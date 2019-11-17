@@ -13,14 +13,13 @@
 
 # Execute initialization code in circuit module
 import aqx.qdk.circuits.circuit as circuit  # noqa: F401
-
 # Execute initialization code in gates module
 import aqx.qdk.circuits.gates as gates  # noqa: F401
+from aqx.qdk.circuits.angled_gate import AngledGate  # noqa: F401
 from aqx.qdk.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F401
 from aqx.qdk.circuits.circuit import Circuit  # noqa: F401
 from aqx.qdk.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
 from aqx.qdk.circuits.gate import Gate  # noqa: F401
-from aqx.qdk.circuits.angled_gate import AngledGate  # noqa: F401
 from aqx.qdk.circuits.instruction import Instruction  # noqa: F401
 from aqx.qdk.circuits.moments import Moments, MomentsKey  # noqa: F401
 from aqx.qdk.circuits.operator import Operator  # noqa: F401

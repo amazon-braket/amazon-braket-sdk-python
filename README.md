@@ -1,6 +1,8 @@
 **DO NOT SHARE OR TALK ABOUT THE CONTENTS OF THIS LIBRARY per the Amazon Beta NDA you signed.**
 
-**aqx-python-sdk** is a library for interacting with quantum devices via AWS. TODO describe the different feature sets / abstractions.
+Amazon Qx Python SDK is an open source library for interacting with quantum devices on Amazon Qx.
+
+TODO describe the different feature sets / abstractions.
 
 ## Installation
 
@@ -93,19 +95,27 @@ tox
 ```
 
 To run the integ tests only, first set the AWS_PROFILE you'd like to use for testing:
-```
+```bash
 export AWS_PROFILE=INSERT_PROFILE_NAME
 ```
 
 Run the following tox command
-```
+```bash
 tox test/integ_tests
 ```
 
 To run an individual test:
-```
+```bash
 tox -- -k 'your_test'
 ```
+
+## Building Sphinx docs
+`cd` into the `doc` directory and run:
+```bash
+make html
+```
+
+You can edit the templates for any of the pages in the docs by editing the .rst files in the ``doc`` directory and then running ``make html`` again.
 
 ## License
 

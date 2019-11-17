@@ -765,7 +765,7 @@ Gate.register_gate(CPhaseShift)
 
 
 class CPhaseShift00(AngledGate):
-    """Controlled phase shift gate for phasing the |00> state.
+    """Controlled phase shift gate for phasing the \\|00> state.
 
     Args:
         angle (float): angle in radians.
@@ -803,7 +803,7 @@ Gate.register_gate(CPhaseShift00)
 
 
 class CPhaseShift01(AngledGate):
-    """Controlled phase shift gate for phasing the |01> state.
+    """Controlled phase shift gate for phasing the \\|01> state.
 
     Args:
         angle (float): angle in radians.
@@ -841,7 +841,7 @@ Gate.register_gate(CPhaseShift01)
 
 
 class CPhaseShift10(AngledGate):
-    """Controlled phase shift gate for phasing the |10> state.
+    """Controlled phase shift gate for phasing the \\|10> state.
 
     Args:
         angle (float): angle in radians.
