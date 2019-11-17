@@ -18,7 +18,6 @@ import pytest
 from aqx.qdk.aws import AwsQuantumTask, AwsQuantumTaskResult
 from aqx.qdk.aws.aws_session import AwsSession
 from aqx.qdk.circuits import Circuit
-
 from common_test_utils import MockS3
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")

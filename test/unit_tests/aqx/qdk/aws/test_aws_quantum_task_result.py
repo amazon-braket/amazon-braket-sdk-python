@@ -18,7 +18,6 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 from aqx.qdk.aws.aws_quantum_task_result import AwsQuantumTaskResult
-
 from common_test_utils import MockS3
 
 

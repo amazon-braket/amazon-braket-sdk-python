@@ -17,7 +17,6 @@ import pytest
 from aqx.qdk.aws.aws_quantum_simulator import AwsQuantumSimulator
 from aqx.qdk.circuits import Circuit
 from aqx.qdk.devices.quantum_simulator.quantum_simulator_type import QuantumSimulatorType
-
 from common_test_utils import MockDevices
 
 

@@ -16,7 +16,6 @@ from unittest.mock import Mock
 import pytest
 from aqx.qdk.aws.aws_qpu import AwsQpu
 from aqx.qdk.devices.qpu.qpu_type import QpuType
-
 from common_test_utils import MockDevices
 
 

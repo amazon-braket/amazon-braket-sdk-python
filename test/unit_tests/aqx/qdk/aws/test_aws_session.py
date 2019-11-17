@@ -19,7 +19,6 @@ from aqx.qdk.aws.aws_session import AwsSession
 from aqx.qdk.devices.qpu.qpu_type import QpuType
 from aqx.qdk.devices.quantum_simulator.quantum_simulator_type import QuantumSimulatorType
 from botocore.exceptions import ClientError
-
 from common_test_utils import MockDevices
 
 TEST_S3_OBJ_CONTENTS = {

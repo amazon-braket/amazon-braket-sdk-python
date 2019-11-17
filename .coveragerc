@@ -1,0 +1,21 @@
+[run]
+parallel = True
+branch = True
+source =
+    aqx
+omit = 
+    **/aqx/ir/*
+
+[paths]
+source =
+    src/aqx
+    .tox/*/lib/python*/site-packages/aqx
+
+[report]
+show_missing = True
+
+[html]
+directory = build/coverage
+
+[xml]
+output = build/coverage/coverage.xml
