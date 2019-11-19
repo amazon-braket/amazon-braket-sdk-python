@@ -8,7 +8,7 @@ TODO describe the different feature sets / abstractions.
 
 ### Prerequisites
 - Python 3.7.2+
-- TODO: Describe how to get access to the service
+- TODO: Describe how to get access to the service and what IAM roles need to be created.
 
 ### Steps
 
@@ -26,7 +26,9 @@ TODO describe the different feature sets / abstractions.
  pip install awscli
  ```
  
-3. Install `aqx-python-sdk` package.
+3. [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) settings to have a profile that can assume the Amazon Qx IAM role in your AWS account. TODO: Add more specifics once the IAM role steps are defined in prerequisites.
+ 
+4. Install `aqx-python-sdk` package.
  ```bash
  git clone https://github.com/aws/aqx-python-sdk.git
  pip install -e aqx-python-sdk
@@ -37,9 +39,11 @@ TODO describe the different feature sets / abstractions.
  pip install -e "aqx-python-sdk[test]"
  ```
    
-4. TODO: Add AQx Service model to the AWS CLI
-
-5. [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) settings to have a profile that the `aqx-python-sdk` can assume.
+5. Install latest Amazon Qx model in AWS CLI.
+ ```bash
+ aws s3 cp s3://aqx-preview-assets-beta/models/aqx-2019-09-01.normal.json aqx-model.json --profile PROFILE_FROM_STEP_3
+ aws configure add-model --service-model "file://aqx-model.json" --service-name aqx
+ ```
 
 6. You can now call AWS from the `aqx-python-sdk`. Confirm by running the following in a python interpreter.
  ```python
@@ -50,7 +54,7 @@ TODO describe the different feature sets / abstractions.
 	
  aws_session = AwsSession(
      boto_session=boto3.session.Session(
-         profile_name="INSERT_AWS_PROFILE_NAME"
+         profile_name="PROFILE_FROM_STEP_3"
      )
  )
  device = AwsQuantumSimulator("quest_arn", aws_session)
@@ -96,7 +100,7 @@ tox
 
 To run the integ tests only, first set the AWS_PROFILE you'd like to use for testing:
 ```bash
-export AWS_PROFILE=INSERT_PROFILE_NAME
+export AWS_PROFILE=PROFILE_FROM_STEP_3
 ```
 
 Run the following tox command
