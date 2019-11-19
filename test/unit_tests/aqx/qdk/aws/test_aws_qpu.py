@@ -11,10 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from aqx.qdk.aws.aws_qpu import AwsQpu
+from aqx.qdk.circuits import Circuit
 from aqx.qdk.devices.qpu.qpu_type import QpuType
 from common_test_utils import MockDevices
 
@@ -27,6 +28,16 @@ def qpu():
         return AwsQpu(arn, mock_session)
 
     return _qpu
+
+
+@pytest.fixture
+def s3_destination_folder():
+    return ("bucket-foo", "key-bar")
+
+
+@pytest.fixture
+def circuit():
+    return Circuit().h(0)
 
 
 def test_qpu_refresh_metadata_success():
@@ -88,3 +99,35 @@ def test_repr(qpu):
     qpu = qpu(QpuType.RIGETTI)
     expected = "QPU('name': {}, 'arn': {})".format(qpu.name, qpu.arn)
     assert repr(qpu) == expected
+
+
+@patch("aqx.qdk.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+def test_run_with_positional_args(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
+    _run_and_assert(aws_quantum_task_mock, qpu, [circuit, s3_destination_folder], {})
+
+
+@patch("aqx.qdk.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+def test_run_with_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        qpu,
+        [],
+        {"circuit": circuit, "s3_destination_folder": s3_destination_folder},
+    )
+
+
+@patch("aqx.qdk.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+def test_run_with_positional_args_and_kwargs(
+    aws_quantum_task_mock, qpu, circuit, s3_destination_folder
+):
+    _run_and_assert(aws_quantum_task_mock, qpu, [circuit, s3_destination_folder], {"shots": 100})
+
+
+def _run_and_assert(aws_quantum_task_mock, qpu, run_args, run_kwargs):
+    task_mock = Mock()
+    aws_quantum_task_mock.return_value = task_mock
+
+    qpu = qpu("test_arn")
+    task = qpu.run(*run_args, **run_kwargs)
+    assert task == task_mock
+    aws_quantum_task_mock.assert_called_with(qpu._aws_session, qpu.arn, *run_args, **run_kwargs)

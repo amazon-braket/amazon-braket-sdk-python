@@ -11,25 +11,23 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import uuid
-
+from aqx.qdk.aws.aws_quantum_task import AwsQuantumTask
 from aqx.qdk.aws.aws_session import AwsSession
 from aqx.qdk.devices.device import Device
-from aqx.qdk.tasks.quantum_task import QuantumTask
 
 
 class AwsQpu(Device):
     """
     AWS Qx implementation of a QPU.
     Use this class to retrieve the latest metadata about the QPU, and run a circuit on the QPU.
-
-    :param str arn: QPU ARN e.g. "RIGETTI_ARN"
-    :param AwsSession aws_session: AWS session object
     """
 
-    HARDCODED_TASK_ID = uuid.uuid4()
-
     def __init__(self, arn: str, aws_session=None):
+        """
+        Args:
+            arn (str): Simulator type ARN e.g. "QUEST_ARN".
+            aws_session (AwsSession, optional) aws_session: AWS session object. Default = None.
+        """
         super().__init__(
             name=None, status=None, status_reason=None, supported_quantum_operations=None
         )
@@ -41,18 +39,34 @@ class AwsQpu(Device):
 
         self.refresh_metadata()
 
-    def run(self, circuit, shots: int) -> QuantumTask:
+    def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
         """
-        Convert circuit to IR, call AWS API create_quantum_task,
-        and create a QuantumTask object with generated task ID
+        Run a circuit on this AWS quantum device.
 
-        :param Circuit circuit: circuit to run on device
-        :param int shots: Number of shots to run circuit
-        :return: the created quantum task
-        :rtype: QuantumTask
+        Args:
+            *aws_quantum_task_args: Variable length positional arguments for
+                `aqx.qdk.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`.
+            **aws_quantum_task_kwargs: Variable length keyword arguments for
+                `aqx.qdk.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`.
+
+        Returns:
+            AwsQuantumTask: AwsQuantumTask that is tracking the circuit execution on the device.
+
+        Examples:
+            >>> circuit = Circuit().h(0).cnot(0, 1)
+            >>> device = AwsQpu("ionq_arn")
+            >>> device.run(circuit, ("bucket-foo", "key-bar"))
+
+            >>> circuit = Circuit().h(0).cnot(0, 1)
+            >>> device = AwsQpu("ionq_arn")
+            >>> device.run(circuit=circuit, s3_destination_folder=("bucket-foo", "key-bar"))
+
+        See Also:
+            `aqx.qdk.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`
         """
-        # TODO: Add in calls to create IR json from circuit and boto3 create_quantum_task
-        return QuantumTask(AwsQpu.HARDCODED_TASK_ID)
+        return AwsQuantumTask.from_circuit(
+            self._aws_session, self._arn, *aws_quantum_task_args, **aws_quantum_task_kwargs
+        )
 
     def refresh_metadata(self) -> None:
         """

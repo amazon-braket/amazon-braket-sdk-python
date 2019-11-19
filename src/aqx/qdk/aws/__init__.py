@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from aqx.qdk.aws.aws_qpu import AwsQpu  # noqa: F401
 from aqx.qdk.aws.aws_quantum_simulator import AwsQuantumSimulator  # noqa: F401
 from aqx.qdk.aws.aws_quantum_task import AwsQuantumTask  # noqa: F401
 from aqx.qdk.aws.aws_quantum_task_result import AwsQuantumTaskResult  # noqa: F401

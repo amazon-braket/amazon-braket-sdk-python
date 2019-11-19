@@ -96,3 +96,19 @@ class MockS3:
             },
         }
     )
+
+    MOCK_S3_RESULT_3 = json.dumps(
+        {
+            "TaskMetadata": {
+                "Id": "1231231",
+                "Status": "COMPLETED",
+                "BackendArn": "test_arn",
+                "BackendTranslation": "...",
+                "Created": 1574140385.0697668,
+                "Modified": 1574140388.6908717,
+                "Shots": 100,
+                "GateModelConfig": {"QubitCount": 6},
+            },
+            "MeasurementProbabilities": {"011000": 0.9999999999999982},
+        }
+    )

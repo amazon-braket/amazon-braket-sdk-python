@@ -13,7 +13,6 @@
 
 import json
 from typing import Any, Counter, Dict
-from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -31,10 +30,22 @@ def result_str_2():
     return MockS3.MOCK_S3_RESULT_2
 
 
+@pytest.fixture
+def result_str_3():
+    return MockS3.MOCK_S3_RESULT_3
+
+
 def test_state_vector():
     state_vector: Dict[str, float] = {"00": 0.00, "01": 0.50, "10": 0.50, "11": 0.00}
     result: AwsQuantumTaskResult = AwsQuantumTaskResult(
-        measurements=None, task_metadata=None, state_vector=state_vector
+        measurements=None,
+        task_metadata=None,
+        state_vector=state_vector,
+        measurement_counts=None,
+        measurement_probabilities=None,
+        measurements_copied_from_device=False,
+        measurement_counts_copied_from_device=False,
+        measurement_probabilities_copied_from_device=False,
     )
     assert result.state_vector == state_vector
 
@@ -50,39 +61,43 @@ def test_task_metadata():
         "UpdatedAt": "02/13/22 21:23",
     }
     result: AwsQuantumTaskResult = AwsQuantumTaskResult(
-        measurements=None, task_metadata=task_metadata
+        measurements=None,
+        task_metadata=task_metadata,
+        measurement_counts=None,
+        measurement_probabilities=None,
+        measurements_copied_from_device=False,
+        measurement_counts_copied_from_device=False,
+        measurement_probabilities_copied_from_device=False,
     )
     assert result.task_metadata == task_metadata
 
 
-def test_measurement_counts():
-    measurement: np.ndarray = np.array(
-        [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
-    )
-    result: AwsQuantumTaskResult = AwsQuantumTaskResult(measurement, task_metadata=None)
-    expected_counts: Counter = {"1010": 3, "0000": 1, "1000": 2}
-    assert expected_counts == result.measurement_counts()
-
-
-def test_measurement_probabilities():
-    counts = {"00": 1, "01": 1, "10": 1, "11": 97}
-    probabilities = {"00": 0.01, "01": 0.01, "10": 0.01, "11": 0.97}
-
-    with patch.object(AwsQuantumTaskResult, "measurement_counts") as mock_method:
-        mock_method.return_value = counts
-        result = AwsQuantumTaskResult(measurements=None, task_metadata=None)
-
-        assert result.measurement_counts() == counts
-        assert result.measurement_probabilities() == probabilities
-
-
-def test_from_string(result_str_1):
+def test_from_string_measurements(result_str_1):
     result_obj = json.loads(result_str_1)
     task_result = AwsQuantumTaskResult.from_string(result_str_1)
     expected_measurements = np.asarray(result_obj["Measurements"], dtype=int)
     assert task_result.task_metadata == result_obj["TaskMetadata"]
     assert task_result.state_vector == result_obj["StateVector"]
     assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
+    assert not task_result.measurement_counts_copied_from_device
+    assert not task_result.measurement_probabilities_copied_from_device
+    assert task_result.measurements_copied_from_device
+
+
+def test_from_string_measurement_probabilities(result_str_3):
+    result_obj = json.loads(result_str_3)
+    task_result = AwsQuantumTaskResult.from_string(result_str_3)
+    assert task_result.measurement_probabilities == result_obj["MeasurementProbabilities"]
+    assert task_result.task_metadata == result_obj["TaskMetadata"]
+    assert task_result.state_vector is None
+    shots = 100
+    measurement_list = [list("011000") for x in range(shots)]
+    expected_measurements = np.asarray(measurement_list, dtype=int)
+    assert np.allclose(task_result.measurements, expected_measurements)
+    assert task_result.measurement_counts == Counter(["011000" for x in range(shots)])
+    assert not task_result.measurement_counts_copied_from_device
+    assert task_result.measurement_probabilities_copied_from_device
+    assert not task_result.measurements_copied_from_device
 
 
 def test_equality(result_str_1, result_str_2):

@@ -36,5 +36,5 @@ def test_quest_quantum_task(aws_session):
 
     result = task.result()
 
-    assert 0.40 < result.measurement_probabilities()["00"] < 0.60
-    assert 0.40 < result.measurement_probabilities()["11"] < 0.60
+    assert 0.40 < result.measurement_probabilities["00"] < 0.60
+    assert 0.40 < result.measurement_probabilities["11"] < 0.60
