@@ -12,72 +12,51 @@
 # language governing permissions and limitations under the License.
 
 from typing import Counter
-from unittest.mock import patch
 
 import numpy as np
 from aqx.qdk.tasks import QuantumTaskResult
 
 
-def test_measurement_counts_build_from_measurement():
+def test_measurement_counts_from_measurements():
     measurements: np.ndarray = np.array(
         [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
     )
-    result: QuantumTaskResult = QuantumTaskResult(measurements)
+    measurement_counts = QuantumTaskResult.measurement_counts_from_measurements(measurements)
     expected_counts: Counter = {"1010": 3, "0000": 1, "1000": 2}
-    assert expected_counts == result.measurement_counts()
+    assert expected_counts == measurement_counts
 
 
-def test_measurement_counts_caches_result():
-    measurements: np.ndarray = np.array(
-        [[1, 0, 1, 0], [0, 0, 0, 0], [1, 0, 1, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 1, 0]]
+def test_measurement_probabilities_from_measurement_counts():
+    counts = {"00": 1, "01": 1, "10": 1, "11": 97}
+    probabilities = {"00": 0.01, "01": 0.01, "10": 0.01, "11": 0.97}
+
+    measurement_probabilities = QuantumTaskResult.measurement_probabilities_from_measurement_counts(
+        counts
     )
-    result: QuantumTaskResult = QuantumTaskResult(measurements)
-    expected_counts: Counter = {"1010": 3, "0000": 1, "1000": 2}
 
-    # Assert lazily loaded
-    assert result._measurement_counts is None
-    assert result.measurement_counts() == expected_counts
-
-    # Assert uses now cached value
-    assert result._measurement_counts == result.measurement_counts()
+    assert measurement_probabilities == probabilities
 
 
-def test_measurement_probabilities_built_from_counts():
-    counts = {"00": 1, "01": 1, "10": 1, "11": 97}
-    probabilities = {"00": 0.01, "01": 0.01, "10": 0.01, "11": 0.97}
+def test_measurements_from_measurement_probabilities():
+    shots = 5
+    probabilities = {"00": 0.2, "01": 0.2, "10": 0.2, "11": 0.4}
+    measurements_list = [["0", "0"], ["0", "1"], ["1", "0"], ["1", "1"], ["1", "1"]]
+    expected_results = np.asarray(measurements_list, dtype=int)
 
-    with patch.object(QuantumTaskResult, "measurement_counts") as mock_method:
-        mock_method.return_value = counts
-        result = QuantumTaskResult(measurements=None)
+    measurements = QuantumTaskResult.measurements_from_measurement_probabilities(
+        probabilities, shots
+    )
 
-        assert result.measurement_counts() == counts
-        assert result.measurement_probabilities() == probabilities
-
-
-def test_measurement_probabilities_caches_result():
-    counts = {"00": 1, "01": 1, "10": 1, "11": 97}
-    probabilities = {"00": 0.01, "01": 0.01, "10": 0.01, "11": 0.97}
-
-    with patch.object(QuantumTaskResult, "measurement_counts") as mock_method:
-        mock_method.return_value = counts
-        result = QuantumTaskResult(measurements=None)
-
-        # Assert lazily loaded
-        assert result._measurement_probabilities is None
-        assert result.measurement_probabilities() == probabilities
-        assert result._measurement_probabilities is not None
-
-        # Assert uses now cached value
-        assert result._measurement_probabilities == result.measurement_probabilities()
+    assert np.allclose(measurements, expected_results)
 
 
 def test_equality():
     measurements_1 = np.array([[0, 0], [1, 1]])
     measurements_2 = np.array([[0, 0], [0, 0]])
 
-    result_1 = QuantumTaskResult(measurements_1)
-    result_2 = QuantumTaskResult(measurements_1)
-    other_result = QuantumTaskResult(measurements_2)
+    result_1 = QuantumTaskResult(measurements_1, None, None, False, True, True)
+    result_2 = QuantumTaskResult(measurements_1, None, None, False, True, True)
+    other_result = QuantumTaskResult(measurements_2, None, None, False, True, True)
     non_result = "not a quantum task result"
 
     assert result_1 == result_2

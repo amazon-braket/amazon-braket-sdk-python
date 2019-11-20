@@ -52,11 +52,11 @@ class AwsQuantumSimulator(Device):
             AwsQuantumTask: AwsQuantumTask that is tracking the circuit execution on the device.
 
         Examples:
-            >>> circuit = Circuit().h(0).cno(0, 1)
+            >>> circuit = Circuit().h(0).cnot(0, 1)
             >>> device = AwsQuantumSimulator("quest_arn")
             >>> device.run(circuit, ("bucket-foo", "key-bar"))
 
-            >>> circuit = Circuit().h(0).cno(0, 1)
+            >>> circuit = Circuit().h(0).cnot(0, 1)
             >>> device = AwsQuantumSimulator("quest_arn")
             >>> device.run(circuit=circuit, s3_destination_folder=("bucket-foo", "key-bar"))
 
