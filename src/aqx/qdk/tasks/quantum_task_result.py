@@ -30,13 +30,13 @@ class QuantumTaskResult:
         measurement_probabilities (Dict[str, float]): A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
             Value is the probability the measurement occurred.
-        measurements_copied_from_device (bool): flag whether measurements were copied from device.
-            If false, measurements are calculated from device data.
-        measurement_counts_copied_from_device (bool): flag whether measurement_counts were copied
-            from device. If false, measurement_counts are calculated from device data.
-        measurement_probabilities_copied_from_device (bool): flag whether measurement_probabilities
-            were copied from device. If false, measurement_probabilities are calculated from
-            device data.
+        measurements_copied_from_device (bool): flag whether `measurements` were copied from device.
+            If false, `measurements` are calculated from device data.
+        measurement_counts_copied_from_device (bool): flag whether `measurement_counts` were copied
+            from device. If false, `measurement_counts` are calculated from device data.
+        measurement_probabilities_copied_from_device (bool): flag whether
+            `measurement_probabilities` were copied from device. If false,
+            `measurement_probabilities` are calculated from device data.
     """
 
     measurements: np.ndarray

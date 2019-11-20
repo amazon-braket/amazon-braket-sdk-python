@@ -25,7 +25,7 @@ class AwsQpu(Device):
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
-            arn (str): Simulator type ARN e.g. "QUEST_ARN".
+            arn (str): QPU ARN, e.g. "arn:aws:aqx:::qpu:ionq"
             aws_session (AwsSession, optional) aws_session: AWS session object. Default = None.
         """
         super().__init__(
