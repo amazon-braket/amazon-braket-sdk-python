@@ -14,9 +14,8 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from aqx.qdk.aws.aws_qpu import AwsQpu
+from aqx.qdk.aws import AwsQpu, AwsQpuArns
 from aqx.qdk.circuits import Circuit
-from aqx.qdk.devices.qpu.qpu_type import QpuType
 from common_test_utils import MockDevices
 
 
@@ -43,7 +42,7 @@ def circuit():
 def test_qpu_refresh_metadata_success():
     mock_session = Mock()
     mock_session.get_qpu_metadata.return_value = MockDevices.MOCK_RIGETTI_QPU_1
-    qpu = AwsQpu(QpuType.RIGETTI, mock_session)
+    qpu = AwsQpu(AwsQpuArns.RIGETTI, mock_session)
     assert qpu.arn == MockDevices.MOCK_RIGETTI_QPU_1.get("arn")
     assert qpu.name == MockDevices.MOCK_RIGETTI_QPU_1.get("name")
     assert qpu.qubit_count == MockDevices.MOCK_RIGETTI_QPU_1.get("qubitCount")
@@ -77,16 +76,16 @@ def test_qpu_refresh_metadata_error():
     err_message = "nooo!"
     mock_session.get_qpu_metadata.side_effect = RuntimeError(err_message)
     with pytest.raises(RuntimeError) as excinfo:
-        AwsQpu(QpuType.RIGETTI, mock_session)
+        AwsQpu(AwsQpuArns.RIGETTI, mock_session)
     assert err_message in str(excinfo.value)
 
 
 def test_equality(qpu):
-    qpu_1 = qpu(QpuType.RIGETTI)
-    qpu_2 = qpu(QpuType.RIGETTI)
+    qpu_1 = qpu(AwsQpuArns.RIGETTI)
+    qpu_2 = qpu(AwsQpuArns.RIGETTI)
     mock_session = Mock()
     mock_session.get_qpu_metadata.return_value = MockDevices.MOCK_IONQ_QPU
-    other_qpu = AwsQpu(QpuType.IONQ, mock_session)
+    other_qpu = AwsQpu(AwsQpuArns.IONQ, mock_session)
     non_qpu = "HI"
 
     assert qpu_1 == qpu_2
@@ -96,7 +95,7 @@ def test_equality(qpu):
 
 
 def test_repr(qpu):
-    qpu = qpu(QpuType.RIGETTI)
+    qpu = qpu(AwsQpuArns.RIGETTI)
     expected = "QPU('name': {}, 'arn': {})".format(qpu.name, qpu.arn)
     assert repr(qpu) == expected
 

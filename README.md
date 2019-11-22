@@ -57,7 +57,7 @@ TODO describe the different feature sets / abstractions.
          profile_name="PROFILE_FROM_STEP_3"
      )
  )
- device = AwsQuantumSimulator("quest_arn", aws_session)
+ device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1", aws_session)
  s3_folder = ("INSERT_BUCKET", "INSERT_KEY")
 	
  bell = Circuit().h(0).cnot(0, 1)

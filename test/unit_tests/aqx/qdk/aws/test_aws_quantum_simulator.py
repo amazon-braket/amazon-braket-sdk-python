@@ -14,9 +14,8 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from aqx.qdk.aws.aws_quantum_simulator import AwsQuantumSimulator
+from aqx.qdk.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from aqx.qdk.circuits import Circuit
-from aqx.qdk.devices.quantum_simulator.quantum_simulator_type import QuantumSimulatorType
 from common_test_utils import MockDevices
 
 
@@ -24,7 +23,7 @@ from common_test_utils import MockDevices
 def simulator():
     def _simulator(arn):
         mock_session = Mock()
-        mock_session.get_simulator_metadata.return_value = MockDevices.MOCK_QUEST_SIMULATOR_1
+        mock_session.get_simulator_metadata.return_value = MockDevices.MOCK_QS1_SIMULATOR_1
         return AwsQuantumSimulator(arn, mock_session)
 
     return _simulator
@@ -42,9 +41,9 @@ def s3_destination_folder():
 
 def test_simulator_refresh_metadata_success():
     mock_session = Mock()
-    expected_metadata = MockDevices.MOCK_QUEST_SIMULATOR_1
+    expected_metadata = MockDevices.MOCK_QS1_SIMULATOR_1
     mock_session.get_simulator_metadata.return_value = expected_metadata
-    simulator = AwsQuantumSimulator(QuantumSimulatorType.QUEST, mock_session)
+    simulator = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1, mock_session)
     assert simulator.arn == expected_metadata.get("arn")
     assert simulator.name == expected_metadata.get("name")
     assert simulator.qubit_count == expected_metadata.get("qubitCount")
@@ -55,7 +54,7 @@ def test_simulator_refresh_metadata_success():
     assert simulator.status_reason is None
 
     # describe_simulators now returns new metadata
-    expected_metadata = MockDevices.MOCK_QUEST_SIMULATOR_2
+    expected_metadata = MockDevices.MOCK_QS1_SIMULATOR_2
     mock_session.get_simulator_metadata.return_value = expected_metadata
     simulator.refresh_metadata()
     assert simulator.arn == expected_metadata.get("arn")
@@ -73,13 +72,13 @@ def test_simulator_refresh_metadata_error():
     err_message = "nooo!"
     mock_session.get_simulator_metadata.side_effect = RuntimeError(err_message)
     with pytest.raises(RuntimeError) as excinfo:
-        AwsQuantumSimulator(QuantumSimulatorType.QUEST, mock_session)
+        AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1, mock_session)
     assert err_message in str(excinfo.value)
 
 
 def test_equality(simulator):
-    simulator_1 = simulator(QuantumSimulatorType.QUEST)
-    simulator_2 = simulator(QuantumSimulatorType.QUEST)
+    simulator_1 = simulator(AwsQuantumSimulatorArns.QS1)
+    simulator_2 = simulator(AwsQuantumSimulatorArns.QS1)
     other_simulator = Mock(spec=AwsQuantumSimulator)
     other_simulator.arn.return_value = "OTHER_ARN"
     non_simulator = "HI"
@@ -91,7 +90,7 @@ def test_equality(simulator):
 
 
 def test_repr(simulator):
-    simulator = simulator(QuantumSimulatorType.QUEST)
+    simulator = simulator(AwsQuantumSimulatorArns.QS1)
     expected = "QuantumSimulator('name': {}, 'arn': {})".format(simulator.name, simulator.arn)
     assert repr(simulator) == expected
 
@@ -124,7 +123,7 @@ def _run_and_assert(aws_quantum_task_mock, simulator, run_args, run_kwargs):
     task_mock = Mock()
     aws_quantum_task_mock.return_value = task_mock
 
-    simulator = simulator(QuantumSimulatorType.QUEST)
+    simulator = simulator(AwsQuantumSimulatorArns.QS1)
     task = simulator.run(*run_args, **run_kwargs)
     assert task == task_mock
     aws_quantum_task_mock.assert_called_with(

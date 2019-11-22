@@ -12,7 +12,9 @@
 # language governing permissions and limitations under the License.
 
 from aqx.qdk.aws.aws_qpu import AwsQpu  # noqa: F401
+from aqx.qdk.aws.aws_qpu_arns import AwsQpuArns  # noqa: F401
 from aqx.qdk.aws.aws_quantum_simulator import AwsQuantumSimulator  # noqa: F401
+from aqx.qdk.aws.aws_quantum_simulator_arns import AwsQuantumSimulatorArns  # noqa: F401
 from aqx.qdk.aws.aws_quantum_task import AwsQuantumTask  # noqa: F401
 from aqx.qdk.aws.aws_quantum_task_result import AwsQuantumTaskResult  # noqa: F401
 from aqx.qdk.aws.aws_session import AwsSession  # noqa: F401

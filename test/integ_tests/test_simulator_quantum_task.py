@@ -11,18 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from aqx.qdk.aws.aws_quantum_simulator import AwsQuantumSimulator
+from aqx.qdk.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from aqx.qdk.circuits import Circuit
 
 BUCKET_NAME = "simulator-output-bucket"
-FILENAME = "integ-tests/test_task_quest.json"
+FILENAME = "integ-tests/test_task_simulator.json"
 
 # TODO: sad path once we have exception types in API
 
 
-def test_quest_quantum_task(aws_session):
+def test_simulator_quantum_task(aws_session):
 
-    device = AwsQuantumSimulator("quest_arn", aws_session)
+    device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1, aws_session)
     s3_destination_folder = (BUCKET_NAME, FILENAME)
 
     bell = Circuit().h(0).cnot(0, 1)

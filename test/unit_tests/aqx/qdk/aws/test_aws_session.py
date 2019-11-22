@@ -15,9 +15,7 @@ import json
 from unittest.mock import Mock
 
 import pytest
-from aqx.qdk.aws.aws_session import AwsSession
-from aqx.qdk.devices.qpu.qpu_type import QpuType
-from aqx.qdk.devices.quantum_simulator.quantum_simulator_type import QuantumSimulatorType
+from aqx.qdk.aws import AwsQpuArns, AwsQuantumSimulatorArns, AwsSession
 from botocore.exceptions import ClientError
 from common_test_utils import MockDevices
 
@@ -25,7 +23,7 @@ TEST_S3_OBJ_CONTENTS = {
     "TaskMetadata": {
         "Id": "UUID_blah",
         "Status": "COMPLETED",
-        "BackendArn": "Rigetti_Arn",
+        "BackendArn": AwsQpuArns.RIGETTI,
         "CwLogGroupArn": "blah",
         "Program": "....",
         "CreatedAt": "02/12/22 21:23",
@@ -82,7 +80,7 @@ def test_get_qpu_metadata_success():
     aqx_client = Mock()
     aqx_client.describe_qpus.return_value = {"qpus": [MockDevices.MOCK_RIGETTI_QPU_1]}
     aws_session = AwsSession(boto_session=boto_session, aqx_client=aqx_client)
-    qpu_metadata = aws_session.get_qpu_metadata(QpuType.RIGETTI)
+    qpu_metadata = aws_session.get_qpu_metadata(AwsQpuArns.RIGETTI)
     assert qpu_metadata == MockDevices.MOCK_RIGETTI_QPU_1
 
 
@@ -95,18 +93,18 @@ def test_get_qpu_metadata_client_error():
         {"Error": {"Code": "ValidationException", "Message": "NoSuchQpu"}}, "Operation"
     )
     aws_session = AwsSession(boto_session=boto_session, aqx_client=aqx_client)
-    aws_session.get_qpu_metadata(QpuType.RIGETTI)
+    aws_session.get_qpu_metadata(AwsQpuArns.RIGETTI)
 
 
 def test_get_simulator_metadata_success():
     boto_session = Mock()
     aqx_client = Mock()
     aqx_client.describe_quantum_simulators.return_value = {
-        "quantumSimulators": [MockDevices.MOCK_QUEST_SIMULATOR_1]
+        "quantumSimulators": [MockDevices.MOCK_QS1_SIMULATOR_1]
     }
     aws_session = AwsSession(boto_session=boto_session, aqx_client=aqx_client)
-    simulator_metadata = aws_session.get_simulator_metadata(QuantumSimulatorType.QUEST)
-    assert simulator_metadata == MockDevices.MOCK_QUEST_SIMULATOR_1
+    simulator_metadata = aws_session.get_simulator_metadata(AwsQuantumSimulatorArns.QS1)
+    assert simulator_metadata == MockDevices.MOCK_QS1_SIMULATOR_1
 
 
 # TODO: revisit once we actually use boto3
@@ -118,7 +116,7 @@ def test_get_simulator_metadata_client_error():
         {"Error": {"Code": "ValidationException", "Message": "NoSuchSimulator"}}, "Operation"
     )
     aws_session = AwsSession(boto_session=boto_session, aqx_client=aqx_client)
-    aws_session.get_simulator_metadata(QuantumSimulatorType.QUEST)
+    aws_session.get_simulator_metadata(AwsQuantumSimulatorArns.QS1)
 
 
 def test_cancel_quantum_task(aws_session):
