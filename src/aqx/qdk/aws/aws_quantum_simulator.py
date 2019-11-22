@@ -26,7 +26,7 @@ class AwsQuantumSimulator(Device):
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
-            arn (str): Simulator type ARN e.g. "QUEST_ARN".
+            arn (str): Simulator type ARN e.g. "arn:aws:aqx:::quantum-simulator:aqx:qs1".
             aws_session (AwsSession, optional) aws_session: AWS session object. Default = None.
         """
         super().__init__(
@@ -53,11 +53,11 @@ class AwsQuantumSimulator(Device):
 
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
-            >>> device = AwsQuantumSimulator("quest_arn")
+            >>> device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1")
             >>> device.run(circuit, ("bucket-foo", "key-bar"))
 
             >>> circuit = Circuit().h(0).cnot(0, 1)
-            >>> device = AwsQuantumSimulator("quest_arn")
+            >>> device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1")
             >>> device.run(circuit=circuit, s3_destination_folder=("bucket-foo", "key-bar"))
 
         See Also:

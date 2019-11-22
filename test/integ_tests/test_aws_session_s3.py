@@ -14,6 +14,7 @@
 import json
 
 import pytest
+from aqx.qdk.aws import AwsQpuArns
 
 BUCKET_NAME = "simulator-output-bucket"
 FILENAME = "integ-tests/test_task_reading.json"
@@ -22,7 +23,7 @@ TEST_S3_OBJ_CONTENTS = {
     "TaskMetadata": {
         "Id": "UUID_blah",
         "Status": "COMPLETED",
-        "BackendArn": "Rigetti_Arn",
+        "BackendArn": AwsQpuArns.RIGETTI,
         "CwLogGroupArn": "blah",
         "Program": "....",
         "CreatedAt": "02/12/22 21:23",

@@ -14,7 +14,6 @@
 from enum import Enum
 
 
-# TODO: create actual ARNs here
-class QpuType(str, Enum):
-    RIGETTI = "RIGETTI_ARN"
-    IONQ = "IONQ_ARN"
+class AwsQpuArns(str, Enum):
+    RIGETTI = "arn:aws:aqx:::qpu:rigetti"
+    IONQ = "arn:aws:aqx:::qpu:ionq"

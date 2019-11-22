@@ -13,56 +13,54 @@
 
 import json
 
-from aqx.qdk.devices.qpu.qpu_status import QpuStatus
-from aqx.qdk.devices.qpu.qpu_type import QpuType
-from aqx.qdk.devices.quantum_simulator.quantum_simulator_status import QuantumSimulatorStatus
-from aqx.qdk.devices.quantum_simulator.quantum_simulator_type import QuantumSimulatorType
+from aqx.qdk.aws.aws_qpu_arns import AwsQpuArns
+from aqx.qdk.aws.aws_quantum_simulator_arns import AwsQuantumSimulatorArns
 
 
 class MockDevices:
 
     MOCK_RIGETTI_QPU_1 = {
-        "arn": QpuType.RIGETTI,
+        "arn": AwsQpuArns.RIGETTI,
         "qubitCount": 16,
         "connectivity": {"connectivityGraph": {"0": ["1", "2"], "1": ["0", "2"], "2": ["0", "1"]}},
         "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "T"],
         "name": "Rigetti",
-        "status": QpuStatus.AVAILABLE,
+        "status": "AVAILABLE",
     }
 
     MOCK_RIGETTI_QPU_2 = {
-        "arn": QpuType.RIGETTI,
+        "arn": AwsQpuArns.RIGETTI,
         "qubitCount": 30,
         "connectivity": {"connectivityGraph": {"0": ["1", "2"], "1": ["0", "2"], "2": ["0", "1"]}},
         "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "T", "S"],
         "name": "Rigetti",
-        "status": QpuStatus.UNAVAILABLE,
+        "status": "UNAVAILABLE",
         "statusReason": "Under maintenance",
     }
 
     MOCK_IONQ_QPU = {
-        "arn": QpuType.IONQ,
+        "arn": AwsQpuArns.IONQ,
         "qubitCount": 11,
         "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli"],
         "name": "IonQ",
-        "status": QpuStatus.UNAVAILABLE,
+        "status": "UNAVAILABLE",
         "statusReason": "Under maintenance",
     }
 
-    MOCK_QUEST_SIMULATOR_1 = {
-        "arn": QuantumSimulatorType.QUEST,
+    MOCK_QS1_SIMULATOR_1 = {
+        "arn": AwsQuantumSimulatorArns.QS1,
         "qubitCount": 23,
         "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli"],
-        "name": "QuEST",
-        "status": QuantumSimulatorStatus.AVAILABLE,
+        "name": "integ_test_simulator",
+        "status": "AVAILABLE",
     }
 
-    MOCK_QUEST_SIMULATOR_2 = {
-        "arn": QuantumSimulatorType.QUEST,
+    MOCK_QS1_SIMULATOR_2 = {
+        "arn": AwsQuantumSimulatorArns.QS1,
         "qubitCount": 30,
         "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli", "Phase", "CPhase"],
-        "name": "QuEST",
-        "status": QuantumSimulatorStatus.UNAVAILABLE,
+        "name": "integ_test_simulator",
+        "status": "UNAVAILABLE",
         "statusReason": "Temporary network issue",
     }
 
@@ -76,7 +74,7 @@ class MockS3:
             "TaskMetadata": {
                 "Id": "UUID_blah_1",
                 "Status": "COMPLETED",
-                "BackendArn": "Rigetti_Arn",
+                "BackendArn": AwsQpuArns.RIGETTI,
                 "CwLogGroupArn": "blah",
                 "Program": "....",
             },
@@ -90,7 +88,7 @@ class MockS3:
             "TaskMetadata": {
                 "Id": "UUID_blah_2",
                 "Status": "COMPLETED",
-                "BackendArn": "Rigetti_Arn",
+                "BackendArn": AwsQpuArns.RIGETTI,
                 "CwLogGroupArn": "blah",
                 "Program": "....",
             },
