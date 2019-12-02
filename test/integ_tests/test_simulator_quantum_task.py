@@ -11,8 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from aqx.qdk.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
-from aqx.qdk.circuits import Circuit
+from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
+from braket.circuits import Circuit
 
 BUCKET_NAME = "simulator-output-bucket"
 FILENAME = "integ-tests/test_task_simulator.json"

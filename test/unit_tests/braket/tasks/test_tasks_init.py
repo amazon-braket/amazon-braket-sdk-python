@@ -11,15 +11,22 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
+import importlib
+import sys
+from unittest.mock import patch
 
-import boto3
-import pytest
-from braket.aws.aws_session import AwsSession
+import braket.tasks
 
 
-@pytest.fixture
-def aws_session():
-    profile_name = os.environ["AWS_PROFILE"]
-    boto_session = boto3.session.Session(profile_name=profile_name)
-    return AwsSession(boto_session)
+@patch("braket.ipython_utils.running_in_jupyter")
+def test_nest_asyncio_not_applied(running_in_jupyter):
+    running_in_jupyter.return_value = False
+    importlib.reload(braket.tasks)
+    assert "nest_asyncio" not in sys.modules
+
+
+@patch("braket.ipython_utils.running_in_jupyter")
+def test_nest_asyncio_is_applied(running_in_jupyter):
+    running_in_jupyter.return_value = True
+    importlib.reload(braket.tasks)
+    assert "nest_asyncio" in sys.modules

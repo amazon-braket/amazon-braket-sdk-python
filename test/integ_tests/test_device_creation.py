@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import test_common
-from aqx.qdk.aws import AwsQpu, AwsQuantumSimulator
+from braket.aws import AwsQpu, AwsQuantumSimulator
 
 
 def test_aws_qpu_actual(aws_session):

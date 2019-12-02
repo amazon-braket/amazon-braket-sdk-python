@@ -14,7 +14,7 @@
 import json
 
 import pytest
-from aqx.qdk.aws import AwsQpuArns
+from braket.aws import AwsQpuArns
 
 BUCKET_NAME = "simulator-output-bucket"
 FILENAME = "integ-tests/test_task_reading.json"

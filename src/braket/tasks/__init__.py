@@ -11,15 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
+import braket.ipython_utils as ipython_utils
+from braket.tasks.quantum_task import QuantumTask  # noqa: F401
+from braket.tasks.quantum_task_result import QuantumTaskResult  # noqa: F401
 
-import boto3
-import pytest
-from braket.aws.aws_session import AwsSession
+# Apply nest_asyncio if currently running within Jupyter. This ensures anything that uses
+# asyncio will run in Jupyter without any issues.
+#
+# Inspired by https://github.com/ipython/ipython/issues/11694 and
+# https://github.com/jupyter/notebook/issues/3397#issuecomment-419386811
+if ipython_utils.running_in_jupyter():
+    import nest_asyncio
 
-
-@pytest.fixture
-def aws_session():
-    profile_name = os.environ["AWS_PROFILE"]
-    boto_session = boto3.session.Session(profile_name=profile_name)
-    return AwsSession(boto_session)
+    nest_asyncio.apply()

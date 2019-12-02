@@ -1,6 +1,6 @@
 **DO NOT SHARE OR TALK ABOUT THE CONTENTS OF THIS LIBRARY per the Amazon Beta NDA you signed.**
 
-Amazon Qx Python SDK is an open source library for interacting with quantum devices on Amazon Qx.
+Amazon Braket Python SDK is an open source library for interacting with quantum devices on Amazon Braket.
 
 TODO describe the different feature sets / abstractions.
 
@@ -14,8 +14,8 @@ TODO describe the different feature sets / abstractions.
 
 1. (Optional) Recommended to work inside a virtual environment. You can skip this step if you don't care about mucking with your global python dependencies. See [virtualenv](https://virtualenv.pypa.io/en/stable/installation/) if you don't have it already installed.
  ```bash
- mkdir aqx
- cd aqx
+ mkdir braket
+ cd braket
 
  virtualenv venv
  source venv/bin/activate
@@ -26,31 +26,31 @@ TODO describe the different feature sets / abstractions.
  pip install awscli
  ```
  
-3. [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) settings to have a profile that can assume the Amazon Qx IAM role in your AWS account. TODO: Add more specifics once the IAM role steps are defined in prerequisites.
+3. [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) settings to have a profile that can assume the Amazon Braket IAM role in your AWS account. TODO: Add more specifics once the IAM role steps are defined in prerequisites.
  
-4. Install `aqx-python-sdk` package.
+4. Install `braket-python-sdk` package.
  ```bash
- git clone https://github.com/aws/aqx-python-sdk.git
- pip install -e aqx-python-sdk
+ git clone https://github.com/aws/braket-python-sdk.git
+ pip install -e braket-python-sdk
  ```
 
  To install test dependencies for running tests locally run:
  ```bash
- pip install -e "aqx-python-sdk[test]"
+ pip install -e "braket-python-sdk[test]"
  ```
    
-5. Install latest Amazon Qx model in AWS CLI.
+5. Install latest Amazon Braket model in AWS CLI.
  ```bash
  aws s3 cp s3://aqx-preview-assets-beta/models/aqx-2019-09-01.normal.json aqx-model.json --profile PROFILE_FROM_STEP_3
  aws configure add-model --service-model "file://aqx-model.json" --service-name aqx
  ```
 
-6. You can now call AWS from the `aqx-python-sdk`. Confirm by running the following in a python interpreter.
+6. You can now call AWS from the `braket-python-sdk`. Confirm by running the following in a python interpreter.
  ```python
  import boto3
  import json
- from aqx.qdk.circuits import Circuit
- from aqx.qdk.aws import AwsQuantumSimulator, AwsSession
+ from braket.circuits import Circuit
+ from braket.aws import AwsQuantumSimulator, AwsSession
 	
  aws_session = AwsSession(
      boto_session=boto3.session.Session(
@@ -69,13 +69,13 @@ You should get output similar to...
 Counter({'11': 50, '00': 50})
 ```
 
-7. Install [Jupyter](https://jupyter.org/install) and create an aqx kernel.
+7. Install [Jupyter](https://jupyter.org/install) and create an braket kernel.
  ```
  pip install jupyter ipykernel
- python -m ipykernel install --user --name aqx
+ python -m ipykernel install --user --name braket
  ```
 	
-8. You can now launch Jupyter and use the QDK within it.
+8. You can now launch Jupyter and use the SDK within it.
  ```
  jupyter notebook
  ```
@@ -90,7 +90,7 @@ TODO
 
 Make sure to install test dependencies first:
 ```
-pip install -e "aqx-python-sdk[test]"
+pip install -e "braket-python-sdk[test]"
 ```
 
 To run the unit tests only:

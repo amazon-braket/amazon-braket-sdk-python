@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
-SPHINXPROJ    = aqx-sdk
+SPHINXPROJ    = braket-sdk
 SOURCEDIR     = .
 BUILDDIR      = ../build/documentation
 

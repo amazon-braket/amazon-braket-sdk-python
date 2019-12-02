@@ -2,14 +2,14 @@
 parallel = True
 branch = True
 source =
-    aqx
+    braket
 omit = 
-    **/aqx/ir/*
+    **/braket/ir/*
 
 [paths]
 source =
-    src/aqx
-    .tox/*/lib/python*/site-packages/aqx
+    src/braket
+    .tox/*/lib/python*/site-packages/braket
 
 [report]
 show_missing = True
