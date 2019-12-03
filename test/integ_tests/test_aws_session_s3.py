@@ -16,9 +16,6 @@ import json
 import pytest
 from braket.aws import AwsQpuArns
 
-BUCKET_NAME = "simulator-output-bucket"
-FILENAME = "integ-tests/test_task_reading.json"
-
 TEST_S3_OBJ_CONTENTS = {
     "TaskMetadata": {
         "Id": "UUID_blah",
@@ -32,31 +29,23 @@ TEST_S3_OBJ_CONTENTS = {
 }
 
 
-@pytest.fixture
-def setup_s3_bucket(aws_session):
-    region = "us-west-2"
-    s3 = aws_session.boto_session.resource("s3", region_name=region)
-    obj = s3.Object(BUCKET_NAME, FILENAME)
+@pytest.fixture()
+def s3_key(s3_resource, s3_bucket, s3_prefix):
+    obj = s3_resource.Object(s3_bucket, f"{s3_prefix}/test_task_reading.json")
+
     try:
         obj_body = obj.get()["Body"].read().decode("utf-8")
         assert obj_body == json.dumps(TEST_S3_OBJ_CONTENTS)
-    except s3.meta.client.exceptions.NoSuchBucket:
-        # Create s3 bucket
-        s3.create_bucket(
-            ACL="private",
-            Bucket=BUCKET_NAME,
-            CreateBucketConfiguration={"LocationConstraint": region},
-        )
-        setup_s3_bucket(aws_session)
-    except s3.meta.client.exceptions.NoSuchKey:
+    except s3_resource.meta.client.exceptions.NoSuchKey:
         # Put s3 object
         obj.put(ACL="private", Body=json.dumps(TEST_S3_OBJ_CONTENTS, indent=4))
     except AssertionError:
         # Put s3 object
         obj.put(ACL="private", Body=json.dumps(TEST_S3_OBJ_CONTENTS, indent=4))
 
+    return obj.key
 
-@pytest.mark.usefixtures("setup_s3_bucket")
-def test_retrieve_s3_object_body(aws_session):
-    obj_body = aws_session.retrieve_s3_object_body(BUCKET_NAME, FILENAME)
+
+def test_retrieve_s3_object_body(aws_session, s3_bucket, s3_key):
+    obj_body = aws_session.retrieve_s3_object_body(s3_bucket, s3_key)
     assert obj_body == json.dumps(TEST_S3_OBJ_CONTENTS, indent=4)
