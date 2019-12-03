@@ -95,7 +95,7 @@ pip install -e "braket-python-sdk[test]"
 
 To run the unit tests only:
 ```
-tox
+tox -e unit-tests
 ```
 
 To run the integ tests only, first set the AWS_PROFILE you'd like to use for testing:
@@ -105,12 +105,21 @@ export AWS_PROFILE=PROFILE_FROM_STEP_3
 
 Run the following tox command
 ```bash
-tox test/integ_tests
+tox -e integ-tests
 ```
 
-To run an individual test:
+To run an individual test (unit or integration)
 ```bash
-tox -- -k 'your_test'
+tox -e unit-tests -- -k 'your_test'
+```
+
+```bash
+tox -e integ-tests -- -k 'your_test'
+```
+
+To run everything (linters, docs, unit tests, integ tests, etc.)
+```bash
+tox
 ```
 
 ## Building Sphinx docs
