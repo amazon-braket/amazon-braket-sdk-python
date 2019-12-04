@@ -117,7 +117,7 @@ tox -e unit-tests -- -k 'your_test'
 tox -e integ-tests -- -k 'your_test'
 ```
 
-To run everything (linters, docs, unit tests, integ tests, etc.)
+To run everything (linters, docs, and unit tests)
 ```bash
 tox
 ```

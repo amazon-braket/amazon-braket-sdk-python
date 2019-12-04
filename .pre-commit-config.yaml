@@ -8,3 +8,11 @@ repos:
     entry: tox
     types: [python]
     pass_filenames: false
+
+  - id: tox_integ_tests
+    name: tox integ tests
+    stages: [push]
+    language: system
+    entry: tox -e integ-tests
+    types: [python]
+    pass_filenames: false
