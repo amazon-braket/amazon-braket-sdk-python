@@ -10,20 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
-
-BUCKET_NAME = "simulator-output-bucket"
-FILENAME = "integ-tests/test_task_simulator.json"
 
 # TODO: sad path once we have exception types in API
 
 
-def test_simulator_quantum_task(aws_session):
-
+def test_simulator_quantum_task(aws_session, s3_bucket, s3_prefix):
     device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1, aws_session)
-    s3_destination_folder = (BUCKET_NAME, FILENAME)
+    s3_destination_folder = (s3_bucket, s3_prefix)
 
     bell = Circuit().h(0).cnot(0, 1)
 

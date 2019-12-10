@@ -15,11 +15,53 @@ import os
 
 import boto3
 import pytest
+from botocore.exceptions import ClientError
 from braket.aws.aws_session import AwsSession
 
 
-@pytest.fixture
-def aws_session():
+@pytest.fixture(scope="session")
+def boto_session():
     profile_name = os.environ["AWS_PROFILE"]
-    boto_session = boto3.session.Session(profile_name=profile_name)
+    return boto3.session.Session(profile_name=profile_name)
+
+
+@pytest.fixture(scope="session")
+def aws_session(boto_session):
     return AwsSession(boto_session)
+
+
+@pytest.fixture(scope="session")
+def s3_resource(boto_session):
+    return boto_session.resource("s3")
+
+
+@pytest.fixture(scope="session")
+def s3_bucket(s3_resource, boto_session):
+    """Create / get S3 bucket for tests"""
+
+    region_name = boto_session.region_name
+    account_id = boto_session.client("sts").get_caller_identity()["Account"]
+    bucket_name = f"braket-sdk-integ-tests-{account_id}"
+    bucket = s3_resource.Bucket(bucket_name)
+
+    try:
+        bucket.create(ACL="private", CreateBucketConfiguration={"LocationConstraint": region_name})
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "BucketAlreadyOwnedByYou":
+            pass
+        else:
+            raise e
+
+    return bucket_name
+
+
+@pytest.fixture(scope="module")
+def s3_prefix():
+    """Returns the module path of the test, e.g. integ_tests/test_simulator_quantum_task"""
+
+    # current test path, e.g. ...
+    # test/integ_tests/test_simulator_quantum_task.py::test_simulator_quantum_task (setup)
+    current_test_path = os.environ.get("PYTEST_CURRENT_TEST")
+
+    # strip off the filename extension and test/
+    return current_test_path.rsplit(".py")[0].replace("test/", "")
