@@ -1,0 +1,67 @@
+Description: Required Amazon Braket resources
+Resources:
+  AmazonBraketFullAccess:
+    Type: "AWS::IAM::Role"
+    Properties:
+      # Must be named AQxFullAccess
+      RoleName: AQxFullAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - braket.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AQxFullAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sagemaker:DescribeTrainingJob"
+                  - "sagemaker:StopTrainingJob"
+                  - "sagemaker:CreateTrainingJob"
+                  - "s3:GetObject"
+                  - "s3:ListBucket"
+                Resource: "*"
+
+  AmazonBraketJobsFullAccess:
+    Type: "AWS::IAM::Role"
+    Properties:
+      # Can be renamed if you desire. This is the role supplied to the create-quantum-job API
+      RoleName: AQxJobsFullAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - braket.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AQxJobsFullAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "cloudwatch:PutMetricData"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "logs:CreateLogGroup"
+                  - "logs:DescribeLogStreams"
+                  - "s3:GetObject"
+                  - "s3:PutObject"
+                  - "s3:ListBucket"
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "aqx:*"
+                Resource: "*"
