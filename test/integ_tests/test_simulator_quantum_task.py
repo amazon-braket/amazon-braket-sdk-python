@@ -10,26 +10,53 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import pytest
 from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
 
-# TODO: sad path once we have exception types in API
 
-
-def test_simulator_quantum_task(aws_session, s3_bucket, s3_prefix):
-    device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1, aws_session)
-    s3_destination_folder = (s3_bucket, s3_prefix)
-
+@pytest.mark.parametrize(
+    "simulator_arn", [AwsQuantumSimulatorArns.QS1, AwsQuantumSimulatorArns.QS3]
+)
+def test_bell_pair(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsQuantumSimulator(simulator_arn, aws_session)
     bell = Circuit().h(0).cnot(0, 1)
-
-    circ = Circuit()
-    circ.add(bell)
-    circ.add(bell, [1, 2])
-    circ.add(bell, [2, 3])
-
-    task = device.run(bell, s3_destination_folder)
-
-    result = task.result()
+    result = device.run(bell, s3_destination_folder, shots=750).result()
 
     assert 0.40 < result.measurement_probabilities["00"] < 0.60
     assert 0.40 < result.measurement_probabilities["11"] < 0.60
+    assert len(result.measurements) == 750
+
+
+@pytest.mark.parametrize(
+    "simulator_arn",
+    [  # TODO Uncomment out below once proper ordering fix has been applied to QS1
+        # AwsQuantumSimulatorArns.QS1,
+        AwsQuantumSimulatorArns.QS3
+    ],
+)
+def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsQuantumSimulator(simulator_arn, aws_session)
+
+    # |110> should get back value of "110"
+    state_110 = Circuit().x(0).x(1).i(2)
+    result = device.run(state_110, s3_destination_folder).result()
+    assert result.measurement_counts.most_common(1)[0][0] == "110"
+
+    # |001> should get back value of "001"
+    state_001 = Circuit().i(0).i(1).x(2)
+    result = device.run(state_001, s3_destination_folder).result()
+    assert result.measurement_counts.most_common(1)[0][0] == "001"
+
+
+def test_qs2_quantum_task(aws_session, s3_destination_folder):
+    device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS2, aws_session)
+
+    bell = Circuit().h(range(8))
+    measurements = device.run(bell, s3_destination_folder, shots=1).result().measurements
+
+    # 1 shot
+    assert len(measurements) == 1
+
+    # 8 qubits
+    assert len(measurements[0]) == 8

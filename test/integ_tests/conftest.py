@@ -65,3 +65,8 @@ def s3_prefix():
 
     # strip off the filename extension and test/
     return current_test_path.rsplit(".py")[0].replace("test/", "")
+
+
+@pytest.fixture(scope="module")
+def s3_destination_folder(s3_bucket, s3_prefix):
+    return AwsSession.S3DestinationFolder(s3_bucket, s3_prefix)

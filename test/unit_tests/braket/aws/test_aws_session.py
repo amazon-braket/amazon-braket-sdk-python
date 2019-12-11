@@ -33,15 +33,45 @@ TEST_S3_OBJ_CONTENTS = {
 
 
 @pytest.fixture
-def aws_session():
-    return AwsSession(boto_session=Mock(), braket_client=Mock())
+def boto_session():
+    _boto_session = Mock()
+    _boto_session.region_name = "us-west-2"
+    return _boto_session
 
 
-def test_retrieve_s3_object_body_success():
+@pytest.fixture
+def aws_session(boto_session):
+    return AwsSession(boto_session=boto_session, braket_client=Mock())
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_no_endpoint_for_region():
+    boto_session = Mock()
+    boto_session.region_name = "foobar"
+    AwsSession(boto_session=boto_session, braket_client=None)
+
+
+def test_uses_endpoint_for_region(boto_session):
+    AwsSession(boto_session=boto_session, braket_client=None)
+
+    boto_session.client.assert_called_with(
+        "aqx", endpoint_url=AwsSession.BRAKET_ENDPOINTS[boto_session.region_name]
+    )
+
+
+def test_uses_supplied_braket_client():
+    boto_session = Mock()
+    boto_session.region_name = "foobar"
+    braket_client = Mock()
+    aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
+
+    assert aws_session.braket_client == braket_client
+
+
+def test_retrieve_s3_object_body_success(boto_session):
     bucket_name = "braket-integ-test"
     filename = "tasks/test_task_1.json"
 
-    boto_session = Mock()
     mock_resource = Mock()
     boto_session.resource.return_value = mock_resource
     mock_object = Mock()
@@ -59,11 +89,10 @@ def test_retrieve_s3_object_body_success():
 
 
 @pytest.mark.xfail(raises=ClientError)
-def test_retrieve_s3_object_body_client_error():
+def test_retrieve_s3_object_body_client_error(boto_session):
     bucket_name = "braket-integ-test"
     filename = "tasks/test_task_1.json"
 
-    boto_session = Mock()
     mock_resource = Mock()
     boto_session.resource.return_value = mock_resource
     mock_object = Mock()
@@ -75,8 +104,7 @@ def test_retrieve_s3_object_body_client_error():
     aws_session.retrieve_s3_object_body(bucket_name, filename)
 
 
-def test_get_qpu_metadata_success():
-    boto_session = Mock()
+def test_get_qpu_metadata_success(boto_session):
     braket_client = Mock()
     braket_client.describe_qpus.return_value = {"qpus": [MockDevices.MOCK_RIGETTI_QPU_1]}
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
@@ -86,8 +114,7 @@ def test_get_qpu_metadata_success():
 
 # TODO: revisit once we actually use boto3
 @pytest.mark.xfail(raises=ClientError)
-def test_get_qpu_metadata_client_error():
-    boto_session = Mock()
+def test_get_qpu_metadata_client_error(boto_session):
     braket_client = Mock()
     braket_client.describe_qpus.side_effect = ClientError(
         {"Error": {"Code": "ValidationException", "Message": "NoSuchQpu"}}, "Operation"
@@ -96,8 +123,7 @@ def test_get_qpu_metadata_client_error():
     aws_session.get_qpu_metadata(AwsQpuArns.RIGETTI)
 
 
-def test_get_simulator_metadata_success():
-    boto_session = Mock()
+def test_get_simulator_metadata_success(boto_session):
     braket_client = Mock()
     braket_client.describe_quantum_simulators.return_value = {
         "quantumSimulators": [MockDevices.MOCK_QS1_SIMULATOR_1]
@@ -109,8 +135,7 @@ def test_get_simulator_metadata_success():
 
 # TODO: revisit once we actually use boto3
 @pytest.mark.xfail(raises=ClientError)
-def test_get_simulator_metadata_client_error():
-    boto_session = Mock()
+def test_get_simulator_metadata_client_error(boto_session):
     braket_client = Mock()
     braket_client.describe_quantum_simulators.side_effect = ClientError(
         {"Error": {"Code": "ValidationException", "Message": "NoSuchSimulator"}}, "Operation"

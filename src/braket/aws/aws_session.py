@@ -15,28 +15,44 @@ from typing import Any, Dict, NamedTuple
 
 import boto3
 
-# TODO: remove this once we have prod stages
-PDX_BETA_URL = "https://4tetbmwz5k.execute-api.us-west-2.amazonaws.com/Prod"
-
 
 class AwsSession(object):
+    """Manage interactions with AWS services."""
+
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
-    """
-    Manage interactions with AWS services
-
-    Args:
-        boto_session: boto3 session object
-        braket_client: boto3 braket client
-    """
+    BRAKET_ENDPOINTS = {
+        "us-west-1": "https://fdoco1n1x7.execute-api.us-west-1.amazonaws.com/Prod",
+        "us-west-2": "https://xe15dbdvw6.execute-api.us-west-2.amazonaws.com/Prod",
+        "us-east-1": "https://kqjovr0n70.execute-api.us-east-1.amazonaws.com/Prod",
+    }
 
     # similar to sagemaker sdk:
     # https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/session.py
     def __init__(self, boto_session=None, braket_client=None):
+        """
+        Args:
+            boto_session: boto3 session object
+            braket_client: boto3 braket client
+
+        Raises:
+            ValueError: If Amazon Braket does not exist for the `boto_session`'s region.
+        """
+
         self.boto_session = boto_session or boto3.Session()
-        self.braket_client = braket_client or self.boto_session.client(
-            "aqx", endpoint_url=PDX_BETA_URL
-        )
+
+        if braket_client:
+            self.braket_client = braket_client
+        else:
+            region = self.boto_session.region_name
+            endpoint = AwsSession.BRAKET_ENDPOINTS.get(region, None)
+            if not endpoint:
+                supported_regions = list(AwsSession.BRAKET_ENDPOINTS.keys())
+                raise ValueError(
+                    f"No braket endpoint for {region}, supported regions are {supported_regions}"
+                )
+
+            self.braket_client = self.boto_session.client("aqx", endpoint_url=endpoint)
 
     #
     # Quantum Tasks

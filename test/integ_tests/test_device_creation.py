@@ -11,28 +11,34 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import test_common
-from braket.aws import AwsQpu, AwsQuantumSimulator
+import pytest
+from braket.aws import AwsQpu, AwsQpuArns, AwsQuantumSimulator, AwsQuantumSimulatorArns
 
 
-def test_aws_qpu_actual(aws_session):
-    qpu_arn = test_common.TEST_QPU_ARN
+@pytest.mark.parametrize(
+    "qpu_arn,qpu_name", [(AwsQpuArns.RIGETTI, "Rigetti"), (AwsQpuArns.IONQ, "IonQ")]
+)
+def test_qpu_creation(qpu_arn, qpu_name, aws_session):
     qpu = AwsQpu(qpu_arn, aws_session=aws_session)
     assert qpu.arn == qpu_arn
-    assert qpu.connectivity_graph == {"0": ["1", "2"], "1": ["0", "2"], "2": ["0", "1"]}
-    assert qpu.name == "integ_test_qpu"
-    assert qpu.qubit_count == 16
-    assert qpu.status == "AVAILABLE"
-    assert qpu.status_reason == "Up and running"
-    assert qpu.supported_quantum_operations == ["CNOT", "H", "RZ", "RY", "RZ", "T"]
+    assert qpu.name == qpu_name
 
 
-def test_get_simulator_metadata_actual(aws_session):
-    simulator_arn = test_common.TEST_SIMULATOR_ARN
+def test_device_across_regions(aws_session):
+    # assert QPUs across different regions can be created using the same aws_session
+    AwsQpu(AwsQpuArns.RIGETTI, aws_session)
+    AwsQpu(AwsQpuArns.IONQ, aws_session)
+
+
+@pytest.mark.parametrize(
+    "simulator_arn,simulator_name",
+    [
+        (AwsQuantumSimulatorArns.QS1, "quantum-simulator-1"),
+        (AwsQuantumSimulatorArns.QS2, "quantum-simulator-2"),
+        (AwsQuantumSimulatorArns.QS3, "quantum-simulator-3"),
+    ],
+)
+def test_simulator_creation(simulator_arn, simulator_name, aws_session):
     simulator = AwsQuantumSimulator(simulator_arn, aws_session=aws_session)
     assert simulator.arn == simulator_arn
-    assert simulator.status_reason == "Under maintenance"
-    assert simulator.status == "UNAVAILABLE"
-    assert simulator.qubit_count == 30
-    assert simulator.name == "integ_test_simulator"
-    assert simulator.supported_quantum_operations == ["CNOT", "H", "RZ", "RY", "RZ", "T"]
+    assert simulator.name == simulator_name

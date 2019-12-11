@@ -10,7 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import boto3
+from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.devices.device import Device
@@ -22,17 +23,29 @@ class AwsQpu(Device):
     Use this class to retrieve the latest metadata about the QPU, and run a circuit on the QPU.
     """
 
+    QPU_REGIONS = {AwsQpuArns.RIGETTI: ["us-west-1"], AwsQpuArns.IONQ: ["us-east-1"]}
+
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
             arn (str): QPU ARN, e.g. "arn:aws:aqx:::qpu:ionq"
             aws_session (AwsSession, optional) aws_session: AWS session object. Default = None.
+
+        Raises:
+            ValueError: If unknown `arn` is supplied.
+
+        Note:
+            QPUs are physically located in specific AWS regions. If the supplied `aws_session`
+            is connected to a region that the QPU is not in then a cloned `aws_session`
+            will be created for the QPU region.
+
+            See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the regions the QPUs are located in.
         """
         super().__init__(
             name=None, status=None, status_reason=None, supported_quantum_operations=None
         )
         self._arn = arn
-        self._aws_session = aws_session or AwsSession()
+        self._aws_session = self._aws_session_for_qpu(arn, aws_session)
         self._qubit_count: int = None
         # TODO: convert into graph object of qubits, type TBD
         self._connectivity_graph = None
@@ -54,11 +67,11 @@ class AwsQpu(Device):
 
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
-            >>> device = AwsQpu("ionq_arn")
+            >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
             >>> device.run(circuit, ("bucket-foo", "key-bar"))
 
             >>> circuit = Circuit().h(0).cnot(0, 1)
-            >>> device = AwsQpu("ionq_arn")
+            >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
             >>> device.run(circuit=circuit, s3_destination_folder=("bucket-foo", "key-bar"))
 
         See Also:
@@ -84,28 +97,45 @@ class AwsQpu(Device):
 
     @property
     def arn(self) -> str:
-        """
-        Return arn of QPU
-
-        :rtype: str
-        """
+        """str: Return arn of QPU."""
         return self._arn
 
     @property
     def qubit_count(self) -> int:
-        """
-        Return maximum number of qubits that can be run on QPU
-
-        :rtype: int
-        """
+        """int: Return maximum number of qubits that can be run on QPU."""
         return self._qubit_count
 
     @property
     def connectivity_graph(self):
-        """
-        Return connectivity graph of QPU
-        """
+        """Return connectivity graph of QPU."""
         return self._connectivity_graph
+
+    def _aws_session_for_qpu(self, qpu_arn: str, aws_session: AwsSession) -> AwsSession:
+        """
+        Get an AwsSession for the QPU ARN. QPUs are only available in certain regions so any
+        supplied AwsSession in a region the QPU doesn't support will need to be adjusted.
+        """
+
+        qpu_regions = AwsQpu.QPU_REGIONS.get(qpu_arn, [])
+        if not qpu_regions:
+            raise ValueError(f"Unknown QPU {qpu_arn} was supplied.")
+
+        if aws_session:
+            if aws_session.boto_session.region_name in qpu_regions:
+                return aws_session
+            else:
+                creds = aws_session.boto_session.get_credentials()
+                boto_session = boto3.Session(
+                    aws_access_key_id=creds.access_key,
+                    aws_secret_access_key=creds.secret_key,
+                    aws_session_token=creds.token,
+                    profile_name=aws_session.boto_session.profile_name,
+                    region_name=qpu_regions[0],
+                )
+                return AwsSession(boto_session=boto_session)
+        else:
+            boto_session = boto3.Session(region_name=qpu_regions[0])
+            return AwsSession(boto_session=boto_session)
 
     def __repr__(self):
         return "QPU('name': {}, 'arn': {})".format(self.name, self.arn)
