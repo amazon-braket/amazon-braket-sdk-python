@@ -5,6 +5,7 @@ Resources:
     Properties:
       # Must be named AQxFullAccess
       RoleName: AQxFullAccess
+      Description: Role that Amazon Braket assumes in order to read / write resources.
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -16,36 +17,46 @@ Resources:
               - sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: AQxFullAccess
+        - PolicyName: AmazonS3Access
           PolicyDocument:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
                 Action:
-                  - "sagemaker:DescribeTrainingJob"
-                  - "sagemaker:StopTrainingJob"
-                  - "sagemaker:CreateTrainingJob"
+                  - "s3:PutObject"
                   - "s3:GetObject"
                   - "s3:ListBucket"
+                Resource: "*"
+        - PolicyName: SagemakerJobAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "sagemaker:CreateTrainingJob"
+                  - "sagemaker:DescribeTrainingJob"
+                  - "sagemaker:StopTrainingJob"
+                  - "iam:PassRole"
                 Resource: "*"
 
   AmazonBraketJobsFullAccess:
     Type: "AWS::IAM::Role"
     Properties:
       # Can be renamed if you desire. This is the role supplied to the create-quantum-job API
-      RoleName: AQxJobsFullAccess
+      RoleName: AmazonBraketJobsFullAccess
+      Description: Role to supply to Amazon Braket's create-quantum-job API.
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
               Service:
-                - braket.amazonaws.com
+                - sagemaker.amazonaws.com
             Action:
               - sts:AssumeRole
       Path: /
       Policies:
-        - PolicyName: AQxJobsFullAccess
+        - PolicyName: SagemakerCreateTrainingJobPermissions
           PolicyDocument:
             Version: 2012-10-17
             Statement:
