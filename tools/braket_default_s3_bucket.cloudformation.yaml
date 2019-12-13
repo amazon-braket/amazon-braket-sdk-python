@@ -1,0 +1,12 @@
+Description: Default S3 Bucket for Amazon Braket
+Resources:
+  IntegTestBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: "braket-output-${AWS::AccountId}"
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
