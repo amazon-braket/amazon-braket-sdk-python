@@ -36,11 +36,11 @@ export AWS_PROFILE=YOUR_PROFILE_NAME
 4. Install `braket-python-sdk` package.
 
 ```bash
-git clone https://github.com/aws/braket-python-sdk.git
+git clone https://github.com/aws/braket-python-sdk.git --branch stable/latest
 pip install -e braket-python-sdk
 ```
 
-To install test dependencies for running tests locally run:
+If you want to run tests and / or do any development on the framework run:
 ```bash
 pip install -e "braket-python-sdk[test]"
 ```
