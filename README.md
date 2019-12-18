@@ -54,10 +54,10 @@ aws configure add-model --service-model "file://aqx-model.json" --service-name a
 
 6. Create the necessary Amazon Braket resources in your AWS account.
 
-This will create the required resources and a default S3 bucket, `braket-output-${AWS::AccountId}`, for storing Amazon Braket outputs. If you don't want to create a bucket and will create your own than drop the `--create-default-bucket` from the command below.
-```bash
-python tools/create_braket_resources.py --create-default-bucket
-```
+Follow the link below to create the resources using CloudFormation. This will create the required IAM resources and a default S3 bucket, `braket-output-${AWS::AccountId}`, for storing Amazon Braket outputs.
+
+[Quick-Create in AWS CloudFormation](https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/create/review?templateURL=https://braket-external-assets-prod-us-west-2.s3-us-west-2.amazonaws.com/templates/braket-resources.yaml&stackName=BraketResources)
+
 
 7. You can now call Amazon Braket from the `braket-python-sdk`.
 
