@@ -129,7 +129,6 @@ class AwsQpu(Device):
                     aws_access_key_id=creds.access_key,
                     aws_secret_access_key=creds.secret_key,
                     aws_session_token=creds.token,
-                    profile_name=aws_session.boto_session.profile_name,
                     region_name=qpu_regions[0],
                 )
                 return AwsSession(boto_session=boto_session)

@@ -93,12 +93,11 @@ def test_aws_session_in_another_qpu_region(
 
     AwsQpu(arn, different_region_aws_session)
 
-    # assert creds, profile, and region were correctly supplied
+    # assert creds, and region were correctly supplied
     boto_session_init.assert_called_with(
         aws_access_key_id=creds.access_key,
         aws_secret_access_key=creds.secret_key,
         aws_session_token=creds.token,
-        profile_name=different_region_aws_session.boto_session.profile_name,
         region_name=region,
     )
 
