@@ -14,6 +14,7 @@
 from unittest.mock import Mock
 
 import braket.ir.jaqcd as jaqcd
+import numpy as np
 import pytest
 from braket.circuits import (
     AsciiCircuitDiagram,
@@ -327,3 +328,20 @@ def test_diagram(h):
 
     assert h.diagram(mock_diagram) == expected
     mock_diagram.build_diagram.assert_called_with(h)
+
+
+def test_to_matrix_single_qubit_gate(h):
+    expected_matrix = Gate.H().to_matrix()
+    assert (expected_matrix == h.to_matrix()).all()
+
+
+def test_to_matrix_two_single_qubit_gates():
+    circ = Circuit().h(0).i(1)
+    expected_matrix = np.kron(Gate.H().to_matrix(), Gate.I().to_matrix())
+    assert (expected_matrix == circ.to_matrix()).all()
+
+
+def test_to_matrix_multi_qubit_gates():
+    circ = Circuit().cnot(0, 1).i(2)
+    expected_matrix = np.kron(Gate.CNot().to_matrix(), Gate.I().to_matrix())
+    assert (expected_matrix == circ.to_matrix()).all()

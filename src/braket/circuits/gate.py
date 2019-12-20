@@ -94,6 +94,15 @@ class Gate(Operator):
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
+    def to_expanded_matrix(self, register: QubitSet, target: QubitSet) -> np.ndarray:
+        """
+        Returns a unitary matrix that reflects applying this gate to a qubit register.
+
+        Returns:
+            np.ndarray: unitary matrix that reflects applying this gate to a qubit register.
+        """
+        raise NotImplementedError("to_expanded_matrix has not been implemented yet.")
+
     def __eq__(self, other):
         if not isinstance(other, Gate):
             return NotImplemented

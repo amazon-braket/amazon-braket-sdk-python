@@ -49,6 +49,15 @@ class H(Gate):
     def to_matrix(self) -> np.ndarray:
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
 
+    def to_expanded_matrix(self, register: QubitSet, target: QubitSet) -> np.ndarray:
+        matrix = np.array([1])
+        for qubit in register:
+            if qubit == target[0]:
+                matrix = np.kron(matrix, self.to_matrix())
+            else:
+                matrix = np.kron(matrix, np.identity(2))
+        return matrix
+
     @staticmethod
     @circuit.subroutine(register=True)
     def h(target: QubitSetInput) -> Iterable[Instruction]:
@@ -81,6 +90,9 @@ class I(Gate):  # noqa: E742, E261
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+
+    def to_expanded_matrix(self, register: QubitSet, target: QubitSet) -> np.ndarray:
+        return np.identity(2 ** len(register))
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -580,6 +592,21 @@ class CNot(Gate):
             ],
             dtype=complex,
         )
+
+    def to_expanded_matrix(self, register: QubitSet, target: QubitSet) -> np.ndarray:
+        zero_gate = np.array([1])
+        one_gate = np.array([1])
+        for qubit in register:
+            if qubit == target[1]:
+                zero_gate = np.kron(zero_gate, np.identity(2))
+                one_gate = np.kron(one_gate, X().to_matrix())
+            elif qubit == target[0]:
+                zero_gate = np.kron(zero_gate, np.array([[1.0, 0], [0, 0]]))
+                one_gate = np.kron(one_gate, np.array([[0, 0], [0, 1.0]]))
+            else:
+                zero_gate = np.kron(zero_gate, np.identity(2))
+                one_gate = np.kron(one_gate, np.identity(2))
+        return zero_gate + one_gate
 
     @staticmethod
     @circuit.subroutine(register=True)

@@ -13,6 +13,7 @@
 
 from typing import Callable, Dict, Iterable, TypeVar
 
+import numpy as np
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
@@ -333,6 +334,12 @@ class Circuit:
         """
         ir_instructions = [instr.to_ir() for instr in self.instructions]
         return Program(instructions=ir_instructions)
+
+    def to_matrix(self) -> np.ndarray:
+        matrix = np.identity(2 ** self.qubit_count)
+        for inst in self.instructions:
+            matrix = np.dot(matrix, inst.operator.to_expanded_matrix(self.qubits, inst.target))
+        return matrix
 
     def _copy(self) -> "Circuit":
         """
