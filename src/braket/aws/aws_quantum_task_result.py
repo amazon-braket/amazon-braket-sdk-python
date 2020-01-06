@@ -40,11 +40,11 @@ class AwsQuantumTaskResult(QuantumTaskResult):
             `measurement_probabilities` were copied from device. If false,
             `measurement_probabilities` are calculated from device data.
         task_metadata (Dict[str, Any]): Dictionary of task metadata. TODO: Link boto3 docs.
-        state_vector (Dict[str, float]): Dictionary where key is state and value is probability.
+        state_vector (Dict[str, complex]): Dictionary where key is state and value is amplitude.
     """
 
     task_metadata: Dict[str, Any]
-    state_vector: Dict[str, float] = None
+    state_vector: Dict[str, complex] = None
 
     @staticmethod
     def from_string(result: str) -> "AwsQuantumTaskResult":
@@ -80,6 +80,10 @@ class AwsQuantumTaskResult(QuantumTaskResult):
             measurements_copied_from_device = False
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = True
+        if "StateVector" in json_obj:
+            state_vector = json_obj.get("StateVector", None)
+            for state in state_vector:
+                state_vector[state] = complex(*state_vector[state])
         return AwsQuantumTaskResult(
             state_vector=state_vector,
             task_metadata=task_metadata,
