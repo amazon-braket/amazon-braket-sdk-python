@@ -21,18 +21,30 @@ class MockDevices:
 
     MOCK_RIGETTI_QPU_1 = {
         "arn": AwsQpuArns.RIGETTI,
-        "qubitCount": 16,
-        "connectivity": {"connectivityGraph": {"0": ["1", "2"], "1": ["0", "2"], "2": ["0", "1"]}},
-        "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "T"],
+        "properties": {
+            "gateModelProperties": {
+                "qubitCount": 16,
+                "connectivity": {
+                    "connectivityGraph": {"0": ["1", "2"], "1": ["0", "2"], "2": ["0", "1"]}
+                },
+                "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "T"],
+            }
+        },
         "name": "Rigetti",
         "status": "AVAILABLE",
     }
 
     MOCK_RIGETTI_QPU_2 = {
         "arn": AwsQpuArns.RIGETTI,
-        "qubitCount": 30,
-        "connectivity": {"connectivityGraph": {"0": ["1", "2"], "1": ["0", "2"], "2": ["0", "1"]}},
-        "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "T", "S"],
+        "properties": {
+            "gateModelProperties": {
+                "qubitCount": 30,
+                "connectivity": {
+                    "connectivityGraph": {"0": ["1", "2"], "1": ["0", "2"], "2": ["0", "1"]}
+                },
+                "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "T", "S"],
+            }
+        },
         "name": "Rigetti",
         "status": "UNAVAILABLE",
         "statusReason": "Under maintenance",
@@ -40,8 +52,12 @@ class MockDevices:
 
     MOCK_IONQ_QPU = {
         "arn": AwsQpuArns.IONQ,
-        "qubitCount": 11,
-        "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli"],
+        "properties": {
+            "gateModelProperties": {
+                "qubitCount": 11,
+                "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli"],
+            }
+        },
         "name": "IonQ",
         "status": "UNAVAILABLE",
         "statusReason": "Under maintenance",
@@ -49,16 +65,33 @@ class MockDevices:
 
     MOCK_QS1_SIMULATOR_1 = {
         "arn": AwsQuantumSimulatorArns.QS1,
-        "qubitCount": 23,
-        "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli"],
+        "properties": {
+            "gateModelProperties": {
+                "qubitCount": 23,
+                "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli"],
+            }
+        },
         "name": "integ_test_simulator",
         "status": "AVAILABLE",
     }
 
     MOCK_QS1_SIMULATOR_2 = {
         "arn": AwsQuantumSimulatorArns.QS1,
-        "qubitCount": 30,
-        "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli", "Phase", "CPhase"],
+        "properties": {
+            "gateModelProperties": {
+                "qubitCount": 30,
+                "supportedQuantumOperations": [
+                    "CNOT",
+                    "H",
+                    "RZ",
+                    "RY",
+                    "RZ",
+                    "Toffoli",
+                    "Phase",
+                    "CPhase",
+                ],
+            }
+        },
         "name": "integ_test_simulator",
         "status": "UNAVAILABLE",
         "statusReason": "Temporary network issue",

@@ -90,10 +90,11 @@ class AwsQpu(Device):
         self._status = qpu_metadata.get("status")
         self._status_reason = qpu_metadata.get("statusReason")
         # TODO: convert string into gate types
-        self._supported_quantum_operations = qpu_metadata.get("supportedQuantumOperations")
-        self._qubit_count = qpu_metadata.get("qubitCount")
-        if "connectivity" in qpu_metadata:
-            self._connectivity_graph = qpu_metadata.get("connectivity").get("connectivityGraph")
+        qpu_properties = qpu_metadata.get("properties").get("gateModelProperties")
+        self._supported_quantum_operations = qpu_properties.get("supportedQuantumOperations")
+        self._qubit_count = qpu_properties.get("qubitCount")
+        if "connectivity" in qpu_properties:
+            self._connectivity_graph = qpu_properties.get("connectivity").get("connectivityGraph")
 
     @property
     def arn(self) -> str:
