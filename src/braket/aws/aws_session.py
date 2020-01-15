@@ -52,7 +52,7 @@ class AwsSession(object):
                     f"No braket endpoint for {region}, supported regions are {supported_regions}"
                 )
 
-            self.braket_client = self.boto_session.client("aqx", endpoint_url=endpoint)
+            self.braket_client = self.boto_session.client("braket", endpoint_url=endpoint)
 
     #
     # Quantum Tasks

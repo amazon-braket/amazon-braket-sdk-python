@@ -34,7 +34,7 @@ def test_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     "simulator_arn",
     [  # TODO Uncomment out below once proper ordering fix has been applied to QS1
         AwsQuantumSimulatorArns.QS1,
-        AwsQuantumSimulatorArns.QS3
+        AwsQuantumSimulatorArns.QS3,
     ],
 )
 def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):

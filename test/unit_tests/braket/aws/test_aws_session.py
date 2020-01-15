@@ -55,7 +55,7 @@ def test_uses_endpoint_for_region(boto_session):
     AwsSession(boto_session=boto_session, braket_client=None)
 
     boto_session.client.assert_called_with(
-        "aqx", endpoint_url=AwsSession.BRAKET_ENDPOINTS[boto_session.region_name]
+        "braket", endpoint_url=AwsSession.BRAKET_ENDPOINTS[boto_session.region_name]
     )
 
 
