@@ -726,6 +726,52 @@ class PSwap(AngledGate):
 Gate.register_gate(PSwap)
 
 
+class XY(AngledGate):
+    """XY gate.
+
+    Args:
+        angle (float): angle in radians.
+    """
+
+    def __init__(self, angle: float):
+        super().__init__(angle=angle, qubit_count=2, ascii_symbols=["XY", "XY"])
+
+    def to_ir(self, target: QubitSet):
+        return ir.XY(targets=[target[0], target[1]], angle=self.angle)
+
+    def to_matrix(self):
+        cos = np.cos(self.angle / 2)
+        sin = np.sin(self.angle / 2)
+        return np.array(
+            [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, cos, 1.0j * sin, 0.0],
+                [0.0, 1.0j * sin, cos, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+            dtype=complex,
+        )
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def xy(targets: QubitSet, angle: float) -> Instruction:
+        """Registers this function into the circuit class.
+
+        Args:
+            targets (Qubit or int): Target qubit indices.
+
+        Returns:
+            Instruction: XY instruction.
+
+        Examples:
+            >>> circ = Circuit().xy(0, 1, 0.15)
+        """
+        return Instruction(Gate.XY(angle), target=targets)
+
+
+Gate.register_gate(XY)
+
+
 class CPhaseShift(AngledGate):
     """Controlled phase shift gate.
 
