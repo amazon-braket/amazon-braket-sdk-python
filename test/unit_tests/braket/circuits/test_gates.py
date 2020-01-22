@@ -44,6 +44,7 @@ testdata = [
     (Gate.CSwap, "cswap", ir.CSwap, [SingleControl, DoubleTarget]),
     (Gate.ISwap, "iswap", ir.ISwap, [DoubleTarget]),
     (Gate.PSwap, "pswap", ir.PSwap, [DoubleTarget, Angle]),
+    (Gate.XY, "xy", ir.XY, [DoubleTarget, Angle]),
     (Gate.PhaseShift, "phaseshift", ir.PhaseShift, [SingleTarget, Angle]),
     (Gate.CPhaseShift, "cphaseshift", ir.CPhaseShift, [SingleControl, SingleTarget, Angle]),
     (Gate.CPhaseShift00, "cphaseshift00", ir.CPhaseShift00, [SingleControl, SingleTarget, Angle]),

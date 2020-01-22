@@ -102,7 +102,7 @@ class MockS3:
 
     MOCK_S3_RESULT_1 = json.dumps(
         {
-            "StateVector": {"00": 0.19999, "01": 0.80000, "10": 0.00000, "11": 0.00001},
+            "StateVector": {"00": [0.2, 0.2], "01": [0.3, 0.1], "10": [0.1, 0.3], "11": [0.2, 0.2]},
             "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
             "TaskMetadata": {
                 "Id": "UUID_blah_1",
@@ -116,7 +116,7 @@ class MockS3:
 
     MOCK_S3_RESULT_2 = json.dumps(
         {
-            "StateVector": {"00": 0.80000, "01": 0.00000, "10": 0.00000, "11": 0.19999},
+            "StateVector": {"00": [0.2, 0.2], "01": [0.3, 0.1], "10": [0.1, 0.3], "11": [0.2, 0.2]},
             "Measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
             "TaskMetadata": {
                 "Id": "UUID_blah_2",

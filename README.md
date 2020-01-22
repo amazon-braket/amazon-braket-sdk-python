@@ -48,8 +48,8 @@ pip install -e "braket-python-sdk[test]"
 5. Install latest Amazon Braket model in AWS CLI.
 
 ```bash
-aws s3 cp s3://braket-external-assets-prod-us-west-2/models/aqx-2019-09-01.normal.json aqx-model.json
-aws configure add-model --service-model "file://aqx-model.json" --service-name aqx
+aws s3 cp s3://braket-external-assets-prod-us-west-2/models/braket-2019-09-01.normal.json braket-model.json
+aws configure add-model --service-model "file://braket-model.json" --service-name braket
 ```
 
 6. Create the necessary Amazon Braket resources in your AWS account.
@@ -87,6 +87,11 @@ python -m ipykernel install --user --name braket
 ```
 jupyter notebook
 ```
+
+## Update to latest changes
+
+1. `cd` into the GitHub repository directory
+2. run `git pull`
 
 ## Sample Notebooks
 TODO 

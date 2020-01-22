@@ -35,19 +35,28 @@ def result_str_3():
     return MockS3.MOCK_S3_RESULT_3
 
 
-def test_state_vector():
-    state_vector: Dict[str, float] = {"00": 0.00, "01": 0.50, "10": 0.50, "11": 0.00}
+@pytest.fixture
+def parsed_state_vector():
+    return {
+        "00": complex(0.2, 0.2),
+        "01": complex(0.3, 0.1),
+        "10": complex(0.1, 0.3),
+        "11": complex(0.2, 0.2),
+    }
+
+
+def test_state_vector(parsed_state_vector):
     result: AwsQuantumTaskResult = AwsQuantumTaskResult(
         measurements=None,
         task_metadata=None,
-        state_vector=state_vector,
+        state_vector=parsed_state_vector,
         measurement_counts=None,
         measurement_probabilities=None,
         measurements_copied_from_device=False,
         measurement_counts_copied_from_device=False,
         measurement_probabilities_copied_from_device=False,
     )
-    assert result.state_vector == state_vector
+    assert result.state_vector == parsed_state_vector
 
 
 def test_task_metadata():
@@ -72,12 +81,12 @@ def test_task_metadata():
     assert result.task_metadata == task_metadata
 
 
-def test_from_string_measurements(result_str_1):
+def test_from_string_measurements(result_str_1, parsed_state_vector):
     result_obj = json.loads(result_str_1)
     task_result = AwsQuantumTaskResult.from_string(result_str_1)
     expected_measurements = np.asarray(result_obj["Measurements"], dtype=int)
     assert task_result.task_metadata == result_obj["TaskMetadata"]
-    assert task_result.state_vector == result_obj["StateVector"]
+    assert task_result.state_vector == parsed_state_vector
     assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
     assert not task_result.measurement_counts_copied_from_device
     assert not task_result.measurement_probabilities_copied_from_device
