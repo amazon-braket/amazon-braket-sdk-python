@@ -141,6 +141,7 @@ def test_no_aws_session_supplied(boto_session_init, aws_session_init, boto_sessi
 def test_qpu_refresh_metadata_success(
     aws_session, qpu_arn, properties_keys, initial_qpu_data, modified_qpu_data
 ):
+    aws_session.boto_session.region_name = AwsQpu.QPU_REGIONS[qpu_arn][0]
     aws_session.get_qpu_metadata.return_value = initial_qpu_data
     qpu = AwsQpu(qpu_arn, aws_session)
     _assert_qpu_fields(qpu, properties_keys, initial_qpu_data)
