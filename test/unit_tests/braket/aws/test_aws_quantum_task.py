@@ -219,7 +219,7 @@ def _assert_create_quantum_task_called_with(aws_session, arn, circuit, s3_result
             "resultsS3Prefix": s3_results_prefix[1],
             "ir": circuit.to_ir().json(),
             "irType": AwsQuantumTask.GATE_IR_TYPE,
-            "gateModelConfig": {"qubitCount": circuit.qubit_count},
+            "backendParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
             "shots": AwsQuantumTask.DEFAULT_SHOTS,
         }
     )

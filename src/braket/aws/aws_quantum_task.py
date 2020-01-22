@@ -73,7 +73,7 @@ class AwsQuantumTask(QuantumTask):
             "resultsS3Prefix": s3_destination_folder[1],
             "ir": circuit.to_ir().json(),
             "irType": AwsQuantumTask.GATE_IR_TYPE,
-            "gateModelConfig": {"qubitCount": circuit.qubit_count},
+            "backendParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
             "shots": shots,
         }
         task_arn = aws_session.create_quantum_task(**create_task_kwargs)

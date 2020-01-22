@@ -126,13 +126,15 @@ def test_qpu_refresh_metadata_success(aws_session):
     qpu = AwsQpu(AwsQpuArns.RIGETTI, aws_session)
     assert qpu.arn == MockDevices.MOCK_RIGETTI_QPU_1.get("arn")
     assert qpu.name == MockDevices.MOCK_RIGETTI_QPU_1.get("name")
-    assert qpu.qubit_count == MockDevices.MOCK_RIGETTI_QPU_1.get("qubitCount")
-    assert qpu.connectivity_graph == MockDevices.MOCK_RIGETTI_QPU_1.get("connectivity").get(
-        "connectivityGraph"
-    )
-    assert qpu.supported_quantum_operations == MockDevices.MOCK_RIGETTI_QPU_1.get(
-        "supportedQuantumOperations"
-    )
+    assert qpu.qubit_count == MockDevices.MOCK_RIGETTI_QPU_1.get("properties").get(
+        "gateModelProperties"
+    ).get("qubitCount")
+    assert qpu.connectivity_graph == MockDevices.MOCK_RIGETTI_QPU_1.get("properties").get(
+        "gateModelProperties"
+    ).get("connectivity").get("connectivityGraph")
+    assert qpu.supported_quantum_operations == MockDevices.MOCK_RIGETTI_QPU_1.get("properties").get(
+        "gateModelProperties"
+    ).get("supportedQuantumOperations")
     assert qpu.status == MockDevices.MOCK_RIGETTI_QPU_1.get("status")
     assert qpu.status_reason is None
 
@@ -141,13 +143,15 @@ def test_qpu_refresh_metadata_success(aws_session):
     qpu.refresh_metadata()
     assert qpu.arn == MockDevices.MOCK_RIGETTI_QPU_2.get("arn")
     assert qpu.name == MockDevices.MOCK_RIGETTI_QPU_2.get("name")
-    assert qpu.qubit_count == MockDevices.MOCK_RIGETTI_QPU_2.get("qubitCount")
-    assert qpu.connectivity_graph == MockDevices.MOCK_RIGETTI_QPU_2.get("connectivity").get(
-        "connectivityGraph"
-    )
-    assert qpu.supported_quantum_operations == MockDevices.MOCK_RIGETTI_QPU_2.get(
-        "supportedQuantumOperations"
-    )
+    assert qpu.qubit_count == MockDevices.MOCK_RIGETTI_QPU_2.get("properties").get(
+        "gateModelProperties"
+    ).get("qubitCount")
+    assert qpu.connectivity_graph == MockDevices.MOCK_RIGETTI_QPU_2.get("properties").get(
+        "gateModelProperties"
+    ).get("connectivity").get("connectivityGraph")
+    assert qpu.supported_quantum_operations == MockDevices.MOCK_RIGETTI_QPU_2.get("properties").get(
+        "gateModelProperties"
+    ).get("supportedQuantumOperations")
     assert qpu.status == MockDevices.MOCK_RIGETTI_QPU_2.get("status")
     assert qpu.status_reason == MockDevices.MOCK_RIGETTI_QPU_2.get("statusReason")
 
