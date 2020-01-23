@@ -17,3 +17,4 @@ from enum import Enum
 class AwsQpuArns(str, Enum):
     RIGETTI = "arn:aws:aqx:::qpu:rigetti"
     IONQ = "arn:aws:aqx:::qpu:ionq"
+    DWAVE = "arn:aws:aqx:::qpu:d-wave"

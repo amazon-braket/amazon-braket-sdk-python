@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from typing import Any, Dict
+
 import boto3
 from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -23,7 +25,11 @@ class AwsQpu(Device):
     Use this class to retrieve the latest metadata about the QPU, and run a circuit on the QPU.
     """
 
-    QPU_REGIONS = {AwsQpuArns.RIGETTI: ["us-west-1"], AwsQpuArns.IONQ: ["us-east-1"]}
+    QPU_REGIONS = {
+        AwsQpuArns.RIGETTI: ["us-west-1"],
+        AwsQpuArns.IONQ: ["us-east-1"],
+        AwsQpuArns.DWAVE: ["us-west-2"],
+    }
 
     def __init__(self, arn: str, aws_session=None):
         """
@@ -41,15 +47,10 @@ class AwsQpu(Device):
 
             See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the regions the QPUs are located in.
         """
-        super().__init__(
-            name=None, status=None, status_reason=None, supported_quantum_operations=None
-        )
+        super().__init__(name=None, status=None, status_reason=None)
         self._arn = arn
         self._aws_session = self._aws_session_for_qpu(arn, aws_session)
-        self._qubit_count: int = None
-        # TODO: convert into graph object of qubits, type TBD
-        self._connectivity_graph = None
-
+        self._properties = None
         self.refresh_metadata()
 
     def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
@@ -89,12 +90,12 @@ class AwsQpu(Device):
         self._name = qpu_metadata.get("name")
         self._status = qpu_metadata.get("status")
         self._status_reason = qpu_metadata.get("statusReason")
-        # TODO: convert string into gate types
-        qpu_properties = qpu_metadata.get("properties").get("gateModelProperties")
-        self._supported_quantum_operations = qpu_properties.get("supportedQuantumOperations")
-        self._qubit_count = qpu_properties.get("qubitCount")
-        if "connectivity" in qpu_properties:
-            self._connectivity_graph = qpu_properties.get("connectivity").get("connectivityGraph")
+        qpu_properties = qpu_metadata.get("properties")
+        self._properties = (
+            qpu_properties.get("annealingModelProperties", {}).get("dWaveProperties")
+            if "annealingModelProperties" in qpu_properties
+            else qpu_properties.get("gateModelProperties")
+        )
 
     @property
     def arn(self) -> str:
@@ -102,14 +103,9 @@ class AwsQpu(Device):
         return self._arn
 
     @property
-    def qubit_count(self) -> int:
-        """int: Return maximum number of qubits that can be run on QPU."""
-        return self._qubit_count
-
-    @property
-    def connectivity_graph(self):
-        """Return connectivity graph of QPU."""
-        return self._connectivity_graph
+    def properties(self) -> Dict[str, Any]:
+        """Dict[str, Any]: Return the qpu specific properties"""
+        return self._properties
 
     def _aws_session_for_qpu(self, qpu_arn: str, aws_session: AwsSession) -> AwsSession:
         """

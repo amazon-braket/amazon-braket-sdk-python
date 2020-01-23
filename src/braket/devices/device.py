@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import List
 
 from braket.tasks.quantum_task import QuantumTask
 
@@ -24,16 +23,12 @@ class Device(ABC):
     :param str name: name of quantum device
     :param str status: status of quantum device
     :param str status_reason: status reason of quantum device
-    :param List[str] supported_quantum_operations: supported quantum operations of quantum device
     """
 
-    def __init__(
-        self, name: str, status: str, status_reason: str, supported_quantum_operations: List[str]
-    ):
+    def __init__(self, name: str, status: str, status_reason: str):
         self._name = name
         self._status = status
         self._status_reason = status_reason
-        self._supported_quantum_operations = supported_quantum_operations
 
     @abstractmethod
     def run(self, circuit, shots: int) -> QuantumTask:
@@ -72,12 +67,3 @@ class Device(ABC):
         :rtype: str
         """
         return self._status_reason
-
-    @property
-    def supported_quantum_operations(self) -> List[str]:
-        """
-        Return supported quantum operations of Device
-
-        :rtype: List[str]
-        """
-        return self._supported_quantum_operations

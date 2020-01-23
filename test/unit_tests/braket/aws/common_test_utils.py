@@ -50,6 +50,79 @@ class MockDevices:
         "statusReason": "Under maintenance",
     }
 
+    MOCK_DWAVE_QPU_1 = {
+        "arn": AwsQpuArns.DWAVE,
+        "properties": {
+            "annealingModelProperties": {
+                "dWaveProperties": {
+                    "activeQubitCount": 2,
+                    "annealingOffsetStep": 2.0,
+                    "annealingOffsetStepPhi0": 4.0,
+                    "annealingOffsetRanges": [[1.34, 5.23], [3.24, 1.44]],
+                    "annealingDurationRange": [3, 5],
+                    "couplers": [[1, 2]],
+                    "defaultAnnealingDuration": 4,
+                    "defaultProgrammingThermalizationDuration": 2,
+                    "defaultReadoutThermalizationDuration": 1,
+                    "extendedJRange": [3.0, 4.0],
+                    "hGainScheduleRange": [2.0, 3.0],
+                    "hRange": [3.4, 5.6],
+                    "jRange": [1.0, 2.0],
+                    "maximumAnnealingSchedulePoints": 3,
+                    "maximumHGainSchedulePoints": 2,
+                    "qubitCount": 3,
+                    "qubits": [0, 2],
+                    "perQubitCouplingRange": [1.0, 3.0],
+                    "programmingThermalizationDurationRange": [1, 2],
+                    "quotaConversionRate": 2.5,
+                    "readoutThermalizationDurationRange": [4, 6],
+                    "shotsRange": [3, 5],
+                    "taskRunDurationRange": [3, 6],
+                    "topology": {"type": "chimera", "topology": [1, 1, 1]},
+                }
+            }
+        },
+        "name": "D-Wave",
+        "status": "AVAILABLE",
+    }
+
+    MOCK_DWAVE_QPU_2 = {
+        "arn": AwsQpuArns.DWAVE,
+        "properties": {
+            "annealingModelProperties": {
+                "dWaveProperties": {
+                    "activeQubitCount": 3,
+                    "annealingOffsetStep": 2.0,
+                    "annealingOffsetStepPhi0": 4.0,
+                    "annealingOffsetRanges": [[1.34, 5.23], [3.24, 1.44]],
+                    "annealingDurationRange": [3, 5],
+                    "couplers": [[1, 2]],
+                    "defaultAnnealingDuration": 4,
+                    "defaultProgrammingThermalizationDuration": 2,
+                    "defaultReadoutThermalizationDuration": 1,
+                    "extendedJRange": [3.0, 4.0],
+                    "hGainScheduleRange": [2.0, 3.0],
+                    "hRange": [3.4, 5.6],
+                    "jRange": [1.0, 2.0],
+                    "maximumAnnealingSchedulePoints": 3,
+                    "maximumHGainSchedulePoints": 2,
+                    "qubitCount": 3,
+                    "qubits": [0, 1, 2],
+                    "perQubitCouplingRange": [1.0, 3.0],
+                    "programmingThermalizationDurationRange": [1, 2],
+                    "quotaConversionRate": 2.5,
+                    "readoutThermalizationDurationRange": [4, 6],
+                    "shotsRange": [3, 5],
+                    "taskRunDurationRange": [3, 6],
+                    "topology": {"type": "chimera", "topology": [1, 1, 1]},
+                }
+            }
+        },
+        "name": "D-Wave",
+        "status": "UNAVAILABLE",
+        "statusReason": "Under maintenance",
+    }
+
     MOCK_IONQ_QPU = {
         "arn": AwsQpuArns.IONQ,
         "properties": {

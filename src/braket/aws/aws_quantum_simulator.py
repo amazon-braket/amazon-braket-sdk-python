@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from typing import Any, Dict
+
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.devices.device import Device
@@ -29,13 +31,10 @@ class AwsQuantumSimulator(Device):
             arn (str): Simulator type ARN e.g. "arn:aws:aqx:::quantum-simulator:aqx:qs1".
             aws_session (AwsSession, optional) aws_session: AWS session object. Default = None.
         """
-        super().__init__(
-            name=None, status=None, status_reason=None, supported_quantum_operations=None
-        )
+        super().__init__(name=None, status=None, status_reason=None)
         self._arn = arn
         self._aws_session = aws_session or AwsSession()
-        self._qubit_count: int = None
-
+        self._properties: Dict[str, Any] = None
         self.refresh_metadata()
 
     def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
@@ -73,9 +72,9 @@ class AwsQuantumSimulator(Device):
         self._name = simulator_metadata.get("name")
         self._status = simulator_metadata.get("status")
         self._status_reason = simulator_metadata.get("statusReason")
-        # TODO: convert string into gate types
-        self._supported_quantum_operations = simulator_metadata.get("supportedQuantumOperations")
-        self._qubit_count = simulator_metadata.get("qubitCount")
+        self._properties = {
+            k: simulator_metadata.get(k) for k in ["supportedQuantumOperations", "qubitCount"]
+        }
 
     @property
     def arn(self) -> str:
@@ -83,9 +82,9 @@ class AwsQuantumSimulator(Device):
         return self._arn
 
     @property
-    def qubit_count(self) -> int:
-        """int: Return maximum number of qubits that can be run on simulator."""
-        return self._qubit_count
+    def properties(self) -> Dict[str, Any]:
+        """Dict[str, Any]: Return the simulator specific properties"""
+        return self._properties
 
     def __repr__(self):
         return f"QuantumSimulator('name': {self.name}, 'arn': {self.arn})"

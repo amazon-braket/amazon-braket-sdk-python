@@ -121,39 +121,34 @@ def test_no_aws_session_supplied(boto_session_init, aws_session_init, boto_sessi
     aws_session.get_qpu_metadata.assert_called_with(arn)
 
 
-def test_qpu_refresh_metadata_success(aws_session):
-    aws_session.get_qpu_metadata.return_value = MockDevices.MOCK_RIGETTI_QPU_1
-    qpu = AwsQpu(AwsQpuArns.RIGETTI, aws_session)
-    assert qpu.arn == MockDevices.MOCK_RIGETTI_QPU_1.get("arn")
-    assert qpu.name == MockDevices.MOCK_RIGETTI_QPU_1.get("name")
-    assert qpu.qubit_count == MockDevices.MOCK_RIGETTI_QPU_1.get("properties").get(
-        "gateModelProperties"
-    ).get("qubitCount")
-    assert qpu.connectivity_graph == MockDevices.MOCK_RIGETTI_QPU_1.get("properties").get(
-        "gateModelProperties"
-    ).get("connectivity").get("connectivityGraph")
-    assert qpu.supported_quantum_operations == MockDevices.MOCK_RIGETTI_QPU_1.get("properties").get(
-        "gateModelProperties"
-    ).get("supportedQuantumOperations")
-    assert qpu.status == MockDevices.MOCK_RIGETTI_QPU_1.get("status")
-    assert qpu.status_reason is None
+@pytest.mark.parametrize(
+    "qpu_arn, properties_keys, initial_qpu_data, modified_qpu_data",
+    [
+        (
+            AwsQpuArns.RIGETTI,
+            ["gateModelProperties"],
+            MockDevices.MOCK_RIGETTI_QPU_1,
+            MockDevices.MOCK_RIGETTI_QPU_2,
+        ),
+        (
+            AwsQpuArns.DWAVE,
+            ["annealingModelProperties", "dWaveProperties"],
+            MockDevices.MOCK_DWAVE_QPU_1,
+            MockDevices.MOCK_DWAVE_QPU_2,
+        ),
+    ],
+)
+def test_qpu_refresh_metadata_success(
+    aws_session, qpu_arn, properties_keys, initial_qpu_data, modified_qpu_data
+):
+    aws_session.get_qpu_metadata.return_value = initial_qpu_data
+    qpu = AwsQpu(qpu_arn, aws_session)
+    _assert_qpu_fields(qpu, properties_keys, initial_qpu_data)
 
     # describe_qpus now returns new metadata
-    aws_session.get_qpu_metadata.return_value = MockDevices.MOCK_RIGETTI_QPU_2
+    aws_session.get_qpu_metadata.return_value = modified_qpu_data
     qpu.refresh_metadata()
-    assert qpu.arn == MockDevices.MOCK_RIGETTI_QPU_2.get("arn")
-    assert qpu.name == MockDevices.MOCK_RIGETTI_QPU_2.get("name")
-    assert qpu.qubit_count == MockDevices.MOCK_RIGETTI_QPU_2.get("properties").get(
-        "gateModelProperties"
-    ).get("qubitCount")
-    assert qpu.connectivity_graph == MockDevices.MOCK_RIGETTI_QPU_2.get("properties").get(
-        "gateModelProperties"
-    ).get("connectivity").get("connectivityGraph")
-    assert qpu.supported_quantum_operations == MockDevices.MOCK_RIGETTI_QPU_2.get("properties").get(
-        "gateModelProperties"
-    ).get("supportedQuantumOperations")
-    assert qpu.status == MockDevices.MOCK_RIGETTI_QPU_2.get("status")
-    assert qpu.status_reason == MockDevices.MOCK_RIGETTI_QPU_2.get("statusReason")
+    _assert_qpu_fields(qpu, properties_keys, modified_qpu_data)
 
 
 def test_qpu_refresh_metadata_error(aws_session):
@@ -214,3 +209,15 @@ def _run_and_assert(aws_quantum_task_mock, qpu, run_args, run_kwargs):
     task = qpu.run(*run_args, **run_kwargs)
     assert task == task_mock
     aws_quantum_task_mock.assert_called_with(qpu._aws_session, qpu.arn, *run_args, **run_kwargs)
+
+
+def _assert_qpu_fields(qpu, properties_keys, expected_qpu_data):
+    assert qpu.arn == expected_qpu_data.get("arn")
+    assert qpu.name == expected_qpu_data.get("name")
+    expected_qpu_properties = expected_qpu_data.get("properties")
+    for key in properties_keys:
+        expected_qpu_properties = expected_qpu_properties.get(key)
+    for property_name in expected_qpu_properties:
+        assert qpu.properties[property_name] == expected_qpu_properties.get(property_name)
+    assert qpu.status == expected_qpu_data.get("status")
+    assert qpu.status_reason == expected_qpu_data.get("statusReason")
