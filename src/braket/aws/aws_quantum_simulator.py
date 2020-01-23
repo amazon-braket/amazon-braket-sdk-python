@@ -82,6 +82,7 @@ class AwsQuantumSimulator(Device):
         return self._arn
 
     @property
+    # TODO: Add a link to the boto3 docs
     def properties(self) -> Dict[str, Any]:
         """Dict[str, Any]: Return the simulator specific properties"""
         return self._properties
