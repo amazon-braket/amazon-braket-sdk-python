@@ -46,8 +46,8 @@ def test_simulator_refresh_metadata_success():
     simulator = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1, mock_session)
     assert simulator.arn == expected_metadata.get("arn")
     assert simulator.name == expected_metadata.get("name")
-    assert simulator.qubit_count == expected_metadata.get("qubitCount")
-    assert simulator.supported_quantum_operations == expected_metadata.get(
+    assert simulator.properties["qubitCount"] == expected_metadata.get("qubitCount")
+    assert simulator.properties["supportedQuantumOperations"] == expected_metadata.get(
         "supportedQuantumOperations"
     )
     assert simulator.status == expected_metadata.get("status")
@@ -59,8 +59,8 @@ def test_simulator_refresh_metadata_success():
     simulator.refresh_metadata()
     assert simulator.arn == expected_metadata.get("arn")
     assert simulator.name == expected_metadata.get("name")
-    assert simulator.qubit_count == expected_metadata.get("qubitCount")
-    assert simulator.supported_quantum_operations == expected_metadata.get(
+    assert simulator.properties["qubitCount"] == expected_metadata.get("qubitCount")
+    assert simulator.properties["supportedQuantumOperations"] == expected_metadata.get(
         "supportedQuantumOperations"
     )
     assert simulator.status == expected_metadata.get("status")
