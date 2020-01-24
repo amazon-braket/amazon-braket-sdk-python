@@ -15,12 +15,12 @@ import asyncio
 import time
 from typing import Any, Dict
 
-from braket.aws.aws_quantum_task_result import AwsQuantumTaskResult
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
-from braket.tasks import QuantumTask
+from braket.tasks import GateModelQuantumTaskResult, QuantumTask
 
 
+# TODO: add AnnealingQuantumTaskResult
 class AwsQuantumTask(QuantumTask):
     """Amazon Braket implementation of a quantum task."""
 
@@ -99,7 +99,7 @@ class AwsQuantumTask(QuantumTask):
         self._poll_interval_seconds = poll_interval_seconds
 
         self._metadata: Dict[str, Any] = {}
-        self._result: AwsQuantumTaskResult = None
+        self._result: GateModelQuantumTaskResult = None
         self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
 
     @property
@@ -150,7 +150,7 @@ class AwsQuantumTask(QuantumTask):
         """
         return self.metadata(use_cached_value).get("status")
 
-    def result(self) -> AwsQuantumTaskResult:
+    def result(self) -> GateModelQuantumTaskResult:
         """
         Get the quantum task result by polling Amazon Braket to see if the task is completed. Once
         the task is completed the result is retrieved from S3 and returned as a QuantumTaskResult.
@@ -191,12 +191,12 @@ class AwsQuantumTask(QuantumTask):
         """
         return asyncio.create_task(self._wait_for_completion())
 
-    async def _wait_for_completion(self) -> AwsQuantumTaskResult:
+    async def _wait_for_completion(self) -> GateModelQuantumTaskResult:
         """
         Waits for the quantum task to be completed and returns back result from S3.
 
         Returns:
-            AwsQuantumTaskResult: If the task ends up in the `AwsQuantumTask.RESULTS_READY_STATES`
+            GateModelQuantumTaskResult: If the task is in the `AwsQuantumTask.RESULTS_READY_STATES`
             state within the time limit then the result from S3 is loaded and returned. None is
             returned if a timeout occurs or task state is in `AwsQuantumTask.TERMINAL_STATES`
             but not `AwsQuantumTask.RESULTS_READY_STATES`.
@@ -213,7 +213,7 @@ class AwsQuantumTask(QuantumTask):
                 result_string = self._aws_session.retrieve_s3_object_body(
                     current_metadata["resultsS3Bucket"], current_metadata["resultsS3ObjectKey"]
                 )
-                self._result = AwsQuantumTaskResult.from_string(result_string)
+                self._result = GateModelQuantumTaskResult.from_string(result_string)
                 return self._result
             elif current_metadata["status"] in AwsQuantumTask.TERMINAL_STATES:
                 self._result = None
