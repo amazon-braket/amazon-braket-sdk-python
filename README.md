@@ -7,7 +7,10 @@ Before you begin working with the Amazon Braket SDK, make sure that you've insta
 
 ### Conda
 Use the instructions for installing Conda from https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html.
-Choose a regular installation, and then choose the Anaconda installer. Conda also installs Python, which is required for other steps in this document.
+Choose a regular installation, and then choose the Anaconda installer. Conda also installs Python, which is required for other steps in this document. Download and install the **Python 3.7 version** of Anaconda.
+
+#### Using a Virtual Environment
+For information about Conda and virtual environments, see [Conda vs. pip vs. virtualenv commands](https://docs.conda.io/projects/conda/en/latest/commands.html#conda-vs-pip-vs-virtualenv-commands).
 
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
@@ -56,8 +59,8 @@ Use the steps in this section to install and configure the Braket Python SDK for
  
 ### Install the braket-python-sdk package
 Use the following commands to install the Braket Python SDK package. If you receive an error related to SSH, see the following information to create and add an SSH key to your GitHub account.
-[Generate a new SSH key](https://help.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-[Add an SSH Key to Your Account](https://help.github.com/en/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account)
+- [Generate a new SSH key](https://help.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+- [Add an SSH Key to Your Account](https://help.github.com/en/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account)
 
 ```bash
 git clone https://github.com/aws/braket-python-sdk.git --branch stable/latest
@@ -107,26 +110,18 @@ bell = Circuit().h(0).cnot(0, 1)
 print(device.run(bell, s3_folder).result().measurement_counts)
 ```
 #### To test your configuration using a Jupyter notebook
-1. Use the following command to install [Jupyter](https://jupyter.org/install):
-```bash
-pip install jupyter ipykernel
-```
+See [Installing the Jupyter Software](https://jupyter.org/install) for information about how to install Jupyter. You can use either JupyterLab or classic Jupyter Notebook.
 
-2. Run the following command to create a Braket kernel:
-```bash
-python -m ipykernel install --user --name braket
-```
-
-3. Use this command to open a Jupyter notebook so you can use the SDK within the notebook:
+After you have installed Jupyter, use this command to open a Jupyter notebook so you can use the SDK within the notebook:
 ```bash
 jupyter notebook
 ```
 Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **Python3**.
 
-4. Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. The entry should look similar to the following:
+Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. The entry should look similar to the following:
 `s3_folder = ("braket-output-123456789012", "folder-name")`
 
-5. Choose **Run** to execute the code to confirm that your environment is configured correctly.
+Choose **Run** to execute the code to confirm that your environment is configured correctly.
 
 When the job completes, you should see output similar to the following:
 `Counter({'00': 519, '11': 481})`
