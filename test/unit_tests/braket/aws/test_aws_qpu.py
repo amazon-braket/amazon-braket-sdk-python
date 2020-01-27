@@ -13,7 +13,6 @@
 
 from unittest.mock import Mock, patch
 
-import braket.aws.aws_qpu  # noqa F401
 import pytest
 from braket.aws import AwsQpu, AwsQpuArns
 from braket.circuits import Circuit

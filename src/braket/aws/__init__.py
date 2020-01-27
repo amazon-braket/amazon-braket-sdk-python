@@ -16,5 +16,4 @@ from braket.aws.aws_qpu_arns import AwsQpuArns  # noqa: F401
 from braket.aws.aws_quantum_simulator import AwsQuantumSimulator  # noqa: F401
 from braket.aws.aws_quantum_simulator_arns import AwsQuantumSimulatorArns  # noqa: F401
 from braket.aws.aws_quantum_task import AwsQuantumTask  # noqa: F401
-from braket.aws.aws_quantum_task_result import AwsQuantumTaskResult  # noqa: F401
 from braket.aws.aws_session import AwsSession  # noqa: F401
