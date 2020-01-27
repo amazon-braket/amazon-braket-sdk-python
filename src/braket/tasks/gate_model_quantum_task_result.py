@@ -11,16 +11,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import json
 from dataclasses import dataclass
-from typing import Counter, Dict
+from typing import Any, Counter, Dict
 
 import numpy as np
 
 
 @dataclass
-class QuantumTaskResult:
+class GateModelQuantumTaskResult:
     """
-    Result of a quantum task execution. This class is intended
+    Result of a gate model quantum task execution. This class is intended
     to be initialized by a QuantumTask class.
 
     Args:
@@ -37,6 +38,8 @@ class QuantumTaskResult:
         measurement_probabilities_copied_from_device (bool): flag whether
             `measurement_probabilities` were copied from device. If false,
             `measurement_probabilities` are calculated from device data.
+        task_metadata (Dict[str, Any]): Dictionary of task metadata. TODO: Link boto3 docs.
+        state_vector (Dict[str, complex]): Dictionary where key is state and value is amplitude.
     """
 
     measurements: np.ndarray
@@ -45,13 +48,17 @@ class QuantumTaskResult:
     measurements_copied_from_device: bool
     measurement_counts_copied_from_device: bool
     measurement_probabilities_copied_from_device: bool
+    task_metadata: Dict[str, Any]
+    state_vector: Dict[str, complex] = None
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, QuantumTaskResult):
+        if isinstance(other, GateModelQuantumTaskResult):
             # __eq__ on numpy arrays results in an array of booleans and therefore can't use
             # the default dataclass __eq__ implementation. Override equals to check if all
             # elements in the array are equal.
-            return (self.measurements == other.measurements).all()
+            self_fields = (self.task_metadata, self.state_vector)
+            other_fields = (other.task_metadata, other.state_vector)
+            return (self.measurements == other.measurements).all() and self_fields == other_fields
         return NotImplemented
 
     @staticmethod
@@ -120,3 +127,50 @@ class QuantumTaskResult:
             )
             measurements_list.extend(individual_measurement_list)
         return np.asarray(measurements_list, dtype=int)
+
+    @staticmethod
+    def from_string(result: str) -> "GateModelQuantumTaskResult":
+        """
+        Create GateModelQuantumTaskResult from string
+
+        Args:
+            result (str): JSON object string, whose keys are GateModelQuantumTaskResult attributes.
+
+        Returns:
+            GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on a string
+        """
+        json_obj = json.loads(result)
+        task_metadata = json_obj["TaskMetadata"]
+        state_vector = json_obj.get("StateVector", None)
+        if state_vector:
+            for state in state_vector:
+                state_vector[state] = complex(*state_vector[state])
+        if "Measurements" in json_obj:
+            measurements = np.asarray(json_obj["Measurements"], dtype=int)
+            m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
+            m_probs = GateModelQuantumTaskResult.measurement_probabilities_from_measurement_counts(
+                m_counts
+            )
+            measurements_copied_from_device = True
+            m_counts_copied_from_device = False
+            m_probabilities_copied_from_device = False
+        elif "MeasurementProbabilities" in json_obj:
+            shots = task_metadata["Shots"]
+            m_probs = json_obj["MeasurementProbabilities"]
+            measurements = GateModelQuantumTaskResult.measurements_from_measurement_probabilities(
+                m_probs, shots
+            )
+            m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
+            measurements_copied_from_device = False
+            m_counts_copied_from_device = False
+            m_probabilities_copied_from_device = True
+        return GateModelQuantumTaskResult(
+            state_vector=state_vector,
+            task_metadata=task_metadata,
+            measurements=measurements,
+            measurement_counts=m_counts,
+            measurement_probabilities=m_probs,
+            measurements_copied_from_device=measurements_copied_from_device,
+            measurement_counts_copied_from_device=m_counts_copied_from_device,
+            measurement_probabilities_copied_from_device=m_probabilities_copied_from_device,
+        )

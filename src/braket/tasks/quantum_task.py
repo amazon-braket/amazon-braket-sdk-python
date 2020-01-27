@@ -13,8 +13,10 @@
 
 import asyncio
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Union
 
-from braket.tasks.quantum_task_result import QuantumTaskResult
+from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
+from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
 
 
 class QuantumTask(ABC):
@@ -34,12 +36,24 @@ class QuantumTask(ABC):
         """str: State of the quantum task"""
 
     @abstractmethod
-    def result(self) -> QuantumTaskResult:
+    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
-        QuantumTaskResult: Get the quantum task result. Call async_result if you want the
-        result in an async way.
+        Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: Get the quantum task result.
+        Call async_result if you want the result in an async way.
         """
 
     @abstractmethod
     def async_result(self) -> asyncio.Task:
         """asyncio.Task: Get the quantum task result asynchronously."""
+
+    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+        """
+        Get task metadata.
+
+        Args:
+            use_cached_value (bool, optional): If true returns the last value retrieved
+
+        Returns:
+            Dict[str, Any]: The metadata regarding the task If `use_cached_value` is True
+            then the last value retrieved is returned.
+        """

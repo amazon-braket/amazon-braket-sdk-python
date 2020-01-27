@@ -15,9 +15,10 @@ import asyncio
 from unittest.mock import Mock
 
 import pytest
-from braket.aws import AwsQuantumTask, AwsQuantumTaskResult
+from braket.aws import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.tasks import GateModelQuantumTaskResult
 from common_test_utils import MockS3
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
@@ -113,7 +114,7 @@ def test_result(quantum_task):
     _mock_state(quantum_task._aws_session, "COMPLETED")
     _mock_s3(quantum_task._aws_session, MockS3.MOCK_S3_RESULT_1)
 
-    expected = AwsQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
     assert quantum_task.result() == expected
 
     s3_bucket = quantum_task.metadata()["resultsS3Bucket"]
@@ -127,7 +128,7 @@ def test_result_is_cached(quantum_task):
     quantum_task.result()
 
     _mock_s3(quantum_task._aws_session, MockS3.MOCK_S3_RESULT_2)
-    expected = AwsQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
     assert quantum_task.result() == expected
 
 
@@ -156,7 +157,7 @@ def test_async_result(quantum_task):
     # via future.result(). Note that this would fail if the future is not complete.
     result_from_future = future.result()
 
-    expected = AwsQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
     assert result_from_callback == expected
     assert result_from_waiting == expected
     assert result_from_future == expected
@@ -180,7 +181,7 @@ def test_timeout(aws_session):
     assert quantum_task.result() is None
 
     _mock_state(aws_session, "COMPLETED")
-    assert quantum_task.result() == AwsQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
+    assert quantum_task.result() == GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
 
 
 @pytest.mark.xfail(raises=ValueError)
