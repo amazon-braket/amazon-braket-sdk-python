@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from typing import Any, Counter, Dict
@@ -129,7 +131,7 @@ class GateModelQuantumTaskResult:
         return np.asarray(measurements_list, dtype=int)
 
     @staticmethod
-    def from_string(result: str) -> "GateModelQuantumTaskResult":
+    def from_string(result: str) -> GateModelQuantumTaskResult:
         """
         Create GateModelQuantumTaskResult from string
 

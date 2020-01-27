@@ -43,9 +43,9 @@ class AwsQuantumSimulator(Device):
 
         Args:
             *aws_quantum_task_args: Variable length positional arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`.
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`.
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
 
         Returns:
             AwsQuantumTask: AwsQuantumTask that is tracking the circuit execution on the device.
@@ -60,9 +60,9 @@ class AwsQuantumSimulator(Device):
             >>> device.run(circuit=circuit, s3_destination_folder=("bucket-foo", "key-bar"))
 
         See Also:
-            `braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`
+            `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        return AwsQuantumTask.from_circuit(
+        return AwsQuantumTask.create(
             self._aws_session, self._arn, *aws_quantum_task_args, **aws_quantum_task_kwargs
         )
 

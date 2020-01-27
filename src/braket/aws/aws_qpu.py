@@ -22,7 +22,7 @@ from braket.devices.device import Device
 class AwsQpu(Device):
     """
     Amazon Braket implementation of a QPU.
-    Use this class to retrieve the latest metadata about the QPU, and run a circuit on the QPU.
+    Use this class to retrieve the latest metadata about the QPU, and run a quantum task on the QPU.
     """
 
     QPU_REGIONS = {
@@ -55,16 +55,16 @@ class AwsQpu(Device):
 
     def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
         """
-        Run a circuit on this AWS quantum device.
+        Run a quantum task description (circuit or annealing program) on this AWS quantum device.
 
         Args:
             *aws_quantum_task_args: Variable length positional arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`.
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`.
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
 
         Returns:
-            AwsQuantumTask: AwsQuantumTask that is tracking the circuit execution on the device.
+            AwsQuantumTask: AwsQuantumTask that tracks the execution on the device.
 
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
@@ -73,12 +73,15 @@ class AwsQpu(Device):
 
             >>> circuit = Circuit().h(0).cnot(0, 1)
             >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
-            >>> device.run(circuit=circuit, s3_destination_folder=("bucket-foo", "key-bar"))
+            >>> device.run(task_description=circuit,
+            >>>     s3_destination_folder=("bucket-foo", "key-bar"))
 
         See Also:
-            `braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit()`
+            `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        return AwsQuantumTask.from_circuit(
+
+        # TODO: Restrict execution to compatible task types
+        return AwsQuantumTask.create(
             self._aws_session, self._arn, *aws_quantum_task_args, **aws_quantum_task_kwargs
         )
 

@@ -179,12 +179,12 @@ def test_repr(qpu):
     assert repr(qpu) == expected
 
 
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
     _run_and_assert(aws_quantum_task_mock, qpu, [circuit, s3_destination_folder], {})
 
 
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
     _run_and_assert(
         aws_quantum_task_mock,
@@ -194,7 +194,7 @@ def test_run_with_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_fol
     )
 
 
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args_and_kwargs(
     aws_quantum_task_mock, qpu, circuit, s3_destination_folder
 ):

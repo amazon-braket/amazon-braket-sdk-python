@@ -216,3 +216,37 @@ class MockS3:
             "MeasurementProbabilities": {"011000": 0.9999999999999982},
         }
     )
+
+    MOCK_S3_RESULT_4 = json.dumps(
+        {
+            "Solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
+            "VariableCount": 4,
+            "Values": [0.0, 1.0, 2.0],
+            "SolutionCounts": None,
+            "ProblemType": "ising",
+            "DWaveMetadata": {
+                "ActiveVariables": [0],
+                "Timing": {
+                    "QpuSamplingTime": 1575,
+                    "QpuAnnealTimePerSample": 20,
+                    "QpuReadoutTimePerSample": 274,
+                    "QpuAccessTime": 10917,
+                    "QpuAccessOverheadTime": 3382,
+                    "QpuProgrammingTime": 9342,
+                    "QpuDelayTimePerSample": 21,
+                    "TotalPostProcessingTime": 117,
+                    "PostProcessingOverheadTime": 117,
+                    "TotalRealTime": 10917,
+                    "RunTimeChip": 1575,
+                    "AnnealTimePerRun": 20,
+                    "ReadoutTimePerRun": 274,
+                },
+            },
+            "TaskMetadata": {
+                "Id": "UUID_blah_1",
+                "Status": "COMPLETED",
+                "BackendArn": AwsQpuArns.DWAVE,
+                "Shots": 5,
+            },
+        }
+    )
