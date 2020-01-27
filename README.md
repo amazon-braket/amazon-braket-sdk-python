@@ -9,9 +9,26 @@ Before you begin working with the Amazon Braket SDK, make sure that you've insta
 Use the instructions for installing Conda from https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html.
 Choose a regular installation, and then choose the Anaconda installer. Conda also installs Python, which is required for other steps in this document. Download and install the **Python 3.7 version** of Anaconda.
 
-#### Using a Virtual Environment
+### Using a Virtual Environment
 For information about Conda and virtual environments, see [Conda vs. pip vs. virtualenv commands](https://docs.conda.io/projects/conda/en/latest/commands.html#conda-vs-pip-vs-virtualenv-commands).
 
+#### Creating a virtual environment
+Use a virtual environment to interact with Amazon Braket to avoid changes to your global environment variables. The following commands  create aand activate a virtual environment in Conda. If you want to use a name for the environment other than `yourenvname`, just change the value to the name you want to use. You may want to create folder in the file system to create the virtual environment.
+Use the following command to create a directory
+`mkdir braket`
+
+Then use the following command to move the cursor to the directory you created
+`cd braket`
+
+```bash
+conda create -n braketvirtenv python=3.7 anaconda
+```
+Press **y** when asked to confirm. 
+
+Then run the following command to activate the virtual environment. If you changed the environment name in the preceding command, be sure to change in this command as well.
+```bash
+source activate braketvirtenv
+```
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
 
@@ -156,6 +173,16 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 - **IonQ** "arn:aws:aqx:::qpu:ionq"
 - **Rigetti** "arn:aws:aqx:::qpu:rigetti"
 - **D-Wave** Not yet available
+
+### Deactivat the virtual environment
+After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command. 
+
+```bash
+source deactivate
+```
+
+When you want to use it again, you can reactivate it.
+
 
 ## Updating to the latest release
 We will periodically make updates and changes the SDK or the model. When you are notified of a change that requires action on your part, use the following steps to update your environment to the latest version.
