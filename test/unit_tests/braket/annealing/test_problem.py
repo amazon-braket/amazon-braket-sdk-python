@@ -15,13 +15,10 @@ from braket.annealing.problem import Problem, ProblemType
 
 
 def test_creation():
-    problem = Problem(
-        ProblemType.ISING, linear={1: 3.14}, quadratic={(1, 2): 10.08}, parameters={"foo": "bar"}
-    )
+    problem = Problem(ProblemType.ISING, linear={1: 3.14}, quadratic={(1, 2): 10.08})
     assert problem.problem_type == ProblemType.ISING
     assert problem.linear == {1: 3.14}
     assert problem.quadratic == {(1, 2): 10.08}
-    assert problem.parameters == {"foo": "bar"}
 
 
 def test_add_linear_term():
@@ -48,25 +45,8 @@ def test_add_quadratic_terms():
     assert problem.quadratic == {(1, 2): 10.08}
 
 
-def test_add_parameter():
-    problem = Problem(ProblemType.QUBO)
-    problem.add_parameter("foo", "bar")
-    assert problem.parameters == {"foo": "bar"}
-
-
-def test_add_parameters():
-    problem = Problem(ProblemType.QUBO)
-    problem.add_parameters({"foo": "bar"})
-    assert problem.parameters == {"foo": "bar"}
-
-
 def test__to_ir():
-    problem = (
-        Problem(ProblemType.QUBO)
-        .add_linear_term(1, 3.14)
-        .add_quadratic_term((1, 2), 10.08)
-        .add_parameter("foo", "bar")
-    )
+    problem = Problem(ProblemType.QUBO).add_linear_term(1, 3.14).add_quadratic_term((1, 2), 10.08)
     assert problem.to_ir() == ir.Problem(
         type=ir.ProblemType.QUBO, linear={1: 3.14}, quadratic={"1,2": 10.08}
     )

@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Dict, Tuple
+from typing import Dict, Tuple
 
 import braket.ir.annealing as ir
 
@@ -39,7 +39,6 @@ class Problem:
         problem_type: ProblemType,
         linear: Dict[int, float] = None,
         quadratic: Dict[Tuple[int, int], float] = None,
-        parameters: Dict[str, Any] = None,
     ):
         """
 
@@ -49,22 +48,18 @@ class Problem:
                 as a map of variable to coefficient
             quadratic (Dict[Tuple[int, int], float]): The quadratic terms of this problem,
                 as a map of variables to coefficient
-            parameters (Dict[str, Any]): The parameters to pass into the device,
-                as a of parameter name to value
 
         Examples:
             >>> problem = Problem(
             >>>     ProblemType.ISING,
             >>>     linear={1: 3.14},
             >>>     quadratic={(1, 2): 10.08},
-            >>>     parameters={"foo": "bar"}
             >>> )
             >>> problem.add_linear_term(2, 1.618).add_quadratic_term((3, 4), 1337)
         """
         self._problem_type = problem_type
         self._linear = linear or {}
         self._quadratic = quadratic or {}
-        self._parameters = parameters or {}
 
     @property
     def problem_type(self) -> ProblemType:
@@ -93,15 +88,6 @@ class Problem:
                 as a map of variables to coefficient
         """
         return self._quadratic
-
-    @property
-    def parameters(self) -> Dict[str, Any]:
-        """ The parameters to pass into the device along with this problem.
-
-        Returns:
-            Dict[str, Any]: The parameters to pass into the device, as a of parameter name to value
-        """
-        return self._parameters
 
     def add_linear_term(self, term: int, coefficient: float) -> Problem:
         """ Adds a linear term to the problem.
@@ -151,31 +137,6 @@ class Problem:
             Problem: This problem object
         """
         self._quadratic.update(coefficients)
-        return self
-
-    def add_parameter(self, name: str, value) -> Problem:
-        """ Adds a parameter to pass into the device with the problem.
-
-        Args:
-            name (str): The name of the parameter
-            value: The value of the parameter
-
-        Returns:
-            Problem: This problem object
-        """
-        self._parameters[name] = value
-        return self
-
-    def add_parameters(self, parameters: Dict[str, Any]) -> Problem:
-        """ Adds parameters to pass into the device with the problem.
-
-        Args:
-            parameters: A map of parameter name to value
-
-        Returns:
-            Problem: This problem object
-        """
-        self._parameters.update(parameters)
         return self
 
     def to_ir(self):
