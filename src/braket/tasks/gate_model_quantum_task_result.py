@@ -140,8 +140,11 @@ class GateModelQuantumTaskResult:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on a string
         """
         json_obj = json.loads(result)
-        state_vector = json_obj.get("StateVector", None)
         task_metadata = json_obj["TaskMetadata"]
+        state_vector = json_obj.get("StateVector", None)
+        if state_vector:
+            for state in state_vector:
+                state_vector[state] = complex(*state_vector[state])
         if "Measurements" in json_obj:
             measurements = np.asarray(json_obj["Measurements"], dtype=int)
             m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
@@ -151,7 +154,7 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device = True
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = False
-        if "MeasurementProbabilities" in json_obj:
+        elif "MeasurementProbabilities" in json_obj:
             shots = task_metadata["Shots"]
             m_probs = json_obj["MeasurementProbabilities"]
             measurements = GateModelQuantumTaskResult.measurements_from_measurement_probabilities(
@@ -161,10 +164,6 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device = False
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = True
-        if "StateVector" in json_obj:
-            state_vector = json_obj.get("StateVector", None)
-            for state in state_vector:
-                state_vector[state] = complex(*state_vector[state])
         return GateModelQuantumTaskResult(
             state_vector=state_vector,
             task_metadata=task_metadata,
