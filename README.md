@@ -160,9 +160,9 @@ The code sample imports the Amazon Braket framework, then defines the execution 
 
 ### Available Simulators
 There are currently three simulators available for Amazon Braket. To specify which simulator to use, change the code sample to replace the value for the `AwsQuantumSimulator` to one of the following values:
-- `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the distribution - an array of bit strings that appears as though it came from a quantum computer. Outputs only shots and does not provide a state vector. 
-- `arn:aws:aqx:::quantum-simulator:aqx:qs2` – a TensorNetwork simulator. Provides an approximation of running a job on a quantum computer.
--	`arn:aws:aqx:::quantum-simulator:aqx:qs3` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. This simulator samples from the distribution but includes the entire state vector. This generates more data, and therefore incurs additional costs for storage of data in Amazon S3.
+- `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector. 
+- `arn:aws:aqx:::quantum-simulator:aqx:qs2` – a tensor network simulator. Provides an approximation of running a job on a quantum computer.
+-	`arn:aws:aqx:::quantum-simulator:aqx:qs3` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples from the state vector but includes the entire state vector. This generates more data, and therefore incurs additional costs for storage of data in Amazon S3.
 
 #### To validate your configuration using a Python file
 1. Open a text editor.
