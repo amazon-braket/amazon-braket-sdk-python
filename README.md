@@ -9,16 +9,20 @@ Before you begin working with the Amazon Braket SDK, make sure that you've insta
 Use the instructions for installing Conda from https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html.
 Choose a regular installation, and then choose the Anaconda installer. Conda also installs Python, which is required for other steps in this document. Download and install the **Python 3.7 version** of Anaconda.
 
+If you are using MacOS, and encounter an issue with the Conda commands not working, see [Conda: command not found on macOS or Linux](https://docs.anaconda.com/anaconda/user-guide/troubleshooting/#conda-command-not-found-on-macos-or-linux).
+
+For a list of commands in Conda, see [Conda Cheat Sheet](https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf)
+
 ### Using a Virtual Environment
 For information about Conda and virtual environments, see [Conda vs. pip vs. virtualenv commands](https://docs.conda.io/projects/conda/en/latest/commands.html#conda-vs-pip-vs-virtualenv-commands).
 
 #### Creating a virtual environment
-Use a virtual environment to interact with Amazon Braket to avoid changes to your global environment variables. The following commands  create aand activate a virtual environment in Conda. If you want to use a name for the environment other than `yourenvname`, just change the value to the name you want to use. You may want to create folder in the file system to create the virtual environment.
+Use a virtual environment to interact with Amazon Braket to avoid changes to your global environment variables. The following commands  create aand activate a virtual environment in Conda. If you want to use a name for the environment other than `braketvirtenv`, just change the value to the name you want to use. You may want to create folder in the file system to create the virtual environment.
 Use the following command to create a directory
-`mkdir braket`
+`mkdir braketvirtenv`
 
 Then use the following command to move the cursor to the directory you created
-`cd braket`
+`cd braketvirtenv`
 
 ```bash
 conda create -n braketvirtenv python=3.7 anaconda
@@ -27,7 +31,7 @@ Press **y** when asked to confirm.
 
 Then run the following command to activate the virtual environment. If you changed the environment name in the preceding command, be sure to change in this command as well.
 ```bash
-source activate braketvirtenv
+conda activate braketvirtenv
 ```
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
@@ -75,10 +79,19 @@ Wait until the Status changes to **CREATE_COMPLETE**. You may need to refresh th
 Use the steps in this section to install and configure the Braket Python SDK for your environment. You should perform the steps in the order in which they are included in this document.
  
 ### Install the braket-python-sdk package
-Use the following commands to install the Braket Python SDK package. 
+Use one of the following commands to clone the Braket Python SDK package. 
+To clone the SDK using HTTPS:
 ```bash
 git clone https://github.com/aws/braket-python-sdk.git --branch stable/latest
 ```
+
+To clone the package using SSH:
+```bash
+git@github.com:aws/braket-python-sdk.git
+```
+
+Use the following command to install the SDK:
+
 ```bash
 pip install -e braket-python-sdk
 ```
@@ -109,7 +122,7 @@ Use the following code sample to validate your environment configuration.
 from braket.circuits import Circuit
 from braket.aws import AwsQuantumSimulator
    
-device_arn = "arn:aws:aqx:::quantum-simulator:aqx:qs1"
+device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1")
 s3_folder = ("braket-output-AWS_ACCOUNT_ID", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
@@ -120,7 +133,7 @@ The code sample imports the Amazon Braket framework, then defines the execution 
 
 ### Available Simulators
 There are currently three simulators available for Amazon Braket. To specify which simulator to use, change the code sample to replace the value for the `AwsQuantumSimulator` to one of the following values:
-- `arn:aws:aqx:::quantum-simulator:aqx:qs1` – A Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the distribution - an array of bit strings that appears as though it came from a quantum computer. Outputs only shots and does not provide a state vector. 
+- `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the distribution - an array of bit strings that appears as though it came from a quantum computer. Outputs only shots and does not provide a state vector. 
 - `arn:aws:aqx:::quantum-simulator:aqx:qs2` – a TensorNetwork simulator. Provides an approximation of running a job on a quantum computer.
 -	`arn:aws:aqx:::quantum-simulator:aqx:qs3` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. This simulator samples from the distribution but includes the entire state vector. This generates more data, and therefore incurs additional costs for storage of data in Amazon S3.
 
@@ -130,7 +143,8 @@ There are currently three simulators available for Amazon Braket. To specify whi
 3. Replace the `AWS_ACCOUNT_ID` in the value for `s3_folder` to your 12-digit AWS account ID. It should look similar to the following:
    `s3_folder = ("braket-output-123456789012", "folder-name")`
 4. Save the file with the name `bellpair.py`.
-5. Run the following command to run the Python file:
+5. Use the file system to copy or move the file to your virtual environment. For example, in Windows, use File Explorer to open the `braket` folder in your virtual environment, then paste the file into the braket folder. Confirm that the file was moved to the correct location by viewing the contacts of the folder, such as with the `dir` command in Windows.
+6. Run the following command to run the Python file:
    ```bash
    python bellpair.py
    ```
@@ -140,11 +154,20 @@ You should see a result similar to the following:
 #### To validate your configuration using a Jupyter notebook
 See [Installing the Jupyter Software](https://jupyter.org/install) for information about how to install Jupyter. You can use either JupyterLab or classic Jupyter Notebook.
 
+Run the following commands to install Jupyter and then create a Braket kernal.
+```bash
+pip install jupyter ipykernel
+```
+
+```bash
+python -m ipykernel install --user --name braket
+```
+
 After you have installed Jupyter, use this command to open a Jupyter notebook so you can use the SDK within the notebook:
 ```bash
 jupyter notebook
 ```
-Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **Python3**.
+Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **braket**.
 
 Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. The entry should look similar to the following:
 `s3_folder = ("braket-output-123456789012", "folder-name")`
@@ -160,9 +183,9 @@ With Amazon Braket, you can run your quantum circuit on a physical quantum compu
 The following example executes the same Bell Pair example described to validate your configuration against an IonQ quantum computer.
 ```python
 from braket.circuits import Circuit
-from braket.aws import AwsQuantumSimulator
-   
-device_arn = "arn:aws:aqx:::qpu:ionq"
+from braket.aws import AwsQpu
+
+device = AwsQpu("arn:aws:aqx:::qpu:ionq")
 s3_folder = ("braket-output-AWS_ACCOUNT_ID", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
@@ -176,13 +199,14 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 
 ### Deactivat the virtual environment
 After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command. 
-
 ```bash
-source deactivate
+conda deactivate
 ```
 
-When you want to use it again, you can reactivate it.
-
+When you want to use it again, you can reactivate it with the same command you used previously:
+```bash
+conda activate braketvirtenv
+```
 
 ## Updating to the latest release
 We will periodically make updates and changes the SDK or the model. When you are notified of a change that requires action on your part, use the following steps to update your environment to the latest version.
@@ -229,7 +253,6 @@ tox
 ```
 
 ### Integration Tests
-
 Set the `AWS_PROFILE` information in the Prerequisites section of this document.
 ```bash
 export AWS_PROFILE=Your_Profile_Name
@@ -248,5 +271,4 @@ tox -e integ-tests -- -k 'your_test'
 ```
 
 ## License
-
 This project is licensed under the Apache-2.0 License.
