@@ -30,7 +30,7 @@ Then use one of the following options to activate the virtual environment.
 
 **To activate the virtual environment on Mac and Linux**:
 ```bash
-source source braketvirtenv/bin/activate
+source braketvirtenv/bin/activate
 ```
 
 **To activate the virtual environment on Windows**
@@ -99,7 +99,7 @@ Use the following links to download the Amazon Braket Python SDK repos
 [braket-python-ir](https://github.com/aws/braket-python-ir/archive/stable/latest.zip)
 [braket-python-sdk](https://github.com/aws/braket-python-sdk/archive/stable/latest.zip)
 
-### Extract the .zip SDK files
+### Extract the SDK .zip files
 Because the files were downloaded directly from GitHub, the folder in the .zip file includes the name of the branch of the GitHub repo that was downloaded, in this case the `stable/latest` branch. But to use the files in the SDK, we need to rename the folder to the original name.
 
 **To rename the folders in the SDK .zip files**
@@ -224,25 +224,30 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 - **Rigetti** "arn:aws:aqx:::qpu:rigetti"
 - **D-Wave** Not yet available
 
-### Deactivat the virtual environment
+### Deactivate the virtual environment
 After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command. 
+
+**To deactivate the virtual environment on Mac or Linux**
 ```bash
-conda deactivate
+source braketvirtenv/bin/deactivate
 ```
 
-When you want to use it again, you can reactivate it with the same command you used previously:
+**To deactivate the virtual environment on Windows**
 ```bash
-conda activate braketvirtenv
+cd braketvirtenv\scripts
 ```
+
+```bash
+deactivate
+```
+
+When you want to use it again, you can reactivate it with the same command you used previously.
 
 ## Updating to the latest release
 We will periodically make updates and changes the SDK or the model. When you are notified of a change that requires action on your part, use the following steps to update your environment to the latest version.
 
 ### To get the lastest updates
-Position your cursor in the folder where you cloned the GitHub repo for the Braket Python SDK, then run the following command to get the latest version.
-```bash
-git pull
-```
+Information to be provided when the next update is available.
 
 ## Sample Notebooks
 Coming soon 
