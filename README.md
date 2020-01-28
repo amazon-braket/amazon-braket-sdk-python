@@ -170,8 +170,7 @@ There are currently three simulators available for Amazon Braket. To specify whi
 3. Replace the `AWS_ACCOUNT_ID` in the value for `s3_folder` to your 12-digit AWS account ID. It should look similar to the following:
    `s3_folder = ("braket-output-123456789012", "folder-name")`
 4. Save the file with the name `bellpair.py`.
-5. Use the file system to copy or move the file to your virtual environment. For example, in Windows, use File Explorer to open the `braket` folder in your virtual environment, then paste the file into the braket folder. Confirm that the file was moved to the correct location by viewing the contacts of the folder, such as with the `dir` command in Windows.
-6. Make sure `braketvirtenv` is activated, and then run the following command to run the Python file:
+5. Make sure `braketvirtenv` is activated, and then run the following command in the location where you saved the bellpair.py file to run it:
    ```bash
    python bellpair.py
    ```
@@ -196,7 +195,7 @@ jupyter notebook
 ```
 Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **braket**. 
 
-**Note** If you are using a Jupyter notebook from an prior installation and did not create a Braket kernel, you will not see braket available for the notebook type. Choose Python3 instead. If you choose Python3, you must have Python envrironment variables set globally.
+**Note** If you are using a Jupyter notebook from an prior installation and did not create a Braket kernel, you will not see braket available for the notebook type. Choose Python3 instead. If you choose Python3, you must have the Braket packages installed globally.
 
 Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. The entry should look similar to the following:
 `s3_folder = ("braket-output-123456789012", "folder-name")`
