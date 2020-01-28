@@ -5,34 +5,48 @@ The Amazon Braket Python SDK is an open source library that provides a framework
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
-### Conda
-Use the instructions for installing Conda from https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html.
-Choose a regular installation, and then choose the Anaconda installer. Conda also installs Python, which is required for other steps in this document. Download and install the **Python 3.7 version** of Anaconda.
-
-If you are using MacOS, and encounter an issue with the Conda commands not working, see [Conda: command not found on macOS or Linux](https://docs.anaconda.com/anaconda/user-guide/troubleshooting/#conda-command-not-found-on-macos-or-linux).
-
-For a list of commands in Conda, see [Conda Cheat Sheet](https://docs.conda.io/projects/conda/en/4.6.0/_downloads/52a95608c49671267e40c689e0bc00ca/conda-cheatsheet.pdf)
+### Python 3.7.2 or greater
+Download and install Python 3.7.2 or greater from [Python.org](https://www.python.org/downloads/).
+If you are using Windows, choose **Add Python to environment variables** before you begin the installation.
 
 ### Using a Virtual Environment
-For information about Conda and virtual environments, see [Conda vs. pip vs. virtualenv commands](https://docs.conda.io/projects/conda/en/latest/commands.html#conda-vs-pip-vs-virtualenv-commands).
+If you want to use a virtual environment for interacting with the Amazon Braket SDK, first install virtualenv with the following command:
+```bash
+pip install virtualenv
+```
 
-#### Creating a virtual environment
-Use a virtual environment to interact with Amazon Braket to avoid changes to your global environment variables. The following commands  create aand activate a virtual environment in Conda. If you want to use a name for the environment other than `braketvirtenv`, just change the value to the name you want to use. You may want to create folder in the file system to create the virtual environment.
-Use the following command to create a directory
-`mkdir braketvirtenv`
+To learn more, see [virtualenv](https://virtualenv.pypa.io/en/stable/installation/).
 
-Then use the following command to move the cursor to the directory you created
-`cd braketvirtenv`
+On Windows, you should open a new terminal window to install `virtualenv`. If you use a terminal window that was open before you installed Python, the terminal window does not use the Python environment variables needed.
+
+After you install `virtualenv`, use the following command to create a virtual environment. When you run this command, it creates a folder named `braketvirtenv`, and uses that folder as the root folder of the virtual environment. You should run the command from a location where you want to create the virtual environment.
+
+**To create a virtual environment**
+```bash
+virtualenv braketvirtenv
+```
+
+Then use one of the following options to activate the virtual environment.
+
+**To activate the virtual environment on Mac and Linux**:
+```bash
+source source braketvirtenv/bin/activate
+```
+
+**To activate the virtual environment on Windows**
+```bash
+cd braketvirtenv\scripts
+```
 
 ```bash
-conda create -n braketvirtenv python=3.7 anaconda
+activate
 ```
-Press **y** when asked to confirm. 
 
-Then run the following command to activate the virtual environment. If you changed the environment name in the preceding command, be sure to change in this command as well.
+Then run this command to return the cursor to the parent folder
 ```bash
-conda activate braketvirtenv
+cd ..
 ```
+
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
 
@@ -75,30 +89,41 @@ When the template loads, select the **I acknowledge that AWS CloudFormation migh
 
 Wait until the Status changes to **CREATE_COMPLETE**. You may need to refresh the page to see the current status of the stack creation.
 
-## Setting up the Braket Python SDK
-Use the steps in this section to install and configure the Braket Python SDK for your environment. You should perform the steps in the order in which they are included in this document.
+## Setting up the Amazon Braket Python SDKs
+Use the steps in this section to install and configure the Amazon Braket Python SDKs for your environment. You should perform the steps in the order in which they are included in this document.
  
-### Install the braket-python-sdk package
-Use one of the following commands to clone the Braket Python SDK package. 
-To clone the SDK using HTTPS:
-```bash
-git clone https://github.com/aws/braket-python-sdk.git --branch stable/latest
-```
+### Download the Amazon Braket GitHub Repositories
+The easiest way to get the SDKs is to download them directly from the GitHub site. Because the repositories are private during the Private Beta period, an SSH key is required to access the files remotely from a terminal session. If you download them directly from the GitHub site, you can just extract the files to your system or virtual environment without the extra steps of using an SSH key. You need to log in to GitHub using the account that was whitelisted for the Amazon Braket (Private Beta).
 
-To clone the package using SSH:
-```bash
-git@github.com:aws/braket-python-sdk.git
-```
+Use the following links to download the Amazon Braket Python SDK repos
+[braket-python-ir](https://github.com/aws/braket-python-ir/archive/stable/latest.zip)
+[braket-python-sdk](https://github.com/aws/braket-python-sdk/archive/stable/latest.zip)
 
-Use the following command to install the SDK:
+### Extract the .zip SDK files
+Because the files were downloaded directly from GitHub, the folder in the .zip file includes the name of the branch of the GitHub repo that was downloaded, in this case the `stable/latest` branch. But to use the files in the SDK, we need to rename the folder to the original name.
+
+**To rename the folders in the SDK .zip files**
+First, extract the .zip files to a location of your choosing. Then open the location where you extracted the folders to. You can use either the GUI file system tools in your OS, or the command line. You should see 2 folders with the following names:
+- braket-python-ir-stable-latest
+- braket-python-sdk-stable-latest
+
+Rename the folders to the following:
+- braket-python-ir
+- braket-python-sdk
+
+Then copy the renamed files and paste them into the `braketvirtenv` folder where you created a virtual environment. Your folder structure should look like this:
+..\YourFolder\braketvirtenv\braket-python-ir\
+
+### Install the SDK packages
+Use the following commands to install the SDKs in the order that they appear:
+
+```bash
+pip install -e braket-python-ir
+```
 
 ```bash
 pip install -e braket-python-sdk
 ```
-
-If you receive an error related to SSH, see the following information to create and add an SSH key to your GitHub account.
-- [Generate a new SSH key](https://help.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-- [Add an SSH Key to Your Account](https://help.github.com/en/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account)
 
 ### Install latest Amazon Braket model in AWS CLI
 Run the following commands to install the Braket model. The file is downloaded to the current location. Position the cursor in the folder where you want to download the file before running the command.
@@ -167,7 +192,9 @@ After you have installed Jupyter, use this command to open a Jupyter notebook so
 ```bash
 jupyter notebook
 ```
-Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **braket**.
+Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **braket**. 
+
+**Note** If you are using a Jupyter notebook from an prior installation and did not create a Braket kernel, you will not see braket available for the notebook type. Choose Python3 instead.
 
 Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. The entry should look similar to the following:
 `s3_folder = ("braket-output-123456789012", "folder-name")`
