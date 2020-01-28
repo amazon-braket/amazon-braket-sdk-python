@@ -181,7 +181,7 @@ You should see a result similar to the following:
 #### To validate your configuration using a Jupyter notebook
 See [Installing the Jupyter Software](https://jupyter.org/install) for information about how to install Jupyter. You can use either JupyterLab or classic Jupyter Notebook.
 
-Run the following commands to install Jupyter and then create a Braket kernal.
+Run the following commands to install Jupyter and then create a Braket kernel.
 ```bash
 pip install jupyter ipykernel
 ```
@@ -196,7 +196,7 @@ jupyter notebook
 ```
 Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **braket**. 
 
-**Note** If you are using a Jupyter notebook from an prior installation and did not create a Braket kernel, you will not see braket available for the notebook type. Choose Python3 instead.
+**Note** If you are using a Jupyter notebook from an prior installation and did not create a Braket kernel, you will not see braket available for the notebook type. Choose Python3 instead. If you choose Python3, you must have Python envrironment variables set globally.
 
 Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. The entry should look similar to the following:
 `s3_folder = ("braket-output-123456789012", "folder-name")`
