@@ -208,7 +208,7 @@ When the job completes, you should see output similar to the following:
 ## Running a Quantum Algorithm on a Quantum Computer
 With Amazon Braket, you can run your quantum circuit on a physical quantum computer. The steps to do so are the same as those described to validate your environment. Just replace the example code provided in this document with your own code. 
 
-The following example executes the same Bell Pair example described to validate your configuration against an Rigetti quantum computer.
+The following example executes the same Bell Pair example described to validate your configuration against a Rigetti quantum computer.
 ```python
 from braket.circuits import Circuit
 from braket.aws import AwsQpu
