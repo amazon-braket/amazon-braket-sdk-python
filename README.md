@@ -222,7 +222,7 @@ print(device.run(bell, s3_folder).result().measurement_counts)
 ```
 
 Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
-- **IonQ** "arn:aws:aqx:::qpu:ionq"
+- **IonQ** "arn:aws:aqx:::qpu:ionq" (Jobs may take 24 hours to complete on IonQ.)
 - **Rigetti** "arn:aws:aqx:::qpu:rigetti"
 - **D-Wave** Not yet available
 
