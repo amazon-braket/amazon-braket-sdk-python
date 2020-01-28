@@ -171,7 +171,7 @@ There are currently three simulators available for Amazon Braket. To specify whi
    `s3_folder = ("braket-output-123456789012", "folder-name")`
 4. Save the file with the name `bellpair.py`.
 5. Use the file system to copy or move the file to your virtual environment. For example, in Windows, use File Explorer to open the `braket` folder in your virtual environment, then paste the file into the braket folder. Confirm that the file was moved to the correct location by viewing the contacts of the folder, such as with the `dir` command in Windows.
-6. Run the following command to run the Python file:
+6. Make sure `braketvirtenv` is activated, and then run the following command to run the Python file:
    ```bash
    python bellpair.py
    ```
@@ -214,7 +214,7 @@ The following example executes the same Bell Pair example described to validate 
 from braket.circuits import Circuit
 from braket.aws import AwsQpu
 
-device = AwsQpu("arn:aws:aqx:::qpu:ionq")
+device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
 s3_folder = ("braket-output-AWS_ACCOUNT_ID", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
