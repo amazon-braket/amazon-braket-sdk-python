@@ -95,9 +95,9 @@ Use the steps in this section to install and configure the Amazon Braket Python 
 ### Download the Amazon Braket GitHub Repositories
 The easiest way to get the SDKs is to download them directly from the GitHub site. Because the repositories are private during the Private Beta period, an SSH key is required to access the files remotely from a terminal session. If you download them directly from the GitHub site, you can just extract the files to your system or virtual environment without the extra steps of using an SSH key. You need to log in to GitHub using the account that was whitelisted for the Amazon Braket (Private Beta).
 
-Use the following links to download the Amazon Braket Python SDK repos
-[braket-python-ir](https://github.com/aws/braket-python-ir/archive/stable/latest.zip)
-[braket-python-sdk](https://github.com/aws/braket-python-sdk/archive/stable/latest.zip)
+Use the following links to download the Amazon Braket Python SDK repos:
+- [braket-python-ir](https://github.com/aws/braket-python-ir/archive/stable/latest.zip)
+- [braket-python-sdk](https://github.com/aws/braket-python-sdk/archive/stable/latest.zip)
 
 ### Extract the SDK .zip files
 Because the files were downloaded directly from GitHub, the folder in the .zip file includes the name of the branch of the GitHub repo that was downloaded, in this case the `stable/latest` branch. But to use the files in the SDK, we need to rename the folder to the original name.
@@ -112,7 +112,9 @@ Rename the folders to the following:
 - braket-python-sdk
 
 Then copy the renamed files and paste them into the `braketvirtenv` folder where you created a virtual environment. Your folder structure should look like this:
+```bash
 ..\YourFolder\braketvirtenv\braket-python-ir\
+```
 
 ### Install the SDK packages
 Use the following commands to install the SDKs in the order that they appear:
