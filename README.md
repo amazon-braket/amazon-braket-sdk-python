@@ -156,7 +156,7 @@ bell = Circuit().h(0).cnot(0, 1)
 print(device.run(bell, s3_folder).result().measurement_counts)
 ```
 
-The code sample imports the Amazon Braket framework, then defines the execution environment as the AWSQuantumSimulator and the device to use. The `s3_folder` statement defines the Amazon S3 bucket for job output. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job.
+The code sample imports the Amazon Braket framework, then defines the execution environment as the AWSQuantumSimulator and the device to use. The `s3_folder` statement defines the Amazon S3 bucket for job output and the folder in the bucket to store job output. This folder is created when you run the job. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job.
 
 ### Available Simulators
 There are currently three simulators available for Amazon Braket. To specify which simulator to use, change the code sample to replace the value for the `AwsQuantumSimulator` to one of the following values:
@@ -167,7 +167,7 @@ There are currently three simulators available for Amazon Braket. To specify whi
 #### To validate your configuration using a Python file
 1. Open a text editor.
 2. Copy the code sample (above), then paste it into the text editor.
-3. Replace the `AWS_ACCOUNT_ID` in the value for `s3_folder` to your 12-digit AWS account ID. It should look similar to the following:
+3. Replace the `AWS_ACCOUNT_ID` in the value for `s3_folder` to your 12-digit AWS account ID. If you want to use a different folder in the bucket, change `folder-name` to the name of the folder to create. If the folder already exists it uses the existing folder. Your statement  should look similar to the following:
    `s3_folder = ("braket-output-123456789012", "folder-name")`
 4. Save the file with the name `bellpair.py`.
 5. Make sure `braketvirtenv` is activated, and then run the following command in the location where you saved the bellpair.py file to run it:
@@ -197,7 +197,7 @@ Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**,
 
 **Note** If you are using a Jupyter notebook from an prior installation and did not create a Braket kernel, you will not see braket available for the notebook type. Choose Python3 instead. If you choose Python3, you must have the Braket packages installed globally.
 
-Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. The entry should look similar to the following:
+Copy the code sample (above) into the notebook. Be sure to change the value for the `s3_folder` to replace `AWS_ACCOUNT_ID` with your 12-digit AWS Account ID. You can find your AWS account ID in the AWS console. If you want to use a different folder in the bucket, change `folder-name` to the name of the folder to create. If the folder already exists it uses the existing folder. Your statement  should look similar to the following:
 `s3_folder = ("braket-output-123456789012", "folder-name")`
 
 Choose **Run** to execute the code to confirm that your environment is configured correctly.
