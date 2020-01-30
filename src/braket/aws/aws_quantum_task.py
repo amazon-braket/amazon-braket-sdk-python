@@ -40,39 +40,54 @@ class AwsQuantumTask(QuantumTask):
     def create(
         aws_session: AwsSession,
         device_arn: str,
-        task_description: Union[Circuit, Problem],
+        task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int = DEFAULT_SHOTS,
+        backend_parameters: Dict[str, Any] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
         """
-        AwsQuantumTask factory method that serializes a quantum task description
+        AwsQuantumTask factory method that serializes a quantum task specification
         (either a quantum circuit or annealing problem), submits it to Amazon Braket,
         and returns back an AwsQuantumTask tracking the execution.
 
         Args:
             aws_session (AwsSession): AwsSession to call AWS with.
             device_arn (str): AWS quantum device arn.
-            task_description (Union[Circuit, Problem]): Description of task
+            task_specification (Union[Circuit, Problem]): Specification of task
                 (circuit or annealing problem) to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple with bucket (index 0)
                 and key (index 1) that is the results destination folder in S3.
             shots (int): The number of times to run the circuit or annealing task on the device.
                 If the device is a classical simulator then this implies sampling the state N times,
                 where N = `shots`. Default = 1_000.
+            backend_parameters (Dict[str, Any]): Additional parameters to pass to the device.
+                For example, for D-Wave:
+                >>> backend_parameters = {"dWaveParameters": {"postprocess": "OPTIMIZATION"}}
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
 
         Note:
             The following arguments are typically defined via clients of Device.
-                - `task_description`
+                - `task_specification`
                 - `s3_destination_folder`
                 - `shots`
         """
+        if len(s3_destination_folder) != 2:
+            raise ValueError(
+                "s3_destination_folder must be of size 2 with a 'bucket' and 'key' respectively."
+            )
+
+        create_task_kwargs = _create_common_params(device_arn, s3_destination_folder, shots)
         return _create_internal(
-            task_description, aws_session, device_arn, s3_destination_folder, shots, *args, **kwargs
+            task_specification,
+            aws_session,
+            create_task_kwargs,
+            backend_parameters or {},
+            *args,
+            **kwargs,
         )
 
     def __init__(
@@ -87,6 +102,8 @@ class AwsQuantumTask(QuantumTask):
         Args:
             arn (str): The AWS quantum task ARN.
             aws_session (AwsSession): The AwsSession for communicating with AWS.
+            results_formatter (Callable[[str], Any]): A function that deserializes a string
+                into a results structure (such as GateModelQuantumTaskResult)
             poll_timeout_seconds (int): The polling timeout for result(), default 120 seconds.
             poll_interval_seconds (int): The polling interval for result(), default 0.25 seconds.
         """
@@ -237,33 +254,20 @@ class AwsQuantumTask(QuantumTask):
 
 @singledispatch
 def _create_internal(
-    task_description: Union[Circuit, Problem],
+    task_specification: Union[Circuit, Problem],
     aws_session: AwsSession,
-    device_arn: str,
-    s3_destination_folder: AwsSession.S3DestinationFolder,
-    shots: int,
+    create_task_kwargs: Dict[str, Any],
+    backend_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    pass
+    raise TypeError("Invalid task specification type")
 
 
 @_create_internal.register
 def _(
-    circuit: Circuit,
-    aws_session: AwsSession,
-    device_arn: str,
-    s3_destination_folder: AwsSession.S3DestinationFolder,
-    shots: int,
-    *args,
-    **kwargs,
+    circuit: Circuit, aws_session: AwsSession, create_task_kwargs: Dict[str, Any], *args, **kwargs,
 ) -> AwsQuantumTask:
-    if len(s3_destination_folder) != 2:
-        raise ValueError(
-            "s3_destination_folder must be of size 2 with a 'bucket' and 'key' respectively."
-        )
-
-    create_task_kwargs = _create_common_params(device_arn, s3_destination_folder, shots)
     create_task_kwargs.update(
         {
             "ir": circuit.to_ir().json(),
@@ -280,24 +284,16 @@ def _(
 def _(
     problem: Problem,
     aws_session: AwsSession,
-    device_arn: str,
-    s3_destination_folder: AwsSession.S3DestinationFolder,
-    shots: int,
-    annealing_parameters: Dict[str, Any],
+    create_task_kwargs: Dict[str, Any],
+    backend_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    if len(s3_destination_folder) != 2:
-        raise ValueError(
-            "s3_destination_folder must be of size 2 with a 'bucket' and 'key' respectively."
-        )
-
-    create_task_kwargs = _create_common_params(device_arn, s3_destination_folder, shots)
     create_task_kwargs.update(
         {
             "ir": problem.to_ir().json(),
             "irType": AwsQuantumTask.ANNEALING_IR_TYPE,
-            "backendParameters": {"annealingModelParameters": annealing_parameters},
+            "backendParameters": {"annealingModelParameters": backend_parameters},
         }
     )
 

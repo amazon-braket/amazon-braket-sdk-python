@@ -12,58 +12,66 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
+from typing import Union
 
+from braket.annealing.problem import Problem
+from braket.circuits import Circuit
 from braket.tasks.quantum_task import QuantumTask
 
 
 class Device(ABC):
-    """
-    An abstraction over quantum devices which includes quantum computers and simulators.
+    """ An abstraction over quantum devices which includes quantum computers and simulators.
 
-    :param str name: name of quantum device
-    :param str status: status of quantum device
-    :param str status_reason: status reason of quantum device
     """
 
     def __init__(self, name: str, status: str, status_reason: str):
+        """
+        Args:
+            name: Name of quantum device
+            status: Status of quantum device
+            status_reason: Status reason of quantum device
+        """
         self._name = name
         self._status = status
         self._status_reason = status_reason
 
     @abstractmethod
-    def run(self, circuit, shots: int) -> QuantumTask:
-        """
-        Run a circuit on this quantum device.
+    def run(self, task_specification: Union[Circuit, Problem], shots: int) -> QuantumTask:
+        """ Run a quantum task specification (circuit or annealing program) on this quantum device.
 
-        :param Circuit circuit: circuit to run on device
-        :param int shots: Number of shots to run circuit
-        :return: the created quantum task
-        :rtype: QuantumTask
+        Args:
+            task_specification (Union[Circuit, Problem]):  Specification of task
+                (circuit or annealing problem) to run on device.
+            shots (int): The number of times to run the circuit or annealing task on the device.
+
+        Returns:
+            QuantumTask: The QuantumTask tracking task execution on this device
         """
+        pass
 
     @property
     def name(self) -> str:
-        """
-        Return name of Device
+        """ Return the name of this Device.
 
-        :rtype: str
+        Returns:
+            str: The name of this Device
         """
         return self._name
 
     @property
     def status(self) -> str:
-        """
-        Return status of Device
+        """ Return the status of this Device.
 
-        :rtype: str
+        Returns:
+            str: The status of thi Device
         """
         return self._status
 
     @property
     def status_reason(self) -> str:
-        """
-        Return status reason of Device
+        """ Return the status reason of this Device.
 
-        :rtype: str
+        Returns:
+            str: The status reason of this Device
         """
         return self._status_reason

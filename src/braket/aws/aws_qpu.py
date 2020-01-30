@@ -55,7 +55,7 @@ class AwsQpu(Device):
 
     def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
         """
-        Run a quantum task description (circuit or annealing program) on this AWS quantum device.
+        Run a quantum task specification (circuit or annealing problem) on this AWS quantum device.
 
         Args:
             *aws_quantum_task_args: Variable length positional arguments for
@@ -73,8 +73,17 @@ class AwsQpu(Device):
 
             >>> circuit = Circuit().h(0).cnot(0, 1)
             >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
-            >>> device.run(task_description=circuit,
+            >>> device.run(task_specification=circuit,
             >>>     s3_destination_folder=("bucket-foo", "key-bar"))
+
+            >>> problem = Problem(
+            >>>     ProblemType.ISING,
+            >>>     linear={1: 3.14},
+            >>>     quadratic={(1, 2): 10.08},
+            >>> )
+            >>> device = AwsQpu("arn:aws:aqx:::qpu:d-wave")
+            >>> device.run(problem, ("bucket-foo", "key-bar"),
+            >>>     backend_parameters = {"dWaveParameters": {"postprocess": "OPTIMIZATION"}})
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
