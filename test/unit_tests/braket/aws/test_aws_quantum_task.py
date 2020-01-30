@@ -282,7 +282,7 @@ def test_from_annealing(aws_session, arn, problem):
         arn,
         problem,
         S3_TARGET,
-        backend_parameters={"dWaveParameters": {"foo": "bar"}},
+        backend_parameters={"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}},
     )
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, AnnealingQuantumTaskResult.from_string
@@ -295,7 +295,7 @@ def test_from_annealing(aws_session, arn, problem):
         AwsQuantumTask.ANNEALING_IR_TYPE,
         S3_TARGET,
         AwsQuantumTask.DEFAULT_SHOTS,
-        {"annealingModelParameters": {"dWaveParameters": {"foo": "bar"}}},
+        {"annealingModelParameters": {"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}},
     )
 
 

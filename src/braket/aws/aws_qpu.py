@@ -83,7 +83,7 @@ class AwsQpu(Device):
             >>> )
             >>> device = AwsQpu("arn:aws:aqx:::qpu:d-wave")
             >>> device.run(problem, ("bucket-foo", "key-bar"),
-            >>>     backend_parameters = {"dWaveParameters": {"postprocess": "OPTIMIZATION"}})
+            >>>     backend_parameters = {"dWaveParameters": {"postprocessingType": "SAMPLING"}})
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
