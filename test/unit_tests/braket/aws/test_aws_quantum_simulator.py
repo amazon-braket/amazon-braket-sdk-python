@@ -95,12 +95,12 @@ def test_repr(simulator):
     assert repr(simulator) == expected
 
 
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
     _run_and_assert(aws_quantum_task_mock, simulator, [circuit, s3_destination_folder], {})
 
 
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_kwargs(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
     _run_and_assert(
         aws_quantum_task_mock,
@@ -110,7 +110,7 @@ def test_run_with_kwargs(aws_quantum_task_mock, simulator, circuit, s3_destinati
     )
 
 
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.from_circuit")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args_and_kwargs(
     aws_quantum_task_mock, simulator, circuit, s3_destination_folder
 ):
