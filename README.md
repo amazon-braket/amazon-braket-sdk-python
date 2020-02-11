@@ -76,7 +76,10 @@ export AWS_PROFILE=YOUR_PROFILE_NAME
 ```
 
 ### Configure your AWS account with the resources necessary for Amazon Braket
-Use the following link to an AWS CloudFormation template to automatically create the resources that Amazon Braket uses or interacts with in your account. The template creates the following resources:
+Use the following link to an AWS CloudFormation template to automatically create the resources that Amazon Braket uses or interacts with in your account. 
+** Important **
+If you are using IAM roles for multiple users in your organization to access the Amazon Braket Private Beta from the same account, only open the template and create the stack once for the account. Each role in the account then has access to the resources Amazon Braket needs in the account. 
+The template creates the following resources:
 - An S3 bucket to store job output. The bucket is named `braket-output-AWSaccountId` where AWSAccountId is your account ID. For example, if your AWS account ID is 123456789012, the bucket is named `braket-output-123456789012`.
 - IAM roles named AmazonBraketJobExecutionRole, which is used to run jobs, and AQxFullAccess which is used to interact with the AWS resources that Amazon Braket needs.
 - An IAM policy, AmazonBraketFullAccess, that includes permission to use Amazon Braket actions, as well as the permissions necessary to access the S3 bucket created. If you want to use a role that does not have admin permissions, you can apply the AmazonBraketFullAccess policy to the user or role you are using to grant the permissions required to use Amazon Braket beta.
