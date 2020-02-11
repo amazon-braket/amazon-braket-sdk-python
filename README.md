@@ -102,6 +102,8 @@ Use the following links to download the Amazon Braket Python SDK repos:
 ### Extract the SDK .zip files
 Because the files were downloaded directly from GitHub, the folder in the .zip file includes the name of the branch of the GitHub repo that was downloaded, in this case the `stable/latest` branch. But to use the files in the SDK, we need to rename the folder to the original name.
 
+Note: Make sure you are always using the branch 'stable/latest' and not 'master' for the SDK. 'master' may contain unstable changes.
+
 **To rename the folders in the SDK .zip files**
 First, extract the .zip files to a location of your choosing. Then open the location where you extracted the folders to. You can use either the GUI file system tools in your OS, or the command line. You should see 2 folders with the following names:
 - braket-python-ir-stable-latest
