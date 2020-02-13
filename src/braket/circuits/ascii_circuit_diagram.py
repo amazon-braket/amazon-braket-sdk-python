@@ -104,7 +104,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 if qubit != min(instr.target):
                     margins[qubit] = "|"
 
-        symbols_width = max([len(symbol) for symbol in symbols.values()])
+        symbols_width = max([len(symbol) for symbol in symbols.values()] + [len(str(time))])
 
         output = "{0:{width}}|\n".format(str(time), width=symbols_width)
         for qubit in circuit_qubits:
