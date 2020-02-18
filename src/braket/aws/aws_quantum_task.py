@@ -277,7 +277,9 @@ def _(
     )
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
-    return AwsQuantumTask(task_arn, aws_session, GateModelQuantumTaskResult.from_string)
+    return AwsQuantumTask(
+        task_arn, aws_session, GateModelQuantumTaskResult.from_string, *args, **kwargs
+    )
 
 
 @_create_internal.register
@@ -298,7 +300,9 @@ def _(
     )
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
-    return AwsQuantumTask(task_arn, aws_session, AnnealingQuantumTaskResult.from_string)
+    return AwsQuantumTask(
+        task_arn, aws_session, AnnealingQuantumTaskResult.from_string, *args, **kwargs
+    )
 
 
 def _create_common_params(
