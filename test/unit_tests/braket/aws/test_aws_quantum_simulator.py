@@ -97,7 +97,9 @@ def test_repr(simulator):
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
-    _run_and_assert(aws_quantum_task_mock, simulator, [circuit, s3_destination_folder], {})
+    _run_and_assert(
+        aws_quantum_task_mock, simulator, circuit, s3_destination_folder, 1000, ["foo"], {}
+    )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
@@ -105,8 +107,24 @@ def test_run_with_kwargs(aws_quantum_task_mock, simulator, circuit, s3_destinati
     _run_and_assert(
         aws_quantum_task_mock,
         simulator,
+        circuit,
+        s3_destination_folder,
+        None,
         [],
-        {"circuit": circuit, "s3_destination_folder": s3_destination_folder},
+        {"bar": 1, "baz": 2},
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_kwargs_no_shots(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        simulator,
+        circuit,
+        s3_destination_folder,
+        1000,
+        [],
+        {"bar": 1, "baz": 2},
     )
 
 
@@ -115,17 +133,35 @@ def test_run_with_positional_args_and_kwargs(
     aws_quantum_task_mock, simulator, circuit, s3_destination_folder
 ):
     _run_and_assert(
-        aws_quantum_task_mock, simulator, [circuit, s3_destination_folder], {"shots": 100}
+        aws_quantum_task_mock,
+        simulator,
+        circuit,
+        s3_destination_folder,
+        1000,
+        ["foo"],
+        {"bar": 1, "baz": 2},
     )
 
 
-def _run_and_assert(aws_quantum_task_mock, simulator, run_args, run_kwargs):
+def _run_and_assert(
+    aws_quantum_task_mock, simulator, circuit, s3_destination_folder, shots, run_args, run_kwargs
+):
     task_mock = Mock()
     aws_quantum_task_mock.return_value = task_mock
 
     simulator = simulator(AwsQuantumSimulatorArns.QS1)
-    task = simulator.run(*run_args, **run_kwargs)
+    task = (
+        simulator.run(circuit, s3_destination_folder, shots, *run_args, **run_kwargs)
+        if shots
+        else simulator.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
+    )
     assert task == task_mock
     aws_quantum_task_mock.assert_called_with(
-        simulator._aws_session, simulator.arn, *run_args, **run_kwargs
+        simulator._aws_session,
+        simulator.arn,
+        circuit,
+        s3_destination_folder,
+        shots,
+        *run_args,
+        **run_kwargs
     )

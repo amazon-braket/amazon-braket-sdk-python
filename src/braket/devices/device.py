@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Optional, Union
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
@@ -36,13 +36,16 @@ class Device(ABC):
         self._status_reason = status_reason
 
     @abstractmethod
-    def run(self, task_specification: Union[Circuit, Problem], shots: int) -> QuantumTask:
+    def run(
+        self, task_specification: Union[Circuit, Problem], location, shots: Optional[int]
+    ) -> QuantumTask:
         """ Run a quantum task specification (circuit or annealing program) on this quantum device.
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of task
                 (circuit or annealing problem) to run on device.
-            shots (int): The number of times to run the circuit or annealing task on the device.
+            location: The location to save the task's results
+            shots (Optional[int]): The number of times to run the circuit or annealing task
 
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device
