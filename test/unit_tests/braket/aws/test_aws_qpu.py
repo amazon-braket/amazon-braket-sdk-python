@@ -181,16 +181,20 @@ def test_repr(qpu):
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
-    _run_and_assert(aws_quantum_task_mock, qpu, [circuit, s3_destination_folder], {})
+    _run_and_assert(aws_quantum_task_mock, qpu, circuit, s3_destination_folder, 1000, ["foo"], {})
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
     _run_and_assert(
-        aws_quantum_task_mock,
-        qpu,
-        [],
-        {"circuit": circuit, "s3_destination_folder": s3_destination_folder},
+        aws_quantum_task_mock, qpu, circuit, s3_destination_folder, 1000, [], {"bar": 1, "baz": 2}
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_kwargs_no_shots(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
+    _run_and_assert(
+        aws_quantum_task_mock, qpu, circuit, s3_destination_folder, None, [], {"bar": 1, "baz": 2}
     )
 
 
@@ -198,17 +202,33 @@ def test_run_with_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_fol
 def test_run_with_positional_args_and_kwargs(
     aws_quantum_task_mock, qpu, circuit, s3_destination_folder
 ):
-    _run_and_assert(aws_quantum_task_mock, qpu, [circuit, s3_destination_folder], {"shots": 100})
+    _run_and_assert(
+        aws_quantum_task_mock,
+        qpu,
+        circuit,
+        s3_destination_folder,
+        1000,
+        ["foo"],
+        {"bar": 1, "baz": 2},
+    )
 
 
-def _run_and_assert(aws_quantum_task_mock, qpu, run_args, run_kwargs):
+def _run_and_assert(
+    aws_quantum_task_mock, qpu, circuit, s3_destination_folder, shots, run_args, run_kwargs
+):
     task_mock = Mock()
     aws_quantum_task_mock.return_value = task_mock
 
     qpu = qpu(AwsQpuArns.RIGETTI)
-    task = qpu.run(*run_args, **run_kwargs)
+    task = (
+        qpu.run(circuit, s3_destination_folder, shots, *run_args, **run_kwargs)
+        if shots
+        else qpu.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
+    )
     assert task == task_mock
-    aws_quantum_task_mock.assert_called_with(qpu._aws_session, qpu.arn, *run_args, **run_kwargs)
+    aws_quantum_task_mock.assert_called_with(
+        qpu._aws_session, qpu.arn, circuit, s3_destination_folder, shots, *run_args, **run_kwargs
+    )
 
 
 def _assert_qpu_fields(qpu, properties_keys, expected_qpu_data):

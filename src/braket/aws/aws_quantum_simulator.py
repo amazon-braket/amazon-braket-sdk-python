@@ -11,10 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Union
 
+from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
+from braket.circuits import Circuit
 from braket.devices.device import Device
 
 
@@ -37,11 +39,22 @@ class AwsQuantumSimulator(Device):
         self._properties: Dict[str, Any] = None
         self.refresh_metadata()
 
-    def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
+    def run(
+        self,
+        task_specification: Union[Circuit, Problem],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: Optional[int] = None,
+        *aws_quantum_task_args,
+        **aws_quantum_task_kwargs,
+    ) -> AwsQuantumTask:
         """
         Run a circuit on this AWS quantum device.
 
         Args:
+            task_specification (Union[Circuit, Problem]):  Specification of task
+                (circuit or annealing problem) to run on device.
+            s3_destination_folder: The S3 location to save the task's results
+            shots (Optional[int]): The number of times to run the circuit or annealing task
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
@@ -63,7 +76,13 @@ class AwsQuantumSimulator(Device):
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
         return AwsQuantumTask.create(
-            self._aws_session, self._arn, *aws_quantum_task_args, **aws_quantum_task_kwargs
+            self._aws_session,
+            self._arn,
+            task_specification,
+            s3_destination_folder,
+            shots,
+            *aws_quantum_task_args,
+            **aws_quantum_task_kwargs,
         )
 
     def refresh_metadata(self) -> None:
