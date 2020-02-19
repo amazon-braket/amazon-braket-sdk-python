@@ -54,7 +54,7 @@ class AwsQuantumSimulator(Device):
             task_specification (Union[Circuit, Problem]):  Specification of task
                 (circuit or annealing problem) to run on device.
             s3_destination_folder: The S3 location to save the task's results
-            shots (Optional[int]): The number of times to run the circuit or annealing task
+            shots (Optional[int]): The number of times to run the circuit or annealing problem
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for

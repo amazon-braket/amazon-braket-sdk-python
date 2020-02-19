@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 import time
 from functools import singledispatch
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
@@ -36,13 +36,16 @@ class AwsQuantumTask(QuantumTask):
     ANNEALING_IR_TYPE = "annealing"
     DEFAULT_SHOTS = 1_000
 
+    DEFAULT_RESULTS_POLL_TIMEOUT = 120
+    DEFAULT_RESULTS_POLL_INTERVAL = 0.25
+
     @staticmethod
     def create(
         aws_session: AwsSession,
         device_arn: str,
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int = DEFAULT_SHOTS,
+        shots: Optional[int] = None,
         backend_parameters: Dict[str, Any] = None,
         *args,
         **kwargs,
@@ -59,9 +62,9 @@ class AwsQuantumTask(QuantumTask):
                 (circuit or annealing problem) to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple with bucket (index 0)
                 and key (index 1) that is the results destination folder in S3.
-            shots (int): The number of times to run the circuit or annealing task on the device.
-                If the device is a classical simulator then this implies sampling the state N times,
-                where N = `shots`. Default = 1_000.
+            shots (Optional[int]): The number of times to run the circuit or annealing problem
+                on the device. If the device is a classical simulator then this implies sampling
+                the state N times, where N = `shots`. If not set, will default to 1_000.
             backend_parameters (Dict[str, Any]): Additional parameters to pass to the device.
                 For example, for D-Wave:
                 >>> backend_parameters = {"dWaveParameters": {"postprocess": "OPTIMIZATION"}}
@@ -80,7 +83,11 @@ class AwsQuantumTask(QuantumTask):
                 "s3_destination_folder must be of size 2 with a 'bucket' and 'key' respectively."
             )
 
-        create_task_kwargs = _create_common_params(device_arn, s3_destination_folder, shots)
+        create_task_kwargs = _create_common_params(
+            device_arn,
+            s3_destination_folder,
+            shots if shots is not None else AwsQuantumTask.DEFAULT_SHOTS,
+        )
         return _create_internal(
             task_specification,
             aws_session,
@@ -95,8 +102,8 @@ class AwsQuantumTask(QuantumTask):
         arn: str,
         aws_session: AwsSession,
         results_formatter: Callable[[str], Any],
-        poll_timeout_seconds: int = 120,
-        poll_interval_seconds: int = 0.25,
+        poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
     ):
         """
         Args:
