@@ -1306,13 +1306,15 @@ class Unitary(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def unitary(targets: QubitSet, matrix: np.ndarray) -> Instruction:
+    def unitary(targets: QubitSet, matrix: np.ndarray, display_name: str = "U") -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             targets (QubitSet): Target qubits.
             matrix (numpy.ndarray): Unitary matrix which defines the gate. Matrix should be
                 compatible with the supplied targets, with 2 ** len(targets) == matrix.shape[0].
+            display_name (str): Name to be used for an instance of this unitary gate
+                for circuit diagrams. Defaults to `U`.
 
         Returns:
             Instruction: Unitary instruction.
@@ -1323,7 +1325,7 @@ class Unitary(Gate):
         if 2 ** len(targets) != matrix.shape[0]:
             raise ValueError("Dimensions of the supplied unitary are incompatible with the targets")
 
-        return Instruction(Gate.Unitary(matrix), target=targets)
+        return Instruction(Gate.Unitary(matrix, display_name), target=targets)
 
 
 Gate.register_gate(Unitary)
