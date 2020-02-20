@@ -1263,6 +1263,11 @@ class Unitary(Gate):
         matrix (numpy.ndarray): Unitary matrix which defines the gate.
         display_name (str): Name to be used for an instance of this unitary gate
             for circuit diagrams. Defaults to `U`.
+
+    Raises:
+        ValueError: If `matrix` is not a two-dimensional square matrix,
+            or has a dimension length which is not a positive exponent of 2,
+            or is non-unitary.
     """
 
     def __init__(self, matrix: np.ndarray, display_name: str = "U"):
@@ -1312,6 +1317,11 @@ class Unitary(Gate):
 
         Returns:
             Instruction: Unitary instruction.
+
+        Raises:
+            ValueError: If `matrix` is not a two-dimensional square matrix,
+                or has a dimension length which is not compatible with the `targets`,
+                or is non-unitary,
 
         Examples:
             >>> circ = Circuit().unitary(matrix=np.array([[0, 1],[1, 0]]), targets=[0])
