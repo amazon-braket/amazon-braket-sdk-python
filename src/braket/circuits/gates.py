@@ -1266,10 +1266,10 @@ class Unitary(Gate):
     """
 
     def __init__(self, matrix: np.ndarray, display_name: str = "U"):
-        self._matrix = np.array(matrix)
-        if len(self._matrix.shape) != 2 or self._matrix.shape[0] != self._matrix.shape[1]:
-            raise ValueError(f"{self._matrix} is not a two-dimensional square matrix")
+        if len(matrix.shape) != 2 or matrix.shape[0] != matrix.shape[1]:
+            raise ValueError(f"{matrix} is not a two-dimensional square matrix")
 
+        self._matrix = np.array(matrix, dtype=complex)
         qubit_count = int(np.log2(self._matrix.shape[0]))
         if 2 ** qubit_count != self._matrix.shape[0] or qubit_count < 1:
             raise ValueError(
@@ -1277,7 +1277,7 @@ class Unitary(Gate):
             )
 
         if not Unitary._is_unitary(self._matrix):
-            raise ValueError(f"{matrix} is not unitary")
+            raise ValueError(f"{self._matrix} is not unitary")
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
@@ -1296,13 +1296,7 @@ class Unitary(Gate):
 
     @staticmethod
     def _transform_matrix_to_ir(matrix: np.ndarray):
-        return [
-            [
-                [element.real, element.imag] if isinstance(element, complex) else [element, 0]
-                for element in row
-            ]
-            for row in matrix.tolist()
-        ]
+        return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]
 
     @staticmethod
     @circuit.subroutine(register=True)
