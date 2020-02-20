@@ -48,7 +48,7 @@ class Circuit:
             ...     circ = Circuit()
             ...     for qubit in target:
             ...         circ += Instruction(Gate.H, qubit)
-            ...         return circ
+            ...     return circ
             ...
             >>> Circuit.register_subroutine(h_on_all)
             >>> circ = Circuit().h_on_all(range(2))
