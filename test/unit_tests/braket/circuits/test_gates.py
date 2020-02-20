@@ -240,6 +240,7 @@ def test_gate_to_matrix(testclass, subroutine_name, irclass, irsubclasses):
 
 # Additional Unitary gate tests
 
+
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):

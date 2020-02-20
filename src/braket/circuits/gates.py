@@ -1261,8 +1261,8 @@ class Unitary(Gate):
 
     Args:
         matrix (numpy.ndarray): Unitary matrix which defines the gate.
-        display_name (str): Name to be used for an instance of this unitary gate for circuit diagrams.
-            Defaults to `U`
+        display_name (str): Name to be used for an instance of this unitary gate
+            for circuit diagrams. Defaults to `U`.
     """
 
     def __init__(self, matrix: np.ndarray, display_name: str = "U"):
