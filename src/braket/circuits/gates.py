@@ -1268,7 +1268,7 @@ class Unitary(Gate):
     def __init__(self, matrix: np.ndarray, display_name: str = "U"):
         self._matrix = np.array(matrix)
         if len(self._matrix.shape) != 2 or self._matrix.shape[0] != self._matrix.shape[1]:
-            raise ValueError(f"{self._matrix} is not a square 2-dimensional array")
+            raise ValueError(f"{self._matrix} is not a two-dimensional square matrix")
 
         qubit_count = int(np.log2(self._matrix.shape[0]))
         if 2 ** qubit_count != self._matrix.shape[0] or qubit_count < 1:
