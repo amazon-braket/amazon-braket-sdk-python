@@ -19,8 +19,10 @@ from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
     DoubleTarget,
+    MultiTarget,
     SingleControl,
     SingleTarget,
+    TwoDimensionalMatrix,
 )
 
 testdata = [
@@ -55,6 +57,16 @@ testdata = [
     (Gate.XX, "xx", ir.XX, [DoubleTarget, Angle]),
     (Gate.YY, "yy", ir.YY, [DoubleTarget, Angle]),
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle]),
+    (Gate.Unitary, "unitary", ir.Unitary, [TwoDimensionalMatrix, MultiTarget]),
+]
+
+
+invalid_unitary_matrices = [
+    (np.array([0, 1, 2])),
+    (np.array([[0, 1], [1, 2], [3, 4]])),
+    (np.array([[0, 1, 2], [2, 3]])),
+    (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])),
+    (np.array([[0, 1], [1, 1]])),
 ]
 
 
@@ -78,19 +90,45 @@ def double_control_valid_input():
     return {"controls": [0, 1]}
 
 
+def multi_target_valid_input():
+    return {"targets": [5]}
+
+
+def two_dimensional_matrix_valid_ir_input():
+    return {"matrix": [[[0, 0], [1, 0]], [[1, 0], [0, 0]]]}
+
+
+def two_dimensional_matrix_valid_input():
+    return {"matrix": np.array([[0, 1], [1, 0]])}
+
+
 valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_input,
     "Angle": angle_valid_input,
     "SingleControl": single_control_valid_input,
     "DoubleControl": double_control_valid_input,
+    "MultiTarget": multi_target_valid_input,
+    "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
 }
+
+
+valid_subroutine_switcher = dict(
+    valid_ir_switcher, **{"TwoDimensionalMatrix": two_dimensional_matrix_valid_input,}
+)
 
 
 def create_valid_ir_input(irsubclasses):
     input = {}
     for subclass in irsubclasses:
         input.update(valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")())
+    return input
+
+
+def create_valid_subroutine_input(irsubclasses):
+    input = {}
+    for subclass in irsubclasses:
+        input.update(valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")())
     return input
 
 
@@ -103,11 +141,13 @@ def create_valid_target_input(irsubclasses):
             qubit_set.extend(list(single_target_valid_input().values()))
         elif subclass == DoubleTarget:
             qubit_set.extend(list(double_target_valid_input().values()))
+        elif subclass == MultiTarget:
+            qubit_set.extend(list(multi_target_valid_input().values()))
         elif subclass == SingleControl:
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_input().values()) + qubit_set
-        elif subclass == Angle:
+        elif subclass == Angle or subclass == TwoDimensionalMatrix:
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -119,6 +159,8 @@ def create_valid_gate_class_input(irsubclasses):
     input = {}
     if Angle in irsubclasses:
         input.update(angle_valid_input())
+    if TwoDimensionalMatrix in irsubclasses:
+        input.update(two_dimensional_matrix_valid_input())
     return input
 
 
@@ -139,7 +181,9 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 1
         elif subclass == DoubleControl:
             qubit_count += 2
-        elif subclass == Angle:
+        elif subclass == MultiTarget:
+            qubit_count += 3
+        elif subclass == Angle or subclass == TwoDimensionalMatrix:
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -167,7 +211,7 @@ def test_ir_instruction_level(testclass, subroutine_name, irclass, irsubclasses)
 def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses):
     qubit_count = calculate_qubit_count(irsubclasses)
     subroutine = getattr(Circuit(), subroutine_name)
-    assert subroutine(**create_valid_ir_input(irsubclasses)) == Circuit(
+    assert subroutine(**create_valid_subroutine_input(irsubclasses)) == Circuit(
         Instruction(**create_valid_instruction_input(testclass, irsubclasses))
     )
     if qubit_count == 1:
@@ -192,3 +236,11 @@ def test_gate_to_matrix(testclass, subroutine_name, irclass, irsubclasses):
     gate2 = testclass(**create_valid_gate_class_input(irsubclasses))
     assert isinstance(gate1.to_matrix(), np.ndarray)
     assert gate1.matrix_equivalence(gate2)
+
+
+# Additional Unitary gate tests
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("matrix", invalid_unitary_matrices)
+def test_unitary_invalid_matrix(matrix):
+    Gate.Unitary(matrix=matrix)
