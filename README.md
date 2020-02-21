@@ -2,6 +2,10 @@
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
 
+**Important**
+
+If you **Star** or **Watch** this repository, other users that have access to this repository are able to see your user name in the list of watchers. If you want to remain anonymous, you should not Watch or Star this repository, nor post any comments or submit a pull request. 
+
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
