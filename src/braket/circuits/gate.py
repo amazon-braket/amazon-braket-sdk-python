@@ -23,16 +23,16 @@ from braket.circuits.qubit_set import QubitSet
 
 class Gate(Operator):
     """
-    Class `Gate` represents a quantum gate that operates on N qubits and are considered the
+    Class `Gate` represents a quantum gate that operates on N qubits. Gates are considered the
     building blocks of quantum circuits. This class is considered the gate definition containing
-    the meta-data that defines what a gate is and what it can do.
+    the metadata that defines what a gate is and what it does.
     """
 
     def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
         """
         Args:
             qubit_count (int): Number of qubits this gate interacts with.
-            ascii_symbols (Sequence[str]): ASCII string symbols for the gate, these are used when
+            ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of circuits. Length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with target ordering on the instruction.
                 For instance, if CNOT instruction has the control qubit on the first index and
@@ -72,7 +72,7 @@ class Gate(Operator):
         Returns the name of the gate
 
         Returns:
-            name of the gate as a string
+            The name of the gate as a string
         """
         return self.__class__.__name__
 
@@ -82,15 +82,15 @@ class Gate(Operator):
         Args:
             target (QubitSet): target qubit(s)
         Returns:
-            IR object of gate and target
+            IR object of the gate and target
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
     def to_matrix(self, *args, **kwargs) -> Any:
-        """Returns gate in matrix representation
+        """Returns a matrix representation of the gate
 
         Returns:
-            np.ndarray: gate in matrix representation
+            np.ndarray: A matrix representation of the gate
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
@@ -109,10 +109,10 @@ class Gate(Operator):
         Return if the matrix form of two gates are equivalent
 
         Args:
-            other (Gate): Gate instance to compare
+            other (Gate): Gate instance to compare this gate to
 
         Returns:
-            true if matrix forms of this gate and the other gate are equivalent
+            True if matrix forms of this gate and the gate compared to are equivalent
         """
         if not isinstance(other, Gate):
             return NotImplemented
@@ -128,7 +128,7 @@ class Gate(Operator):
 
     @classmethod
     def register_gate(cls, gate: "Gate"):
-        """Register a gate implementation by monkey patching into the Gate class.
+        """Register a gate implementation by adding it into the Gate class.
 
         Args:
             gate (Gate): Gate instance to register.

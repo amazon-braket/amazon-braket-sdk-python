@@ -22,14 +22,14 @@ class AwsQuantumSimulator(Device):
     """
     Amazon Braket implementation of a quantum simulator.
     Use this class to retrieve the latest metadata about the simulator,
-    and run a circuit on the simulator.
+    and to run a task on the simulator.
     """
 
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
-            arn (str): Simulator type ARN e.g. "arn:aws:aqx:::quantum-simulator:aqx:qs1".
-            aws_session (AwsSession, optional) aws_session: AWS session object. Default = None.
+            arn (str): The ARN of the simulator, for example, "arn:aws:aqx:::quantum-simulator:aqx:qs1".
+            aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
         """
         super().__init__(name=None, status=None, status_reason=None)
         self._arn = arn
@@ -39,7 +39,7 @@ class AwsQuantumSimulator(Device):
 
     def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
         """
-        Run a circuit on this AWS quantum device.
+        Run a task on the simulator device.
 
         Args:
             *aws_quantum_task_args: Variable length positional arguments for
@@ -48,7 +48,7 @@ class AwsQuantumSimulator(Device):
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
 
         Returns:
-            AwsQuantumTask: AwsQuantumTask that is tracking the circuit execution on the device.
+            AwsQuantumTask: An AwsQuantumTask that tracks the task execution on the device.
 
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
@@ -67,7 +67,7 @@ class AwsQuantumSimulator(Device):
         )
 
     def refresh_metadata(self) -> None:
-        """Refresh AwsQuantumSimulator object with most up to date simulator metadata."""
+        """Refresh the AwsQuantumSimulator object with the most recent simulator metadata."""
         simulator_metadata = self._aws_session.get_simulator_metadata(self._arn)
         self._name = simulator_metadata.get("name")
         self._status = simulator_metadata.get("status")
@@ -78,13 +78,13 @@ class AwsQuantumSimulator(Device):
 
     @property
     def arn(self) -> str:
-        """str: Return arn of simulator."""
+        """str: Returns the ARN of the simulator."""
         return self._arn
 
     @property
     # TODO: Add a link to the boto3 docs
     def properties(self) -> Dict[str, Any]:
-        """Dict[str, Any]: Return the simulator specific properties"""
+        """Dict[str, Any]: Return the simulator properties"""
         return self._properties
 
     def __repr__(self):

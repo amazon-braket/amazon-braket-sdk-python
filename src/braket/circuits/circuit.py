@@ -30,18 +30,18 @@ AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 class Circuit:
     """
     A representation of a quantum circuit that contains the instructions to be performed on a
-    quantum device. See :mod:`braket.circuits.gates` module for all the supported instructions.
+    quantum device. See :mod:`braket.circuits.gates` module for all of the supported instructions.
     """
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
         """
-        Register the subroutine `func` as an attribute of the Circuit class. The attribute name
+        Register the subroutine `func` as an attribute of the `Circuit` class. The attribute name
         is the name of `func`.
 
         Args:
             func (Callable[..., Union[Instruction, Iterable[Instruction]]]): The function of the
-                subroutine to be added to the class.
+                subroutine to add to the class.
 
         Examples:
             >>> def h_on_all(target):
@@ -71,7 +71,7 @@ class Circuit:
     def __init__(self, addable: AddableTypes = None, *args, **kwargs):
         """
         Args:
-            addable (Instruction, iterable of Instruction, or SubroutineCallable, optional): The
+            addable (Instruction, iterable of `Instruction`, or `SubroutineCallable`, optional): The
                 instruction-like item(s) to add to self. Default = None.
             *args: Variable length argument list. Supports any arguments that `add()` offers.
             **kwargs: Arbitrary keyword arguments. Supports any keyword arguments that `add()`
@@ -103,12 +103,12 @@ class Circuit:
 
     @property
     def instructions(self) -> Iterable[Instruction]:
-        """Iterable[Instruction]: Get an iterable of instructions in the circuit."""
+        """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
         return self._moments.values()
 
     @property
     def moments(self) -> Moments:
-        """Moments: Get the moments for this circuit."""
+        """Moments: Get the `moments` for this circuit."""
         return self._moments
 
     @property
@@ -128,12 +128,12 @@ class Circuit:
         target_mapping: Dict[QubitInput, QubitInput] = {},
     ) -> "Circuit":
         """
-        Add an instruction to self, returns self for chaining ability.
+        Add an instruction to `self`, returns `self` for chaining ability.
 
         Args:
-            instruction (Instruction): Instruction to add into self.
+            instruction (Instruction): `Instruction` to add into `self`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
-                instruction. If instruction is a single qubit gate than an instruction is created
+                `instruction`. If `instruction` is a single qubit gate, then an instruction is created
                 for every index in `target`. Default = None.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
@@ -169,7 +169,7 @@ class Circuit:
             Instruction('operator': 'H', 'target': QubitSet(Qubit(11),))
         """
         if target_mapping and target is not None:
-            raise TypeError("Both 'target_mapping' and 'target' cannot be supplied.")
+            raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
         if not target_mapping and not target:
             # Nothing has been supplied, add instruction
@@ -196,7 +196,7 @@ class Circuit:
     ) -> "Circuit":
         """
         Add a `circuit` to self, returns self for chaining ability. This is a composite form of
-        `add_instruction()` since it adds all the instructions of `circuit` to this circuit.
+        `add_instruction()` since it adds all of the instructions of `circuit` to this circuit.
 
         Args:
             circuit (Circuit): Circuit to add into self.
@@ -206,7 +206,7 @@ class Circuit:
                 Default = None.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
-                to be mapped and the value is what it will be changed to. Default = {}.
+                to map, and the Value is what to change it to. Default = {}.
 
         Returns:
             Circuit: self
@@ -216,9 +216,9 @@ class Circuit:
 
         Note:
             Supplying `target` sorts `circuit.qubits` in order to have deterministic behavior since
-            `circuit.qubits` ordering is based on how instructions are inserted. Therefore be
-            cautious using this parameter with circuits that have large number of qubits as the sort
-            can become costly. If performance is a concern then use `target_mapping` since that has
+            `circuit.qubits` ordering is based on how instructions are inserted. Therefore, be
+            cautious when using this parameter with circuits that have a large number of qubits, as the sort
+            can be resource-intensive. If performance is a concern, use `target_mapping` since that has
             only a linear runtime to remap the qubits.
 
         Examples:
@@ -244,7 +244,7 @@ class Circuit:
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(10), Qubit(11)))
         """
         if target_mapping and target is not None:
-            raise TypeError("Both 'target_mapping' and 'target' cannot be supplied.")
+            raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
         elif target is not None:
             keys = sorted(circuit.qubits)
             values = target
@@ -258,8 +258,8 @@ class Circuit:
     def add(self, addable: AddableTypes, *args, **kwargs) -> "Circuit":
         """
         Generic add method for adding instruction-like item(s) to self. Any arguments that
-        `add_circuit()` and / or `add_instruction()` supports is supported by this method.
-        If adding a subroutine then check with that subroutines docs to determine what input it
+        `add_circuit()` and / or `add_instruction()` supports are supported by this method.
+        If adding a subroutine, check with that subroutines documentation to determine what input it
         allows.
 
         Args:
@@ -315,21 +315,21 @@ class Circuit:
         Get a diagram for the current circuit.
 
         Args:
-            circuit_diagram_class (Class, optional): A CircuitDiagram class that will build the
+            circuit_diagram_class (Class, optional): A `CircuitDiagram` class that builds the
                 diagram for this circuit. Default = AsciiCircuitDiagram.
 
         Returns:
-            str: String circuit diagram.
+            str: An ASCII string circuit diagram.
         """
         return circuit_diagram_class.build_diagram(self)
 
     def to_ir(self) -> Program:
         """
         Converts the circuit into the canonical intermediate representation.
-        If the circuit is sent over the wire then this method is called before it is sent.
+        If the circuit is sent over the wire, this method is called before it is sent.
 
         Returns:
-            (Program): A JSON AWS Quantum Circuit Description (jaqcd) program.
+            (Program): An AWS quantum circuit description program in JSON format.
         """
         ir_instructions = [instr.to_ir() for instr in self.instructions]
         return Program(instructions=ir_instructions)
@@ -339,7 +339,7 @@ class Circuit:
         Return a shallow copy of the circuit.
 
         Returns:
-            Circuit: Shallow copy of the circuit.
+            Circuit: A shallow copy of the circuit.
         """
         return Circuit().add(self.instructions)
 
@@ -368,7 +368,7 @@ def subroutine(register=False):
     Subroutine is a function that returns instructions or circuits.
 
     Args:
-        register (bool, optional): If true, monkey patch this subroutine into the Circuit class.
+        register (bool, optional): If `True`, adds this subroutine into the `Circuit` class.
             Default = False.
 
     Examples:

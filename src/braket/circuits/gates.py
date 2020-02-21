@@ -29,7 +29,7 @@ from braket.circuits.qubit_set import QubitSet, QubitSetInput
 To add a new gate:
     1. Implement the class and extend `Gate`
     2. Add a method with the `@circuit.subroutine(register=True)` decorator. Method name
-       will be monkey patched into the Circuit class. This method will be the default way
+       will be added into the `Circuit` class. This method is the default way
        clients add this gate to a circuit.
     3. Register the class with the `Gate` class via `Gate.register_gate()`.
 """
@@ -58,7 +58,7 @@ class H(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of H instructions.
+            Iterable[Instruction]: `Iterable` of H instructions.
 
         Examples:
             >>> circ = Circuit().h(0)
@@ -91,7 +91,7 @@ class I(Gate):  # noqa: E742, E261
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of I instructions.
+            Iterable[Instruction]: `Iterable` of I instructions.
 
         Examples:
             >>> circ = Circuit().i(0)
@@ -124,7 +124,7 @@ class X(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of X instructions.
+            Iterable[Instruction]: `Iterable` of X instructions.
 
         Examples:
             >>> circ = Circuit().x(0)
@@ -157,7 +157,7 @@ class Y(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of Y instructions.
+            Iterable[Instruction]: `Iterable` of Y instructions.
 
         Examples:
             >>> circ = Circuit().y(0)
@@ -190,7 +190,7 @@ class Z(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of Z instructions.
+            Iterable[Instruction]: `Iterable` of Z instructions.
 
         Examples:
             >>> circ = Circuit().z(0)
@@ -224,7 +224,7 @@ class S(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of S instructions.
+            Iterable[Instruction]: `Iterable` of S instructions.
 
         Examples:
             >>> circ = Circuit().s(0)
@@ -290,7 +290,7 @@ class T(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of T instructions.
+            Iterable[Instruction]: `Iterable` of T instructions.
 
         Examples:
             >>> circ = Circuit().t(0)
@@ -323,7 +323,7 @@ class Ti(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of Ti instructions.
+            Iterable[Instruction]: `Iterable` of Ti instructions.
 
         Examples:
             >>> circ = Circuit().ti(0)
@@ -356,7 +356,7 @@ class V(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of V instructions.
+            Iterable[Instruction]: `Iterable` of V instructions.
 
         Examples:
             >>> circ = Circuit().v(0)
@@ -389,7 +389,7 @@ class Vi(Gate):
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
 
         Returns:
-            Iterable[Instruction]: Iterable of Vi instructions.
+            Iterable[Instruction]: `Iterable` of Vi instructions.
 
         Examples:
             >>> circ = Circuit().vi(0)

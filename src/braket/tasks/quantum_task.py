@@ -25,7 +25,7 @@ class QuantumTask(ABC):
     @property
     @abstractmethod
     def id(self) -> str:
-        """str: The task id."""
+        """str: The task ID."""
 
     @abstractmethod
     def cancel(self) -> None:
@@ -39,7 +39,7 @@ class QuantumTask(ABC):
     def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
         Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: Get the quantum task result.
-        Call async_result if you want the result in an async way.
+        Call async_result if you want the result in an asynchronous way.
         """
 
     @abstractmethod
@@ -51,9 +51,9 @@ class QuantumTask(ABC):
         Get task metadata.
 
         Args:
-            use_cached_value (bool, optional): If true returns the last value retrieved
+            use_cached_value (bool, optional): If True, returns the value retrieved from the most recent request
 
         Returns:
-            Dict[str, Any]: The metadata regarding the task If `use_cached_value` is True
-            then the last value retrieved is returned.
+            Dict[str, Any]: The metadata regarding the task. If `use_cached_value` is True,
+            then the value retrieved from the most recent request is used.
         """

@@ -40,8 +40,8 @@ class GateModelQuantumTaskResult:
         measurement_probabilities_copied_from_device (bool): flag whether
             `measurement_probabilities` were copied from device. If false,
             `measurement_probabilities` are calculated from device data.
-        task_metadata (Dict[str, Any]): Dictionary of task metadata. TODO: Link boto3 docs.
-        state_vector (Dict[str, complex]): Dictionary where key is state and value is amplitude.
+        task_metadata (Dict[str, Any]): Dictionary of task metadata.
+        state_vector (Dict[str, complex]): Dictionary where Key is state and Value is amplitude.4
     """
 
     measurements: np.ndarray
@@ -136,7 +136,7 @@ class GateModelQuantumTaskResult:
         Create GateModelQuantumTaskResult from string
 
         Args:
-            result (str): JSON object string, whose keys are GateModelQuantumTaskResult attributes.
+            result (str): JSON object string, with keys that are GateModelQuantumTaskResult attributes.
 
         Returns:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on a string

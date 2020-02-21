@@ -32,11 +32,11 @@ class AwsSession(object):
     def __init__(self, boto_session=None, braket_client=None):
         """
         Args:
-            boto_session: boto3 session object
-            braket_client: boto3 braket client
+            boto_session: A boto3 session object
+            braket_client: A boto3 Braket client
 
         Raises:
-            ValueError: If Amazon Braket does not exist for the `boto_session`'s region.
+            ValueError: If Amazon Braket is not available in the Region specified for the boto3 session.
         """
 
         self.boto_session = boto_session or boto3.Session()
@@ -49,7 +49,7 @@ class AwsSession(object):
             if not endpoint:
                 supported_regions = list(AwsSession.BRAKET_ENDPOINTS.keys())
                 raise ValueError(
-                    f"No braket endpoint for {region}, supported regions are {supported_regions}"
+                    f"No braket endpoint for {region}, supported Regions are {supported_regions}"
                 )
 
             self.braket_client = self.boto_session.client("braket", endpoint_url=endpoint)
@@ -62,7 +62,7 @@ class AwsSession(object):
         Cancel the quantum task.
 
         Args:
-            arn (str): ARN of the quantum task to cancel.
+            arn (str): The ARN of the quantum task to cancel.
         """
         self.braket_client.cancel_quantum_task(quantumTaskArn=arn)
 
@@ -71,36 +71,36 @@ class AwsSession(object):
         Create a quantum task.
 
         Args:
-            **boto3_kwargs: Keyword arguments for the Braket CreateQuantumTask API.
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateQuantumTask` operation.
 
         Returns:
-            str: Quantum task ARN.
+            str: The ARN of the quantum task.
         """
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         return response["quantumTaskArn"]
 
     def get_quantum_task(self, arn: str) -> Dict[str, Any]:
         """
-        Get the quantum task.
+        Gets the quantum task.
 
         Args:
-            arn (str): ARN of the quantum task to cancel.
+            arn (str): The ARN of the quantum task to cancel.
 
         Returns:
-            Dict[str, Any]: Braket GetQuantumTask API result.
+            Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
 
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
-        Retrieve S3 object body
+        Retrieve the S3 object body
 
         Args:
-            s3_bucket (str): S3 bucket name
-            s3_object_key (str): S3 object key within `s3_bucket`
+            s3_bucket (str): The S3 bucket name
+            s3_object_key (str): The S3 object key within the `s3_bucket`
 
         Returns:
-            str: Body of S3 object
+            str: The body of the S3 object
         """
         s3 = self.boto_session.resource("s3")
         obj = s3.Object(s3_bucket, s3_object_key)
@@ -109,10 +109,10 @@ class AwsSession(object):
     # TODO: add in boto3 exception handling once we have exception types in API
     def get_qpu_metadata(self, arn: str) -> Dict[str, Any]:
         """
-        Call AWS API describe_qpus to return metadata about QPU
+        Calls the Amazon Braket `DescribeQpus` (`describe_qpus`) operation to retrieve QPU metadata.
 
         Args:
-            arn (str): QPU ARN
+            arn (str): The ARN of the QPU to retrieve metadata from
 
         Returns:
             Dict[str, Any]: QPU metadata
@@ -127,13 +127,13 @@ class AwsSession(object):
     # TODO: add in boto3 exception handling once we have exception types in API
     def get_simulator_metadata(self, arn: str) -> Dict[str, Any]:
         """
-        Call AWS API describe_quantum_simulators to return metadata about simulator
+        Calls the Amazon Braket `DescribeQuantumSimulators` (`describe_quantum_simulators`) to retrieve simulator metadata
 
         Args:
-            arn (str): simulator ARN
+            arn (str): The ARN of the simulator to retrieve metadata from
 
         Returns:
-            Dict[str, Any]: simulator metadata
+            Dict[str, Any]: Simulator metadata
         """
         try:
             response = self.braket_client.describe_quantum_simulators(quantumSimulatorArns=[arn])

@@ -24,18 +24,18 @@ class AngledGate(Gate):
     def __init__(self, angle: float, qubit_count: int, ascii_symbols: Sequence[str]):
         """
         Args:
-            angle (float): Angle of gate in radians
-            qubit_count (int): Number of qubits this gate interacts with.
-            ascii_symbols (Sequence[str]): ASCII string symbols for the gate, these are used when
-                printing a diagram of circuits. Length must be the same as `qubit_count`, and
-                index ordering is expected to correlate with target ordering on the instruction.
-                For instance, if CNOT instruction has the control qubit on the first index and
-                target qubit on the second index. Then ASCII symbols would have ["C", "X"] to
+            angle (float): The angle of the gate in radians.
+            qubit_count (int): The number of qubits that this gate interacts with.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
+                printing a diagram of a circuit. The length must be the same as `qubit_count`, and
+                index ordering is expected to correlate with the target ordering on the instruction.
+                For instance, if a CNOT instruction has the control qubit on the first index and
+                target qubit on the second index, the ASCII symbols should have `["C", "X"]` to
                 correlate a symbol with that index.
 
         Raises:
-            ValueError: `qubit_count` is less than 1, `ascii_symbols` are None, or
-                `ascii_symbols` length != `qubit_count`, or `angle` is None
+            ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`, or `angle` is`None`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         if angle is None:
@@ -45,9 +45,9 @@ class AngledGate(Gate):
     @property
     def angle(self) -> float:
         """
-        Returns angle for the gate
+        Returns the angle for the gate
 
         Returns:
-            angle (float): angle of gate in radians
+            angle (float): The angle of the gate in radians
         """
         return self._angle
