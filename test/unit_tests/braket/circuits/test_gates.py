@@ -80,21 +80,21 @@ testdata = [
         "unitary",
         ir.Unitary,
         [TwoDimensionalMatrix, MultiTarget],
-        {"input_generator_kwargs": {"input_type": complex}},
+        {"input_type": complex},
     ),
     (
         Gate.Unitary,
         "unitary",
         ir.Unitary,
         [TwoDimensionalMatrix, MultiTarget],
-        {"input_generator_kwargs": {"input_type": float}},
+        {"input_type": float},
     ),
     (
         Gate.Unitary,
         "unitary",
         ir.Unitary,
         [TwoDimensionalMatrix, MultiTarget],
-        {"input_generator_kwargs": {"input_type": int}},
+        {"input_type": int},
     ),
 ]
 
@@ -171,9 +171,7 @@ def create_valid_subroutine_input(irsubclasses, **kwargs):
     input = {}
     for subclass in irsubclasses:
         input.update(
-            valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(
-                **kwargs.get("input_generator_kwargs", {})
-            )
+            valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(**kwargs)
         )
     return input
 
@@ -206,7 +204,7 @@ def create_valid_gate_class_input(irsubclasses, **kwargs):
     if Angle in irsubclasses:
         input.update(angle_valid_input())
     if TwoDimensionalMatrix in irsubclasses:
-        input.update(two_dimensional_matrix_valid_input(**kwargs.get("input_generator_kwargs", {})))
+        input.update(two_dimensional_matrix_valid_input(**kwargs))
     return input
 
 
