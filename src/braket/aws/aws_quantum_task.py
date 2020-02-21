@@ -273,7 +273,12 @@ def _create_internal(
 
 @_create_internal.register
 def _(
-    circuit: Circuit, aws_session: AwsSession, create_task_kwargs: Dict[str, Any], *args, **kwargs,
+    circuit: Circuit,
+    aws_session: AwsSession,
+    create_task_kwargs: Dict[str, Any],
+    backend_parameters: Dict[str, Any],
+    *args,
+    **kwargs,
 ) -> AwsQuantumTask:
     create_task_kwargs.update(
         {

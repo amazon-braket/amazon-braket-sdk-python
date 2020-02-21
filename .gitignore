@@ -20,6 +20,7 @@ __pycache__/
 /.cache
 /.pytest_cache
 /.mypy_cache
+/pip-wheel-metadata
 
 /doc/_apidoc/
 /build
