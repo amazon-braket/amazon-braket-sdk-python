@@ -36,7 +36,7 @@ class AwsSession(object):
             braket_client: A boto3 Braket client
 
         Raises:
-            ValueError: If Amazon Braket is not available in the Region specified for the boto3 session.
+            ValueError: If Braket is not available in the Region used for the boto3 session.
         """
 
         self.boto_session = boto_session or boto3.Session()
@@ -109,7 +109,8 @@ class AwsSession(object):
     # TODO: add in boto3 exception handling once we have exception types in API
     def get_qpu_metadata(self, arn: str) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `DescribeQpus` (`describe_qpus`) operation to retrieve QPU metadata.
+        Calls the Amazon Braket `DescribeQpus` (`describe_qpus`) operation to retrieve 
+        QPU metadata.
 
         Args:
             arn (str): The ARN of the QPU to retrieve metadata from
@@ -127,7 +128,8 @@ class AwsSession(object):
     # TODO: add in boto3 exception handling once we have exception types in API
     def get_simulator_metadata(self, arn: str) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `DescribeQuantumSimulators` (`describe_quantum_simulators`) to retrieve simulator metadata
+        Calls the Amazon Braket `DescribeQuantumSimulators` (`describe_quantum_simulators`) to 
+        retrieve simulator metadata
 
         Args:
             arn (str): The ARN of the simulator to retrieve metadata from

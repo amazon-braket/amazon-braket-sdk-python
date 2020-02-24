@@ -133,8 +133,8 @@ class Circuit:
         Args:
             instruction (Instruction): `Instruction` to add into `self`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
-                `instruction`. If `instruction` is a single qubit gate, then an instruction is created
-                for every index in `target`. Default = None.
+                `instruction`. If a single qubit gate, an instruction is created for every index in `target`. 
+                Default = None.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
                 `instruction.target` and the value is what the key will be changed to. Default = {}.
@@ -215,11 +215,10 @@ class Circuit:
             TypeError: If both `target_mapping` and `target` are supplied.
 
         Note:
-            Supplying `target` sorts `circuit.qubits` in order to have deterministic behavior since
-            `circuit.qubits` ordering is based on how instructions are inserted. Therefore, be
-            cautious when using this parameter with circuits that have a large number of qubits, as the sort
-            can be resource-intensive. If performance is a concern, use `target_mapping` since that has
-            only a linear runtime to remap the qubits.
+            Supplying `target` sorts `circuit.qubits` to have deterministic behavior since
+            `circuit.qubits` ordering is based on how instructions are inserted.
+            Use caution when using this with circuits that with a lot of qubits, as the sort
+            can be resource-intensive. Use `target_mapping` to use a linear runtime to remap the qubits.
 
         Examples:
             >>> widget = Circuit().h(0).cnot([0, 1])

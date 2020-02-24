@@ -26,7 +26,8 @@ from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult,
 
 # TODO: add AnnealingQuantumTaskResult
 class AwsQuantumTask(QuantumTask):
-    """Amazon Braket implementation of a quantum task. A task can be a circuit or an annealing problem. Cuurently, only circuits are supported in the Private Beta."""
+     """Amazon Braket implementation of a quantum task. A task can be a circuit or an annealing
+        problem. Cuurently, only circuits are supported in the Private Beta."""
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     TERMINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}
@@ -48,16 +49,18 @@ class AwsQuantumTask(QuantumTask):
         **kwargs,
     ) -> AwsQuantumTask:
         """
-        An `AwsQuantumTask` factory method that serializes a quantum task specification, 
-        submits it to Amazon Braket, and then returns an `AwsQuantumTask` that tracks the execution of the task.
+        An `AwsQuantumTask` factory method that serializes a quantum task specification,
+        submits it to Amazon Braket, and then returns an `AwsQuantumTask` that tracks the
+        execution of the task.
 
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             device_arn (str): The ARN of the quantum device.
-            task_specification (Union[Circuit, Problem]): The specification of the task 
+            task_specification (Union[Circuit, Problem]): The specification of the task
                 to run on device.
-            s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple with bucket (index 0)
-                and key (index 1) that specifies the Amazon S3 bucket and folder to store task results.
+            s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple with bucket
+                (index 0) and key (index 1) that specifies the Amazon S3 bucket and folder 
+                to store task results.
             shots (int): The number of times to run the task on the device.
                 If the device is a classical simulator, this implies the state is sampled N times,
                 where N = `shots`. Default shots = 1_000.
@@ -104,7 +107,8 @@ class AwsQuantumTask(QuantumTask):
             results_formatter (Callable[[str], Any]): A function that deserializes a string
                 into a results structure (such as `GateModelQuantumTaskResult`)
             poll_timeout_seconds (int): The polling timeout for result(), default is 120 seconds.
-            poll_interval_seconds (int): The polling interval for result(), default is 0.25 seconds.
+            poll_interval_seconds (int): The polling interval for result(), default is 0.25 
+            seconds.
         """
         self._arn: str = arn
         self._aws_session: AwsSession = aws_session
@@ -131,9 +135,10 @@ class AwsQuantumTask(QuantumTask):
         Get the task metadata defined in Amazon Braket.
 
         Args:
-            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved from
-                the Amazon Braket `GetQuantumTask` operation. If `False`, calls the `GetQuantumTask` 
-                operation  to retrieve metadata, which also updates the cached value.
+            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
+                `GetQuantumTask` operation  to retrieve metadata, which also updates the cached
+                value.
                 Default = False.
 
         Returns:
@@ -150,15 +155,16 @@ class AwsQuantumTask(QuantumTask):
         The state of the quantum task.
 
         Args:
-            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved from
-                the Amazon Braket `GetQuantumTask` operation. If `False`, calls the `GetQuantumTask` 
-                operation  to retrieve metadata, which also updates the cached value.
+            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
+                `GetQuantumTask` operation to retrieve metadata, which also updates the cached
+                value.
                 Default = False.
 
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
-            in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`, 
-            the value most recently returned from the `GetQuantumTask` operation is used. 
+            in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`,
+            the value most recently returned from the `GetQuantumTask` operation is used.
 
         See Also:
             `metadata()`
@@ -167,8 +173,9 @@ class AwsQuantumTask(QuantumTask):
 
     def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
-        Get the quantum task result by polling Amazon Braket to see if the task is completed. Once
-        the task is completed, the result is retrieved from S3 and returned as a `QuantumTaskResult`.
+        Get the quantum task result by polling Amazon Braket to see if the task is completed.
+            Once the task is completed, the result is retrieved from S3 and returned as a
+            `QuantumTaskResult`.
 
         This method is a blocking thread call and synchronously returns a result. Call
         async_result() if you require an asynchronous invocation.
@@ -212,9 +219,9 @@ class AwsQuantumTask(QuantumTask):
 
         Returns:
             GateModelQuantumTaskResult: If the task is in the `AwsQuantumTask.RESULTS_READY_STATES`
-            state within the specified time limit, the result from the S3 bucket is loaded and returned. `None` is
-            returned if a timeout occurs or task state is in `AwsQuantumTask.TERMINAL_STATES`
-            but not `AwsQuantumTask.RESULTS_READY_STATES`.
+            state within the specified time limit, the result from the S3 bucket is loaded and
+            returned. `None` is returned if a timeout occurs or task state is in `AwsQuantumTask.
+            TERMINAL_STATES` but not `AwsQuantumTask.RESULTS_READY_STATES`.
 
         Note:
             Timeout and sleep intervals are defined in the constructor fields

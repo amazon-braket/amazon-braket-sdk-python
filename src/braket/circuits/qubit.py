@@ -47,7 +47,7 @@ class Qubit(int):
     @staticmethod
     def new(qubit: QubitInput) -> "Qubit":
         """
-        Helper constructor - if input is a Qubit it returns the same value, 
+        Helper constructor - if input is a Qubit it returns the same value,
         else a new Qubit is constructed.
 
         Args:

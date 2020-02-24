@@ -37,15 +37,15 @@ class MomentsKey(NamedTuple):
 
 class Moments(Mapping[MomentsKey, Instruction]):
     """
-    An ordered mapping of `MomentsKey` to `Instruction`. This is the core data structure that
-    contains instructions, the ordering in which they are inserted, and the time slices at which they
-    occur. `Moments` implements `Mapping` and therefore offers the same experience as a read-only
-    dictionary, and is mutable only through the `add()` method.
+    An ordered mapping of `MomentsKey` to `Instruction`. The core data structure that
+        contains instructions, ordering they are inserted in, and time slices when they
+        occur. `Moments` implements `Mapping` and functions the same as a read-only
+        dictionary. It is mutable only through the `add()` method.
 
-    This data structure is useful for determining the dependency of instructions such as 
-    printing or optimizing circuit structure before sending it to a quantum
-    device. The original insertion order is preserved and can be retrieved via the `values()`
-    method.
+    This data structure is useful to determine a dependency of instructions, such as
+        printing or optimizing circuit structure, before sending it to a quantum
+        device. The original insertion order is preserved and can be retrieved via the `values()`
+        method.
 
     Args:
         instructions (Iterable[Instruction], optional): Instructions to initialize self with.
@@ -113,8 +113,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
             occur at that moment in time. The order of instructions is in no particular order.
 
         Note:
-            This is a computed result over self and can be freely mutated. Be aware that this
-            is re-computed with every call, and has a computational runtime O(N) where N is the number
+            This is a computed result over self and can be freely mutated. This is re-computed with
+            every call, with a computational runtime O(N) where N is the number
             of instructions in self.
         """
 
@@ -131,7 +131,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         Add instructions to self.
 
         Args:
-            instructions (Iterable[Instruction]): Instructions to add to self. The instruction 
+            instructions (Iterable[Instruction]): Instructions to add to self. The instruction
             are added to the max time slice in which the instruction fits.
         """
         for instruction in instructions:

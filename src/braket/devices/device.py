@@ -37,12 +37,13 @@ class Device(ABC):
 
     @abstractmethod
     def run(self, task_specification: Union[Circuit, Problem], shots: int) -> QuantumTask:
-        """ Run a quantum task specification on this quantum device. A task can be a circuit 
-        or an annealing problem. Only circuits are currently supported in the Amazon Braket Private Beta.
+        """ Run a quantum task specification on this quantum device. A task can be a circuit
+        or an annealing problem. Only circuits are currently supported in the Amazon Braket 
+        Private Beta.
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of a task
-            to run on device. 
+            to run on device.
             shots (int): The number of times to run the task on the device. Default is 1_000.
 
         Returns:

@@ -33,8 +33,8 @@ class AnnealingQuantumTaskResult:
              list of the output or energy of the solutions
         variable_count (int): the number of variables
         problem_type (str): the type of problem ('ising' or 'qubo')
-        task_metadata (Dict[str, Any]): Dictionary of task metadata. 
-        additional_metadata (Dict[str, Any]): A dictionary of additional device-specific metadata            
+        task_metadata (Dict[str, Any]): Dictionary of task metadata.
+        additional_metadata (Dict[str, Any]): A dictionary of additional device-specific metadata
     """
 
     record_array: numpy.recarray
@@ -50,9 +50,9 @@ class AnnealingQuantumTaskResult:
         Args:
             selected_fields (List[str], optional, default=None): selected fields to return.
                 Options are 'solution', 'value', and 'solution_count'
-            sorted_by (str, optional, default='value'): Indicates that the data returned is sorted by this field.
+            sorted_by (str, optional, default='value'): Sorts the data by this field.
                 Options are 'solution', 'value', and 'solution_count'
-            reverse (bool, optional, default=False): Indicates whether the data is returned in reverse order
+            reverse (bool, optional, default=False): If Truem, returns the data in reverse order.
 
         Yields:
             tuple: data in record_array

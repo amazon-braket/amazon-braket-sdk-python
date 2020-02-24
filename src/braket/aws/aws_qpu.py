@@ -22,7 +22,8 @@ from braket.devices.device import Device
 class AwsQpu(Device):
     """
     Amazon Braket implementation of a Quantum Processing Unit (QPU).
-    Use this class to retrieve the latest metadata about the QPU, and to run a quantum task on the QPU.
+    Use this class to retrieve the latest metadata about the QPU, and to run a quantum task on the
+    QPU.
     """
 
     QPU_REGIONS = {
@@ -41,11 +42,13 @@ class AwsQpu(Device):
             ValueError: If an unknown `arn` is specified.
 
         Note:
-            QPUs are physically located in specific AWS Regions. In some cases, the current `aws_session`
-            connects to a Region other than the Region in which the QPU is physically located. When this occurs, 
-            a cloned `aws_session` is created for the Region the QPU is located in.
+            QPUs are physically located in specific AWS Regions. In some cases, the current
+            `aws_session` connects to a Region other than the Region in which the QPU is
+            physically located. When this occurs, a cloned `aws_session` is created for the Region
+            the QPU is located in.
 
-            See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located in.
+            See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located
+            in.
         """
         super().__init__(name=None, status=None, status_reason=None)
         self._arn = arn
@@ -55,7 +58,8 @@ class AwsQpu(Device):
 
     def run(self, *aws_quantum_task_args, **aws_quantum_task_kwargs) -> AwsQuantumTask:
         """
-        Run a quantum task specification on this quantum device. A task can be a circuit or an annealing problem. Currently, only circuits are supported in the Private Beta.
+        Run a quantum task specification on this quantum device. A task can be a circuit or an
+        annealing problem. Currently, only circuits are supported in the Private Beta.
 
         Args:
             *aws_quantum_task_args: Variable length positional arguments for
@@ -122,9 +126,9 @@ class AwsQpu(Device):
 
     def _aws_session_for_qpu(self, qpu_arn: str, aws_session: AwsSession) -> AwsSession:
         """
-        Get an AwsSession for the QPU ARN. QPUs are physically located in specific AWS Regions. 
+        Get an AwsSession for the QPU ARN. QPUs are physically located in specific AWS Regions.
         The AWS sessions should connect to the Region that the QPU is located in.
-        
+
         See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located in.
         """
 

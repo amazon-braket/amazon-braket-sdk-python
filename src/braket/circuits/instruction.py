@@ -23,7 +23,7 @@ from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 class Instruction:
     """
-    An instruction is a quantum directive that describes the task to be performed on a quantum device.
+    An instruction is a quantum directive that describes the task to perform on a quantum device.
     """
 
     def __init__(self, operator: Operator, target: QubitSetInput):
@@ -36,7 +36,7 @@ class Instruction:
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the Qubit
                 or QubitSet class requirements.
-            TypeError: If a Qubit class cannot be constructed from the `target` due to an incorrect `typing`
+            TypeError: If a Qubit class can't be constructed from `target` due to an incorrect `typing`
 
         Examples:
             >>> Instruction(Gate.CNot(), [0, 1])

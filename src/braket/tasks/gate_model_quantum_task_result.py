@@ -136,7 +136,7 @@ class GateModelQuantumTaskResult:
         Create GateModelQuantumTaskResult from string
 
         Args:
-            result (str): JSON object string, with keys that are GateModelQuantumTaskResult attributes.
+            result (str): JSON object string, with GateModelQuantumTaskResult attributes as keys.
 
         Returns:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on a string

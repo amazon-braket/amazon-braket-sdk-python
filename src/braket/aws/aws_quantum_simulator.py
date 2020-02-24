@@ -28,7 +28,8 @@ class AwsQuantumSimulator(Device):
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
-            arn (str): The ARN of the simulator, for example, "arn:aws:aqx:::quantum-simulator:aqx:qs1".
+            arn (str): The ARN of the simulator, for example, 
+            "arn:aws:aqx:::quantum-simulator:aqx:qs1". 
             aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
         """
         super().__init__(name=None, status=None, status_reason=None)
