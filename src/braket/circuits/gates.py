@@ -1254,3 +1254,82 @@ class CSwap(Gate):
 
 
 Gate.register_gate(CSwap)
+
+
+class Unitary(Gate):
+    """Arbitrary unitary gate
+
+    Args:
+        matrix (numpy.ndarray): Unitary matrix which defines the gate.
+        display_name (str): Name to be used for an instance of this unitary gate
+            for circuit diagrams. Defaults to `U`.
+
+    Raises:
+        ValueError: If `matrix` is not a two-dimensional square matrix,
+            or has a dimension length which is not a positive exponent of 2,
+            or is non-unitary.
+    """
+
+    def __init__(self, matrix: np.ndarray, display_name: str = "U"):
+        if len(matrix.shape) != 2 or matrix.shape[0] != matrix.shape[1]:
+            raise ValueError(f"{matrix} is not a two-dimensional square matrix")
+
+        self._matrix = np.array(matrix, dtype=complex)
+        qubit_count = int(np.log2(self._matrix.shape[0]))
+        if 2 ** qubit_count != self._matrix.shape[0] or qubit_count < 1:
+            raise ValueError(
+                f"`matrix` dimension {self._matrix.shape[0]} is not a positive exponent of 2"
+            )
+
+        if not Unitary._is_unitary(self._matrix):
+            raise ValueError(f"{self._matrix} is not unitary")
+
+        super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+
+    def to_matrix(self):
+        return np.array(self._matrix)
+
+    def to_ir(self, target: QubitSet):
+        return ir.Unitary(
+            targets=[qubit for qubit in target],
+            matrix=Unitary._transform_matrix_to_ir(self._matrix),
+        )
+
+    @staticmethod
+    def _is_unitary(matrix: np.ndarray):
+        return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
+
+    @staticmethod
+    def _transform_matrix_to_ir(matrix: np.ndarray):
+        return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def unitary(targets: QubitSet, matrix: np.ndarray, display_name: str = "U") -> Instruction:
+        """Registers this function into the circuit class.
+
+        Args:
+            targets (QubitSet): Target qubits.
+            matrix (numpy.ndarray): Unitary matrix which defines the gate. Matrix should be
+                compatible with the supplied targets, with 2 ** len(targets) == matrix.shape[0].
+            display_name (str): Name to be used for an instance of this unitary gate
+                for circuit diagrams. Defaults to `U`.
+
+        Returns:
+            Instruction: Unitary instruction.
+
+        Raises:
+            ValueError: If `matrix` is not a two-dimensional square matrix,
+                or has a dimension length which is not compatible with the `targets`,
+                or is non-unitary,
+
+        Examples:
+            >>> circ = Circuit().unitary(matrix=np.array([[0, 1],[1, 0]]), targets=[0])
+        """
+        if 2 ** len(targets) != matrix.shape[0]:
+            raise ValueError("Dimensions of the supplied unitary are incompatible with the targets")
+
+        return Instruction(Gate.Unitary(matrix, display_name), target=targets)
+
+
+Gate.register_gate(Unitary)
