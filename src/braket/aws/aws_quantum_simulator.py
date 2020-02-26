@@ -66,11 +66,11 @@ class AwsQuantumSimulator(Device):
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
             >>> device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1")
-            >>> device.run(circuit, ("bucket-foo", "key-bar"))
+            >>> device.run(circuit, ("bucket", "key"), shots=1000)
 
             >>> circuit = Circuit().h(0).cnot(0, 1)
             >>> device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1")
-            >>> device.run(circuit=circuit, s3_destination_folder=("bucket-foo", "key-bar"))
+            >>> device.run(circuit=circuit, s3_destination_folder=("bucket", "key"), shots=1000)
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
