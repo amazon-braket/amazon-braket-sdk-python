@@ -13,6 +13,7 @@
 
 # Execute initialization code in circuit module
 import braket.circuits.circuit as circuit  # noqa: F401
+
 # Execute initialization code in gates module
 import braket.circuits.gates as gates  # noqa: F401
 from braket.circuits.angled_gate import AngledGate  # noqa: F401
