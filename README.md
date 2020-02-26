@@ -1,10 +1,12 @@
 **This prerelease documentation is confidential and is provided under the terms of your nondisclosure agreement with Amazon Web Services (AWS) or other agreement governing your receipt of AWS confidential information.**
 
-The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
+The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket. This document describes how to configure your environment to use the Amazon Braket (Private Beta) locally on your computer. It does not include information about how to use Amazon Braket (Private Beta) in the AWS console.
+
+Tp provide feedback or request support, please contact the Amazon Braket team at [amazon-braket-preview-support@amazon.com](mailto:amazon-braket-preview-support@amazon.com?subject=Add%20a%20brief%20description%20of%20the%20issue).
 
 **Important**
 
-If you **Star** or **Watch** this repository, other users that have access to this repository are able to see your user name in the list of watchers. If you want to remain anonymous, you should not Watch or Star this repository, nor post any comments or submit a pull request. 
+If you **Star**, **Watch**, or submit a pull request for this repository, other users that have access to this repository are able to see your user name in the list of watchers. If you want to remain anonymous, you should not Watch or Star this repository, nor post any comments or submit a pull request. 
 
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
@@ -55,7 +57,7 @@ cd ..
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
 
 ### Access to Amazon Braket (Private Beta)
-You can configure your environment for the Amazon Braket Python SDK, but you need to be granted permission to access Amazon Braket (Private Beta). Before you can execute code against Amazon Braket. If you’ve not received notification that you have been added to the beta, please contact the Braket team for assistance.
+You can configure your environment for the Amazon Braket Python SDK, but you need to be granted permission to access Amazon Braket (Private Beta) before you can start making code requests to Amazon Braket. If you’ve not received notification that you have been added to the beta, please contact the Amazon Braket team for assistance using this email address: [amazon-braket-preview-support@amazon.com](mailto:amazon-braket-preview-support@amazon.com?subject=Add%20a%20brief%20description%20of%20the%20issue).
 
 ### IAM user or role with required permissions
 To perform the steps in this document and to interact with Amazon Braket, use an account with administrator privileges, such as one with the AdministratorAccess policy applied. To learn more about IAM user, roles, and policies, see [Adding and Removing IAM Identity Permissions](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage-attach-detach.html).
