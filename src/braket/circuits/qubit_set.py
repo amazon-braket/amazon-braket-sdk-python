@@ -11,12 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Dict, Iterable, TypeVar
+from typing import Dict, Iterable, Union
 
 from boltons.setutils import IndexedSet
 from braket.circuits.qubit import Qubit, QubitInput
 
-QubitSetInput = TypeVar("QubitSetInput", QubitInput, Iterable[QubitInput])
+QubitSetInput = Union[QubitInput, Iterable[QubitInput]]
 
 
 class QubitSet(IndexedSet):
@@ -52,7 +52,7 @@ class QubitSet(IndexedSet):
         """
 
         def _flatten(other):
-            if isinstance(other, Iterable):
+            if isinstance(other, Iterable) and not isinstance(other, str):
                 for item in other:
                     yield from _flatten(item)
             else:

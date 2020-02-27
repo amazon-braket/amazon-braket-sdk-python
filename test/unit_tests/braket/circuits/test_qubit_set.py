@@ -46,6 +46,11 @@ def test_with_qubit_set():
     assert QubitSet([qubits, [2, 3]]) == tuple([Qubit(0), Qubit(1), Qubit(2), Qubit(3)])
 
 
+def test_flattening_does_not_recurse_infinitely():
+    with pytest.raises(TypeError):  # str instead of expected int
+        QubitSet("kaboom")
+
+
 def test_map_creates_new_object(qubits):
     mapped_qubits = qubits.map({})
     assert mapped_qubits == qubits
