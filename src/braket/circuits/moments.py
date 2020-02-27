@@ -53,8 +53,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     Examples:
         >>> moments = Moments()
-        >>> moments.add([Instruction(Gate.H, 0), Instruction(Gate.CNot, [0, 1])])
-        >>> moments.add([Instruction(Gate.H, 0), Instruction(Gate.H, 1)])
+        >>> moments.add([Instruction(Gate.H(), 0), Instruction(Gate.CNot(), [0, 1])])
+        >>> moments.add([Instruction(Gate.H(), 0), Instruction(Gate.H(), 1)])
         >>> for i, item in enumerate(moments.items()):
         ...     print(f"Item {i}")
         ...     print(f"\\tKey: {item[0]}")
