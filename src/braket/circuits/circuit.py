@@ -47,7 +47,7 @@ class Circuit:
             >>> def h_on_all(target):
             ...     circ = Circuit()
             ...     for qubit in target:
-            ...         circ += Instruction(Gate.H, qubit)
+            ...         circ += Instruction(Gate.H(), qubit)
             ...     return circ
             ...
             >>> Circuit.register_subroutine(h_on_all)
@@ -81,7 +81,7 @@ class Circuit:
             TypeError: If `addable` is an unsupported type.
 
         Examples:
-            >>> circ = Circuit([Instruction(Gate.H, 4), Instruction(Gate.CNot, [4, 5])])
+            >>> circ = Circuit([Instruction(Gate.H(), 4), Instruction(Gate.CNot(), [4, 5])])
             >>> circ = Circuit().h(0).cnot(0, 1)
 
             >>> @circuit.subroutine(register=True)
@@ -146,22 +146,22 @@ class Circuit:
             TypeError: If both `target_mapping` and `target` are supplied.
 
         Examples:
-            >>> instr = Instruction(Gate.CNot, [0, 1])
+            >>> instr = Instruction(Gate.CNot(), [0, 1])
             >>> circ = Circuit().add_instruction(instr)
             >>> print(circ.instructions[0])
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(0), Qubit(1)))
 
-            >>> instr = Instruction(Gate.CNot, [0, 1])
+            >>> instr = Instruction(Gate.CNot(), [0, 1])
             >>> circ = Circuit().add_instruction(instr, target_mapping={0: 10, 1: 11})
             >>> print(circ.instructions[0])
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(10), Qubit(11)))
 
-            >>> instr = Instruction(Gate.CNot, [0, 1])
+            >>> instr = Instruction(Gate.CNot(), [0, 1])
             >>> circ = Circuit().add_instruction(instr, target=[10, 11])
             >>> print(circ.instructions[0])
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(10), Qubit(11)))
 
-            >>> instr = Instruction(Gate.H, 0)
+            >>> instr = Instruction(Gate.H(), 0)
             >>> circ = Circuit().add_instruction(instr, target=[10, 11])
             >>> print(circ.instructions[0])
             Instruction('operator': 'H', 'target': QubitSet(Qubit(10),))
@@ -280,7 +280,7 @@ class Circuit:
             `add_instruction()`
 
         Examples:
-            >>> circ = Circuit().add([Instruction(Gate.H, 4), Instruction(Gate.CNot, [4, 5])])
+            >>> circ = Circuit().add([Instruction(Gate.H(), 4), Instruction(Gate.CNot(), [4, 5])])
 
             >>> circ = Circuit().h(4).cnot([4, 5])
 
