@@ -159,12 +159,16 @@ You can confirm that your environment is correctly configured in either of the f
 
 ## Code sample for validating your configuration
 Use the following code sample to validate your environment configuration.
+
 ```python
+import boto3
+from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
-from braket.aws import AwsQuantumSimulator
-   
-device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1")
-s3_folder = ("braket-output-AWS_ACCOUNT_ID", "folder-name")
+
+aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+
+device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
+s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
 print(device.run(bell, s3_folder).result().measurement_counts)
@@ -224,11 +228,14 @@ With Amazon Braket, you can run your quantum circuit on a physical quantum compu
 
 The following example executes the same Bell Pair example described to validate your configuration against a Rigetti quantum computer.
 ```python
+import boto3
 from braket.circuits import Circuit
-from braket.aws import AwsQpu
+from braket.aws import AwsQpu, AwsQpuArns
 
-device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
-s3_folder = ("braket-output-AWS_ACCOUNT_ID", "folder-name")
+aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+
+device = AwsQpu(AwsQpuArns.RIGETTI)
+s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
 print(device.run(bell, s3_folder).result().measurement_counts)
