@@ -109,7 +109,7 @@ class AwsSession(object):
     # TODO: add in boto3 exception handling once we have exception types in API
     def get_qpu_metadata(self, arn: str) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `DescribeQpus` (`describe_qpus`) operation to retrieve 
+        Calls the Amazon Braket `DescribeQpus` (`describe_qpus`) operation to retrieve
         QPU metadata.
 
         Args:
@@ -128,7 +128,7 @@ class AwsSession(object):
     # TODO: add in boto3 exception handling once we have exception types in API
     def get_simulator_metadata(self, arn: str) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `DescribeQuantumSimulators` (`describe_quantum_simulators`) to 
+        Calls the Amazon Braket `DescribeQuantumSimulators` (`describe_quantum_simulators`) to
         retrieve simulator metadata
 
         Args:

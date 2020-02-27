@@ -51,7 +51,8 @@ class QuantumTask(ABC):
         Get task metadata.
 
         Args:
-            use_cached_value (bool, optional): If True, uses the value retrieved from the previous request
+            use_cached_value (bool, optional): If True, uses the value retrieved from the previous
+            request.
 
         Returns:
             Dict[str, Any]: The metadata regarding the task. If `use_cached_value` is True,

@@ -36,7 +36,8 @@ class Instruction:
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the Qubit
                 or QubitSet class requirements.
-            TypeError: If a Qubit class can't be constructed from `target` due to an incorrect `typing`
+            TypeError: If a Qubit class can't be constructed from `target` due to an incorrect
+            `typing`.
 
         Examples:
             >>> Instruction(Gate.CNot(), [0, 1])
