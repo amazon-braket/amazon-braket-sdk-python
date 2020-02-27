@@ -12,4 +12,3 @@
 # language governing permissions and limitations under the License.
 
 from braket.devices.device import Device  # noqa: F401
-from braket.devices.device_details import DeviceDetails  # noqa: F401
