@@ -21,7 +21,7 @@ QubitSetInput = Union[QubitInput, Iterable[QubitInput]]
 
 class QubitSet(IndexedSet):
     """
-    An ordered unique set of quantum bits.
+    An ordered, unique set of quantum bits.
 
     Note:
         QubitSet implements __hash__() but is a mutable object, therefore be careful when
@@ -31,7 +31,7 @@ class QubitSet(IndexedSet):
     def __init__(self, qubits: QubitSetInput = []):
         """
         Args:
-            qubits (int, Qubit, or iterable of int / Qubit): Qubits to be part of the QubitSet.
+            qubits (int, Qubit, or iterable of int / Qubit): Qubits to be included in the QubitSet.
 
         Examples:
             >>> qubits = QubitSet([0, 1])
@@ -64,11 +64,11 @@ class QubitSet(IndexedSet):
     def map(self, mapping: Dict[QubitInput, QubitInput]) -> "QubitSet":
         """
         Creates a new QubitSet where this instance's qubits are mapped to the values in `mapping`.
-        If this instance contains a qubit not in the `mapping` then that qubit is not modified.
+        If this instance contains a qubit that is not in the `mapping` that qubit is not modified.
 
         Args:
             mapping (dictionary[int or Qubit, int or Qubit]): A dictionary of qubit mappings to
-                apply. Key is the qubit in this instance to be targeted and the value is what
+                apply. Key is the qubit in this instance to target, and the value is what
                 the key will be changed to.
 
         Returns:

@@ -23,19 +23,18 @@ import numpy
 @dataclass
 class AnnealingQuantumTaskResult:
     """
-    Result of an annealing quantum task execution. This class is intended
+    Result of an annealing problem quantum task execution. This class is intended
     to be initialized by a QuantumTask class.
 
     Args:
         record_array (numpy.recarray): numpy array with keys 'solution' (numpy.ndarray)
-            where row is solution, column is value of the variable, 'solution_count' (numpy.ndarray)
-             - list of number of times the solutions occurred, and 'value' (numpy.ndarray) -
-             list of the output or energy of the solutions
+        where row is solution, column is value of the variable, 'solution_count' (numpy.ndarray)
+        the number of times the solutions occurred, and 'value' (numpy.ndarray) the
+        output or energy of the solutions.
         variable_count (int): the number of variables
         problem_type (str): the type of problem ('ising' or 'qubo')
-        task_metadata (Dict[str, Any]): Dictionary of task metadata. TODO: Link boto3 docs.
-        additional_metadata (Dict[str, Any]): A dictionary of additional metadata
-            that's device-specific TODO: Link result schema docs
+        task_metadata (Dict[str, Any]): Dictionary of task metadata.
+        additional_metadata (Dict[str, Any]): A dictionary of additional device-specific metadata
     """
 
     record_array: numpy.recarray
@@ -51,9 +50,9 @@ class AnnealingQuantumTaskResult:
         Args:
             selected_fields (List[str], optional, default=None): selected fields to return.
                 Options are 'solution', 'value', and 'solution_count'
-            sorted_by (str, optional, default='value'): data returned will be sorted by this field.
+            sorted_by (str, optional, default='value'): Sorts the data by this field.
                 Options are 'solution', 'value', and 'solution_count'
-            reverse (bool, optional, default=False): whether data returned will be in reverse order
+            reverse (bool, optional, default=False): If True, returns the data in reverse order.
 
         Yields:
             tuple: data in record_array
@@ -133,7 +132,7 @@ class AnnealingQuantumTaskResult:
         solutions: numpy.ndarray, solution_counts: numpy.ndarray, values: numpy.ndarray
     ) -> numpy.recarray:
         """
-        Create solutions record for AnnealingQuantumTaskResult
+        Create a solutions record for AnnealingQuantumTaskResult
 
         Args:
             solutions (numpy.ndarray): row is solution, column is value of the variable

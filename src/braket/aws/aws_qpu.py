@@ -23,8 +23,9 @@ from braket.devices.device import Device
 
 class AwsQpu(Device):
     """
-    Amazon Braket implementation of a QPU.
-    Use this class to retrieve the latest metadata about the QPU, and run a quantum task on the QPU.
+    Amazon Braket implementation of a Quantum Processing Unit (QPU).
+    Use this class to retrieve the latest metadata about the QPU, and to run a quantum task on the
+    QPU.
     """
 
     QPU_REGIONS = {
@@ -36,18 +37,20 @@ class AwsQpu(Device):
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
-            arn (str): QPU ARN, e.g. "arn:aws:aqx:::qpu:ionq"
-            aws_session (AwsSession, optional) aws_session: AWS session object. Default = None.
+            arn (str): The ARN of the QPU, for example, "arn:aws:aqx:::qpu:ionq"
+            aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
 
         Raises:
-            ValueError: If unknown `arn` is supplied.
+            ValueError: If an unknown `arn` is specified.
 
         Note:
-            QPUs are physically located in specific AWS regions. If the supplied `aws_session`
-            is connected to a region that the QPU is not in then a cloned `aws_session`
-            will be created for the QPU region.
+            QPUs are physically located in specific AWS Regions. In some cases, the current
+            `aws_session` connects to a Region other than the Region in which the QPU is
+            physically located. When this occurs, a cloned `aws_session` is created for the Region
+            the QPU is located in.
 
-            See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the regions the QPUs are located in.
+            See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located
+            in.
         """
         super().__init__(name=None, status=None, status_reason=None)
         self._arn = arn
@@ -64,7 +67,8 @@ class AwsQpu(Device):
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
         """
-        Run a quantum task specification (circuit or annealing problem) on this AWS quantum device.
+        Run a quantum task specification on this quantum device. A task can be a circuit or an
+        annealing problem. Currently, only circuits are supported in the Private Beta.
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of task
@@ -77,7 +81,7 @@ class AwsQpu(Device):
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
 
         Returns:
-            AwsQuantumTask: AwsQuantumTask that tracks the execution on the device.
+            AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
 
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
@@ -115,7 +119,7 @@ class AwsQpu(Device):
 
     def refresh_metadata(self) -> None:
         """
-        Refresh AwsQpu object with most up to date QPU metadata.
+        Refresh the `AwsQpu` object with the most recent QPU metadata.
         """
         qpu_metadata = self._aws_session.get_qpu_metadata(self._arn)
         self._name = qpu_metadata.get("name")
@@ -130,19 +134,21 @@ class AwsQpu(Device):
 
     @property
     def arn(self) -> str:
-        """str: Return arn of QPU."""
+        """str: Return the ARN of the QPU"""
         return self._arn
 
     @property
     # TODO: Add a link to the boto3 docs
     def properties(self) -> Dict[str, Any]:
-        """Dict[str, Any]: Return the qpu specific properties"""
+        """Dict[str, Any]: Return the QPU properties"""
         return self._properties
 
     def _aws_session_for_qpu(self, qpu_arn: str, aws_session: AwsSession) -> AwsSession:
         """
-        Get an AwsSession for the QPU ARN. QPUs are only available in certain regions so any
-        supplied AwsSession in a region the QPU doesn't support will need to be adjusted.
+        Get an AwsSession for the QPU ARN. QPUs are physically located in specific AWS Regions.
+        The AWS sessions should connect to the Region that the QPU is located in.
+
+        See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located in.
         """
 
         qpu_regions = AwsQpu.QPU_REGIONS.get(qpu_arn, [])

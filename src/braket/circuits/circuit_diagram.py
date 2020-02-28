@@ -21,12 +21,12 @@ class CircuitDiagram(ABC):
     @abstractmethod
     def build_diagram(circuit) -> str:
         """
-        Build a diagram for the suppplied `circuit`.
+        Build a diagram for the specified `circuit`.
 
         Args:
             circuit (Circuit): The circuit to build a diagram for.
 
         Returns:
             str: String representation for the circuit diagram.
-                Empty string is returned for an empty circuit.
+                An empty string is returned for an empty circuit.
         """

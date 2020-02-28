@@ -20,7 +20,7 @@ from braket.tasks.quantum_task import QuantumTask
 
 
 class Device(ABC):
-    """ An abstraction over quantum devices which includes quantum computers and simulators.
+    """ An abstraction over quantum devices that includes quantum computers and simulators.
 
     """
 
@@ -44,13 +44,16 @@ class Device(ABC):
         *args,
         **kwargs
     ) -> QuantumTask:
-        """ Run a quantum task specification (circuit or annealing program) on this quantum device.
+        """ Run a quantum task specification on this quantum device. A task can be a circuit
+        or an annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]):  Specification of task
-                (circuit or annealing problem) to run on device.
+            task_specification (Union[Circuit, Problem]):  Specification of a task
+            to run on device.
+
             location: The location to save the task's results
-            shots (Optional[int]): The number of times to run the circuit or annealing task
+
+            shots (int): The number of times to run the task on the device. Default is 1_000.
 
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device
@@ -71,7 +74,7 @@ class Device(ABC):
         """ Return the status of this Device.
 
         Returns:
-            str: The status of thi Device
+            str: The status of this Device
         """
         return self._status
 
@@ -80,6 +83,6 @@ class Device(ABC):
         """ Return the status reason of this Device.
 
         Returns:
-            str: The status reason of this Device
+            str: The reason that the device is in the current status
         """
         return self._status_reason

@@ -1,6 +1,12 @@
 **This prerelease documentation is confidential and is provided under the terms of your nondisclosure agreement with Amazon Web Services (AWS) or other agreement governing your receipt of AWS confidential information.**
 
-The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
+The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket. This document describes how to configure your environment to use the Amazon Braket (Private Beta) locally on your computer. It does not include information about how to use Amazon Braket (Private Beta) in the AWS console.
+
+To provide feedback or request support, please contact the Amazon Braket team at [amazon-braket-preview-support@amazon.com](mailto:amazon-braket-preview-support@amazon.com?subject=Add%20a%20brief%20description%20of%20the%20issue).
+
+**Important**
+
+If you **Star**, **Watch**, or submit a pull request for this repository, other users that have access to this repository are able to see your user name in the list of watchers. If you want to remain anonymous, you should not Watch or Star this repository, nor post any comments or submit a pull request. 
 
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
@@ -51,7 +57,7 @@ cd ..
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
 
 ### Access to Amazon Braket (Private Beta)
-You can configure your environment for the Amazon Braket Python SDK, but you need to be granted permission to access Amazon Braket (Private Beta). Before you can execute code against Amazon Braket. If you’ve not received notification that you have been added to the beta, please contact the Braket team for assistance.
+You can configure your environment for the Amazon Braket Python SDK, but you need to be granted permission to access Amazon Braket (Private Beta) before you can start making code requests to Amazon Braket. If you’ve not received notification that you have been added to the beta, please contact the Amazon Braket team for assistance using this email address: [amazon-braket-preview-support@amazon.com](mailto:amazon-braket-preview-support@amazon.com?subject=Add%20a%20brief%20description%20of%20the%20issue).
 
 ### IAM user or role with required permissions
 To perform the steps in this document and to interact with Amazon Braket, use an account with administrator privileges, such as one with the AdministratorAccess policy applied. To learn more about IAM user, roles, and policies, see [Adding and Removing IAM Identity Permissions](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage-attach-detach.html).
@@ -76,7 +82,13 @@ export AWS_PROFILE=YOUR_PROFILE_NAME
 ```
 
 ### Configure your AWS account with the resources necessary for Amazon Braket
-Use the following link to an AWS CloudFormation template to automatically create the resources that Amazon Braket uses or interacts with in your account. The template creates the following resources:
+Use the following link to an AWS CloudFormation template to automatically create the resources that Amazon Braket uses or interacts with in your account.
+
+**Important**
+
+If you are using IAM roles for multiple users in your organization to access the Amazon Braket Private Beta from the same account, only open the template and create the stack once for the account. Each role in the account then has access to the resources Amazon Braket needs in the account.
+
+The template creates the following resources:
 - An S3 bucket to store job output. The bucket is named `braket-output-AWSaccountId` where AWSAccountId is your account ID. For example, if your AWS account ID is 123456789012, the bucket is named `braket-output-123456789012`.
 - IAM roles named AmazonBraketJobExecutionRole, which is used to run jobs, and AQxFullAccess which is used to interact with the AWS resources that Amazon Braket needs.
 - An IAM policy, AmazonBraketFullAccess, that includes permission to use Amazon Braket actions, as well as the permissions necessary to access the S3 bucket created. If you want to use a role that does not have admin permissions, you can apply the AmazonBraketFullAccess policy to the user or role you are using to grant the permissions required to use Amazon Braket beta.
@@ -147,12 +159,16 @@ You can confirm that your environment is correctly configured in either of the f
 
 ## Code sample for validating your configuration
 Use the following code sample to validate your environment configuration.
+
 ```python
+import boto3
+from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
-from braket.aws import AwsQuantumSimulator
-   
-device = AwsQuantumSimulator("arn:aws:aqx:::quantum-simulator:aqx:qs1")
-s3_folder = ("braket-output-AWS_ACCOUNT_ID", "folder-name")
+
+aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+
+device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
+s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
 print(device.run(bell, s3_folder).result().measurement_counts)
@@ -212,11 +228,14 @@ With Amazon Braket, you can run your quantum circuit on a physical quantum compu
 
 The following example executes the same Bell Pair example described to validate your configuration against a Rigetti quantum computer.
 ```python
+import boto3
 from braket.circuits import Circuit
-from braket.aws import AwsQpu
+from braket.aws import AwsQpu, AwsQpuArns
 
-device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
-s3_folder = ("braket-output-AWS_ACCOUNT_ID", "folder-name")
+aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
+
+device = AwsQpu(AwsQpuArns.RIGETTI)
+s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
 print(device.run(bell, s3_folder).result().measurement_counts)

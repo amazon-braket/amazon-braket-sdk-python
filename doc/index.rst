@@ -1,5 +1,5 @@
 Amazon Braket (Private Beta) Python SDK
-========================
+=======================================
 
 Amazon Braket Python SDK is an open source library for interacting with quantum devices on Amazon Braket (Private Beta).
 
