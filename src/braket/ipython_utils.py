@@ -21,7 +21,7 @@ def running_in_jupyter():
     Inspired by https://github.com/ipython/ipython/issues/11694
 
     Returns:
-        bool: True if running in Jupyter else False.
+        bool: True if running in Jupyter, else False.
     """
     in_ipython = False
     in_ipython_kernel = False

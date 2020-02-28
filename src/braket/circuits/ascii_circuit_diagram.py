@@ -73,10 +73,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
         time: int, circuit_qubits: QubitSet, instructions: List[Instruction]
     ) -> str:
         """
-        Return an ASCII string diagram of the circuit at a particular time moment.
+        Return an ASCII string diagram of the circuit at a particular moment in time.
 
         Returns:
-            str: ASCII string diagram for the given time moment.
+            str: An ASCII string diagram for the specified moment in time.
         """
         symbols = {qubit: "-" for qubit in circuit_qubits}
         margins = {qubit: " " for qubit in circuit_qubits}

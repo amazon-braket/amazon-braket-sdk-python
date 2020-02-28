@@ -37,15 +37,15 @@ class MomentsKey(NamedTuple):
 
 class Moments(Mapping[MomentsKey, Instruction]):
     """
-    An ordered mapping of `MomentsKey` to `Instruction`. This is the core data structure that
-    contains instructions, the ordering of which they are inserted, and the time slices that they
-    occur. `Moments` implements `Mapping` and therefore offers the same experience as a read-only
-    dictionary and is mutable only through the `add()` method.
+    An ordered mapping of `MomentsKey` to `Instruction`. The core data structure that
+        contains instructions, ordering they are inserted in, and time slices when they
+        occur. `Moments` implements `Mapping` and functions the same as a read-only
+        dictionary. It is mutable only through the `add()` method.
 
-    This data structure is useful for anything that needs to know about the dependency of
-    instructions such as printing or optimizing circuit structure before sending to the quantum
-    device. The original insertion order is preserved and can be retrieved via the `values()`
-    method.
+    This data structure is useful to determine a dependency of instructions, such as
+        printing or optimizing circuit structure, before sending it to a quantum
+        device. The original insertion order is preserved and can be retrieved via the `values()`
+        method.
 
     Args:
         instructions (Iterable[Instruction], optional): Instructions to initialize self with.
@@ -84,23 +84,23 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     @property
     def depth(self) -> int:
-        """int: Get the depth of self, i.e. number of time slices."""
+        """int: Get the depth (number of slices) of self."""
         return self._depth
 
     @property
     def qubit_count(self) -> int:
-        """int: Get the number of qubits used across all the instructions."""
+        """int: Get the number of qubits used across all of the instructions."""
         return len(self._qubits)
 
     @property
     def qubits(self) -> QubitSet:
         """
-        QubitSet: Get the qubits used across all the instructions. The order of qubits is based
-        on the order the instructions were added.
+        QubitSet: Get the qubits used across all of the instructions. The order of qubits is based
+        on the order in which the instructions were added.
 
         Note:
             Don't mutate this object, any changes may impact the behavior of this class and / or
-            consumers. If you need to mutate this than copy it via `QubitSet(moments.qubits())`.
+            consumers. If you need to mutate this, then copy it via `QubitSet(moments.qubits())`.
         """
         return self._qubits
 
@@ -113,8 +113,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
             occur at that moment in time. The order of instructions is in no particular order.
 
         Note:
-            This is a computed result over self and can be freely mutated. Be aware that this
-            is re-computed every call and has a computational runtime O(N) where N is the number
+            This is a computed result over self and can be freely mutated. This is re-computed with
+            every call, with a computational runtime O(N) where N is the number
             of instructions in self.
         """
 
@@ -131,8 +131,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
         Add instructions to self.
 
         Args:
-            instructions (Iterable[Instruction]): Instructions to add to self. The instruction will
-                be added to the max time slice that can fit the instruction.
+            instructions (Iterable[Instruction]): Instructions to add to self. The instruction
+            are added to the max time slice in which the instruction fits.
         """
         for instruction in instructions:
             self._add(instruction)
@@ -176,10 +176,10 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         Args:
             key (MomentsKey): Key of the instruction to fetch.
-            default (Any, optional): Value to return if `key` not in moment. Default = None.
+            default (Any, optional): Value to return if `key` is not in moment. Default = None.
 
         Returns:
-            Instruction: moments[key] if key in moments else `default` is returned.
+            Instruction: moments[key] if key in moments, else `default` is returned.
         """
         return self._moments.get(key, default)
 

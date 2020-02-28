@@ -23,20 +23,21 @@ from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 class Instruction:
     """
-    Instruction is a quantum directive that describes the task to be performed on a quantum device.
+    An instruction is a quantum directive that describes the task to perform on a quantum device.
     """
 
     def __init__(self, operator: Operator, target: QubitSetInput):
         """
         Args:
             operator (Operator): Operator for the instruction.
-            target (int, Qubit, or iterable of int / Qubit): Target qubits the operator is
+            target (int, Qubit, or iterable of int / Qubit): Target qubits that the operator is
                 applied to.
 
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the Qubit
                 or QubitSet class requirements.
-            TypeError: If a Qubit class cannot be constructed from `target` due to incorrect typing
+            TypeError: If a Qubit class can't be constructed from `target` due to an incorrect
+            `typing`.
 
         Examples:
             >>> Instruction(Gate.CNot(), [0, 1])
@@ -55,13 +56,13 @@ class Instruction:
 
     @property
     def operator(self) -> Operator:
-        """Operator: Operator for the instruction, e.g. `Gate`."""
+        """Operator: The operator for the instruction, for example, `Gate`."""
         return self._operator
 
     @property
     def target(self) -> QubitSet:
         """
-        QubitSet: Target qubits the operator is applied to.
+        QubitSet: Target qubits that the operator is applied to.
 
         Note:
             Don't mutate this property, any mutations can have unexpected consequences.
@@ -71,7 +72,7 @@ class Instruction:
     def to_ir(self):
         """
         Converts the operator into the canonical intermediate representation.
-        If the operator is sent over the wire then this method is called before it is sent.
+        If the operator is passed in a request, this method is called before it is passed.
         """
         return self.operator.to_ir(self.target)
 
@@ -82,19 +83,18 @@ class Instruction:
         Return a shallow copy of the instruction.
 
         Note:
-            If `target_mapping` is supplied then `self.target` will be mapped to the specified
-            qubits. This is useful for when wanting to apply an instruction to a circuit but want
-            to change the target qubits.
+            If `target_mapping` is specified, then `self.target` is mapped to the specified
+            qubits. This is useful apply an instruction to a circuit and change the target qubits.
 
         Args:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
-                value is what the key will be changed to. Default = {}.
+                value is what the key is changed to. Default = {}.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
                 instruction.
 
         Returns:
-            Instruction: Shallow copy of the instruction.
+            Instruction: A shallow copy of the instruction.
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
@@ -112,7 +112,7 @@ class Instruction:
             QubitSet(Qubit(5))
         """
         if target_mapping and target is not None:
-            raise TypeError("Both 'target_mapping' and 'target' cannot be supplied.")
+            raise TypeError("Only 'target_mapping' or 'target' can be supplied, but not both.")
         elif target is not None:
             return Instruction(self.operator, target)
         else:

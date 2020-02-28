@@ -26,8 +26,8 @@ class Operator(ABC):
     def to_ir(self, *args, **kwargs):
         """
         Converts the operator into the canonical intermediate representation.
-        If the operator is sent over the wire then this method is called before it is sent.
+        If the operator is passed in a request, this method is called before it is passed.
 
         Args:
-            target (QubitSet): Target qubits the operator is applied to.
+            target (QubitSet): Target qubits that the operator is applied to.
         """
