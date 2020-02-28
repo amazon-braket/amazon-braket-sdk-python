@@ -45,8 +45,7 @@ class Device(ABC):
         **kwargs
     ) -> QuantumTask:
         """ Run a quantum task specification on this quantum device. A task can be a circuit
-        or an annealing problem. Only circuits are currently supported in the Amazon Braket
-        Private Beta.
+        or an annealing problem.
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of a task

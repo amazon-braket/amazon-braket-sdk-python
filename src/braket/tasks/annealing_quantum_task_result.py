@@ -52,7 +52,7 @@ class AnnealingQuantumTaskResult:
                 Options are 'solution', 'value', and 'solution_count'
             sorted_by (str, optional, default='value'): Sorts the data by this field.
                 Options are 'solution', 'value', and 'solution_count'
-            reverse (bool, optional, default=False): If Truem, returns the data in reverse order.
+            reverse (bool, optional, default=False): If True, returns the data in reverse order.
 
         Yields:
             tuple: data in record_array

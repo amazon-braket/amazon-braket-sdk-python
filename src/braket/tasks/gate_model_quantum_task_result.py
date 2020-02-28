@@ -41,7 +41,7 @@ class GateModelQuantumTaskResult:
             `measurement_probabilities` were copied from device. If false,
             `measurement_probabilities` are calculated from device data.
         task_metadata (Dict[str, Any]): Dictionary of task metadata.
-        state_vector (Dict[str, complex]): Dictionary where Key is state and Value is amplitude.4
+        state_vector (Dict[str, complex]): Dictionary where Key is state and Value is amplitude.
     """
 
     measurements: np.ndarray
