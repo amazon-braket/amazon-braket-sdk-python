@@ -225,8 +225,8 @@ class AwsQuantumTask(QuantumTask):
         Returns:
             GateModelQuantumTaskResult: If the task is in the `AwsQuantumTask.RESULTS_READY_STATES`
                 state within the specified time limit, the result from the S3 bucket is loaded and
-                returned. `None` is returned if a timeout occurs or task state is in `AwsQuantumTask.
-                TERMINAL_STATES` but not `AwsQuantumTask.RESULTS_READY_STATES`.
+                returned. `None` is returned if a timeout occurs or task state is in
+                `AwsQuantumTask.TERMINAL_STATES` but not `AwsQuantumTask.RESULTS_READY_STATES`.
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
