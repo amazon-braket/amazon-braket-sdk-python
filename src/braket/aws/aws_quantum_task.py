@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import time
 from functools import singledispatch
+from logging import Logger, getLogger
 from typing import Any, Callable, Dict, Optional, Union
 
 from braket.annealing.problem import Problem
@@ -24,7 +25,6 @@ from braket.circuits.circuit import Circuit
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
 
 
-# TODO: add AnnealingQuantumTaskResult
 class AwsQuantumTask(QuantumTask):
     """Amazon Braket implementation of a quantum task. A task can be a circuit or an annealing
     problem. Currently, only circuits are supported in the Private Beta."""
@@ -61,19 +61,19 @@ class AwsQuantumTask(QuantumTask):
             device_arn (str): The ARN of the quantum device.
 
             task_specification (Union[Circuit, Problem]): The specification of the task
-            to run on device.
+                to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
-            for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
-            to store task results in.
+                for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
+                to store task results in.
 
             shots (int): The number of times to run the task on the device. If the device is a
-            simulator, this implies the state is sampled N times, where N = `shots`. Default
-            shots = 1_000.
+                simulator, this implies the state is sampled N times, where N = `shots`. Default
+                shots = 1_000.
 
             backend_parameters (Dict[str, Any]): Additional parameters to send to the device.
-            For example, for D-Wave:
-            >>> backend_parameters = {"dWaveParameters": {"postprocess": "OPTIMIZATION"}}
+                For example, for D-Wave:
+                >>> backend_parameters = {"dWaveParameters": {"postprocess": "OPTIMIZATION"}}
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
@@ -109,6 +109,7 @@ class AwsQuantumTask(QuantumTask):
         results_formatter: Callable[[str], Any],
         poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
+        logger: Logger = getLogger(__name__),
     ):
         """
         Args:
@@ -118,7 +119,9 @@ class AwsQuantumTask(QuantumTask):
                 into a results structure (such as `GateModelQuantumTaskResult`)
             poll_timeout_seconds (int): The polling timeout for result(), default is 120 seconds.
             poll_interval_seconds (int): The polling interval for result(), default is 0.25
-            seconds.
+                seconds.
+            logger (Logger): Logger object with which to write logs, such as task statuses
+                while waiting for task to be in a terminal state.
         """
 
         self._arn: str = arn
@@ -126,6 +129,7 @@ class AwsQuantumTask(QuantumTask):
         self._results_formatter = results_formatter
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
+        self._logger = logger
 
         self._metadata: Dict[str, Any] = {}
         self._result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult] = None
@@ -163,9 +167,9 @@ class AwsQuantumTask(QuantumTask):
         The state of the quantum task.
         Args:
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
-                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
-                `GetQuantumTask` operation to retrieve metadata, which also updates the cached
-                value. Default = False.
+            from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
+            `GetQuantumTask` operation to retrieve metadata, which also updates the cached
+            value. Default = False.
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`,
@@ -220,17 +224,19 @@ class AwsQuantumTask(QuantumTask):
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
         Returns:
             GateModelQuantumTaskResult: If the task is in the `AwsQuantumTask.RESULTS_READY_STATES`
-            state within the specified time limit, the result from the S3 bucket is loaded and
-            returned. `None` is returned if a timeout occurs or task state is in `AwsQuantumTask.
-            TERMINAL_STATES` but not `AwsQuantumTask.RESULTS_READY_STATES`.
+                state within the specified time limit, the result from the S3 bucket is loaded and
+                returned. `None` is returned if a timeout occurs or task state is in `AwsQuantumTask.
+                TERMINAL_STATES` but not `AwsQuantumTask.RESULTS_READY_STATES`.
         Note:
             Timeout and sleep intervals are defined in the constructor fields
-            `poll_timeout_seconds` and `poll_interval_seconds` respectively.
+                `poll_timeout_seconds` and `poll_interval_seconds` respectively.
         """
+        self._logger.debug(f"Task {self._arn}: start polling for completion")
         start_time = time.time()
 
         while (time.time() - start_time) < self._poll_timeout_seconds:
             current_metadata = self.metadata()
+            self._logger.debug(f"Task {self._arn}: task status {current_metadata['status']}")
             if current_metadata["status"] in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
                     current_metadata["resultsS3Bucket"], current_metadata["resultsS3ObjectKey"]
@@ -244,6 +250,9 @@ class AwsQuantumTask(QuantumTask):
                 await asyncio.sleep(self._poll_interval_seconds)
 
         # Timed out
+        self._logger.debug(
+            f"Task {self._arn}: polling timed out after {self._poll_timeout_seconds} secs"
+        )
         self._result = None
         return None
 
