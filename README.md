@@ -186,7 +186,7 @@ There are currently three simulators available for Amazon Braket. To specify whi
 1. Open a text editor with example file `BRAKET_SDK_ROOT/examples/bell.py`.
 1. If desired, modify `folder-name` to the name of the folder to create/use for results in following line:
    `s3_folder = (f"braket-output-{aws_account_id}", "folder-name")`. Save the file.
-1. Make sure `braketvirtenv` is activated, and then run the following command in the location where you saved the bellpair.py file to run it:
+1. Make sure `braketvirtenv` is activated, and then run the following command:
    ```bash
    python BRAKET_SDK_ROOT/examples/bell.py
    ```
