@@ -121,7 +121,7 @@ class AwsQuantumTask(QuantumTask):
             poll_interval_seconds (int): The polling interval for result(), default is 0.25
                 seconds.
             logger (Logger): Logger object with which to write logs, such as task statuses
-                while waiting for task to be in a terminal state.
+                while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
         """
 
         self._arn: str = arn
@@ -250,8 +250,8 @@ class AwsQuantumTask(QuantumTask):
                 await asyncio.sleep(self._poll_interval_seconds)
 
         # Timed out
-        self._logger.debug(
-            f"Task {self._arn}: polling timed out after {self._poll_timeout_seconds} secs"
+        self._logger.warning(
+            f"Task {self._arn}: polling timed out after {time.time()-start_time} secs"
         )
         self._result = None
         return None

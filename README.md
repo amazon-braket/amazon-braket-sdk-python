@@ -184,10 +184,9 @@ There are currently three simulators available for Amazon Braket. To specify whi
 
 #### To validate your configuration using a Python file
 1. Open a text editor with example file `BRAKET_SDK_ROOT/examples/bell.py`.
-2. Replace the `AWS_ACCOUNT_ID` in the value for `s3_folder` to your 12-digit AWS account ID. If you want to use a different folder in the bucket, change `folder-name` to the name of the folder to create. If the folder already exists it uses the existing folder. Your statement  should look similar to the following:
-   `s3_folder = ("braket-output-123456789012", "folder-name")`
-3. Save the file.
-4. Make sure `braketvirtenv` is activated, and then run the following command in the location where you saved the bellpair.py file to run it:
+1. If desired, modify `folder-name` to the name of the folder to create/use for results in following line:
+   `s3_folder = (f"braket-output-{aws_account_id}", "folder-name")`. Save the file.
+1. Make sure `braketvirtenv` is activated, and then run the following command in the location where you saved the bellpair.py file to run it:
    ```bash
    python BRAKET_SDK_ROOT/examples/bell.py
    ```
