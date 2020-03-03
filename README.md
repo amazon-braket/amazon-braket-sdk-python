@@ -183,14 +183,12 @@ There are currently three simulators available for Amazon Braket. To specify whi
 -	`arn:aws:aqx:::quantum-simulator:aqx:qs3` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples from the state vector but includes the entire state vector. This generates more data, and therefore incurs additional costs for storage of data in Amazon S3.
 
 #### To validate your configuration using a Python file
-1. Open a text editor.
-2. Copy the code sample (above), then paste it into the text editor.
-3. Replace the `AWS_ACCOUNT_ID` in the value for `s3_folder` to your 12-digit AWS account ID. If you want to use a different folder in the bucket, change `folder-name` to the name of the folder to create. If the folder already exists it uses the existing folder. Your statement  should look similar to the following:
-   `s3_folder = ("braket-output-123456789012", "folder-name")`
-4. Save the file with the name `bellpair.py`.
-5. Make sure `braketvirtenv` is activated, and then run the following command in the location where you saved the bellpair.py file to run it:
+1. Open a text editor with example file `BRAKET_SDK_ROOT/examples/bell.py`.
+1. If desired, modify `folder-name` to the name of the folder to create/use for results in following line:
+   `s3_folder = (f"braket-output-{aws_account_id}", "folder-name")`. Save the file.
+1. Make sure `braketvirtenv` is activated, and then run the following command:
    ```bash
-   python bellpair.py
+   python BRAKET_SDK_ROOT/examples/bell.py
    ```
 You should see a result similar to the following:
 ```Counter({'11': 522, '00': 478})```
@@ -222,6 +220,10 @@ Choose **Run** to execute the code to confirm that your environment is configure
 
 When the job completes, you should see output similar to the following:
 `Counter({'00': 519, '11': 481})`
+
+#### Debugging logs
+
+Debugging logs are available for troubleshooting. An example to enable these logs can be found in `BRAKET_SDK_ROOT/examples/debug_bell.py`. This example enables logs of task status updates to be continuously printed to console when a quantum task is created. The logs can also be configured to save to a file or output to another stream.
 
 ## Running a Quantum Algorithm on a Quantum Computer
 With Amazon Braket, you can run your quantum circuit on a physical quantum computer. The steps to do so are the same as those described to validate your environment. Just replace the example code provided in this document with your own code. 
