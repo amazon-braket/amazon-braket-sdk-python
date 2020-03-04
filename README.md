@@ -277,11 +277,15 @@ Information to be provided when the next update is available.
 Coming soon 
 
 ## Documentation
-You can generate the documentation for the SDK. First change directories (`cd`) to position the cursor in the (`doc`) directory.
-Then run the following command to generate the HTML documentation files:
+You can generate the documentation for the SDK. First change directories (`cd`) to position the cursor in the `braket-python-sdk` directory. Then, run the following command to generate the HTML documentation files:
 
 ```bash
-make html
+tox -e docs
+```
+
+If you get an error that tox is not installed, run the following command to install it:
+```bash
+pip install tox
 ```
 
 To view the generated documentation, open the following file in a browser:
