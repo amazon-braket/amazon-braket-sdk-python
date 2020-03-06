@@ -73,8 +73,11 @@ def test_overlaping_qubits():
     moments = Moments([h(0), h(0)])
     assert moments.depth == 2
 
-    moments.add([cnot(0, 2), h(1)])
-    assert moments.depth == 4
+    moments.add([cnot(0, 3), h(1)])
+    assert moments.depth == 3
+
+    moments.add([cnot(2, 4)])
+    assert moments.depth == 3
 
 
 def test_qubits():

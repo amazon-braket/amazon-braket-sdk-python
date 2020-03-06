@@ -18,6 +18,13 @@ def test_empty_circuit():
     assert AsciiCircuitDiagram.build_diagram(Circuit()) == ""
 
 
+def test_one_gate_one_qubit():
+    circ = Circuit().h(0)
+    expected = ("T  : |0|", "        ", "q0 : -H-", "", "T  : |0|")
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
 def test_qubit_width():
     circ = Circuit().h(0).h(100)
     expected = (
@@ -43,13 +50,13 @@ def test_gate_width():
 
     circ = Circuit().h(0).h(1).add_instruction(Instruction(Foo(), 0))
     expected = (
-        "T  : |0|1  |",
+        "T  : |0| 1 |",
         "            ",
         "q0 : -H-FOO-",
         "            ",
         "q1 : -H-----",
         "",
-        "T  : |0|1  |",
+        "T  : |0| 1 |",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
@@ -120,10 +127,48 @@ def test_connector_across_two_qubits():
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
 
 
+def test_overlapping_qubits():
+    circ = Circuit().cnot(0, 2).cnot(1, 3).h(0)
+    expected = (
+        "T  : | 0 |1|",
+        "            ",
+        "q0 : -C---H-",
+        "      |     ",
+        "q1 : -|-C---",
+        "      | |   ",
+        "q2 : -X-|---",
+        "        |   ",
+        "q3 : ---X---",
+        "",
+        "T  : | 0 |1|",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_overlapping_qubits_angled_gates():
+    circ = Circuit().zz([0, 2], 0.15).cnot(1, 3).h(0)
+    expected = (
+        "T  : |    0     |1|",
+        "                   ",
+        "q0 : -ZZ(0.15)---H-",
+        "      |            ",
+        "q1 : -|--------C---",
+        "      |        |   ",
+        "q2 : -ZZ(0.15)-|---",
+        "               |   ",
+        "q3 : ----------X---",
+        "",
+        "T  : |    0     |1|",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
 def test_connector_across_gt_two_qubits():
     circ = Circuit().h(4).cnot(3, 5).h(4).h(2)
     expected = (
-        "T  : |0|1|2|",
+        "T  : | 0 |1|",
         "            ",
         "q2 : -H-----",
         "            ",
@@ -133,7 +178,7 @@ def test_connector_across_gt_two_qubits():
         "        |   ",
         "q5 : ---X---",
         "",
-        "T  : |0|1|2|",
+        "T  : | 0 |1|",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
@@ -142,7 +187,7 @@ def test_connector_across_gt_two_qubits():
 def test_connector_across_non_used_qubits():
     circ = Circuit().h(4).cnot(3, 100).h(4).h(101)
     expected = (
-        "T    : |0|1|2|",
+        "T    : | 0 |1|",
         "              ",
         "q3   : ---C---",
         "          |   ",
@@ -152,7 +197,7 @@ def test_connector_across_non_used_qubits():
         "              ",
         "q101 : -H-----",
         "",
-        "T    : |0|1|2|",
+        "T    : | 0 |1|",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
