@@ -624,11 +624,12 @@ class Swap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def swap(targets: QubitSet) -> Instruction:
+    def swap(target1: QubitInput, target2: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            targets (QubitSet): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
 
         Returns:
             Instruction: Swap instruction.
@@ -636,7 +637,7 @@ class Swap(Gate):
         Examples:
             >>> circ = Circuit().swap(0, 1)
         """
-        return Instruction(Gate.Swap(), target=targets)
+        return Instruction(Gate.Swap(), target=[target1, target2])
 
 
 Gate.register_gate(Swap)
@@ -664,11 +665,12 @@ class ISwap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def iswap(targets: QubitSet) -> Instruction:
+    def iswap(target1: QubitInput, target2: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            targets (QubitSet): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
 
         Returns:
             Instruction: ISwap instruction.
@@ -676,7 +678,7 @@ class ISwap(Gate):
         Examples:
             >>> circ = Circuit().iswap(0, 1)
         """
-        return Instruction(Gate.ISwap(), target=targets)
+        return Instruction(Gate.ISwap(), target=[target1, target2])
 
 
 Gate.register_gate(ISwap)
@@ -712,11 +714,12 @@ class PSwap(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def pswap(targets: QubitSet, angle: float) -> Instruction:
+    def pswap(target1: QubitInput, target2: QubitInput, angle: float) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            targets (Qubit or int): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
 
         Returns:
             Instruction: PSwap instruction.
@@ -724,7 +727,7 @@ class PSwap(AngledGate):
         Examples:
             >>> circ = Circuit().pswap(0, 1, 0.15)
         """
-        return Instruction(Gate.PSwap(angle), target=targets)
+        return Instruction(Gate.PSwap(angle), target=[target1, target2])
 
 
 Gate.register_gate(PSwap)
@@ -762,11 +765,12 @@ class XY(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def xy(targets: QubitSet, angle: float) -> Instruction:
+    def xy(target1: QubitInput, target2: QubitInput, angle: float) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            targets (Qubit or int): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
 
         Returns:
             Instruction: XY instruction.
@@ -774,7 +778,7 @@ class XY(AngledGate):
         Examples:
             >>> circ = Circuit().xy(0, 1, 0.15)
         """
-        return Instruction(Gate.XY(angle), target=targets)
+        return Instruction(Gate.XY(angle), target=[target1, target2])
 
 
 Gate.register_gate(XY)
@@ -1044,11 +1048,12 @@ class XX(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def xx(targets: QubitSet, angle: float) -> Instruction:
+    def xx(target1: QubitInput, target2: QubitInput, angle: float) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            targets (Qubit or int): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
             angle (float): Angle in radians.
 
         Returns:
@@ -1057,7 +1062,7 @@ class XX(AngledGate):
         Examples:
             >>> circ = Circuit().xx(0, 1, 0.15)
         """
-        return Instruction(Gate.XX(angle), target=targets)
+        return Instruction(Gate.XX(angle), target=[target1, target2])
 
 
 Gate.register_gate(XX)
@@ -1095,11 +1100,12 @@ class YY(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def yy(targets: QubitSet, angle: float) -> Instruction:
+    def yy(target1: QubitInput, target2: QubitInput, angle: float) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            targets (Qubit or int): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
             angle (float): Angle in radians.
 
         Returns:
@@ -1108,7 +1114,7 @@ class YY(AngledGate):
         Examples:
             >>> circ = Circuit().yy(0, 1, 0.15)
         """
-        return Instruction(Gate.YY(angle), target=targets)
+        return Instruction(Gate.YY(angle), target=[target1, target2])
 
 
 Gate.register_gate(YY)
@@ -1144,11 +1150,12 @@ class ZZ(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def zz(targets: QubitSet, angle: float) -> Instruction:
+    def zz(target1: QubitInput, target2: QubitInput, angle: float) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            targets (Qubit or int): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
             angle (float): Angle in radians.
 
         Returns:
@@ -1157,7 +1164,7 @@ class ZZ(AngledGate):
         Examples:
             >>> circ = Circuit().zz(0, 1, 0.15)
         """
-        return Instruction(Gate.ZZ(angle), target=targets)
+        return Instruction(Gate.ZZ(angle), target=[target1, target2])
 
 
 Gate.register_gate(ZZ)
@@ -1192,20 +1199,21 @@ class CCNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def ccnot(controls: QubitSet, target: QubitInput) -> Instruction:
+    def ccnot(control1: QubitInput, control2: QubitInput, target: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            controls (QubitSet): Control qubit indices.
+            control1 (Qubit or int): Control qubit 1 index.
+            control2 (Qubit or int): Control qubit 2 index.
             target (Qubit or int): Target qubit index.
 
         Returns:
             Instruction: CCNot instruction.
 
         Examples:
-            >>> circ = Circuit().ccnot(controls=[0, 1], target=2)
+            >>> circ = Circuit().ccnot(0, 1, 2)
         """
-        return Instruction(Gate.CCNot(), target=[controls[0], controls[1], target])
+        return Instruction(Gate.CCNot(), target=[control1, control2, target])
 
 
 Gate.register_gate(CCNot)
@@ -1237,12 +1245,13 @@ class CSwap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cswap(control: QubitInput, targets: QubitSet) -> Instruction:
+    def cswap(control: QubitInput, target1: QubitInput, target2: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             control (Qubit or int): Control qubit index
-            targets (QubitSet): Target qubit indices.
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
 
         Returns:
             Instruction: CSwap instruction.
@@ -1250,7 +1259,7 @@ class CSwap(Gate):
         Examples:
             >>> circ = Circuit().cswap(0, 1, 2)
         """
-        return Instruction(Gate.CSwap(), target=[control, targets[0], targets[1]])
+        return Instruction(Gate.CSwap(), target=[control, target1, target2])
 
 
 Gate.register_gate(CSwap)
