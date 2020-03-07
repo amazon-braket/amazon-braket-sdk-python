@@ -12,6 +12,8 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
+import threading
+import time
 from unittest.mock import Mock
 
 import pytest
@@ -297,6 +299,17 @@ def test_from_annealing(aws_session, arn, problem):
         AwsQuantumTask.DEFAULT_SHOTS,
         {"annealingModelParameters": {"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}},
     )
+
+
+def test_init_new_thread(aws_session, arn):
+    tasks_list = []
+    threading.Thread(target=_init_and_add_to_list, args=(aws_session, arn, tasks_list)).start()
+    time.sleep(0.1)
+    assert len(tasks_list) == 1
+
+
+def _init_and_add_to_list(aws_session, arn, task_list):
+    task_list.append(AwsQuantumTask(arn, aws_session, GateModelQuantumTaskResult.from_string))
 
 
 def _assert_create_quantum_task_called_with(

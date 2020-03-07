@@ -133,6 +133,12 @@ class AwsQuantumTask(QuantumTask):
 
         self._metadata: Dict[str, Any] = {}
         self._result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult] = None
+        try:
+            asyncio.get_event_loop()
+        except Exception as e:
+            self._logger.debug(e)
+            self._logger.info("No event loop found; creating new event loop")
+            asyncio.set_event_loop(asyncio.new_event_loop())
         self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
 
     @property
