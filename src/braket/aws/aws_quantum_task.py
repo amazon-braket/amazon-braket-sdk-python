@@ -136,9 +136,9 @@ class AwsQuantumTask(QuantumTask):
         try:
             asyncio.get_event_loop()
         except Exception as e:
-            self._logger.warning(f"Failed to get event loop. {e}")
+            self._logger.debug(e)
+            self._logger.info("No event loop found; creating new event loop")
             asyncio.set_event_loop(asyncio.new_event_loop())
-            self._logger.debug("Created new event loop")
         self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
 
     @property
