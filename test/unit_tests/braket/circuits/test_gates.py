@@ -115,8 +115,12 @@ def single_target_valid_input(**kwargs):
     return {"target": 2}
 
 
-def double_target_valid_input(**kwargs):
+def double_target_valid_ir_input(**kwargs):
     return {"targets": [2, 3]}
+
+
+def double_target_valid_input(**kwargs):
+    return {"target1": 2, "target2": 3}
 
 
 def angle_valid_input(**kwargs):
@@ -127,8 +131,12 @@ def single_control_valid_input(**kwargs):
     return {"control": 0}
 
 
-def double_control_valid_input(**kwargs):
+def double_control_valid_ir_input(**kwargs):
     return {"controls": [0, 1]}
+
+
+def double_control_valid_input(**kwargs):
+    return {"control1": 0, "control2": 1}
 
 
 def multi_target_valid_input(**kwargs):
@@ -146,17 +154,22 @@ def two_dimensional_matrix_valid_input(**kwargs):
 
 valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
-    "DoubleTarget": double_target_valid_input,
+    "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
     "SingleControl": single_control_valid_input,
-    "DoubleControl": double_control_valid_input,
+    "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
     "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
 }
 
 
 valid_subroutine_switcher = dict(
-    valid_ir_switcher, **{"TwoDimensionalMatrix": two_dimensional_matrix_valid_input,}
+    valid_ir_switcher,
+    **{
+        "TwoDimensionalMatrix": two_dimensional_matrix_valid_input,
+        "DoubleTarget": double_target_valid_input,
+        "DoubleControl": double_control_valid_input,
+    }
 )
 
 
@@ -184,13 +197,13 @@ def create_valid_target_input(irsubclasses):
         if subclass == SingleTarget:
             qubit_set.extend(list(single_target_valid_input().values()))
         elif subclass == DoubleTarget:
-            qubit_set.extend(list(double_target_valid_input().values()))
+            qubit_set.extend(list(double_target_valid_ir_input().values()))
         elif subclass == MultiTarget:
             qubit_set.extend(list(multi_target_valid_input().values()))
         elif subclass == SingleControl:
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == DoubleControl:
-            qubit_set = list(double_control_valid_input().values()) + qubit_set
+            qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
         elif subclass == Angle or subclass == TwoDimensionalMatrix:
             pass
         else:

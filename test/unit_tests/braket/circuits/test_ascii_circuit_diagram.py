@@ -147,7 +147,7 @@ def test_overlapping_qubits():
 
 
 def test_overlapping_qubits_angled_gates():
-    circ = Circuit().zz([0, 2], 0.15).cnot(1, 3).h(0)
+    circ = Circuit().zz(0, 2, 0.15).cnot(1, 3).h(0)
     expected = (
         "T  : |    0     |1|",
         "                   ",
