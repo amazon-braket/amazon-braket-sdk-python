@@ -2,13 +2,13 @@
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket. This document describes how to configure your environment to use the Amazon Braket (Private Beta) locally on your computer. It does not include information about how to use Amazon Braket (Private Beta) in the AWS console.
 
-**Getting the latest version**
+**Getting the latest version** 
 
 Get the latest version of the SDK. If you receive a notice that a new version of the SDK is available, you can update to the latest version. For more information, see [Updating to the latest release](https://github.com/aws/braket-python-sdk/tree/stable/latest#updating-to-the-latest-release). View the [Releases](https://github.com/aws/braket-python-sdk/releases) page for more information.
 
 **Use the stable/latest branch**
 
-You should always use the stable/latest branch of this repo, which includes the latest stable version of the SDK. The master branch includes in-progress features and will not work.
+You should always use the stable/latest branch of this repo, which includes the latest stable version of the SDK. The master branch includes in-progress features and will not work. 
 
 **Providing Feedback and Getting Help**
 
@@ -16,7 +16,7 @@ To provide feedback or request support, please contact the Amazon Braket team at
 
 **Important**
 
-If you **Star**, **Watch**, or submit a pull request for this repository, other users that have access to this repository are able to see your user name in the list of watchers. If you want to remain anonymous, you should not Watch or Star this repository, nor post any comments or submit a pull request.
+If you **Star**, **Watch**, or submit a pull request for this repository, other users that have access to this repository are able to see your user name in the list of watchers. If you want to remain anonymous, you should not Watch or Star this repository, nor post any comments or submit a pull request. 
 
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
@@ -83,7 +83,7 @@ pip install awscli
 ```
 
 #### Configure a profile for the AWS CLI
-Configure a CLI profile to use your account to interact with AWS. To learn more, see [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
+Configure a CLI profile to use your account to interact with AWS. To learn more, see [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html). 
 
 After you create a profile, use the following command to set the `AWS_PROFILE` so that all future commands can access your AWS account and resources.
 
@@ -113,7 +113,7 @@ Wait until the Status changes to **CREATE_COMPLETE**. You may need to refresh th
 
 ## Setting up the Amazon Braket Python SDKs
 Use the steps in this section to install and configure the Amazon Braket Python SDKs for your environment. You should perform the steps in the order in which they are included in this document.
-
+ 
 ### Download the Amazon Braket GitHub Repositories
 The easiest way to get the SDKs is to download them directly from the GitHub site. Because the repositories are private during the Private Beta period, an SSH key is required to access the files remotely from a terminal session. If you download them directly from the GitHub site, you can just extract the files to your system or virtual environment without the extra steps of using an SSH key. You need to log in to GitHub using the account that was whitelisted for the Amazon Braket (Private Beta).
 
@@ -188,7 +188,7 @@ The code sample imports the Amazon Braket framework, then defines the execution 
 
 ### Available Simulators
 There are currently three simulators available for Amazon Braket. To specify which simulator to use, change the code sample to replace the value for the `AwsQuantumSimulator` to one of the following values:
-- `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector.
+- `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector. 
 - `arn:aws:aqx:::quantum-simulator:aqx:qs2` – a tensor network simulator. Provides an approximation of running a job on a quantum computer.
 -	`arn:aws:aqx:::quantum-simulator:aqx:qs3` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples from the state vector but includes the entire state vector. This generates more data, and therefore incurs additional costs for storage of data in Amazon S3.
 
@@ -219,7 +219,7 @@ After you have installed Jupyter, use this command to open a Jupyter notebook so
 ```bash
 jupyter notebook
 ```
-Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **braket**.
+Jupyter opens in a browser window. Choose **New**, and then under **Notebooks**, choose **braket**. 
 
 **Note** If you are using a Jupyter notebook from an prior installation and did not create a Braket kernel, you will not see braket available for the notebook type. Choose Python3 instead. If you choose Python3, you must have the Braket packages installed globally.
 
@@ -236,7 +236,7 @@ When the job completes, you should see output similar to the following:
 Debugging logs are available for troubleshooting. An example to enable these logs can be found in `BRAKET_SDK_ROOT/examples/debug_bell.py`. This example enables logs of task status updates to be continuously printed to console when a quantum task is created. The logs can also be configured to save to a file or output to another stream.
 
 ## Running a Quantum Algorithm on a Quantum Computer
-With Amazon Braket, you can run your quantum circuit on a physical quantum computer. The steps to do so are the same as those described to validate your environment. Just replace the example code provided in this document with your own code.
+With Amazon Braket, you can run your quantum circuit on a physical quantum computer. The steps to do so are the same as those described to validate your environment. Just replace the example code provided in this document with your own code. 
 
 The following example executes the same Bell Pair example described to validate your configuration against a Rigetti quantum computer.
 ```python
@@ -259,7 +259,7 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 - **D-Wave** Not yet available
 
 ### Deactivate the virtual environment
-After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command.
+After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command. 
 
 **To deactivate the virtual environment on Mac or Linux**
 ```bash
@@ -293,7 +293,7 @@ Perform the steps described in the [Setting up the Amazon Braket Python SDKs](ht
 You can extract the file to the same location you are using and replace the existing files with the updated SDK. This lets you continue to use the same virtual environment.
 
 ## Sample Notebooks
-Coming soon
+Coming soon 
 
 ## Documentation
 You can generate the documentation for the SDK. First change directories (`cd`) to position the cursor in the `braket-python-sdk` directory. Then, run the following command to generate the HTML documentation files:
