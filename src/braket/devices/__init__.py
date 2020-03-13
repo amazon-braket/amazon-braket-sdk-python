@@ -12,3 +12,4 @@
 # language governing permissions and limitations under the License.
 
 from braket.devices.device import Device  # noqa: F401
+from braket.devices.local_simulator import LocalSimulator  # noqa: F401
