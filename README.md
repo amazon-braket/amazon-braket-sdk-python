@@ -256,7 +256,10 @@ print(device.run(bell, s3_folder).result().measurement_counts)
 Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
 - **IonQ** "arn:aws:aqx:::qpu:ionq" (Jobs may take 24 hours to complete on IonQ.)
 - **Rigetti** "arn:aws:aqx:::qpu:rigetti"
-- **D-Wave** Not yet available
+- **D-Wave** "arn:aws:aqx:::qpu:d-wave"
+
+### Using Amazon Braket with D-Wave QPUs
+To use Amazon Braket with D-Wave QPUs, you also need to install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [Readme](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.
 
 ### Deactivate the virtual environment
 After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command.
