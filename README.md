@@ -2,6 +2,16 @@
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket. This document describes how to configure your environment to use the Amazon Braket (Private Beta) locally on your computer. It does not include information about how to use Amazon Braket (Private Beta) in the AWS console.
 
+**Getting the latest version** 
+
+Get the latest version of the SDK. If you receive a notice that a new version of the SDK is available, you can update to the latest version. For more information, see [Updating to the latest release](https://github.com/aws/braket-python-sdk/tree/stable/latest#updating-to-the-latest-release). View the [Releases](https://github.com/aws/braket-python-sdk/releases) page for more information.
+
+**Use the stable/latest branch**
+
+You should always use the stable/latest branch of this repo, which includes the latest stable version of the SDK. The master branch includes in-progress features and will not work. 
+
+**Providing Feedback and Getting Help**
+
 To provide feedback or request support, please contact the Amazon Braket team at [amazon-braket-preview-support@amazon.com](mailto:amazon-braket-preview-support@amazon.com?subject=Add%20a%20brief%20description%20of%20the%20issue).
 
 **Important**
@@ -270,8 +280,17 @@ When you want to use it again, you can reactivate it with the same command you u
 ## Updating to the latest release
 We will periodically make updates and changes the SDK or the model. When you are notified of a change that requires action on your part, use the following steps to update your environment to the latest version.
 
+### Check the version you have installed
+You can view the version of the braket-python-sdk that you have installed by using the following command in the virtual environment:
+```bash
+pip show braket-sdk
+```
+Compare the version displayed in your local environment with the latest version listed in the [Releases](https://github.com/aws/braket-python-sdk/releases) page. If the version listed is higher than your local version, you should update to the latest release.
+
 ### To get the lastest updates
-Information to be provided when the next update is available.
+Perform the steps described in the [Setting up the Amazon Braket Python SDKs](https://github.com/aws/braket-python-sdk/tree/stable/latest#setting-up-the-amazon-braket-python-sdks) section of this document. The links in that section point to the most recent version of the braket-python-sdk, braket-python-ir, and model file you need to set up the new version of the SDK.
+
+You can extract the file to the same location you are using and replace the existing files with the updated SDK. This lets you continue to use the same virtual environment.
 
 ## Sample Notebooks
 Coming soon 
@@ -281,11 +300,6 @@ You can generate the documentation for the SDK. First change directories (`cd`) 
 
 ```bash
 tox -e docs
-```
-
-If you get an error that tox is not installed, run the following command to install it:
-```bash
-pip install tox
 ```
 
 To view the generated documentation, open the following file in a browser:
