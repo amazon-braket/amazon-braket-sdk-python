@@ -258,8 +258,8 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 - **Rigetti** "arn:aws:aqx:::qpu:rigetti"
 - **D-Wave** "arn:aws:aqx:::qpu:d-wave"
 
-### Using Amazon Braket with D-Wave QPUs
-To use Amazon Braket with D-Wave QPUs, you also need to install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [Readme](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.
+### Using Amazon Braket with D-Wave QPU
+If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [README](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.
 
 ### Deactivate the virtual environment
 After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command.
