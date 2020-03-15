@@ -295,6 +295,9 @@ Perform the steps described in the [Setting up the Amazon Braket Python SDKs](ht
 
 You can extract the file to the same location you are using and replace the existing files with the updated SDK. This lets you continue to use the same virtual environment.
 
+## Using the Amazon Braket SDK with PennyLane
+If you want to use Amazon Braket with [PennyLane](https://pennylane.ai/), you can install and configure the [PennyLane-Braket plugin] (https://github.com/XanaduAI/pennylane-braket). Information about how to install and configure the plugin is provided in the Readme for the repository.
+
 ## Sample Notebooks
 Coming soon
 
