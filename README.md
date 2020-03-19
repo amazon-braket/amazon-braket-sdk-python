@@ -307,9 +307,15 @@ Coming soon
 To view the API Reference for the SDK, either download the .zip file or building it in your local environment.
 
 **To download the API Reference .zip file**
-[Download the .zip file](aws s3 cp s3://braket-external-assets-prod-us-west-2/sdk-docs/built-sdk-documentation.zip braket-sdk-documentation.zip), and then extract the `braket-sdk-documentation.zip` file to your local environment. After you extract the file, open the index.html file in the `SDK Documentation` folder.
+
+Use the following command to download the .zip file
+```bash
+aws s3 cp s3://braket-external-assets-prod-us-west-2/sdk-docs/built-sdk-documentation.zip braket-sdk-documentation.zip
+```
+Then extract the `braket-sdk-documentation.zip` file to your local environment. After you extract the file, open the index.html file in the `SDK Documentation` folder.
 
 **To generate the API Reference HTML in your local environment**
+
 To generate the HTML, first change directories (`cd`) to position the cursor in the `braket-python-sdk` directory. Then, run the following command to generate the HTML documentation files:
 
 ```bash
