@@ -13,6 +13,7 @@
 
 from unittest.mock import Mock, patch
 
+import networkx as nx
 import pytest
 from braket.aws import AwsQpu, AwsQpuArns
 from braket.circuits import Circuit
@@ -213,6 +214,30 @@ def test_run_with_positional_args_and_kwargs(
     )
 
 
+@pytest.mark.parametrize(
+    "properties, expected_edges",
+    [
+        (
+            {"connectivity": {"connectivityGraph": {"0": ["1"], "1": ["2", "3"]}}},
+            [(0, 1), (1, 2), (1, 3)],
+        ),
+        (
+            {"connectivity": {"connectivityGraph": {}}, "qubitCount": "3"},
+            list(nx.complete_graph(3).edges),
+        ),
+        ({"couplers": [[0, 1], [1, 2]],}, [(0, 1), (1, 2)]),
+        ({}, None),
+    ],
+)
+def test_construct_topology_graph(qpu, properties, expected_edges):
+    device = qpu(AwsQpuArns.RIGETTI)
+    with patch("braket.aws.aws_qpu.AwsQpu.properties", properties):
+        if expected_edges is None:
+            assert device._construct_topology_graph() is None
+        else:
+            assert list(device._construct_topology_graph().edges) == expected_edges
+
+
 def _run_and_assert(
     aws_quantum_task_mock, qpu, circuit, s3_destination_folder, shots, run_args, run_kwargs
 ):
@@ -241,3 +266,4 @@ def _assert_qpu_fields(qpu, properties_keys, expected_qpu_data):
         assert qpu.properties[property_name] == expected_qpu_properties.get(property_name)
     assert qpu.status == expected_qpu_data.get("status")
     assert qpu.status_reason == expected_qpu_data.get("statusReason")
+    assert qpu.topology_graph.edges == qpu._construct_topology_graph().edges

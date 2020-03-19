@@ -26,6 +26,7 @@ setup(
         "boto3",
         "nest-asyncio",
         "numpy",
+        "networkx",
     ],
     extras_require={
         "test": [
