@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 import braket.ir as ir
 import pytest
-from braket.annealing.problem import Problem, ProblemType
+from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator
 from braket.devices.ir_simulator import IRSimulator
@@ -25,7 +25,7 @@ from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 GATE_MODEL_RESULT = {
     "StateVector": {"00": [0.2, 0.2], "01": [0.3, 0.1], "10": [0.1, 0.3], "11": [0.2, 0.2]},
     "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED",},
+    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED"},
 }
 
 ANNEALING_RESULT = {
