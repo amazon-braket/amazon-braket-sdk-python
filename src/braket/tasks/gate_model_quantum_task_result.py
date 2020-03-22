@@ -166,6 +166,10 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device = False
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = True
+        else:
+            raise ValueError(
+                'One of "Measurements" or "MeasurementProbabilities" must be in the results dict'
+            )
         return GateModelQuantumTaskResult(
             state_vector=state_vector,
             task_metadata=task_metadata,

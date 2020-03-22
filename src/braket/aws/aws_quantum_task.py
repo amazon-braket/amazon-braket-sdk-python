@@ -225,14 +225,17 @@ class AwsQuantumTask(QuantumTask):
         """
         return asyncio.create_task(self._wait_for_completion())
 
-    async def _wait_for_completion(self) -> GateModelQuantumTaskResult:
+    async def _wait_for_completion(
+        self,
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
         Returns:
-            GateModelQuantumTaskResult: If the task is in the `AwsQuantumTask.RESULTS_READY_STATES`
-                state within the specified time limit, the result from the S3 bucket is loaded and
-                returned. `None` is returned if a timeout occurs or task state is in
-                `AwsQuantumTask.TERMINAL_STATES` but not `AwsQuantumTask.RESULTS_READY_STATES`.
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in
+                the `AwsQuantumTask.RESULTS_READY_STATES` state within the specified time limit,
+                the result from the S3 bucket is loaded and returned. `None` is returned if a
+                timeout occurs or task state is in `AwsQuantumTask.TERMINAL_STATES` but not
+                `AwsQuantumTask.RESULTS_READY_STATES`.
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
