@@ -11,17 +11,27 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Union
+from typing import Union
 
 from braket.ir.annealing import Problem
 from braket.ir.jaqcd import Program
 
 
-class IRSimulator(ABC):
+class BraketSimulator(ABC):
     """ An abstract simulator that locally runs a quantum task.
 
     The task can be either a circuit-based program or an annealing task,
     specified by the given IR.
+
+    To register a simulator so the Braket SDK recognizes its name, the name
+    and class must added as an entry point for "braket.simulators". This is done
+    by adding an entry to entry_points in the simulator package's setup.py:
+
+    >>> entry_points = {
+    >>>     "braket.simulators": [
+    >>>         "backend_name = <backend_class>"
+    >>>     ]
+    >>> }
     """
 
     # TODO: Move this class to the local simulator repo and take a dependency on it
@@ -30,9 +40,7 @@ class IRSimulator(ABC):
     # TODO: Update to use new simulate() method
 
     @abstractmethod
-    def run(
-        self, ir: Union[Program, Problem], shots: Optional[int], *args, **kwargs
-    ) -> Dict[str, Any]:
+    def run(self, ir: Union[Program, Problem], *args, **kwargs) -> str:
         """ Run the task specified by the given IR.
 
         Extra arguments will contain any additional information necessary to run the task,
@@ -40,12 +48,11 @@ class IRSimulator(ABC):
 
         Args:
             ir (Union[Program, Problem]): The IR representation of the program
-            shots (Optional[int]): The number of times to run the program
 
         Returns:
-            Dict[str, Any]: A dict containing the results of the simulation.
-            In order to work with braket-python-sdk, the format of this dict should
+            str: A JSON string containing the results of the simulation.
+            In order to work with braket-python-sdk, the format of the JSON dict should
             match that needed by GateModelQuantumTaskResult or AnnealingQuantumTaskResult
-            in the SDK.
+            in the SDK, depending on the type of task.
         """
         raise NotImplementedError()

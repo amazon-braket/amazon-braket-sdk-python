@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import json
-from typing import Any, Dict, Optional
+from typing import Optional
 from unittest.mock import patch
 
 import braket.ir as ir
@@ -19,30 +19,34 @@ import pytest
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator
-from braket.devices.ir_simulator import IRSimulator
+from braket.devices.braket_simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
-GATE_MODEL_RESULT = {
-    "StateVector": {"00": [0.2, 0.2], "01": [0.3, 0.1], "10": [0.1, 0.3], "11": [0.2, 0.2]},
-    "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED"},
-}
+GATE_MODEL_RESULT = json.dumps(
+    {
+        "StateVector": {"00": [0.2, 0.2], "01": [0.3, 0.1], "10": [0.1, 0.3], "11": [0.2, 0.2]},
+        "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
+        "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED"},
+    }
+)
 
-ANNEALING_RESULT = {
-    "Solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
-    "VariableCount": 4,
-    "Values": [0.0, 1.0, 2.0],
-    "SolutionCounts": None,
-    "ProblemType": "ising",
-    "Foo": {"Bar": "Baz"},
-    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED", "Shots": 5,},
-}
+ANNEALING_RESULT = json.dumps(
+    {
+        "Solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
+        "VariableCount": 4,
+        "Values": [0.0, 1.0, 2.0],
+        "SolutionCounts": None,
+        "ProblemType": "ising",
+        "Foo": {"Bar": "Baz"},
+        "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED", "Shots": 5,},
+    }
+)
 
 
-class DummyCircuitSimulator(IRSimulator):
+class DummyCircuitSimulator(BraketSimulator):
     def run(
-        self, program: ir.jaqcd.Program, shots: Optional[int], qubits: int, *args, **kwargs
-    ) -> Dict[str, Any]:
+        self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
+    ) -> str:
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT
@@ -54,8 +58,8 @@ class DummyCircuitSimulator(IRSimulator):
         assert self._qubits == qubits
 
 
-class DummyAnnealingSimulator(IRSimulator):
-    def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> Dict[str, Any]:
+class DummyAnnealingSimulator(BraketSimulator):
+    def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> str:
         return ANNEALING_RESULT
 
 
@@ -65,13 +69,13 @@ def test_run_gate_model():
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
     dummy.assert_qubits(2)
-    assert task.result == GateModelQuantumTaskResult.from_string(json.dumps(GATE_MODEL_RESULT))
+    assert task.result == GateModelQuantumTaskResult.from_string(GATE_MODEL_RESULT)
 
 
 def test_run_annealing():
     sim = LocalSimulator(DummyAnnealingSimulator())
     task = sim.run(Problem(ProblemType.ISING))
-    assert task.result == AnnealingQuantumTaskResult.from_string(json.dumps(ANNEALING_RESULT))
+    assert task.result == AnnealingQuantumTaskResult.from_string(ANNEALING_RESULT)
 
 
 @pytest.mark.xfail(raises=TypeError)

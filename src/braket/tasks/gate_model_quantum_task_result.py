@@ -140,6 +140,10 @@ class GateModelQuantumTaskResult:
 
         Returns:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on a string
+
+        Raises:
+            ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
+            in the result dict
         """
         json_obj = json.loads(result)
         task_metadata = json_obj["TaskMetadata"]

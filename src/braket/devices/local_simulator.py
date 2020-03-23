@@ -10,20 +10,19 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-import json
 from functools import singledispatch
-from typing import Optional, Set, Union
+from typing import Set, Union
 
 import pkg_resources
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
+from braket.devices.braket_simulator import BraketSimulator
 from braket.devices.device import Device
-from braket.devices.ir_simulator import IRSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
-simulator_devices = {
+_simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
 }
 
@@ -35,40 +34,30 @@ class LocalSimulator(Device):
     results using constructs from the SDK rather than Braket IR.
     """
 
-    def __init__(self, backend: Union[str, IRSimulator]):
+    def __init__(self, backend: Union[str, BraketSimulator]):
         """
-        To create a LocalSimulator with a backend name, the name and class must
-        be registered as an entry point for "braket.simulators". This is done
-        by adding an entry to entry_points in the backend package's setup.py:
-
-        >>> entry_points = {
-        >>>     "braket.simulators": [
-        >>>         "backend_name = <backend_class>"
-        >>>     ]
-        >>> }
-
-        To create a LocalSimulator using an IRSimulator instance, simply pass the
-        instance to the constructor.
-
         Args:
             backend (Union[str, IRSimulator]): The name of the simulator backend or
             the actual simulator instance to use for simulation
         """
-        super().__init__(name=None, status=None, status_reason=None)
+        delegate = _get_simulator(backend)
+        super().__init__(
+            name=delegate.__class__.__name__,
+            status="AVAILABLE",
+            status_reason="Local simulator loaded successfully",
+        )
         self._delegate = _get_simulator(backend)
 
     def run(
-        self,
-        task_specification: Union[Circuit, Problem],
-        shots: Optional[int] = None,
-        *args,
-        **kwargs,
+        self, task_specification: Union[Circuit, Problem], *args, **kwargs,
     ) -> LocalQuantumTask:
-        """ Runs the given task with the wrapped local simulator
+        """ Runs the given task with the wrapped local simulator.
+
+        Note: If running a circuit, the number of qubits will be passed
+        to the backend as the argument after the circuit itself.
 
         Args:
             task_specification (Union[Circuit, Problem]):
-            shots (Optional[int]): Number of times to run task
             *args: Positional args to pass to the IR simulator
             **kwargs: Keyword arguments to pass to the IR simulator
 
@@ -76,7 +65,7 @@ class LocalSimulator(Device):
             LocalQuantumTask: A LocalQuantumTask object containing the results
             of the simulation
         """
-        result = _run_internal(task_specification, self._delegate, shots, *args, **kwargs)
+        result = _run_internal(task_specification, self._delegate, *args, **kwargs)
         return LocalQuantumTask(result)
 
     @classmethod
@@ -87,7 +76,7 @@ class LocalSimulator(Device):
             Set[str]: The names of the available backends that can be passed
             into LocalSimulator's constructor
         """
-        return set(simulator_devices.keys())
+        return set(_simulator_devices.keys())
 
 
 @singledispatch
@@ -97,33 +86,33 @@ def _get_simulator(simulator):
 
 @_get_simulator.register
 def _(backend_name: str):
-    if backend_name in simulator_devices:
-        device_class = simulator_devices[backend_name].load()
+    if backend_name in _simulator_devices:
+        device_class = _simulator_devices[backend_name].load()
         return device_class()
     else:
-        raise ValueError(f"Only the following devices are available {simulator_devices.keys()}")
+        raise ValueError(f"Only the following devices are available {_simulator_devices.keys()}")
 
 
 @_get_simulator.register
-def _(backend_impl: IRSimulator):
+def _(backend_impl: BraketSimulator):
     return backend_impl
 
 
 @singledispatch
-def _run_internal(task_specification, simulator: IRSimulator, shots: int, *args, **kwargs):
+def _run_internal(task_specification, simulator: BraketSimulator, *args, **kwargs):
     raise NotImplementedError("Unsupported task type")
 
 
 @_run_internal.register
-def _(circuit: Circuit, simulator: IRSimulator, shots: Optional[int], *args, **kwargs):
+def _(circuit: Circuit, simulator: BraketSimulator, *args, **kwargs):
     program = circuit.to_ir()
     qubits = circuit.qubit_count
-    result_json = json.dumps(simulator.run(program, shots, qubits, *args, **kwargs))
+    result_json = simulator.run(program, qubits, *args, **kwargs)
     return GateModelQuantumTaskResult.from_string(result_json)
 
 
 @_run_internal.register
-def _(problem: Problem, simulator: IRSimulator, *args, **kwargs):
+def _(problem: Problem, simulator: BraketSimulator, *args, **kwargs):
     ir = problem.to_ir()
-    result_json = json.dumps(simulator.run(ir, *args, *kwargs))
+    result_json = simulator.run(ir, *args, *kwargs)
     return AnnealingQuantumTaskResult.from_string(result_json)
