@@ -100,7 +100,7 @@ class AnnealingQuantumTaskResult:
             result (str): Results dict with AnnealingQuantumTaskResult attributes as keys
 
         Returns:
-            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on dict
+            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on the given dict
         """
         return AnnealingQuantumTaskResult._from_dict_internal(result)
 
@@ -113,7 +113,7 @@ class AnnealingQuantumTaskResult:
             result (str): JSON object string
 
         Returns:
-            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on a string
+            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on the given string
         """
         return AnnealingQuantumTaskResult._from_dict_internal(json.loads(result))
 

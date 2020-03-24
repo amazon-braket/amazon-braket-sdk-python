@@ -139,7 +139,7 @@ class GateModelQuantumTaskResult:
             result (Dict[str, Any]): Results dict with GateModelQuantumTaskResult attributes as keys
 
         Returns:
-            GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on dict
+            GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on the given dict
 
         Raises:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
@@ -160,7 +160,7 @@ class GateModelQuantumTaskResult:
             result (str): JSON object string, with GateModelQuantumTaskResult attributes as keys.
 
         Returns:
-            GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on a string
+            GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on the given string
 
         Raises:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
