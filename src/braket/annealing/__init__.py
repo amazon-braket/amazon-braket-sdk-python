@@ -11,5 +11,5 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.devices.device import Device  # noqa: F401
-from braket.devices.local_simulator import LocalSimulator  # noqa: F401
+# Execute initialization code in circuit module
+from braket.annealing.problem import Problem, ProblemType  # noqa: F401

@@ -140,6 +140,10 @@ class GateModelQuantumTaskResult:
 
         Returns:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on a string
+
+        Raises:
+            ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
+            in the result dict
         """
         json_obj = json.loads(result)
         task_metadata = json_obj["TaskMetadata"]
@@ -166,6 +170,10 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device = False
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = True
+        else:
+            raise ValueError(
+                'One of "Measurements" or "MeasurementProbabilities" must be in the results dict'
+            )
         return GateModelQuantumTaskResult(
             state_vector=state_vector,
             task_metadata=task_metadata,

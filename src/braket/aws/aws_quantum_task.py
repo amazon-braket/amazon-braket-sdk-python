@@ -154,11 +154,12 @@ class AwsQuantumTask(QuantumTask):
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
         """
         Get task metadata defined in Amazon Braket.
+
         Args:
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
-            from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
-            `GetQuantumTask` operation  to retrieve metadata, which also updates the cached
-            value. Default = False.
+                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
+                `GetQuantumTask` operation  to retrieve metadata, which also updates the cached
+                value. Default = False.
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
@@ -171,11 +172,12 @@ class AwsQuantumTask(QuantumTask):
     def state(self, use_cached_value: bool = False) -> str:
         """
         The state of the quantum task.
+
         Args:
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
-            from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
-            `GetQuantumTask` operation to retrieve metadata, which also updates the cached
-            value. Default = False.
+                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
+                `GetQuantumTask` operation to retrieve metadata, which also updates the cached
+                value. Default = False.
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`,
@@ -225,14 +227,17 @@ class AwsQuantumTask(QuantumTask):
         """
         return asyncio.create_task(self._wait_for_completion())
 
-    async def _wait_for_completion(self) -> GateModelQuantumTaskResult:
+    async def _wait_for_completion(
+        self,
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
         Returns:
-            GateModelQuantumTaskResult: If the task is in the `AwsQuantumTask.RESULTS_READY_STATES`
-                state within the specified time limit, the result from the S3 bucket is loaded and
-                returned. `None` is returned if a timeout occurs or task state is in
-                `AwsQuantumTask.TERMINAL_STATES` but not `AwsQuantumTask.RESULTS_READY_STATES`.
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in
+                the `AwsQuantumTask.RESULTS_READY_STATES` state within the specified time limit,
+                the result from the S3 bucket is loaded and returned. `None` is returned if a
+                timeout occurs or task state is in `AwsQuantumTask.TERMINAL_STATES` but not
+                `AwsQuantumTask.RESULTS_READY_STATES`.
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
