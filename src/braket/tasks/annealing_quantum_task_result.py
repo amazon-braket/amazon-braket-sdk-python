@@ -28,9 +28,9 @@ class AnnealingQuantumTaskResult:
 
     Args:
         record_array (numpy.recarray): numpy array with keys 'solution' (numpy.ndarray)
-        where row is solution, column is value of the variable, 'solution_count' (numpy.ndarray)
-        the number of times the solutions occurred, and 'value' (numpy.ndarray) the
-        output or energy of the solutions.
+            where row is solution, column is value of the variable, 'solution_count' (numpy.ndarray)
+            the number of times the solutions occurred, and 'value' (numpy.ndarray) the
+            output or energy of the solutions.
         variable_count (int): the number of variables
         problem_type (str): the type of problem ('ising' or 'qubo')
         task_metadata (Dict[str, Any]): Dictionary of task metadata.
