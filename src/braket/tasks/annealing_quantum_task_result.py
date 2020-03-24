@@ -97,7 +97,7 @@ class AnnealingQuantumTaskResult:
         Create AnnealingQuantumTaskResult from dict
 
         Args:
-            result (str): Results dict with AnnealingQuantumTaskResult attributes as keys
+            result (Dict[str, Any]): Results dict with AnnealingQuantumTaskResult attributes as keys
 
         Returns:
             AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on the given dict

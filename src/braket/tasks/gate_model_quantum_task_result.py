@@ -147,7 +147,7 @@ class GateModelQuantumTaskResult:
 
         Note:
             For the "StateVector" key, the value should be of type Dict[str, complex];
-            each bitstring's amplitude is Python complex number.
+            each bitstring's amplitude is a Python complex number.
         """
         return GateModelQuantumTaskResult._from_dict_internal(result)
 
