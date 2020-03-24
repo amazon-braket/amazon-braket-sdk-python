@@ -12,13 +12,13 @@
 # language governing permissions and limitations under the License.
 import json
 from typing import Optional
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import braket.ir as ir
 import pytest
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
-from braket.devices import LocalSimulator
+from braket.devices import LocalSimulator, local_simulator
 from braket.devices.braket_simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
@@ -63,6 +63,17 @@ class DummyAnnealingSimulator(BraketSimulator):
         return ANNEALING_RESULT
 
 
+mock_entry = Mock()
+mock_entry.load.return_value = DummyCircuitSimulator
+local_simulator._simulator_devices = {"dummy": mock_entry}
+
+
+def test_load_from_entry_point():
+    sim = LocalSimulator("dummy")
+    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    assert task.result == GateModelQuantumTaskResult.from_string(GATE_MODEL_RESULT)
+
+
 def test_run_gate_model():
     dummy = DummyCircuitSimulator()
     sim = LocalSimulator(dummy)
@@ -78,15 +89,17 @@ def test_run_annealing():
     assert task.result == AnnealingQuantumTaskResult.from_string(ANNEALING_RESULT)
 
 
+def test_registered_backends():
+    assert LocalSimulator.registered_backends() == {"dummy"}
+
+
 @pytest.mark.xfail(raises=TypeError)
 def test_init_invalid_backend_type():
     LocalSimulator(1234)
 
 
 @pytest.mark.xfail(raises=ValueError)
-@patch("pkg_resources.iter_entry_points")
-def test_init_unregistered_backend(mock):
-    mock.return_value = []
+def test_init_unregistered_backend():
     LocalSimulator("foo")
 
 

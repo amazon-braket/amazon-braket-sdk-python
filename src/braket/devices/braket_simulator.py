@@ -23,9 +23,10 @@ class BraketSimulator(ABC):
     The task can be either a circuit-based program or an annealing task,
     specified by the given IR.
 
-    To register a simulator so the Braket SDK recognizes its name, the name
-    and class must added as an entry point for "braket.simulators". This is done
-    by adding an entry to entry_points in the simulator package's setup.py:
+    For users creating their own simulator: to register a simulator so the
+    Braket SDK recognizes its name, the name and class must added as an
+    entry point for "braket.simulators". This is done by adding an entry to
+    entry_points in the simulator package's setup.py:
 
     >>> entry_points = {
     >>>     "braket.simulators": [

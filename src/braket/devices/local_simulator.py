@@ -30,15 +30,15 @@ _simulator_devices = {
 class LocalSimulator(Device):
     """ A simulator meant to run directly on the user's machine.
 
-    This class wraps an IRSimulator object so that it can be run and returns
+    This class wraps a BraketSimulator object so that it can be run and returns
     results using constructs from the SDK rather than Braket IR.
     """
 
     def __init__(self, backend: Union[str, BraketSimulator]):
         """
         Args:
-            backend (Union[str, IRSimulator]): The name of the simulator backend or
-            the actual simulator instance to use for simulation
+            backend (Union[str, BraketSimulator]): The name of the simulator backend or
+                the actual simulator instance to use for simulation
         """
         delegate = _get_simulator(backend)
         super().__init__(
@@ -53,9 +53,6 @@ class LocalSimulator(Device):
     ) -> LocalQuantumTask:
         """ Runs the given task with the wrapped local simulator.
 
-        Note: If running a circuit, the number of qubits will be passed
-        to the backend as the argument after the circuit itself.
-
         Args:
             task_specification (Union[Circuit, Problem]):
             *args: Positional args to pass to the IR simulator
@@ -64,6 +61,10 @@ class LocalSimulator(Device):
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results
             of the simulation
+
+        Note:
+            If running a circuit, the number of qubits will be passed
+            to the backend as the argument after the circuit itself.
         """
         result = _run_internal(task_specification, self._delegate, *args, **kwargs)
         return LocalQuantumTask(result)
@@ -81,7 +82,7 @@ class LocalSimulator(Device):
 
 @singledispatch
 def _get_simulator(simulator):
-    raise TypeError("Simulator must either be a string or an IRSimulator instance")
+    raise TypeError("Simulator must either be a string or a BraketSimulator instance")
 
 
 @_get_simulator.register

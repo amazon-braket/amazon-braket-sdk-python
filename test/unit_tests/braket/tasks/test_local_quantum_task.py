@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import json
+import uuid
 
 import pytest
 from braket.tasks import GateModelQuantumTaskResult
@@ -27,6 +28,11 @@ RESULT = GateModelQuantumTaskResult.from_string(
 )
 
 TASK = LocalQuantumTask(RESULT)
+
+
+def test_id():
+    # Task ID is valid UUID
+    uuid.UUID(TASK.id)
 
 
 def test_state():

@@ -154,11 +154,12 @@ class AwsQuantumTask(QuantumTask):
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
         """
         Get task metadata defined in Amazon Braket.
+
         Args:
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
-            from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
-            `GetQuantumTask` operation  to retrieve metadata, which also updates the cached
-            value. Default = False.
+                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
+                `GetQuantumTask` operation  to retrieve metadata, which also updates the cached
+                value. Default = False.
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
@@ -171,11 +172,12 @@ class AwsQuantumTask(QuantumTask):
     def state(self, use_cached_value: bool = False) -> str:
         """
         The state of the quantum task.
+
         Args:
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
-            from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
-            `GetQuantumTask` operation to retrieve metadata, which also updates the cached
-            value. Default = False.
+                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
+                `GetQuantumTask` operation to retrieve metadata, which also updates the cached
+                value. Default = False.
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`,
