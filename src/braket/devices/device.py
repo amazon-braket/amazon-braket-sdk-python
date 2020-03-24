@@ -49,7 +49,7 @@ class Device(ABC):
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of a task
-            to run on device.
+                to run on device.
 
             location: The location to save the task's results
 
