@@ -46,7 +46,7 @@ class LocalSimulator(Device):
             status="AVAILABLE",
             status_reason="Local simulator loaded successfully",
         )
-        self._delegate = _get_simulator(backend)
+        self._delegate = delegate
 
     def run(
         self, task_specification: Union[Circuit, Problem], *args, **kwargs,
