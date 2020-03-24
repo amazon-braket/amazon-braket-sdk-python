@@ -131,9 +131,30 @@ class GateModelQuantumTaskResult:
         return np.asarray(measurements_list, dtype=int)
 
     @staticmethod
+    def from_dict(result: Dict[str, Any]):
+        """
+        Create GateModelQuantumTaskResult from dict.
+
+        Args:
+            result (Dict[str, Any]): Results dict with GateModelQuantumTaskResult attributes as keys
+
+        Returns:
+            GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on dict
+
+        Raises:
+            ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
+            in the result dict
+
+        Note:
+            For the "StateVector" key, the value should be of type Dict[str, complex];
+            each bitstring's amplitude is Python complex number.
+        """
+        return GateModelQuantumTaskResult._from_dict_internal(result)
+
+    @staticmethod
     def from_string(result: str) -> GateModelQuantumTaskResult:
         """
-        Create GateModelQuantumTaskResult from string
+        Create GateModelQuantumTaskResult from string.
 
         Args:
             result (str): JSON object string, with GateModelQuantumTaskResult attributes as keys.
@@ -144,15 +165,25 @@ class GateModelQuantumTaskResult:
         Raises:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
             in the result dict
+
+        Note:
+            For the "StateVector" key, the value should be of type Dict[str, List[float, float]];
+            each bitstring's amplitude is represented by a two-element list, with first element
+            the real component and second element the imaginary component.
         """
         json_obj = json.loads(result)
-        task_metadata = json_obj["TaskMetadata"]
         state_vector = json_obj.get("StateVector", None)
         if state_vector:
             for state in state_vector:
                 state_vector[state] = complex(*state_vector[state])
-        if "Measurements" in json_obj:
-            measurements = np.asarray(json_obj["Measurements"], dtype=int)
+        return GateModelQuantumTaskResult._from_dict_internal(json_obj)
+
+    @staticmethod
+    def _from_dict_internal(result: Dict[str, Any]):
+        task_metadata = result["TaskMetadata"]
+        state_vector = result.get("StateVector", None)
+        if "Measurements" in result:
+            measurements = np.asarray(result["Measurements"], dtype=int)
             m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
             m_probs = GateModelQuantumTaskResult.measurement_probabilities_from_measurement_counts(
                 m_counts
@@ -160,9 +191,9 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device = True
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = False
-        elif "MeasurementProbabilities" in json_obj:
+        elif "MeasurementProbabilities" in result:
             shots = task_metadata["Shots"]
-            m_probs = json_obj["MeasurementProbabilities"]
+            m_probs = result["MeasurementProbabilities"]
             measurements = GateModelQuantumTaskResult.measurements_from_measurement_probabilities(
                 m_probs, shots
             )

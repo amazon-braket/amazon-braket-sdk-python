@@ -92,6 +92,19 @@ class AnnealingQuantumTaskResult:
         return NotImplemented
 
     @staticmethod
+    def from_dict(result: Dict[str, Any]):
+        """
+        Create AnnealingQuantumTaskResult from dict
+
+        Args:
+            result (str): Results dict with AnnealingQuantumTaskResult attributes as keys
+
+        Returns:
+            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on dict
+        """
+        return AnnealingQuantumTaskResult._from_dict_internal(result)
+
+    @staticmethod
     def from_string(result: str) -> AnnealingQuantumTaskResult:
         """
         Create AnnealingQuantumTaskResult from string
@@ -100,25 +113,28 @@ class AnnealingQuantumTaskResult:
             result (str): JSON object string
 
         Returns:
-            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on a string.
+            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on a string
         """
-        json_obj = json.loads(result)
-        solutions = numpy.asarray(json_obj["Solutions"], dtype=int)
-        values = numpy.asarray(json_obj["Values"], dtype=float)
-        if json_obj["SolutionCounts"] is None:
+        return AnnealingQuantumTaskResult._from_dict_internal(json.loads(result))
+
+    @staticmethod
+    def _from_dict_internal(result: Dict[str, Any]):
+        solutions = numpy.asarray(result["Solutions"], dtype=int)
+        values = numpy.asarray(result["Values"], dtype=float)
+        if result["SolutionCounts"] is None:
             solution_counts = numpy.ones(len(solutions), dtype=int)
         else:
-            solution_counts = numpy.asarray(json_obj["SolutionCounts"], dtype=int)
-        record_array = AnnealingQuantumTaskResult.create_record_array(
+            solution_counts = numpy.asarray(result["SolutionCounts"], dtype=int)
+        record_array = AnnealingQuantumTaskResult._create_record_array(
             solutions, solution_counts, values
         )
-        variable_count = json_obj["VariableCount"]
-        problem_type = json_obj["ProblemType"]
-        task_metadata = json_obj["TaskMetadata"]
+        variable_count = result["VariableCount"]
+        problem_type = result["ProblemType"]
+        task_metadata = result["TaskMetadata"]
         additional_metadata = {}
-        for key in json_obj.keys():
+        for key in result.keys():
             if key.endswith("Metadata") and key != "TaskMetadata":
-                additional_metadata[key] = json_obj[key]
+                additional_metadata[key] = result[key]
         return AnnealingQuantumTaskResult(
             record_array=record_array,
             variable_count=variable_count,
@@ -128,7 +144,7 @@ class AnnealingQuantumTaskResult:
         )
 
     @staticmethod
-    def create_record_array(
+    def _create_record_array(
         solutions: numpy.ndarray, solution_counts: numpy.ndarray, values: numpy.ndarray
     ) -> numpy.recarray:
         """
