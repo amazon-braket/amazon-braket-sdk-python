@@ -10,8 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Any, Dict, Union
 
 from braket.ir.annealing import Problem
 from braket.ir.jaqcd import Program
@@ -41,7 +42,7 @@ class BraketSimulator(ABC):
     # TODO: Update to use new simulate() method
 
     @abstractmethod
-    def run(self, ir: Union[Program, Problem], *args, **kwargs) -> str:
+    def run(self, ir: Union[Program, Problem], *args, **kwargs) -> Dict[str, Any]:
         """ Run the task specified by the given IR.
 
         Extra arguments will contain any additional information necessary to run the task,
@@ -51,9 +52,9 @@ class BraketSimulator(ABC):
             ir (Union[Program, Problem]): The IR representation of the program
 
         Returns:
-            str: A JSON string containing the results of the simulation.
+            Dict[str, Any]: A dict containing the results of the simulation.
             In order to work with braket-python-sdk, the format of the JSON dict should
             match that needed by GateModelQuantumTaskResult or AnnealingQuantumTaskResult
-            in the SDK, depending on the type of task.
+            from the SDK, depending on the type of task.
         """
         raise NotImplementedError()
