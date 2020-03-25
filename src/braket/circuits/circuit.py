@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Callable, Dict, Iterable, TypeVar
 
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
@@ -126,7 +128,7 @@ class Circuit:
         instruction: Instruction,
         target: QubitSetInput = None,
         target_mapping: Dict[QubitInput, QubitInput] = {},
-    ) -> "Circuit":
+    ) -> Circuit:
         """
         Add an instruction to `self`, returns `self` for chaining ability.
 
@@ -191,10 +193,10 @@ class Circuit:
 
     def add_circuit(
         self,
-        circuit: "Circuit",
+        circuit: Circuit,
         target: QubitSetInput = None,
         target_mapping: Dict[QubitInput, QubitInput] = {},
-    ) -> "Circuit":
+    ) -> Circuit:
         """
         Add a `circuit` to self, returns self for chaining ability. This is a composite form of
         `add_instruction()` since it adds all of the instructions of `circuit` to this circuit.
@@ -256,7 +258,7 @@ class Circuit:
 
         return self
 
-    def add(self, addable: AddableTypes, *args, **kwargs) -> "Circuit":
+    def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """
         Generic add method for adding instruction-like item(s) to self. Any arguments that
         `add_circuit()` and / or `add_instruction()` supports are supported by this method.
@@ -335,7 +337,7 @@ class Circuit:
         ir_instructions = [instr.to_ir() for instr in self.instructions]
         return Program(instructions=ir_instructions)
 
-    def _copy(self) -> "Circuit":
+    def _copy(self) -> Circuit:
         """
         Return a shallow copy of the circuit.
 
@@ -344,10 +346,10 @@ class Circuit:
         """
         return Circuit().add(self.instructions)
 
-    def __iadd__(self, addable: AddableTypes) -> "Circuit":
+    def __iadd__(self, addable: AddableTypes) -> Circuit:
         return self.add(addable)
 
-    def __add__(self, addable: AddableTypes) -> "Circuit":
+    def __add__(self, addable: AddableTypes) -> Circuit:
         new = self._copy()
         new.add(addable)
         return new

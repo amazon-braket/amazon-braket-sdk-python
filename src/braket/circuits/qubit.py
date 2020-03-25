@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Union
 
 QubitInput = Union["Qubit", int]
@@ -45,7 +47,7 @@ class Qubit(int):
         return self.__repr__()
 
     @staticmethod
-    def new(qubit: QubitInput) -> "Qubit":
+    def new(qubit: QubitInput) -> Qubit:
         """
         Helper constructor - if input is a Qubit it returns the same value,
         else a new Qubit is constructed.
