@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict
 
 from braket.circuits.operator import Operator
@@ -74,11 +76,11 @@ class Instruction:
         Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
         """
-        return self.operator.to_ir(self.target)
+        return self._operator.to_ir([int(qubit) for qubit in self._target])
 
     def copy(
         self, target_mapping: Dict[QubitInput, QubitInput] = {}, target: QubitSetInput = None
-    ) -> "Instruction":
+    ) -> Instruction:
         """
         Return a shallow copy of the instruction.
 
@@ -114,14 +116,14 @@ class Instruction:
         if target_mapping and target is not None:
             raise TypeError("Only 'target_mapping' or 'target' can be supplied, but not both.")
         elif target is not None:
-            return Instruction(self.operator, target)
+            return Instruction(self._operator, target)
         else:
-            return Instruction(self.operator, self.target.map(target_mapping))
+            return Instruction(self._operator, self._target.map(target_mapping))
 
     def __repr__(self):
-        return f"Instruction('operator': {self.operator}, 'target': {self.target})"
+        return f"Instruction('operator': {self._operator}, 'target': {self._target})"
 
     def __eq__(self, other):
         if isinstance(other, Instruction):
-            return (self.operator, self.target) == (other.operator, other.target)
+            return (self._operator, self._target) == (other._operator, other._target)
         return NotImplemented
