@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Dict, Iterable, Union
 
 from boltons.setutils import IndexedSet
@@ -61,7 +63,7 @@ class QubitSet(IndexedSet):
         _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)]
         super().__init__(_qubits)
 
-    def map(self, mapping: Dict[QubitInput, QubitInput]) -> "QubitSet":
+    def map(self, mapping: Dict[QubitInput, QubitInput]) -> QubitSet:
         """
         Creates a new QubitSet where this instance's qubits are mapped to the values in `mapping`.
         If this instance contains a qubit that is not in the `mapping` that qubit is not modified.
