@@ -117,8 +117,8 @@ class AnnealingQuantumTaskResult:
         """
         return AnnealingQuantumTaskResult._from_dict_internal(json.loads(result))
 
-    @staticmethod
-    def _from_dict_internal(result: Dict[str, Any]):
+    @classmethod
+    def _from_dict_internal(cls, result: Dict[str, Any]):
         solutions = numpy.asarray(result["Solutions"], dtype=int)
         values = numpy.asarray(result["Values"], dtype=float)
         if result["SolutionCounts"] is None:
@@ -135,7 +135,7 @@ class AnnealingQuantumTaskResult:
         for key in result.keys():
             if key.endswith("Metadata") and key != "TaskMetadata":
                 additional_metadata[key] = result[key]
-        return AnnealingQuantumTaskResult(
+        return cls(
             record_array=record_array,
             variable_count=variable_count,
             problem_type=problem_type,

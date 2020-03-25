@@ -178,8 +178,8 @@ class GateModelQuantumTaskResult:
                 state_vector[state] = complex(*state_vector[state])
         return GateModelQuantumTaskResult._from_dict_internal(json_obj)
 
-    @staticmethod
-    def _from_dict_internal(result: Dict[str, Any]):
+    @classmethod
+    def _from_dict_internal(cls, result: Dict[str, Any]):
         task_metadata = result["TaskMetadata"]
         state_vector = result.get("StateVector", None)
         if "Measurements" in result:
@@ -205,7 +205,7 @@ class GateModelQuantumTaskResult:
             raise ValueError(
                 'One of "Measurements" or "MeasurementProbabilities" must be in the results dict'
             )
-        return GateModelQuantumTaskResult(
+        return cls(
             state_vector=state_vector,
             task_metadata=task_metadata,
             measurements=measurements,
