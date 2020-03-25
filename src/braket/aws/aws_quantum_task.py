@@ -27,7 +27,7 @@ from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult,
 
 class AwsQuantumTask(QuantumTask):
     """Amazon Braket implementation of a quantum task. A task can be a circuit or an annealing
-    problem. Currently, only circuits are supported in the Private Beta."""
+    problem."""
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     TERMINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}

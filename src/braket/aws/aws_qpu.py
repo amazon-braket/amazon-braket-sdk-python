@@ -70,7 +70,7 @@ class AwsQpu(Device):
     ) -> AwsQuantumTask:
         """
         Run a quantum task specification on this quantum device. A task can be a circuit or an
-        annealing problem. Currently, only circuits are supported in the Private Beta.
+        annealing problem.
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of task
