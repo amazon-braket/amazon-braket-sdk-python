@@ -21,6 +21,24 @@ from braket.tasks import GateModelQuantumTaskResult
 
 
 @pytest.fixture
+def result_dict_1():
+    return {
+        "StateVector": {
+            "00": complex(0.2, 0.2),
+            "01": complex(0.3, 0.1),
+            "10": complex(0.1, 0.3),
+            "11": complex(0.2, 0.2),
+        },
+        "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
+        "TaskMetadata": {
+            "Id": "UUID_blah_1",
+            "Status": "COMPLETED",
+            "BackendArn": AwsQpuArns.RIGETTI,
+        },
+    }
+
+
+@pytest.fixture
 def result_str_1():
     return json.dumps(
         {
@@ -76,6 +94,17 @@ def parsed_state_vector():
         "01": complex(0.3, 0.1),
         "10": complex(0.1, 0.3),
         "11": complex(0.2, 0.2),
+    }
+
+
+@pytest.fixture
+def malformatted_results():
+    return {
+        "TaskMetadata": {
+            "Id": "UUID_blah_1",
+            "Status": "COMPLETED",
+            "BackendArn": AwsQpuArns.RIGETTI,
+        },
     }
 
 
@@ -150,7 +179,34 @@ def test_task_metadata():
     assert result.task_metadata == task_metadata
 
 
-def test_from_string_measurements(result_str_1, parsed_state_vector):
+def test_from_dict_measurements_state_vector(result_dict_1):
+    task_result = GateModelQuantumTaskResult.from_dict(result_dict_1)
+    expected_measurements = np.asarray(result_dict_1["Measurements"], dtype=int)
+    assert task_result.task_metadata == result_dict_1["TaskMetadata"]
+    assert task_result.state_vector == result_dict_1["StateVector"]
+    assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
+    assert not task_result.measurement_counts_copied_from_device
+    assert not task_result.measurement_probabilities_copied_from_device
+    assert task_result.measurements_copied_from_device
+
+
+def test_from_dict_measurement_probabilities(result_str_3):
+    result_obj = json.loads(result_str_3)
+    task_result = GateModelQuantumTaskResult.from_dict(result_obj)
+    assert task_result.measurement_probabilities == result_obj["MeasurementProbabilities"]
+    assert task_result.task_metadata == result_obj["TaskMetadata"]
+    assert task_result.state_vector is None
+    shots = 100
+    measurement_list = [list("011000") for x in range(shots)]
+    expected_measurements = np.asarray(measurement_list, dtype=int)
+    assert np.allclose(task_result.measurements, expected_measurements)
+    assert task_result.measurement_counts == Counter(["011000" for x in range(shots)])
+    assert not task_result.measurement_counts_copied_from_device
+    assert task_result.measurement_probabilities_copied_from_device
+    assert not task_result.measurements_copied_from_device
+
+
+def test_from_string_measurements_state_vector(result_str_1, parsed_state_vector):
     result_obj = json.loads(result_str_1)
     task_result = GateModelQuantumTaskResult.from_string(result_str_1)
     expected_measurements = np.asarray(result_obj["Measurements"], dtype=int)
@@ -178,6 +234,15 @@ def test_from_string_measurement_probabilities(result_str_3):
     assert not task_result.measurements_copied_from_device
 
 
+def test_from_dict_equal_to_from_string(result_dict_1, result_str_1, result_str_3):
+    assert GateModelQuantumTaskResult.from_dict(
+        result_dict_1
+    ) == GateModelQuantumTaskResult.from_string(result_str_1)
+    assert GateModelQuantumTaskResult.from_dict(
+        json.loads(result_str_3)
+    ) == GateModelQuantumTaskResult.from_string(result_str_3)
+
+
 def test_equality(result_str_1, result_str_2):
     result_1 = GateModelQuantumTaskResult.from_string(result_str_1)
     result_2 = GateModelQuantumTaskResult.from_string(result_str_1)
@@ -188,3 +253,14 @@ def test_equality(result_str_1, result_str_2):
     assert result_1 is not result_2
     assert result_1 != other_result
     assert result_1 != non_result
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_bad_dict(malformatted_results):
+    GateModelQuantumTaskResult.from_dict(malformatted_results)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_bad_string(malformatted_results):
+    results_string = json.dumps(malformatted_results)
+    GateModelQuantumTaskResult.from_string(results_string)
