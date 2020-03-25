@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from functools import singledispatch
 from typing import Set, Union
 
@@ -69,8 +70,8 @@ class LocalSimulator(Device):
         result = _run_internal(task_specification, self._delegate, *args, **kwargs)
         return LocalQuantumTask(result)
 
-    @classmethod
-    def registered_backends(cls) -> Set[str]:
+    @staticmethod
+    def registered_backends() -> Set[str]:
         """ Gets the backends that have been registered as entry points
 
         Returns:
@@ -108,12 +109,12 @@ def _run_internal(task_specification, simulator: BraketSimulator, *args, **kwarg
 def _(circuit: Circuit, simulator: BraketSimulator, *args, **kwargs):
     program = circuit.to_ir()
     qubits = circuit.qubit_count
-    result_json = simulator.run(program, qubits, *args, **kwargs)
-    return GateModelQuantumTaskResult.from_string(result_json)
+    results_dict = simulator.run(program, qubits, *args, **kwargs)
+    return GateModelQuantumTaskResult.from_dict(results_dict)
 
 
 @_run_internal.register
 def _(problem: Problem, simulator: BraketSimulator, *args, **kwargs):
     ir = problem.to_ir()
-    result_json = simulator.run(ir, *args, *kwargs)
-    return AnnealingQuantumTaskResult.from_string(result_json)
+    results_dict = simulator.run(ir, *args, *kwargs)
+    return AnnealingQuantumTaskResult.from_dict(results_dict)
