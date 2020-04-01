@@ -58,7 +58,6 @@ class Device(ABC):
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device
         """
-        pass
 
     @property
     def name(self) -> str:

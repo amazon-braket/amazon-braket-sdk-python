@@ -17,9 +17,6 @@ import numpy as np
 from braket.circuits.operator import Operator
 from braket.circuits.qubit_set import QubitSet
 
-# TODO: Add parameters support
-# TODO: Add printing / visualization capabilities
-
 
 class Gate(Operator):
     """

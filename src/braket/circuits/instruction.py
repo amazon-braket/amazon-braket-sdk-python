@@ -106,7 +106,8 @@ class Instruction:
             >>> new_instr = instr.copy()
             >>> new_instr.target
             QubitSet(Qubit(0))
-            >>> new_instr = instr.copy(target_mapping={0: 5})
+            >>> new_instr = instr.copy(target_mappinifcckjblierbttkrbcikvgbkgnvklljctlhjgkhrbh
+            g={0: 5})
             >>> new_instr.target
             QubitSet(Qubit(5))
             >>> new_instr = instr.copy(target=[5])

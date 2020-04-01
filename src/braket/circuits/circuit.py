@@ -20,6 +20,7 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.result import Result
 from braket.ir.jaqcd import Program
 
 SubroutineReturn = TypeVar("SubroutineReturn", Iterable[Instruction], Instruction)
@@ -32,7 +33,11 @@ AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 class Circuit:
     """
     A representation of a quantum circuit that contains the instructions to be performed on a
-    quantum device. See :mod:`braket.circuits.gates` module for all of the supported instructions.
+    quantum device and the requested results.
+
+    See :mod:`braket.circuits.gates` module for all of the supported instructions.
+
+    See :mod:`braket.circuits.results` module for all of the supported results.
     """
 
     @classmethod
@@ -42,8 +47,8 @@ class Circuit:
         is the name of `func`.
 
         Args:
-            func (Callable[..., Union[Instruction, Iterable[Instruction]]]): The function of the
-                subroutine to add to the class.
+            func (Callable[..., Union[Instruction, Iterable[Instruction], Result,
+                Iterable[Result]]): The function of the subroutine to add to the class.
 
         Examples:
             >>> def h_on_all(target):
@@ -73,8 +78,9 @@ class Circuit:
     def __init__(self, addable: AddableTypes = None, *args, **kwargs):
         """
         Args:
-            addable (Instruction, iterable of `Instruction`, or `SubroutineCallable`, optional): The
-                instruction-like item(s) to add to self. Default = None.
+            addable (Instruction, iterable of `Instruction`, Result, iterable of `Result`,
+                or `SubroutineCallable`, optional): The item(s) to add to self.
+                Default = None.
             *args: Variable length argument list. Supports any arguments that `add()` offers.
             **kwargs: Arbitrary keyword arguments. Supports any keyword arguments that `add()`
                 offers.
@@ -85,6 +91,7 @@ class Circuit:
         Examples:
             >>> circ = Circuit([Instruction(Gate.H(), 4), Instruction(Gate.CNot(), [4, 5])])
             >>> circ = Circuit().h(0).cnot(0, 1)
+            >>> circ = Circuit().h(0).cnot(0, 1).probability([0, 1])
 
             >>> @circuit.subroutine(register=True)
             >>> def bell_pair(target):
@@ -92,8 +99,10 @@ class Circuit:
             ...
             >>> circ = Circuit(bell_pair, [4,5])
             >>> circ = Circuit().bell_pair([4,5])
+
         """
         self._moments: Moments = Moments()
+        self._results: Iterable[Result] = []
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -109,6 +118,11 @@ class Circuit:
         return self._moments.values()
 
     @property
+    def results(self) -> Iterable[Result]:
+        """Iterable[Result]: Get an `iterable` of requested results in the circuit."""
+        return self._results
+
+    @property
     def moments(self) -> Moments:
         """Moments: Get the `moments` for this circuit."""
         return self._moments
@@ -122,6 +136,72 @@ class Circuit:
     def qubits(self) -> QubitSet:
         """QubitSet: Get a copy of the qubits for this circuit."""
         return QubitSet(self._moments.qubits)
+
+    def add_result(
+        self,
+        result: Result,
+        target: QubitSetInput = None,
+        target_mapping: Dict[QubitInput, QubitInput] = {},
+    ) -> Circuit:
+        """
+        Add a requested result to `self`, returns `self` for chaining ability.
+
+        Args:
+            result (Result): `Result` to add into `self`.
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
+                `result`.
+                Default = None.
+            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+                qubit mappings to apply to the `result.target`. Key is the qubit in
+                `result.target` and the value is what the key will be changed to. Default = {}.
+
+
+        Note: target and target_mapping will only be applied to those requested results with
+        the attribute `target`
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            TypeError: If both `target_mapping` and `target` are supplied.
+
+        Examples:
+            >>> result = Result.Probability(target=[0, 1])
+            >>> circ = Circuit().add_result(result)
+            >>> print(circ.results[0])
+            Probability(target=QubitSet([Qubit(0), Qubit(1)]))
+
+            >>> result = Result.Probability(target=[0, 1])
+            >>> circ = Circuit().add_result(result, target_mapping={0: 10, 1: 11})
+            >>> print(circ.results[0])
+            Probability(target=QubitSet([Qubit(10), Qubit(11)]))
+
+            >>> result = Result.Probability(target=[0, 1])
+            >>> circ = Circuit().add_result(result, target=[10, 11])
+            >>> print(circ.results[0])
+            Probability(target=QubitSet([Qubit(10), Qubit(11)]))
+
+            >>> result = Result.StateVector()
+            >>> circ = Circuit().add_result(result)
+            >>> print(circ.results[0])
+            StateVector()
+        """
+        if target_mapping and target is not None:
+            raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
+
+        if not target_mapping and not target:
+            # Nothing has been supplied, add result
+            results_to_add = [result]
+        elif target_mapping:
+            # Target mapping has been supplied, copy result
+            results_to_add = [result.copy(target_mapping=target_mapping)]
+        else:
+            # Result with target
+            results_to_add = [result.copy(target=target)]
+
+        self._results.extend(results_to_add)
+
+        return self
 
     def add_instruction(
         self,
@@ -198,8 +278,7 @@ class Circuit:
         target_mapping: Dict[QubitInput, QubitInput] = {},
     ) -> Circuit:
         """
-        Add a `circuit` to self, returns self for chaining ability. This is a composite form of
-        `add_instruction()` since it adds all of the instructions of `circuit` to this circuit.
+        Add a `circuit` to self, returns self for chaining ability.
 
         Args:
             circuit (Circuit): Circuit to add into self.
@@ -256,18 +335,22 @@ class Circuit:
         for instruction in circuit.instructions:
             self.add_instruction(instruction, target_mapping=target_mapping)
 
+        for result in circuit.results:
+            self.add_result(result, target_mapping=target_mapping)
+
         return self
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """
-        Generic add method for adding instruction-like item(s) to self. Any arguments that
-        `add_circuit()` and / or `add_instruction()` supports are supported by this method.
-        If adding a subroutine, check with that subroutines documentation to determine what input it
+        Generic add method for adding item(s) to self. Any arguments that
+        `add_circuit()` and / or `add_instruction()` and / or `add_result`
+        supports are supported by this method. If adding a subroutine,
+        check with that subroutines documentation to determine what input it
         allows.
 
         Args:
-            addable (Instruction, iterable of Instruction, or SubroutineCallable, optional): The
-                instruction-like item(s) to add to self. Default = None.
+            addable (Instruction, iterable of Instruction, Result, iterable of Result,
+                or SubroutineCallable, optional): The item(s) to add to self. Default = None.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
 
@@ -282,8 +365,11 @@ class Circuit:
 
             `add_instruction()`
 
+            `add_result()`
+
         Examples:
             >>> circ = Circuit().add([Instruction(Gate.H(), 4), Instruction(Gate.CNot(), [4, 5])])
+            >>> circ = Circuit().add([Result.StateVector()])
 
             >>> circ = Circuit().h(4).cnot([4, 5])
 
@@ -304,6 +390,8 @@ class Circuit:
         for item in _flatten(addable):
             if isinstance(item, Instruction):
                 self.add_instruction(item, *args, **kwargs)
+            elif isinstance(item, Result):
+                self.add_result(item, *args, **kwargs)
             elif isinstance(item, Circuit):
                 self.add_circuit(item, *args, **kwargs)
             elif callable(item):
@@ -335,7 +423,8 @@ class Circuit:
             (Program): An AWS quantum circuit description program in JSON format.
         """
         ir_instructions = [instr.to_ir() for instr in self.instructions]
-        return Program(instructions=ir_instructions)
+        ir_results = [result.to_ir() for result in self.results]
+        return Program(instructions=ir_instructions, results=ir_results)
 
     def _copy(self) -> Circuit:
         """
@@ -344,7 +433,9 @@ class Circuit:
         Returns:
             Circuit: A shallow copy of the circuit.
         """
-        return Circuit().add(self.instructions)
+        copy = Circuit().add(self.instructions)
+        copy.add(self.results)
+        return copy
 
     def __iadd__(self, addable: AddableTypes) -> Circuit:
         return self.add(addable)
@@ -354,21 +445,26 @@ class Circuit:
         new.add(addable)
         return new
 
-    def __repr__(self):
-        return f"Circuit('instructions': {list(self.instructions)})"
+    def __repr__(self) -> str:
+        if not self.results:
+            return f"Circuit('instructions': {list(self.instructions)})"
+        else:
+            return f"Circuit('instructions': {list(self.instructions)} 'results': {self.results})"
 
     def __str__(self):
         return self.diagram(AsciiCircuitDiagram)
 
     def __eq__(self, other):
         if isinstance(other, Circuit):
-            return list(self.instructions) == list(other.instructions)
+            return (
+                list(self.instructions) == list(other.instructions) and self.results == self.results
+            )
         return NotImplemented
 
 
 def subroutine(register=False):
     """
-    Subroutine is a function that returns instructions or circuits.
+    Subroutine is a function that returns instructions, results, or circuits.
 
     Args:
         register (bool, optional): If `True`, adds this subroutine into the `Circuit` class.
