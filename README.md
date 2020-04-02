@@ -266,6 +266,10 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 ### Using Amazon Braket with D-Wave QPU
 If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [README](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.
 
+### Using Amazon Braket with PennyLane
+To use Amazon Braket with Xanadu [PennyLane](https://pennylane.ai/), install the [Amazon Braket plugin for PennyLane](https://github.com/aws/amazon-braket-pennylane-plugin-python). 
+Instructions for setting up and using the plugin are provided in the README in the repository.
+
 ### Deactivate the virtual environment
 After you are finished using the virtual environment to interact with Amazon Braket, you can deactivate it using the following command.
 
