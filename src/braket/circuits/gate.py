@@ -17,9 +17,6 @@ import numpy as np
 from braket.circuits.operator import Operator
 from braket.circuits.qubit_set import QubitSet
 
-# TODO: Add parameters support
-# TODO: Add printing / visualization capabilities
-
 
 class Gate(Operator):
     """
@@ -131,6 +128,6 @@ class Gate(Operator):
         """Register a gate implementation by adding it into the Gate class.
 
         Args:
-            gate (Gate): Gate instance to register.
+            gate (Gate): Gate class to register.
         """
         setattr(cls, gate.__name__, gate)

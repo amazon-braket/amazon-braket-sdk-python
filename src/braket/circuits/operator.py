@@ -29,5 +29,6 @@ class Operator(ABC):
         If the operator is passed in a request, this method is called before it is passed.
 
         Args:
-            target (QubitSet): Target qubits that the operator is applied to.
+            *args: Positional arguments
+            **kwargs: Keyword arguments
         """

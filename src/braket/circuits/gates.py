@@ -23,8 +23,6 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
-# TODO: look into adding angle to diagrams
-
 """
 To add a new gate:
     1. Implement the class and extend `Gate`
