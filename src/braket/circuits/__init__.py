@@ -16,7 +16,6 @@ import braket.circuits.circuit as circuit  # noqa: F401
 
 # Execute initialization code in gates module
 import braket.circuits.gates as gates  # noqa: F401
-import braket.circuits.results as results  # noqa: F401
 from braket.circuits.angled_gate import AngledGate  # noqa: F401
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F401
 from braket.circuits.circuit import Circuit  # noqa: F401
@@ -27,4 +26,5 @@ from braket.circuits.moments import Moments, MomentsKey  # noqa: F401
 from braket.circuits.operator import Operator  # noqa: F401
 from braket.circuits.qubit import Qubit, QubitInput  # noqa: F401
 from braket.circuits.qubit_set import QubitSet, QubitSetInput  # noqa: F401
-from braket.circuits.result import Result  # noqa: F401
+from braket.circuits.result_type import ResultType  # noqa: F401
+from braket.circuits.result_types import Amplitude, Probability, StateVector  # noqa: F401

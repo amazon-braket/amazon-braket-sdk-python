@@ -18,17 +18,17 @@ from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSetInput
 
 
-class Result:
+class ResultType:
     """
-    Class `Result` represents a requested result for the circuit.
-    This class is considered the result definition containing
-    the metadata that defines what a requested result is and what it does.
+    Class `ResultType` represents a requested result type for the circuit.
+    This class is considered the result type definition containing
+    the metadata that defines what a requested result type is and what it does.
     """
 
     def __init__(self, ascii_symbol: str):
         """
         Args:
-            ascii_symbol (str): ASCII string symbol for the result. This is used when
+            ascii_symbol (str): ASCII string symbol for the result type. This is used when
                 printing a diagram of circuits.
 
         Raises:
@@ -42,34 +42,34 @@ class Result:
 
     @property
     def ascii_symbol(self) -> str:
-        """Tuple[str]: Returns the ascii symbol for the requested result."""
+        """str: Returns the ascii symbol for the requested result type."""
         return self._ascii_symbol
 
     @property
     def name(self) -> str:
         """
-        Returns the name of the result
+        Returns the name of the result type
 
         Returns:
-            The name of the result as a string
+            The name of the result type as a string
         """
         return self.__class__.__name__
 
     def to_ir(self, *args, **kwargs) -> Any:
-        """Returns IR object of the requested result
+        """Returns IR object of the result type
 
         Args:
             *args: Positional arguments
             **kwargs: Keyword arguments
 
         Returns:
-            IR object of the requested result
+            IR object of the result type
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
     def copy(self, target_mapping: Dict[QubitInput, QubitInput] = {}, target: QubitSetInput = None):
         """
-        Return a shallow copy of the requested result.
+        Return a shallow copy of the result type.
 
         Note:
             If `target_mapping` is specified, then `self.target` is mapped to the specified
@@ -83,21 +83,21 @@ class Result:
                 instruction.
 
         Returns:
-            Result: A shallow copy of the result.
+            ResultType: A shallow copy of the result type.
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
 
         Examples:
-            >>> result = Result.Probabilities(targets=[0])
-            >>> new_result = result.copy()
-            >>> new_result.targets
+            >>> result_type = ResultType.Probabilities(targets=[0])
+            >>> new_result_type = result_type.copy()
+            >>> new_result_type.targets
             QubitSet(Qubit(0))
-            >>> new_result = result.copy(target_mapping={0: 5})
-            >>> new_result.target
+            >>> new_result = result_type.copy(target_mapping={0: 5})
+            >>> new_result_type.target
             QubitSet(Qubit(5))
-            >>> new_result = result.copy(target=[5])
-            >>> new_result.target
+            >>> new_result = result_type.copy(target=[5])
+            >>> new_result_type.target
             QubitSet(Qubit(5))
         """
         copy = self.__copy__()
@@ -112,13 +112,13 @@ class Result:
         return copy
 
     @classmethod
-    def register_result(cls, result: "Result"):
-        """Register a result implementation by adding it into the Result class.
+    def register_result_type(cls, result_type: "ResultType"):
+        """Register a result type implementation by adding it into the ResultType class.
 
         Args:
-            result (Result): Result instance to register.
+            result_type (ResultType): ResultType instance to register.
         """
-        setattr(cls, result.__name__, result)
+        setattr(cls, result_type.__name__, result_type)
 
     def __repr__(self) -> str:
         return f"{self.name}()"

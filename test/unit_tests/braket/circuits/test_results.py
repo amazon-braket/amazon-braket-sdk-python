@@ -13,12 +13,18 @@
 
 import braket.ir.jaqcd as ir
 import pytest
-from braket.circuits import Circuit, Result
+from braket.circuits import Circuit, ResultType
 
 testdata = [
-    (Result.StateVector, "state_vector", ir.StateVector, {}, {}),
-    (Result.Amplitude, "amplitude", ir.Amplitude, {"state": ["0"]}, {"states": ["0"]}),
-    (Result.Probability, "probability", ir.Probability, {"target": [0, 1]}, {"targets": [0, 1]}),
+    (ResultType.StateVector, "state_vector", ir.StateVector, {}, {}),
+    (ResultType.Amplitude, "amplitude", ir.Amplitude, {"state": ["0"]}, {"states": ["0"]}),
+    (
+        ResultType.Probability,
+        "probability",
+        ir.Probability,
+        {"target": [0, 1]},
+        {"targets": [0, 1]},
+    ),
 ]
 
 
@@ -48,13 +54,13 @@ def test_result_equality(testclass, subroutine_name, irclass, input, ir_input):
 
 @pytest.mark.xfail(raises=ValueError)
 def test_amplitude_init_value_error():
-    Result.Amplitude(state=None)
+    ResultType.Amplitude(state=None)
 
 
 def test_amplitude_equality():
-    a1 = Result.Amplitude(state=["0", "1"])
-    a2 = Result.Amplitude(state=["0", "1"])
-    a3 = Result.Amplitude(state=["01", "11", "10"])
+    a1 = ResultType.Amplitude(state=["0", "1"])
+    a2 = ResultType.Amplitude(state=["0", "1"])
+    a3 = ResultType.Amplitude(state=["01", "11", "10"])
     a4 = "hi"
     assert a1 == a2
     assert a1 != a3
@@ -65,9 +71,9 @@ def test_amplitude_equality():
 
 
 def test_probability_equality():
-    a1 = Result.Probability([0, 1])
-    a2 = Result.Probability([0, 1])
-    a3 = Result.Probability([0, 1, 2])
+    a1 = ResultType.Probability([0, 1])
+    a2 = ResultType.Probability([0, 1])
+    a3 = ResultType.Probability([0, 1, 2])
     a4 = "hi"
     assert a1 == a2
     assert a1 != a3

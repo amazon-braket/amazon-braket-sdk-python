@@ -12,44 +12,44 @@
 # language governing permissions and limitations under the License.
 
 import pytest
-from braket.circuits import Result
+from braket.circuits import ResultType
 
 
 @pytest.fixture
-def result():
-    return Result(ascii_symbol="foo")
+def result_type():
+    return ResultType(ascii_symbol="foo")
 
 
 @pytest.fixture
 def prob():
-    return Result.Probability([0, 1])
+    return ResultType.Probability([0, 1])
 
 
 @pytest.fixture
 def sv():
-    return Result.StateVector()
+    return ResultType.StateVector()
 
 
 @pytest.mark.xfail(raises=ValueError)
 def test_none_ascii():
-    Result(ascii_symbol=None)
+    ResultType(ascii_symbol=None)
 
 
-def test_name(result):
-    expected = result.__class__.__name__
-    assert result.name == expected
+def test_name(result_type):
+    expected = result_type.__class__.__name__
+    assert result_type.name == expected
 
 
 def test_ascii_symbol():
     ascii_symbol = "foo"
-    result = Result(ascii_symbol=ascii_symbol)
-    assert result.ascii_symbol == ascii_symbol
+    result_type = ResultType(ascii_symbol=ascii_symbol)
+    assert result_type.ascii_symbol == ascii_symbol
 
 
 def test_equality():
-    result1 = Result.StateVector()
-    result2 = Result.StateVector()
-    result3 = Result.Probability([1])
+    result1 = ResultType.StateVector()
+    result2 = ResultType.StateVector()
+    result3 = ResultType.Probability([1])
     result4 = "hi"
     assert result1 == result2
     assert result1 != result3
@@ -57,27 +57,27 @@ def test_equality():
 
 
 @pytest.mark.xfail(raises=AttributeError)
-def test_ascii_symbol_setter(result):
-    result.ascii_symbol = "bar"
+def test_ascii_symbol_setter(result_type):
+    result_type.ascii_symbol = "bar"
 
 
 @pytest.mark.xfail(raises=AttributeError)
-def test_name_setter(result):
-    result.name = "hi"
+def test_name_setter(result_type):
+    result_type.name = "hi"
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
-def test_to_ir_not_implemented_by_default(result):
-    result.to_ir(None)
+def test_to_ir_not_implemented_by_default(result_type):
+    result_type.to_ir(None)
 
 
 def test_register_result():
-    class _FooResult(Result):
+    class _FooResultType(ResultType):
         def __init__(self):
             super().__init__(ascii_symbol="foo")
 
-    Result.register_result(_FooResult)
-    assert Result._FooResult().name == _FooResult().name
+    ResultType.register_result_type(_FooResultType)
+    assert ResultType._FooResultType().name == _FooResultType().name
 
 
 def test_copy_creates_new_object(prob):
@@ -88,25 +88,25 @@ def test_copy_creates_new_object(prob):
 
 def test_copy_with_mapping_target(sv):
     target_mapping = {0: 10, 1: 11}
-    expected = Result.StateVector()
+    expected = ResultType.StateVector()
     assert sv.copy(target_mapping=target_mapping) == expected
 
 
 def test_copy_with_mapping_target_hasattr(prob):
     target_mapping = {0: 10, 1: 11}
-    expected = Result.Probability([10, 11])
+    expected = ResultType.Probability([10, 11])
     assert prob.copy(target_mapping=target_mapping) == expected
 
 
 def test_copy_with_target_hasattr(prob):
     target = [10, 11]
-    expected = Result.Probability(target)
+    expected = ResultType.Probability(target)
     assert prob.copy(target=target) == expected
 
 
 def test_copy_with_target(sv):
     target = [10, 11]
-    expected = Result.StateVector()
+    expected = ResultType.StateVector()
     assert sv.copy(target=target) == expected
 
 

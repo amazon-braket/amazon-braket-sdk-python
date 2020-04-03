@@ -22,7 +22,7 @@ from braket.circuits import (
     Instruction,
     Moments,
     QubitSet,
-    Result,
+    ResultType,
     circuit,
 )
 
@@ -49,12 +49,12 @@ def h_instr():
 
 @pytest.fixture
 def prob():
-    return Result.Probability([0, 1])
+    return ResultType.Probability([0, 1])
 
 
 @pytest.fixture
 def cnot_prob(cnot_instr, prob):
-    return Circuit().add_result(prob).add_instruction(cnot_instr)
+    return Circuit().add_result_type(prob).add_instruction(cnot_instr)
 
 
 @pytest.fixture
@@ -63,7 +63,7 @@ def bell_pair(prob):
         Circuit()
         .add_instruction(Instruction(Gate.H(), 0))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_result(prob)
+        .add_result_type(prob)
     )
 
 
@@ -72,9 +72,12 @@ def test_repr_instructions(h):
     assert repr(h) == expected
 
 
-def test_repr_results(cnot_prob):
+def test_repr_result_types(cnot_prob):
     circuit = cnot_prob
-    expected = f"Circuit('instructions': {list(circuit.instructions)} 'results': {circuit.results})"
+    expected = (
+        f"Circuit('instructions': {list(circuit.instructions)}"
+        + f"result_types': {circuit.result_types})"
+    )
     assert repr(circuit) == expected
 
 
@@ -95,26 +98,32 @@ def test_equality():
     assert circ_1 != non_circ
 
 
-def test_add_result_default(prob):
-    circ = Circuit().add_result(prob)
-    assert list(circ.results) == [prob]
+def test_add_result_type_default(prob):
+    circ = Circuit().add_result_type(prob)
+    assert list(circ.result_types) == [prob]
 
 
-def test_add_result_with_mapping(prob):
-    expected = [Result.Probability([10, 11])]
-    circ = Circuit().add_result(prob, target_mapping={0: 10, 1: 11})
-    assert list(circ.results) == expected
+def test_add_result_type_with_mapping(prob):
+    expected = [ResultType.Probability([10, 11])]
+    circ = Circuit().add_result_type(prob, target_mapping={0: 10, 1: 11})
+    assert list(circ.result_types) == expected
 
 
-def test_add_result_with_target(prob):
-    expected = [Result.Probability([10, 11])]
-    circ = Circuit().add_result(prob, target=[10, 11])
-    assert list(circ.results) == expected
+def test_add_result_type_with_target(prob):
+    expected = [ResultType.Probability([10, 11])]
+    circ = Circuit().add_result_type(prob, target=[10, 11])
+    assert list(circ.result_types) == expected
+
+
+def test_add_result_type_already_exists():
+    expected = [ResultType.StateVector()]
+    circ = Circuit(expected).add_result_type(expected[0])
+    assert list(circ.result_types) == expected
 
 
 @pytest.mark.xfail(raises=TypeError)
-def test_add_result_with_target_and_mapping(prob):
-    Circuit().add_result(prob, target=[10], target_mapping={0: 10})
+def test_add_result_type_with_target_and_mapping(prob):
+    Circuit().add_result_type(prob, target=[10], target_mapping={0: 10})
 
 
 def test_add_instruction_default(cnot_instr):
@@ -156,7 +165,7 @@ def test_add_circuit_with_mapping(bell_pair):
         Circuit()
         .add_instruction(Instruction(Gate.H(), 10))
         .add_instruction(Instruction(Gate.CNot(), [10, 11]))
-        .add_result(Result.Probability([10, 11]))
+        .add_result_type(ResultType.Probability([10, 11]))
     )
     assert circ == expected
 
@@ -167,7 +176,7 @@ def test_add_circuit_with_target(bell_pair):
         Circuit()
         .add_instruction(Instruction(Gate.H(), 10))
         .add_instruction(Instruction(Gate.CNot(), [10, 11]))
-        .add_result(Result.Probability([10, 11]))
+        .add_result_type(ResultType.Probability([10, 11]))
     )
     assert circ == expected
 
@@ -305,12 +314,12 @@ def test_subroutine_nested():
     assert circ == expected
 
 
-def test_ir_empty_instructions_results():
+def test_ir_empty_instructions_result_types():
     circ = Circuit()
     assert circ.to_ir() == jaqcd.Program(instructions=[], results=[])
 
 
-def test_ir_non_empty_instructions_results():
+def test_ir_non_empty_instructions_result_types():
     circ = Circuit().h(0).cnot(0, 1).probability([0, 1])
     expected = jaqcd.Program(
         instructions=[jaqcd.H(target=0), jaqcd.CNot(control=0, target=1)],
