@@ -43,7 +43,7 @@ def test_state():
 
 
 def test_result():
-    assert TASK.result == RESULT
+    assert TASK.result() == RESULT
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
