@@ -72,7 +72,7 @@ local_simulator._simulator_devices = {"dummy": mock_entry}
 def test_load_from_entry_point():
     sim = LocalSimulator("dummy")
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    assert task.result == GateModelQuantumTaskResult.from_dict(GATE_MODEL_RESULT)
+    assert task.result() == GateModelQuantumTaskResult.from_dict(GATE_MODEL_RESULT)
 
 
 def test_run_gate_model():
@@ -81,13 +81,13 @@ def test_run_gate_model():
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
     dummy.assert_qubits(2)
-    assert task.result == GateModelQuantumTaskResult.from_dict(GATE_MODEL_RESULT)
+    assert task.result() == GateModelQuantumTaskResult.from_dict(GATE_MODEL_RESULT)
 
 
 def test_run_annealing():
     sim = LocalSimulator(DummyAnnealingSimulator())
     task = sim.run(Problem(ProblemType.ISING))
-    assert task.result == AnnealingQuantumTaskResult.from_dict(ANNEALING_RESULT)
+    assert task.result() == AnnealingQuantumTaskResult.from_dict(ANNEALING_RESULT)
 
 
 def test_registered_backends():
