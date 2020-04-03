@@ -38,7 +38,6 @@ class LocalQuantumTask(QuantumTask):
     def state(self) -> str:
         return "COMPLETED"
 
-    @property
     def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         return self._result
 
