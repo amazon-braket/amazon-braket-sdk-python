@@ -35,7 +35,6 @@ class AwsQuantumTask(QuantumTask):
 
     GATE_IR_TYPE = "jaqcd"
     ANNEALING_IR_TYPE = "annealing"
-    DEFAULT_SHOTS = 1_000
 
     DEFAULT_RESULTS_POLL_TIMEOUT = 120
     DEFAULT_RESULTS_POLL_INTERVAL = 0.25

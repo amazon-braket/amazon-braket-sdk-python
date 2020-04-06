@@ -119,6 +119,7 @@ The easiest way to get the SDKs is to download them directly from the GitHub sit
 
 Use the following links to download the Amazon Braket Python SDK repos:
 - [braket-python-ir](https://github.com/aws/braket-python-ir/archive/stable/latest.zip)
+- [amazon-braket-default-simulator-python](https://github.com/aws/amazon-braket-default-simulator-python/archive/stable/latest.zip)
 - [braket-python-sdk](https://github.com/aws/braket-python-sdk/archive/stable/latest.zip)
 
 ### Extract the SDK .zip files
@@ -127,12 +128,14 @@ Because the files were downloaded directly from GitHub, the folder in the .zip f
 Note: Make sure you are always using the branch 'stable/latest' and not 'master' for the SDK. 'master' may contain unstable changes.
 
 **To rename the folders in the SDK .zip files**
-First, extract the .zip files to a location of your choosing. Then open the location where you extracted the folders to. You can use either the GUI file system tools in your OS, or the command line. You should see 2 folders with the following names:
+First, extract the .zip files to a location of your choosing. Then open the location where you extracted the folders to. You can use either the GUI file system tools in your OS, or the command line. You should see 3 folders with the following names:
 - braket-python-ir-stable-latest
+- amazon-braket-default-simulator-python-stable-latest
 - braket-python-sdk-stable-latest
 
 Rename the folders to the following:
 - braket-python-ir
+- amazon-braket-default-simulator-python
 - braket-python-sdk
 
 Then copy the renamed files and paste them into the `braketvirtenv` folder where you created a virtual environment. Your folder structure should look like this:
@@ -145,6 +148,10 @@ Use the following commands to install the SDKs in the order that they appear:
 
 ```bash
 pip install -e braket-python-ir
+```
+
+```bash
+pip install -e amazon-braket-default-simulator-python
 ```
 
 ```bash
@@ -190,7 +197,7 @@ The code sample imports the Amazon Braket framework, then defines the execution 
 There are currently three simulators available for Amazon Braket. To specify which simulator to use, change the code sample to replace the value for the `AwsQuantumSimulator` to one of the following values:
 - `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector.
 - `arn:aws:aqx:::quantum-simulator:aqx:qs2` – a tensor network simulator. Provides an approximation of running a job on a quantum computer.
--	`arn:aws:aqx:::quantum-simulator:aqx:qs3` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples from the state vector but includes the entire state vector. This generates more data, and therefore incurs additional costs for storage of data in Amazon S3.
+- `arn:aws:aqx:::quantum-simulator:aqx:qs3` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples from the state vector but includes the entire state vector. This generates more data, and therefore incurs additional costs for storage of data in Amazon S3.
 
 #### To validate your configuration using a Python file
 1. Open a text editor with example file `../braket-python-sdk/examples/bell.py`.
@@ -235,6 +242,10 @@ When the job completes, you should see output similar to the following:
 `Counter({'00': 519, '11': 481})`
 
 **Important** Tasks may not run immediately on the QPU. IonQ runs tasks once every 24 hours. Rigetti tasks run when the QPU is available, with times varying day to day.
+
+#### To validate your quantum algorithm locally
+
+Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. You can use the local simulator to test quantum tasks constructed using the SDK before you submit them to the Amazon Braket service for execution. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
 
 #### Debugging logs
 
@@ -300,7 +311,7 @@ pip show braket-sdk
 Compare the version displayed in your local environment with the latest version listed in the [Releases](https://github.com/aws/braket-python-sdk/releases) page. If the version listed is higher than your local version, you should update to the latest release.
 
 ### To get the lastest updates
-Perform the steps described in the [Setting up the Amazon Braket Python SDKs](https://github.com/aws/braket-python-sdk/tree/stable/latest#setting-up-the-amazon-braket-python-sdks) section of this document. The links in that section point to the most recent version of the braket-python-sdk, braket-python-ir, and model file you need to set up the new version of the SDK.
+Perform the steps described in the [Setting up the Amazon Braket Python SDKs](https://github.com/aws/braket-python-sdk/tree/stable/latest#setting-up-the-amazon-braket-python-sdks) section of this document. The links in that section point to the most recent version of the braket-python-sdk, braket-python-ir, amazon-braket-default-simulator-python, and model file you need to set up the new version of the SDK.
 
 You can extract the file to the same location you are using and replace the existing files with the updated SDK. This lets you continue to use the same virtual environment.
 
@@ -327,7 +338,7 @@ tox -e docs
 ```
 
 To view the generated documentation, open the following file in a browser:
-../braket-python-sdk/build/documentation/html/index.html`
+`../braket-python-sdk/build/documentation/html/index.html`
 
 ## Install the SDK for Testing
 Make sure to install test dependencies first:
