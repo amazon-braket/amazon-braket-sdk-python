@@ -44,3 +44,6 @@ class LocalQuantumTask(QuantumTask):
     def async_result(self) -> asyncio.Task:
         # TODO: Allow for asynchronous simulation
         raise NotImplementedError("Asynchronous local simulation unsupported")
+
+    def __repr__(self) -> str:
+        return f"LocalQuantumTask('id':{self.id})"

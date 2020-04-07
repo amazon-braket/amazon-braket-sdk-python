@@ -22,6 +22,8 @@ from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResu
 class QuantumTask(ABC):
     """An abstraction over a quantum task on a quantum device."""
 
+    DEFAULT_SHOTS = 1_000
+
     @property
     @abstractmethod
     def id(self) -> str:
