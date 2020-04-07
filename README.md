@@ -125,7 +125,7 @@ Use the following links to download the Amazon Braket Python SDK repos:
 ### Extract the SDK .zip files
 Because the files were downloaded directly from GitHub, the folder in the .zip file includes the name of the branch of the GitHub repo that was downloaded, in this case the `stable/latest` branch. But to use the files in the SDK, we need to rename the folder to the original name.
 
-Note: Make sure you are always using the branch 'stable/latest' and not 'master' for the SDK. 'master' may contain unstable changes.
+Note: Make sure you are always using the branch 'stable/latest' and not 'master'. The 'master' branch may contain in-progress changes that result in errors.
 
 **To rename the folders in the SDK .zip files**
 First, extract the .zip files to a location of your choosing. Then open the location where you extracted the folders to. You can use either the GUI file system tools in your OS, or the command line. You should see 3 folders with the following names:
@@ -304,11 +304,18 @@ When you want to use it again, you can reactivate it with the same command you u
 We will periodically make updates and changes the SDK or the model. When you are notified of a change that requires action on your part, use the following steps to update your environment to the latest version.
 
 ### Check the version you have installed
-You can view the version of the braket-python-sdk that you have installed by using the following command in the virtual environment:
+You can view the version of the braket packages that you have installed by using the following commands in the virtual environment:
 ```bash
+pip show amazon-braket-default-simulator-python
+pip show braket-ir
 pip show braket-sdk
 ```
-Compare the version displayed in your local environment with the latest version listed in the [Releases](https://github.com/aws/braket-python-sdk/releases) page. If the version listed is higher than your local version, you should update to the latest release.
+Compare the version displayed in your local environment with the latest version listed for each of the following release pages:
+- [amazon-braket-default-simulator-python](https://github.com/aws/amazon-braket-default-simulator-python/releases) 
+- [braket-python-ir](https://github.com/aws/braket-python-ir/releases)
+- [braket-python-sdk](https://github.com/aws/braket-python-sdk/releases) 
+
+If the version listed is higher than your local version, you should update to the latest release.
 
 ### To get the lastest updates
 Perform the steps described in the [Setting up the Amazon Braket Python SDKs](https://github.com/aws/braket-python-sdk/tree/stable/latest#setting-up-the-amazon-braket-python-sdks) section of this document. The links in that section point to the most recent version of the braket-python-sdk, braket-python-ir, amazon-braket-default-simulator-python, and model file you need to set up the new version of the SDK.
