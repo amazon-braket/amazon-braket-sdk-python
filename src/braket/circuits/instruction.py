@@ -15,12 +15,15 @@ from __future__ import annotations
 
 from typing import Dict
 
-from braket.circuits.operator import Operator
+from braket.circuits.gate import Gate
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 # TODO: Add parameters support
 # TODO: Rename to QuantumInstruction, and change Operator to Gate, then rename "target" to "qubits"
+
+# InstructionOperator is a type alias, and it can be expanded to include other operators
+InstructionOperator = Gate
 
 
 class Instruction:
@@ -28,10 +31,12 @@ class Instruction:
     An instruction is a quantum directive that describes the task to perform on a quantum device.
     """
 
-    def __init__(self, operator: Operator, target: QubitSetInput):
+    def __init__(self, operator: InstructionOperator, target: QubitSetInput):
         """
+        InstructionOperator includes objects of type Gate only.
+
         Args:
-            operator (Operator): Operator for the instruction.
+            operator (InstructionOperator): Operator for the instruction.
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the operator is
                 applied to.
 
@@ -57,7 +62,7 @@ class Instruction:
         self._target = QubitSet(target)
 
     @property
-    def operator(self) -> Operator:
+    def operator(self) -> InstructionOperator:
         """Operator: The operator for the instruction, for example, `Gate`."""
         return self._operator
 

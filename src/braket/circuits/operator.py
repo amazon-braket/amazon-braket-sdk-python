@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 
 
 class Operator(ABC):
-    """A quantum operator is the abstract definition of an operation for a quantum device."""
+    """A operator is the abstract definition of an operation for a quantum device."""
 
     @property
     @abstractmethod
