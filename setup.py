@@ -22,6 +22,10 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "braket-ir @ git+https://github.com/aws/braket-python-ir.git",
+        (
+            "amazon-braket-default-simulator-python @"
+            "git+https://github.com/aws/amazon-braket-default-simulator-python.git"
+        ),
         "boltons",
         "boto3",
         "nest-asyncio",
