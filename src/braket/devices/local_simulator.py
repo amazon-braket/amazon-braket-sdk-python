@@ -118,7 +118,7 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots: Optional[int] = None,
     program = circuit.to_ir()
     qubits = circuit.qubit_count
     shots_count = shots if shots else LocalQuantumTask.DEFAULT_SHOTS
-    results_dict = simulator.run(program, qubits, shots_count, *args, **kwargs)
+    results_dict = simulator.run(program, qubits, shots=shots_count, *args, **kwargs)
     return GateModelQuantumTaskResult.from_dict(results_dict)
 
 
