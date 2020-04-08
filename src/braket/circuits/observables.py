@@ -194,12 +194,12 @@ Observable.register_observable(TensorProduct)
 class Hermitian(Observable):
     """Hermitian matrix as an observable."""
 
-    def __init__(self, matrix: np.ndarray, display_name: str = "H"):
+    def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
         """
         Args:
             matrix (numpy.ndarray): Hermitian matrix which defines the observable.
             display_name (str): Name to be used for an instance of this Hermitian matrix
-                observable for circuit diagrams. Defaults to `H`.
+                observable for circuit diagrams. Defaults to `Hermitian`.
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,

@@ -37,13 +37,13 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
 
 def is_hermitian(matrix: np.array) -> bool:
     """
-    Whether matrix is hermitian
+    Whether matrix is Hermitian
 
     Args:
         matrix (np.ndarray): matrix to verify
 
     Return:
-        bool: If matrix is hermitian
+        bool: If matrix is Hermitian
     """
     return np.allclose(matrix, matrix.conj().T)
 

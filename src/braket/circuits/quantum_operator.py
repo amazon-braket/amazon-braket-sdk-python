@@ -87,14 +87,14 @@ class QuantumOperator(Operator):
 
     def matrix_equivalence(self, other):
         """
-        Return if the matrix form of two gates are equivalent
+        Whether the matrix form of two gates are equivalent
 
         Args:
             other (Gate): Gate instance to compare this quantum operator to
 
         Returns:
-            True if matrix forms of this quantum operator and the other quantum operator
-              are equivalent
+            bool: If matrix forms of this quantum operator and the other quantum operator
+            are equivalent
         """
         if not isinstance(other, QuantumOperator):
             return NotImplemented

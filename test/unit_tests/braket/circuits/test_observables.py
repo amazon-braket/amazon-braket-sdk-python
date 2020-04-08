@@ -93,7 +93,7 @@ def test_tensor_product_matmul_tensor():
     t3 = t1 @ t2
     assert t3.to_ir() == ["z", "i", "x", [[[1.0, 0], [0, 0]], [[0, 0], [1.0, 0]]], "y"]
     assert t3.qubit_count == 5
-    assert t3.ascii_symbols == tuple(["Z@I@X@H@Y"] * 5)
+    assert t3.ascii_symbols == tuple(["Z@I@X@Hermitian@Y"] * 5)
 
 
 def test_tensor_product_matmul_observable():
