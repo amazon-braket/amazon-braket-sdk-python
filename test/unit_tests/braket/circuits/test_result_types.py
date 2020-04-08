@@ -26,6 +26,7 @@ testdata = [
         {"target": [0, 1]},
         {"targets": [0, 1]},
     ),
+    (ResultType.Probability, "probability", ir.Probability, {"target": None}, {},),
     (
         ResultType.Expectation,
         "expectation",
@@ -48,6 +49,13 @@ testdata = [
         {"observable": [[[[1.0, 0], [0, 0]], [[0, 0], [1.0, 0]]]], "targets": [0]},
     ),
     (
+        ResultType.Expectation,
+        "expectation",
+        ir.Expectation,
+        {"observable": Observable.Hermitian(matrix=Observable.I().to_matrix()), "target": None},
+        {"observable": [[[[1.0, 0], [0, 0]], [[0, 0], [1.0, 0]]]]},
+    ),
+    (
         ResultType.Sample,
         "sample",
         ir.Sample,
@@ -55,11 +63,25 @@ testdata = [
         {"observable": ["z"], "targets": [0]},
     ),
     (
+        ResultType.Sample,
+        "sample",
+        ir.Sample,
+        {"observable": Observable.Z(), "target": None},
+        {"observable": ["z"]},
+    ),
+    (
         ResultType.Variance,
         "variance",
         ir.Variance,
         {"observable": Observable.Z(), "target": [0]},
         {"observable": ["z"], "targets": [0]},
+    ),
+    (
+        ResultType.Variance,
+        "variance",
+        ir.Variance,
+        {"observable": Observable.Z(), "target": None},
+        {"observable": ["z"]},
     ),
 ]
 

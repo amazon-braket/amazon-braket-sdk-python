@@ -129,11 +129,12 @@ class Probability(ResultType):
     It can be the probability of all states if no targets are specified or the marginal probability
     of a restricted set of states if only a subset of all qubits are specified as target."""
 
-    def __init__(self, target: QubitSetInput = ()):
+    def __init__(self, target: QubitSetInput = None):
         """
         Args:
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means all qubits for the circuit.
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means all qubits for the
+                circuit.
 
         Examples:
             >>> ResultType.Probability(target=[0, 1])
@@ -150,16 +151,17 @@ class Probability(ResultType):
         self._target = QubitSet(target)
 
     def to_ir(self) -> ir.Probability:
-        return ir.Probability(targets=list(self.target))
+        return ir.Probability(targets=list(self.target)) if self.target else ir.Probability()
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def probability(target: QubitSetInput = ()) -> ResultType:
+    def probability(target: QubitSetInput = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means all qubits for the circuit.
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means all qubits for the
+                circuit.
 
         Returns:
             ResultType: probability as a requested result type
@@ -194,26 +196,27 @@ class ObservableResultType(ResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, ascii_symbol: str, observable: Observable, target: QubitSetInput = ()):
+    def __init__(self, ascii_symbol: str, observable: Observable, target: QubitSetInput = None):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means the observable must only operate
-                on 1 qubit and it will be applied to all qubits in parallel
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
             ValueError: If the observable's qubit count and the number of target qubits
-                are not equal. Or, if target=[] and the observable's qubit count is not 1.
+                are not equal. Or, if target=None and the observable's qubit count is not 1.
         """
         super().__init__(ascii_symbol)
         self._observable = observable
         self._target = QubitSet(target)
-        if not self._target and self._observable.qubit_count != 1:
-            raise ValueError(
-                f"Observable {self._observable} must only operate on 1 qubit for target=[]"
-            )
-        if self._observable.qubit_count != len(self._target):
+        if not self._target:
+            if self._observable.qubit_count != 1:
+                raise ValueError(
+                    f"Observable {self._observable} must only operate on 1 qubit for target=None"
+                )
+        elif self._observable.qubit_count != len(self._target):
             raise ValueError(
                 f"Observable's qubit count and the number of target qubits must be equal"
             )
@@ -252,17 +255,17 @@ class Expectation(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = ()):
+    def __init__(self, observable: Observable, target: QubitSetInput = None):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means the observable must only operate
-                on 1 qubit and it will be applied to all qubits in parallel
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
             ValueError: If the observable's qubit count and the number of target qubits
-                are not equal. Or, if target=[] and the observable's qubit count is not 1.
+                are not equal. Or, if target=None and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Expectation(observable=Observable.Z(), target=0)
@@ -273,18 +276,21 @@ class Expectation(ObservableResultType):
         super().__init__(ascii_symbol=["Expectation"], observable=observable, target=target)
 
     def to_ir(self) -> ir.Expectation:
-        return ir.Expectation(observable=self.observable.to_ir(), targets=list(self.target))
+        if self.target:
+            return ir.Expectation(observable=self.observable.to_ir(), targets=list(self.target))
+        else:
+            return ir.Expectation(observable=self.observable.to_ir())
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def expectation(observable: Observable, target: QubitSetInput = ()) -> ResultType:
+    def expectation(observable: Observable, target: QubitSetInput = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means the observable must only operate
-                on 1 qubit and it will be applied to all qubits in parallel
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Returns:
             ResultType: expectation as a requested result type
@@ -308,17 +314,17 @@ class Sample(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = ()):
+    def __init__(self, observable: Observable, target: QubitSetInput = None):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means the observable must only operate
-                on 1 qubit and it will be applied to all qubits in parallel
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
             ValueError: If the observable's qubit count and the number of target qubits
-                are not equal. Or, if target=[] and the observable's qubit count is not 1.
+                are not equal. Or, if target=None and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Sample(observable=Observable.Z(), target=0)
@@ -329,18 +335,21 @@ class Sample(ObservableResultType):
         super().__init__(ascii_symbol=["Sample"], observable=observable, target=target)
 
     def to_ir(self) -> ir.Sample:
-        return ir.Sample(observable=self.observable.to_ir(), targets=list(self.target))
+        if self.target:
+            return ir.Sample(observable=self.observable.to_ir(), targets=list(self.target))
+        else:
+            return ir.Sample(observable=self.observable.to_ir())
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def sample(observable: Observable, target: QubitSetInput = ()) -> ResultType:
+    def sample(observable: Observable, target: QubitSetInput = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means the observable must only operate
-                on 1 qubit and it will be applied to all qubits in parallel
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Returns:
             ResultType: sample as a requested result type
@@ -364,17 +373,17 @@ class Variance(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = ()):
+    def __init__(self, observable: Observable, target: QubitSetInput = None):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means the observable must only operate
-                on 1 qubit and it will be applied to all qubits in parallel
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
             ValueError: If the observable's qubit count and the number of target qubits
-                are not equal. Or, if target=[] and the observable's qubit count is not 1.
+                are not equal. Or, if target=None and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Variance(observable=Observable.Z(), target=0)
@@ -385,18 +394,21 @@ class Variance(ObservableResultType):
         super().__init__(ascii_symbol=["Variance"], observable=observable, target=target)
 
     def to_ir(self) -> ir.Variance:
-        return ir.Variance(observable=self.observable.to_ir(), targets=list(self.target))
+        if self.target:
+            return ir.Variance(observable=self.observable.to_ir(), targets=list(self.target))
+        else:
+            return ir.Variance(observable=self.observable.to_ir())
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def variance(observable: Observable, target: QubitSetInput = ()) -> ResultType:
+    def variance(observable: Observable, target: QubitSetInput = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is (), which means the observable must only operate
-                on 1 qubit and it will be applied to all qubits in parallel
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Returns:
             ResultType: variance as a requested result type

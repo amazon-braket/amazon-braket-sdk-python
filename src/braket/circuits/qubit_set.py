@@ -30,11 +30,11 @@ class QubitSet(IndexedSet):
         mutating this object.
     """
 
-    def __init__(self, qubits: QubitSetInput = ()):
+    def __init__(self, qubits: QubitSetInput = None):
         """
         Args:
-            qubits (int, Qubit, or iterable of int / Qubit): Qubits to be included in the QubitSet.
-                Default is ().
+            qubits (int, Qubit, or iterable of int / Qubit, optional): Qubits to be included in
+                the QubitSet. Default is None.
 
         Examples:
             >>> qubits = QubitSet([0, 1])
@@ -61,7 +61,7 @@ class QubitSet(IndexedSet):
             else:
                 yield other
 
-        _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)]
+        _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None
         super().__init__(_qubits)
 
     def map(self, mapping: Dict[QubitInput, QubitInput]) -> QubitSet:

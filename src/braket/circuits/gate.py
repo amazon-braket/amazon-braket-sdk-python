@@ -52,18 +52,11 @@ class Gate(QuantumOperator):
         raise NotImplementedError("to_ir has not been implemented yet.")
 
     def __eq__(self, other):
-        if not isinstance(other, Gate):
-            return NotImplemented
-        if self.name == other.name:
-            if hasattr(self, "angle"):
-                return self.angle == other.angle
-            return True
-        else:
-            return False
+        if isinstance(other, Gate):
+            return self.name == other.name
+        return NotImplemented
 
     def __repr__(self):
-        if hasattr(self, "angle"):
-            return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
     @classmethod

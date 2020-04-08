@@ -55,4 +55,6 @@ class Observable(QuantumOperator):
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, Observable) and self.name == other.name
+        if isinstance(other, Observable):
+            return self.name == other.name
+        return NotImplemented
