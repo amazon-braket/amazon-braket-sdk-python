@@ -14,7 +14,7 @@
 import asyncio
 import threading
 import time
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from braket.annealing.problem import Problem, ProblemType
@@ -30,27 +30,23 @@ S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 @pytest.fixture
 def aws_session():
     mock = Mock()
-    _mock_state(mock, "RUNNING")
+    _mock_metadata(mock, "RUNNING")
     return mock
 
 
 @pytest.fixture
 def quantum_task(aws_session):
-    return AwsQuantumTask("foo:bar:arn", aws_session, lambda x: x, poll_timeout_seconds=2)
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
 
 @pytest.fixture
 def circuit_task(aws_session):
-    return AwsQuantumTask(
-        "foo:bar:arn", aws_session, GateModelQuantumTaskResult.from_string, poll_timeout_seconds=2
-    )
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
 
 @pytest.fixture
 def annealing_task(aws_session):
-    return AwsQuantumTask(
-        "foo:bar:arn", aws_session, AnnealingQuantumTaskResult.from_string, poll_timeout_seconds=2
-    )
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
 
 @pytest.fixture
@@ -69,9 +65,9 @@ def problem():
 
 
 def test_equality(arn, aws_session):
-    quantum_task_1 = AwsQuantumTask(arn, aws_session, lambda x: x)
-    quantum_task_2 = AwsQuantumTask(arn, aws_session, lambda x: x)
-    other_quantum_task = AwsQuantumTask("different:arn", aws_session, lambda x: x)
+    quantum_task_1 = AwsQuantumTask(arn, aws_session)
+    quantum_task_2 = AwsQuantumTask(arn, aws_session)
+    other_quantum_task = AwsQuantumTask("different:arn", aws_session)
     non_quantum_task = quantum_task_1.id
 
     assert quantum_task_1 == quantum_task_2
@@ -90,7 +86,7 @@ def test_hash(quantum_task):
 
 
 def test_id_getter(arn, aws_session):
-    quantum_task = AwsQuantumTask(arn, aws_session, lambda x: x)
+    quantum_task = AwsQuantumTask(arn, aws_session)
     assert quantum_task.id == arn
 
 
@@ -112,12 +108,12 @@ def test_metadata(quantum_task):
 
 def test_state(quantum_task):
     state_1 = "RUNNING"
-    _mock_state(quantum_task._aws_session, state_1)
+    _mock_metadata(quantum_task._aws_session, state_1)
     assert quantum_task.state() == state_1
     quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
 
     state_2 = "COMPLETED"
-    _mock_state(quantum_task._aws_session, state_2)
+    _mock_metadata(quantum_task._aws_session, state_2)
     assert quantum_task.state(use_cached_value=True) == state_1
 
 
@@ -133,7 +129,7 @@ def test_cancel(quantum_task):
 
 
 def test_result_circuit(circuit_task):
-    _mock_state(circuit_task._aws_session, "COMPLETED")
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
     _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_1)
 
     expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
@@ -144,8 +140,15 @@ def test_result_circuit(circuit_task):
     circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(s3_bucket, s3_object_key)
 
 
+@pytest.mark.xfail(raises=ValueError)
+def test_result_unknown_ir_type(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED", "unsupported_ir_type")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_1)
+    circuit_task.result()
+
+
 def test_result_annealing(annealing_task):
-    _mock_state(annealing_task._aws_session, "COMPLETED")
+    _mock_metadata(annealing_task._aws_session, "COMPLETED", "annealing")
     _mock_s3(annealing_task._aws_session, MockS3.MOCK_S3_RESULT_4)
 
     expected = AnnealingQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_4)
@@ -157,7 +160,7 @@ def test_result_annealing(annealing_task):
 
 
 def test_result_is_cached(circuit_task):
-    _mock_state(circuit_task._aws_session, "COMPLETED")
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
     _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_1)
     circuit_task.result()
 
@@ -172,7 +175,7 @@ def test_async_result(circuit_task):
         nonlocal result_from_callback
         result_from_callback = future.result()
 
-    _mock_state(circuit_task._aws_session, "RUNNING")
+    _mock_metadata(circuit_task._aws_session, "RUNNING")
     _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_1)
 
     future = circuit_task.async_result()
@@ -184,7 +187,7 @@ def test_async_result(circuit_task):
     future.add_done_callback(set_result_from_callback)
 
     # via asyncio waiting for result
-    _mock_state(circuit_task._aws_session, "COMPLETED")
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
     event_loop = asyncio.get_event_loop()
     result_from_waiting = event_loop.run_until_complete(future)
 
@@ -198,28 +201,38 @@ def test_async_result(circuit_task):
 
 
 def test_failed_task(quantum_task):
-    _mock_state(quantum_task._aws_session, "FAILED")
+    _mock_metadata(quantum_task._aws_session, "FAILED")
     _mock_s3(quantum_task._aws_session, MockS3.MOCK_S3_RESULT_1)
     result = quantum_task.result()
     assert result is None
 
 
-def test_timeout(aws_session):
-    _mock_state(aws_session, "RUNNING")
+def test_timeout_completed(aws_session):
+    _mock_metadata(aws_session, "RUNNING")
     _mock_s3(aws_session, MockS3.MOCK_S3_RESULT_1)
 
     # Setup the poll timing such that the timeout will occur after one API poll
     quantum_task = AwsQuantumTask(
-        "foo:bar:arn",
-        aws_session,
-        GateModelQuantumTaskResult.from_string,
-        poll_timeout_seconds=0.5,
-        poll_interval_seconds=1,
+        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1,
+    )
+    assert quantum_task.result() is None
+    _mock_metadata(aws_session, "COMPLETED")
+    assert quantum_task.state() == "COMPLETED"
+    assert quantum_task.result() == GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
+
+
+def test_timeout_no_result_terminal_state(aws_session):
+    _mock_metadata(aws_session, "RUNNING")
+    _mock_s3(aws_session, MockS3.MOCK_S3_RESULT_1)
+
+    # Setup the poll timing such that the timeout will occur after one API poll
+    quantum_task = AwsQuantumTask(
+        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1,
     )
     assert quantum_task.result() is None
 
-    _mock_state(aws_session, "COMPLETED")
-    assert quantum_task.result() == GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
+    _mock_metadata(aws_session, "FAILED")
+    assert quantum_task.result() is None
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -308,6 +321,18 @@ def test_init_new_thread(aws_session, arn):
     assert len(tasks_list) == 1
 
 
+@patch("braket.aws.aws_quantum_task.boto3.Session")
+def test_aws_session_for_task_arn(mock_session):
+    region = "us-west-2"
+    arn = f"arn:aws:aqx:{region}:account_id:quantum-task:task_id"
+    mock_boto_session = Mock()
+    mock_session.return_value = mock_boto_session
+    mock_boto_session.region_name = region
+    aws_session = AwsQuantumTask._aws_session_for_task_arn(arn)
+    mock_session.assert_called_with(region_name=region)
+    assert aws_session.boto_session == mock_boto_session
+
+
 def _init_and_add_to_list(aws_session, arn, task_list):
     task_list.append(AwsQuantumTask(arn, aws_session, GateModelQuantumTaskResult.from_string))
 
@@ -328,11 +353,12 @@ def _assert_create_quantum_task_called_with(
     )
 
 
-def _mock_state(aws_session, state):
+def _mock_metadata(aws_session, state, irType="jaqcd"):
     return_value = {
         "status": state,
         "resultsS3Bucket": S3_TARGET.bucket,
         "resultsS3ObjectKey": S3_TARGET.key,
+        "irType": irType,
     }
     aws_session.get_quantum_task.return_value = return_value
 
