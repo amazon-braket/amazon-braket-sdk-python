@@ -129,11 +129,11 @@ class Probability(ResultType):
     It can be the probability of all states if no targets are specified or the marginal probability
     of a restricted set of states if only a subset of all qubits are specified as target."""
 
-    def __init__(self, target: QubitSetInput = []):
+    def __init__(self, target: QubitSetInput = ()):
         """
         Args:
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means all qubits for the circuit.
+                is requested for. Default is (), which means all qubits for the circuit.
 
         Examples:
             >>> ResultType.Probability(target=[0, 1])
@@ -154,12 +154,12 @@ class Probability(ResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def probability(target: QubitSetInput = []) -> ResultType:
+    def probability(target: QubitSetInput = ()) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means all qubits for the circuit.
+                is requested for. Default is (), which means all qubits for the circuit.
 
         Returns:
             ResultType: probability as a requested result type
@@ -194,12 +194,12 @@ class ObservableResultType(ResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, ascii_symbol: str, observable: Observable, target: QubitSetInput = []):
+    def __init__(self, ascii_symbol: str, observable: Observable, target: QubitSetInput = ()):
         """
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means the observable must only operate
+                is requested for. Default is (), which means the observable must only operate
                 on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
@@ -252,12 +252,12 @@ class Expectation(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = []):
+    def __init__(self, observable: Observable, target: QubitSetInput = ()):
         """
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means the observable must only operate
+                is requested for. Default is (), which means the observable must only operate
                 on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
@@ -277,13 +277,13 @@ class Expectation(ObservableResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def expectation(observable: Observable, target: QubitSetInput = []) -> ResultType:
+    def expectation(observable: Observable, target: QubitSetInput = ()) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means the observable must only operate
+                is requested for. Default is (), which means the observable must only operate
                 on 1 qubit and it will be applied to all qubits in parallel
 
         Returns:
@@ -308,12 +308,12 @@ class Sample(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = []):
+    def __init__(self, observable: Observable, target: QubitSetInput = ()):
         """
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means the observable must only operate
+                is requested for. Default is (), which means the observable must only operate
                 on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
@@ -333,13 +333,13 @@ class Sample(ObservableResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def sample(observable: Observable, target: QubitSetInput = []) -> ResultType:
+    def sample(observable: Observable, target: QubitSetInput = ()) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means the observable must only operate
+                is requested for. Default is (), which means the observable must only operate
                 on 1 qubit and it will be applied to all qubits in parallel
 
         Returns:
@@ -364,12 +364,12 @@ class Variance(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = []):
+    def __init__(self, observable: Observable, target: QubitSetInput = ()):
         """
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means the observable must only operate
+                is requested for. Default is (), which means the observable must only operate
                 on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
@@ -389,13 +389,13 @@ class Variance(ObservableResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def variance(observable: Observable, target: QubitSetInput = []) -> ResultType:
+    def variance(observable: Observable, target: QubitSetInput = ()) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit): Target qubits that the result type
-                is requested for. Default is [], which means the observable must only operate
+                is requested for. Default is (), which means the observable must only operate
                 on 1 qubit and it will be applied to all qubits in parallel
 
         Returns:

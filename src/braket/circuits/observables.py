@@ -17,6 +17,10 @@ from typing import List, Tuple
 
 import numpy as np
 from braket.circuits.observable import Observable
+from braket.circuits.quantum_operator_helpers import (
+    is_hermitian,
+    verify_quantum_operator_matrix_dimensions,
+)
 
 
 class H(Observable):
@@ -205,17 +209,11 @@ class Hermitian(Observable):
         Example:
             >>> Observable.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
         """
-        if len(matrix.shape) != 2 or matrix.shape[0] != matrix.shape[1]:
-            raise ValueError(f"{matrix} is not a two-dimensional square matrix")
-
+        verify_quantum_operator_matrix_dimensions(matrix)
         self._matrix = np.array(matrix, dtype=complex)
         qubit_count = int(np.log2(self._matrix.shape[0]))
-        if 2 ** qubit_count != self._matrix.shape[0] or qubit_count < 1:
-            raise ValueError(
-                f"`matrix` dimension {self._matrix.shape[0]} is not a positive exponent of 2"
-            )
 
-        if not np.allclose(self._matrix, self._matrix.conj().T):
+        if not is_hermitian(self._matrix):
             raise ValueError(f"{self._matrix} is not hermitian")
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)

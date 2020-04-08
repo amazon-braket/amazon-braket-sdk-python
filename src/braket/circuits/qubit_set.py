@@ -30,10 +30,11 @@ class QubitSet(IndexedSet):
         mutating this object.
     """
 
-    def __init__(self, qubits: QubitSetInput = []):
+    def __init__(self, qubits: QubitSetInput = ()):
         """
         Args:
             qubits (int, Qubit, or iterable of int / Qubit): Qubits to be included in the QubitSet.
+                Default is ().
 
         Examples:
             >>> qubits = QubitSet([0, 1])
