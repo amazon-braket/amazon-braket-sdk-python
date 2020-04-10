@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from typing import Any, Dict, Optional, Union
 
 import boto3
@@ -19,6 +20,7 @@ from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.devices.device import Device
+from networkx import Graph, complete_graph, from_edgelist
 
 
 class AwsQpu(Device):
@@ -68,7 +70,7 @@ class AwsQpu(Device):
     ) -> AwsQuantumTask:
         """
         Run a quantum task specification on this quantum device. A task can be a circuit or an
-        annealing problem. Currently, only circuits are supported in the Private Beta.
+        annealing problem.
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of task
@@ -131,6 +133,7 @@ class AwsQpu(Device):
             if "annealingModelProperties" in qpu_properties
             else qpu_properties.get("gateModelProperties")
         )
+        self._topology_graph = self._construct_topology_graph()
 
     @property
     def arn(self) -> str:
@@ -142,6 +145,45 @@ class AwsQpu(Device):
     def properties(self) -> Dict[str, Any]:
         """Dict[str, Any]: Return the QPU properties"""
         return self._properties
+
+    @property
+    def topology_graph(self) -> Graph:
+        """Graph: topology of QPU as a networkx Graph object
+
+        Examples:
+            >>> import networkx as nx
+            >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
+            >>> nx.draw_kamada_kawai(device.topology_graph, with_labels=True, font_weight="bold")
+
+            >>> topology_subgraph = device.topology_graph.subgraph(range(8))
+            >>> nx.draw_kamada_kawai(topology_subgraph, with_labels=True, font_weight="bold")
+
+            >>> print(device.topology_graph.edges)
+        """
+        return self._topology_graph
+
+    def _construct_topology_graph(self) -> Graph:
+        """
+        Construct topology graph. If no such metadata is available, return None.
+
+        Returns:
+            Graph: topology of QPU as a networkx Graph object
+        """
+        if "connectivity" in self.properties:
+            adjacency_lists = self.properties["connectivity"]["connectivityGraph"]
+            edges = []
+            for item in adjacency_lists.items():
+                i = item[0]
+                edges.extend([(int(i), int(j)) for j in item[1]])
+            if len(edges) == 0:  # empty connectivity graph means fully connected
+                return complete_graph(int(self.properties["qubitCount"]))
+            else:
+                return from_edgelist(edges)
+        elif "couplers" in self.properties:
+            edges = self.properties["couplers"]
+            return from_edgelist(edges)
+        else:
+            return None
 
     def _aws_session_for_qpu(self, qpu_arn: str, aws_session: AwsSession) -> AwsSession:
         """

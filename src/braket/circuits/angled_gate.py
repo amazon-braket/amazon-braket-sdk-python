@@ -51,3 +51,6 @@ class AngledGate(Gate):
             angle (float): The angle of the gate in radians
         """
         return self._angle
+
+    def __repr__(self):
+        return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"

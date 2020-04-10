@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import pytest
-from braket.circuits import Gate, Operator
+from braket.circuits import Gate, QuantumOperator
 
 
 @pytest.fixture
@@ -21,51 +21,7 @@ def gate():
 
 
 def test_is_operator(gate):
-    assert isinstance(gate, Operator)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_qubit_count_lt_one():
-    Gate(qubit_count=0, ascii_symbols=[])
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_none_ascii():
-    Gate(qubit_count=1, ascii_symbols=None)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_mismatch_length_ascii():
-    Gate(qubit_count=1, ascii_symbols=["foo", "bar"])
-
-
-def test_name(gate):
-    expected = gate.__class__.__name__
-    assert gate.name == expected
-
-
-def test_getters():
-    qubit_count = 2
-    ascii_symbols = ("foo", "bar")
-    gate = Gate(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
-
-    assert gate.qubit_count == qubit_count
-    assert gate.ascii_symbols == ascii_symbols
-
-
-@pytest.mark.xfail(raises=AttributeError)
-def test_qubit_count_setter(gate):
-    gate.qubit_count = 10
-
-
-@pytest.mark.xfail(raises=AttributeError)
-def test_ascii_symbols_setter(gate):
-    gate.ascii_symbols = ["foo", "bar"]
-
-
-@pytest.mark.xfail(raises=AttributeError)
-def test_name_setter(gate):
-    gate.name = "hi"
+    assert isinstance(gate, QuantumOperator)
 
 
 @pytest.mark.xfail(raises=NotImplementedError)

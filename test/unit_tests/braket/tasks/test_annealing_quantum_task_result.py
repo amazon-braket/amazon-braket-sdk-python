@@ -110,7 +110,7 @@ def annealing_result(
     solutions = np.asarray(solutions, dtype=int)
     values = np.asarray(values, dtype=float)
     solution_counts = np.asarray(solution_counts, dtype=int)
-    record_array = AnnealingQuantumTaskResult.create_record_array(
+    record_array = AnnealingQuantumTaskResult._create_record_array(
         solutions, solution_counts, values
     )
     return AnnealingQuantumTaskResult(
@@ -119,6 +119,30 @@ def annealing_result(
         problem_type=problem_type,
         task_metadata=task_metadata,
         additional_metadata={"DWaveMetadata": dwave_metadata},
+    )
+
+
+def test_from_dict(
+    result_str_1,
+    solutions,
+    values,
+    solution_counts,
+    variable_count,
+    problem_type,
+    task_metadata,
+    dwave_metadata,
+):
+    result = AnnealingQuantumTaskResult.from_dict(json.loads(result_str_1))
+    solutions = np.asarray(solutions, dtype=int)
+    values = np.asarray(values, dtype=float)
+    solution_counts = np.asarray(solution_counts, dtype=int)
+    assert result.variable_count == variable_count
+    assert result.problem_type == problem_type
+    assert result.task_metadata == task_metadata
+    assert result.additional_metadata == {"DWaveMetadata": dwave_metadata}
+    np.testing.assert_equal(
+        result.record_array,
+        AnnealingQuantumTaskResult._create_record_array(solutions, solution_counts, values),
     )
 
 
@@ -142,7 +166,7 @@ def test_from_string(
     assert result.additional_metadata == {"DWaveMetadata": dwave_metadata}
     np.testing.assert_equal(
         result.record_array,
-        AnnealingQuantumTaskResult.create_record_array(solutions, solution_counts, values),
+        AnnealingQuantumTaskResult._create_record_array(solutions, solution_counts, values),
     )
 
 
@@ -180,6 +204,12 @@ def test_data_sort_by(annealing_result, solutions, values, solution_counts):
     assert (d[0][0] == solutions[min_index]).all()
     assert d[0][1] == values[min_index]
     assert d[0][2] == solution_counts[min_index]
+
+
+def test_from_dict_equal_to_from_string(result_str_1):
+    assert AnnealingQuantumTaskResult.from_dict(
+        json.loads(result_str_1)
+    ) == AnnealingQuantumTaskResult.from_string(result_str_1)
 
 
 def test_equality(result_str_1, result_str_2):

@@ -49,7 +49,7 @@ class Device(ABC):
 
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of a task
-            to run on device.
+                to run on device.
 
             location: The location to save the task's results
 
@@ -58,7 +58,6 @@ class Device(ABC):
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device
         """
-        pass
 
     @property
     def name(self) -> str:

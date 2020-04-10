@@ -22,6 +22,8 @@ from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResu
 class QuantumTask(ABC):
     """An abstraction over a quantum task on a quantum device."""
 
+    DEFAULT_SHOTS = 1_000
+
     @property
     @abstractmethod
     def id(self) -> str:
@@ -52,7 +54,7 @@ class QuantumTask(ABC):
 
         Args:
             use_cached_value (bool, optional): If True, uses the value retrieved from the previous
-            request.
+                request.
 
         Returns:
             Dict[str, Any]: The metadata regarding the task. If `use_cached_value` is True,
