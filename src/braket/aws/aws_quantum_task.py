@@ -238,8 +238,6 @@ class AwsQuantumTask(QuantumTask):
                 self._logger.warning(
                     f"Task is in terminal state {task_status} and no result is available"
                 )
-                # Return done future. Don't restart polling.
-                return self._future
             else:
                 self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         return self._future
@@ -274,13 +272,17 @@ class AwsQuantumTask(QuantumTask):
         else:
             raise ValueError("Unknown IR type")
 
-    async def _wait_for_completion(self) -> GateModelQuantumTaskResult:
+    async def _wait_for_completion(
+        self,
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
+
         Returns:
-            GateModelQuantumTaskResult: If the task is in the `AwsQuantumTask.RESULTS_READY_STATES`
-                state within the specified time limit, the result from the S3 bucket is loaded and
-                returned. `None` is returned if a timeout occurs or task state is in
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in the
+                `AwsQuantumTask.RESULTS_READY_STATES` state within the specified time limit,
+                the result from the S3 bucket is loaded and returned.
+                `None` is returned if a timeout occurs or task state is in
                 `AwsQuantumTask.NO_RESULT_TERMINAL_STATES`.
         Note:
             Timeout and sleep intervals are defined in the constructor fields
@@ -301,7 +303,7 @@ class AwsQuantumTask(QuantumTask):
                 return self._result
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
                 self._logger.warning(
-                    f"Task is in terminal state {task_status}" + "and no result is available"
+                    f"Task is in terminal state {task_status} and no result is available"
                 )
                 self._result = None
                 return None
