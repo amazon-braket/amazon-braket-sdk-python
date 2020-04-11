@@ -17,8 +17,9 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
+import boto3
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
@@ -30,7 +31,7 @@ class AwsQuantumTask(QuantumTask):
     problem."""
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
-    TERMINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}
+    NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
     RESULTS_READY_STATES = {"COMPLETED"}
 
     GATE_IR_TYPE = "jaqcd"
@@ -72,7 +73,7 @@ class AwsQuantumTask(QuantumTask):
 
             backend_parameters (Dict[str, Any]): Additional parameters to send to the device.
                 For example, for D-Wave:
-                >>> backend_parameters = {"dWaveParameters": {"postprocess": "OPTIMIZATION"}}
+                `{"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
@@ -104,8 +105,7 @@ class AwsQuantumTask(QuantumTask):
     def __init__(
         self,
         arn: str,
-        aws_session: AwsSession,
-        results_formatter: Callable[[str], Any],
+        aws_session: AwsSession = None,
         poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
@@ -113,19 +113,31 @@ class AwsQuantumTask(QuantumTask):
         """
         Args:
             arn (str): The ARN of the task.
-            aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
-            results_formatter (Callable[[str], Any]): A function that deserializes a string
-                into a results structure (such as `GateModelQuantumTaskResult`)
+            aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
+                Default is `None`, in which case an `AwsSession` object will be created with the
+                region of the task.
             poll_timeout_seconds (int): The polling timeout for result(), default is 120 seconds.
             poll_interval_seconds (int): The polling interval for result(), default is 0.25
                 seconds.
             logger (Logger): Logger object with which to write logs, such as task statuses
                 while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
+
+        Examples:
+            >>> task = AwsQuantumTask(arn='task_arn')
+            >>> task.state()
+            'COMPLETED'
+            >>> result = task.result()
+            AnnealingQuantumTaskResult(...)
+
+            >>> task = AwsQuantumTask(arn='task_arn', poll_timeout_seconds=300)
+            >>> result = task.result()
+            GateModelQuantumTaskResult(...)
         """
 
         self._arn: str = arn
-        self._aws_session: AwsSession = aws_session
-        self._results_formatter = results_formatter
+        self._aws_session: AwsSession = aws_session or AwsQuantumTask._aws_session_for_task_arn(
+            task_arn=arn
+        )
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
         self._logger = logger
@@ -139,6 +151,18 @@ class AwsQuantumTask(QuantumTask):
             self._logger.info("No event loop found; creating new event loop")
             asyncio.set_event_loop(asyncio.new_event_loop())
         self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
+
+    @staticmethod
+    def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
+        """
+        Get an AwsSession for the Task ARN. The AWS session should be in the region of the task.
+
+        Returns:
+            AwsSession: `AwsSession` object with default `boto_session` in task's region
+        """
+        task_region = task_arn.split(":")[3]
+        boto_session = boto3.Session(region_name=task_region)
+        return AwsSession(boto_session=boto_session)
 
     @property
     def id(self) -> str:
@@ -158,7 +182,7 @@ class AwsQuantumTask(QuantumTask):
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
                 `GetQuantumTask` operation  to retrieve metadata, which also updates the cached
-                value. Default = False.
+                value. Default = `False`.
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
@@ -176,7 +200,7 @@ class AwsQuantumTask(QuantumTask):
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
                 `GetQuantumTask` operation to retrieve metadata, which also updates the cached
-                value. Default = False.
+                value. Default = `False`.
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`,
@@ -190,7 +214,7 @@ class AwsQuantumTask(QuantumTask):
         """
         Get the quantum task result by polling Amazon Braket to see if the task is completed.
         Once the task is completed, the result is retrieved from S3 and returned as a
-        `QuantumTaskResult`.
+        `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
         This method is a blocking thread call and synchronously returns a result. Call
         async_result() if you require an asynchronous invocation.
@@ -200,6 +224,7 @@ class AwsQuantumTask(QuantumTask):
             return asyncio.get_event_loop().run_until_complete(self.async_result())
         except asyncio.CancelledError:
             # Future was cancelled, return whatever is in self._result if anything
+            self._logger.warning("Task future was cancelled")
             return self._result
 
     def async_result(self) -> asyncio.Task:
@@ -207,12 +232,14 @@ class AwsQuantumTask(QuantumTask):
         Get the quantum task result asynchronously. Consecutive calls to this method return
         the result cached from the most recent request.
         """
-        if (
-            self._future.done()
-            and self.metadata(use_cached_value=True).get("status")
-            not in AwsQuantumTask.TERMINAL_STATES
-        ):  # Future timed out
-            self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
+        if self._future.done() and self._result is None:  # timed out and no result
+            task_status = self.metadata()["status"]
+            if task_status in self.NO_RESULT_TERMINAL_STATES:
+                self._logger.warning(
+                    f"Task is in terminal state {task_status} and no result is available"
+                )
+            else:
+                self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         return self._future
 
     async def _create_future(self) -> asyncio.Task:
@@ -226,17 +253,37 @@ class AwsQuantumTask(QuantumTask):
         """
         return asyncio.create_task(self._wait_for_completion())
 
+    def _get_results_formatter(
+        self,
+    ) -> Union[GateModelQuantumTaskResult.from_string, AnnealingQuantumTaskResult.from_string]:
+        """
+        Get results formatter based on irType of self.metadata()
+
+        Returns:
+            Union[GateModelQuantumTaskResult.from_string, AnnealingQuantumTaskResult.from_string]:
+            function that deserializes a string into a results structure
+        """
+        current_metadata = self.metadata()
+        ir_type = current_metadata["irType"]
+        if ir_type == AwsQuantumTask.ANNEALING_IR_TYPE:
+            return AnnealingQuantumTaskResult.from_string
+        elif ir_type == AwsQuantumTask.GATE_IR_TYPE:
+            return GateModelQuantumTaskResult.from_string
+        else:
+            raise ValueError("Unknown IR type")
+
     async def _wait_for_completion(
         self,
     ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
+
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in
-                the `AwsQuantumTask.RESULTS_READY_STATES` state within the specified time limit,
-                the result from the S3 bucket is loaded and returned. `None` is returned if a
-                timeout occurs or task state is in `AwsQuantumTask.TERMINAL_STATES` but not
-                `AwsQuantumTask.RESULTS_READY_STATES`.
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in the
+                `AwsQuantumTask.RESULTS_READY_STATES` state within the specified time limit,
+                the result from the S3 bucket is loaded and returned.
+                `None` is returned if a timeout occurs or task state is in
+                `AwsQuantumTask.NO_RESULT_TERMINAL_STATES`.
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
@@ -246,14 +293,18 @@ class AwsQuantumTask(QuantumTask):
 
         while (time.time() - start_time) < self._poll_timeout_seconds:
             current_metadata = self.metadata()
-            self._logger.debug(f"Task {self._arn}: task status {current_metadata['status']}")
-            if current_metadata["status"] in AwsQuantumTask.RESULTS_READY_STATES:
+            task_status = current_metadata["status"]
+            self._logger.debug(f"Task {self._arn}: task status {task_status}")
+            if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
                     current_metadata["resultsS3Bucket"], current_metadata["resultsS3ObjectKey"]
                 )
-                self._result = self._results_formatter(result_string)
+                self._result = self._get_results_formatter()(result_string)
                 return self._result
-            elif current_metadata["status"] in AwsQuantumTask.TERMINAL_STATES:
+            elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
+                self._logger.warning(
+                    f"Task is in terminal state {task_status} and no result is available"
+                )
                 self._result = None
                 return None
             else:
@@ -261,7 +312,8 @@ class AwsQuantumTask(QuantumTask):
 
         # Timed out
         self._logger.warning(
-            f"Task {self._arn}: polling timed out after {time.time()-start_time} secs"
+            f"Task {self._arn}: polling for task completion timed out after "
+            + f"{time.time()-start_time} secs"
         )
         self._result = None
         return None
@@ -306,11 +358,8 @@ def _(
             "backendParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
         }
     )
-
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
-    return AwsQuantumTask(
-        task_arn, aws_session, GateModelQuantumTaskResult.from_string, *args, **kwargs
-    )
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
 
 @_create_internal.register
@@ -331,9 +380,7 @@ def _(
     )
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
-    return AwsQuantumTask(
-        task_arn, aws_session, AnnealingQuantumTaskResult.from_string, *args, **kwargs
-    )
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
 
 def _create_common_params(
