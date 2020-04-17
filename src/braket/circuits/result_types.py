@@ -13,10 +13,10 @@
 
 from __future__ import annotations
 
+import re
 from typing import List
 
 import braket.ir.jaqcd as ir
-import re
 from braket.circuits import circuit
 from braket.circuits.observable import Observable
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
@@ -82,8 +82,12 @@ class Amplitude(ResultType):
             >>> ResultType.Amplitude(state=['01', '10'])
         """
         super().__init__(ascii_symbol=["Amplitude"])
-        if not state or not all(isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude) for amplitude in state):
-            raise ValueError("A non-empty list of states must be specified in binary encoding e.g. ['01', '10']")
+        if not state or not all(
+            isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude) for amplitude in state
+        ):
+            raise ValueError(
+                "A non-empty list of states must be specified in binary encoding e.g. ['01', '10']"
+            )
         self._state = state
 
     @property
@@ -152,7 +156,11 @@ class Probability(ResultType):
         self._target = QubitSet(target)
 
     def to_ir(self) -> ir.Probability:
-        return ir.Probability.construct(targets=list(self.target)) if self.target else ir.Probability.construct()
+        return (
+            ir.Probability.construct(targets=list(self.target))
+            if self.target
+            else ir.Probability.construct()
+        )
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -278,7 +286,9 @@ class Expectation(ObservableResultType):
 
     def to_ir(self) -> ir.Expectation:
         if self.target:
-            return ir.Expectation.construct(observable=self.observable.to_ir(), targets=list(self.target))
+            return ir.Expectation.construct(
+                observable=self.observable.to_ir(), targets=list(self.target)
+            )
         else:
             return ir.Expectation.construct(observable=self.observable.to_ir())
 
@@ -337,7 +347,9 @@ class Sample(ObservableResultType):
 
     def to_ir(self) -> ir.Sample:
         if self.target:
-            return ir.Sample.construct(observable=self.observable.to_ir(), targets=list(self.target))
+            return ir.Sample.construct(
+                observable=self.observable.to_ir(), targets=list(self.target)
+            )
         else:
             return ir.Sample.construct(observable=self.observable.to_ir())
 
@@ -396,7 +408,9 @@ class Variance(ObservableResultType):
 
     def to_ir(self) -> ir.Variance:
         if self.target:
-            return ir.Variance.construct(observable=self.observable.to_ir(), targets=list(self.target))
+            return ir.Variance.construct(
+                observable=self.observable.to_ir(), targets=list(self.target)
+            )
         else:
             return ir.Variance.construct(observable=self.observable.to_ir())
 
