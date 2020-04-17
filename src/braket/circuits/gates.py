@@ -46,7 +46,7 @@ class H(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["H"])
 
     def to_ir(self, target: QubitSet):
-        return ir.H(target=target[0])
+        return ir.H.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
@@ -79,7 +79,7 @@ class I(Gate):  # noqa: E742, E261
         super().__init__(qubit_count=1, ascii_symbols=["I"])
 
     def to_ir(self, target: QubitSet):
-        return ir.I(target=target[0])
+        return ir.I.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
@@ -112,7 +112,7 @@ class X(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["X"])
 
     def to_ir(self, target: QubitSet):
-        return ir.X(target=target[0])
+        return ir.X.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -145,7 +145,7 @@ class Y(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["Y"])
 
     def to_ir(self, target: QubitSet):
-        return ir.Y(target=target[0])
+        return ir.Y.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
@@ -178,7 +178,7 @@ class Z(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["Z"])
 
     def to_ir(self, target: QubitSet):
-        return ir.Z(target=target[0])
+        return ir.Z.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -211,7 +211,7 @@ class S(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["S"])
 
     def to_ir(self, target: QubitSet):
-        return ir.S(target=target[0])
+        return ir.S.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
 
@@ -245,7 +245,7 @@ class Si(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["Si"])
 
     def to_ir(self, target: QubitSet):
-        return ir.Si(target=target[0])
+        return ir.Si.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1, 0], [0, -1j]], dtype=complex)
@@ -278,7 +278,7 @@ class T(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["T"])
 
     def to_ir(self, target: QubitSet):
-        return ir.T(target=target[0])
+        return ir.T.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * np.pi / 4)]], dtype=complex)
@@ -311,7 +311,7 @@ class Ti(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["Ti"])
 
     def to_ir(self, target: QubitSet):
-        return ir.Ti(target=target[0])
+        return ir.Ti.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(-1j * np.pi / 4)]], dtype=complex)
@@ -344,7 +344,7 @@ class V(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["V"])
 
     def to_ir(self, target: QubitSet):
-        return ir.V(target=target[0])
+        return ir.V.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]], dtype=complex)
@@ -377,7 +377,7 @@ class Vi(Gate):
         super().__init__(qubit_count=1, ascii_symbols=["Vi"])
 
     def to_ir(self, target: QubitSet):
-        return ir.Vi(target=target[0])
+        return ir.Vi.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
         return np.array(([[0.5 - 0.5j, 0.5 + 0.5j], [0.5 + 0.5j, 0.5 - 0.5j]]), dtype=complex)
@@ -417,7 +417,7 @@ class Rx(AngledGate):
         super().__init__(angle=angle, qubit_count=1, ascii_symbols=["Rx({:.3g})".format(angle)])
 
     def to_ir(self, target: QubitSet):
-        return ir.Rx(target=target[0], angle=self.angle)
+        return ir.Rx.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
@@ -456,7 +456,7 @@ class Ry(AngledGate):
         super().__init__(angle=angle, qubit_count=1, ascii_symbols=["Ry({:.3g})".format(angle)])
 
     def to_ir(self, target: QubitSet):
-        return ir.Ry(target=target[0], angle=self.angle)
+        return ir.Ry.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
@@ -495,7 +495,7 @@ class Rz(AngledGate):
         super().__init__(angle=angle, qubit_count=1, ascii_symbols=["Rz({:.3g})".format(angle)])
 
     def to_ir(self, target: QubitSet):
-        return ir.Rz(target=target[0], angle=self.angle)
+        return ir.Rz.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -534,7 +534,7 @@ class PhaseShift(AngledGate):
         super().__init__(angle=angle, qubit_count=1, ascii_symbols=["PHASE({:.3g})".format(angle)])
 
     def to_ir(self, target: QubitSet):
-        return ir.PhaseShift(target=target[0], angle=self.angle)
+        return ir.PhaseShift.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * self.angle)]], dtype=complex)
@@ -570,7 +570,7 @@ class CNot(Gate):
         super().__init__(qubit_count=2, ascii_symbols=["C", "X"])
 
     def to_ir(self, target: QubitSet):
-        return ir.CNot(control=target[0], target=target[1])
+        return ir.CNot.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -611,7 +611,7 @@ class Swap(Gate):
         super().__init__(qubit_count=2, ascii_symbols=["SWAP", "SWAP"])
 
     def to_ir(self, target: QubitSet):
-        return ir.Swap(targets=[target[0], target[1]])
+        return ir.Swap.construct(targets=[target[0], target[1]])
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -652,7 +652,7 @@ class ISwap(Gate):
         super().__init__(qubit_count=2, ascii_symbols=["ISWAP", "ISWAP"])
 
     def to_ir(self, target: QubitSet):
-        return ir.ISwap(targets=[target[0], target[1]])
+        return ir.ISwap.construct(targets=[target[0], target[1]])
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -701,7 +701,7 @@ class PSwap(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.PSwap(targets=[target[0], target[1]], angle=self.angle)
+        return ir.PSwap.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -750,7 +750,7 @@ class XY(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.XY(targets=[target[0], target[1]], angle=self.angle)
+        return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
@@ -799,7 +799,7 @@ class CPhaseShift(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.CPhaseShift(control=target[0], target=target[1], angle=self.angle)
+        return ir.CPhaseShift.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, 1.0, np.exp(1j * self.angle)])
@@ -839,7 +839,7 @@ class CPhaseShift00(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.CPhaseShift00(control=target[0], target=target[1], angle=self.angle)
+        return ir.CPhaseShift00.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([np.exp(1j * self.angle), 1.0, 1.0, 1.0])
@@ -879,7 +879,7 @@ class CPhaseShift01(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.CPhaseShift01(control=target[0], target=target[1], angle=self.angle)
+        return ir.CPhaseShift01.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, np.exp(1j * self.angle), 1.0, 1.0])
@@ -919,7 +919,7 @@ class CPhaseShift10(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.CPhaseShift10(control=target[0], target=target[1], angle=self.angle)
+        return ir.CPhaseShift10.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, np.exp(1j * self.angle), 1.0])
@@ -953,7 +953,7 @@ class CY(Gate):
         super().__init__(qubit_count=2, ascii_symbols=["C", "Y"])
 
     def to_ir(self, target: QubitSet):
-        return ir.CY(control=target[0], target=target[1])
+        return ir.CY.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -994,7 +994,7 @@ class CZ(Gate):
         super().__init__(qubit_count=2, ascii_symbols=["C", "Z"])
 
     def to_ir(self, target: QubitSet):
-        return ir.CZ(control=target[0], target=target[1])
+        return ir.CZ.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, 1.0, -1.0])
@@ -1035,7 +1035,7 @@ class XX(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.XX(targets=[target[0], target[1]], angle=self.angle)
+        return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return (1 / math.sqrt(2)) * np.array(
@@ -1085,7 +1085,7 @@ class YY(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.YY(targets=[target[0], target[1]], angle=self.angle)
+        return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle)
@@ -1137,7 +1137,7 @@ class ZZ(AngledGate):
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.ZZ(targets=[target[0], target[1]], angle=self.angle)
+        return ir.ZZ.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1182,7 +1182,7 @@ class CCNot(Gate):
         super().__init__(qubit_count=3, ascii_symbols=["C", "C", "X"])
 
     def to_ir(self, target: QubitSet):
-        return ir.CCNot(controls=[target[0], target[1]], target=target[2])
+        return ir.CCNot.construct(controls=[target[0], target[1]], target=target[2])
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1228,7 +1228,7 @@ class CSwap(Gate):
         super().__init__(qubit_count=3, ascii_symbols=["C", "SWAP", "SWAP"])
 
     def to_ir(self, target: QubitSet):
-        return ir.CSwap(control=target[0], targets=[target[1], target[2]])
+        return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1295,7 +1295,7 @@ class Unitary(Gate):
         return np.array(self._matrix)
 
     def to_ir(self, target: QubitSet):
-        return ir.Unitary(
+        return ir.Unitary.construct(
             targets=[qubit for qubit in target],
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )

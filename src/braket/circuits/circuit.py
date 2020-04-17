@@ -433,7 +433,7 @@ class Circuit:
         """
         ir_instructions = [instr.to_ir() for instr in self.instructions]
         ir_results = [result_type.to_ir() for result_type in self.result_types]
-        return Program(instructions=ir_instructions, results=ir_results)
+        return Program.construct(instructions=ir_instructions, results=ir_results)
 
     def _copy(self) -> Circuit:
         """
