@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Counter, Dict
+from typing import Any, Counter, Dict, List
 
 import numpy as np
 
@@ -27,6 +27,7 @@ class GateModelQuantumTaskResult:
     to be initialized by a QuantumTask class.
 
     Args:
+        task_metadata (Dict[str, Any]): Dictionary of task metadata.
         measurements (numpy.ndarray): 2d array - row is shot, column is qubit.
         measurement_counts (Counter): A Counter of measurements. Key is the measurements
             in a big endian binary string. Value is the number of times that measurement occurred.
@@ -40,18 +41,16 @@ class GateModelQuantumTaskResult:
         measurement_probabilities_copied_from_device (bool): flag whether
             `measurement_probabilities` were copied from device. If false,
             `measurement_probabilities` are calculated from device data.
-        task_metadata (Dict[str, Any]): Dictionary of task metadata.
-        state_vector (Dict[str, complex]): Dictionary where Key is state and Value is amplitude.
     """
-
-    measurements: np.ndarray
-    measurement_counts: Counter
-    measurement_probabilities: Dict[str, float]
-    measurements_copied_from_device: bool
-    measurement_counts_copied_from_device: bool
-    measurement_probabilities_copied_from_device: bool
     task_metadata: Dict[str, Any]
-    state_vector: Dict[str, complex] = None
+    results_dict: Dict[Dict[str, str], Any] = None
+    values: List[Any] = None
+    measurements: np.ndarray = None
+    measurement_counts: Counter = None
+    measurement_probabilities: Dict[str, float] = None
+    measurements_copied_from_device: bool = None
+    measurement_counts_copied_from_device: bool = None
+    measurement_probabilities_copied_from_device: bool = None
 
     def __eq__(self, other) -> bool:
         if isinstance(other, GateModelQuantumTaskResult):
@@ -180,8 +179,14 @@ class GateModelQuantumTaskResult:
 
     @classmethod
     def _from_dict_internal(cls, result: Dict[str, Any]):
+        if result["TaskMetadata"]["Shots"] > 0:
+            return GateModelQuantumTaskResult._from_dict_internal_computational_basis_sampling(result)
+        else:
+            return GateModelQuantumTaskResult._from_dict_internal_simulator_only_results(result)
+
+    @classmethod
+    def _from_dict_internal_computational_basis_sampling(cls, result: Dict[str, Any]):
         task_metadata = result["TaskMetadata"]
-        state_vector = result.get("StateVector", None)
         if "Measurements" in result:
             measurements = np.asarray(result["Measurements"], dtype=int)
             m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
@@ -205,9 +210,12 @@ class GateModelQuantumTaskResult:
             raise ValueError(
                 'One of "Measurements" or "MeasurementProbabilities" must be in the results dict'
             )
+        result_types = task_metadata[]
+        result_dict = GateModelQuantumTaskResult._create_result_dict(measurements)
         return cls(
-            state_vector=state_vector,
             task_metadata=task_metadata,
+            result_dict=result_dict,
+            values=result_dict.values(),
             measurements=measurements,
             measurement_counts=m_counts,
             measurement_probabilities=m_probs,
@@ -215,3 +223,16 @@ class GateModelQuantumTaskResult:
             measurement_counts_copied_from_device=m_counts_copied_from_device,
             measurement_probabilities_copied_from_device=m_probabilities_copied_from_device,
         )
+
+    @classmethod
+    def _from_dict_internal_simulator_only_results(cls, result: Dict[str, Any]):
+        task_metadata = result["TaskMetadata"]
+        result_dict = FrozenDict()
+        return cls(
+            task_metadata=task_metadata,
+            result_dict=result_dict,
+            values=result_dict.values()
+        )
+
+    @classmethod
+    def _create_result_dict(cls, measurements):
