@@ -156,11 +156,10 @@ class Probability(ResultType):
         self._target = QubitSet(target)
 
     def to_ir(self) -> ir.Probability:
-        return (
-            ir.Probability.construct(targets=list(self.target))
-            if self.target
-            else ir.Probability.construct()
-        )
+        if self.target:
+            return ir.Probability.construct(targets=list(self.target))
+        else:
+            return ir.Probability.construct()
 
     @staticmethod
     @circuit.subroutine(register=True)
