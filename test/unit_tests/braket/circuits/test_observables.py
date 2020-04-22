@@ -30,7 +30,6 @@ invalid_hermitian_matrices = [
     (np.array([[0, 1], [1, 2], [3, 4]])),
     (np.array([[0, 1, 2], [2, 3]])),
     (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])),
-    (np.array([[0, 1], ["a", 0]])),
     (Gate.T().to_matrix()),
 ]
 
