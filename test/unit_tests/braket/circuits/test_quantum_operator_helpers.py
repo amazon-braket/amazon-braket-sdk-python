@@ -58,10 +58,10 @@ def test_is_hermitian_false(matrix):
 
 
 @pytest.mark.xfail(raises=Exception)
-def test_is_hermitian_type_error():
+def test_is_hermitian_exception():
     is_hermitian(invalid_matrix_type_error)
 
 
 @pytest.mark.xfail(raises=Exception)
-def test_is_unitary_type_error():
+def test_is_unitary_exception():
     is_unitary(invalid_matrix_type_error)
