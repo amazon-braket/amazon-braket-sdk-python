@@ -111,12 +111,9 @@ def test_result_equality(testclass, subroutine_name, irclass, input, ir_input):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_amplitude_init_value_error():
-    ResultType.Amplitude(state=None)
-
-
-@pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("state", ((["2", "11"], [1, 0], [0.1, 0], ["", ""])))
+@pytest.mark.parametrize(
+    "state", ((["2", "11"]), ([1, 0]), ([0.1, 0]), ("-0", "1"), (["", ""]), (None), ([None, None]))
+)
 def test_amplitude_init_invalid_state_value_error(state):
     ResultType.Amplitude(state=state)
 
