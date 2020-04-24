@@ -109,19 +109,6 @@ def test_run_with_kwargs(aws_quantum_task_mock, simulator, circuit, s3_destinati
         simulator,
         circuit,
         s3_destination_folder,
-        None,
-        [],
-        {"bar": 1, "baz": 2},
-    )
-
-
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_kwargs_no_shots(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
-    _run_and_assert(
-        aws_quantum_task_mock,
-        simulator,
-        circuit,
-        s3_destination_folder,
         1000,
         [],
         {"bar": 1, "baz": 2},

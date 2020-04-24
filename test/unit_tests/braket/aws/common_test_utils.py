@@ -181,8 +181,8 @@ class MockS3:
                 "Id": "UUID_blah_1",
                 "Status": "COMPLETED",
                 "BackendArn": AwsQpuArns.RIGETTI,
-                "CwLogGroupArn": "blah",
-                "Program": "....",
+                "Shots": 1000,
+                "Ir": "{}",
             },
         }
     )
@@ -195,8 +195,8 @@ class MockS3:
                 "Id": "UUID_blah_2",
                 "Status": "COMPLETED",
                 "BackendArn": AwsQpuArns.RIGETTI,
-                "CwLogGroupArn": "blah",
-                "Program": "....",
+                "Shots": 1000,
+                "Ir": "{}",
             },
         }
     )
@@ -212,6 +212,7 @@ class MockS3:
                 "Modified": 1574140388.6908717,
                 "Shots": 100,
                 "GateModelConfig": {"QubitCount": 6},
+                "Ir": "{}",
             },
             "MeasurementProbabilities": {"011000": 0.9999999999999982},
         }

@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any, Counter, Dict, List
 
 import numpy as np
+from braket.circuits import ResultType
 
 
 @dataclass
@@ -27,23 +28,38 @@ class GateModelQuantumTaskResult:
     to be initialized by a QuantumTask class.
 
     Args:
-        task_metadata (Dict[str, Any]): Dictionary of task metadata.
-        measurements (numpy.ndarray): 2d array - row is shot, column is qubit.
-        measurement_counts (Counter): A Counter of measurements. Key is the measurements
+        task_metadata (Dict[str, Any]): Dictionary of task metadata. task_metadata must have
+            keys 'Id', 'Shots', 'Ir', and 'IrType'.
+        result_types (List[Dict[str, Any]], optional): List of dictionaries where each dictionary
+            has two keys: 'Type' (the result type in IR JSON form) and
+            'Value' (the result value for this result type).
+            Default is None. Currently only available when shots = 0. TODO: update
+        values (List[Any], optional): The values for result types requested in the circuit.
+            Default is None. Currently only available when shots = 0. TODO: update
+        measurements (numpy.ndarray, optional): 2d array - row is shot, column is qubit.
+            Default is None. Only available when shots > 0.
+        measurement_counts (Counter, optional): A Counter of measurements. Key is the measurements
             in a big endian binary string. Value is the number of times that measurement occurred.
-        measurement_probabilities (Dict[str, float]): A dictionary of probabilistic results.
+            Default is None. Only available when shots > 0.
+        measurement_probabilities (Dict[str, float], optional):
+            A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
             Value is the probability the measurement occurred.
-        measurements_copied_from_device (bool): flag whether `measurements` were copied from device.
-            If false, `measurements` are calculated from device data.
-        measurement_counts_copied_from_device (bool): flag whether `measurement_counts` were copied
-            from device. If false, `measurement_counts` are calculated from device data.
-        measurement_probabilities_copied_from_device (bool): flag whether
+            Default is None. Only available when shots > 0.
+        measurements_copied_from_device (bool, optional): flag whether `measurements`
+            were copied from device. If false, `measurements` are calculated from device data.
+            Default is None. Only available when shots > 0.
+        measurement_counts_copied_from_device (bool, optional): flag whether `measurement_counts`
+            were copied from device. If False, `measurement_counts` are calculated from device data.
+            Default is None. Only available when shots > 0.
+        measurement_probabilities_copied_from_device (bool, optional): flag whether
             `measurement_probabilities` were copied from device. If false,
-            `measurement_probabilities` are calculated from device data.
+            `measurement_probabilities` are calculated from device data. Default is None.
+            Only available when shots > 0.
     """
+
     task_metadata: Dict[str, Any]
-    results_dict: Dict[Dict[str, str], Any] = None
+    result_types: List[Dict[str, str]] = None
     values: List[Any] = None
     measurements: np.ndarray = None
     measurement_counts: Counter = None
@@ -52,14 +68,33 @@ class GateModelQuantumTaskResult:
     measurement_counts_copied_from_device: bool = None
     measurement_probabilities_copied_from_device: bool = None
 
+    def get_value_by_result_type(self, result_type: ResultType) -> Any:
+        """
+        Get value by result type. The result type must have already been
+        requested in the circuit sent to the device for this task result.
+
+        Args:
+            result_type (ResultType): result type requested
+
+        Returns:
+            Any: value of the result corresponding to the result type
+
+        Raises:
+            ValueError: If result type not found in result.
+                Result types must be added to circuit before circuit is run on device.
+        """
+        rt_json = result_type.to_ir().json()
+        for rt in self.result_types:
+            if rt_json == json.dumps(rt["Type"]):
+                return rt["Value"]
+        raise ValueError(
+            "Result type not found in result. "
+            + "Result types must be added to circuit before circuit is run on device."
+        )
+
     def __eq__(self, other) -> bool:
-        if isinstance(other, GateModelQuantumTaskResult):
-            # __eq__ on numpy arrays results in an array of booleans and therefore can't use
-            # the default dataclass __eq__ implementation. Override equals to check if all
-            # elements in the array are equal.
-            self_fields = (self.task_metadata, self.state_vector)
-            other_fields = (other.task_metadata, other.state_vector)
-            return (self.measurements == other.measurements).all() and self_fields == other_fields
+        if isinstance(other, GateModelQuantumTaskResult) and self.task_metadata.get("Id"):
+            return self.task_metadata["Id"] == other.task_metadata["Id"]
         return NotImplemented
 
     @staticmethod
@@ -142,11 +177,7 @@ class GateModelQuantumTaskResult:
 
         Raises:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
-            in the result dict
-
-        Note:
-            For the "StateVector" key, the value should be of type Dict[str, complex];
-            each bitstring's amplitude is a Python complex number.
+                in the result dict
         """
         return GateModelQuantumTaskResult._from_dict_internal(result)
 
@@ -163,26 +194,28 @@ class GateModelQuantumTaskResult:
 
         Raises:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
-            in the result dict
-
-        Note:
-            For the "StateVector" key, the value should be of type Dict[str, List[float, float]];
-            each bitstring's amplitude is represented by a two-element list, with first element
-            the real component and second element the imaginary component.
+                in the result dict
         """
         json_obj = json.loads(result)
-        state_vector = json_obj.get("StateVector", None)
-        if state_vector:
-            for state in state_vector:
-                state_vector[state] = complex(*state_vector[state])
+        for result_type in json_obj.get("ResultTypes", []):
+            type = result_type["Type"]["type"]
+            if type == "probability":
+                result_type["Value"] = np.array(result_type["Value"])
+            elif type == "statevector":
+                result_type["Value"] = np.array([complex(*value) for value in result_type["Value"]])
+            elif type == "amplitude":
+                for state in result_type["Value"]:
+                    result_type["Value"][state] = complex(*result_type["Value"][state])
         return GateModelQuantumTaskResult._from_dict_internal(json_obj)
 
     @classmethod
     def _from_dict_internal(cls, result: Dict[str, Any]):
         if result["TaskMetadata"]["Shots"] > 0:
-            return GateModelQuantumTaskResult._from_dict_internal_computational_basis_sampling(result)
+            return GateModelQuantumTaskResult._from_dict_internal_computational_basis_sampling(
+                result
+            )
         else:
-            return GateModelQuantumTaskResult._from_dict_internal_simulator_only_results(result)
+            return GateModelQuantumTaskResult._from_dict_internal_simulator_only(result)
 
     @classmethod
     def _from_dict_internal_computational_basis_sampling(cls, result: Dict[str, Any]):
@@ -208,14 +241,11 @@ class GateModelQuantumTaskResult:
             m_probabilities_copied_from_device = True
         else:
             raise ValueError(
-                'One of "Measurements" or "MeasurementProbabilities" must be in the results dict'
+                'One of "Measurements" or "MeasurementProbabilities" must be in the result dict'
             )
-        result_types = task_metadata[]
-        result_dict = GateModelQuantumTaskResult._create_result_dict(measurements)
+        # TODO: add result types for shots > 0 after basis rotation instructions are added to IR
         return cls(
             task_metadata=task_metadata,
-            result_dict=result_dict,
-            values=result_dict.values(),
             measurements=measurements,
             measurement_counts=m_counts,
             measurement_probabilities=m_probs,
@@ -225,14 +255,8 @@ class GateModelQuantumTaskResult:
         )
 
     @classmethod
-    def _from_dict_internal_simulator_only_results(cls, result: Dict[str, Any]):
+    def _from_dict_internal_simulator_only(cls, result: Dict[str, Any]):
         task_metadata = result["TaskMetadata"]
-        result_dict = FrozenDict()
-        return cls(
-            task_metadata=task_metadata,
-            result_dict=result_dict,
-            values=result_dict.values()
-        )
-
-    @classmethod
-    def _create_result_dict(cls, measurements):
+        result_types = result["ResultTypes"]
+        values = [rt["Value"] for rt in result_types]
+        return cls(task_metadata=task_metadata, result_types=result_types, values=values)

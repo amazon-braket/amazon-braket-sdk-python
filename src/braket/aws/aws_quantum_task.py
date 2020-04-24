@@ -17,12 +17,13 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 import boto3
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
+from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
 
 
@@ -46,7 +47,7 @@ class AwsQuantumTask(QuantumTask):
         device_arn: str,
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: Optional[int] = None,
+        shots: int,
         backend_parameters: Dict[str, Any] = None,
         *args,
         **kwargs,
@@ -68,8 +69,7 @@ class AwsQuantumTask(QuantumTask):
                 to store task results in.
 
             shots (int): The number of times to run the task on the device. If the device is a
-                simulator, this implies the state is sampled N times, where N = `shots`. Default
-                shots = 1_000.
+                simulator, this implies the state is sampled N times, where N = `shots`.
 
             backend_parameters (Dict[str, Any]): Additional parameters to send to the device.
                 For example, for D-Wave:
@@ -77,6 +77,7 @@ class AwsQuantumTask(QuantumTask):
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
+
         Note:
             The following arguments are typically defined via clients of Device.
                 - `task_specification`
@@ -351,6 +352,7 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
+    validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
     create_task_kwargs.update(
         {
             "ir": circuit.to_ir().json(),

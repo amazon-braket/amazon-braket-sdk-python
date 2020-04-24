@@ -11,58 +11,47 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import copy
 import json
 from typing import Any, Counter, Dict
 
 import numpy as np
 import pytest
 from braket.aws.aws_qpu_arns import AwsQpuArns
+from braket.circuits import Observable, ResultType
 from braket.tasks import GateModelQuantumTaskResult
 
 
 @pytest.fixture
 def result_dict_1():
     return {
-        "StateVector": {
-            "00": complex(0.2, 0.2),
-            "01": complex(0.3, 0.1),
-            "10": complex(0.1, 0.3),
-            "11": complex(0.2, 0.2),
-        },
         "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
         "TaskMetadata": {
             "Id": "UUID_blah_1",
             "Status": "COMPLETED",
             "BackendArn": AwsQpuArns.RIGETTI,
+            "Shots": 1000,
+            "Ir": json.dumps({"results": []}),
         },
     }
 
 
 @pytest.fixture
-def result_str_1():
-    return json.dumps(
-        {
-            "StateVector": {"00": [0.2, 0.2], "01": [0.3, 0.1], "10": [0.1, 0.3], "11": [0.2, 0.2]},
-            "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-            "TaskMetadata": {
-                "Id": "UUID_blah_1",
-                "Status": "COMPLETED",
-                "BackendArn": AwsQpuArns.RIGETTI,
-            },
-        }
-    )
+def result_str_1(result_dict_1):
+    return json.dumps(result_dict_1)
 
 
 @pytest.fixture
 def result_str_2():
     return json.dumps(
         {
-            "StateVector": {"00": [0.2, 0.2], "01": [0.3, 0.1], "10": [0.1, 0.3], "11": [0.2, 0.2]},
             "Measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
             "TaskMetadata": {
                 "Id": "UUID_blah_2",
                 "Status": "COMPLETED",
                 "BackendArn": AwsQpuArns.RIGETTI,
+                "Shots": 1000,
+                "Ir": json.dumps({"results": []}),
             },
         }
     )
@@ -81,6 +70,7 @@ def result_str_3():
                 "Modified": 1574140388.6908717,
                 "Shots": 100,
                 "GateModelConfig": {"QubitCount": 6},
+                "Ir": json.dumps({"results": []}),
             },
             "MeasurementProbabilities": {"011000": 0.9999999999999982},
         }
@@ -88,13 +78,44 @@ def result_str_3():
 
 
 @pytest.fixture
-def parsed_state_vector():
+def result_dict_4():
     return {
-        "00": complex(0.2, 0.2),
-        "01": complex(0.3, 0.1),
-        "10": complex(0.1, 0.3),
-        "11": complex(0.2, 0.2),
+        "TaskMetadata": {
+            "Id": "1231231",
+            "Shots": 0,
+            "GateModelConfig": {"QubitCount": 2},
+            "Ir": json.dumps({"results": []}),
+        },
+        "ResultTypes": [
+            {"Type": {"targets": [0], "type": "probability"}, "Value": np.array([0.5, 0.5])},
+            {
+                "Type": {"type": "statevector"},
+                "Value": np.array([complex(0.70710678, 0), 0, 0, complex(0.70710678, 0)]),
+            },
+            {"Type": {"targets": [0], "type": "expectation", "observable": ["y"]}, "Value": 0.0},
+            {"Type": {"targets": [0], "type": "variance", "observable": ["y"]}, "Value": 0.1},
+            {
+                "Type": {"type": "amplitude", "states": ["00"]},
+                "Value": {"00": complex(0.70710678, 0)},
+            },
+        ],
     }
+
+
+@pytest.fixture
+def result_str_4(result_dict_4):
+    result = copy.deepcopy(result_dict_4)
+    result["ResultTypes"] = [
+        {"Type": {"targets": [0], "type": "probability"}, "Value": [0.5, 0.5]},
+        {
+            "Type": {"type": "statevector"},
+            "Value": [(0.70710678, 0), (0, 0), (0, 0), (0.70710678, 0)],
+        },
+        {"Type": {"targets": [0], "type": "expectation", "observable": ["y"]}, "Value": 0.0},
+        {"Type": {"targets": [0], "type": "variance", "observable": ["y"]}, "Value": 0.1},
+        {"Type": {"type": "amplitude", "states": ["00"]}, "Value": {"00": (0.70710678, 0)}},
+    ]
+    return json.dumps(result)
 
 
 @pytest.fixture
@@ -104,6 +125,8 @@ def malformatted_results():
             "Id": "UUID_blah_1",
             "Status": "COMPLETED",
             "BackendArn": AwsQpuArns.RIGETTI,
+            "Shots": 1000,
+            "Ir": json.dumps({"results": []}),
         },
     }
 
@@ -143,20 +166,6 @@ def test_measurements_from_measurement_probabilities():
     assert np.allclose(measurements, expected_results)
 
 
-def test_state_vector(parsed_state_vector):
-    result: GateModelQuantumTaskResult = GateModelQuantumTaskResult(
-        measurements=None,
-        task_metadata=None,
-        state_vector=parsed_state_vector,
-        measurement_counts=None,
-        measurement_probabilities=None,
-        measurements_copied_from_device=False,
-        measurement_counts_copied_from_device=False,
-        measurement_probabilities_copied_from_device=False,
-    )
-    assert result.state_vector == parsed_state_vector
-
-
 def test_task_metadata():
     task_metadata: Dict[str, Any] = {
         "Id": "UUID_blah",
@@ -179,11 +188,10 @@ def test_task_metadata():
     assert result.task_metadata == task_metadata
 
 
-def test_from_dict_measurements_state_vector(result_dict_1):
+def test_from_dict_measurements(result_dict_1):
     task_result = GateModelQuantumTaskResult.from_dict(result_dict_1)
     expected_measurements = np.asarray(result_dict_1["Measurements"], dtype=int)
     assert task_result.task_metadata == result_dict_1["TaskMetadata"]
-    assert task_result.state_vector == result_dict_1["StateVector"]
     assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
     assert not task_result.measurement_counts_copied_from_device
     assert not task_result.measurement_probabilities_copied_from_device
@@ -195,7 +203,6 @@ def test_from_dict_measurement_probabilities(result_str_3):
     task_result = GateModelQuantumTaskResult.from_dict(result_obj)
     assert task_result.measurement_probabilities == result_obj["MeasurementProbabilities"]
     assert task_result.task_metadata == result_obj["TaskMetadata"]
-    assert task_result.state_vector is None
     shots = 100
     measurement_list = [list("011000") for x in range(shots)]
     expected_measurements = np.asarray(measurement_list, dtype=int)
@@ -206,12 +213,11 @@ def test_from_dict_measurement_probabilities(result_str_3):
     assert not task_result.measurements_copied_from_device
 
 
-def test_from_string_measurements_state_vector(result_str_1, parsed_state_vector):
+def test_from_string_measurements(result_str_1):
     result_obj = json.loads(result_str_1)
     task_result = GateModelQuantumTaskResult.from_string(result_str_1)
     expected_measurements = np.asarray(result_obj["Measurements"], dtype=int)
     assert task_result.task_metadata == result_obj["TaskMetadata"]
-    assert task_result.state_vector == parsed_state_vector
     assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
     assert not task_result.measurement_counts_copied_from_device
     assert not task_result.measurement_probabilities_copied_from_device
@@ -223,7 +229,6 @@ def test_from_string_measurement_probabilities(result_str_3):
     task_result = GateModelQuantumTaskResult.from_string(result_str_3)
     assert task_result.measurement_probabilities == result_obj["MeasurementProbabilities"]
     assert task_result.task_metadata == result_obj["TaskMetadata"]
-    assert task_result.state_vector is None
     shots = 100
     measurement_list = [list("011000") for x in range(shots)]
     expected_measurements = np.asarray(measurement_list, dtype=int)
@@ -253,6 +258,43 @@ def test_equality(result_str_1, result_str_2):
     assert result_1 is not result_2
     assert result_1 != other_result
     assert result_1 != non_result
+
+
+def test_from_string_simulator_only(result_dict_4, result_str_4):
+    result = GateModelQuantumTaskResult.from_string(result_str_4)
+    assert len(result.result_types) == len(result_dict_4["ResultTypes"])
+    for i in range(len(result.result_types)):
+        rt = result.result_types[i]
+        expected_rt = result_dict_4["ResultTypes"][i]
+        assert rt["Type"] == expected_rt["Type"]
+        if isinstance(rt["Value"], np.ndarray):
+            assert np.allclose(rt["Value"], expected_rt["Value"])
+        else:
+            assert rt["Value"] == expected_rt["Value"]
+    assert result.task_metadata == result.task_metadata
+
+
+def test_get_value_by_result_type(result_dict_4):
+    result = GateModelQuantumTaskResult.from_dict(result_dict_4)
+    assert np.allclose(
+        result.get_value_by_result_type(ResultType.Probability(target=0)), result.values[0]
+    )
+    assert np.allclose(result.get_value_by_result_type(ResultType.StateVector()), result.values[1])
+    assert (
+        result.get_value_by_result_type(ResultType.Expectation(observable=Observable.Y(), target=0))
+        == result.values[2]
+    )
+    assert (
+        result.get_value_by_result_type(ResultType.Variance(observable=Observable.Y(), target=0))
+        == result.values[3]
+    )
+    assert result.get_value_by_result_type(ResultType.Amplitude(state=["00"])) == result.values[4]
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_get_value_by_result_type_value_error(result_dict_4):
+    result = GateModelQuantumTaskResult.from_dict(result_dict_4)
+    result.get_value_by_result_type(ResultType.Probability(target=[0, 1]))
 
 
 @pytest.mark.xfail(raises=ValueError)

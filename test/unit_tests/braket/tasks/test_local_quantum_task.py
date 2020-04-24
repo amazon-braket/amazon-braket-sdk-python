@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import json
 import uuid
 
 import pytest
@@ -19,14 +20,13 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 
 RESULT = GateModelQuantumTaskResult.from_dict(
     {
-        "StateVector": {
-            "00": complex(0.2, 0.2),
-            "01": complex(0.3, 0.1),
-            "10": complex(0.1, 0.3),
-            "11": complex(0.2, 0.2),
-        },
         "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-        "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED"},
+        "TaskMetadata": {
+            "Id": str(uuid.uuid4()),
+            "Status": "COMPLETED",
+            "Shots": 2,
+            "Ir": json.dumps({"results": []}),
+        },
     }
 )
 
@@ -43,6 +43,7 @@ def test_state():
 
 
 def test_result():
+    assert RESULT.task_metadata["Id"] == TASK.id
     assert TASK.result() == RESULT
 
 

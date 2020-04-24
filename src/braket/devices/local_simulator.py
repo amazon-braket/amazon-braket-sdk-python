@@ -18,6 +18,7 @@ import pkg_resources
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
+from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.devices.braket_simulator import BraketSimulator
 from braket.devices.device import Device
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -51,12 +52,16 @@ class LocalSimulator(Device):
         self._delegate = delegate
 
     def run(
-        self, task_specification: Union[Circuit, Problem], *args, **kwargs,
+        self, task_specification: Union[Circuit, Problem], shots: int = 0, *args, **kwargs,
     ) -> LocalQuantumTask:
         """ Runs the given task with the wrapped local simulator.
 
         Args:
             task_specification (Union[Circuit, Problem]):
+            shots (int, optional): The number of times to run the circuit or annealing problem.
+                Default is 0, which means that the simulator will compute the exact
+                results based on the task specification.
+                Sampling is not supported for shots=0.
             *args: Positional args to pass to the IR simulator
             **kwargs: Keyword arguments to pass to the IR simulator
 
@@ -73,7 +78,7 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = _run_internal(task_specification, self._delegate, *args, **kwargs)
+        result = _run_internal(task_specification, self._delegate, shots, *args, **kwargs)
         return LocalQuantumTask(result)
 
     @staticmethod
@@ -114,16 +119,16 @@ def _run_internal(
 
 
 @_run_internal.register
-def _(circuit: Circuit, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
+    validate_circuit_and_shots(circuit, shots)
     program = circuit.to_ir()
     qubits = circuit.qubit_count
-    shots_count = shots if shots else LocalQuantumTask.DEFAULT_SHOTS
-    results_dict = simulator.run(program, qubits, shots=shots_count, *args, **kwargs)
+    results_dict = simulator.run(program, qubits, shots, *args, **kwargs)
     return GateModelQuantumTaskResult.from_dict(results_dict)
 
 
 @_run_internal.register
-def _(problem: Problem, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
     ir = problem.to_ir()
-    results_dict = simulator.run(ir, *args, *kwargs)
+    results_dict = simulator.run(ir, shots, *args, *kwargs)
     return AnnealingQuantumTaskResult.from_dict(results_dict)

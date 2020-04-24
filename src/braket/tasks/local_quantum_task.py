@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
-import uuid
 from typing import Union
 
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
@@ -25,7 +24,7 @@ class LocalQuantumTask(QuantumTask):
     """
 
     def __init__(self, result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]):
-        self._id = uuid.uuid4()
+        self._id = result.task_metadata["Id"]
         self._result = result
 
     @property

@@ -194,8 +194,13 @@ def test_run_with_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_fol
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_kwargs_no_shots(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
-    _run_and_assert(
-        aws_quantum_task_mock, qpu, circuit, s3_destination_folder, None, [], {"bar": 1, "baz": 2}
+    task_mock = Mock()
+    aws_quantum_task_mock.return_value = task_mock
+    qpu = qpu(AwsQpuArns.RIGETTI)
+    task = qpu.run(circuit, s3_destination_folder)
+    assert task == task_mock
+    aws_quantum_task_mock.assert_called_with(
+        qpu._aws_session, qpu.arn, circuit, s3_destination_folder, 1000
     )
 
 
