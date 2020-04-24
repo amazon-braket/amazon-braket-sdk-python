@@ -31,7 +31,7 @@ class AwsQuantumSimulator(Device):
         """
         Args:
             arn (str): The ARN of the simulator, for example,
-            "arn:aws:aqx:::quantum-simulator:aqx:qs1".
+                "arn:aws:aqx:::quantum-simulator:aqx:qs1".
             aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
         """
         super().__init__(name=None, status=None, status_reason=None)
@@ -56,9 +56,12 @@ class AwsQuantumSimulator(Device):
                 (circuit or annealing problem) to run on device.
             s3_destination_folder: The S3 location to save the task's results
             shots (int, optional): The number of times to run the circuit or annealing problem.
-                Default is 0, which means that the simulator will compute the exact
-                results based on the task specification.
-                Sampling is not supported for shots=0.
+                Default is 0.
+                For circuits, when `shots=0`, the simulator will support simulator-only
+                result types, compute the exact results based on the task specification,
+                and sampling is not supported.
+                `shots>0` means that the simulator will be treated like a QPU and
+                only support result types available for a QPU.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for

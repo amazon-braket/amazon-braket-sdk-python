@@ -70,6 +70,8 @@ class AwsQuantumTask(QuantumTask):
 
             shots (int): The number of times to run the task on the device. If the device is a
                 simulator, this implies the state is sampled N times, where N = `shots`.
+                `shots=0` is only available on simulators and means that the simulator
+                will compute the exact results based on the task specification.
 
             backend_parameters (Dict[str, Any]): Additional parameters to send to the device.
                 For example, for D-Wave:
@@ -83,6 +85,10 @@ class AwsQuantumTask(QuantumTask):
                 - `task_specification`
                 - `s3_destination_folder`
                 - `shots`
+
+        See Also:
+            `braket.aws.aws_quantum_simulator.AwsQuantumSimulator.run()`
+            `braket.aws.aws_qpu.AwsQpu.run()`
         """
         if len(s3_destination_folder) != 2:
             raise ValueError(
