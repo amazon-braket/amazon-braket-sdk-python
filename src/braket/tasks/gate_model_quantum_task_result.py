@@ -37,7 +37,11 @@ class GateModelQuantumTaskResult:
         values (List[Any], optional): The values for result types requested in the circuit.
             Default is None. Currently only available when shots = 0. TODO: update
         measurements (numpy.ndarray, optional): 2d array - row is shot, column is qubit.
-            Default is None. Only available when shots > 0.
+            Default is None. Only available when shots > 0. The qubits in `measurements`
+            are the ones in `GateModelQuantumTaskResult.measured_qubits`.
+        measured_qubits (List[int], optional): The indices of the measured qubits. Default
+            is None. Only available when shots > 0. Indicates which qubits are in
+            `measurements`.
         measurement_counts (Counter, optional): A Counter of measurements. Key is the measurements
             in a big endian binary string. Value is the number of times that measurement occurred.
             Default is None. Only available when shots > 0.
@@ -62,6 +66,7 @@ class GateModelQuantumTaskResult:
     result_types: List[Dict[str, str]] = None
     values: List[Any] = None
     measurements: np.ndarray = None
+    measured_qubits: List[int] = None
     measurement_counts: Counter = None
     measurement_probabilities: Dict[str, float] = None
     measurements_copied_from_device: bool = None
@@ -220,6 +225,7 @@ class GateModelQuantumTaskResult:
     @classmethod
     def _from_dict_internal_computational_basis_sampling(cls, result: Dict[str, Any]):
         task_metadata = result["TaskMetadata"]
+        measured_qubits = result.get("MeasuredQubits")
         if "Measurements" in result:
             measurements = np.asarray(result["Measurements"], dtype=int)
             m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
@@ -247,6 +253,7 @@ class GateModelQuantumTaskResult:
         return cls(
             task_metadata=task_metadata,
             measurements=measurements,
+            measured_qubits=measured_qubits,
             measurement_counts=m_counts,
             measurement_probabilities=m_probs,
             measurements_copied_from_device=measurements_copied_from_device,

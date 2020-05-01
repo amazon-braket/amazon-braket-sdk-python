@@ -26,6 +26,7 @@ from braket.tasks import GateModelQuantumTaskResult
 def result_dict_1():
     return {
         "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
+        "MeasuredQubits": [0, 1],
         "TaskMetadata": {
             "Id": "UUID_blah_1",
             "Status": "COMPLETED",
@@ -46,6 +47,7 @@ def result_str_2():
     return json.dumps(
         {
             "Measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+            "MeasuredQubits": [0, 1],
             "TaskMetadata": {
                 "Id": "UUID_blah_2",
                 "Status": "COMPLETED",
@@ -73,6 +75,7 @@ def result_str_3():
                 "Ir": json.dumps({"results": []}),
             },
             "MeasurementProbabilities": {"011000": 0.9999999999999982},
+            "MeasuredQubits": list(range(6)),
         }
     )
 
@@ -196,6 +199,7 @@ def test_from_dict_measurements(result_dict_1):
     assert not task_result.measurement_counts_copied_from_device
     assert not task_result.measurement_probabilities_copied_from_device
     assert task_result.measurements_copied_from_device
+    assert task_result.measured_qubits == result_dict_1["MeasuredQubits"]
 
 
 def test_from_dict_measurement_probabilities(result_str_3):
@@ -211,6 +215,7 @@ def test_from_dict_measurement_probabilities(result_str_3):
     assert not task_result.measurement_counts_copied_from_device
     assert task_result.measurement_probabilities_copied_from_device
     assert not task_result.measurements_copied_from_device
+    assert task_result.measured_qubits == result_obj["MeasuredQubits"]
 
 
 def test_from_string_measurements(result_str_1):
@@ -222,6 +227,7 @@ def test_from_string_measurements(result_str_1):
     assert not task_result.measurement_counts_copied_from_device
     assert not task_result.measurement_probabilities_copied_from_device
     assert task_result.measurements_copied_from_device
+    assert task_result.measured_qubits == result_obj["MeasuredQubits"]
 
 
 def test_from_string_measurement_probabilities(result_str_3):
