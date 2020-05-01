@@ -34,7 +34,10 @@ To add a new result type:
 
 
 class StateVector(ResultType):
-    """The full state vector as a requested result type."""
+    """
+    The full state vector as a requested result type.
+    This is only available when `shots=0` for simulators.
+    """
 
     def __init__(self):
         super().__init__(ascii_symbol=["StateVector"])
@@ -68,7 +71,10 @@ ResultType.register_result_type(StateVector)
 
 
 class Amplitude(ResultType):
-    """The amplitude of specified quantum states as a requested result type."""
+    """
+    The amplitude of specified quantum states as a requested result type.
+    This is only available when `shots=0` for simulators.
+    """
 
     def __init__(self, state: List[str]):
         """
@@ -129,10 +135,14 @@ ResultType.register_result_type(Amplitude)
 
 
 class Probability(ResultType):
-    """Probability as the requested result type.
+    """Probability in the computational basis as the requested result type.
 
     It can be the probability of all states if no targets are specified or the marginal probability
-    of a restricted set of states if only a subset of all qubits are specified as target."""
+    of a restricted set of states if only a subset of all qubits are specified as target.
+
+    For `shots>0`, this is calculated by measurements. For `shots=0`, this is supported
+    only by simulators and represents the exact result.
+    """
 
     def __init__(self, target: QubitSetInput = None):
         """
@@ -260,6 +270,9 @@ class Expectation(ObservableResultType):
     will be applied to all qubits in parallel. Otherwise, the number of specified targets
     must be equivalent to the number of qubits the observable can be applied to.
 
+    For `shots>0`, this is calculated by measurements. For `shots=0`, this is supported
+    only by simulators and represents the exact result.
+
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
@@ -321,6 +334,8 @@ class Sample(ObservableResultType):
     will be applied to all qubits in parallel. Otherwise, the number of specified targets
     must be equivalent to the number of qubits the observable can be applied to.
 
+    This is only available for `shots>0`.
+
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
@@ -381,6 +396,9 @@ class Variance(ObservableResultType):
     If no targets are specified, the observable must only operate on 1 qubit and it
     will be applied to all qubits in parallel. Otherwise, the number of specified targets
     must be equivalent to the number of qubits the observable can be applied to.
+
+    For `shots>0`, this is calculated by measurements. For `shots=0`, this is supported
+    only by simulators and represents the exact result.
 
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """

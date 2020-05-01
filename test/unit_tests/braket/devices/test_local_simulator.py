@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import json
 from typing import Any, Dict, Optional
 from unittest.mock import Mock
 
@@ -23,14 +24,13 @@ from braket.devices.braket_simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 GATE_MODEL_RESULT = {
-    "StateVector": {
-        "00": complex(0.2, 0.2),
-        "01": complex(0.3, 0.1),
-        "10": complex(0.1, 0.3),
-        "11": complex(0.2, 0.2),
-    },
     "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED"},
+    "TaskMetadata": {
+        "Id": "UUID_blah_1",
+        "Status": "COMPLETED",
+        "Shots": 1000,
+        "Ir": json.dumps({"results": []}),
+    },
 }
 
 ANNEALING_RESULT = {
@@ -40,7 +40,7 @@ ANNEALING_RESULT = {
     "SolutionCounts": None,
     "ProblemType": "ising",
     "Foo": {"Bar": "Baz"},
-    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED", "Shots": 5,},
+    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED", "Shots": 5},
 }
 
 
@@ -82,6 +82,13 @@ def test_run_gate_model():
     dummy.assert_shots(10)
     dummy.assert_qubits(2)
     assert task.result() == GateModelQuantumTaskResult.from_dict(GATE_MODEL_RESULT)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_run_gate_model_value_error():
+    dummy = DummyCircuitSimulator()
+    sim = LocalSimulator(dummy)
+    sim.run(Circuit().h(0).cnot(0, 1))
 
 
 def test_run_annealing():

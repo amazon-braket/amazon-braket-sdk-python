@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -31,7 +31,7 @@ class AwsQuantumSimulator(Device):
         """
         Args:
             arn (str): The ARN of the simulator, for example,
-            "arn:aws:aqx:::quantum-simulator:aqx:qs1".
+                "arn:aws:aqx:::quantum-simulator:aqx:qs1".
             aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
         """
         super().__init__(name=None, status=None, status_reason=None)
@@ -44,7 +44,7 @@ class AwsQuantumSimulator(Device):
         self,
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: Optional[int] = None,
+        shots: int = 0,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -55,7 +55,13 @@ class AwsQuantumSimulator(Device):
             task_specification (Union[Circuit, Problem]):  Specification of task
                 (circuit or annealing problem) to run on device.
             s3_destination_folder: The S3 location to save the task's results
-            shots (Optional[int]): The number of times to run the circuit or annealing problem
+            shots (int, optional): The number of times to run the circuit or annealing problem.
+                Default is 0.
+                For circuits, when `shots=0`, the simulator will support simulator-only
+                result types, compute the exact results based on the task specification,
+                and sampling is not supported.
+                `shots>0` means that the simulator will be treated like a QPU and
+                only support result types available for a QPU.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for

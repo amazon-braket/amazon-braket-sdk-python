@@ -237,34 +237,14 @@ def test_timeout_no_result_terminal_state(aws_session):
 
 @pytest.mark.xfail(raises=ValueError)
 def test_create_invalid_s3_folder(aws_session, arn, circuit):
-    AwsQuantumTask.create(aws_session, arn, circuit, ("bucket",))
+    AwsQuantumTask.create(aws_session, arn, circuit, ("bucket",), 1000)
 
 
 @pytest.mark.xfail(raises=TypeError)
-def test_create_invalid_task_specification(aws_session, arn, circuit):
+def test_create_invalid_task_specification(aws_session, arn):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
-    AwsQuantumTask.create(aws_session, arn, "foo", S3_TARGET)
-
-
-def test_from_circuit_default_shots(aws_session, arn, circuit):
-    mocked_task_arn = "task-arn-1"
-    aws_session.create_quantum_task.return_value = mocked_task_arn
-
-    task = AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET)
-    assert task == AwsQuantumTask(
-        mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
-    )
-
-    _assert_create_quantum_task_called_with(
-        aws_session,
-        arn,
-        circuit,
-        AwsQuantumTask.GATE_IR_TYPE,
-        S3_TARGET,
-        AwsQuantumTask.DEFAULT_SHOTS,
-        {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
-    )
+    AwsQuantumTask.create(aws_session, arn, "foo", S3_TARGET, 1000)
 
 
 def test_from_circuit_with_shots(aws_session, arn, circuit):
@@ -272,7 +252,7 @@ def test_from_circuit_with_shots(aws_session, arn, circuit):
     aws_session.create_quantum_task.return_value = mocked_task_arn
     shots = 53
 
-    task = AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, shots=shots)
+    task = AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, shots)
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
     )
@@ -288,6 +268,13 @@ def test_from_circuit_with_shots(aws_session, arn, circuit):
     )
 
 
+@pytest.mark.xfail(raises=ValueError)
+def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
+    mocked_task_arn = "task-arn-1"
+    aws_session.create_quantum_task.return_value = mocked_task_arn
+    AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, 0)
+
+
 def test_from_annealing(aws_session, arn, problem):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
@@ -297,6 +284,7 @@ def test_from_annealing(aws_session, arn, problem):
         arn,
         problem,
         S3_TARGET,
+        1000,
         backend_parameters={"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}},
     )
     assert task == AwsQuantumTask(
@@ -309,7 +297,7 @@ def test_from_annealing(aws_session, arn, problem):
         problem,
         AwsQuantumTask.ANNEALING_IR_TYPE,
         S3_TARGET,
-        AwsQuantumTask.DEFAULT_SHOTS,
+        1000,
         {"annealingModelParameters": {"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}},
     )
 
