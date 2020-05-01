@@ -22,18 +22,15 @@ def test_validate_circuit_and_shots_0_no_results():
 
 
 def test_validate_circuit_and_shots_100_no_results():
-    validate_circuit_and_shots(Circuit().h(0), 100)
-    assert 1
+    assert validate_circuit_and_shots(Circuit().h(0), 100) is None
 
 
 def test_validate_circuit_and_shots_0_results():
-    validate_circuit_and_shots(Circuit().h(0).state_vector(), 0)
-    assert 1
+    assert validate_circuit_and_shots(Circuit().h(0).state_vector(), 0) is None
 
 
 def test_validate_circuit_and_shots_100_results():
-    validate_circuit_and_shots(Circuit().h(0).probability(), 100)
-    assert 1
+    assert validate_circuit_and_shots(Circuit().h(0).probability(), 100) is None
 
 
 @pytest.mark.xfail(raises=ValueError)
