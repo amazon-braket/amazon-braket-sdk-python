@@ -11,16 +11,25 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import math
+
 import numpy as np
 import pytest
 from braket.circuits import Gate, Observable
+from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 
 testdata = [
-    (Observable.I(), Gate.I(), ["i"]),
-    (Observable.X(), Gate.X(), ["x"]),
-    (Observable.Y(), Gate.Y(), ["y"]),
-    (Observable.Z(), Gate.Z(), ["z"]),
-    (Observable.H(), Gate.H(), ["h"]),
+    (Observable.I(), Gate.I(), ["i"], (), np.array([1, 1])),
+    (Observable.X(), Gate.X(), ["x"], tuple([Gate.H()]), get_pauli_eigenvalues(1)),
+    (
+        Observable.Y(),
+        Gate.Y(),
+        ["y"],
+        tuple([Gate.Z(), Gate.S(), Gate.H()]),
+        get_pauli_eigenvalues(1),
+    ),
+    (Observable.Z(), Gate.Z(), ["z"], (), get_pauli_eigenvalues(1)),
+    (Observable.H(), Gate.H(), ["h"], tuple([Gate.Ry(-math.pi / 4)]), get_pauli_eigenvalues(1)),
 ]
 
 invalid_hermitian_matrices = [
@@ -34,18 +43,24 @@ invalid_hermitian_matrices = [
 ]
 
 
-@pytest.mark.parametrize("testobject,gateobject,expected_ir", testdata)
-def test_to_ir(testobject, gateobject, expected_ir):
+@pytest.mark.parametrize(
+    "testobject,gateobject,expected_ir,basis_rotation_gates,eigenvalues", testdata
+)
+def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenvalues):
     expected = expected_ir
     actual = testobject.to_ir()
     assert actual == expected
 
 
-@pytest.mark.parametrize("testobject,gateobject,expected_ir", testdata)
-def test_gate_equality(testobject, gateobject, expected_ir):
+@pytest.mark.parametrize(
+    "testobject,gateobject,expected_ir,basis_rotation_gates,eigenvalues", testdata
+)
+def test_gate_equality(testobject, gateobject, expected_ir, basis_rotation_gates, eigenvalues):
     assert testobject.qubit_count == gateobject.qubit_count
     assert testobject.ascii_symbols == gateobject.ascii_symbols
     assert testobject.matrix_equivalence(gateobject)
+    assert testobject.basis_rotation_gates == basis_rotation_gates
+    assert np.allclose(testobject.eigenvalues, eigenvalues)
 
 
 # Hermitian
@@ -72,6 +87,51 @@ def test_hermitian_to_ir():
     matrix = Observable.I().to_matrix()
     obs = Observable.Hermitian(matrix=matrix)
     assert obs.to_ir() == [[[[1, 0], [0, 0]], [[0, 0], [1, 0]]]]
+
+
+@pytest.mark.parametrize(
+    "matrix,eigenvalues",
+    [
+        (np.array([[1.0, 0.0], [0.0, 1.0]]), np.array([1, 1])),
+        (np.array([[0, -1j], [1j, 0]]), np.array([-1.0, 1.0])),
+        (np.array([[1, 1 - 1j], [1 + 1j, -1]]), np.array([-np.sqrt(3), np.sqrt(3)])),
+    ],
+)
+def test_hermitian_eigenvalues(matrix, eigenvalues):
+    assert np.allclose(Observable.Hermitian(matrix=matrix).eigenvalues, eigenvalues)
+
+
+@pytest.mark.parametrize(
+    "matrix,basis_rotation_matrix",
+    [
+        (
+            np.array([[1.0, 0.0], [0.0, 1.0]]),
+            np.array([[-0.70710678, 0.70710678], [0.70710678, 0.70710678]]).conj().T,
+        ),
+        (
+            np.array([[0, -1j], [1j, 0]]),
+            np.array(
+                [[-0.70710678 + 0.0j, -0.70710678 + 0.0j], [0.0 + 0.70710678j, 0.0 - 0.70710678j]]
+            )
+            .conj()
+            .T,
+        ),
+        (
+            np.array([[1, 1 - 1j], [1 + 1j, -1]]),
+            np.array(
+                [
+                    [-0.45970084 - 0.0j, 0.62796303 - 0.62796303j],
+                    [-0.88807383 - 0.0j, -0.32505758 + 0.32505758j],
+                ]
+            ),
+        ),
+    ],
+)
+def test_hermitian_basis_rotation_gates(matrix, basis_rotation_matrix):
+    expected_unitary = Gate.Unitary(matrix=basis_rotation_matrix)
+    actual_rotation_gates = Observable.Hermitian(matrix=matrix).basis_rotation_gates
+    assert actual_rotation_gates == tuple([expected_unitary])
+    assert expected_unitary.matrix_equivalence(actual_rotation_gates)
 
 
 # TensorProduct
@@ -121,3 +181,34 @@ def test_tensor_product_rmatmul_observable():
 @pytest.mark.xfail(raises=ValueError)
 def test_tensor_product_rmatmul_value_error():
     "a" @ Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
+
+
+@pytest.mark.parametrize(
+    "observable,eigenvalues",
+    [
+        (Observable.X() @ Observable.Y(), np.array([1, -1, -1, 1])),
+        (Observable.X() @ Observable.Y() @ Observable.Z(), np.array([1, -1, -1, 1, -1, 1, 1, -1])),
+        (Observable.X() @ Observable.Y() @ Observable.I(), np.array([1, 1, -1, -1, -1, -1, 1, 1])),
+    ],
+)
+def test_tensor_product_eigenvalues(observable, eigenvalues):
+    assert np.allclose(observable.eigenvalues, eigenvalues)
+
+
+@pytest.mark.parametrize(
+    "observable,basis_rotation_gates",
+    [
+        (Observable.X() @ Observable.Y(), tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()])),
+        (
+            Observable.X() @ Observable.Y() @ Observable.Z(),
+            tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()]),
+        ),
+        (
+            Observable.X() @ Observable.Y() @ Observable.I(),
+            tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()]),
+        ),
+        (Observable.X() @ Observable.H(), tuple([Gate.H(), Gate.Ry(-np.pi / 4)])),
+    ],
+)
+def test_tensor_product_basis_rotation_gates(observable, basis_rotation_gates):
+    assert observable.basis_rotation_gates == basis_rotation_gates

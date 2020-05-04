@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import pytest
-from braket.circuits import ResultType
+from braket.circuits import Observable, ObservableResultType, ResultType
 
 
 @pytest.fixture
@@ -113,3 +113,37 @@ def test_copy_with_target(sv):
 @pytest.mark.xfail(raises=TypeError)
 def test_copy_with_target_and_mapping(prob):
     prob.copy(target=[10], target_mapping={0: 10})
+
+
+# ObservableResultType
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_expectation_init_value_error_target():
+    ObservableResultType(ascii_symbol="Obs", observable=Observable.X() @ Observable.Y(), target=[])
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_obs_rt_init_value_error_qubit_count():
+    ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=[0, 1])
+
+
+def test_obs_rt_equality():
+    a1 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
+    a2 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
+    a3 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=1)
+    a4 = "hi"
+    assert a1 == a2
+    assert a1 != a3
+    assert a1 != a4
+    assert ResultType.Variance(observable=Observable.Y(), target=0) != ResultType.Expectation(
+        observable=Observable.Y(), target=0
+    )
+
+
+def test_obs_rt_repr():
+    a1 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
+    assert (
+        str(a1)
+        == f"ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
+    )

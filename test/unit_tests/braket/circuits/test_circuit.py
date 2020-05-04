@@ -14,6 +14,7 @@
 from unittest.mock import Mock
 
 import braket.ir.jaqcd as jaqcd
+import numpy as np
 import pytest
 from braket.circuits import (
     AsciiCircuitDiagram,
@@ -21,6 +22,7 @@ from braket.circuits import (
     Gate,
     Instruction,
     Moments,
+    Observable,
     QubitSet,
     ResultType,
     circuit,
@@ -119,6 +121,51 @@ def test_add_result_type_already_exists():
     expected = [ResultType.StateVector()]
     circ = Circuit(expected).add_result_type(expected[0])
     assert list(circ.result_types) == expected
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_add_result_type_observable_conflict_target():
+    circ = Circuit().add_result_type(ResultType.Probability([0, 1]))
+    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=0))
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_add_result_type_observable_conflict_all():
+    circ = Circuit().add_result_type(ResultType.Probability())
+    circ.add_result_type(ResultType.Expectation(observable=Observable.Y()))
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_add_result_type_observable_conflict_all_target():
+    circ = Circuit().add_result_type(ResultType.Probability())
+    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[0, 1]))
+
+
+def test_add_result_type_observable_no_conflict_all_target():
+    expected = [
+        ResultType.Probability(),
+        ResultType.Expectation(observable=Observable.Z(), target=[0]),
+    ]
+    circ = Circuit(expected)
+    assert circ.result_types == expected
+
+
+def test_add_result_type_observable_no_conflict_all():
+    expected = [
+        ResultType.Variance(observable=Observable.Y()),
+        ResultType.Expectation(observable=Observable.Y()),
+    ]
+    circ = Circuit(expected)
+    assert circ.result_types == expected
+
+
+def test_add_result_type_observable_no_conflict_state_vector_obs_return_value():
+    expected = [
+        ResultType.StateVector(),
+        ResultType.Expectation(observable=Observable.Y()),
+    ]
+    circ = Circuit(expected)
+    assert circ.result_types == expected
 
 
 @pytest.mark.xfail(raises=TypeError)
@@ -316,7 +363,9 @@ def test_subroutine_nested():
 
 def test_ir_empty_instructions_result_types():
     circ = Circuit()
-    assert circ.to_ir() == jaqcd.Program(instructions=[], results=[])
+    assert circ.to_ir() == jaqcd.Program(
+        instructions=[], results=[], basis_rotation_instructions=[]
+    )
 
 
 def test_ir_non_empty_instructions_result_types():
@@ -324,8 +373,46 @@ def test_ir_non_empty_instructions_result_types():
     expected = jaqcd.Program(
         instructions=[jaqcd.H(target=0), jaqcd.CNot(control=0, target=1)],
         results=[jaqcd.Probability(targets=[0, 1])],
+        basis_rotation_instructions=[],
     )
     assert circ.to_ir() == expected
+
+
+def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
+    circ = Circuit().h(0).cnot(0, 1).sample(observable=Observable.X(), target=[0])
+    expected = jaqcd.Program(
+        instructions=[jaqcd.H(target=0), jaqcd.CNot(control=0, target=1)],
+        results=[jaqcd.Sample(observable=["x"], targets=[0])],
+        basis_rotation_instructions=[jaqcd.H(target=0)],
+    )
+    assert circ.to_ir() == expected
+
+
+def test_basis_rotation_instructions_all():
+    circ = Circuit().h(0).cnot(0, 1).sample(observable=Observable.X())
+    expected = [
+        Instruction(Gate.H(), 0),
+        Instruction(Gate.H(), 1),
+    ]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_target():
+    circ = Circuit().h(0).cnot(0, 1).expectation(observable=Observable.X(), target=0)
+    expected = [Instruction(Gate.H(), 0)]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.X(), target=0)
+        .sample(observable=Observable.H(), target=1)
+    )
+    expected = [Instruction(Gate.H(), 0), Instruction(Gate.Ry(-np.pi / 4), 1)]
+    assert circ.basis_rotation_instructions == expected
 
 
 def test_depth_getter(h):

@@ -12,9 +12,12 @@
 # language governing permissions and limitations under the License.
 from __future__ import annotations
 
-from typing import List, Sequence, Union
+from typing import List, Sequence, Tuple, Union
 
+import numpy as np
+from braket.circuits.gate import Gate
 from braket.circuits.quantum_operator import QuantumOperator
+from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 
 
 class Observable(QuantumOperator):
@@ -33,8 +36,18 @@ class Observable(QuantumOperator):
             representation for the observable"""
         raise NotImplementedError
 
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        """Tuple[Gate]: Returns the basis rotation gates for this observable."""
+        raise NotImplementedError
+
+    @property
+    def eigenvalues(self) -> np.ndarray:
+        """np.ndarray: Returns the eigenvalues for this observable."""
+        raise NotImplementedError
+
     @classmethod
-    def register_observable(cls, observable: Observable):
+    def register_observable(cls, observable: Observable) -> None:
         """Register an observable implementation by adding it into the Observable class.
 
         Args:
@@ -58,3 +71,17 @@ class Observable(QuantumOperator):
         if isinstance(other, Observable):
             return self.name == other.name
         return NotImplemented
+
+
+class StandardObservable(Observable):
+    """
+    Class `StandardObservable` to represent a standard quantum observable with
+    Pauli eigenvalues.
+    """
+
+    def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+    @property
+    def eigenvalues(self) -> np.ndarray:
+        return get_pauli_eigenvalues(self.qubit_count)
