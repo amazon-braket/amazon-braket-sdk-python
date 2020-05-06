@@ -43,7 +43,7 @@ class Observable(QuantumOperator):
 
     @property
     def eigenvalues(self) -> np.ndarray:
-        """np.ndarray: Returns the eigenvalues for this observable."""
+        """np.ndarray: Returns the eigenvalues of this observable."""
         raise NotImplementedError
 
     @classmethod
@@ -76,7 +76,7 @@ class Observable(QuantumOperator):
 class StandardObservable(Observable):
     """
     Class `StandardObservable` to represent a standard quantum observable with
-    Pauli eigenvalues.
+    eigenvalues of +/-1, each with a multiplicity of 1.
     """
 
     def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
