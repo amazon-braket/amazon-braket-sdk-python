@@ -13,14 +13,15 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, TypeVar
+from typing import Callable, Dict, Iterable, List, TypeVar, Union
 
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
+from braket.circuits.observable import Observable
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
-from braket.circuits.result_type import ResultType
+from braket.circuits.result_type import ObservableResultType, ResultType
 from braket.ir.jaqcd import Program
 
 SubroutineReturn = TypeVar(
@@ -44,6 +45,8 @@ class Circuit:
     `AddableTypes` are `Instruction`, iterable of `Instruction`, `ResultType`,
     iterable of `ResultType`, or `SubroutineCallable`
     """
+
+    _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
@@ -106,7 +109,8 @@ class Circuit:
 
         """
         self._moments: Moments = Moments()
-        self._result_types: Iterable[ResultType] = []
+        self._result_types: List[ResultType] = []
+        self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -125,6 +129,28 @@ class Circuit:
     def result_types(self) -> List[ResultType]:
         """List[ResultType]: Get a list of requested result types in the circuit."""
         return self._result_types
+
+    @property
+    def basis_rotation_instructions(self) -> List[Instruction]:
+        """List[Instruction]: Get a list of basis rotation instructions in the circuit.
+        These basis rotation instructions are added if result types are requested for
+        an observable other than Pauli-Z.
+        """
+        # Note that basis_rotation_instructions can change each time a new instruction
+        # is added to the circuit because `self._moments.qubits` would change
+        basis_rotation_instructions = []
+        observable_return_types = filter(
+            lambda x: isinstance(x, ObservableResultType), self._result_types
+        )
+        for target, observable in [(obs.target, obs.observable) for obs in observable_return_types]:
+            for gate in observable.basis_rotation_gates:
+                if not target:
+                    basis_rotation_instructions.extend(
+                        [Instruction(gate, target) for target in self._moments.qubits]
+                    )
+                else:
+                    basis_rotation_instructions.append(Instruction(gate, target))
+        return basis_rotation_instructions
 
     @property
     def moments(self) -> Moments:
@@ -169,6 +195,9 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If the observable specified for a qubit is different from what is
+                specified by the result types already added to the circuit. Only one observable
+                is allowed for a qubit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])
@@ -205,9 +234,27 @@ class Circuit:
             result_type_to_add = result_type.copy(target=target)
 
         if result_type_to_add not in self._result_types:
+            self._add_to_qubit_observable_mapping(result_type)
             self._result_types.append(result_type_to_add)
-
         return self
+
+    def _add_to_qubit_observable_mapping(self, result_type: ResultType) -> None:
+        if isinstance(result_type, ResultType.Probability):
+            observable = Observable.Z()  # computational basis
+        elif isinstance(result_type, ObservableResultType):
+            observable = result_type.observable
+        else:
+            return
+        targets = result_type.target if result_type.target else [Circuit._ALL_QUBITS]
+        all_qubits_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
+        for target in targets:
+            current_observable = all_qubits_observable or self._qubit_observable_mapping.get(target)
+            if current_observable and current_observable != observable:
+                raise ValueError(
+                    f"Existing result type for observable {current_observable} for target {target}"
+                    + f"conflicts with observable {observable} for new result type"
+                )
+            self._qubit_observable_mapping[target] = observable
 
     def add_instruction(
         self,
@@ -433,7 +480,14 @@ class Circuit:
         """
         ir_instructions = [instr.to_ir() for instr in self.instructions]
         ir_results = [result_type.to_ir() for result_type in self.result_types]
-        return Program.construct(instructions=ir_instructions, results=ir_results)
+        ir_basis_rotation_instructions = [
+            instr.to_ir() for instr in self.basis_rotation_instructions
+        ]
+        return Program.construct(
+            instructions=ir_instructions,
+            results=ir_results,
+            basis_rotation_instructions=ir_basis_rotation_instructions,
+        )
 
     def _copy(self) -> Circuit:
         """

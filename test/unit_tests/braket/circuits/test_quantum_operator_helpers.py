@@ -1,6 +1,10 @@
+import functools
+import itertools
+
 import numpy as np
 import pytest
 from braket.circuits.quantum_operator_helpers import (
+    get_pauli_eigenvalues,
     is_hermitian,
     is_square_matrix,
     is_unitary,
@@ -23,6 +27,17 @@ invalid_unitary_matrices_false = [(np.array([[0, 1], [1, 1]])), (np.array([[1, 2
 invalid_hermitian_matrices_false = [(np.array([[1, 0], [0, 1j]])), (np.array([[1, 2], [3, 4]]))]
 
 invalid_matrix_type_error = np.array([[0, 1], ["a", 0]])
+
+x_matrix = np.array([[0, 1], [1, 0]])
+y_matrix = np.array([[0, -1j], [1j, 0]])
+z_matrix = np.array([[1, 0], [0, -1]])
+h_matrix = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
+
+standard_observables = [x_matrix, y_matrix, z_matrix, h_matrix]
+
+matrix_pairs = [
+    np.kron(x, y) for x, y in list(itertools.product(standard_observables, standard_observables))
+]
 
 
 def test_verify_quantum_operator_matrix_dimensions():
@@ -65,3 +80,37 @@ def test_is_hermitian_exception():
 @pytest.mark.xfail(raises=Exception)
 def test_is_unitary_exception():
     is_unitary(invalid_matrix_type_error)
+
+
+@pytest.mark.parametrize("pauli", standard_observables)
+def test_get_pauli_eigenvalues_correct_eigenvalues_one_qubit(pauli):
+    """Test the get_pauli_eigenvalues function for one qubit"""
+    assert np.array_equal(get_pauli_eigenvalues(1), np.diag(z_matrix))
+
+
+@pytest.mark.parametrize("pauli_product", matrix_pairs)
+def test_get_pauli_eigenvalues_correct_eigenvalues_two_qubits(pauli_product):
+    """Test the get_pauli_eigenvalues function for two qubits"""
+    assert np.array_equal(get_pauli_eigenvalues(2), np.diag(np.kron(z_matrix, z_matrix)))
+
+
+@pytest.mark.parametrize("pauli_product", matrix_pairs)
+def test_get_pauli_eigenvalues_correct_eigenvalues_three_qubits(pauli_product):
+    """Test the get_pauli_eigenvalues function for three qubits"""
+    assert np.array_equal(
+        get_pauli_eigenvalues(3), np.diag(np.kron(z_matrix, np.kron(z_matrix, z_matrix))),
+    )
+
+
+@pytest.mark.parametrize("depth", list(range(1, 6)))
+def test_get_pauli_eigenvalues_cache_usage(depth):
+    """Test that the right number of cachings have been executed after clearing the cache"""
+    get_pauli_eigenvalues.cache_clear()
+    get_pauli_eigenvalues(depth)
+    assert functools._CacheInfo(depth - 1, depth, 128, depth) == get_pauli_eigenvalues.cache_info()
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("num_qubits", [1, 2])
+def test_get_pauli_eigenvalues_immutable(num_qubits):
+    get_pauli_eigenvalues(num_qubits)[0] = 100

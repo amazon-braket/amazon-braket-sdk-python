@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from functools import lru_cache
+
 import numpy as np
 
 
@@ -72,3 +74,26 @@ def is_unitary(matrix: np.array) -> bool:
         bool: If matrix is unitary
     """
     return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
+
+
+@lru_cache()
+def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
+    """
+    Get the eigenvalues of Pauli operators and their tensor products as
+    an immutable Numpy array.
+
+    Args:
+        num_qubits (int): the number of qubits the operator acts on
+
+    Returns:
+        np.ndarray: the eigenvalues of a Pauli product operator of the given size
+    """
+    if num_qubits == 1:
+        eigs = np.array([1, -1])
+        eigs.setflags(write=False)
+        return eigs
+    eigs = np.concatenate(
+        [get_pauli_eigenvalues(num_qubits - 1), -get_pauli_eigenvalues(num_qubits - 1)]
+    )
+    eigs.setflags(write=False)
+    return eigs

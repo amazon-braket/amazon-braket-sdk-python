@@ -11,13 +11,19 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import numpy as np
 import pytest
-from braket.circuits import Observable, QuantumOperator
+from braket.circuits import Observable, QuantumOperator, StandardObservable
 
 
 @pytest.fixture
 def observable():
     return Observable(qubit_count=1, ascii_symbols=["foo"])
+
+
+@pytest.fixture
+def standard_observable():
+    return StandardObservable(qubit_count=1, ascii_symbols=["foo"])
 
 
 def test_is_operator(observable):
@@ -78,6 +84,16 @@ def test_to_matrix_not_implemented_by_default(observable):
     observable.to_matrix(None)
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_basis_rotation_gates_not_implemented_by_default(observable):
+    observable.basis_rotation_gates
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_eigenvalues_not_implemented_by_default(observable):
+    observable.eigenvalues
+
+
 def test_str(observable):
     expected = "{}('qubit_count': {})".format(observable.name, observable.qubit_count)
     assert str(observable) == expected
@@ -115,3 +131,11 @@ def test_observable_equality():
     assert o1 == o2
     assert o1 != o3
     assert o1 != o4
+
+
+def test_standard_observable_subclass_of_observable(standard_observable):
+    assert isinstance(standard_observable, Observable)
+
+
+def test_standard_observable_eigenvalues(standard_observable):
+    assert np.allclose(standard_observable.eigenvalues, np.array([1, -1]))

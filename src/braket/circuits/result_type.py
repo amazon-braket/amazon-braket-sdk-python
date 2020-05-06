@@ -14,8 +14,9 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from braket.circuits.observable import Observable
 from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSetInput
+from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 
 class ResultType:
@@ -122,3 +123,66 @@ class ResultType:
 
     def __repr__(self) -> str:
         return f"{self.name}()"
+
+
+class ObservableResultType(ResultType):
+    """
+    Result types with observables and targets.
+    If no targets are specified, the observable must only operate on 1 qubit and it
+    will be applied to all qubits in parallel. Otherwise, the number of specified targets
+    must be equivalent to the number of qubits the observable can be applied to.
+
+    See :mod:`braket.circuits.observables` module for all of the supported observables.
+    """
+
+    def __init__(self, ascii_symbol: str, observable: Observable, target: QubitSetInput = None):
+        """
+        Args:
+            observable (Observable): the observable for the result type
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+                result type is requested for. Default is None, which means the observable must
+                only operate on 1 qubit and it will be applied to all qubits in parallel
+
+        Raises:
+            ValueError: If the observable's qubit count and the number of target qubits
+                are not equal. Or, if target=None and the observable's qubit count is not 1.
+        """
+        super().__init__(ascii_symbol)
+        self._observable = observable
+        self._target = QubitSet(target)
+        if not self._target:
+            if self._observable.qubit_count != 1:
+                raise ValueError(
+                    f"Observable {self._observable} must only operate on 1 qubit for target=None"
+                )
+        elif self._observable.qubit_count != len(self._target):
+            raise ValueError(
+                f"Observable's qubit count and the number of target qubits must be equal"
+            )
+
+    @property
+    def observable(self) -> Observable:
+        return self._observable
+
+    @property
+    def target(self) -> QubitSet:
+        return self._target
+
+    @target.setter
+    def target(self, target: QubitSetInput) -> None:
+        self._target = QubitSet(target)
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, ObservableResultType):
+            return (
+                self.name == other.name
+                and self.target == other.target
+                and self.observable == other.observable
+            )
+        return NotImplemented
+
+    def __repr__(self) -> str:
+        return f"{self.name}(observable={self.observable}, target={self.target})"
+
+    def __copy__(self) -> ObservableResultType:
+        return type(self)(observable=self.observable, target=self.target)

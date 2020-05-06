@@ -13,17 +13,21 @@
 from __future__ import annotations
 
 import functools
-from typing import List, Tuple
+import itertools
+import math
+from typing import Dict, List, Tuple
 
 import numpy as np
-from braket.circuits.observable import Observable
+from braket.circuits.gate import Gate
+from braket.circuits.observable import Observable, StandardObservable
 from braket.circuits.quantum_operator_helpers import (
+    get_pauli_eigenvalues,
     is_hermitian,
     verify_quantum_operator_matrix_dimensions,
 )
 
 
-class H(Observable):
+class H(StandardObservable):
     """Hadamard operation as an observable."""
 
     def __init__(self):
@@ -38,6 +42,10 @@ class H(Observable):
 
     def to_matrix(self) -> np.ndarray:
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
+
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        return tuple([Gate.Ry(-math.pi / 4)])
 
 
 Observable.register_observable(H)
@@ -59,11 +67,19 @@ class I(Observable):  # noqa: E742, E261
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
 
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        return ()
+
+    @property
+    def eigenvalues(self) -> np.ndarray:
+        return np.array([1, 1])
+
 
 Observable.register_observable(I)
 
 
-class X(Observable):
+class X(StandardObservable):
     """Pauli-X operation as an observable."""
 
     def __init__(self):
@@ -79,11 +95,15 @@ class X(Observable):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        return tuple([Gate.H()])
+
 
 Observable.register_observable(X)
 
 
-class Y(Observable):
+class Y(StandardObservable):
     """Pauli-Y operation as an observable."""
 
     def __init__(self):
@@ -99,11 +119,15 @@ class Y(Observable):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        return tuple([Gate.Z(), Gate.S(), Gate.H()])
+
 
 Observable.register_observable(Y)
 
 
-class Z(Observable):
+class Z(StandardObservable):
     """Pauli-Z operation as an observable."""
 
     def __init__(self):
@@ -118,6 +142,10 @@ class Z(Observable):
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
+
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        return ()
 
 
 Observable.register_observable(Z)
@@ -151,6 +179,7 @@ class TensorProduct(Observable):
         qubit_count = sum([obs.qubit_count for obs in observables])
         display_name = "@".join([obs.ascii_symbols[0] for obs in observables])
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+        self._eigenvalues = TensorProduct._compute_eigenvalues(self._observables, qubit_count)
 
     def to_ir(self) -> List[str]:
         ir = []
@@ -165,6 +194,17 @@ class TensorProduct(Observable):
 
     def to_matrix(self) -> np.ndarray:
         return functools.reduce(np.kron, [obs.to_matrix() for obs in self.observables])
+
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        gates = []
+        for obs in self.observables:
+            gates.extend(obs.basis_rotation_gates)
+        return tuple(gates)
+
+    @property
+    def eigenvalues(self):
+        return self._eigenvalues
 
     def __matmul__(self, other):
         if isinstance(other, TensorProduct):
@@ -187,12 +227,36 @@ class TensorProduct(Observable):
     def __eq__(self, other):
         return self.matrix_equivalence(other)
 
+    @staticmethod
+    def _compute_eigenvalues(observables: Tuple[Observable], num_qubits: int) -> np.ndarray:
+        if False in [isinstance(observable, StandardObservable) for observable in observables]:
+            # Tensor product of observables contains a mixture
+            # of standard and non-standard observables
+            eigenvalues = np.array([1])
+            for k, g in itertools.groupby(observables, lambda x: isinstance(x, StandardObservable)):
+                if k:
+                    # Subgroup g contains only standard observables.
+                    eigenvalues = np.kron(eigenvalues, get_pauli_eigenvalues(len(list(g))))
+                else:
+                    # Subgroup g contains only non-standard observables.
+                    for nonstandard in g:
+                        # loop through all non-standard observables
+                        eigenvalues = np.kron(eigenvalues, nonstandard.eigenvalues)
+        else:
+            eigenvalues = get_pauli_eigenvalues(num_qubits=num_qubits)
+
+        eigenvalues.setflags(write=False)
+        return eigenvalues
+
 
 Observable.register_observable(TensorProduct)
 
 
 class Hermitian(Observable):
     """Hermitian matrix as an observable."""
+
+    # Cache of eigenpairs
+    _eigenpairs = {}
 
     def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
         """
@@ -228,6 +292,40 @@ class Hermitian(Observable):
 
     def __eq__(self, other) -> bool:
         return self.matrix_equivalence(other)
+
+    @property
+    def basis_rotation_gates(self) -> Tuple[Gate]:
+        return tuple([Gate.Unitary(matrix=self._get_eigendecomposition()["eigenvectors_conj_t"])])
+
+    @property
+    def eigenvalues(self):
+        return self._get_eigendecomposition()["eigenvalues"]
+
+    def _get_eigendecomposition(self) -> Dict[str, np.ndarray]:
+        """
+        Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
+        The eigendecomposition is cached so that if another Hermitian observable
+        is created with the same matrix, the eigendecomposition doesn't have to
+        be recalculated.
+
+        Returns:
+            Dict[str, np.ndarray]: The keys are "eigenvectors_conj_t", mapping to the
+            conjugate transpose of a matrix whose columns are the eigenvectors of the matrix,
+            and "eigenvalues", a list of associated eigenvalues in the order of their
+            corresponding eigenvectors in the "eigenvectors" matrix. These cached values
+            are immutable.
+        """
+        mat_key = tuple(self._matrix.flatten().tolist())
+        if mat_key not in Hermitian._eigenpairs:
+            eigenvalues, eigenvectors = np.linalg.eigh(self._matrix)
+            eigenvalues.setflags(write=False)
+            eigenvectors_conj_t = eigenvectors.conj().T
+            eigenvectors_conj_t.setflags(write=False)
+            Hermitian._eigenpairs[mat_key] = {
+                "eigenvectors_conj_t": eigenvectors_conj_t,
+                "eigenvalues": eigenvalues,
+            }
+        return Hermitian._eigenpairs[mat_key]
 
 
 Observable.register_observable(Hermitian)

@@ -141,37 +141,6 @@ def test_probability_equality():
     assert a1 != a4
 
 
-# ObservableResultType
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_expectation_init_value_error_target():
-    ObservableResultType(ascii_symbol="Obs", observable=Observable.X() @ Observable.Y(), target=[])
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_obs_rt_init_value_error_qubit_count():
-    ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=[0, 1])
-
-
-def test_obs_rt_equality():
-    a1 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
-    a2 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
-    a3 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=1)
-    a4 = "hi"
-    assert a1 == a2
-    assert a1 != a3
-    assert a1 != a4
-
-
-def test_obs_rt_repr():
-    a1 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
-    assert (
-        str(a1)
-        == f"ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
-    )
-
-
 # Expectation
 
 
