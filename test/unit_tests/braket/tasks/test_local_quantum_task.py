@@ -21,6 +21,7 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 RESULT = GateModelQuantumTaskResult.from_dict(
     {
         "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
+        "MeasuredQubits": [0, 1],
         "TaskMetadata": {
             "Id": str(uuid.uuid4()),
             "Status": "COMPLETED",

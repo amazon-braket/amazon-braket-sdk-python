@@ -15,7 +15,7 @@ from __future__ import annotations
 import functools
 import itertools
 import math
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from braket.circuits.gate import Gate
@@ -329,3 +329,42 @@ class Hermitian(Observable):
 
 
 Observable.register_observable(Hermitian)
+
+
+def observable_from_ir(ir_observable: List[Union[str, List[List[List[float]]]]]) -> Observable:
+    """
+    Create an observable from the IR observable list. This can be a tensor product of
+    observables or a single observable.
+
+    Args:
+        ir_observable (List[Union[str, List[List[List[float]]]]]): observable as defined in IR
+
+    Return:
+        Observable: observable object
+    """
+    if len(ir_observable) == 1:
+        return _observable_from_ir_list_item(ir_observable[0])
+    else:
+        observable = TensorProduct([_observable_from_ir_list_item(obs) for obs in ir_observable])
+        return observable
+
+
+def _observable_from_ir_list_item(observable: Union[str, List[List[List[float]]]]) -> Observable:
+    if observable == "i":
+        return I()
+    elif observable == "h":
+        return H()
+    elif observable == "x":
+        return X()
+    elif observable == "y":
+        return Y()
+    elif observable == "z":
+        return Z()
+    else:
+        try:
+            matrix = np.array(
+                [[complex(element[0], element[1]) for element in row] for row in observable]
+            )
+            return Hermitian(matrix)
+        except Exception as e:
+            raise ValueError(f"Invalid observable specified: {observable} error: {e}")
