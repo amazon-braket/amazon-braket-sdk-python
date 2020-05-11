@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.circuits import Observable, ResultType
+from braket.ir import jaqcd
 from braket.tasks import GateModelQuantumTaskResult
 
 
@@ -122,7 +123,52 @@ def result_str_4(result_dict_4):
 
 
 @pytest.fixture
-def malformatted_results():
+def result_dict_5():
+    return {
+        "TaskMetadata": {
+            "Id": "1231231",
+            "Shots": 100,
+            "GateModelConfig": {"QubitCount": 2},
+            "Ir": json.dumps(
+                {
+                    "results": [
+                        jaqcd.Probability(targets=[1]).dict(),
+                        jaqcd.Expectation(targets=None, observable=["z"]).dict(),
+                    ]
+                }
+            ),
+        },
+        "Measurements": [
+            [0, 0, 1, 0],
+            [1, 1, 1, 1],
+            [1, 0, 0, 1],
+            [0, 0, 1, 0],
+            [1, 1, 1, 1],
+            [0, 1, 1, 1],
+            [0, 0, 0, 1],
+            [0, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+        ],
+        "MeasuredQubits": [0, 1, 2, 3],
+    }
+
+
+@pytest.fixture
+def malformatted_results_1():
+    return {
+        "TaskMetadata": {
+            "Id": "UUID_blah_1",
+            "Status": "COMPLETED",
+            "BackendArn": AwsQpuArns.RIGETTI,
+            "Shots": 1000,
+            "Ir": json.dumps({"results": []}),
+        }
+    }
+
+
+@pytest.fixture
+def malformatted_results_2():
     return {
         "TaskMetadata": {
             "Id": "UUID_blah_1",
@@ -131,7 +177,39 @@ def malformatted_results():
             "Shots": 1000,
             "Ir": json.dumps({"results": []}),
         },
+        "MeasurementProbabilities": {"011000": 0.9999999999999982},
+        "MeasuredQubits": [0],
     }
+
+
+test_ir_results = [
+    (jaqcd.Probability(targets=[1]), np.array([0.6, 0.4])),
+    (jaqcd.Probability(targets=[1, 2]), np.array([0.4, 0.2, 0.0, 0.4])),
+    (
+        jaqcd.Probability(targets=None),
+        np.array([0.1, 0.2, 0.2, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2]),
+    ),
+    (jaqcd.Sample(targets=[1], observable=["z"]), np.array([1, -1, 1, 1, -1, -1, 1, -1, 1, 1])),
+    (
+        jaqcd.Sample(targets=[1, 2], observable=["x", "y"]),
+        np.array([-1, 1, 1, -1, 1, 1, 1, 1, 1, 1]),
+    ),
+    (
+        jaqcd.Sample(targets=None, observable=["z"]),
+        [
+            np.array([1, -1, -1, 1, -1, 1, 1, 1, 1, 1]),
+            np.array([1, -1, 1, 1, -1, -1, 1, -1, 1, 1]),
+            np.array([-1, -1, 1, -1, -1, -1, 1, -1, 1, 1]),
+            np.array([1, -1, -1, 1, -1, -1, -1, -1, 1, -1]),
+        ],
+    ),
+    (jaqcd.Expectation(targets=[1], observable=["z"]), 0.2),
+    (jaqcd.Expectation(targets=[1, 2], observable=["z", "y"]), 0.6),
+    (jaqcd.Expectation(targets=None, observable=["z"]), [0.4, 0.2, -0.2, -0.4]),
+    (jaqcd.Variance(targets=[1], observable=["z"]), 0.96),
+    (jaqcd.Variance(targets=[1, 2], observable=["z", "y"]), 0.64),
+    (jaqcd.Variance(targets=None, observable=["z"]), [0.84, 0.96, 0.96, 0.84]),
+]
 
 
 def test_measurement_counts_from_measurements():
@@ -181,6 +259,8 @@ def test_task_metadata():
     }
     result: GateModelQuantumTaskResult = GateModelQuantumTaskResult(
         measurements=None,
+        result_types=[],
+        values=[],
         task_metadata=task_metadata,
         measurement_counts=None,
         measurement_probabilities=None,
@@ -200,6 +280,23 @@ def test_from_dict_measurements(result_dict_1):
     assert not task_result.measurement_probabilities_copied_from_device
     assert task_result.measurements_copied_from_device
     assert task_result.measured_qubits == result_dict_1["MeasuredQubits"]
+    assert task_result.values == []
+    assert task_result.result_types == []
+
+
+def test_from_dict_result_types(result_dict_5):
+    task_result = GateModelQuantumTaskResult.from_dict(result_dict_5)
+    expected_measurements = np.asarray(result_dict_5["Measurements"], dtype=int)
+    assert task_result.task_metadata == result_dict_5["TaskMetadata"]
+    assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
+    assert task_result.measured_qubits == result_dict_5["MeasuredQubits"]
+    assert np.allclose(task_result.values[0], np.array([0.6, 0.4]))
+    assert task_result.values[1] == [0.4, 0.2, -0.2, -0.4]
+    assert task_result.result_types[0]["Type"] == jaqcd.Probability(targets=[1]).dict()
+    assert (
+        task_result.result_types[1]["Type"]
+        == jaqcd.Expectation(targets=None, observable=["z"]).dict()
+    )
 
 
 def test_from_dict_measurement_probabilities(result_str_3):
@@ -304,11 +401,53 @@ def test_get_value_by_result_type_value_error(result_dict_4):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_bad_dict(malformatted_results):
-    GateModelQuantumTaskResult.from_dict(malformatted_results)
+def test_bad_dict(malformatted_results_1):
+    GateModelQuantumTaskResult.from_dict(malformatted_results_1)
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_bad_string(malformatted_results):
-    results_string = json.dumps(malformatted_results)
+def test_bad_string(malformatted_results_1):
+    results_string = json.dumps(malformatted_results_1)
     GateModelQuantumTaskResult.from_string(results_string)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_measurements_measured_qubits_mismatch(malformatted_results_2):
+    results_string = json.dumps(malformatted_results_2)
+    GateModelQuantumTaskResult.from_string(results_string)
+
+
+@pytest.mark.parametrize("ir_result,expected_result", test_ir_results)
+def test_calculate_ir_results(ir_result, expected_result):
+    ir_string = jaqcd.Program(
+        instructions=[jaqcd.H(target=i) for i in range(4)], results=[ir_result]
+    ).json()
+    measured_qubits = [0, 1, 2, 3]
+    measurements = np.array(
+        [
+            [0, 0, 1, 0],
+            [1, 1, 1, 1],
+            [1, 0, 0, 1],
+            [0, 0, 1, 0],
+            [1, 1, 1, 1],
+            [0, 1, 1, 1],
+            [0, 0, 0, 1],
+            [0, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+        ]
+    )
+    result_types = GateModelQuantumTaskResult._calculate_result_types(
+        ir_string, measurements, measured_qubits
+    )
+    assert len(result_types) == 1
+    assert result_types[0]["Type"] == ir_result.dict()
+    assert np.allclose(result_types[0]["Value"], expected_result)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_calculate_ir_results_value_error():
+    ir_string = json.dumps({"results": [{"type": "foo"}]})
+    measured_qubits = [0]
+    measurements = np.array([[0]])
+    GateModelQuantumTaskResult._calculate_result_types(ir_string, measurements, measured_qubits)

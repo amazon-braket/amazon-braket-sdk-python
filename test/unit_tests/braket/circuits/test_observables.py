@@ -16,6 +16,7 @@ import math
 import numpy as np
 import pytest
 from braket.circuits import Gate, Observable
+from braket.circuits.observables import observable_from_ir
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 
 testdata = [
@@ -61,6 +62,29 @@ def test_gate_equality(testobject, gateobject, expected_ir, basis_rotation_gates
     assert testobject.matrix_equivalence(gateobject)
     assert testobject.basis_rotation_gates == basis_rotation_gates
     assert np.allclose(testobject.eigenvalues, eigenvalues)
+
+
+@pytest.mark.parametrize(
+    "testobject,gateobject,expected_ir,basis_rotation_gates,eigenvalues", testdata
+)
+def test_basis_rotation_gates(
+    testobject, gateobject, expected_ir, basis_rotation_gates, eigenvalues
+):
+    assert testobject.basis_rotation_gates == basis_rotation_gates
+
+
+@pytest.mark.parametrize(
+    "testobject,gateobject,expected_ir,basis_rotation_gates,eigenvalues", testdata
+)
+def test_eigenvalues(testobject, gateobject, expected_ir, basis_rotation_gates, eigenvalues):
+    assert np.allclose(testobject.eigenvalues, eigenvalues)
+
+
+@pytest.mark.parametrize(
+    "testobject,gateobject,expected_ir,basis_rotation_gates,eigenvalues", testdata
+)
+def test_observable_from_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenvalues):
+    assert testobject == observable_from_ir(expected_ir)
 
 
 # Hermitian
@@ -132,6 +156,18 @@ def test_hermitian_basis_rotation_gates(matrix, basis_rotation_matrix):
     actual_rotation_gates = Observable.Hermitian(matrix=matrix).basis_rotation_gates
     assert actual_rotation_gates == tuple([expected_unitary])
     assert expected_unitary.matrix_equivalence(actual_rotation_gates)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_observable_from_ir_hermitian_value_error():
+    ir_observable = [[[[1.0, 0], [0, 1]], [[0.0, 1], [1, 0]]]]
+    observable_from_ir(ir_observable)
+
+
+def test_observable_from_ir_hermitian():
+    ir_observable = [[[[1, 0], [0, 0]], [[0, 0], [1, 0]]]]
+    actual_observable = observable_from_ir(ir_observable)
+    assert actual_observable == Observable.Hermitian(matrix=np.array([[1.0, 0.0], [0.0, 1.0]]))
 
 
 # TensorProduct
@@ -212,3 +248,14 @@ def test_tensor_product_eigenvalues(observable, eigenvalues):
 )
 def test_tensor_product_basis_rotation_gates(observable, basis_rotation_gates):
     assert observable.basis_rotation_gates == basis_rotation_gates
+
+
+def test_observable_from_ir_tensor_product():
+    expected_observable = Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
+    actual_observable = observable_from_ir(["z", "i", "x"])
+    assert expected_observable == actual_observable
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_observable_from_ir_tensor_product_value_error():
+    observable_from_ir(["z", "i", "foo"])

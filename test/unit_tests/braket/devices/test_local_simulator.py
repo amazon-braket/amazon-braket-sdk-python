@@ -25,6 +25,7 @@ from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 GATE_MODEL_RESULT = {
     "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
+    "MeasuredQubits": [0, 1],
     "TaskMetadata": {
         "Id": "UUID_blah_1",
         "Status": "COMPLETED",
