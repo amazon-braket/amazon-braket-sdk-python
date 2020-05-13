@@ -52,6 +52,10 @@ class DummyCircuitSimulator(BraketSimulator):
         self._qubits = qubits
         return GATE_MODEL_RESULT
 
+    @property
+    def properties(self) -> Dict[str, Any]:
+        return {"supportedQuantumOperations": ["I", "X"]}
+
     def assert_shots(self, shots):
         assert self._shots == shots
 
@@ -62,6 +66,10 @@ class DummyCircuitSimulator(BraketSimulator):
 class DummyAnnealingSimulator(BraketSimulator):
     def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> Dict[str, Any]:
         return ANNEALING_RESULT
+
+    @property
+    def properties(self) -> Dict[str, Any]:
+        return {}
 
 
 mock_entry = Mock()
@@ -115,3 +123,9 @@ def test_init_unregistered_backend():
 def test_run_unsupported_type():
     sim = LocalSimulator(DummyCircuitSimulator())
     sim.run("I'm unsupported")
+
+
+def test_properties():
+    sim = LocalSimulator(DummyCircuitSimulator())
+    expected_properties = {"supportedQuantumOperations": ["I", "X"]}
+    assert sim.properties == expected_properties

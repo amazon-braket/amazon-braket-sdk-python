@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from functools import singledispatch
-from typing import Optional, Set, Union
+from typing import Any, Dict, Optional, Set, Union
 
 import pkg_resources
 
@@ -80,6 +80,11 @@ class LocalSimulator(Device):
         """
         result = _run_internal(task_specification, self._delegate, shots, *args, **kwargs)
         return LocalQuantumTask(result)
+
+    @property
+    def properties(self) -> Dict[str, Any]:
+        """ Dict[str, Any]: Properties of the LocalSimulator device """
+        return self._delegate.properties
 
     @staticmethod
     def registered_backends() -> Set[str]:

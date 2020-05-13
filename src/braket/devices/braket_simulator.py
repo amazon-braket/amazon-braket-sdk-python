@@ -58,3 +58,9 @@ class BraketSimulator(ABC):
             from the SDK, depending on the type of task.
         """
         raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def properties(self) -> Dict[str, Any]:
+        """ Dict[str, Any]: Properties of the BraketSimulator device. """
+        raise NotImplementedError()
