@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from braket.circuits.observable import Observable
 from braket.circuits.qubit import QubitInput
@@ -26,25 +26,25 @@ class ResultType:
     the metadata that defines what a requested result type is and what it does.
     """
 
-    def __init__(self, ascii_symbol: str):
+    def __init__(self, ascii_symbols: List[str]):
         """
         Args:
-            ascii_symbol (str): ASCII string symbol for the result type. This is used when
+            ascii_symbols (List[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
 
         Raises:
-            ValueError: `ascii_symbol` is None
+            ValueError: `ascii_symbols` is None
         """
 
-        if ascii_symbol is None:
-            raise ValueError(f"ascii_symbol must not be None")
+        if ascii_symbols is None:
+            raise ValueError(f"ascii_symbols must not be None")
 
-        self._ascii_symbol = ascii_symbol
+        self._ascii_symbols = ascii_symbols
 
     @property
-    def ascii_symbol(self) -> str:
-        """str: Returns the ascii symbol for the requested result type."""
-        return self._ascii_symbol
+    def ascii_symbols(self) -> List[str]:
+        """List[str]: Returns the ascii symbols for the requested result type."""
+        return self._ascii_symbols
 
     @property
     def name(self) -> str:
@@ -135,7 +135,9 @@ class ObservableResultType(ResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, ascii_symbol: str, observable: Observable, target: QubitSetInput = None):
+    def __init__(
+        self, ascii_symbols: List[str], observable: Observable, target: QubitSetInput = None
+    ):
         """
         Args:
             observable (Observable): the observable for the result type
@@ -144,10 +146,12 @@ class ObservableResultType(ResultType):
                 only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
-            ValueError: If the observable's qubit count and the number of target qubits
-                are not equal. Or, if target=None and the observable's qubit count is not 1.
+            ValueError: if target=None and the observable's qubit count is not 1.
+                Or, if target!=None and the observable's qubit count and the number of target qubits
+                are not equal. Or, if target!=None and the observable's qubit count and
+                the number of ascii_symbols are not equal.
         """
-        super().__init__(ascii_symbol)
+        super().__init__(ascii_symbols)
         self._observable = observable
         self._target = QubitSet(target)
         if not self._target:
@@ -155,10 +159,15 @@ class ObservableResultType(ResultType):
                 raise ValueError(
                     f"Observable {self._observable} must only operate on 1 qubit for target=None"
                 )
-        elif self._observable.qubit_count != len(self._target):
-            raise ValueError(
-                f"Observable's qubit count and the number of target qubits must be equal"
-            )
+        else:
+            if self._observable.qubit_count != len(self._target):
+                raise ValueError(
+                    f"Observable's qubit count and the number of target qubits must be equal"
+                )
+            if self._observable.qubit_count != len(self.ascii_symbols):
+                raise ValueError(
+                    f"Observable's qubit count and the number of ASCII symbols must be equal"
+                )
 
     @property
     def observable(self) -> Observable:

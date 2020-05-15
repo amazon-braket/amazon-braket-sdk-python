@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Operator
+import numpy as np
+from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator
 
 
 def test_empty_circuit():
@@ -223,6 +224,121 @@ def test_ignore_non_gates():
         "q2 : ---X-",
         "",
         "T  : |0|1|",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_result_types_target_none():
+    circ = Circuit().h(0).h(100).probability()
+    expected = (
+        "T    : |0|Result Types|",
+        "                       ",
+        "q0   : -H-Probability--",
+        "          |            ",
+        "q100 : -H-Probability--",
+        "",
+        "T    : |0|Result Types|",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_result_types_target_some():
+    circ = (
+        Circuit()
+        .h(0)
+        .h(1)
+        .h(100)
+        .expectation(observable=Observable.Y() @ Observable.Z(), target=[0, 100])
+    )
+    expected = (
+        "T    : |0|  Result Types  |",
+        "                           ",
+        "q0   : -H-Expectation(Y@Z)-",
+        "          |                ",
+        "q1   : -H-|----------------",
+        "          |                ",
+        "q100 : -H-Expectation(Y@Z)-",
+        "",
+        "T    : |0|  Result Types  |",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_additional_result_types():
+    circ = Circuit().h(0).h(1).h(100).state_vector().amplitude(["110", "001"])
+    expected = (
+        "T    : |0|",
+        "          ",
+        "q0   : -H-",
+        "          ",
+        "q1   : -H-",
+        "          ",
+        "q100 : -H-",
+        "",
+        "T    : |0|",
+        "",
+        "Additional result types: StateVector, Amplitude(110,001)",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_multiple_result_types():
+    circ = (
+        Circuit()
+        .cnot(0, 2)
+        .cnot(1, 3)
+        .h(0)
+        .variance(observable=Observable.Y(), target=0)
+        .expectation(observable=Observable.Y(), target=2)
+        .sample(observable=Observable.Y())
+    )
+    expected = (
+        "T  : | 0 |1|      Result Types      |",
+        "                                     ",
+        "q0 : -C---H-Variance(Y)----Sample(Y)-",
+        "      |                    |         ",
+        "q1 : -|-C------------------Sample(Y)-",
+        "      | |                  |         ",
+        "q2 : -X-|---Expectation(Y)-Sample(Y)-",
+        "        |                  |         ",
+        "q3 : ---X------------------Sample(Y)-",
+        "",
+        "T  : | 0 |1|      Result Types      |",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_multiple_result_types_with_state_vector_amplitude():
+    circ = (
+        Circuit()
+        .cnot(0, 2)
+        .cnot(1, 3)
+        .h(0)
+        .variance(observable=Observable.Y(), target=0)
+        .expectation(observable=Observable.Y(), target=3)
+        .expectation(observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])), target=1)
+        .amplitude(["0001"])
+        .state_vector()
+    )
+    expected = (
+        "T  : | 0 |1|     Result Types     |",
+        "                                   ",
+        "q0 : -C---H-Variance(Y)------------",
+        "      |                            ",
+        "q1 : -|-C---Expectation(Hermitian)-",
+        "      | |                          ",
+        "q2 : -X-|--------------------------",
+        "        |                          ",
+        "q3 : ---X---Expectation(Y)---------",
+        "",
+        "T  : | 0 |1|     Result Types     |",
+        "",
+        "Additional result types: Amplitude(0001), StateVector",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
