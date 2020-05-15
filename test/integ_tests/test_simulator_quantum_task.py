@@ -47,15 +47,3 @@ def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     result = device.run(state_001, s3_destination_folder).result()
     assert result.measurement_counts.most_common(1)[0][0] == "001"
 
-
-def test_qs2_quantum_task(aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS2, aws_session)
-
-    bell = Circuit().h(range(8))
-    measurements = device.run(bell, s3_destination_folder, shots=1).result().measurements
-
-    # 1 shot
-    assert len(measurements) == 1
-
-    # 8 qubits
-    assert len(measurements[0]) == 8
