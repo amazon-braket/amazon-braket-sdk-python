@@ -41,7 +41,7 @@ class QuantumOperator(Operator):
         self._qubit_count = qubit_count
 
         if ascii_symbols is None:
-            raise ValueError(f"ascii_symbols must not be None")
+            raise ValueError("ascii_symbols must not be None")
 
         if len(ascii_symbols) != qubit_count:
             msg = f"ascii_symbols, {ascii_symbols}, length must equal qubit_count, {qubit_count}"

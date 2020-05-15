@@ -136,9 +136,17 @@ def test_add_result_type_observable_conflict_all():
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_add_result_type_observable_conflict_all_target():
+def test_add_result_type_observable_conflict_all_target_then_selected_target():
     circ = Circuit().add_result_type(ResultType.Probability())
     circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[0, 1]))
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_add_result_type_observable_conflict_selected_target_then_all_target():
+    circ = Circuit().add_result_type(
+        ResultType.Expectation(observable=Observable.Y(), target=[0, 1])
+    )
+    circ.add_result_type(ResultType.Probability())
 
 
 def test_add_result_type_observable_no_conflict_all_target():

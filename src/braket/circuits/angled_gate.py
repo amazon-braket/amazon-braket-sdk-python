@@ -39,7 +39,7 @@ class AngledGate(Gate):
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         if angle is None:
-            raise ValueError(f"angle must not be None")
+            raise ValueError("angle must not be None")
         self._angle = angle
 
     @property

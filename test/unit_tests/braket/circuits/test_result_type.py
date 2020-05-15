@@ -17,7 +17,7 @@ from braket.circuits import Observable, ObservableResultType, ResultType
 
 @pytest.fixture
 def result_type():
-    return ResultType(ascii_symbol="foo")
+    return ResultType(ascii_symbols=["foo"])
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def sv():
 
 @pytest.mark.xfail(raises=ValueError)
 def test_none_ascii():
-    ResultType(ascii_symbol=None)
+    ResultType(ascii_symbols=None)
 
 
 def test_name(result_type):
@@ -41,9 +41,9 @@ def test_name(result_type):
 
 
 def test_ascii_symbol():
-    ascii_symbol = "foo"
-    result_type = ResultType(ascii_symbol=ascii_symbol)
-    assert result_type.ascii_symbol == ascii_symbol
+    ascii_symbols = ["foo"]
+    result_type = ResultType(ascii_symbols=ascii_symbols)
+    assert result_type.ascii_symbols == ascii_symbols
 
 
 def test_equality():
@@ -58,7 +58,7 @@ def test_equality():
 
 @pytest.mark.xfail(raises=AttributeError)
 def test_ascii_symbol_setter(result_type):
-    result_type.ascii_symbol = "bar"
+    result_type.ascii_symbols = ["bar"]
 
 
 @pytest.mark.xfail(raises=AttributeError)
@@ -74,7 +74,7 @@ def test_to_ir_not_implemented_by_default(result_type):
 def test_register_result():
     class _FooResultType(ResultType):
         def __init__(self):
-            super().__init__(ascii_symbol="foo")
+            super().__init__(ascii_symbols=["foo"])
 
     ResultType.register_result_type(_FooResultType)
     assert ResultType._FooResultType().name == _FooResultType().name
@@ -120,18 +120,27 @@ def test_copy_with_target_and_mapping(prob):
 
 @pytest.mark.xfail(raises=ValueError)
 def test_expectation_init_value_error_target():
-    ObservableResultType(ascii_symbol="Obs", observable=Observable.X() @ Observable.Y(), target=[])
+    ObservableResultType(
+        ascii_symbols=["Obs", "Obs"], observable=Observable.X() @ Observable.Y(), target=[]
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_expectation_init_value_error_ascii_symbols():
+    ObservableResultType(
+        ascii_symbols=["Obs"], observable=Observable.X() @ Observable.Y(), target=[1, 2]
+    )
 
 
 @pytest.mark.xfail(raises=ValueError)
 def test_obs_rt_init_value_error_qubit_count():
-    ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=[0, 1])
+    ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=[0, 1])
 
 
 def test_obs_rt_equality():
-    a1 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
-    a2 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
-    a3 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=1)
+    a1 = ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=0)
+    a2 = ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=0)
+    a3 = ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=1)
     a4 = "hi"
     assert a1 == a2
     assert a1 != a3
@@ -142,8 +151,8 @@ def test_obs_rt_equality():
 
 
 def test_obs_rt_repr():
-    a1 = ObservableResultType(ascii_symbol="Obs", observable=Observable.X(), target=0)
+    a1 = ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=0)
     assert (
         str(a1)
-        == f"ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
+        == "ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
     )

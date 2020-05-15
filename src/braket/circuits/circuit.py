@@ -47,6 +47,7 @@ class Circuit:
     """
 
     _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
+    _EXISTING_QUBITS = "EXISTING"  # Flag to indicate existing qubits in _qubit_observable_mapping
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
@@ -245,8 +246,9 @@ class Circuit:
             observable = result_type.observable
         else:
             return
-        targets = result_type.target if result_type.target else [Circuit._ALL_QUBITS]
+        targets = result_type.target if result_type.target else Circuit._EXISTING_QUBITS
         all_qubits_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
+
         for target in targets:
             current_observable = all_qubits_observable or self._qubit_observable_mapping.get(target)
             if current_observable and current_observable != observable:
@@ -255,6 +257,7 @@ class Circuit:
                     + f"conflicts with observable {observable} for new result type"
                 )
             self._qubit_observable_mapping[target] = observable
+        self._qubit_observable_mapping[Circuit._EXISTING_QUBITS] = observable
 
     def add_instruction(
         self,

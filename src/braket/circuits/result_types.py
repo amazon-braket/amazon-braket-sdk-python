@@ -40,7 +40,7 @@ class StateVector(ResultType):
     """
 
     def __init__(self):
-        super().__init__(ascii_symbol=["StateVector"])
+        super().__init__(ascii_symbols=["StateVector"])
 
     def to_ir(self) -> ir.StateVector:
         return ir.StateVector.construct()
@@ -87,13 +87,13 @@ class Amplitude(ResultType):
         Examples:
             >>> ResultType.Amplitude(state=['01', '10'])
         """
-        super().__init__(ascii_symbol=["Amplitude"])
         if not state or not all(
             isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude) for amplitude in state
         ):
             raise ValueError(
                 "A non-empty list of states must be specified in binary encoding e.g. ['01', '10']"
             )
+        super().__init__(ascii_symbols=[f"Amplitude({','.join(state)})"])
         self._state = state
 
     @property
@@ -154,8 +154,9 @@ class Probability(ResultType):
         Examples:
             >>> ResultType.Probability(target=[0, 1])
         """
-        super().__init__(ascii_symbol=["Prob"])
         self._target = QubitSet(target)
+        ascii_symbols = ["Probability"] * len(self._target) if self._target else ["Probability"]
+        super().__init__(ascii_symbols=ascii_symbols)
 
     @property
     def target(self) -> QubitSet:
@@ -235,7 +236,11 @@ class Expectation(ObservableResultType):
             >>> tensor_product = Observable.Y() @ Observable.Z()
             >>> ResultType.Expectation(observable=tensor_product, target=[0, 1])
         """
-        super().__init__(ascii_symbol=["Expectation"], observable=observable, target=target)
+        super().__init__(
+            ascii_symbols=[f"Expectation({obs_ascii})" for obs_ascii in observable.ascii_symbols],
+            observable=observable,
+            target=target,
+        )
 
     def to_ir(self) -> ir.Expectation:
         if self.target:
@@ -298,7 +303,11 @@ class Sample(ObservableResultType):
             >>> tensor_product = Observable.Y() @ Observable.Z()
             >>> ResultType.Sample(observable=tensor_product, target=[0, 1])
         """
-        super().__init__(ascii_symbol=["Sample"], observable=observable, target=target)
+        super().__init__(
+            ascii_symbols=[f"Sample({obs_ascii})" for obs_ascii in observable.ascii_symbols],
+            observable=observable,
+            target=target,
+        )
 
     def to_ir(self) -> ir.Sample:
         if self.target:
@@ -362,7 +371,11 @@ class Variance(ObservableResultType):
             >>> tensor_product = Observable.Y() @ Observable.Z()
             >>> ResultType.Variance(observable=tensor_product, target=[0, 1])
         """
-        super().__init__(ascii_symbol=["Variance"], observable=observable, target=target)
+        super().__init__(
+            ascii_symbols=[f"Variance({obs_ascii})" for obs_ascii in observable.ascii_symbols],
+            observable=observable,
+            target=target,
+        )
 
     def to_ir(self) -> ir.Variance:
         if self.target:
