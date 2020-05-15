@@ -342,3 +342,34 @@ def test_multiple_result_types_with_state_vector_amplitude():
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
+    herm_matrix = (Observable.Y() @ Observable.Z()).to_matrix()
+    circ = (
+        Circuit()
+        .cnot(0, 2)
+        .cnot(1, 3)
+        .h(0)
+        .variance(observable=Observable.Y(), target=0)
+        .expectation(observable=Observable.Y(), target=3)
+        .expectation(
+            observable=Observable.Hermitian(matrix=herm_matrix, display_name="MyHerm",),
+            target=[1, 2],
+        )
+    )
+    expected = (
+        "T  : | 0 |1|   Result Types    |",
+        "                                ",
+        "q0 : -C---H-Variance(Y)---------",
+        "      |                         ",
+        "q1 : -|-C---Expectation(MyHerm)-",
+        "      | |   |                   ",
+        "q2 : -X-|---Expectation(MyHerm)-",
+        "        |                       ",
+        "q3 : ---X---Expectation(Y)------",
+        "",
+        "T  : | 0 |1|   Result Types    |",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected

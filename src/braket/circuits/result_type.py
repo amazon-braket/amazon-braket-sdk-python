@@ -37,7 +37,7 @@ class ResultType:
         """
 
         if ascii_symbols is None:
-            raise ValueError(f"ascii_symbols must not be None")
+            raise ValueError("ascii_symbols must not be None")
 
         self._ascii_symbols = ascii_symbols
 
@@ -162,11 +162,11 @@ class ObservableResultType(ResultType):
         else:
             if self._observable.qubit_count != len(self._target):
                 raise ValueError(
-                    f"Observable's qubit count and the number of target qubits must be equal"
+                    "Observable's qubit count and the number of target qubits must be equal"
                 )
             if self._observable.qubit_count != len(self.ascii_symbols):
                 raise ValueError(
-                    f"Observable's qubit count and the number of ASCII symbols must be equal"
+                    "Observable's qubit count and the number of ASCII symbols must be equal"
                 )
 
     @property

@@ -154,5 +154,5 @@ def test_obs_rt_repr():
     a1 = ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=0)
     assert (
         str(a1)
-        == f"ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
+        == "ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
     )
