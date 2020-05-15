@@ -35,7 +35,6 @@ def test_device_across_regions(aws_session):
     [
         (AwsQuantumSimulatorArns.QS1, "quantum-simulator-1"),
         (AwsQuantumSimulatorArns.QS2, "quantum-simulator-2"),
-        (AwsQuantumSimulatorArns.QS3, "quantum-simulator-3"),
     ],
 )
 def test_simulator_creation(simulator_arn, simulator_name, aws_session):
