@@ -18,9 +18,7 @@ from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
 
 
-@pytest.mark.parametrize(
-    "simulator_arn", [AwsQuantumSimulatorArns.QS1]
-)
+@pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
 def test_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsQuantumSimulator(simulator_arn, aws_session)
     bell = Circuit().h(0).cnot(0, 1)
@@ -31,9 +29,7 @@ def test_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     assert len(result.measurements) == 750
 
 
-@pytest.mark.parametrize(
-    "simulator_arn", [AwsQuantumSimulatorArns.QS1]
-)
+@pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
 def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     device = AwsQuantumSimulator(simulator_arn, aws_session)
 
@@ -46,4 +42,3 @@ def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     state_001 = Circuit().i(0).i(1).x(2)
     result = device.run(state_001, s3_destination_folder).result()
     assert result.measurement_counts.most_common(1)[0][0] == "001"
-
