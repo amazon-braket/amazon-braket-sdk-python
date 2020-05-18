@@ -194,7 +194,7 @@ print(device.run(bell, s3_folder).result().measurement_counts)
 The code sample imports the Amazon Braket framework, then defines the execution environment as the AWSQuantumSimulator and the device to use. The `s3_folder` statement defines the Amazon S3 bucket for job output and the folder in the bucket to store job output. This folder is created when you run the job. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job.
 
 ### Available Simulators
-There is currently one cloud simulator available for Amazon Braket:
+There is currently one AwsQuantumSimulator available:
 - `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector.
 
 #### To validate your configuration using a Python file
