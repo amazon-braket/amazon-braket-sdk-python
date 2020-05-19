@@ -16,5 +16,3 @@ from enum import Enum
 
 class AwsQuantumSimulatorArns(str, Enum):
     QS1 = "arn:aws:aqx:::quantum-simulator:aqx:qs1"
-    QS2 = "arn:aws:aqx:::quantum-simulator:aqx:qs2"
-    QS3 = "arn:aws:aqx:::quantum-simulator:aqx:qs3"
