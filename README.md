@@ -254,7 +254,7 @@ Tasks sent to QPUs don't always run right away. For IonQ, jobs are run once ever
 ## Running a Quantum Algorithm on a Quantum Computer
 With Amazon Braket, you can run your quantum circuit on a physical quantum computer. The steps to do so are the same as those described to validate your environment. Just replace the example code provided in this document with your own code.
 
-The following example executes the same Bell Pair example described to validate your configuration against a Rigetti quantum computer. For the case when the specified QPU is unavailable and tasks are not immediately run, a `poll_timeout_seconds` parameter is included to set a longer polling time. With this parameter, the results are not returned until the task reaches a status of COMPLETE, FAILED, or CANCELLED, or 24 hours passes. When using the default polling time, local timeout errors occur in some cases while waiting for the QPU to process the task. This example sets the polling time to one day (24 hours). Since tasks typically run within 24 hours this keeps the local task from timing out before the task is run on the QPU.
+The following example executes the same Bell Pair example described to validate your configuration against a Rigetti quantum computer. When you execute your task, Braket polls for a result. If it a result is not returned during the default polling time, such as when a QPU is unavailable, a local timeout error is returned. To avoid receiving timeout errors, you can include `poll_timeout_seconds` parameter and specify a longer polling time. In this example, `poll_timeout_seconds=86400` sets the polling time to one day (24 hours).
 ```python
 import boto3
 from braket.circuits import Circuit
