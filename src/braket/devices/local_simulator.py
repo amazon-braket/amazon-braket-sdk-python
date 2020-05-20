@@ -19,8 +19,8 @@ import pkg_resources
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from braket.devices.braket_simulator import BraketSimulator
 from braket.devices.device import Device
+from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 

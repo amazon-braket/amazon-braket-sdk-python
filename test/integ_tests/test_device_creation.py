@@ -31,7 +31,7 @@ def test_device_across_regions(aws_session):
 
 
 @pytest.mark.parametrize(
-    "simulator_arn,simulator_name", [(AwsQuantumSimulatorArns.QS1, "quantum-simulator-1"),],
+    "simulator_arn,simulator_name", [(AwsQuantumSimulatorArns.QS1, "quantum-simulator-1")],
 )
 def test_simulator_creation(simulator_arn, simulator_name, aws_session):
     simulator = AwsQuantumSimulator(simulator_arn, aws_session=aws_session)
