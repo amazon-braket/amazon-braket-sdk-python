@@ -250,9 +250,11 @@ Braket Python SDK comes bundled with an implementation of a quantum simulator th
 Tasks sent to QPUs don't always run right away. For IonQ, jobs are run once every 24 hours. For Rigetti, tasks are queued and run when the QPU is available, with the time varying day to day. To view task status, you can enable debugging logs. An example of how to enable these logs is included in repo: `../examples/debug_bell.py`. This example enables task logging so that status updates are continuously printed to console after a quantum task is executed. The logs can also be configured to save to a file or output to another stream. You can use the debugging example to get information on the tasks you submit, such as the current status, so that you know when your task completes. 
 
 ## Running a Quantum Algorithm on a Quantum Computer
-With Amazon Braket, you can run your quantum circuit on a physical quantum computer. The steps to do so are the same as those described to validate your environment. Just replace the example code provided in this document with your own code.
+With Amazon Braket, you can run your quantum circuit on a physical quantum computer.
 
-The following example executes the same Bell Pair example described to validate your configuration against a Rigetti quantum computer. When you execute your task, Braket polls for a result. If it a result is not returned during the default polling time, such as when a QPU is unavailable, a local timeout error is returned. To avoid receiving timeout errors, you can include `poll_timeout_seconds` parameter and specify a longer polling time. In this example, `poll_timeout_seconds=86400` sets the polling time to one day (24 hours).
+The following example executes the same Bell Pair example described to validate your configuration on a Rigetti quantum computer. When you execute your task, Amazon Braket polls for a result. If it a result is not returned within the default polling time, such as when a QPU is unavailable, a local timeout error is returned. You can always restart the polling by using `task.result()`.
+
+However, to avoid receiving timeout errors, you can include `poll_timeout_seconds` parameter and specify a longer polling time. In this example, `poll_timeout_seconds=86400` sets the polling time to one day (24 hours).
 ```python
 import boto3
 from braket.circuits import Circuit
@@ -264,14 +266,14 @@ device = AwsQpu(AwsQpuArns.RIGETTI)
 s3_folder = (f"braket-output-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
-print(device.run(bell, s3_folder), 
-poll_timeout_seconds=86400).result().measurement_counts)
+task = device.run(bell, s3_folder, poll_timeout_seconds=86400), 
+print(task.result().measurement_counts)
 ```
 
 Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
-- **IonQ** "arn:aws:aqx:::qpu:ionq" (Tasks may take 24 hours to complete on IonQ.)
-- **Rigetti** "arn:aws:aqx:::qpu:rigetti" (Tasks are run when the QPU is available. Time varies day to day.)
-- **D-Wave** "arn:aws:aqx:::qpu:d-wave" (Use for annealing problems.)
+- **IonQ** "arn:aws:aqx:::qpu:ionq" (Available 4:00 PM to 8:00 PM M-F)
+- **Rigetti** "arn:aws:aqx:::qpu:rigetti" (Available 11:00 AM to 1:00 PM daily)
+- **D-Wave** "arn:aws:aqx:::qpu:d-wave" (Use for annealing problems. See the next section in this document for more information.)
 
 ### Using Amazon Braket with D-Wave QPU
 If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [README](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.
