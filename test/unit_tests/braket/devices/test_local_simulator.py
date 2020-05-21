@@ -20,7 +20,7 @@ import pytest
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator, local_simulator
-from braket.devices.braket_simulator import BraketSimulator
+from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 GATE_MODEL_RESULT = {

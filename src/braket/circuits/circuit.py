@@ -19,6 +19,7 @@ from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.observable import Observable
+from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
@@ -140,18 +141,38 @@ class Circuit:
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
         basis_rotation_instructions = []
-        observable_return_types = filter(
-            lambda x: isinstance(x, ObservableResultType), self._result_types
+        observable_return_types = (
+            result_type
+            for result_type in self._result_types
+            if isinstance(result_type, ObservableResultType)
         )
-        for target, observable in [(obs.target, obs.observable) for obs in observable_return_types]:
-            for gate in observable.basis_rotation_gates:
-                if not target:
-                    basis_rotation_instructions.extend(
-                        [Instruction(gate, target) for target in self._moments.qubits]
+
+        for return_type in observable_return_types:
+            target: List[int] = return_type.target
+            observable: Observable = return_type.observable
+            if not target:
+                # There will be only one result type in observable_return_types,
+                # and its observable acts on all qubits
+                for target in self._moments.qubits:
+                    basis_rotation_instructions += Circuit._observable_to_instruction(
+                        observable, target
                     )
-                else:
-                    basis_rotation_instructions.append(Instruction(gate, target))
+            else:
+                basis_rotation_instructions += Circuit._observable_to_instruction(
+                    observable, target
+                )
         return basis_rotation_instructions
+
+    @staticmethod
+    def _observable_to_instruction(observable: Observable, targets: List[int]):
+        if isinstance(observable, TensorProduct):
+            instructions = []
+            for constituent in observable.observables:
+                target = [targets.pop(0) for _ in range(constituent.qubit_count)]
+                instructions += Circuit._observable_to_instruction(constituent, target)
+            return instructions
+        else:
+            return [Instruction(gate, targets) for gate in observable.basis_rotation_gates]
 
     @property
     def moments(self) -> Moments:

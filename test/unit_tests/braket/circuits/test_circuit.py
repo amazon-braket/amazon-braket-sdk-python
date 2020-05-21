@@ -397,9 +397,13 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
 
 
 def test_basis_rotation_instructions_all():
-    circ = Circuit().h(0).cnot(0, 1).sample(observable=Observable.X())
+    circ = Circuit().h(0).cnot(0, 1).sample(observable=Observable.Y())
     expected = [
+        Instruction(Gate.Z(), 0),
+        Instruction(Gate.S(), 0),
         Instruction(Gate.H(), 0),
+        Instruction(Gate.Z(), 1),
+        Instruction(Gate.S(), 1),
         Instruction(Gate.H(), 1),
     ]
     assert circ.basis_rotation_instructions == expected
@@ -408,6 +412,25 @@ def test_basis_rotation_instructions_all():
 def test_basis_rotation_instructions_target():
     circ = Circuit().h(0).cnot(0, 1).expectation(observable=Observable.X(), target=0)
     expected = [Instruction(Gate.H(), 0)]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_tensor_product():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.X() @ Observable.Y() @ Observable.Y(), target=[0, 1, 2])
+    )
+    expected = [
+        Instruction(Gate.H(), 0),
+        Instruction(Gate.Z(), 1),
+        Instruction(Gate.S(), 1),
+        Instruction(Gate.H(), 1),
+        Instruction(Gate.Z(), 2),
+        Instruction(Gate.S(), 2),
+        Instruction(Gate.H(), 2),
+    ]
     assert circ.basis_rotation_instructions == expected
 
 

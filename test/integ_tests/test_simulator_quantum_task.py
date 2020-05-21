@@ -11,34 +11,38 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import math
-
 import pytest
 from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
-from braket.circuits import Circuit
+from simulator_assert_utils import (
+    assert_measurement_counts_most_common,
+    assert_measurement_probabilities,
+)
+
+SHOTS = 750
 
 
 @pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
-def test_bell_pair(simulator_arn, aws_session, s3_destination_folder):
+def test_bell_pair(simulator_arn, aws_session, s3_destination_folder, bell_state_and_tolerances):
     device = AwsQuantumSimulator(simulator_arn, aws_session)
-    bell = Circuit().h(0).cnot(0, 1)
-    result = device.run(bell, s3_destination_folder, shots=750).result()
-
-    assert 0.40 < result.measurement_probabilities["00"] < 0.60
-    assert 0.40 < result.measurement_probabilities["11"] < 0.60
-    assert len(result.measurements) == 750
+    result = device.run(bell_state_and_tolerances[0], s3_destination_folder, shots=SHOTS).result()
+    assert_measurement_probabilities(result.measurement_probabilities, bell_state_and_tolerances[1])
+    assert len(result.measurements) == SHOTS
 
 
 @pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
-def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
+def test_qubit_ordering(
+    simulator_arn,
+    aws_session,
+    s3_destination_folder,
+    state_110_and_most_common,
+    state_001_and_most_common,
+):
     device = AwsQuantumSimulator(simulator_arn, aws_session)
 
     # |110> should get back value of "110"
-    state_110 = Circuit().x(0).x(1).i(2)
-    result = device.run(state_110, s3_destination_folder).result()
-    assert result.measurement_counts.most_common(1)[0][0] == "110"
+    result = device.run(state_110_and_most_common[0], s3_destination_folder, shots=SHOTS).result()
+    assert_measurement_counts_most_common(result.measurement_counts, state_110_and_most_common[1])
 
     # |001> should get back value of "001"
-    state_001 = Circuit().i(0).i(1).x(2)
-    result = device.run(state_001, s3_destination_folder).result()
-    assert result.measurement_counts.most_common(1)[0][0] == "001"
+    result = device.run(state_001_and_most_common[0], s3_destination_folder, shots=SHOTS).result()
+    assert_measurement_counts_most_common(result.measurement_counts, state_001_and_most_common[1])
