@@ -62,7 +62,7 @@ def test_result_types_no_shots():
     )
 
 
-def test_result_types_nonzero_shots():
+def test_result_types_nonzero_shots_expectation():
     circuit_expectation = (
         Circuit()
         .h(0)
@@ -79,6 +79,8 @@ def test_result_types_nonzero_shots():
         < 0.8
     )
 
+
+def test_result_types_nonzero_shots_sample():
     circuit_sample = (
         Circuit().h(0).cnot(0, 1).sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
     )
