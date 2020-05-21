@@ -15,30 +15,29 @@ import numpy as np
 from braket.circuits import Circuit, Observable
 from braket.circuits.result_types import Expectation, Sample, StateVector
 from braket.devices import LocalSimulator
+from simulator_assert_utils import (
+    assert_measurement_counts_most_common,
+    assert_measurement_probabilities,
+)
 
 DEVICE = LocalSimulator()
 SHOTS = 750
 
 
-def test_bell_pair():
-    bell = Circuit().h(0).cnot(0, 1)
-    result = DEVICE.run(bell, shots=SHOTS).result()
-
-    assert 0.40 < result.measurement_probabilities["00"] < 0.60
-    assert 0.40 < result.measurement_probabilities["11"] < 0.60
+def test_bell_pair(bell_state_and_tolerances):
+    result = DEVICE.run(bell_state_and_tolerances[0], shots=SHOTS).result()
+    assert_measurement_probabilities(result.measurement_probabilities, bell_state_and_tolerances[1])
     assert len(result.measurements) == SHOTS
 
 
-def test_qubit_ordering():
+def test_qubit_ordering(state_110_and_most_common, state_001_and_most_common):
     # |110> should get back value of "110"
-    state_110 = Circuit().x(0).x(1).i(2)
-    result = DEVICE.run(state_110, shots=SHOTS).result()
-    assert result.measurement_counts.most_common(1)[0][0] == "110"
+    result = DEVICE.run(state_110_and_most_common[0], shots=SHOTS).result()
+    assert_measurement_counts_most_common(result.measurement_counts, state_110_and_most_common[1])
 
     # |001> should get back value of "001"
-    state_001 = Circuit().i(0).i(1).x(2)
-    result = DEVICE.run(state_001, shots=SHOTS).result()
-    assert result.measurement_counts.most_common(1)[0][0] == "001"
+    result = DEVICE.run(state_001_and_most_common[0], shots=SHOTS).result()
+    assert_measurement_counts_most_common(result.measurement_counts, state_001_and_most_common[1])
 
 
 def test_result_types_no_shots():

@@ -17,6 +17,7 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 from braket.aws.aws_session import AwsSession
+from braket.circuits import Circuit
 
 
 @pytest.fixture(scope="session")
@@ -70,3 +71,18 @@ def s3_prefix():
 @pytest.fixture(scope="module")
 def s3_destination_folder(s3_bucket, s3_prefix):
     return AwsSession.S3DestinationFolder(s3_bucket, s3_prefix)
+
+
+@pytest.fixture(scope="session")
+def bell_state_and_tolerances():
+    return Circuit().h(0).cnot(0, 1), {"00": (0.4, 0.6), "11": (0.4, 0.6)}
+
+
+@pytest.fixture(scope="session")
+def state_110_and_most_common():
+    return Circuit().x(0).x(1).i(2), "110"
+
+
+@pytest.fixture(scope="session")
+def state_001_and_most_common():
+    return Circuit().i(0).i(1).x(2), "001"
