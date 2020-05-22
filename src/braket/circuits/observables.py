@@ -168,7 +168,7 @@ class TensorProduct(Observable):
             [0.+0.j, 0.+1.j, 0.+0.j, 0.+0.j],
             [0.+1.j, 0.+0.j, 0.+0.j, 0.+0.j]])
             >>> t2 = Observable.Z() @ t1
-            >>> t2.observables
+            >>> t2.factors
             (Z('qubit_count': 1), Y('qubit_count': 1), X('qubit_count': 1))
 
         Note: list of observables for tensor product must be given in the desired order that
@@ -184,22 +184,22 @@ class TensorProduct(Observable):
 
     def to_ir(self) -> List[str]:
         ir = []
-        for obs in self.observables:
+        for obs in self.factors:
             ir.extend(obs.to_ir())
         return ir
 
     @property
-    def observables(self) -> Tuple[Observable]:
-        """Tuple[Observable]: observables part of tensor product"""
+    def factors(self) -> Tuple[Observable]:
+        """ Tuple[Observable]: The observables that make up this tensor product"""
         return self._observables
 
     def to_matrix(self) -> np.ndarray:
-        return functools.reduce(np.kron, [obs.to_matrix() for obs in self.observables])
+        return functools.reduce(np.kron, [obs.to_matrix() for obs in self.factors])
 
     @property
     def basis_rotation_gates(self) -> Tuple[Gate]:
         gates = []
-        for obs in self.observables:
+        for obs in self.factors:
             gates.extend(obs.basis_rotation_gates)
         return tuple(gates)
 
@@ -209,21 +209,21 @@ class TensorProduct(Observable):
 
     def __matmul__(self, other):
         if isinstance(other, TensorProduct):
-            return TensorProduct(list(self.observables) + list(other.observables))
+            return TensorProduct(list(self.factors) + list(other.factors))
 
         if isinstance(other, Observable):
-            return TensorProduct(list(self.observables) + [other])
+            return TensorProduct(list(self.factors) + [other])
 
         raise ValueError("Can only perform tensor products between observables.")
 
     def __rmatmul__(self, other):
         if isinstance(other, Observable):
-            return TensorProduct([other] + list(self.observables))
+            return TensorProduct([other] + list(self.factors))
 
         raise ValueError("Can only perform tensor products between observables.")
 
     def __repr__(self):
-        return "TensorProduct(" + ", ".join([repr(o) for o in self.observables]) + ")"
+        return "TensorProduct(" + ", ".join([repr(o) for o in self.factors]) + ")"
 
     def __eq__(self, other):
         return self.matrix_equivalence(other)

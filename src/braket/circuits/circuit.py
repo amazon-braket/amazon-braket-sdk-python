@@ -167,9 +167,9 @@ class Circuit:
     def _observable_to_instruction(observable: Observable, targets: List[int]):
         if isinstance(observable, TensorProduct):
             instructions = []
-            for constituent in observable.observables:
-                target = [targets.pop(0) for _ in range(constituent.qubit_count)]
-                instructions += Circuit._observable_to_instruction(constituent, target)
+            for factor in observable.factors:
+                target = [targets.pop(0) for _ in range(factor.qubit_count)]
+                instructions += Circuit._observable_to_instruction(factor, target)
             return instructions
         else:
             return [Instruction(gate, targets) for gate in observable.basis_rotation_gates]
