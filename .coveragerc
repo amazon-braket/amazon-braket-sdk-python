@@ -5,6 +5,7 @@ source =
     braket
 omit = 
     **/braket/ir/*
+    **/braket/simulator/*
 
 [paths]
 source =
