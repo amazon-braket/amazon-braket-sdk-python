@@ -170,6 +170,13 @@ def test_observable_from_ir_hermitian():
     assert actual_observable == Observable.Hermitian(matrix=np.array([[1.0, 0.0], [0.0, 1.0]]))
 
 
+def test_hermitian_str():
+    assert (
+        str(Observable.Hermitian(matrix=np.array([[1.0, 0.0], [0.0, 1.0]])))
+        == "Hermitian('qubit_count': 1, 'matrix': [[1.+0.j 0.+0.j], [0.+0.j 1.+0.j]])"
+    )
+
+
 # TensorProduct
 
 

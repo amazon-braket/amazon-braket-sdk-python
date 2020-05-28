@@ -48,7 +48,6 @@ class Circuit:
     """
 
     _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
-    _EXISTING_QUBITS = "EXISTING"  # Flag to indicate existing qubits in _qubit_observable_mapping
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
@@ -147,17 +146,20 @@ class Circuit:
             if isinstance(result_type, ObservableResultType)
         )
 
+        added_observables_targets = set()
         for return_type in observable_return_types:
-            target: List[int] = return_type.target
             observable: Observable = return_type.observable
-            if not target:
-                # There will be only one result type in observable_return_types,
-                # and its observable acts on all qubits
-                for target in self._moments.qubits:
-                    basis_rotation_instructions += Circuit._observable_to_instruction(
-                        observable, target
-                    )
-            else:
+            targets: List[List[int]] = [return_type.target] if return_type.target else [
+                QubitSet(qubit) for qubit in self._moments.qubits
+            ]
+
+            for target in targets:
+                # only add gates for observables and targets that
+                # have not been processed
+                str_observables_target = f"{observable}; {target}"
+                if str_observables_target in added_observables_targets:
+                    continue
+                added_observables_targets.add(str_observables_target)
                 basis_rotation_instructions += Circuit._observable_to_instruction(
                     observable, target
                 )
@@ -267,7 +269,8 @@ class Circuit:
             observable = result_type.observable
         else:
             return
-        targets = result_type.target if result_type.target else Circuit._EXISTING_QUBITS
+
+        targets = result_type.target or self._qubit_observable_mapping.keys()
         all_qubits_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
 
         for target in targets:
@@ -275,10 +278,13 @@ class Circuit:
             if current_observable and current_observable != observable:
                 raise ValueError(
                     f"Existing result type for observable {current_observable} for target {target}"
-                    + f"conflicts with observable {observable} for new result type"
+                    f" conflicts with observable {observable} for new result type"
                 )
-            self._qubit_observable_mapping[target] = observable
-        self._qubit_observable_mapping[Circuit._EXISTING_QUBITS] = observable
+            if result_type.target:
+                self._qubit_observable_mapping[target] = observable
+
+        if not result_type.target:
+            self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable
 
     def add_instruction(
         self,
