@@ -188,7 +188,8 @@ device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
 s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
-print(device.run(bell, s3_folder).result().measurement_counts)
+task = device.run(bell, s3_folder, shots=1000, poll_timeout_seconds=86400)
+print(task.result().measurement_counts)
 ```
 
 The code sample imports the Amazon Braket framework, then defines the execution environment as the AWSQuantumSimulator and the device to use. The `s3_folder` statement defines the Amazon S3 bucket for job output and the folder in the bucket to store job output. This folder is created when you run the job. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job.
@@ -266,7 +267,7 @@ device = AwsQpu(AwsQpuArns.RIGETTI)
 s3_folder = (f"braket-output-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder, poll_timeout_seconds=86400), 
+task = device.run(bell, s3_folder, shots=1000, poll_timeout_seconds=86400), 
 print(task.result().measurement_counts)
 ```
 
