@@ -188,7 +188,7 @@ device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
 s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder)
+task = device.run(bell, s3_folder, shots=100)
 print(task.result().measurement_counts)
 ```
 
@@ -211,7 +211,7 @@ There is currently one AwsQuantumSimulator available:
    ```
 
 You should see a result similar to the following:
-```Counter({'11': 522, '00': 478})```
+```Counter({'11': 52, '00': 48})```
 
 #### To validate your configuration using a Jupyter notebook
 See [Installing the Jupyter Software](https://jupyter.org/install) for information about how to install Jupyter. You can use either JupyterLab or classic Jupyter Notebook.

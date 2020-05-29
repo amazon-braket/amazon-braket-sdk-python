@@ -9,5 +9,5 @@ s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 # https://wikipedia.org/wiki/Bell_state
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder)
+task = device.run(bell, s3_folder, shots=100)
 print(task.result().measurement_counts)
