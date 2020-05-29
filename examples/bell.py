@@ -1,11 +1,10 @@
 import boto3
 from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
-from braket.aws import AwsQpu, AwsQpuArns
 from braket.circuits import Circuit
 
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
-device = AwsQpu(AwsQpuArns.IONQ)
+device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
 s3_folder = (f"braket-output-{aws_account_id}", "IONQ")
 
 # https://wikipedia.org/wiki/Bell_state
