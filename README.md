@@ -188,7 +188,7 @@ device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
 s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder, shots=1000, poll_timeout_seconds=86400)
+task = device.run(bell, s3_folder)
 print(task.result().measurement_counts)
 ```
 
@@ -238,7 +238,7 @@ Copy the code sample (above) into the notebook. If you want to use a different f
 Choose **Run** to execute the code to confirm that your environment is configured correctly.
 
 When the job completes, you should see output similar to the following:
-`Counter({'00': 519, '11': 481})`
+`Counter({'00': 52, '11': 48})`
 
 **Important** Tasks may not run immediately on the QPU. IonQ runs tasks once every 24 hours. Rigetti tasks run when the QPU is available, with times varying day to day.
 
@@ -267,7 +267,7 @@ device = AwsQpu(AwsQpuArns.RIGETTI)
 s3_folder = (f"braket-output-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder, shots=1000, poll_timeout_seconds=86400), 
+task = device.run(bell, s3_folder) 
 print(task.result().measurement_counts)
 ```
 
