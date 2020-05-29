@@ -36,6 +36,10 @@ class AwsQpu(Device):
         AwsQpuArns.DWAVE: ["us-west-2"],
     }
 
+    DEFAULT_SHOTS = 1000
+    DEFAULT_RESULTS_POLL_TIMEOUT_QPU = 432000
+    DEFAULT_RESULTS_POLL_INTERVAL_QPU = 1
+
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
@@ -64,7 +68,9 @@ class AwsQpu(Device):
         self,
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int = 1000,
+        shots: int = DEFAULT_SHOTS,
+        poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT_QPU,
+        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL_QPU,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -78,6 +84,10 @@ class AwsQpu(Device):
             s3_destination_folder: The S3 location to save the task's results
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000.
+            poll_timeout_seconds (int): The polling timeout for AwsQuantumTask.result(), in seconds.
+                Default: 5 days.
+            poll_interval_seconds (int): The polling interval for AwsQuantumTask.result(),
+                in seconds. Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
@@ -116,6 +126,8 @@ class AwsQpu(Device):
             task_specification,
             s3_destination_folder,
             shots,
+            poll_timeout_seconds=poll_timeout_seconds,
+            poll_interval_seconds=poll_interval_seconds,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )

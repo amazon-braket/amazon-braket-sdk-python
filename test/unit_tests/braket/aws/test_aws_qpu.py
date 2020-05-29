@@ -31,7 +31,7 @@ def qpu(aws_session):
 
 @pytest.fixture
 def s3_destination_folder():
-    return ("bucket-foo", "key-bar")
+    return "bucket-foo", "key-bar"
 
 
 @pytest.fixture
@@ -181,26 +181,59 @@ def test_repr(qpu):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_no_extra(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
+    _run_and_assert(
+        aws_quantum_task_mock, qpu, circuit, s3_destination_folder,
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
-    _run_and_assert(aws_quantum_task_mock, qpu, circuit, s3_destination_folder, 1000, ["foo"], {})
+    _run_and_assert(
+        aws_quantum_task_mock, qpu, circuit, s3_destination_folder, 100, 86400, 0.25, ["foo"]
+    )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
     _run_and_assert(
-        aws_quantum_task_mock, qpu, circuit, s3_destination_folder, 1000, [], {"bar": 1, "baz": 2}
+        aws_quantum_task_mock,
+        qpu,
+        circuit,
+        s3_destination_folder,
+        extra_kwargs={"bar": 1, "baz": 2},
     )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_kwargs_no_shots(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
-    task_mock = Mock()
-    aws_quantum_task_mock.return_value = task_mock
-    qpu = qpu(AwsQpuArns.RIGETTI)
-    task = qpu.run(circuit, s3_destination_folder)
-    assert task == task_mock
-    aws_quantum_task_mock.assert_called_with(
-        qpu._aws_session, qpu.arn, circuit, s3_destination_folder, 1000
+def test_run_with_shots(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
+    _run_and_assert(aws_quantum_task_mock, qpu, circuit, s3_destination_folder, 100)
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_shots_kwargs(aws_quantum_task_mock, qpu, circuit, s3_destination_folder):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        qpu,
+        circuit,
+        s3_destination_folder,
+        100,
+        extra_kwargs={"bar": 1, "baz": 2},
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_shots_poll_timeout_kwargs(
+    aws_quantum_task_mock, qpu, circuit, s3_destination_folder
+):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        qpu,
+        circuit,
+        s3_destination_folder,
+        100,
+        86400,
+        extra_kwargs={"bar": 1, "baz": 2},
     )
 
 
@@ -213,7 +246,9 @@ def test_run_with_positional_args_and_kwargs(
         qpu,
         circuit,
         s3_destination_folder,
-        1000,
+        100,
+        86400,
+        0.25,
         ["foo"],
         {"bar": 1, "baz": 2},
     )
@@ -244,20 +279,50 @@ def test_construct_topology_graph(qpu, properties, expected_edges):
 
 
 def _run_and_assert(
-    aws_quantum_task_mock, qpu, circuit, s3_destination_folder, shots, run_args, run_kwargs
+    aws_quantum_task_mock,
+    qpu_factory,
+    circuit,
+    s3_destination_folder,
+    shots=None,  # Treated as positional arg
+    poll_timeout_seconds=None,  # Treated as positional arg
+    poll_interval_seconds=None,  # Treated as positional arg
+    extra_args=None,
+    extra_kwargs=None,
 ):
     task_mock = Mock()
     aws_quantum_task_mock.return_value = task_mock
+    qpu = qpu_factory(AwsQpuArns.RIGETTI)
 
-    qpu = qpu(AwsQpuArns.RIGETTI)
-    task = (
-        qpu.run(circuit, s3_destination_folder, shots, *run_args, **run_kwargs)
-        if shots
-        else qpu.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
-    )
+    run_args = []
+    if shots is not None:
+        run_args.append(shots)
+    if poll_timeout_seconds is not None:
+        run_args.append(poll_timeout_seconds)
+    if poll_interval_seconds is not None:
+        run_args.append(poll_interval_seconds)
+    run_args += extra_args if extra_args else []
+
+    run_kwargs = extra_kwargs or {}
+
+    task = qpu.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
     assert task == task_mock
+
+    create_args = [shots if shots is not None else 1000]
+    create_args += extra_args if extra_args else []
+
+    create_kwargs = extra_kwargs or {}
+    create_kwargs.update(
+        {
+            "poll_timeout_seconds": poll_timeout_seconds
+            if poll_timeout_seconds is not None
+            else 432000,
+            "poll_interval_seconds": poll_interval_seconds
+            if poll_interval_seconds is not None
+            else 1,
+        }
+    )
     aws_quantum_task_mock.assert_called_with(
-        qpu._aws_session, qpu.arn, circuit, s3_destination_folder, shots, *run_args, **run_kwargs
+        qpu._aws_session, qpu.arn, circuit, s3_destination_folder, *create_args, **create_kwargs
     )
 
 
