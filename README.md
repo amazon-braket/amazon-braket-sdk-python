@@ -188,7 +188,8 @@ device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
 s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
-print(device.run(bell, s3_folder).result().measurement_counts)
+task = device.run(bell, s3_folder, shots=100)
+print(task.result().measurement_counts)
 ```
 
 The code sample imports the Amazon Braket framework, then defines the execution environment as the AWSQuantumSimulator and the device to use. The `s3_folder` statement defines the Amazon S3 bucket for job output and the folder in the bucket to store job output. This folder is created when you run the job. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job.
@@ -210,7 +211,7 @@ There is currently one AwsQuantumSimulator available:
    ```
 
 You should see a result similar to the following:
-```Counter({'11': 522, '00': 478})```
+```Counter({'11': 52, '00': 48})```
 
 #### To validate your configuration using a Jupyter notebook
 See [Installing the Jupyter Software](https://jupyter.org/install) for information about how to install Jupyter. You can use either JupyterLab or classic Jupyter Notebook.
@@ -237,7 +238,7 @@ Copy the code sample (above) into the notebook. If you want to use a different f
 Choose **Run** to execute the code to confirm that your environment is configured correctly.
 
 When the job completes, you should see output similar to the following:
-`Counter({'00': 519, '11': 481})`
+`Counter({'00': 52, '11': 48})`
 
 **Important** Tasks may not run immediately on the QPU. IonQ runs tasks once every 24 hours. Rigetti tasks run when the QPU is available, with times varying day to day.
 
@@ -266,7 +267,7 @@ device = AwsQpu(AwsQpuArns.RIGETTI)
 s3_folder = (f"braket-output-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder, poll_timeout_seconds=86400), 
+task = device.run(bell, s3_folder) 
 print(task.result().measurement_counts)
 ```
 
