@@ -238,7 +238,7 @@ Copy the code sample (above) into the notebook. If you want to use a different f
 Choose **Run** to execute the code to confirm that your environment is configured correctly.
 
 When the job completes, you should see output similar to the following:
-`Counter({'00': 52, '11': 48})`
+`Counter({'00': 519, '11': 481})`
 
 **Important** Tasks may not run immediately on the QPU. IonQ runs tasks once every 24 hours. Rigetti tasks run when the QPU is available, with times varying day to day.
 
