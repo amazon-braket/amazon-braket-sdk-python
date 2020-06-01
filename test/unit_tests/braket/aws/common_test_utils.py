@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
+from unittest.mock import Mock
 
 from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.aws.aws_quantum_simulator_arns import AwsQuantumSimulatorArns
@@ -251,4 +252,59 @@ class MockS3:
                 "Shots": 5,
             },
         }
+    )
+
+
+def run_and_assert(
+    aws_quantum_task_mock,
+    device,
+    default_shots,
+    default_timeout,
+    default_poll_interval,
+    circuit,
+    s3_destination_folder,
+    shots,  # Treated as positional arg
+    poll_timeout_seconds,  # Treated as positional arg
+    poll_interval_seconds,  # Treated as positional arg
+    extra_args,
+    extra_kwargs,
+):
+    task_mock = Mock()
+    aws_quantum_task_mock.return_value = task_mock
+
+    run_args = []
+    if shots is not None:
+        run_args.append(shots)
+    if poll_timeout_seconds is not None:
+        run_args.append(poll_timeout_seconds)
+    if poll_interval_seconds is not None:
+        run_args.append(poll_interval_seconds)
+    run_args += extra_args if extra_args else []
+
+    run_kwargs = extra_kwargs or {}
+
+    task = device.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
+    assert task == task_mock
+
+    create_args = [shots if shots is not None else default_shots]
+    create_args += extra_args if extra_args else []
+
+    create_kwargs = extra_kwargs or {}
+    create_kwargs.update(
+        {
+            "poll_timeout_seconds": poll_timeout_seconds
+            if poll_timeout_seconds is not None
+            else default_timeout,
+            "poll_interval_seconds": poll_interval_seconds
+            if poll_interval_seconds is not None
+            else default_poll_interval,
+        }
+    )
+    aws_quantum_task_mock.assert_called_with(
+        device._aws_session,
+        device.arn,
+        circuit,
+        s3_destination_folder,
+        *create_args,
+        **create_kwargs
     )

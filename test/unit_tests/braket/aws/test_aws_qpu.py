@@ -17,7 +17,7 @@ import networkx as nx
 import pytest
 from braket.aws import AwsQpu, AwsQpuArns
 from braket.circuits import Circuit
-from common_test_utils import MockDevices
+from common_test_utils import MockDevices, run_and_assert
 
 
 @pytest.fixture
@@ -289,40 +289,19 @@ def _run_and_assert(
     extra_args=None,
     extra_kwargs=None,
 ):
-    task_mock = Mock()
-    aws_quantum_task_mock.return_value = task_mock
-    qpu = qpu_factory(AwsQpuArns.RIGETTI)
-
-    run_args = []
-    if shots is not None:
-        run_args.append(shots)
-    if poll_timeout_seconds is not None:
-        run_args.append(poll_timeout_seconds)
-    if poll_interval_seconds is not None:
-        run_args.append(poll_interval_seconds)
-    run_args += extra_args if extra_args else []
-
-    run_kwargs = extra_kwargs or {}
-
-    task = qpu.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
-    assert task == task_mock
-
-    create_args = [shots if shots is not None else 1000]
-    create_args += extra_args if extra_args else []
-
-    create_kwargs = extra_kwargs or {}
-    create_kwargs.update(
-        {
-            "poll_timeout_seconds": poll_timeout_seconds
-            if poll_timeout_seconds is not None
-            else 432000,
-            "poll_interval_seconds": poll_interval_seconds
-            if poll_interval_seconds is not None
-            else 1,
-        }
-    )
-    aws_quantum_task_mock.assert_called_with(
-        qpu._aws_session, qpu.arn, circuit, s3_destination_folder, *create_args, **create_kwargs
+    run_and_assert(
+        aws_quantum_task_mock,
+        qpu_factory(AwsQpuArns.RIGETTI),
+        AwsQpu.DEFAULT_SHOTS_QPU,
+        AwsQpu.DEFAULT_RESULTS_POLL_TIMEOUT_QPU,
+        AwsQpu.DEFAULT_RESULTS_POLL_INTERVAL_QPU,
+        circuit,
+        s3_destination_folder,
+        shots,
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
     )
 
 

@@ -36,7 +36,7 @@ class AwsQpu(Device):
         AwsQpuArns.DWAVE: ["us-west-2"],
     }
 
-    DEFAULT_SHOTS = 1000
+    DEFAULT_SHOTS_QPU = 1000
     DEFAULT_RESULTS_POLL_TIMEOUT_QPU = 432000
     DEFAULT_RESULTS_POLL_INTERVAL_QPU = 1
 
@@ -68,7 +68,7 @@ class AwsQpu(Device):
         self,
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int = DEFAULT_SHOTS,
+        shots: int = DEFAULT_SHOTS_QPU,
         poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT_QPU,
         poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL_QPU,
         *aws_quantum_task_args,
