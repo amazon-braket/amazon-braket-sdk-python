@@ -320,7 +320,9 @@ class AwsQuantumTask(QuantumTask):
         # Timed out
         self._logger.warning(
             f"Task {self._arn}: polling for task completion timed out after "
-            + f"{time.time()-start_time} secs"
+            + f"{time.time()-start_time} seconds. Please increase the timeout; "
+            + "this can be done by creating a new AwsQuantumTask with this task's ARN "
+            + "and a higher value for the `poll_timeout_seconds` parameter."
         )
         self._result = None
         return None

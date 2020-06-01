@@ -16,7 +16,7 @@ from unittest.mock import Mock, patch
 import pytest
 from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
-from common_test_utils import MockDevices
+from common_test_utils import MockDevices, run_and_assert
 
 
 @pytest.fixture
@@ -98,7 +98,7 @@ def test_repr(simulator):
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
     _run_and_assert(
-        aws_quantum_task_mock, simulator, circuit, s3_destination_folder, 1000, ["foo"], {}
+        aws_quantum_task_mock, simulator, circuit, s3_destination_folder, 1000, 300, 1, ["foo"]
     )
 
 
@@ -109,9 +109,39 @@ def test_run_with_kwargs(aws_quantum_task_mock, simulator, circuit, s3_destinati
         simulator,
         circuit,
         s3_destination_folder,
+        extra_kwargs={"bar": 1, "baz": 2},
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_shots(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
+    _run_and_assert(aws_quantum_task_mock, simulator, circuit, s3_destination_folder, 1000)
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_shots_kwargs(aws_quantum_task_mock, simulator, circuit, s3_destination_folder):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        simulator,
+        circuit,
+        s3_destination_folder,
         1000,
-        [],
-        {"bar": 1, "baz": 2},
+        extra_kwargs={"bar": 1, "baz": 2},
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_shots_poll_timeout_kwargs(
+    aws_quantum_task_mock, simulator, circuit, s3_destination_folder
+):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        simulator,
+        circuit,
+        s3_destination_folder,
+        1000,
+        300,
+        extra_kwargs={"bar": 1, "baz": 2},
     )
 
 
@@ -125,30 +155,35 @@ def test_run_with_positional_args_and_kwargs(
         circuit,
         s3_destination_folder,
         1000,
+        300,
+        1,
         ["foo"],
         {"bar": 1, "baz": 2},
     )
 
 
 def _run_and_assert(
-    aws_quantum_task_mock, simulator, circuit, s3_destination_folder, shots, run_args, run_kwargs
+    aws_quantum_task_mock,
+    simulator_factory,
+    circuit,
+    s3_destination_folder,
+    shots=None,  # Treated as positional arg
+    poll_timeout_seconds=None,  # Treated as positional arg
+    poll_interval_seconds=None,  # Treated as positional arg
+    extra_args=None,
+    extra_kwargs=None,
 ):
-    task_mock = Mock()
-    aws_quantum_task_mock.return_value = task_mock
-
-    simulator = simulator(AwsQuantumSimulatorArns.QS1)
-    task = (
-        simulator.run(circuit, s3_destination_folder, shots, *run_args, **run_kwargs)
-        if shots
-        else simulator.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
-    )
-    assert task == task_mock
-    aws_quantum_task_mock.assert_called_with(
-        simulator._aws_session,
-        simulator.arn,
+    run_and_assert(
+        aws_quantum_task_mock,
+        simulator_factory(AwsQuantumSimulatorArns.QS1),
+        AwsQuantumSimulator.DEFAULT_SHOTS_SIMULATOR,
+        AwsQuantumSimulator.DEFAULT_RESULTS_POLL_TIMEOUT_SIMULATOR,
+        AwsQuantumSimulator.DEFAULT_RESULTS_POLL_INTERVAL_SIMULATOR,
         circuit,
         s3_destination_folder,
         shots,
-        *run_args,
-        **run_kwargs
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
     )
