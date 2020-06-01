@@ -28,8 +28,8 @@ class AwsQuantumSimulator(Device):
     """
 
     DEFAULT_SHOTS_SIMULATOR = 0
-    DEFAULT_RESULTS_POLL_TIMEOUT_SIMULATOR = 120
-    DEFAULT_RESULTS_POLL_INTERVAL_SIMULATOR = 0.25
+    DEFAULT_RESULTS_POLL_TIMEOUT_SIMULATOR = 432000
+    DEFAULT_RESULTS_POLL_INTERVAL_SIMULATOR = 1
 
     def __init__(self, arn: str, aws_session=None):
         """
@@ -69,9 +69,9 @@ class AwsQuantumSimulator(Device):
                 `shots>0` means that the simulator will be treated like a QPU and
                 only support result types available for a QPU.
             poll_timeout_seconds (int): The polling timeout for AwsQuantumTask.result(), in seconds.
-                Default: 120.
+                Default: 432000 (5 days).
             poll_interval_seconds (int): The polling interval for AwsQuantumTask.result(),
-                in seconds. Default: 0.25.
+                in seconds. Default: 1.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
