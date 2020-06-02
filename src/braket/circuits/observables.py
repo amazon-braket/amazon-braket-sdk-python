@@ -171,9 +171,9 @@ class TensorProduct(Observable):
             >>> t2.factors
             (Z('qubit_count': 1), Y('qubit_count': 1), X('qubit_count': 1))
 
-        Note: list of observables for tensor product must be given in the desired order that
-        the tensor product will be calculated. For `TensorProduct(observables=[ob1, ob2, ob3])`,
-        the tensor product's matrix will be the result of the tensor product of `ob1`, `ob2`,
+        Note: You must provide the list of observables for tensor product in the order that you 
+        want the tensor product to be calculated. For `TensorProduct(observables=[ob1, ob2, ob3])`,
+        the tensor product's matrix is the result of the tensor product of `ob1`, `ob2`,
         `ob3`, or `np.kron(np.kron(ob1.to_matrix(), ob2.to_matrix()), ob3.to_matrix())`
         """
         self._observables = tuple(observables)
@@ -190,7 +190,7 @@ class TensorProduct(Observable):
 
     @property
     def factors(self) -> Tuple[Observable]:
-        """ Tuple[Observable]: The observables that make up this tensor product"""
+        """ Tuple[Observable]: The observables that comprise this tensor product"""
         return self._observables
 
     def to_matrix(self) -> np.ndarray:
@@ -262,13 +262,13 @@ class Hermitian(Observable):
     def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
         """
         Args:
-            matrix (numpy.ndarray): Hermitian matrix which defines the observable.
-            display_name (str): Name to be used for an instance of this Hermitian matrix
+            matrix (numpy.ndarray): Hermitian matrix that defines the observable.
+            display_name (str): Name to use for an instance of this Hermitian matrix
                 observable for circuit diagrams. Defaults to `Hermitian`.
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,
-                or has a dimension length which is not a positive exponent of 2,
+                or has a dimension length that is not a positive exponent of 2,
                 or is non-hermitian.
 
         Example:

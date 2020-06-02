@@ -31,7 +31,7 @@ class GateModelQuantumTaskResult:
     to be initialized by a QuantumTask class.
 
     Args:
-        task_metadata (Dict[str, Any]): Dictionary of task metadata. task_metadata must have
+        task_metadata (Dict[str, Any]): Dictionary of task metadata. `task_metadata` must have
             keys 'Id', 'Shots', 'Ir', and 'IrType'.
         result_types (List[Dict[str, Any]]): List of dictionaries where each dictionary
             has two keys: 'Type' (the result type in IR JSON form) and
@@ -43,7 +43,7 @@ class GateModelQuantumTaskResult:
             This can be an empty list if no result types are specified in the IR.
             This is calculated from `measurements` and
             the IR of the circuit program when `shots>0`.
-        measurements (numpy.ndarray, optional): 2d array - row is shot, column is qubit.
+        measurements (numpy.ndarray, optional): 2d array - row is shot and column is qubit.
             Default is None. Only available when shots > 0. The qubits in `measurements`
             are the ones in `GateModelQuantumTaskResult.measured_qubits`.
         measured_qubits (List[int], optional): The indices of the measured qubits. Default
@@ -92,8 +92,8 @@ class GateModelQuantumTaskResult:
             Any: value of the result corresponding to the result type
 
         Raises:
-            ValueError: If result type not found in result.
-                Result types must be added to circuit before circuit is run on device.
+            ValueError: If result type is not found in result.
+                Result types must be added to the circuit before the circuit is run on a device.
         """
         rt_json = result_type.to_ir().json()
         for rt in self.result_types:
@@ -115,7 +115,7 @@ class GateModelQuantumTaskResult:
         Creates measurement counts from measurements
 
         Args:
-            measurements (numpy.ndarray): 2d array - row is shot, column is qubit.
+            measurements (numpy.ndarray): 2d array - row is shot and column is qubit.
 
         Returns:
             Counter: A Counter of measurements. Key is the measurements in a big endian binary
