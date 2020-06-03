@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import math
 from typing import Iterable
 
 import braket.ir.jaqcd as ir
@@ -738,6 +737,8 @@ Gate.register_gate(PSwap)
 class XY(AngledGate):
     """XY gate.
 
+    Reference: https://arxiv.org/abs/1912.04424v1
+
     Args:
         angle (float): angle in radians.
     """
@@ -1023,6 +1024,8 @@ Gate.register_gate(CZ)
 class XX(AngledGate):
     """Ising XX coupling gate.
 
+    Reference: https://arxiv.org/abs/1707.06356
+
     Args:
         angle (float): angle in radians.
     """
@@ -1038,12 +1041,14 @@ class XX(AngledGate):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        return (1 / math.sqrt(2)) * np.array(
+        cos = np.cos(self.angle / 2)
+        isin = 1.0j * np.sin(self.angle / 2)
+        return np.array(
             [
-                [1.0, 0.0, 0.0, -1.0j * np.exp(1.0j * self.angle)],
-                [0.0, 1.0, -1.0j, 0.0],
-                [0.0, -1.0j, 1.0, 0.0],
-                [-1.0j * np.exp(-1.0j * self.angle), 0.0, 0.0, 1.0],
+                [cos, 0.0, 0.0, -isin],
+                [0.0, cos, -isin, 0.0],
+                [0.0, -isin, cos, 0.0],
+                [-isin, 0.0, 0.0, cos],
             ],
             dtype=complex,
         )
@@ -1073,6 +1078,8 @@ Gate.register_gate(XX)
 class YY(AngledGate):
     """Ising YY coupling gate.
 
+    Reference: https://arxiv.org/abs/1707.06356
+
     Args:
         angle (float): angle in radians.
     """
@@ -1088,14 +1095,14 @@ class YY(AngledGate):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        cos = np.cos(self.angle)
-        sin = np.sin(self.angle)
+        cos = np.cos(self.angle / 2)
+        isin = 1.0j * np.sin(self.angle / 2)
         return np.array(
             [
-                [cos, 0.0, 0.0, 1.0j * sin],
-                [0.0, cos, -1.0j * sin, 0.0],
-                [0.0, -1.0j * sin, cos, 0.0],
-                [1.0j * sin, 0.0, 0.0, cos],
+                [cos, 0.0, 0.0, isin],
+                [0.0, cos, -isin, 0.0],
+                [0.0, -isin, cos, 0.0],
+                [isin, 0.0, 0.0, cos],
             ],
             dtype=complex,
         )
@@ -1125,6 +1132,8 @@ Gate.register_gate(YY)
 class ZZ(AngledGate):
     """Ising ZZ coupling gate.
 
+    Reference: https://arxiv.org/abs/1707.06356
+
     Args:
         angle (float): angle in radians.
     """
@@ -1142,10 +1151,10 @@ class ZZ(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
-                [np.exp(1j * (self.angle / 2)), 0.0, 0.0, 0.0],
-                [0.0, np.exp(-1j * (self.angle / 2)), 0.0, 0.0],
-                [0.0, 0.0, np.exp(-1j * (self.angle / 2)), 0.0],
-                [0.0, 0.0, 0.0, np.exp(1j * (self.angle / 2))],
+                [np.exp(-1j * (self.angle / 2)), 0.0, 0.0, 0.0],
+                [0.0, np.exp(1j * (self.angle / 2)), 0.0, 0.0],
+                [0.0, 0.0, np.exp(1j * (self.angle / 2)), 0.0],
+                [0.0, 0.0, 0.0, np.exp(-1j * (self.angle / 2))],
             ],
             dtype=complex,
         )
