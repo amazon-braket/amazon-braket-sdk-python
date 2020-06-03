@@ -302,3 +302,10 @@ def test_gate_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwarg
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):
     Gate.Unitary(matrix=matrix)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_unitary_matrix_target_size_mismatch():
+    Circuit().unitary(
+        matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
+    )
