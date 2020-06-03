@@ -139,7 +139,7 @@ class Probability(ResultType):
 
     It can be the probability of all states if no targets are specified, or the marginal 
     probability of a restricted set of states if only a subset of all qubits are specified as 
-    target.
+    targets.
 
     For `shots>0`, this is calculated by measurements. For `shots=0`, this is supported
     only on simulators and represents the exact result.

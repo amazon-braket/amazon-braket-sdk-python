@@ -171,10 +171,11 @@ class TensorProduct(Observable):
             >>> t2.factors
             (Z('qubit_count': 1), Y('qubit_count': 1), X('qubit_count': 1))
 
-        Note: You must provide the list of observables for tensor product in the order that you 
-        want the tensor product to be calculated. For `TensorProduct(observables=[ob1, ob2, ob3])`,
-        the tensor product's matrix is the result of the tensor product of `ob1`, `ob2`,
-        `ob3`, or `np.kron(np.kron(ob1.to_matrix(), ob2.to_matrix()), ob3.to_matrix())`
+        Note: You must provide the list of observables for the tensor product to be evaluated 
+        in the order that you want the tensor product to be calculated. For 
+        `TensorProduct(observables=[ob1, ob2, ob3])`, the tensor product's matrix is the result
+        of the tensor product of `ob1`, `ob2`, `ob3`, or `np.kron(np.kron(ob1.to_matrix(), 
+        ob2.to_matrix()), ob3.to_matrix())`
         """
         self._observables = tuple(observables)
         qubit_count = sum([obs.qubit_count for obs in observables])
@@ -336,7 +337,7 @@ def observable_from_ir(ir_observable: List[Union[str, List[List[List[float]]]]])
     """
     Create an observable from the IR observable list. This can be a tensor product of
     observables or a single observable.
-
+https://s3.console.aws.amazon.com/s3/buckets/braket-external-assets-prod-us-west-2/?region=us-west-2&tab=overview
     Args:
         ir_observable (List[Union[str, List[List[List[float]]]]]): observable as defined in IR
 
