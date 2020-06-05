@@ -137,8 +137,8 @@ ResultType.register_result_type(Amplitude)
 class Probability(ResultType):
     """Probability in the computational basis as the requested result type.
 
-    It can be the probability of all states if no targets are specified, or the marginal 
-    probability of a restricted set of states if only a subset of all qubits are specified as 
+    It can be the probability of all states if no targets are specified, or the marginal
+    probability of a restricted set of states if only a subset of all qubits are specified as
     targets.
 
     For `shots>0`, this is calculated by measurements. For `shots=0`, this is supported
@@ -228,7 +228,7 @@ class Expectation(ObservableResultType):
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
         Raises:
-            ValueError: If the observable's qubit count does not equal the number of target 
+            ValueError: If the observable's qubit count does not equal the number of target
             qubits, or if target=None and the observable's qubit count is not 1.
 
         Examples:
@@ -295,7 +295,7 @@ class Sample(ObservableResultType):
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
         Raises:
-            ValueError: If the observable's qubit count is not equal to the number of target 
+            ValueError: If the observable's qubit count is not equal to the number of target
             qubits, or if target=None and the observable's qubit count is not 1.
 
         Examples:
@@ -345,7 +345,7 @@ class Variance(ObservableResultType):
     """Variance of specified target qubit set and observable as the requested result type.
 
     If no targets are specified, the observable must operate only on 1 qubit and it
-    is applied to all qubits in parallel. Otherwise, the number of targets specified 
+    is applied to all qubits in parallel. Otherwise, the number of targets specified
     must equal the number of qubits that the observable can be applied to.
 
     For `shots>0`, this is calculated by measurements. For `shots=0`, this is supported
@@ -363,7 +363,7 @@ class Variance(ObservableResultType):
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
         Raises:
-            ValueError: If the observable's qubit count does not equal the number of target 
+            ValueError: If the observable's qubit count does not equal the number of target
             qubits, or if target=None and the observable's qubit count is not 1.
 
         Examples:

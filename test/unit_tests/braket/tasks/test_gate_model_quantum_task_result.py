@@ -133,7 +133,7 @@ def result_dict_5():
                 {
                     "results": [
                         jaqcd.Probability(targets=[1]).dict(),
-                        jaqcd.Expectation(targets=None, observable=["z"]).dict(),
+                        jaqcd.Expectation(observable=["z"]).dict(),
                     ]
                 }
             ),
@@ -186,7 +186,7 @@ test_ir_results = [
     (jaqcd.Probability(targets=[1]), np.array([0.6, 0.4])),
     (jaqcd.Probability(targets=[1, 2]), np.array([0.4, 0.2, 0.0, 0.4])),
     (
-        jaqcd.Probability(targets=None),
+        jaqcd.Probability(),
         np.array([0.1, 0.2, 0.2, 0.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2]),
     ),
     (jaqcd.Sample(targets=[1], observable=["z"]), np.array([1, -1, 1, 1, -1, -1, 1, -1, 1, 1])),
@@ -195,7 +195,7 @@ test_ir_results = [
         np.array([-1, 1, 1, -1, 1, 1, 1, 1, 1, 1]),
     ),
     (
-        jaqcd.Sample(targets=None, observable=["z"]),
+        jaqcd.Sample(observable=["z"]),
         [
             np.array([1, -1, -1, 1, -1, 1, 1, 1, 1, 1]),
             np.array([1, -1, 1, 1, -1, -1, 1, -1, 1, 1]),
@@ -205,10 +205,10 @@ test_ir_results = [
     ),
     (jaqcd.Expectation(targets=[1], observable=["z"]), 0.2),
     (jaqcd.Expectation(targets=[1, 2], observable=["z", "y"]), 0.6),
-    (jaqcd.Expectation(targets=None, observable=["z"]), [0.4, 0.2, -0.2, -0.4]),
+    (jaqcd.Expectation(observable=["z"]), [0.4, 0.2, -0.2, -0.4]),
     (jaqcd.Variance(targets=[1], observable=["z"]), 0.96),
     (jaqcd.Variance(targets=[1, 2], observable=["z", "y"]), 0.64),
-    (jaqcd.Variance(targets=None, observable=["z"]), [0.84, 0.96, 0.96, 0.84]),
+    (jaqcd.Variance(observable=["z"]), [0.84, 0.96, 0.96, 0.84]),
 ]
 
 
@@ -293,10 +293,7 @@ def test_from_dict_result_types(result_dict_5):
     assert np.allclose(task_result.values[0], np.array([0.6, 0.4]))
     assert task_result.values[1] == [0.4, 0.2, -0.2, -0.4]
     assert task_result.result_types[0]["Type"] == jaqcd.Probability(targets=[1]).dict()
-    assert (
-        task_result.result_types[1]["Type"]
-        == jaqcd.Expectation(targets=None, observable=["z"]).dict()
-    )
+    assert task_result.result_types[1]["Type"] == jaqcd.Expectation(observable=["z"]).dict()
 
 
 def test_from_dict_measurement_probabilities(result_str_3):

@@ -142,6 +142,13 @@ def test_add_result_type_observable_conflict_all_target_then_selected_target():
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_add_result_type_observable_conflict_different_selected_targets_then_all_target():
+    circ = Circuit().add_result_type(ResultType.Expectation(observable=Observable.Z(), target=[0]))
+    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1]))
+    circ.add_result_type(ResultType.Expectation(observable=Observable.Y()))
+
+
+@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_observable_conflict_selected_target_then_all_target():
     circ = Circuit().add_result_type(
         ResultType.Expectation(observable=Observable.Y(), target=[0, 1])
@@ -153,6 +160,15 @@ def test_add_result_type_observable_no_conflict_all_target():
     expected = [
         ResultType.Probability(),
         ResultType.Expectation(observable=Observable.Z(), target=[0]),
+    ]
+    circ = Circuit(expected)
+    assert circ.result_types == expected
+
+
+def test_add_result_type_observable_no_conflict_target_all():
+    expected = [
+        ResultType.Expectation(observable=Observable.Z(), target=[0]),
+        ResultType.Probability(),
     ]
     circ = Circuit(expected)
     assert circ.result_types == expected
@@ -434,7 +450,7 @@ def test_basis_rotation_instructions_tensor_product():
     assert circ.basis_rotation_instructions == expected
 
 
-def test_basis_rotation_instructions_multiple_result_types():
+def test_basis_rotation_instructions_multiple_result_types_different_targets():
     circ = (
         Circuit()
         .h(0)
@@ -443,6 +459,77 @@ def test_basis_rotation_instructions_multiple_result_types():
         .sample(observable=Observable.H(), target=1)
     )
     expected = [Instruction(Gate.H(), 0), Instruction(Gate.Ry(-np.pi / 4), 1)]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_same_targets():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
+        .sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
+        .variance(observable=Observable.H() @ Observable.X(), target=[0, 1])
+    )
+    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.H(), 1)]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_all_specified_same_targets():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.H())
+        .sample(observable=Observable.H(), target=[0])
+    )
+    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.Ry(-np.pi / 4), 1)]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_specified_all_same_targets():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .sample(observable=Observable.H(), target=[0])
+        .expectation(observable=Observable.H())
+    )
+    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.Ry(-np.pi / 4), 1)]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_same_targets_hermitian():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .sample(observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
+        .expectation(
+            observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1]
+        )
+    )
+    expected = [Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1])]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_different_hermitian_targets():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .sample(observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])), target=[1])
+        .expectation(observable=Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[0])
+    )
+    expected = [
+        Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1]),
+        Instruction(
+            Gate.Unitary(
+                matrix=1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
+            ),
+            target=[0],
+        ),
+    ]
     assert circ.basis_rotation_instructions == expected
 
 

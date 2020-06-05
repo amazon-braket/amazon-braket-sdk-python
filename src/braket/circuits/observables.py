@@ -171,10 +171,10 @@ class TensorProduct(Observable):
             >>> t2.factors
             (Z('qubit_count': 1), Y('qubit_count': 1), X('qubit_count': 1))
 
-        Note: You must provide the list of observables for the tensor product to be evaluated 
-        in the order that you want the tensor product to be calculated. 
-        For `TensorProduct(observables=[ob1, ob2, ob3])`, the tensor product's matrix is the 
-        result of the tensor product of `ob1`, `ob2`, `ob3`, or `np.kron(np.kron(ob1.to_matrix(), 
+        Note: You must provide the list of observables for the tensor product to be evaluated
+        in the order that you want the tensor product to be calculated.
+        For `TensorProduct(observables=[ob1, ob2, ob3])`, the tensor product's matrix is the
+        result of the tensor product of `ob1`, `ob2`, `ob3`, or `np.kron(np.kron(ob1.to_matrix(),
         ob2.to_matrix()), ob3.to_matrix())`.
         """
         self._observables = tuple(observables)
@@ -328,6 +328,10 @@ class Hermitian(Observable):
                 "eigenvalues": eigenvalues,
             }
         return Hermitian._eigenpairs[mat_key]
+
+    def __repr__(self):
+        matrix_str = np.array2string(self.to_matrix()).replace("\n", ",")
+        return f"{self.name}('qubit_count': {self.qubit_count}, 'matrix': {matrix_str})"
 
 
 Observable.register_observable(Hermitian)
