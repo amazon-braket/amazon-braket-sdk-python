@@ -45,7 +45,6 @@ bell = (
     Circuit()
     .h(0)
     .cnot(0, 1)
-    .probability()
     .expectation(observable=Observable.Y() @ Observable.X(), target=[0, 1])
     .variance(observable=Observable.Y() @ Observable.X(), target=[0, 1])
     .sample(observable=Observable.Y() @ Observable.X(), target=[0, 1])
@@ -54,9 +53,8 @@ bell = (
 # When shots>0 for a simulator, probability, expectation, variance are calculated from measurements
 # Users can request sample as a result when shots > 0
 result = device.run(bell, shots=100).result()
-print("Probability of all states in computational basis:", result.values[0])
-print("Expectation of target 0, 1 in the basis of Pauli-Y @ Pauli-X:", result.values[1])
-print("Variance of target 0, 1 in the basis of Pauli-Y @ Pauli-X:", result.values[2])
-print("Samples of target 0, 1 in the basis of Pauli-Y @ Pauli-X:", result.values[3])
+print("Expectation of target 0, 1 in the basis of Pauli-Y @ Pauli-X:", result.values[0])
+print("Variance of target 0, 1 in the basis of Pauli-Y @ Pauli-X:", result.values[1])
+print("Samples of target 0, 1 in the basis of Pauli-Y @ Pauli-X:", result.values[2])
 
 # Probability, sample, expectation, and variance are also supported for QPU devices
