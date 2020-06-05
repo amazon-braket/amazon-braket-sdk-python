@@ -323,7 +323,7 @@ You can also check your version of `braket-python-sdk` from within Python:
 
 ```
 >>> import braket._sdk as braket_sdk
->>> braket_sdk.__version___
+>>> braket_sdk.__version__
 ```
 
 Compare the version displayed in your local environment with the latest version listed for each of the following release pages:
