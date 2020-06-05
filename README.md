@@ -318,6 +318,14 @@ pip show amazon-braket-default-simulator-python
 pip show braket-ir
 pip show braket-sdk
 ```
+
+You can also check your version of `braket-python-sdk` from within Python:
+
+```
+>>> import braket._sdk as braket_sdk
+>>> braket_sdk.__version___
+```
+
 Compare the version displayed in your local environment with the latest version listed for each of the following release pages:
 - [amazon-braket-default-simulator-python](https://github.com/aws/amazon-braket-default-simulator-python/releases) 
 - [braket-python-ir](https://github.com/aws/braket-python-ir/releases)

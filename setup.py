@@ -13,9 +13,12 @@
 
 from setuptools import find_namespace_packages, setup
 
+with open("src/braket/_sdk/_version.py") as f:
+    version = f.readlines()[-1].split()[-1].strip("\"'")
+
 setup(
     name="braket-sdk",
-    version="0.4.0",
+    version=version,
     license="Apache License 2.0",
     python_requires=">= 3.7.2",
     packages=find_namespace_packages(where="src", exclude=("test",)),
