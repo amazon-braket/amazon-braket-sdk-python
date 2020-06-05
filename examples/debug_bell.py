@@ -30,7 +30,14 @@ s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 bell = Circuit().h(0).cnot(0, 1)
 # pass in logger to device.run, enabling debugging logs to print to console
 logger.info(
-    device.run(bell, s3_folder, poll_timeout_seconds=120, poll_interval_seconds=0.25, logger=logger)
+    device.run(
+        bell,
+        s3_folder,
+        shots=100,
+        poll_timeout_seconds=120,
+        poll_interval_seconds=0.25,
+        logger=logger,
+    )
     .result()
     .measurement_counts
 )
