@@ -47,7 +47,13 @@ def s3_bucket(s3_resource, boto_session):
     try:
         bucket.create(ACL="private", CreateBucketConfiguration={"LocationConstraint": region_name})
     except ClientError as e:
-        if e.response["Error"]["Code"] == "BucketAlreadyOwnedByYou":
+        code = e.response["Error"]["Code"]
+
+        # Bucket exists in profile region
+        if code == "BucketAlreadyOwnedByYou":
+            pass
+        # Bucket exists in another region
+        elif code == "IllegalLocationConstraintException" and bucket.creation_date:
             pass
         else:
             raise e
