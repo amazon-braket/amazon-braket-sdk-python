@@ -111,7 +111,8 @@ class AwsQuantumSimulator(Device):
         self._status = simulator_metadata.get("status")
         self._status_reason = simulator_metadata.get("statusReason")
         self._properties = {
-            k: simulator_metadata.get(k) for k in ["supportedQuantumOperations", "qubitCount"]
+            k: simulator_metadata.get(k)
+            for k in ["supportedQuantumOperations", "qubitCount", "supportedResultTypes"]
         }
 
     @property

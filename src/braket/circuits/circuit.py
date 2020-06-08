@@ -149,8 +149,8 @@ class Circuit:
         added_observables_targets = set()
         for return_type in observable_return_types:
             observable: Observable = return_type.observable
-            targets: List[List[int]] = [return_type.target] if return_type.target else [
-                QubitSet(qubit) for qubit in self._moments.qubits
+            targets: List[List[int]] = [list(return_type.target)] if return_type.target else [
+                list([qubit]) for qubit in self._moments.qubits
             ]
 
             for target in targets:
@@ -166,15 +166,15 @@ class Circuit:
         return basis_rotation_instructions
 
     @staticmethod
-    def _observable_to_instruction(observable: Observable, targets: List[int]):
+    def _observable_to_instruction(observable: Observable, target_list: List[int]):
         if isinstance(observable, TensorProduct):
             instructions = []
             for factor in observable.factors:
-                target = [targets.pop(0) for _ in range(factor.qubit_count)]
+                target = [target_list.pop(0) for _ in range(factor.qubit_count)]
                 instructions += Circuit._observable_to_instruction(factor, target)
             return instructions
         else:
-            return [Instruction(gate, targets) for gate in observable.basis_rotation_gates]
+            return [Instruction(gate, target_list) for gate in observable.basis_rotation_gates]
 
     @property
     def moments(self) -> Moments:
