@@ -533,6 +533,20 @@ def test_basis_rotation_instructions_multiple_result_types_different_hermitian_t
     assert circ.basis_rotation_instructions == expected
 
 
+def test_basis_rotation_instructions_call_twice():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
+        .sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
+        .variance(observable=Observable.H() @ Observable.X(), target=[0, 1])
+    )
+    expected = [Instruction(Gate.Ry(-np.pi / 4), 0), Instruction(Gate.H(), 1)]
+    assert circ.basis_rotation_instructions == expected
+    assert circ.basis_rotation_instructions == expected
+
+
 def test_depth_getter(h):
     assert h.depth is h._moments.depth
 

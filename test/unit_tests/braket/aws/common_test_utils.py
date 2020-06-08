@@ -143,6 +143,15 @@ class MockDevices:
             "gateModelProperties": {
                 "qubitCount": 23,
                 "supportedQuantumOperations": ["CNOT", "H", "RZ", "RY", "RZ", "Toffoli"],
+                "supportedResultTypes": [
+                    {
+                        "name": "Sample",
+                        "observables": ["X", "Y", "Z"],
+                        "minShots": 1,
+                        "maxShots": 100,
+                    },
+                    {"name": "Probability", "minShots": 1, "maxShots": 100,},
+                ],
             }
         },
         "name": "integ_test_simulator",
@@ -163,6 +172,14 @@ class MockDevices:
                     "Toffoli",
                     "Phase",
                     "CPhase",
+                ],
+                "supportedResultTypes": [
+                    {
+                        "name": "Sample",
+                        "observables": ["X", "Y", "Z"],
+                        "minShots": 1,
+                        "maxShots": 100,
+                    }
                 ],
             }
         },

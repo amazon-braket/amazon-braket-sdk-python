@@ -50,6 +50,9 @@ def test_simulator_refresh_metadata_success():
     assert simulator.properties["supportedQuantumOperations"] == expected_metadata.get(
         "supportedQuantumOperations"
     )
+    assert simulator.properties["supportedResultTypes"] == expected_metadata.get(
+        "supportedResultTypes"
+    )
     assert simulator.status == expected_metadata.get("status")
     assert simulator.status_reason is None
 
@@ -62,6 +65,9 @@ def test_simulator_refresh_metadata_success():
     assert simulator.properties["qubitCount"] == expected_metadata.get("qubitCount")
     assert simulator.properties["supportedQuantumOperations"] == expected_metadata.get(
         "supportedQuantumOperations"
+    )
+    assert simulator.properties["supportedResultTypes"] == expected_metadata.get(
+        "supportedResultTypes"
     )
     assert simulator.status == expected_metadata.get("status")
     assert simulator.status_reason == expected_metadata.get("statusReason")
