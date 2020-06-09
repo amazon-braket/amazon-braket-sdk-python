@@ -20,7 +20,7 @@ import pytest
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator, local_simulator
-from braket.simulator import BraketSimulator, IrType
+from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 GATE_MODEL_RESULT = {
@@ -55,7 +55,7 @@ class DummyCircuitSimulator(BraketSimulator):
 
     @property
     def properties(self) -> Dict[str, Any]:
-        return {"supportedIrTypes": [IrType.JAQCD], "supportedQuantumOperations": ["I", "X"]}
+        return {"supportedIrTypes": ["jaqcd"], "supportedQuantumOperations": ["I", "X"]}
 
     def assert_shots(self, shots):
         assert self._shots == shots
@@ -70,7 +70,7 @@ class DummyAnnealingSimulator(BraketSimulator):
 
     @property
     def properties(self) -> Dict[str, Any]:
-        return {"supportedIrTypes": [IrType.ANNEALING]}
+        return {"supportedIrTypes": ["annealing"]}
 
 
 mock_entry = Mock()
@@ -141,7 +141,7 @@ def test_run_qubit_gate_unsupported():
 def test_properties():
     sim = LocalSimulator(DummyCircuitSimulator())
     expected_properties = {
-        "supportedIrTypes": [IrType.JAQCD],
+        "supportedIrTypes": ["jaqcd"],
         "supportedQuantumOperations": ["I", "X"],
     }
     assert sim.properties == expected_properties
