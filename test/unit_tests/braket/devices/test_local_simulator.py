@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
-from typing import Any, Dict, FrozenSet, Optional
+from typing import Any, Dict, Optional
 from unittest.mock import Mock
 
 import braket.ir as ir
@@ -20,7 +20,7 @@ import pytest
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator, local_simulator
-from braket.simulator import BraketSimulator, Paradigm
+from braket.simulator import BraketSimulator, IrType
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 GATE_MODEL_RESULT = {
@@ -55,11 +55,7 @@ class DummyCircuitSimulator(BraketSimulator):
 
     @property
     def properties(self) -> Dict[str, Any]:
-        return {"supportedQuantumOperations": ["I", "X"]}
-
-    @property
-    def supported_paradigms(self) -> FrozenSet[Paradigm]:
-        return frozenset([Paradigm.QUBIT_GATE])
+        return {"supportedIrTypes": [IrType.JAQCD], "supportedQuantumOperations": ["I", "X"]}
 
     def assert_shots(self, shots):
         assert self._shots == shots
@@ -74,11 +70,7 @@ class DummyAnnealingSimulator(BraketSimulator):
 
     @property
     def properties(self) -> Dict[str, Any]:
-        return {}
-
-    @property
-    def supported_paradigms(self) -> FrozenSet[Paradigm]:
-        return frozenset([Paradigm.ANNEALING])
+        return {"supportedIrTypes": [IrType.ANNEALING]}
 
 
 mock_entry = Mock()
@@ -148,5 +140,8 @@ def test_run_qubit_gate_unsupported():
 
 def test_properties():
     sim = LocalSimulator(DummyCircuitSimulator())
-    expected_properties = {"supportedQuantumOperations": ["I", "X"]}
+    expected_properties = {
+        "supportedIrTypes": [IrType.JAQCD],
+        "supportedQuantumOperations": ["I", "X"],
+    }
     assert sim.properties == expected_properties

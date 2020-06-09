@@ -20,7 +20,7 @@ from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.devices.device import Device
-from braket.simulator import BraketSimulator, Paradigm
+from braket.simulator import BraketSimulator, IrType
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
@@ -125,7 +125,7 @@ def _run_internal(
 
 @_run_internal.register
 def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
-    if Paradigm.QUBIT_GATE not in simulator.supported_paradigms:
+    if IrType.JAQCD not in simulator.properties["supportedIrTypes"]:
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
     validate_circuit_and_shots(circuit, shots)
     program = circuit.to_ir()
@@ -136,7 +136,7 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
 
 @_run_internal.register
 def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
-    if Paradigm.ANNEALING not in simulator.supported_paradigms:
+    if IrType.ANNEALING not in simulator.properties["supportedIrTypes"]:
         raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
     ir = problem.to_ir()
     results_dict = simulator.run(ir, shots, *args, *kwargs)
