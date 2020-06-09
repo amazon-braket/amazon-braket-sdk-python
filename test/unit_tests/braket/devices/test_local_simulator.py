@@ -55,7 +55,7 @@ class DummyCircuitSimulator(BraketSimulator):
 
     @property
     def properties(self) -> Dict[str, Any]:
-        return {"supportedQuantumOperations": ["I", "X"]}
+        return {"supportedIrTypes": ["jaqcd"], "supportedQuantumOperations": ["I", "X"]}
 
     def assert_shots(self, shots):
         assert self._shots == shots
@@ -70,7 +70,7 @@ class DummyAnnealingSimulator(BraketSimulator):
 
     @property
     def properties(self) -> Dict[str, Any]:
-        return {}
+        return {"supportedIrTypes": ["annealing"]}
 
 
 mock_entry = Mock()
@@ -126,7 +126,22 @@ def test_run_unsupported_type():
     sim.run("I'm unsupported")
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_run_annealing_unsupported():
+    sim = LocalSimulator(DummyCircuitSimulator())
+    sim.run(Problem(ProblemType.ISING))
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_run_qubit_gate_unsupported():
+    sim = LocalSimulator(DummyAnnealingSimulator())
+    sim.run(Circuit().h(0).cnot(0, 1), 1000)
+
+
 def test_properties():
     sim = LocalSimulator(DummyCircuitSimulator())
-    expected_properties = {"supportedQuantumOperations": ["I", "X"]}
+    expected_properties = {
+        "supportedIrTypes": ["jaqcd"],
+        "supportedQuantumOperations": ["I", "X"],
+    }
     assert sim.properties == expected_properties

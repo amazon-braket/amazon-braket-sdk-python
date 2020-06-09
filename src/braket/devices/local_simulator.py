@@ -120,11 +120,13 @@ def _(backend_impl: BraketSimulator):
 def _run_internal(
     task_specification, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs
 ):
-    raise NotImplementedError("Unsupported task type")
+    raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
 
 @_run_internal.register
 def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
+    if "jaqcd" not in simulator.properties["supportedIrTypes"]:
+        raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
     validate_circuit_and_shots(circuit, shots)
     program = circuit.to_ir()
     qubits = circuit.qubit_count
@@ -134,6 +136,8 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
 
 @_run_internal.register
 def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
+    if "annealing" not in simulator.properties["supportedIrTypes"]:
+        raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
     ir = problem.to_ir()
     results_dict = simulator.run(ir, shots, *args, *kwargs)
     return AnnealingQuantumTaskResult.from_dict(results_dict)
