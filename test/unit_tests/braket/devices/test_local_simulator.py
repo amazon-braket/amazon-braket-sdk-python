@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, FrozenSet, Optional
 from unittest.mock import Mock
 
 import braket.ir as ir
@@ -20,7 +20,7 @@ import pytest
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator, local_simulator
-from braket.simulator import BraketSimulator
+from braket.simulator import BraketSimulator, Paradigm
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 GATE_MODEL_RESULT = {
@@ -57,6 +57,10 @@ class DummyCircuitSimulator(BraketSimulator):
     def properties(self) -> Dict[str, Any]:
         return {"supportedQuantumOperations": ["I", "X"]}
 
+    @property
+    def supported_paradigms(self) -> FrozenSet[Paradigm]:
+        return frozenset([Paradigm.QUBIT_GATE])
+
     def assert_shots(self, shots):
         assert self._shots == shots
 
@@ -71,6 +75,10 @@ class DummyAnnealingSimulator(BraketSimulator):
     @property
     def properties(self) -> Dict[str, Any]:
         return {}
+
+    @property
+    def supported_paradigms(self) -> FrozenSet[Paradigm]:
+        return frozenset([Paradigm.ANNEALING])
 
 
 mock_entry = Mock()
@@ -124,6 +132,18 @@ def test_init_unregistered_backend():
 def test_run_unsupported_type():
     sim = LocalSimulator(DummyCircuitSimulator())
     sim.run("I'm unsupported")
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_run_annealing_unsupported():
+    sim = LocalSimulator(DummyCircuitSimulator())
+    sim.run(Problem(ProblemType.ISING))
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_run_qubit_gate_unsupported():
+    sim = LocalSimulator(DummyAnnealingSimulator())
+    sim.run(Circuit().h(0).cnot(0, 1), 1000)
 
 
 def test_properties():
