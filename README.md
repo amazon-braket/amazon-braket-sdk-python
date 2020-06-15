@@ -278,7 +278,7 @@ print(task.result().measurement_counts)
 ```
 
 Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
-- **IonQ** "arn:aws:aqx:::qpu:ionq" (Available 4:00 PM to 8:00 PM ET M-F)
+- **IonQ** "arn:aws:aqx:::qpu:ionq" (Available 9:00 AM to 1:00 PM ET M-F)
 - **Rigetti** "arn:aws:aqx:::qpu:rigetti" (Available 11:00 AM to 1:00 PM ET daily)
 - **D-Wave** "arn:aws:aqx:::qpu:d-wave" (Available 24/7. See the next section in this document for more information about using D-Wave.)
 
