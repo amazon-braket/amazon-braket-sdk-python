@@ -25,7 +25,7 @@ bell = (
     .cnot(0, 1)
     .probability(target=[0])
     .expectation(observable=Observable.Z(), target=[1])
-    .amplitude(state="00")
+    .amplitude(state=["00"])
     .state_vector()
 )
 

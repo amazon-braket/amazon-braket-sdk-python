@@ -82,13 +82,19 @@ class Amplitude(ResultType):
             state (List[str]): list of quantum states as strings with "0" and "1"
 
         Raises:
-            ValueError: If state is None or an empty list
+            ValueError: If state is None or an empty list, or
+                state is not a list of strings of '0' and '1'
 
         Examples:
             >>> ResultType.Amplitude(state=['01', '10'])
         """
-        if not state or not all(
-            isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude) for amplitude in state
+        if (
+            not state
+            or not isinstance(state, List)
+            or not all(
+                isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude)
+                for amplitude in state
+            )
         ):
             raise ValueError(
                 "A non-empty list of states must be specified in binary encoding e.g. ['01', '10']"
