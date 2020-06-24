@@ -13,7 +13,9 @@
 
 from typing import Any, Dict, NamedTuple
 
+import backoff
 import boto3
+from botocore.exceptions import ClientError
 
 
 class AwsSession(object):
@@ -79,6 +81,21 @@ class AwsSession(object):
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         return response["quantumTaskArn"]
 
+    @staticmethod
+    def _should_giveup(err):
+        return not (
+            isinstance(err, ClientError)
+            and err.response["Error"]["Code"]
+            in ["ResourceNotFoundException", "ThrottlingException",]
+        )
+
+    @backoff.on_exception(
+        backoff.expo,
+        ClientError,
+        max_tries=3,
+        jitter=backoff.full_jitter,
+        giveup=_should_giveup.__func__,
+    )
     def get_quantum_task(self, arn: str) -> Dict[str, Any]:
         """
         Gets the quantum task.
