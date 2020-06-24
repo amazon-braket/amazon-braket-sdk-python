@@ -20,6 +20,7 @@ from logging import Logger, getLogger
 from typing import Any, Dict, Union
 
 import boto3
+from botocore.exceptions import ClientError
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
@@ -299,7 +300,24 @@ class AwsQuantumTask(QuantumTask):
         start_time = time.time()
 
         while (time.time() - start_time) < self._poll_timeout_seconds:
-            current_metadata = self.metadata()
+            current_metadata = None
+            try:
+                current_metadata = self.metadata()
+            except ClientError as err:
+                if err.response["Error"]["Code"] in [
+                    "ResourceNotFoundException",
+                    "ThrottlingException",
+                ]:
+                    self._logger.warning(
+                        f"Failed to fetch task {self._arn} with error code "
+                        + f"{err.response['Error']['Code']}. Will retry shortly. If you "
+                        + "continue to experience this error for more than few minutes, "
+                        + "please reach out customer support."
+                    )
+                    continue
+                else:
+                    raise err
+
             task_status = current_metadata["status"]
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:

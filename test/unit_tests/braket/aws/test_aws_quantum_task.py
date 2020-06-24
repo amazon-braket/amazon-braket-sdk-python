@@ -17,6 +17,7 @@ import time
 from unittest.mock import Mock, patch
 
 import pytest
+from botocore.exceptions import ClientError
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
@@ -200,6 +201,36 @@ def test_async_result(circuit_task):
     assert result_from_future == expected
 
 
+def test_async_result_with_partial_failures(circuit_task):
+    def set_result_from_callback(future):
+        # Set the result_from_callback variable in the enclosing functions scope
+        nonlocal result_from_callback
+        result_from_callback = future.result()
+
+    _mock_metadata_partial_error(circuit_task._aws_session, "RUNNING", "COMPLETED")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_1)
+
+    future = circuit_task.async_result()
+
+    # test the different ways to get the result from async
+
+    # via callback
+    result_from_callback = None
+    future.add_done_callback(set_result_from_callback)
+
+    # via asyncio waiting for result
+    event_loop = asyncio.get_event_loop()
+    result_from_waiting = event_loop.run_until_complete(future)
+
+    # via future.result(). Note that this would fail if the future is not complete.
+    result_from_future = future.result()
+
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_1)
+    assert result_from_callback == expected
+    assert result_from_waiting == expected
+    assert result_from_future == expected
+
+
 def test_failed_task(quantum_task):
     _mock_metadata(quantum_task._aws_session, "FAILED")
     _mock_s3(quantum_task._aws_session, MockS3.MOCK_S3_RESULT_1)
@@ -349,6 +380,34 @@ def _mock_metadata(aws_session, state, irType="jaqcd"):
         "irType": irType,
     }
     aws_session.get_quantum_task.return_value = return_value
+
+
+def _mock_metadata_partial_error(aws_session, *states, irType="jaqcd"):
+    first_return_value = {
+        "status": states[0],
+        "resultsS3Bucket": S3_TARGET.bucket,
+        "resultsS3ObjectKey": S3_TARGET.key,
+        "irType": irType,
+    }
+    second_return_value = {
+        "status": states[1],
+        "resultsS3Bucket": S3_TARGET.bucket,
+        "resultsS3ObjectKey": S3_TARGET.key,
+        "irType": irType,
+    }
+    resource_not_found_response = {
+        "Error": {"Code": "ResourceNotFoundException", "Message": "unit-test-error",}
+    }
+    throttling_response = {
+        "Error": {"Code": "ResourceNotFoundException", "Message": "unit-test-error",}
+    }
+    aws_session.get_quantum_task.side_effect = [
+        first_return_value,
+        ClientError(resource_not_found_response, "unit-test"),
+        ClientError(throttling_response, "unit-test"),
+        second_return_value,
+        second_return_value,
+    ]
 
 
 def _mock_s3(aws_session, result):
