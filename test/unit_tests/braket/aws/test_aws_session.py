@@ -173,3 +173,52 @@ def test_get_quantum_task(aws_session):
 
     assert aws_session.get_quantum_task(arn) == return_value
     aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
+
+
+def test_get_quantum_task_retry(aws_session):
+    arn = "foo:bar:arn"
+    return_value = {"quantumTaskArn": arn}
+
+    resource_not_found_response = {
+        "Error": {"Code": "ResourceNotFoundException", "Message": "unit-test-error",}
+    }
+    throttling_response = {"Error": {"Code": "ThrottlingException", "Message": "unit-test-error",}}
+
+    aws_session.braket_client.get_quantum_task.side_effect = [
+        ClientError(resource_not_found_response, "unit-test"),
+        ClientError(throttling_response, "unit-test"),
+        return_value,
+    ]
+
+    assert aws_session.get_quantum_task(arn) == return_value
+    aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
+    aws_session.braket_client.get_quantum_task.call_count == 3
+
+
+def test_get_quantum_task_fail_after_retries(aws_session):
+    resource_not_found_response = {
+        "Error": {"Code": "ResourceNotFoundException", "Message": "unit-test-error",}
+    }
+    throttling_response = {"Error": {"Code": "ThrottlingException", "Message": "unit-test-error",}}
+
+    aws_session.braket_client.get_quantum_task.side_effect = [
+        ClientError(resource_not_found_response, "unit-test"),
+        ClientError(throttling_response, "unit-test"),
+        ClientError(throttling_response, "unit-test"),
+    ]
+
+    with pytest.raises(ClientError):
+        aws_session.get_quantum_task("some-arn")
+    aws_session.braket_client.get_quantum_task.call_count == 3
+
+
+def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
+    exception_response = {"Error": {"Code": "SomeOtherException", "Message": "unit-test-error",}}
+
+    aws_session.braket_client.get_quantum_task.side_effect = [
+        ClientError(exception_response, "unit-test"),
+    ]
+
+    with pytest.raises(ClientError):
+        aws_session.get_quantum_task("some-arn")
+    aws_session.braket_client.get_quantum_task.call_count == 1

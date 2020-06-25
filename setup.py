@@ -29,6 +29,7 @@ setup(
             "amazon-braket-default-simulator-python @"
             "git+https://github.com/aws/amazon-braket-default-simulator-python.git"
         ),
+        "backoff",
         "boltons",
         "boto3",
         "nest-asyncio",
