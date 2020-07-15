@@ -14,7 +14,7 @@
 import asyncio
 import threading
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from common_test_utils import MockS3
@@ -135,6 +135,26 @@ def test_cancel_without_fetching_result(quantum_task):
     assert quantum_task.result() is None
     assert quantum_task._future.cancelled()
     quantum_task._aws_session.cancel_quantum_task.assert_called_with(quantum_task.id)
+
+
+def asyncio_get_event_loop_side_effect(*args, **kwargs):
+    yield ValueError("unit-test-exception")
+    mock = MagicMock()
+    while True:
+        yield mock
+
+
+@patch("braket.aws.aws_quantum_task.asyncio")
+def test_initialize_asyncio_event_loop_if_required(mock_asyncio, quantum_task):
+    mock_asyncio.get_event_loop.side_effect = asyncio_get_event_loop_side_effect()
+    mock_asyncio.set_event_loop.return_value = MagicMock()
+    mock_asyncio.new_event_loop.return_value = MagicMock()
+
+    quantum_task._get_future()
+
+    assert mock_asyncio.get_event_loop.call_count == 2
+    assert mock_asyncio.set_event_loop.call_count == 1
+    assert mock_asyncio.new_event_loop.call_count == 1
 
 
 def test_result_circuit(circuit_task):
