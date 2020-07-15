@@ -15,6 +15,7 @@ import json
 
 import numpy as np
 import pytest
+
 from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.tasks import AnnealingQuantumTaskResult
 

@@ -14,6 +14,7 @@
 from collections import OrderedDict
 
 import pytest
+
 from braket.circuits import Gate, Instruction, Moments, MomentsKey, QubitSet
 
 

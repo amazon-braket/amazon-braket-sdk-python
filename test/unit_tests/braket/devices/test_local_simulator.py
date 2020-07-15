@@ -15,8 +15,9 @@ import json
 from typing import Any, Dict, Optional
 from unittest.mock import Mock
 
-import braket.ir as ir
 import pytest
+
+import braket.ir as ir
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator, local_simulator

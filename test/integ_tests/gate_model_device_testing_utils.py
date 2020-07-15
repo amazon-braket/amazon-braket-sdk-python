@@ -14,6 +14,7 @@
 from typing import Any, Dict
 
 import numpy as np
+
 from braket.circuits import Circuit, Observable, ResultType
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 from braket.devices import Device

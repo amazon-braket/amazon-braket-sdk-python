@@ -17,12 +17,13 @@ import time
 from unittest.mock import Mock, patch
 
 import pytest
+from common_test_utils import MockS3
+
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
-from common_test_utils import MockS3
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 

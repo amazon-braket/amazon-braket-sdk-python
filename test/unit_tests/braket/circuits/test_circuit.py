@@ -13,9 +13,10 @@
 
 from unittest.mock import Mock
 
-import braket.ir.jaqcd as jaqcd
 import numpy as np
 import pytest
+
+import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
     AsciiCircuitDiagram,
     Circuit,

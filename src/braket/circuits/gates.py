@@ -13,8 +13,9 @@
 
 from typing import Iterable
 
-import braket.ir.jaqcd as ir
 import numpy as np
+
+import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import AngledGate
 from braket.circuits.gate import Gate

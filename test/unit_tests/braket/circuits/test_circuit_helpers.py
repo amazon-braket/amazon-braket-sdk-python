@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import pytest
+
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 

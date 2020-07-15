@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import pytest
+
 from braket.aws import AwsQpu, AwsQpuArns, AwsQuantumSimulator, AwsQuantumSimulatorArns
 
 

@@ -14,13 +14,14 @@
 from typing import Any, Dict, Union
 
 import boto3
+from networkx import Graph, complete_graph, from_edgelist
+
 from braket.annealing.problem import Problem
 from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.devices.device import Device
-from networkx import Graph, complete_graph, from_edgelist
 
 
 class AwsQpu(Device):

@@ -13,6 +13,7 @@
 
 import numpy as np
 import pytest
+
 from braket.circuits import Operator, QuantumOperator
 
 

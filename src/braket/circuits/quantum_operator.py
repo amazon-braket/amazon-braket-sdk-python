@@ -13,6 +13,7 @@
 from typing import Any, List, Sequence
 
 import numpy as np
+
 from braket.circuits.operator import Operator
 
 

@@ -14,6 +14,7 @@
 import json
 
 import pytest
+
 from braket.aws import AwsQpuArns
 
 TEST_S3_OBJ_CONTENTS = {

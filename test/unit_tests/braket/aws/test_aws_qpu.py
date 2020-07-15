@@ -15,9 +15,10 @@ from unittest.mock import Mock, patch
 
 import networkx as nx
 import pytest
+from common_test_utils import MockDevices, run_and_assert
+
 from braket.aws import AwsQpu, AwsQpuArns
 from braket.circuits import Circuit
-from common_test_utils import MockDevices, run_and_assert
 
 
 @pytest.fixture

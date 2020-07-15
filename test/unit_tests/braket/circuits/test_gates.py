@@ -11,9 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import braket.ir.jaqcd as ir
 import numpy as np
 import pytest
+
+import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Gate, Instruction, QubitSet
 from braket.ir.jaqcd.shared_models import (
     Angle,

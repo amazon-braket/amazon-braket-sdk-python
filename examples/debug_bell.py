@@ -15,6 +15,7 @@ import logging
 import sys
 
 import boto3
+
 from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
 
