@@ -129,6 +129,14 @@ def test_cancel(quantum_task):
     quantum_task._aws_session.cancel_quantum_task.assert_called_with(quantum_task.id)
 
 
+def test_cancel_without_fetching_result(quantum_task):
+    quantum_task.cancel()
+
+    assert quantum_task.result() is None
+    assert quantum_task._future.cancelled()
+    quantum_task._aws_session.cancel_quantum_task.assert_called_with(quantum_task.id)
+
+
 def test_result_circuit(circuit_task):
     _mock_metadata(circuit_task._aws_session, "COMPLETED")
     _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_1)
