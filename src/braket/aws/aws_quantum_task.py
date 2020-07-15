@@ -20,6 +20,7 @@ from logging import Logger, getLogger
 from typing import Any, Dict, Union
 
 import boto3
+
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit

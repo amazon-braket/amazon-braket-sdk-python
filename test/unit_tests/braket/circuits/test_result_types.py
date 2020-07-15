@@ -11,8 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import braket.ir.jaqcd as ir
 import pytest
+
+import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Observable, ResultType
 from braket.circuits.result_types import ObservableResultType
 

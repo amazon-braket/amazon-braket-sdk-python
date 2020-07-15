@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Counter, Dict, List, Optional, TypeVar, Union
 
 import numpy as np
+
 from braket.circuits import Observable, ResultType, StandardObservable
 from braket.circuits.observables import observable_from_ir
 

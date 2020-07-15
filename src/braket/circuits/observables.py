@@ -19,6 +19,7 @@ import math
 from typing import Dict, List, Tuple, Union
 
 import numpy as np
+
 from braket.circuits.gate import Gate
 from braket.circuits.observable import Observable, StandardObservable
 from braket.circuits.quantum_operator_helpers import (

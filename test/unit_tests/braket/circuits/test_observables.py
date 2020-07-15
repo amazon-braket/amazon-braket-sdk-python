@@ -15,6 +15,7 @@ import math
 
 import numpy as np
 import pytest
+
 from braket.circuits import Gate, Observable
 from braket.circuits.observables import observable_from_ir
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues

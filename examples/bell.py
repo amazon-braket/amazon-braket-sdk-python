@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import boto3
+
 from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
 from braket.circuits import Circuit
 

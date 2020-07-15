@@ -15,6 +15,7 @@ import json
 import uuid
 
 import pytest
+
 from braket.tasks import GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 

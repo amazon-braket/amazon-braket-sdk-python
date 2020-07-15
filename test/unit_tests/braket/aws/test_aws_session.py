@@ -16,8 +16,9 @@ from unittest.mock import Mock
 
 import pytest
 from botocore.exceptions import ClientError
-from braket.aws import AwsQpuArns, AwsQuantumSimulatorArns, AwsSession
 from common_test_utils import MockDevices
+
+from braket.aws import AwsQpuArns, AwsQuantumSimulatorArns, AwsSession
 
 TEST_S3_OBJ_CONTENTS = {
     "TaskMetadata": {

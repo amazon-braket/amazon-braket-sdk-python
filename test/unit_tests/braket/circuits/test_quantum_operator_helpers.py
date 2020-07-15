@@ -2,6 +2,7 @@ import functools
 
 import numpy as np
 import pytest
+
 from braket.circuits.quantum_operator_helpers import (
     get_pauli_eigenvalues,
     is_hermitian,

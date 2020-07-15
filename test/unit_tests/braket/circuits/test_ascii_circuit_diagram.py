@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import numpy as np
+
 from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator
 
 

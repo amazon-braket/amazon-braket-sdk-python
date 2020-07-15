@@ -17,6 +17,7 @@ from typing import Any, Counter, Dict
 
 import numpy as np
 import pytest
+
 from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.circuits import Observable, ResultType
 from braket.ir import jaqcd

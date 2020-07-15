@@ -22,7 +22,6 @@ from braket.circuits.observable import Observable
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
 
-
 """
 To add a new result type:
     1. Implement the class and extend `ResultType`
