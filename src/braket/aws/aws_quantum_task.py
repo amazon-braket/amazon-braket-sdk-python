@@ -172,11 +172,11 @@ class AwsQuantumTask(QuantumTask):
 
     def _cancel_future(self) -> None:
         """Cancel the future if it exists. Else, create a cancelled future."""
-        if hasattr(self, "_AwsQuantumTask__future"):
+        if hasattr(self, "_future"):
             self._future.cancel()
         else:
-            self.__future = asyncio.Future()
-            self.__future.cancel()
+            self._future = asyncio.Future()
+            self._future.cancel()
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the future and the task in Amazon Braket."""
@@ -236,8 +236,7 @@ class AwsQuantumTask(QuantumTask):
             self._logger.warning("Task future was cancelled")
             return self._result
 
-    @property
-    def _future(self):
+    def _get_future(self):
         try:
             asyncio.get_event_loop()
         except Exception as e:
@@ -245,10 +244,10 @@ class AwsQuantumTask(QuantumTask):
             self._logger.info("No event loop found; creating new event loop")
             asyncio.set_event_loop(asyncio.new_event_loop())
 
-        if not hasattr(self, "_AwsQuantumTask__future"):
-            self.__future = asyncio.get_event_loop().run_until_complete(self._create_future())
+        if not hasattr(self, "_future"):
+            self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         elif (
-            self.__future.done() and not self.__future.cancelled() and self._result is None
+            self._future.done() and not self._future.cancelled() and self._result is None
         ):  # timed out and no result
             task_status = self.metadata()["status"]
             if task_status in self.NO_RESULT_TERMINAL_STATES:
@@ -256,15 +255,15 @@ class AwsQuantumTask(QuantumTask):
                     f"Task is in terminal state {task_status} and no result is available"
                 )
             else:
-                self.__future = asyncio.get_event_loop().run_until_complete(self._create_future())
-        return self.__future
+                self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
+        return self._future
 
     def async_result(self) -> asyncio.Task:
         """
         Get the quantum task result asynchronously. Consecutive calls to this method return
         the result cached from the most recent request.
         """
-        return self._future
+        return self._get_future()
 
     async def _create_future(self) -> asyncio.Task:
         """
