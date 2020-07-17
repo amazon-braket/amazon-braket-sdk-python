@@ -50,7 +50,7 @@ class Observable(QuantumOperator):
 
     @classmethod
     def register_observable(cls, observable: Observable) -> None:
-        """Register an observable implementation by adding it into the Observable class.
+        """Register an observable implementation by adding it into the `Observable` class.
 
         Args:
             observable (Observable): Observable class to register.
