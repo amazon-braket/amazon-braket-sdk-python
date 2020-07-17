@@ -35,7 +35,7 @@ class AngledGate(Gate):
 
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, or `angle` is`None`
+                `ascii_symbols` length != `qubit_count`, or `angle` is `None`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         if angle is None:
