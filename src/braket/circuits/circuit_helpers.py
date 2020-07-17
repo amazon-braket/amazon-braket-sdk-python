@@ -23,9 +23,9 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
         shots (int): shots to validate
 
     Raises:
-        ValueError: If no result types specified for circuit and shots=0.
-            See `braket.circuit.result_types. Or, if `StateVector` or `Amplitude`
-            are specified as result types when shots > 0.
+        ValueError: If no result types specified for circuit and `shots=0`.
+            See `braket.circuit.result_types`. Or, if `StateVector` or `Amplitude`
+            are specified as result types when `shots > 0`.
     """
     if not shots and not circuit.result_types:
         raise ValueError(

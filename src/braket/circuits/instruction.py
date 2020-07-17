@@ -33,7 +33,7 @@ class Instruction:
 
     def __init__(self, operator: InstructionOperator, target: QubitSetInput):
         """
-        InstructionOperator includes objects of type Gate only.
+        InstructionOperator includes objects of type `Gate` only.
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
@@ -41,9 +41,9 @@ class Instruction:
                 applied to.
 
         Raises:
-            ValueError: If `operator` is empty or any integer in `target` does not meet the Qubit
-                or QubitSet class requirements.
-            TypeError: If a Qubit class can't be constructed from `target` due to an incorrect
+            ValueError: If `operator` is empty or any integer in `target` does not meet the `Qubit`
+                or `QubitSet` class requirements.
+            TypeError: If a `Qubit` class can't be constructed from `target` due to an incorrect
             `typing`.
 
         Examples:
@@ -96,7 +96,7 @@ class Instruction:
         Args:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
-                value is what the key is changed to. Default = {}.
+                value is what the key is changed to. Default = `{}`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
                 instruction.
 

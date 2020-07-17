@@ -34,7 +34,7 @@ class ResultType:
                 printing a diagram of circuits.
 
         Raises:
-            ValueError: `ascii_symbols` is None
+            ValueError: `ascii_symbols` is `None`
         """
 
         if ascii_symbols is None:
@@ -80,7 +80,7 @@ class ResultType:
         Args:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
-                value is what the key is changed to. Default = {}.
+                value is what the key is changed to. Default = `{}`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
                 instruction.
 
@@ -115,10 +115,10 @@ class ResultType:
 
     @classmethod
     def register_result_type(cls, result_type: "ResultType"):
-        """Register a result type implementation by adding it into the ResultType class.
+        """Register a result type implementation by adding it into the `ResultType` class.
 
         Args:
-            result_type (ResultType): ResultType instance to register.
+            result_type (ResultType): `ResultType` instance to register.
         """
         setattr(cls, result_type.__name__, result_type)
 
@@ -143,14 +143,14 @@ class ObservableResultType(ResultType):
         Args:
             observable (Observable): the observable for the result type
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
-                result type is requested for. Default is None, which means the observable must
+                result type is requested for. Default is `None`, which means the observable must
                 only operate on 1 qubit and it will be applied to all qubits in parallel
 
         Raises:
             ValueError: if target=None and the observable's qubit count is not 1.
-                Or, if target!=None and the observable's qubit count and the number of target qubits
-                are not equal. Or, if target!=None and the observable's qubit count and
-                the number of ascii_symbols are not equal.
+                Or, if `target!=None` and the observable's qubit count and the number of target qubits
+                are not equal. Or, if `target!=None` and the observable's qubit count and
+                the number of `ascii_symbols` are not equal.
         """
         super().__init__(ascii_symbols)
         self._observable = observable

@@ -132,7 +132,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         Args:
             instructions (Iterable[Instruction]): Instructions to add to self. The instruction
-            are added to the max time slice in which the instruction fits.
+            is added to the max time slice in which the instruction fits.
         """
         for instruction in instructions:
             self._add(instruction)
@@ -174,10 +174,10 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         Args:
             key (MomentsKey): Key of the instruction to fetch.
-            default (Any, optional): Value to return if `key` is not in moment. Default = None.
+            default (Any, optional): Value to return if `key` is not in `moments`. Default = `None`.
 
         Returns:
-            Instruction: moments[key] if key in moments, else `default` is returned.
+            Instruction: `moments[key]` if `key` in `moments`, else `default` is returned.
         """
         return self._moments.get(key, default)
 
