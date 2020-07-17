@@ -36,7 +36,7 @@ class Gate(QuantumOperator):
                 correlate a symbol with that index.
 
         Raises:
-            ValueError: `qubit_count` is less than 1, `ascii_symbols` are None, or
+            ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
