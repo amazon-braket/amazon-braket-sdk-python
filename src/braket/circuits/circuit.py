@@ -204,10 +204,10 @@ class Circuit:
             result_type (ResultType): `ResultType` to add into `self`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
                 `result_type`.
-                Default = None.
+                Default = `None`.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `result_type.target`. Key is the qubit in
-                `result_type.target` and the value is what the key will be changed to. Default = {}.
+                `result_type.target` and the value is what the key will be changed to. Default = `{}`.
 
 
         Note: target and target_mapping will only be applied to those requested result types with
@@ -300,10 +300,10 @@ class Circuit:
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
                 `instruction`. If a single qubit gate, an instruction is created for every index
                 in `target`.
-                Default = None.
+                Default = `None`.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
-                `instruction.target` and the value is what the key will be changed to. Default = {}.
+                `instruction.target` and the value is what the key will be changed to. Default = `{}`.
 
         Returns:
             Circuit: self
@@ -368,10 +368,10 @@ class Circuit:
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
                 supplied circuit. This is a macro over `target_mapping`; `target` is converted to
                 a `target_mapping` by zipping together a sorted `circuit.qubits` and `target`.
-                Default = None.
+                Default = `None`.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
-                to map, and the Value is what to change it to. Default = {}.
+                to map, and the value is what to change it to. Default = `{}`.
 
         Returns:
             Circuit: self
@@ -436,7 +436,7 @@ class Circuit:
         allows.
 
         Args:
-            addable (AddableTypes): The item(s) to add to self. Default = None.
+            addable (AddableTypes): The item(s) to add to self. Default = `None`.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
 
@@ -493,7 +493,7 @@ class Circuit:
 
         Args:
             circuit_diagram_class (Class, optional): A `CircuitDiagram` class that builds the
-                diagram for this circuit. Default = AsciiCircuitDiagram.
+                diagram for this circuit. Default = `AsciiCircuitDiagram`.
 
         Returns:
             str: An ASCII string circuit diagram.
@@ -565,7 +565,7 @@ def subroutine(register=False):
 
     Args:
         register (bool, optional): If `True`, adds this subroutine into the `Circuit` class.
-            Default = False.
+            Default = `False`.
 
     Examples:
         >>> @circuit.subroutine(register=True)
