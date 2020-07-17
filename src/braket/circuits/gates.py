@@ -1322,7 +1322,7 @@ class Unitary(Gate):
         Args:
             targets (QubitSet): Target qubits.
             matrix (numpy.ndarray): Unitary matrix which defines the gate. Matrix should be
-                compatible with the supplied targets, with 2 ** len(targets) == matrix.shape[0].
+                compatible with the supplied targets, with `2 ** len(targets) == matrix.shape[0]`.
             display_name (str): Name to be used for an instance of this unitary gate
                 for circuit diagrams. Defaults to `U`.
 
