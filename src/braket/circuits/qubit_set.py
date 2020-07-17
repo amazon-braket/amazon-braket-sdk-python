@@ -27,7 +27,7 @@ class QubitSet(IndexedSet):
     An ordered, unique set of quantum bits.
 
     Note:
-        QubitSet implements __hash__() but is a mutable object, therefore be careful when
+        QubitSet implements `__hash__()` but is a mutable object, therefore be careful when
         mutating this object.
     """
 
@@ -35,7 +35,7 @@ class QubitSet(IndexedSet):
         """
         Args:
             qubits (int, Qubit, or iterable of int / Qubit, optional): Qubits to be included in
-                the QubitSet. Default is None.
+                the `QubitSet`. Default is `None`.
 
         Examples:
             >>> qubits = QubitSet([0, 1])
@@ -67,7 +67,7 @@ class QubitSet(IndexedSet):
 
     def map(self, mapping: Dict[QubitInput, QubitInput]) -> QubitSet:
         """
-        Creates a new QubitSet where this instance's qubits are mapped to the values in `mapping`.
+        Creates a new `QubitSet` where this instance's qubits are mapped to the values in `mapping`.
         If this instance contains a qubit that is not in the `mapping` that qubit is not modified.
 
         Args:
