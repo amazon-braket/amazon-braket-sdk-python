@@ -148,8 +148,8 @@ class ObservableResultType(ResultType):
 
         Raises:
             ValueError: if target=None and the observable's qubit count is not 1.
-                Or, if `target!=None` and the observable's qubit count and the number of target qubits
-                are not equal. Or, if `target!=None` and the observable's qubit count and
+                Or, if `target!=None` and the observable's qubit count and the number of target
+                qubits are not equal. Or, if `target!=None` and the observable's qubit count and
                 the number of `ascii_symbols` are not equal.
         """
         super().__init__(ascii_symbols)
