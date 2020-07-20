@@ -522,15 +522,18 @@ class Circuit:
         )
 
     def _copy(self) -> Circuit:
+        copy = Circuit().add(self.instructions)
+        copy.add(self.result_types)
+        return copy
+
+    def copy(self) -> Circuit:
         """
         Return a shallow copy of the circuit.
 
         Returns:
             Circuit: A shallow copy of the circuit.
         """
-        copy = Circuit().add(self.instructions)
-        copy.add(self.result_types)
-        return copy
+        return self._copy()
 
     def __iadd__(self, addable: AddableTypes) -> Circuit:
         return self.add(addable)
