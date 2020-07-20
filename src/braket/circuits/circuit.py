@@ -207,7 +207,8 @@ class Circuit:
                 Default = `None`.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `result_type.target`. Key is the qubit in
-                `result_type.target` and the value is what the key will be changed to. Default = `{}`.
+                `result_type.target` and the value is what the key will be changed to.
+                Default = `{}`.
 
 
         Note: target and target_mapping will only be applied to those requested result types with
@@ -303,7 +304,8 @@ class Circuit:
                 Default = `None`.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
-                `instruction.target` and the value is what the key will be changed to. Default = `{}`.
+                `instruction.target` and the value is what the key will be changed to.
+                Default = `{}`.
 
         Returns:
             Circuit: self
