@@ -308,6 +308,21 @@ def test_add_with_circuit_with_target(bell_pair):
     assert circ == expected
 
 
+def test_circuit_copy(h, bell_pair, cnot_instr):
+    original = Circuit().add(h).add(bell_pair).add(cnot_instr)
+    copy = original.copy()
+
+    assert copy is not original
+    assert copy == original
+
+
+def test_circuit_copy_with_modification(h, bell_pair, cnot_instr):
+    original = Circuit().add(h).add(bell_pair)
+    copy = original.copy().add(cnot_instr)
+
+    assert copy != original
+
+
 def test_iadd_operator(cnot_instr, h):
     circ = Circuit()
     circ += h
