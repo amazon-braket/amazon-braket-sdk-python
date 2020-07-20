@@ -521,7 +521,7 @@ class Circuit:
             basis_rotation_instructions=ir_basis_rotation_instructions,
         )
 
-    def _copy(self) -> Circuit:
+    def copy(self) -> Circuit:
         """
         Return a shallow copy of the circuit.
 
@@ -536,7 +536,7 @@ class Circuit:
         return self.add(addable)
 
     def __add__(self, addable: AddableTypes) -> Circuit:
-        new = self._copy()
+        new = self.copy()
         new.add(addable)
         return new
 
