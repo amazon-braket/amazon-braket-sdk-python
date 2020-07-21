@@ -13,11 +13,12 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
-from typing import Any, Dict
 
 import numpy
+
+from braket.annealing import ProblemType
+from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 
 
 @dataclass
@@ -32,16 +33,16 @@ class AnnealingQuantumTaskResult:
             the number of times the solutions occurred, and 'value' (numpy.ndarray) the
             output or energy of the solutions.
         variable_count (int): the number of variables
-        problem_type (str): the type of problem ('ising' or 'qubo')
-        task_metadata (Dict[str, Any]): Dictionary of task metadata.
-        additional_metadata (Dict[str, Any]): A dictionary of additional device-specific metadata
+        problem_type (ProblemType): the type of problem ('ising' or 'qubo')
+        task_metadata (TaskMetadata): Task metadata.
+        additional_metadata (AdditionalMetadata): Additional metadata about the task
     """
 
     record_array: numpy.recarray
     variable_count: int
-    problem_type: str
-    task_metadata: Dict[str, Any]
-    additional_metadata: Dict[str, Any]
+    problem_type: ProblemType
+    task_metadata: TaskMetadata
+    additional_metadata: AdditionalMetadata
 
     def data(self, selected_fields=None, sorted_by="value", reverse=False):
         """
@@ -92,17 +93,18 @@ class AnnealingQuantumTaskResult:
         return NotImplemented
 
     @staticmethod
-    def from_dict(result: Dict[str, Any]):
+    def from_object(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
         """
-        Create AnnealingQuantumTaskResult from dict
+        Create AnnealingQuantumTaskResult from AnnealingTaskResult object
 
         Args:
-            result (Dict[str, Any]): Results dict with AnnealingQuantumTaskResult attributes as keys
+            result (AnnealingTaskResult): AnnealingTaskResult object
 
         Returns:
-            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on the given dict
+            AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on the
+            given result object
         """
-        return AnnealingQuantumTaskResult._from_dict_internal(result)
+        return AnnealingQuantumTaskResult._from_object(result)
 
     @staticmethod
     def from_string(result: str) -> AnnealingQuantumTaskResult:
@@ -115,26 +117,23 @@ class AnnealingQuantumTaskResult:
         Returns:
             AnnealingQuantumTaskResult: An AnnealingQuantumTaskResult based on the given string
         """
-        return AnnealingQuantumTaskResult._from_dict_internal(json.loads(result))
+        return AnnealingQuantumTaskResult._from_object(AnnealingTaskResult.parse_raw(result))
 
     @classmethod
-    def _from_dict_internal(cls, result: Dict[str, Any]):
-        solutions = numpy.asarray(result["Solutions"], dtype=int)
-        values = numpy.asarray(result["Values"], dtype=float)
-        if result["SolutionCounts"] is None:
+    def _from_object(cls, result: AnnealingTaskResult):
+        solutions = numpy.asarray(result.solutions, dtype=int)
+        values = numpy.asarray(result.values, dtype=float)
+        if result.solutionCounts is None:
             solution_counts = numpy.ones(len(solutions), dtype=int)
         else:
-            solution_counts = numpy.asarray(result["SolutionCounts"], dtype=int)
+            solution_counts = numpy.asarray(result.solutionCounts, dtype=int)
         record_array = AnnealingQuantumTaskResult._create_record_array(
             solutions, solution_counts, values
         )
-        variable_count = result["VariableCount"]
-        problem_type = result["ProblemType"]
-        task_metadata = result["TaskMetadata"]
-        additional_metadata = {}
-        for key in result.keys():
-            if key.endswith("Metadata") and key != "TaskMetadata":
-                additional_metadata[key] = result[key]
+        variable_count = result.variableCount
+        problem_type = result.additionalMetadata.action.type
+        task_metadata = result.taskMetadata
+        additional_metadata = result.additionalMetadata
         return cls(
             record_array=record_array,
             variable_count=variable_count,

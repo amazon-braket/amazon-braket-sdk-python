@@ -140,4 +140,4 @@ def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
         raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
     ir = problem.to_ir()
     results_dict = simulator.run(ir, shots, *args, *kwargs)
-    return AnnealingQuantumTaskResult.from_dict(results_dict)
+    return AnnealingQuantumTaskResult.from_object(results_dict)

@@ -239,34 +239,35 @@ class MockS3:
 
     MOCK_S3_RESULT_4 = json.dumps(
         {
-            "Solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
-            "VariableCount": 4,
-            "Values": [0.0, 1.0, 2.0],
-            "SolutionCounts": None,
-            "ProblemType": "ising",
-            "DWaveMetadata": {
-                "ActiveVariables": [0],
-                "Timing": {
-                    "QpuSamplingTime": 1575,
-                    "QpuAnnealTimePerSample": 20,
-                    "QpuReadoutTimePerSample": 274,
-                    "QpuAccessTime": 10917,
-                    "QpuAccessOverheadTime": 3382,
-                    "QpuProgrammingTime": 9342,
-                    "QpuDelayTimePerSample": 21,
-                    "TotalPostProcessingTime": 117,
-                    "PostProcessingOverheadTime": 117,
-                    "TotalRealTime": 10917,
-                    "RunTimeChip": 1575,
-                    "AnnealTimePerRun": 20,
-                    "ReadoutTimePerRun": 274,
+            "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
+            "solutionCounts": [3, 2, 4],
+            "values": [0.0, 1.0, 2.0],
+            "variableCount": 4,
+            "taskMetadata": {"id": "task_arn", "shots": 100, "deviceId": AwsQpuArns.DWAVE,},
+            "additionalMetadata": {
+                "action": {
+                    "type": "ISING",
+                    "linear": {"0": 0.3333, "1": -0.333, "4": -0.333, "5": 0.333},
+                    "quadratic": {"0,4": 0.667, "0,5": -1.0, "1,4": 0.667, "1,5": 0.667},
                 },
-            },
-            "TaskMetadata": {
-                "Id": "UUID_blah_1",
-                "Status": "COMPLETED",
-                "BackendArn": AwsQpuArns.DWAVE,
-                "Shots": 5,
+                "dwaveMetadata": {
+                    "activeVariables": [0],
+                    "timing": {
+                        "qpuSamplingTime": 100,
+                        "qpuAnnealTimePerSample": 20,
+                        "qpuAccessTime": 10917,
+                        "qpuAccessOverheadTime": 3382,
+                        "qpuReadoutTimePerSample": 274,
+                        "qpuProgrammingTime": 9342,
+                        "qpuDelayTimePerSample": 21,
+                        "postProcessingOverheadTime": 117,
+                        "totalPostProcessingTime": 117,
+                        "totalRealTime": 10917,
+                        "runTimeChip": 1575,
+                        "annealTimePerRun": 20,
+                        "readoutTimePerRun": 274,
+                    },
+                },
             },
         }
     )

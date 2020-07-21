@@ -22,6 +22,7 @@ from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator, local_simulator
 from braket.simulator import BraketSimulator
+from braket.task_result import AnnealingTaskResult
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 GATE_MODEL_RESULT = {
@@ -35,15 +36,40 @@ GATE_MODEL_RESULT = {
     },
 }
 
-ANNEALING_RESULT = {
-    "Solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
-    "VariableCount": 4,
-    "Values": [0.0, 1.0, 2.0],
-    "SolutionCounts": None,
-    "ProblemType": "ising",
-    "Foo": {"Bar": "Baz"},
-    "TaskMetadata": {"Id": "UUID_blah_1", "Status": "COMPLETED", "Shots": 5},
-}
+ANNEALING_RESULT = AnnealingTaskResult(
+    **{
+        "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
+        "solutionCounts": [3, 2, 4],
+        "values": [0.0, 1.0, 2.0],
+        "variableCount": 4,
+        "taskMetadata": {"id": "task_arn", "shots": 100, "deviceId": "device_id",},
+        "additionalMetadata": {
+            "action": {
+                "type": "ISING",
+                "linear": {"0": 0.3333, "1": -0.333, "4": -0.333, "5": 0.333},
+                "quadratic": {"0,4": 0.667, "0,5": -1.0, "1,4": 0.667, "1,5": 0.667},
+            },
+            "dwaveMetadata": {
+                "activeVariables": [0],
+                "timing": {
+                    "qpuSamplingTime": 100,
+                    "qpuAnnealTimePerSample": 20,
+                    "qpuAccessTime": 10917,
+                    "qpuAccessOverheadTime": 3382,
+                    "qpuReadoutTimePerSample": 274,
+                    "qpuProgrammingTime": 9342,
+                    "qpuDelayTimePerSample": 21,
+                    "postProcessingOverheadTime": 117,
+                    "totalPostProcessingTime": 117,
+                    "totalRealTime": 10917,
+                    "runTimeChip": 1575,
+                    "annealTimePerRun": 20,
+                    "readoutTimePerRun": 274,
+                },
+            },
+        },
+    }
+)
 
 
 class DummyCircuitSimulator(BraketSimulator):
@@ -66,7 +92,7 @@ class DummyCircuitSimulator(BraketSimulator):
 
 
 class DummyAnnealingSimulator(BraketSimulator):
-    def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> Dict[str, Any]:
+    def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> AnnealingTaskResult:
         return ANNEALING_RESULT
 
     @property
@@ -104,7 +130,7 @@ def test_run_gate_model_value_error():
 def test_run_annealing():
     sim = LocalSimulator(DummyAnnealingSimulator())
     task = sim.run(Problem(ProblemType.ISING))
-    assert task.result() == AnnealingQuantumTaskResult.from_dict(ANNEALING_RESULT)
+    assert task.result() == AnnealingQuantumTaskResult.from_object(ANNEALING_RESULT)
 
 
 def test_registered_backends():
