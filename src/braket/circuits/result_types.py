@@ -234,7 +234,7 @@ class Expectation(ObservableResultType):
 
         Raises:
             ValueError: If the observable's qubit count does not equal the number of target
-            qubits, or if `target=None` and the observable's qubit count is not 1.
+                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Expectation(observable=Observable.Z(), target=0)
@@ -301,7 +301,7 @@ class Sample(ObservableResultType):
 
         Raises:
             ValueError: If the observable's qubit count is not equal to the number of target
-            qubits, or if `target=None` and the observable's qubit count is not 1.
+                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Sample(observable=Observable.Z(), target=0)
@@ -369,7 +369,7 @@ class Variance(ObservableResultType):
 
         Raises:
             ValueError: If the observable's qubit count does not equal the number of target
-            qubits, or if `target=None` and the observable's qubit count is not 1.
+                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Variance(observable=Observable.Z(), target=0)
