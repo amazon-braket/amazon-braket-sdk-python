@@ -33,7 +33,7 @@ class AnnealingQuantumTaskResult:
             the number of times the solutions occurred, and 'value' (numpy.ndarray) the
             output or energy of the solutions.
         variable_count (int): the number of variables
-        problem_type (ProblemType): the type of problem ('ising' or 'qubo')
+        problem_type (ProblemType): the type of annealing problem
         task_metadata (TaskMetadata): Task metadata.
         additional_metadata (AdditionalMetadata): Additional metadata about the task
     """
@@ -131,7 +131,7 @@ class AnnealingQuantumTaskResult:
             solutions, solution_counts, values
         )
         variable_count = result.variableCount
-        problem_type = result.additionalMetadata.action.type
+        problem_type = ProblemType[result.additionalMetadata.action.type.value]
         task_metadata = result.taskMetadata
         additional_metadata = result.additionalMetadata
         return cls(
