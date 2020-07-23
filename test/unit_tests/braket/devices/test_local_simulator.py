@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
 from typing import Any, Dict, Optional
 from unittest.mock import Mock
 
@@ -22,19 +21,27 @@ from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.devices import LocalSimulator, local_simulator
 from braket.simulator import BraketSimulator
-from braket.task_result import AnnealingTaskResult
+from braket.task_result import AnnealingTaskResult, GateModelTaskResult
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
-GATE_MODEL_RESULT = {
-    "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-    "MeasuredQubits": [0, 1],
-    "TaskMetadata": {
-        "Id": "UUID_blah_1",
-        "Status": "COMPLETED",
-        "Shots": 1000,
-        "Ir": json.dumps({"results": []}),
-    },
-}
+GATE_MODEL_RESULT = GateModelTaskResult(
+    **{
+        "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+        "measuredQubits": [0, 1],
+        "taskMetadata": {
+            "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+            "id": "task_arn",
+            "shots": 100,
+            "deviceId": "default",
+        },
+        "additionalMetadata": {
+            "action": {
+                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
+            },
+        },
+    }
+)
 
 ANNEALING_RESULT = AnnealingTaskResult(
     **{
@@ -108,7 +115,7 @@ local_simulator._simulator_devices = {"dummy": mock_entry}
 def test_load_from_entry_point():
     sim = LocalSimulator("dummy")
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    assert task.result() == GateModelQuantumTaskResult.from_dict(GATE_MODEL_RESULT)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_gate_model():
@@ -117,7 +124,7 @@ def test_run_gate_model():
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
     dummy.assert_qubits(2)
-    assert task.result() == GateModelQuantumTaskResult.from_dict(GATE_MODEL_RESULT)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 @pytest.mark.xfail(raises=ValueError)
