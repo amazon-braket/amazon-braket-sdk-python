@@ -49,7 +49,7 @@ class AwsQuantumTask(QuantumTask):
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
-        backend_parameters: Dict[str, Any] = None,
+        device_parameters: Dict[str, Any] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -74,7 +74,7 @@ class AwsQuantumTask(QuantumTask):
                 `shots=0` is only available on simulators and means that the simulator
                 will compute the exact results based on the task specification.
 
-            backend_parameters (Dict[str, Any]): Additional parameters to send to the device.
+            device_parameters (Dict[str, Any]): Additional parameters to send to the device.
                 For example, for D-Wave:
                 `{"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
@@ -105,7 +105,7 @@ class AwsQuantumTask(QuantumTask):
             task_specification,
             aws_session,
             create_task_kwargs,
-            backend_parameters or {},
+            device_parameters or {},
             *args,
             **kwargs,
         )
@@ -123,7 +123,7 @@ class AwsQuantumTask(QuantumTask):
             arn (str): The ARN of the task.
             aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
-                region of the task.
+            create_quantum_taskcreate_quantum_tasksk.
             poll_timeout_seconds (int): The polling timeout for result(), default is 120 seconds.
             poll_interval_seconds (int): The polling interval for result(), default is 0.25
                 seconds.
@@ -320,7 +320,7 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
-                    current_metadata["resultsS3Bucket"], current_metadata["resultsS3ObjectKey"]
+                    current_metadata["outputS3Bucket"], current_metadata["outputS3Directory"]
                 )
                 self._result = self._get_results_formatter()(result_string)
                 return self._result
@@ -360,7 +360,7 @@ def _create_internal(
     task_specification: Union[Circuit, Problem],
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    backend_parameters: Dict[str, Any],
+    device_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -372,16 +372,15 @@ def _(
     circuit: Circuit,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    backend_parameters: Dict[str, Any],
+    device_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
     validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
     create_task_kwargs.update(
         {
-            "ir": circuit.to_ir().json(),
-            "irType": AwsQuantumTask.GATE_IR_TYPE,
-            "backendParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
+            "action": circuit.to_ir().json(),
+            "deviceParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
         }
     )
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
@@ -393,15 +392,14 @@ def _(
     problem: Problem,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    backend_parameters: Dict[str, Any],
+    device_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
     create_task_kwargs.update(
         {
-            "ir": problem.to_ir().json(),
-            "irType": AwsQuantumTask.ANNEALING_IR_TYPE,
-            "backendParameters": {"annealingModelParameters": backend_parameters},
+            "action": problem.to_ir().json(),
+            "deviceParameters": {"annealingModelParameters": device_parameters},
         }
     )
 
@@ -413,8 +411,8 @@ def _create_common_params(
     device_arn: str, s3_destination_folder: AwsSession.S3DestinationFolder, shots: int
 ) -> Dict[str, Any]:
     return {
-        "backendArn": device_arn,
-        "resultsS3Bucket": s3_destination_folder[0],
-        "resultsS3Prefix": s3_destination_folder[1],
+        "deviceArn": device_arn,
+        "outputS3Bucket": s3_destination_folder[0],
+        "outputS3KeyPrefix": s3_destination_folder[1],
         "shots": shots,
     }
