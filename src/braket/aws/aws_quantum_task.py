@@ -123,7 +123,7 @@ class AwsQuantumTask(QuantumTask):
             arn (str): The ARN of the task.
             aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
-            create_quantum_taskcreate_quantum_tasksk.
+                region of the task.
             poll_timeout_seconds (int): The polling timeout for result(), default is 120 seconds.
             poll_interval_seconds (int): The polling interval for result(), default is 0.25
                 seconds.
