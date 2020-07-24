@@ -21,6 +21,12 @@ import numpy as np
 
 from braket.circuits import Observable, ResultType, StandardObservable
 from braket.circuits.observables import observable_from_ir
+from braket.task_result import (
+    AdditionalMetadata,
+    GateModelTaskResult,
+    ResultTypeValue,
+    TaskMetadata,
+)
 
 T = TypeVar("T")
 
@@ -32,8 +38,8 @@ class GateModelQuantumTaskResult:
     to be initialized by a QuantumTask class.
 
     Args:
-        task_metadata (Dict[str, Any]): Dictionary of task metadata. `task_metadata` must have
-            keys 'Id', 'Shots', 'Ir', and 'IrType'.
+        task_metadata (TaskMetadata): Task metadata.
+        additional_metadata (AdditionalMetadata): Additional metadata about the task
         result_types (List[Dict[str, Any]]): List of dictionaries where each dictionary
             has two keys: 'Type' (the result type in IR JSON form) and
             'Value' (the result value for this result type).
@@ -70,7 +76,8 @@ class GateModelQuantumTaskResult:
             Only available when shots > 0.
     """
 
-    task_metadata: Dict[str, Any]
+    task_metadata: TaskMetadata
+    additional_metadata: AdditionalMetadata
     result_types: List[Dict[str, str]]
     values: List[Any]
     measurements: np.ndarray = None
@@ -96,18 +103,18 @@ class GateModelQuantumTaskResult:
             ValueError: If result type is not found in result.
                 Result types must be added to the circuit before the circuit is run on a device.
         """
-        rt_json = result_type.to_ir().json()
+        rt_ir = result_type.to_ir()
         for rt in self.result_types:
-            if rt_json == json.dumps(rt["Type"]):
-                return rt["Value"]
+            if rt_ir == rt.type:
+                return rt.value
         raise ValueError(
             "Result type not found in result. "
             + "Result types must be added to circuit before circuit is run on device."
         )
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, GateModelQuantumTaskResult) and self.task_metadata.get("Id"):
-            return self.task_metadata["Id"] == other.task_metadata["Id"]
+        if isinstance(other, GateModelQuantumTaskResult):
+            return self.task_metadata.id == other.task_metadata.id
         return NotImplemented
 
     @staticmethod
@@ -178,7 +185,7 @@ class GateModelQuantumTaskResult:
         return np.asarray(measurements_list, dtype=int)
 
     @staticmethod
-    def from_dict(result: Dict[str, Any]):
+    def from_object(result: GateModelQuantumTaskResult):
         """
         Create GateModelQuantumTaskResult from dict.
 
@@ -192,7 +199,7 @@ class GateModelQuantumTaskResult:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
                 in the result dict
         """
-        return GateModelQuantumTaskResult._from_dict_internal(result)
+        return GateModelQuantumTaskResult._from_object_internal(result)
 
     @staticmethod
     def from_string(result: str) -> GateModelQuantumTaskResult:
@@ -209,32 +216,34 @@ class GateModelQuantumTaskResult:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
                 in the result dict
         """
-        json_obj = json.loads(result)
-        for result_type in json_obj.get("ResultTypes", []):
-            type = result_type["Type"]["type"]
-            if type == "probability":
-                result_type["Value"] = np.array(result_type["Value"])
-            elif type == "statevector":
-                result_type["Value"] = np.array([complex(*value) for value in result_type["Value"]])
-            elif type == "amplitude":
-                for state in result_type["Value"]:
-                    result_type["Value"][state] = complex(*result_type["Value"][state])
-        return GateModelQuantumTaskResult._from_dict_internal(json_obj)
+        obj = GateModelTaskResult.parse_raw(result)
+        if obj.resultTypes:
+            for result_type in obj.resultTypes:
+                type = result_type.type.type
+                if type == "probability":
+                    result_type.value = np.array(result_type.value)
+                elif type == "statevector":
+                    result_type.value = np.array([complex(*value) for value in result_type.value])
+                elif type == "amplitude":
+                    for state in result_type.value:
+                        result_type.value[state] = complex(*result_type.value[state])
+        return GateModelQuantumTaskResult._from_object_internal(obj)
 
     @classmethod
-    def _from_dict_internal(cls, result: Dict[str, Any]):
-        if result["TaskMetadata"]["Shots"] > 0:
-            return GateModelQuantumTaskResult._from_dict_internal_computational_basis_sampling(
+    def _from_object_internal(cls, result: GateModelTaskResult):
+        if result.taskMetadata.shots > 0:
+            return GateModelQuantumTaskResult._from_object_internal_computational_basis_sampling(
                 result
             )
         else:
             return GateModelQuantumTaskResult._from_dict_internal_simulator_only(result)
 
     @classmethod
-    def _from_dict_internal_computational_basis_sampling(cls, result: Dict[str, Any]):
-        task_metadata = result["TaskMetadata"]
-        if "Measurements" in result:
-            measurements = np.asarray(result["Measurements"], dtype=int)
+    def _from_object_internal_computational_basis_sampling(cls, result: GateModelTaskResult):
+        task_metadata = result.taskMetadata
+        additional_metadata = result.additionalMetadata
+        if result.measurements:
+            measurements = np.asarray(result.measurements, dtype=int)
             m_counts = GateModelQuantumTaskResult.measurement_counts_from_measurements(measurements)
             m_probs = GateModelQuantumTaskResult.measurement_probabilities_from_measurement_counts(
                 m_counts
@@ -242,9 +251,9 @@ class GateModelQuantumTaskResult:
             measurements_copied_from_device = True
             m_counts_copied_from_device = False
             m_probabilities_copied_from_device = False
-        elif "MeasurementProbabilities" in result:
-            shots = task_metadata["Shots"]
-            m_probs = result["MeasurementProbabilities"]
+        elif result.measurementProbabilities:
+            shots = task_metadata.shots
+            m_probs = result.measurementProbabilities
             measurements = GateModelQuantumTaskResult.measurements_from_measurement_probabilities(
                 m_probs, shots
             )
@@ -254,20 +263,22 @@ class GateModelQuantumTaskResult:
             m_probabilities_copied_from_device = True
         else:
             raise ValueError(
-                'One of "Measurements" or "MeasurementProbabilities" must be in the result dict'
+                'One of "measurements" or "measurementProbabilities" must be populated in',
+                " the result obj",
             )
-        measured_qubits = result["MeasuredQubits"]
+        measured_qubits = result.measuredQubits
         if len(measured_qubits) != measurements.shape[1]:
             raise ValueError(
                 f"Measured qubits {measured_qubits} is not equivalent to number of qubits "
                 + f"{measurements.shape[1]} in measurements"
             )
         result_types = GateModelQuantumTaskResult._calculate_result_types(
-            result["TaskMetadata"]["Ir"], measurements, measured_qubits
+            additional_metadata.action.json(), measurements, measured_qubits
         )
-        values = [rt["Value"] for rt in result_types]
+        values = [rt.value for rt in result_types]
         return cls(
             task_metadata=task_metadata,
+            additional_metadata=additional_metadata,
             result_types=result_types,
             values=values,
             measurements=measurements,
@@ -280,11 +291,17 @@ class GateModelQuantumTaskResult:
         )
 
     @classmethod
-    def _from_dict_internal_simulator_only(cls, result: Dict[str, Any]):
-        task_metadata = result["TaskMetadata"]
-        result_types = result["ResultTypes"]
-        values = [rt["Value"] for rt in result_types]
-        return cls(task_metadata=task_metadata, result_types=result_types, values=values)
+    def _from_dict_internal_simulator_only(cls, result: GateModelTaskResult):
+        task_metadata = result.taskMetadata
+        additional_metadata = result.additionalMetadata
+        result_types = result.resultTypes
+        values = [rt.value for rt in result_types]
+        return cls(
+            task_metadata=task_metadata,
+            additional_metadata=additional_metadata,
+            result_types=result_types,
+            values=values,
+        )
 
     @staticmethod
     def _calculate_result_types(
@@ -329,7 +346,7 @@ class GateModelQuantumTaskResult:
                 )
             else:
                 raise ValueError(f"Unknown result type {rt_type}")
-            result_types.append({"Type": result_type, "Value": value})
+            result_types.append(ResultTypeValue.construct(type=result_type, value=value))
         return result_types
 
     @staticmethod

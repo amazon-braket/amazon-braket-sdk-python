@@ -24,12 +24,7 @@ class LocalQuantumTask(QuantumTask):
     """
 
     def __init__(self, result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]):
-        # TODO: update when gate model task result is migrated
-        self._id = (
-            result.task_metadata.id
-            if not isinstance(result.task_metadata, dict)
-            else result.task_metadata["Id"]
-        )
+        self._id = result.task_metadata.id
         self._result = result
 
     @property

@@ -130,8 +130,8 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
     validate_circuit_and_shots(circuit, shots)
     program = circuit.to_ir()
     qubits = circuit.qubit_count
-    results_dict = simulator.run(program, qubits, shots, *args, **kwargs)
-    return GateModelQuantumTaskResult.from_dict(results_dict)
+    results = simulator.run(program, qubits, shots, *args, **kwargs)
+    return GateModelQuantumTaskResult.from_object(results)
 
 
 @_run_internal.register
