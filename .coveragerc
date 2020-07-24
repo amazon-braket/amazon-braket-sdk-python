@@ -6,6 +6,7 @@ source =
 omit = 
     **/braket/ir/*
     **/braket/schema_common/*
+    **/braket/task_result/*
     **/braket/simulator/*
 
 [paths]

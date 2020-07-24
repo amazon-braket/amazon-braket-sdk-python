@@ -191,82 +191,56 @@ class MockDevices:
 
 class MockS3:
 
-    MOCK_S3_RESULT_1 = json.dumps(
+    MOCK_S3_RESULT_GATE_MODEL = json.dumps(
         {
-            "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-            "MeasuredQubits": [0, 1],
-            "TaskMetadata": {
-                "Id": "UUID_blah_1",
-                "Status": "COMPLETED",
-                "BackendArn": AwsQpuArns.RIGETTI,
-                "Shots": 1000,
-                "Ir": "{}",
+            "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+            "measuredQubits": [0, 1],
+            "taskMetadata": {
+                "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+                "id": "task_arn",
+                "shots": 100,
+                "deviceId": "default",
             },
-        }
-    )
-
-    MOCK_S3_RESULT_2 = json.dumps(
-        {
-            "Measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
-            "MeasuredQubits": [0, 1],
-            "TaskMetadata": {
-                "Id": "UUID_blah_2",
-                "Status": "COMPLETED",
-                "BackendArn": AwsQpuArns.RIGETTI,
-                "Shots": 1000,
-                "Ir": "{}",
-            },
-        }
-    )
-
-    MOCK_S3_RESULT_3 = json.dumps(
-        {
-            "TaskMetadata": {
-                "Id": "1231231",
-                "Status": "COMPLETED",
-                "BackendArn": "test_arn",
-                "BackendTranslation": "...",
-                "Created": 1574140385.0697668,
-                "Modified": 1574140388.6908717,
-                "Shots": 100,
-                "GateModelConfig": {"QubitCount": 6},
-                "Ir": "{}",
-            },
-            "MeasurementProbabilities": {"011000": 0.9999999999999982},
-            "MeasuredQubits": [0, 1],
-        }
-    )
-
-    MOCK_S3_RESULT_4 = json.dumps(
-        {
-            "Solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
-            "VariableCount": 4,
-            "Values": [0.0, 1.0, 2.0],
-            "SolutionCounts": None,
-            "ProblemType": "ising",
-            "DWaveMetadata": {
-                "ActiveVariables": [0],
-                "Timing": {
-                    "QpuSamplingTime": 1575,
-                    "QpuAnnealTimePerSample": 20,
-                    "QpuReadoutTimePerSample": 274,
-                    "QpuAccessTime": 10917,
-                    "QpuAccessOverheadTime": 3382,
-                    "QpuProgrammingTime": 9342,
-                    "QpuDelayTimePerSample": 21,
-                    "TotalPostProcessingTime": 117,
-                    "PostProcessingOverheadTime": 117,
-                    "TotalRealTime": 10917,
-                    "RunTimeChip": 1575,
-                    "AnnealTimePerRun": 20,
-                    "ReadoutTimePerRun": 274,
+            "additionalMetadata": {
+                "action": {
+                    "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                    "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
                 },
             },
-            "TaskMetadata": {
-                "Id": "UUID_blah_1",
-                "Status": "COMPLETED",
-                "BackendArn": AwsQpuArns.DWAVE,
-                "Shots": 5,
+        }
+    )
+
+    MOCK_S3_RESULT_ANNEALING = json.dumps(
+        {
+            "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
+            "solutionCounts": [3, 2, 4],
+            "values": [0.0, 1.0, 2.0],
+            "variableCount": 4,
+            "taskMetadata": {"id": "task_arn", "shots": 100, "deviceId": AwsQpuArns.DWAVE,},
+            "additionalMetadata": {
+                "action": {
+                    "type": "ISING",
+                    "linear": {"0": 0.3333, "1": -0.333, "4": -0.333, "5": 0.333},
+                    "quadratic": {"0,4": 0.667, "0,5": -1.0, "1,4": 0.667, "1,5": 0.667},
+                },
+                "dwaveMetadata": {
+                    "activeVariables": [0],
+                    "timing": {
+                        "qpuSamplingTime": 100,
+                        "qpuAnnealTimePerSample": 20,
+                        "qpuAccessTime": 10917,
+                        "qpuAccessOverheadTime": 3382,
+                        "qpuReadoutTimePerSample": 274,
+                        "qpuProgrammingTime": 9342,
+                        "qpuDelayTimePerSample": 21,
+                        "postProcessingOverheadTime": 117,
+                        "totalPostProcessingTime": 117,
+                        "totalRealTime": 10917,
+                        "runTimeChip": 1575,
+                        "annealTimePerRun": 20,
+                        "readoutTimePerRun": 274,
+                    },
+                },
             },
         }
     )
