@@ -166,18 +166,13 @@ def test_result_circuit(circuit_task):
 
     s3_bucket = circuit_task.metadata()["outputS3Bucket"]
     s3_object_key = circuit_task.metadata()["outputS3Directory"]
-    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(s3_bucket, s3_object_key)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_result_unknown_ir_type(circuit_task):
-    _mock_metadata(circuit_task._aws_session, "COMPLETED", "unsupported_ir_type")
-    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
-    circuit_task.result()
+    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
 
 
 def test_result_annealing(annealing_task):
-    _mock_metadata(annealing_task._aws_session, "COMPLETED", "annealing")
+    _mock_metadata(annealing_task._aws_session, "COMPLETED")
     _mock_s3(annealing_task._aws_session, MockS3.MOCK_S3_RESULT_ANNEALING)
 
     expected = AnnealingQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_ANNEALING)
@@ -185,7 +180,9 @@ def test_result_annealing(annealing_task):
 
     s3_bucket = annealing_task.metadata()["outputS3Bucket"]
     s3_object_key = annealing_task.metadata()["outputS3Directory"]
-    annealing_task._aws_session.retrieve_s3_object_body.assert_called_with(s3_bucket, s3_object_key)
+    annealing_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
 
 
 def test_result_is_cached(circuit_task):
@@ -369,12 +366,11 @@ def _assert_create_quantum_task_called_with(
     )
 
 
-def _mock_metadata(aws_session, state, irType="jaqcd"):
+def _mock_metadata(aws_session, state):
     return_value = {
         "status": state,
         "outputS3Bucket": S3_TARGET.bucket,
         "outputS3Directory": S3_TARGET.key,
-        "irType": irType,
     }
     aws_session.get_quantum_task.return_value = return_value
 

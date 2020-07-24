@@ -193,6 +193,10 @@ class MockS3:
 
     MOCK_S3_RESULT_GATE_MODEL = json.dumps(
         {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.gate_model_task_result",
+                "version": "1",
+            },
             "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
             "measuredQubits": [0, 1],
             "taskMetadata": {
@@ -212,6 +216,10 @@ class MockS3:
 
     MOCK_S3_RESULT_ANNEALING = json.dumps(
         {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.annealing_task_result",
+                "version": "1",
+            },
             "solutions": [[-1, -1, -1, -1], [1, -1, 1, 1], [1, -1, -1, 1]],
             "solutionCounts": [3, 2, 4],
             "values": [0.0, 1.0, 2.0],
