@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
@@ -25,6 +26,8 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.schema_common import BraketSchemaBase
+from braket.task_result import AnnealingTaskResult, GateModelTaskResult
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
 
 
@@ -41,6 +44,7 @@ class AwsQuantumTask(QuantumTask):
 
     DEFAULT_RESULTS_POLL_TIMEOUT = 120
     DEFAULT_RESULTS_POLL_INTERVAL = 0.25
+    RESULTS_FILENAME = "results.json"
 
     @staticmethod
     def create(
@@ -320,9 +324,10 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
-                    current_metadata["outputS3Bucket"], current_metadata["outputS3Directory"]
+                    current_metadata["outputS3Bucket"],
+                    current_metadata["outputS3Directory"] + AwsQuantumTask.RESULTS_FILENAME,
                 )
-                self._result = self._get_results_formatter()(result_string)
+                self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
                 return self._result
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
                 self._logger.warning(
@@ -380,7 +385,9 @@ def _(
     create_task_kwargs.update(
         {
             "action": circuit.to_ir().json(),
-            "deviceParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
+            "deviceParameters": json.dumps(
+                {"gateModelParameters": {"qubitCount": circuit.qubit_count}}
+            ),
         }
     )
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
@@ -416,3 +423,18 @@ def _create_common_params(
         "outputS3KeyPrefix": s3_destination_folder[1],
         "shots": shots,
     }
+
+
+@singledispatch
+def _format_result(result):
+    raise TypeError("Invalid result specification type")
+
+
+@_format_result.register
+def _(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
+    return GateModelQuantumTaskResult.from_object(result)
+
+
+@_format_result.register
+def _(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
+    return AnnealingQuantumTaskResult.from_object(result)

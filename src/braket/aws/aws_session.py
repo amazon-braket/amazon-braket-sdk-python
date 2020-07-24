@@ -24,9 +24,9 @@ class AwsSession(object):
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
     BRAKET_ENDPOINTS = {
-        "us-west-1": "https://fdoco1n1x7.execute-api.us-west-1.amazonaws.com/V3",
-        "us-west-2": "https://xe15dbdvw6.execute-api.us-west-2.amazonaws.com/V3",
-        "us-east-1": "https://kqjovr0n70.execute-api.us-east-1.amazonaws.com/V3",
+        "us-west-1": "https://fdoco1n1x7.execute-api.us-west-1.amazonaws.com/V4",
+        "us-west-2": "https://7ko20bz2m2.execute-api.us-west-2.amazonaws.com/V4",
+        "us-east-1": "https://kqjovr0n70.execute-api.us-east-1.amazonaws.com/V4",
     }
 
     # similar to sagemaker sdk:
