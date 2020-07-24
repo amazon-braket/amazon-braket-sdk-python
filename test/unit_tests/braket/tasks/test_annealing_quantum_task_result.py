@@ -11,12 +11,18 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
-
 import numpy as np
 import pytest
 
 from braket.aws.aws_qpu_arns import AwsQpuArns
+from braket.ir.annealing import Problem
+from braket.task_result import (
+    AdditionalMetadata,
+    AnnealingTaskResult,
+    DwaveMetadata,
+    DwaveTiming,
+    TaskMetadata,
+)
 from braket.tasks import AnnealingQuantumTaskResult
 
 
@@ -42,71 +48,82 @@ def solution_counts():
 
 @pytest.fixture
 def problem_type():
-    return "ising"
+    return "ISING"
 
 
 @pytest.fixture
 def task_metadata():
-    return {"Id": "UUID_blah_1", "Status": "COMPLETED", "BackendArn": AwsQpuArns.DWAVE, "Shots": 5}
+    return TaskMetadata(**{"id": "task_arn", "deviceId": AwsQpuArns.DWAVE, "shots": 100})
 
 
 @pytest.fixture
 def dwave_metadata():
-    return {
-        "ActiveVariables": [0],
-        "Timing": {
-            "QpuSamplingTime": 1575,
-            "QpuAnnealTimePerSample": 20,
-            "QpuReadoutTimePerSample": 274,
-            "QpuAccessTime": 10917,
-            "QpuAccessOverheadTime": 3382,
-            "QpuProgrammingTime": 9342,
-            "QpuDelayTimePerSample": 21,
-            "TotalPostProcessingTime": 117,
-            "PostProcessingOverheadTime": 117,
-            "TotalRealTime": 10917,
-            "RunTimeChip": 1575,
-            "AnnealTimePerRun": 20,
-            "ReadoutTimePerRun": 274,
-        },
-    }
+    return DwaveMetadata(
+        activeVariables=[0],
+        timing=DwaveTiming(
+            qpuSamplingTime=100,
+            qpuAnnealTimePerSample=20,
+            qpuReadoutTimePerSample=274,
+            qpuAccessTime=10917,
+            qpuAccessOverheadTime=3382,
+            qpuProgrammingTime=9342,
+            qpuDelayTimePerSample=21,
+            totalPostProcessingTime=117,
+            postProcessingOverheadTime=117,
+            totalRealTime=10917,
+            runTimeChip=1575,
+            annealTimePerRun=20,
+            readoutTimePerRun=274,
+        ),
+    )
+
+
+@pytest.fixture
+def additional_metadata(problem_type, dwave_metadata):
+    problem = Problem(
+        type=problem_type,
+        linear={0: 0.3333, 1: -0.333, 4: -0.333, 5: 0.333},
+        quadratic={"0,4": 0.667, "0,5": -1, "1,4": 0.667, "1,5": 0.667},
+    )
+    return AdditionalMetadata(action=problem, dwaveMetadata=dwave_metadata)
 
 
 @pytest.fixture
 def result_str_1(
-    solutions, values, solution_counts, variable_count, problem_type, dwave_metadata, task_metadata
+    solutions, values, solution_counts, variable_count, task_metadata, additional_metadata
 ):
-    return json.dumps(
-        {
-            "Solutions": solutions,
-            "VariableCount": variable_count,
-            "Values": values,
-            "SolutionCounts": solution_counts,
-            "ProblemType": problem_type,
-            "DWaveMetadata": dwave_metadata,
-            "TaskMetadata": task_metadata,
-        }
+    result = AnnealingTaskResult(
+        solutions=solutions,
+        variableCount=variable_count,
+        values=values,
+        solutionCounts=solution_counts,
+        taskMetadata=task_metadata,
+        additionalMetadata=additional_metadata,
     )
+    return result.json()
 
 
 @pytest.fixture
-def result_str_2(solutions, values, variable_count, problem_type, dwave_metadata, task_metadata):
-    return json.dumps(
-        {
-            "Solutions": solutions,
-            "VariableCount": variable_count,
-            "Values": values,
-            "SolutionCounts": None,
-            "ProblemType": problem_type,
-            "DWaveMetadata": dwave_metadata,
-            "TaskMetadata": task_metadata,
-        }
+def result_str_2(solutions, values, variable_count, task_metadata, additional_metadata):
+    result = AnnealingTaskResult(
+        solutions=solutions,
+        variableCount=variable_count,
+        values=values,
+        taskMetadata=task_metadata,
+        additionalMetadata=additional_metadata,
     )
+    return result.json()
 
 
 @pytest.fixture
 def annealing_result(
-    solutions, values, solution_counts, variable_count, problem_type, dwave_metadata, task_metadata
+    solutions,
+    values,
+    solution_counts,
+    variable_count,
+    problem_type,
+    additional_metadata,
+    task_metadata,
 ):
     solutions = np.asarray(solutions, dtype=int)
     values = np.asarray(values, dtype=float)
@@ -119,11 +136,11 @@ def annealing_result(
         variable_count=variable_count,
         problem_type=problem_type,
         task_metadata=task_metadata,
-        additional_metadata={"DWaveMetadata": dwave_metadata},
+        additional_metadata=additional_metadata,
     )
 
 
-def test_from_dict(
+def test_from_object(
     result_str_1,
     solutions,
     values,
@@ -131,16 +148,16 @@ def test_from_dict(
     variable_count,
     problem_type,
     task_metadata,
-    dwave_metadata,
+    additional_metadata,
 ):
-    result = AnnealingQuantumTaskResult.from_dict(json.loads(result_str_1))
+    result = AnnealingQuantumTaskResult.from_object(AnnealingTaskResult.parse_raw(result_str_1))
     solutions = np.asarray(solutions, dtype=int)
     values = np.asarray(values, dtype=float)
     solution_counts = np.asarray(solution_counts, dtype=int)
     assert result.variable_count == variable_count
     assert result.problem_type == problem_type
     assert result.task_metadata == task_metadata
-    assert result.additional_metadata == {"DWaveMetadata": dwave_metadata}
+    assert result.additional_metadata == additional_metadata
     np.testing.assert_equal(
         result.record_array,
         AnnealingQuantumTaskResult._create_record_array(solutions, solution_counts, values),
@@ -155,7 +172,7 @@ def test_from_string(
     variable_count,
     problem_type,
     task_metadata,
-    dwave_metadata,
+    additional_metadata,
 ):
     result = AnnealingQuantumTaskResult.from_string(result_str_1)
     solutions = np.asarray(solutions, dtype=int)
@@ -164,7 +181,7 @@ def test_from_string(
     assert result.variable_count == variable_count
     assert result.problem_type == problem_type
     assert result.task_metadata == task_metadata
-    assert result.additional_metadata == {"DWaveMetadata": dwave_metadata}
+    assert result.additional_metadata == additional_metadata
     np.testing.assert_equal(
         result.record_array,
         AnnealingQuantumTaskResult._create_record_array(solutions, solution_counts, values),
@@ -207,9 +224,9 @@ def test_data_sort_by(annealing_result, solutions, values, solution_counts):
     assert d[0][2] == solution_counts[min_index]
 
 
-def test_from_dict_equal_to_from_string(result_str_1):
-    assert AnnealingQuantumTaskResult.from_dict(
-        json.loads(result_str_1)
+def test_from_object_equal_to_from_string(result_str_1):
+    assert AnnealingQuantumTaskResult.from_object(
+        AnnealingTaskResult.parse_raw(result_str_1)
     ) == AnnealingQuantumTaskResult.from_string(result_str_1)
 
 

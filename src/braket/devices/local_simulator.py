@@ -130,8 +130,8 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
     validate_circuit_and_shots(circuit, shots)
     program = circuit.to_ir()
     qubits = circuit.qubit_count
-    results_dict = simulator.run(program, qubits, shots, *args, **kwargs)
-    return GateModelQuantumTaskResult.from_dict(results_dict)
+    results = simulator.run(program, qubits, shots, *args, **kwargs)
+    return GateModelQuantumTaskResult.from_object(results)
 
 
 @_run_internal.register
@@ -139,5 +139,5 @@ def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
     if "annealing" not in simulator.properties["supportedIrTypes"]:
         raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
     ir = problem.to_ir()
-    results_dict = simulator.run(ir, shots, *args, *kwargs)
-    return AnnealingQuantumTaskResult.from_dict(results_dict)
+    results = simulator.run(ir, shots, *args, *kwargs)
+    return AnnealingQuantumTaskResult.from_object(results)

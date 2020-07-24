@@ -11,25 +11,22 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
 import uuid
 
+import numpy as np
 import pytest
 
+from braket.task_result import TaskMetadata
 from braket.tasks import GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
-RESULT = GateModelQuantumTaskResult.from_dict(
-    {
-        "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-        "MeasuredQubits": [0, 1],
-        "TaskMetadata": {
-            "Id": str(uuid.uuid4()),
-            "Status": "COMPLETED",
-            "Shots": 2,
-            "Ir": json.dumps({"results": []}),
-        },
-    }
+RESULT = GateModelQuantumTaskResult(
+    task_metadata=TaskMetadata(**{"id": str(uuid.uuid4()), "deviceId": "default", "shots": 100}),
+    additional_metadata=None,
+    measurements=np.array([[0, 1], [1, 0]]),
+    measured_qubits=[0, 1],
+    result_types=None,
+    values=None,
 )
 
 TASK = LocalQuantumTask(RESULT)
@@ -45,7 +42,7 @@ def test_state():
 
 
 def test_result():
-    assert RESULT.task_metadata["Id"] == TASK.id
+    assert RESULT.task_metadata.id == TASK.id
     assert TASK.result() == RESULT
 
 

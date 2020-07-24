@@ -11,135 +11,127 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import copy
 import json
-from typing import Any, Counter, Dict
+from typing import Counter
 
 import numpy as np
 import pytest
 
-from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.circuits import Observable, ResultType
 from braket.ir import jaqcd
+from braket.task_result import (
+    AdditionalMetadata,
+    GateModelTaskResult,
+    ResultTypeValue,
+    TaskMetadata,
+)
 from braket.tasks import GateModelQuantumTaskResult
 
 
 @pytest.fixture
-def result_dict_1():
-    return {
-        "Measurements": [[0, 0], [0, 1], [0, 1], [0, 1]],
-        "MeasuredQubits": [0, 1],
-        "TaskMetadata": {
-            "Id": "UUID_blah_1",
-            "Status": "COMPLETED",
-            "BackendArn": AwsQpuArns.RIGETTI,
-            "Shots": 1000,
-            "Ir": json.dumps({"results": []}),
-        },
-    }
+def task_metadata_shots():
+    return TaskMetadata(**{"id": "task_arn", "deviceId": "default", "shots": 100})
 
 
 @pytest.fixture
-def result_str_1(result_dict_1):
-    return json.dumps(result_dict_1)
+def task_metadata_zero_shots():
+    return TaskMetadata(**{"id": "task_arn", "deviceId": "default", "shots": 0})
 
 
 @pytest.fixture
-def result_str_2():
-    return json.dumps(
-        {
-            "Measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
-            "MeasuredQubits": [0, 1],
-            "TaskMetadata": {
-                "Id": "UUID_blah_2",
-                "Status": "COMPLETED",
-                "BackendArn": AwsQpuArns.RIGETTI,
-                "Shots": 1000,
-                "Ir": json.dumps({"results": []}),
-            },
-        }
+def additional_metadata():
+    program = jaqcd.Program(instructions=[jaqcd.CNot(control=0, target=1)])
+    return AdditionalMetadata(action=program)
+
+
+@pytest.fixture
+def result_obj_1(task_metadata_shots, additional_metadata):
+    return GateModelTaskResult(
+        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
+        measuredQubits=[0, 1],
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata,
     )
 
 
 @pytest.fixture
-def result_str_3():
-    return json.dumps(
-        {
-            "TaskMetadata": {
-                "Id": "1231231",
-                "Status": "COMPLETED",
-                "BackendArn": "test_arn",
-                "BackendTranslation": "...",
-                "Created": 1574140385.0697668,
-                "Modified": 1574140388.6908717,
-                "Shots": 100,
-                "GateModelConfig": {"QubitCount": 6},
-                "Ir": json.dumps({"results": []}),
-            },
-            "MeasurementProbabilities": {"011000": 0.9999999999999982},
-            "MeasuredQubits": list(range(6)),
-        }
-    )
+def result_str_1(result_obj_1):
+    return result_obj_1.json()
 
 
 @pytest.fixture
-def result_dict_4():
-    return {
-        "TaskMetadata": {
-            "Id": "1231231",
-            "Shots": 0,
-            "GateModelConfig": {"QubitCount": 2},
-            "Ir": json.dumps({"results": []}),
-        },
-        "ResultTypes": [
-            {"Type": {"targets": [0], "type": "probability"}, "Value": np.array([0.5, 0.5])},
-            {
-                "Type": {"type": "statevector"},
-                "Value": np.array([complex(0.70710678, 0), 0, 0, complex(0.70710678, 0)]),
-            },
-            {"Type": {"targets": [0], "type": "expectation", "observable": ["y"]}, "Value": 0.0},
-            {"Type": {"targets": [0], "type": "variance", "observable": ["y"]}, "Value": 0.1},
-            {
-                "Type": {"type": "amplitude", "states": ["00"]},
-                "Value": {"00": complex(0.70710678, 0)},
-            },
-        ],
-    }
+def result_str_2(result_obj_1):
+    result_obj_1.taskMetadata.id = "task_arn_2"
+    return result_obj_1.json()
 
 
 @pytest.fixture
-def result_str_4(result_dict_4):
-    result = copy.deepcopy(result_dict_4)
-    result["ResultTypes"] = [
-        {"Type": {"targets": [0], "type": "probability"}, "Value": [0.5, 0.5]},
-        {
-            "Type": {"type": "statevector"},
-            "Value": [(0.70710678, 0), (0, 0), (0, 0), (0.70710678, 0)],
-        },
-        {"Type": {"targets": [0], "type": "expectation", "observable": ["y"]}, "Value": 0.0},
-        {"Type": {"targets": [0], "type": "variance", "observable": ["y"]}, "Value": 0.1},
-        {"Type": {"type": "amplitude", "states": ["00"]}, "Value": {"00": (0.70710678, 0)}},
-    ]
-    return json.dumps(result)
+def result_str_3(task_metadata_shots, additional_metadata):
+    return GateModelTaskResult(
+        measurementProbabilities={"011000": 0.9999999999999982},
+        measuredQubits=list(range(6)),
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata,
+    ).json()
 
 
 @pytest.fixture
-def result_dict_5():
-    return {
-        "TaskMetadata": {
-            "Id": "1231231",
-            "Shots": 100,
-            "GateModelConfig": {"QubitCount": 2},
-            "Ir": json.dumps(
-                {
-                    "results": [
-                        jaqcd.Probability(targets=[1]).dict(),
-                        jaqcd.Expectation(observable=["z"]).dict(),
-                    ]
-                }
+def result_obj_4(task_metadata_zero_shots, additional_metadata):
+    return GateModelTaskResult(
+        resultTypes=[
+            ResultTypeValue.construct(
+                type=jaqcd.Probability(targets=[0]), value=np.array([0.5, 0.5])
             ),
-        },
-        "Measurements": [
+            ResultTypeValue.construct(
+                type=jaqcd.StateVector(),
+                value=np.array([complex(0.70710678, 0), 0, 0, complex(0.70710678, 0)]),
+            ),
+            ResultTypeValue.construct(
+                type=jaqcd.Expectation(observable=["y"], targets=[0]), value=0.0
+            ),
+            ResultTypeValue.construct(
+                type=jaqcd.Variance(observable=["y"], targets=[0]), value=0.1
+            ),
+            ResultTypeValue.construct(
+                type=jaqcd.Amplitude(states=["00"]), value={"00": complex(0.70710678, 0)}
+            ),
+        ],
+        measuredQubits=list(range(2)),
+        taskMetadata=task_metadata_zero_shots,
+        additionalMetadata=additional_metadata,
+    )
+
+
+@pytest.fixture
+def result_str_4(task_metadata_zero_shots, additional_metadata):
+    result = GateModelTaskResult(
+        resultTypes=[
+            ResultTypeValue(type=jaqcd.Probability(targets=[0]), value=[0.5, 0.5]),
+            ResultTypeValue(
+                type=jaqcd.StateVector(), value=[(0.70710678, 0), (0, 0), (0, 0), (0.70710678, 0)]
+            ),
+            ResultTypeValue(type=jaqcd.Expectation(observable=["y"], targets=[0]), value=0.0),
+            ResultTypeValue(type=jaqcd.Variance(observable=["y"], targets=[0]), value=0.1),
+            ResultTypeValue(type=jaqcd.Amplitude(states=["00"]), value={"00": (0.70710678, 0)}),
+        ],
+        measuredQubits=list(range(2)),
+        taskMetadata=task_metadata_zero_shots,
+        additionalMetadata=additional_metadata,
+    )
+    return result.json()
+
+
+@pytest.fixture
+def result_obj_5(task_metadata_shots):
+    return GateModelTaskResult(
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=AdditionalMetadata(
+            action=jaqcd.Program(
+                instructions=[jaqcd.CNot(control=0, target=1), jaqcd.CNot(control=2, target=3)],
+                results=[jaqcd.Probability(targets=[1]), jaqcd.Expectation(observable=["z"])],
+            )
+        ),
+        measurements=[
             [0, 0, 1, 0],
             [1, 1, 1, 1],
             [1, 0, 0, 1],
@@ -151,36 +143,27 @@ def result_dict_5():
             [0, 0, 0, 0],
             [0, 0, 0, 1],
         ],
-        "MeasuredQubits": [0, 1, 2, 3],
-    }
+        measuredQubits=[0, 1, 2, 3],
+    )
 
 
 @pytest.fixture
-def malformatted_results_1():
-    return {
-        "TaskMetadata": {
-            "Id": "UUID_blah_1",
-            "Status": "COMPLETED",
-            "BackendArn": AwsQpuArns.RIGETTI,
-            "Shots": 1000,
-            "Ir": json.dumps({"results": []}),
-        }
-    }
+def malformatted_results_1(task_metadata_shots, additional_metadata):
+    return GateModelTaskResult(
+        measuredQubits=list(range(6)),
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata,
+    ).json()
 
 
 @pytest.fixture
-def malformatted_results_2():
-    return {
-        "TaskMetadata": {
-            "Id": "UUID_blah_1",
-            "Status": "COMPLETED",
-            "BackendArn": AwsQpuArns.RIGETTI,
-            "Shots": 1000,
-            "Ir": json.dumps({"results": []}),
-        },
-        "MeasurementProbabilities": {"011000": 0.9999999999999982},
-        "MeasuredQubits": [0],
-    }
+def malformatted_results_2(task_metadata_shots, additional_metadata):
+    return GateModelTaskResult(
+        measurementProbabilities={"011000": 0.9999999999999982},
+        measuredQubits=[0],
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata,
+    ).json()
 
 
 test_ir_results = [
@@ -248,90 +231,38 @@ def test_measurements_from_measurement_probabilities():
     assert np.allclose(measurements, expected_results)
 
 
-def test_task_metadata():
-    task_metadata: Dict[str, Any] = {
-        "Id": "UUID_blah",
-        "Status": "COMPLETED",
-        "BackendArn": "Rigetti_Arn",
-        "CwLogGroupArn": "blah",
-        "Program": "....",
-        "CreatedAt": "02/12/22 21:23",
-        "UpdatedAt": "02/13/22 21:23",
-    }
-    result: GateModelQuantumTaskResult = GateModelQuantumTaskResult(
-        measurements=None,
-        result_types=[],
-        values=[],
-        task_metadata=task_metadata,
-        measurement_counts=None,
-        measurement_probabilities=None,
-        measurements_copied_from_device=False,
-        measurement_counts_copied_from_device=False,
-        measurement_probabilities_copied_from_device=False,
-    )
-    assert result.task_metadata == task_metadata
-
-
-def test_from_dict_measurements(result_dict_1):
-    task_result = GateModelQuantumTaskResult.from_dict(result_dict_1)
-    expected_measurements = np.asarray(result_dict_1["Measurements"], dtype=int)
-    assert task_result.task_metadata == result_dict_1["TaskMetadata"]
+def test_from_string_measurements(result_str_1):
+    result_obj = GateModelTaskResult.parse_raw(result_str_1)
+    task_result = GateModelQuantumTaskResult.from_string(result_str_1)
+    expected_measurements = np.asarray(result_obj.measurements, dtype=int)
+    assert task_result.task_metadata == result_obj.taskMetadata
+    assert task_result.additional_metadata == result_obj.additionalMetadata
     assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
     assert not task_result.measurement_counts_copied_from_device
     assert not task_result.measurement_probabilities_copied_from_device
     assert task_result.measurements_copied_from_device
-    assert task_result.measured_qubits == result_dict_1["MeasuredQubits"]
+    assert task_result.measured_qubits == result_obj.measuredQubits
     assert task_result.values == []
     assert task_result.result_types == []
 
 
-def test_from_dict_result_types(result_dict_5):
-    task_result = GateModelQuantumTaskResult.from_dict(result_dict_5)
-    expected_measurements = np.asarray(result_dict_5["Measurements"], dtype=int)
-    assert task_result.task_metadata == result_dict_5["TaskMetadata"]
+def test_from_object_result_types(result_obj_5):
+    result_obj = result_obj_5
+    task_result = GateModelQuantumTaskResult.from_object(result_obj)
+    expected_measurements = np.asarray(result_obj.measurements, dtype=int)
     assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
-    assert task_result.measured_qubits == result_dict_5["MeasuredQubits"]
     assert np.allclose(task_result.values[0], np.array([0.6, 0.4]))
     assert task_result.values[1] == [0.4, 0.2, -0.2, -0.4]
-    assert task_result.result_types[0]["Type"] == jaqcd.Probability(targets=[1]).dict()
-    assert task_result.result_types[1]["Type"] == jaqcd.Expectation(observable=["z"]).dict()
-
-
-def test_from_dict_measurement_probabilities(result_str_3):
-    result_obj = json.loads(result_str_3)
-    task_result = GateModelQuantumTaskResult.from_dict(result_obj)
-    assert task_result.measurement_probabilities == result_obj["MeasurementProbabilities"]
-    assert task_result.task_metadata == result_obj["TaskMetadata"]
-    shots = 100
-    measurement_list = [list("011000") for x in range(shots)]
-    expected_measurements = np.asarray(measurement_list, dtype=int)
-    assert np.allclose(task_result.measurements, expected_measurements)
-    assert task_result.measurement_counts == Counter(["011000" for x in range(shots)])
-    assert not task_result.measurement_counts_copied_from_device
-    assert task_result.measurement_probabilities_copied_from_device
-    assert not task_result.measurements_copied_from_device
-    assert task_result.measured_qubits == result_obj["MeasuredQubits"]
-
-
-def test_from_string_measurements(result_str_1):
-    result_obj = json.loads(result_str_1)
-    task_result = GateModelQuantumTaskResult.from_string(result_str_1)
-    expected_measurements = np.asarray(result_obj["Measurements"], dtype=int)
-    assert task_result.task_metadata == result_obj["TaskMetadata"]
-    assert np.array2string(task_result.measurements) == np.array2string(expected_measurements)
-    assert not task_result.measurement_counts_copied_from_device
-    assert not task_result.measurement_probabilities_copied_from_device
-    assert task_result.measurements_copied_from_device
-    assert task_result.measured_qubits == result_obj["MeasuredQubits"]
+    assert task_result.result_types[0].type == jaqcd.Probability(targets=[1])
+    assert task_result.result_types[1].type == jaqcd.Expectation(observable=["z"])
 
 
 def test_from_string_measurement_probabilities(result_str_3):
-    result_obj = json.loads(result_str_3)
+    result_obj = GateModelTaskResult.parse_raw(result_str_3)
     task_result = GateModelQuantumTaskResult.from_string(result_str_3)
-    assert task_result.measurement_probabilities == result_obj["MeasurementProbabilities"]
-    assert task_result.task_metadata == result_obj["TaskMetadata"]
+    assert task_result.measurement_probabilities == result_obj.measurementProbabilities
     shots = 100
-    measurement_list = [list("011000") for x in range(shots)]
+    measurement_list = [list("011000") for _ in range(shots)]
     expected_measurements = np.asarray(measurement_list, dtype=int)
     assert np.allclose(task_result.measurements, expected_measurements)
     assert task_result.measurement_counts == Counter(["011000" for x in range(shots)])
@@ -340,12 +271,12 @@ def test_from_string_measurement_probabilities(result_str_3):
     assert not task_result.measurements_copied_from_device
 
 
-def test_from_dict_equal_to_from_string(result_dict_1, result_str_1, result_str_3):
-    assert GateModelQuantumTaskResult.from_dict(
-        result_dict_1
+def test_from_object_equal_to_from_string(result_obj_1, result_str_1, result_str_3):
+    assert GateModelQuantumTaskResult.from_object(
+        result_obj_1
     ) == GateModelQuantumTaskResult.from_string(result_str_1)
-    assert GateModelQuantumTaskResult.from_dict(
-        json.loads(result_str_3)
+    assert GateModelQuantumTaskResult.from_object(
+        GateModelTaskResult.parse_raw(result_str_3)
     ) == GateModelQuantumTaskResult.from_string(result_str_3)
 
 
@@ -361,22 +292,22 @@ def test_equality(result_str_1, result_str_2):
     assert result_1 != non_result
 
 
-def test_from_string_simulator_only(result_dict_4, result_str_4):
+def test_from_string_simulator_only(result_obj_4, result_str_4):
+    result_obj = result_obj_4
     result = GateModelQuantumTaskResult.from_string(result_str_4)
-    assert len(result.result_types) == len(result_dict_4["ResultTypes"])
+    assert len(result.result_types) == len(result_obj.resultTypes)
     for i in range(len(result.result_types)):
         rt = result.result_types[i]
-        expected_rt = result_dict_4["ResultTypes"][i]
-        assert rt["Type"] == expected_rt["Type"]
-        if isinstance(rt["Value"], np.ndarray):
-            assert np.allclose(rt["Value"], expected_rt["Value"])
+        expected_rt = result_obj.resultTypes[i]
+        assert rt.type == expected_rt.type
+        if isinstance(rt.value, np.ndarray):
+            assert np.allclose(rt.value, expected_rt.value)
         else:
-            assert rt["Value"] == expected_rt["Value"]
-    assert result.task_metadata == result.task_metadata
+            assert rt.value == expected_rt.value
 
 
-def test_get_value_by_result_type(result_dict_4):
-    result = GateModelQuantumTaskResult.from_dict(result_dict_4)
+def test_get_value_by_result_type(result_obj_4):
+    result = GateModelQuantumTaskResult.from_object(result_obj_4)
     assert np.allclose(
         result.get_value_by_result_type(ResultType.Probability(target=0)), result.values[0]
     )
@@ -393,26 +324,19 @@ def test_get_value_by_result_type(result_dict_4):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_get_value_by_result_type_value_error(result_dict_4):
-    result = GateModelQuantumTaskResult.from_dict(result_dict_4)
+def test_get_value_by_result_type_value_error(result_obj_4):
+    result = GateModelQuantumTaskResult.from_object(result_obj_4)
     result.get_value_by_result_type(ResultType.Probability(target=[0, 1]))
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_bad_dict(malformatted_results_1):
-    GateModelQuantumTaskResult.from_dict(malformatted_results_1)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_bad_string(malformatted_results_1):
-    results_string = json.dumps(malformatted_results_1)
-    GateModelQuantumTaskResult.from_string(results_string)
+def test_shots_no_measurements_no_measurement_probs(malformatted_results_1):
+    GateModelQuantumTaskResult.from_string(malformatted_results_1)
 
 
 @pytest.mark.xfail(raises=ValueError)
 def test_measurements_measured_qubits_mismatch(malformatted_results_2):
-    results_string = json.dumps(malformatted_results_2)
-    GateModelQuantumTaskResult.from_string(results_string)
+    GateModelQuantumTaskResult.from_string(malformatted_results_2)
 
 
 @pytest.mark.parametrize("ir_result,expected_result", test_ir_results)
@@ -439,8 +363,8 @@ def test_calculate_ir_results(ir_result, expected_result):
         ir_string, measurements, measured_qubits
     )
     assert len(result_types) == 1
-    assert result_types[0]["Type"] == ir_result.dict()
-    assert np.allclose(result_types[0]["Value"], expected_result)
+    assert result_types[0].type == ir_result
+    assert np.allclose(result_types[0].value, expected_result)
 
 
 @pytest.mark.xfail(raises=ValueError)
