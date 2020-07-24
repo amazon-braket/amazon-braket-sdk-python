@@ -263,7 +263,8 @@ class GateModelQuantumTaskResult:
             m_probabilities_copied_from_device = True
         else:
             raise ValueError(
-                'One of "measurements" or "measurementProbabilities" must not be null in result obj'
+                'One of "measurements" or "measurementProbabilities" must be populated in',
+                " the result obj",
             )
         measured_qubits = result.measuredQubits
         if len(measured_qubits) != measurements.shape[1]:
