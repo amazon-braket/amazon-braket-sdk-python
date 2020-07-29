@@ -185,12 +185,12 @@ class GateModelQuantumTaskResult:
         return np.asarray(measurements_list, dtype=int)
 
     @staticmethod
-    def from_object(result: GateModelQuantumTaskResult):
+    def from_object(result: GateModelTaskResult):
         """
-        Create GateModelQuantumTaskResult from dict.
+        Create GateModelQuantumTaskResult from GateModelTaskResult object.
 
         Args:
-            result (Dict[str, Any]): Results dict with GateModelQuantumTaskResult attributes as keys
+            result (GateModelTaskResult): GateModelTaskResult object
 
         Returns:
             GateModelQuantumTaskResult: A GateModelQuantumTaskResult based on the given dict

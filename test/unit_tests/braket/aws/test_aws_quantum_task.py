@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
+import json
 import threading
 import time
 from unittest.mock import MagicMock, Mock, patch
@@ -164,28 +165,25 @@ def test_result_circuit(circuit_task):
     expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
     assert circuit_task.result() == expected
 
-    s3_bucket = circuit_task.metadata()["resultsS3Bucket"]
-    s3_object_key = circuit_task.metadata()["resultsS3ObjectKey"]
-    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(s3_bucket, s3_object_key)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_result_unknown_ir_type(circuit_task):
-    _mock_metadata(circuit_task._aws_session, "COMPLETED", "unsupported_ir_type")
-    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
-    circuit_task.result()
+    s3_bucket = circuit_task.metadata()["outputS3Bucket"]
+    s3_object_key = circuit_task.metadata()["outputS3Directory"]
+    circuit_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
 
 
 def test_result_annealing(annealing_task):
-    _mock_metadata(annealing_task._aws_session, "COMPLETED", "annealing")
+    _mock_metadata(annealing_task._aws_session, "COMPLETED")
     _mock_s3(annealing_task._aws_session, MockS3.MOCK_S3_RESULT_ANNEALING)
 
     expected = AnnealingQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_ANNEALING)
     assert annealing_task.result() == expected
 
-    s3_bucket = annealing_task.metadata()["resultsS3Bucket"]
-    s3_object_key = annealing_task.metadata()["resultsS3ObjectKey"]
-    annealing_task._aws_session.retrieve_s3_object_body.assert_called_with(s3_bucket, s3_object_key)
+    s3_bucket = annealing_task.metadata()["outputS3Bucket"]
+    s3_object_key = annealing_task.metadata()["outputS3Directory"]
+    annealing_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
 
 
 def test_result_is_cached(circuit_task):
@@ -292,7 +290,6 @@ def test_from_circuit_with_shots(aws_session, arn, circuit):
         aws_session,
         arn,
         circuit,
-        AwsQuantumTask.GATE_IR_TYPE,
         S3_TARGET,
         shots,
         {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
@@ -316,7 +313,7 @@ def test_from_annealing(aws_session, arn, problem):
         problem,
         S3_TARGET,
         1000,
-        backend_parameters={"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}},
+        device_parameters={"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}},
     )
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, AnnealingQuantumTaskResult.from_string
@@ -326,7 +323,6 @@ def test_from_annealing(aws_session, arn, problem):
         aws_session,
         arn,
         problem,
-        AwsQuantumTask.ANNEALING_IR_TYPE,
         S3_TARGET,
         1000,
         {"annealingModelParameters": {"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}},
@@ -357,27 +353,25 @@ def _init_and_add_to_list(aws_session, arn, task_list):
 
 
 def _assert_create_quantum_task_called_with(
-    aws_session, arn, task_description, ir_type, s3_results_prefix, shots, backend_parameters
+    aws_session, arn, task_description, s3_results_prefix, shots, device_parameters
 ):
     aws_session.create_quantum_task.assert_called_with(
         **{
-            "backendArn": arn,
-            "resultsS3Bucket": s3_results_prefix[0],
-            "resultsS3Prefix": s3_results_prefix[1],
-            "ir": task_description.to_ir().json(),
-            "irType": ir_type,
-            "backendParameters": backend_parameters,
+            "deviceArn": arn,
+            "outputS3Bucket": s3_results_prefix[0],
+            "outputS3KeyPrefix": s3_results_prefix[1],
+            "action": task_description.to_ir().json(),
+            "deviceParameters": json.dumps(device_parameters),
             "shots": shots,
         }
     )
 
 
-def _mock_metadata(aws_session, state, irType="jaqcd"):
+def _mock_metadata(aws_session, state):
     return_value = {
         "status": state,
-        "resultsS3Bucket": S3_TARGET.bucket,
-        "resultsS3ObjectKey": S3_TARGET.key,
-        "irType": irType,
+        "outputS3Bucket": S3_TARGET.bucket,
+        "outputS3Directory": S3_TARGET.key,
     }
     aws_session.get_quantum_task.return_value = return_value
 

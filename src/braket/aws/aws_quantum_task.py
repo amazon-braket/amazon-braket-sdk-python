@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
@@ -25,6 +26,8 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.schema_common import BraketSchemaBase
+from braket.task_result import AnnealingTaskResult, GateModelTaskResult
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
 
 
@@ -41,6 +44,7 @@ class AwsQuantumTask(QuantumTask):
 
     DEFAULT_RESULTS_POLL_TIMEOUT = 120
     DEFAULT_RESULTS_POLL_INTERVAL = 0.25
+    RESULTS_FILENAME = "results.json"
 
     @staticmethod
     def create(
@@ -49,7 +53,7 @@ class AwsQuantumTask(QuantumTask):
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
-        backend_parameters: Dict[str, Any] = None,
+        device_parameters: Dict[str, Any] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -74,7 +78,7 @@ class AwsQuantumTask(QuantumTask):
                 `shots=0` is only available on simulators and means that the simulator
                 will compute the exact results based on the task specification.
 
-            backend_parameters (Dict[str, Any]): Additional parameters to send to the device.
+            device_parameters (Dict[str, Any]): Additional parameters to send to the device.
                 For example, for D-Wave:
                 `{"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
@@ -105,7 +109,7 @@ class AwsQuantumTask(QuantumTask):
             task_specification,
             aws_session,
             create_task_kwargs,
-            backend_parameters or {},
+            device_parameters or {},
             *args,
             **kwargs,
         )
@@ -276,25 +280,6 @@ class AwsQuantumTask(QuantumTask):
         """
         return asyncio.create_task(self._wait_for_completion())
 
-    def _get_results_formatter(
-        self,
-    ) -> Union[GateModelQuantumTaskResult.from_string, AnnealingQuantumTaskResult.from_string]:
-        """
-        Get results formatter based on irType of self.metadata()
-
-        Returns:
-            Union[GateModelQuantumTaskResult.from_string, AnnealingQuantumTaskResult.from_string]:
-            function that deserializes a string into a results structure
-        """
-        current_metadata = self.metadata()
-        ir_type = current_metadata["irType"]
-        if ir_type == AwsQuantumTask.ANNEALING_IR_TYPE:
-            return AnnealingQuantumTaskResult.from_string
-        elif ir_type == AwsQuantumTask.GATE_IR_TYPE:
-            return GateModelQuantumTaskResult.from_string
-        else:
-            raise ValueError("Unknown IR type")
-
     async def _wait_for_completion(
         self,
     ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
@@ -320,9 +305,10 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
-                    current_metadata["resultsS3Bucket"], current_metadata["resultsS3ObjectKey"]
+                    current_metadata["outputS3Bucket"],
+                    current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
                 )
-                self._result = self._get_results_formatter()(result_string)
+                self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
                 return self._result
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
                 self._logger.warning(
@@ -360,7 +346,7 @@ def _create_internal(
     task_specification: Union[Circuit, Problem],
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    backend_parameters: Dict[str, Any],
+    device_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -372,16 +358,17 @@ def _(
     circuit: Circuit,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    backend_parameters: Dict[str, Any],
+    device_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
     validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
     create_task_kwargs.update(
         {
-            "ir": circuit.to_ir().json(),
-            "irType": AwsQuantumTask.GATE_IR_TYPE,
-            "backendParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
+            "action": circuit.to_ir().json(),
+            "deviceParameters": json.dumps(
+                {"gateModelParameters": {"qubitCount": circuit.qubit_count}}
+            ),
         }
     )
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
@@ -393,15 +380,14 @@ def _(
     problem: Problem,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    backend_parameters: Dict[str, Any],
+    device_parameters: Dict[str, Any],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
     create_task_kwargs.update(
         {
-            "ir": problem.to_ir().json(),
-            "irType": AwsQuantumTask.ANNEALING_IR_TYPE,
-            "backendParameters": {"annealingModelParameters": backend_parameters},
+            "action": problem.to_ir().json(),
+            "deviceParameters": json.dumps({"annealingModelParameters": device_parameters}),
         }
     )
 
@@ -413,8 +399,23 @@ def _create_common_params(
     device_arn: str, s3_destination_folder: AwsSession.S3DestinationFolder, shots: int
 ) -> Dict[str, Any]:
     return {
-        "backendArn": device_arn,
-        "resultsS3Bucket": s3_destination_folder[0],
-        "resultsS3Prefix": s3_destination_folder[1],
+        "deviceArn": device_arn,
+        "outputS3Bucket": s3_destination_folder[0],
+        "outputS3KeyPrefix": s3_destination_folder[1],
         "shots": shots,
     }
+
+
+@singledispatch
+def _format_result(result):
+    raise TypeError("Invalid result specification type")
+
+
+@_format_result.register
+def _(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
+    return GateModelQuantumTaskResult.from_object(result)
+
+
+@_format_result.register
+def _(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
+    return AnnealingQuantumTaskResult.from_object(result)
