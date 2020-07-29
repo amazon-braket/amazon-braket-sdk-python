@@ -195,8 +195,8 @@ print(task.result().measurement_counts)
 The code sample imports the Amazon Braket framework, then defines the execution environment as the AWSQuantumSimulator and the device to use. The `s3_folder` statement defines the Amazon S3 bucket for job output and the folder in the bucket to store job output. This folder is created when you run the job. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job.
 
 ### Available Simulators
-There is currently one AwsQuantumSimulator available:
-- `arn:aws:aqx:::quantum-simulator:aqx:qs1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector.
+There is currently one AWS simulator available:
+- `arn:aws:braket:::device/quantum-simulator/amazon/sv1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector.
 
 #### To validate your configuration using a Python file
 1. Open a text editor with example file `../braket-python-sdk/examples/bell.py`.
@@ -278,9 +278,9 @@ print(task.result().measurement_counts)
 ```
 
 Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
-- **IonQ** "arn:aws:aqx:::qpu:ionq" (Available 9:00 AM to 1:00 PM ET M-F)
-- **Rigetti** "arn:aws:aqx:::qpu:rigetti" (Available 11:00 AM to 1:00 PM ET daily)
-- **D-Wave** "arn:aws:aqx:::qpu:d-wave" (Available 24/7. See the next section in this document for more information about using D-Wave.)
+- **IonQ** "arn:aws:braket:::device/qpu/ionq/ionQdevice" (Available 9:00 AM to 1:00 PM ET M-F)
+- **Rigetti** "arn:aws:braket:::device/qpu/rigetti/Aspen-8" (Available 11:00 AM to 1:00 PM ET daily)
+- **D-Wave** "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6" (Available 24/7. See the next section in this document for more information about using D-Wave.)
 
 ### Using Amazon Braket with D-Wave QPU
 If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [README](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.

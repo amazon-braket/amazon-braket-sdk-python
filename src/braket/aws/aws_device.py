@@ -23,11 +23,11 @@ from braket.circuits import Circuit
 from braket.devices.device import Device
 
 
-class AwsQpu(Device):
+class AwsDevice(Device):
     """
-    Amazon Braket implementation of a Quantum Processing Unit (QPU).
-    Use this class to retrieve the latest metadata about the QPU, and to run a quantum task on the
-    QPU.
+    Amazon Braket implementation of a device.
+    Use this class to retrieve the latest metadata about the device and to run a quantum task on the
+    device.
     """
 
     QPU_REGIONS = {
@@ -36,26 +36,22 @@ class AwsQpu(Device):
         'd-wave': ["us-west-2"],
     }
 
-    DEFAULT_SHOTS_QPU = 1000
-    DEFAULT_RESULTS_POLL_TIMEOUT_QPU = 432000
-    DEFAULT_RESULTS_POLL_INTERVAL_QPU = 1
-
     def __init__(self, arn: str, aws_session=None):
         """
         Args:
-            arn (str): The ARN of the QPU, for example, "arn:aws:aqx:::qpu:ionq"
+            arn (str): The ARN of the device
             aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
 
         Raises:
             ValueError: If an unknown `arn` is specified.
 
         Note:
-            QPUs are physically located in specific AWS Regions. In some cases, the current
+            Some devices (QPUs) are physically located in specific AWS Regions. In some cases, the current
             `aws_session` connects to a Region other than the Region in which the QPU is
             physically located. When this occurs, a cloned `aws_session` is created for the Region
             the QPU is located in.
 
-            See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located
+            See `braket.aws.aws_device.AwsDevice.QPU_REGIONS` for the AWS Regions the QPUs are located
             in.
         """
         super().__init__(name=None, status=None, status_reason=None)
@@ -65,14 +61,14 @@ class AwsQpu(Device):
         self.refresh_metadata()
 
     def run(
-        self,
-        task_specification: Union[Circuit, Problem],
-        s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int = DEFAULT_SHOTS_QPU,
-        poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT_QPU,
-        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL_QPU,
-        *aws_quantum_task_args,
-        **aws_quantum_task_kwargs,
+            self,
+            task_specification: Union[Circuit, Problem],
+            s3_destination_folder: AwsSession.S3DestinationFolder,
+            shots: int = DEFAULT_SHOTS_QPU,
+            poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
+            poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL_QPU,
+            *aws_quantum_task_args,
+            **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
         """
         Run a quantum task specification on this quantum device. A task can be a circuit or an
@@ -205,8 +201,10 @@ class AwsQpu(Device):
 
         See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located in.
         """
-        region_key = qpu_arn.split('/')[-2]
-        qpu_regions = AwsQpu.QPU_REGIONS.get(region_key, [])
+
+        qpu_regions = AwsQpu.QPU_REGIONS.get(qpu_arn, [])
+        if not qpu_regions:
+            raise ValueError(f"Unknown QPU {qpu_arn} was supplied.")
 
         if aws_session:
             if aws_session.boto_session.region_name in qpu_regions:

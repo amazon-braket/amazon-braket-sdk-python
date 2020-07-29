@@ -18,17 +18,11 @@ import pytest
 from botocore.exceptions import ClientError
 from common_test_utils import MockDevices
 
-from braket.aws import AwsQpuArns, AwsQuantumSimulatorArns, AwsSession
+from braket.aws import AwsSession
 
 TEST_S3_OBJ_CONTENTS = {
     "TaskMetadata": {
-        "Id": "UUID_blah",
-        "Status": "COMPLETED",
-        "BackendArn": AwsQpuArns.RIGETTI,
-        "CwLogGroupArn": "blah",
-        "Program": "....",
-        "CreatedAt": "02/12/22 21:23",
-        "UpdatedAt": "02/13/22 21:23",
+        "Id": "blah",
     }
 }
 
@@ -109,7 +103,7 @@ def test_get_qpu_metadata_success(boto_session):
     braket_client = Mock()
     braket_client.describe_qpus.return_value = {"qpus": [MockDevices.MOCK_RIGETTI_QPU_1]}
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
-    qpu_metadata = aws_session.get_qpu_metadata(AwsQpuArns.RIGETTI)
+    qpu_metadata = aws_session.get_qpu_metadata("arn1")
     assert qpu_metadata == MockDevices.MOCK_RIGETTI_QPU_1
 
 
@@ -121,7 +115,7 @@ def test_get_qpu_metadata_client_error(boto_session):
         {"Error": {"Code": "ValidationException", "Message": "NoSuchQpu"}}, "Operation"
     )
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
-    aws_session.get_qpu_metadata(AwsQpuArns.RIGETTI)
+    aws_session.get_qpu_metadata("arn1")
 
 
 def test_get_simulator_metadata_success(boto_session):
@@ -130,7 +124,7 @@ def test_get_simulator_metadata_success(boto_session):
         "quantumSimulators": [MockDevices.MOCK_QS1_SIMULATOR_1]
     }
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
-    simulator_metadata = aws_session.get_simulator_metadata(AwsQuantumSimulatorArns.QS1)
+    simulator_metadata = aws_session.get_simulator_metadata("arn1")
     assert simulator_metadata == MockDevices.MOCK_QS1_SIMULATOR_1
 
 
@@ -142,7 +136,7 @@ def test_get_simulator_metadata_client_error(boto_session):
         {"Error": {"Code": "ValidationException", "Message": "NoSuchSimulator"}}, "Operation"
     )
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
-    aws_session.get_simulator_metadata(AwsQuantumSimulatorArns.QS1)
+    aws_session.get_simulator_metadata("arn1")
 
 
 def test_cancel_quantum_task(aws_session):

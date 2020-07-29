@@ -14,7 +14,6 @@
 import numpy as np
 import pytest
 
-from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.ir.annealing import Problem
 from braket.task_result import (
     AdditionalMetadata,
@@ -53,7 +52,7 @@ def problem_type():
 
 @pytest.fixture
 def task_metadata():
-    return TaskMetadata(**{"id": "task_arn", "deviceId": AwsQpuArns.DWAVE, "shots": 100})
+    return TaskMetadata(**{"id": "task_arn", "deviceId": "arn1", "shots": 100})
 
 
 @pytest.fixture

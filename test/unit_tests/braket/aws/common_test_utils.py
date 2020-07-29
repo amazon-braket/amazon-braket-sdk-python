@@ -14,14 +14,15 @@
 import json
 from unittest.mock import Mock
 
-from braket.aws.aws_qpu_arns import AwsQpuArns
-from braket.aws.aws_quantum_simulator_arns import AwsQuantumSimulatorArns
-
+DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
+RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
+IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
+SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
 class MockDevices:
 
     MOCK_RIGETTI_QPU_1 = {
-        "arn": AwsQpuArns.RIGETTI,
+        "arn": RIGETTI_ARN,
         "properties": {
             "gateModelProperties": {
                 "qubitCount": 16,
@@ -36,7 +37,7 @@ class MockDevices:
     }
 
     MOCK_RIGETTI_QPU_2 = {
-        "arn": AwsQpuArns.RIGETTI,
+        "arn": RIGETTI_ARN,
         "properties": {
             "gateModelProperties": {
                 "qubitCount": 30,
@@ -52,7 +53,7 @@ class MockDevices:
     }
 
     MOCK_DWAVE_QPU_1 = {
-        "arn": AwsQpuArns.DWAVE,
+        "arn": DWAVE_ARN,
         "properties": {
             "annealingModelProperties": {
                 "dWaveProperties": {
@@ -88,7 +89,7 @@ class MockDevices:
     }
 
     MOCK_DWAVE_QPU_2 = {
-        "arn": AwsQpuArns.DWAVE,
+        "arn": DWAVE_ARN,
         "properties": {
             "annealingModelProperties": {
                 "dWaveProperties": {
@@ -125,7 +126,7 @@ class MockDevices:
     }
 
     MOCK_IONQ_QPU = {
-        "arn": AwsQpuArns.IONQ,
+        "arn": IONQ_ARN,
         "properties": {
             "gateModelProperties": {
                 "qubitCount": 11,
@@ -138,7 +139,7 @@ class MockDevices:
     }
 
     MOCK_QS1_SIMULATOR_1 = {
-        "arn": AwsQuantumSimulatorArns.QS1,
+        "arn": SIMULATOR_ARN,
         "properties": {
             "gateModelProperties": {
                 "qubitCount": 23,
@@ -159,7 +160,7 @@ class MockDevices:
     }
 
     MOCK_QS1_SIMULATOR_2 = {
-        "arn": AwsQuantumSimulatorArns.QS1,
+        "arn": SIMULATOR_ARN,
         "properties": {
             "gateModelProperties": {
                 "qubitCount": 30,
@@ -224,7 +225,7 @@ class MockS3:
             "solutionCounts": [3, 2, 4],
             "values": [0.0, 1.0, 2.0],
             "variableCount": 4,
-            "taskMetadata": {"id": "task_arn", "shots": 100, "deviceId": AwsQpuArns.DWAVE,},
+            "taskMetadata": {"id": "task_arn", "shots": 100, "deviceId": DWAVE_ARN,},
             "additionalMetadata": {
                 "action": {
                     "type": "ISING",
