@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
@@ -365,7 +366,9 @@ def _(
     create_task_kwargs.update(
         {
             "action": circuit.to_ir().json(),
-            "deviceParameters": {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
+            "deviceParameters": json.dumps(
+                {"gateModelParameters": {"qubitCount": circuit.qubit_count}}
+            ),
         }
     )
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
@@ -384,7 +387,7 @@ def _(
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
-            "deviceParameters": {"annealingModelParameters": device_parameters},
+            "deviceParameters": json.dumps({"annealingModelParameters": device_parameters}),
         }
     )
 

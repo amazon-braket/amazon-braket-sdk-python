@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
+import json
 import threading
 import time
 from unittest.mock import MagicMock, Mock, patch
@@ -360,7 +361,7 @@ def _assert_create_quantum_task_called_with(
             "outputS3Bucket": s3_results_prefix[0],
             "outputS3KeyPrefix": s3_results_prefix[1],
             "action": task_description.to_ir().json(),
-            "deviceParameters": device_parameters,
+            "deviceParameters": json.dumps(device_parameters),
             "shots": shots,
         }
     )
