@@ -179,12 +179,12 @@ Use the following code sample to validate your environment configuration.
 
 ```python
 import boto3
-from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
+from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
-device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
+device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
 s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
@@ -258,11 +258,11 @@ The following example executes the same Bell Pair example described to validate 
 ```python
 import boto3
 from braket.circuits import Circuit
-from braket.aws import AwsQpu, AwsQpuArns
+from braket.aws import AwsDevice
 
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
-device = AwsQpu(AwsQpuArns.RIGETTI)
+device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
 s3_folder = (f"braket-output-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
@@ -270,7 +270,7 @@ task = device.run(bell, s3_folder)
 print(task.result().measurement_counts)
 ```
 
-When you execute your task, Amazon Braket polls for a result. By default, Braket polls for 5 days; however, it is possible to change this by modifying the `poll_timeout_seconds` parameter in `AwsQpu.run` (or `AwsQuantumTask`), as in the example below. Keep in mind that if your polling timeout is too short, results may not be returned within the polling time, such as when a QPU is unavailable, and a local timeout error is returned. You can always restart the polling by using `task.result()`.
+When you execute your task, Amazon Braket polls for a result. By default, Braket polls for 5 days; however, it is possible to change this by modifying the `poll_timeout_seconds` parameter in `AwsDevice.run` (or `AwsQuantumTask`), as in the example below. Keep in mind that if your polling timeout is too short, results may not be returned within the polling time, such as when a QPU is unavailable, and a local timeout error is returned. You can always restart the polling by using `task.result()`.
 
 ```python
 task = device.run(bell, s3_folder, poll_timeout_seconds=86400)  # 1 day 

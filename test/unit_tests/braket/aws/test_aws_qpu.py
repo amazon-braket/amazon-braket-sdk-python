@@ -15,13 +15,13 @@ from unittest.mock import Mock, patch
 
 import networkx as nx
 import pytest
-from common_test_utils import MockDevices, run_and_assert, IONQ_ARN, RIGETTI_ARN, DWAVE_ARN
+from common_test_utils import DWAVE_ARN, IONQ_ARN, RIGETTI_ARN, MockDevices, run_and_assert
 
 from braket.aws import AwsQpu
 from braket.circuits import Circuit
 
-RIGETTI_REGION_KEY = 'rigetti'
-IONQ_REGION_KEY = 'ionq'
+RIGETTI_REGION_KEY = "rigetti"
+IONQ_REGION_KEY = "ionq"
 
 
 @pytest.fixture
@@ -140,7 +140,7 @@ def test_no_aws_session_supplied(boto_session_init, aws_session_init, boto_sessi
 def test_qpu_refresh_metadata_success(
     aws_session, qpu_arn, properties_keys, initial_qpu_data, modified_qpu_data
 ):
-    region_key = qpu_arn.split('/')[-2]
+    region_key = qpu_arn.split("/")[-2]
     aws_session.boto_session.region_name = AwsQpu.QPU_REGIONS[region_key][0]
     aws_session.get_qpu_metadata.return_value = initial_qpu_data
     qpu = AwsQpu(qpu_arn, aws_session)

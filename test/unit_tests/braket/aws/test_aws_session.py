@@ -20,11 +20,7 @@ from common_test_utils import MockDevices
 
 from braket.aws import AwsSession
 
-TEST_S3_OBJ_CONTENTS = {
-    "TaskMetadata": {
-        "Id": "blah",
-    }
-}
+TEST_S3_OBJ_CONTENTS = {"TaskMetadata": {"Id": "blah",}}
 
 
 @pytest.fixture

@@ -23,6 +23,7 @@ from braket.circuits import Circuit
 from braket.devices.device import Device
 
 
+# TODO: deprecate
 class AwsQpu(Device):
     """
     Amazon Braket implementation of a Quantum Processing Unit (QPU).
@@ -31,9 +32,9 @@ class AwsQpu(Device):
     """
 
     QPU_REGIONS = {
-        'rigetti': ["us-west-1"],
-        'ionq': ["us-east-1"],
-        'd-wave': ["us-west-2"],
+        "rigetti": ["us-west-1"],
+        "ionq": ["us-east-1"],
+        "d-wave": ["us-west-2"],
     }
 
     DEFAULT_SHOTS_QPU = 1000
@@ -205,7 +206,7 @@ class AwsQpu(Device):
 
         See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located in.
         """
-        region_key = qpu_arn.split('/')[-2]
+        region_key = qpu_arn.split("/")[-2]
         qpu_regions = AwsQpu.QPU_REGIONS.get(region_key, [])
 
         if aws_session:

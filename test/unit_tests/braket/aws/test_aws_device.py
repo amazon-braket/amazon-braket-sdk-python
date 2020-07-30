@@ -11,8 +11,33 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.aws.aws_device import AwsDevice  # noqa: F401
-from braket.aws.aws_qpu import AwsQpu  # noqa: F401
-from braket.aws.aws_quantum_simulator import AwsQuantumSimulator  # noqa: F401
-from braket.aws.aws_quantum_task import AwsQuantumTask  # noqa: F401
-from braket.aws.aws_session import AwsSession  # noqa: F401
+from unittest.mock import Mock
+
+import pytest
+
+from braket.aws import AwsDevice
+from braket.circuits import Circuit
+
+
+@pytest.fixture
+def arn():
+    return "test_arn"
+
+
+@pytest.fixture
+def device(arn):
+    return AwsDevice(arn, Mock())
+
+
+@pytest.fixture
+def s3_destination_folder():
+    return "bucket-foo", "key-bar"
+
+
+@pytest.fixture
+def circuit():
+    return Circuit().h(0)
+
+
+# TODO: Unit tests for AWS device once AwsQpu and AwsQuantumSimulator are deleted
+# and we have new V4 *Device APIs

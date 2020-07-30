@@ -14,7 +14,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from common_test_utils import MockDevices, run_and_assert, SIMULATOR_ARN 
+from common_test_utils import SIMULATOR_ARN, MockDevices, run_and_assert
 
 from braket.aws import AwsQuantumSimulator
 from braket.circuits import Circuit

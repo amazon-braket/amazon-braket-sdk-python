@@ -19,6 +19,7 @@ RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
+
 class MockDevices:
 
     MOCK_RIGETTI_QPU_1 = {

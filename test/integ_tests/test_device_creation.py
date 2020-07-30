@@ -13,28 +13,21 @@
 
 import pytest
 
-from braket.aws import AwsQpu, AwsQpuArns, AwsQuantumSimulator, AwsQuantumSimulatorArns
+from braket.aws import AwsDevice
+
+DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
+RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
+IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
+SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
 
-@pytest.mark.parametrize(
-    "qpu_arn,qpu_name", [(AwsQpuArns.RIGETTI, "Rigetti"), (AwsQpuArns.IONQ, "IonQ")]
-)
-def test_qpu_creation(qpu_arn, qpu_name, aws_session):
-    qpu = AwsQpu(qpu_arn, aws_session=aws_session)
-    assert qpu.arn == qpu_arn
-    assert qpu.name == qpu_name
+@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (DWAVE_ARN), (SIMULATOR_ARN)])
+def test_qpu_creation(arn, aws_session):
+    device = AwsDevice(arn, aws_session=aws_session)
+    assert device.arn == arn
 
 
 def test_device_across_regions(aws_session):
     # assert QPUs across different regions can be created using the same aws_session
-    AwsQpu(AwsQpuArns.RIGETTI, aws_session)
-    AwsQpu(AwsQpuArns.IONQ, aws_session)
-
-
-@pytest.mark.parametrize(
-    "simulator_arn,simulator_name", [(AwsQuantumSimulatorArns.QS1, "quantum-simulator-1")],
-)
-def test_simulator_creation(simulator_arn, simulator_name, aws_session):
-    simulator = AwsQuantumSimulator(simulator_arn, aws_session=aws_session)
-    assert simulator.arn == simulator_arn
-    assert simulator.name == simulator_name
+    AwsDevice(RIGETTI_ARN, aws_session)
+    AwsDevice(IONQ_ARN, aws_session)

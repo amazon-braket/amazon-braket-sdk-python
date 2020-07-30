@@ -13,10 +13,11 @@
 
 from typing import Any, Dict, Union
 
-import boto3
-from networkx import Graph, complete_graph, from_edgelist
+from networkx import Graph
 
 from braket.annealing.problem import Problem
+from braket.aws.aws_qpu import AwsQpu
+from braket.aws.aws_quantum_simulator import AwsQuantumSimulator
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
@@ -30,11 +31,11 @@ class AwsDevice(Device):
     device.
     """
 
-    QPU_REGIONS = {
-        'rigetti': ["us-west-1"],
-        'ionq': ["us-east-1"],
-        'd-wave': ["us-west-2"],
-    }
+    _DUMMY_SHOTS = -1
+    DEFAULT_SHOTS_QPU = 1000
+    DEFAULT_SHOTS_SIMULATOR = 0
+    DEFAULT_RESULTS_POLL_TIMEOUT = 432000
+    DEFAULT_RESULTS_POLL_INTERVAL = 1
 
     def __init__(self, arn: str, aws_session=None):
         """
@@ -46,32 +47,29 @@ class AwsDevice(Device):
             ValueError: If an unknown `arn` is specified.
 
         Note:
-            Some devices (QPUs) are physically located in specific AWS Regions. In some cases, the current
-            `aws_session` connects to a Region other than the Region in which the QPU is
+            Some devices (QPUs) are physically located in specific AWS Regions. In some cases,
+            the current `aws_session` connects to a Region other than the Region in which the QPU is
             physically located. When this occurs, a cloned `aws_session` is created for the Region
             the QPU is located in.
-
-            See `braket.aws.aws_device.AwsDevice.QPU_REGIONS` for the AWS Regions the QPUs are located
-            in.
         """
         super().__init__(name=None, status=None, status_reason=None)
-        self._arn = arn
-        self._aws_session = self._aws_session_for_qpu(arn, aws_session)
-        self._properties = None
-        self.refresh_metadata()
+        if "qpu" in arn:
+            self._device = AwsQpu(arn, aws_session)
+        else:
+            self._device = AwsQuantumSimulator(arn, aws_session)
 
     def run(
-            self,
-            task_specification: Union[Circuit, Problem],
-            s3_destination_folder: AwsSession.S3DestinationFolder,
-            shots: int = DEFAULT_SHOTS_QPU,
-            poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
-            poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL_QPU,
-            *aws_quantum_task_args,
-            **aws_quantum_task_kwargs,
+        self,
+        task_specification: Union[Circuit, Problem],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: int = _DUMMY_SHOTS,
+        poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
+        *aws_quantum_task_args,
+        **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
         """
-        Run a quantum task specification on this quantum device. A task can be a circuit or an
+        Run a quantum task specification on this device. A task can be a circuit or an
         annealing problem.
 
         Args:
@@ -79,7 +77,7 @@ class AwsDevice(Device):
                 (circuit or annealing problem) to run on device.
             s3_destination_folder: The S3 location to save the task's results
             shots (int, optional): The number of times to run the circuit or annealing problem.
-                Default is 1000.
+                Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (int): The polling timeout for AwsQuantumTask.result(), in seconds.
                 Default: 5 days.
             poll_interval_seconds (int): The polling interval for AwsQuantumTask.result(),
@@ -94,11 +92,11 @@ class AwsDevice(Device):
 
         Examples:
             >>> circuit = Circuit().h(0).cnot(0, 1)
-            >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
+            >>> device = AwsDevice("arn1")
             >>> device.run(circuit, ("bucket-foo", "key-bar"))
 
             >>> circuit = Circuit().h(0).cnot(0, 1)
-            >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
+            >>> device = AwsDevice("arn2")
             >>> device.run(task_specification=circuit,
             >>>     s3_destination_folder=("bucket-foo", "key-bar"))
 
@@ -107,18 +105,19 @@ class AwsDevice(Device):
             >>>     linear={1: 3.14},
             >>>     quadratic={(1, 2): 10.08},
             >>> )
-            >>> device = AwsQpu("arn:aws:aqx:::qpu:d-wave")
+            >>> device = AwsDevice("arn3")
             >>> device.run(problem, ("bucket-foo", "key-bar"),
             >>>     device_parameters = {"dWaveParameters": {"postprocessingType": "SAMPLING"}})
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-
-        # TODO: Restrict execution to compatible task types
-        return AwsQuantumTask.create(
-            self._aws_session,
-            self._arn,
+        if shots == AwsDevice._DUMMY_SHOTS:
+            if "qpu" in self.arn:
+                shots = AwsDevice.DEFAULT_SHOTS_QPU
+            else:
+                shots = AwsDevice.DEFAULT_SHOTS_SIMULATOR
+        return self._device.run(
             task_specification,
             s3_destination_folder,
             shots,
@@ -130,38 +129,29 @@ class AwsDevice(Device):
 
     def refresh_metadata(self) -> None:
         """
-        Refresh the `AwsQpu` object with the most recent QPU metadata.
+        Refresh the `AwsDevice` object with the most recent Device metadata.
         """
-        qpu_metadata = self._aws_session.get_qpu_metadata(self._arn)
-        self._name = qpu_metadata.get("name")
-        self._status = qpu_metadata.get("status")
-        self._status_reason = qpu_metadata.get("statusReason")
-        qpu_properties = qpu_metadata.get("properties")
-        self._properties = (
-            qpu_properties.get("annealingModelProperties", {}).get("dWaveProperties")
-            if "annealingModelProperties" in qpu_properties
-            else qpu_properties.get("gateModelProperties")
-        )
-        self._topology_graph = self._construct_topology_graph()
+        self._device.refresh_metadata()
 
     @property
     def arn(self) -> str:
-        """str: Return the ARN of the QPU"""
-        return self._arn
+        """str: Return the ARN of the device"""
+        return self._device.arn
 
     @property
     # TODO: Add a link to the boto3 docs
     def properties(self) -> Dict[str, Any]:
-        """Dict[str, Any]: Return the QPU properties"""
-        return self._properties
+        """Dict[str, Any]: Return the device properties"""
+        return self._device.properties
 
     @property
     def topology_graph(self) -> Graph:
-        """Graph: topology of QPU as a networkx Graph object
+        """Graph: topology of device as a networkx Graph object.
+        Returns None if the topology is not available for the device.
 
         Examples:
             >>> import networkx as nx
-            >>> device = AwsQpu("arn:aws:aqx:::qpu:rigetti")
+            >>> device = AwsDevice("arn1")
             >>> nx.draw_kamada_kawai(device.topology_graph, with_labels=True, font_weight="bold")
 
             >>> topology_subgraph = device.topology_graph.subgraph(range(8))
@@ -169,63 +159,15 @@ class AwsDevice(Device):
 
             >>> print(device.topology_graph.edges)
         """
-        return self._topology_graph
-
-    def _construct_topology_graph(self) -> Graph:
-        """
-        Construct topology graph. If no such metadata is available, return None.
-
-        Returns:
-            Graph: topology of QPU as a networkx Graph object
-        """
-        if "connectivity" in self.properties:
-            adjacency_lists = self.properties["connectivity"]["connectivityGraph"]
-            edges = []
-            for item in adjacency_lists.items():
-                i = item[0]
-                edges.extend([(int(i), int(j)) for j in item[1]])
-            if len(edges) == 0:  # empty connectivity graph means fully connected
-                return complete_graph(int(self.properties["qubitCount"]))
-            else:
-                return from_edgelist(edges)
-        elif "couplers" in self.properties:
-            edges = self.properties["couplers"]
-            return from_edgelist(edges)
+        if hasattr(self._device, "topology_graph"):
+            return self._device.topology_graph
         else:
             return None
 
-    def _aws_session_for_qpu(self, qpu_arn: str, aws_session: AwsSession) -> AwsSession:
-        """
-        Get an AwsSession for the QPU ARN. QPUs are physically located in specific AWS Regions.
-        The AWS sessions should connect to the Region that the QPU is located in.
-
-        See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located in.
-        """
-
-        qpu_regions = AwsQpu.QPU_REGIONS.get(qpu_arn, [])
-        if not qpu_regions:
-            raise ValueError(f"Unknown QPU {qpu_arn} was supplied.")
-
-        if aws_session:
-            if aws_session.boto_session.region_name in qpu_regions:
-                return aws_session
-            else:
-                creds = aws_session.boto_session.get_credentials()
-                boto_session = boto3.Session(
-                    aws_access_key_id=creds.access_key,
-                    aws_secret_access_key=creds.secret_key,
-                    aws_session_token=creds.token,
-                    region_name=qpu_regions[0],
-                )
-                return AwsSession(boto_session=boto_session)
-        else:
-            boto_session = boto3.Session(region_name=qpu_regions[0])
-            return AwsSession(boto_session=boto_session)
-
     def __repr__(self):
-        return "QPU('name': {}, 'arn': {})".format(self.name, self.arn)
+        return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
 
     def __eq__(self, other):
-        if isinstance(other, AwsQpu):
+        if isinstance(other, AwsDevice):
             return self.arn == other.arn
         return NotImplemented
