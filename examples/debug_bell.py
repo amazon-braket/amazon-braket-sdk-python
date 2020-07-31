@@ -16,7 +16,7 @@ import sys
 
 import boto3
 
-from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
+from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
 logger = logging.getLogger("newLogger")  # create new logger
@@ -25,7 +25,7 @@ logger.setLevel(logging.DEBUG)  # print to sys.stdout all log messages with leve
 
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
-device = AwsQuantumSimulator(AwsQuantumSimulatorArns.QS1)
+device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
 s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)

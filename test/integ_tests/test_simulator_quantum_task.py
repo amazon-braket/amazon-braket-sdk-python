@@ -28,112 +28,113 @@ from gate_model_device_testing_utils import (
     result_types_tensor_z_z_testing,
 )
 
-from braket.aws import AwsQuantumSimulator, AwsQuantumSimulatorArns
+from braket.aws import AwsDevice
 
 SHOTS = 8000
+SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
 
-@pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
 def test_no_result_types_bell_pair(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     no_result_types_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
 def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     qubit_ordering_testing(device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder})
 
 
-@pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
 def test_result_types_nonzero_shots_bell_pair(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_nonzero_shots_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
 def test_result_types_bell_pair_full_probability(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_bell_pair_full_probability_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn", [AwsQuantumSimulatorArns.QS1])
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
 def test_result_types_bell_pair_marginal_probability(
     simulator_arn, aws_session, s3_destination_folder
 ):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_bell_pair_marginal_probability_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_x_y_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_h_y_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_z_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_tensor_hermitian_hermitian(
     simulator_arn, shots, aws_session, s3_destination_folder
 ):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_hermitian_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_y_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(AwsQuantumSimulatorArns.QS1, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
 def test_result_types_all_selected(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsQuantumSimulator(simulator_arn, aws_session)
+    device = AwsDevice(simulator_arn, aws_session)
     result_types_all_selected_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )

@@ -20,6 +20,7 @@ from braket.circuits import Circuit
 from braket.devices.device import Device
 
 
+# TODO: deprecate
 class AwsQuantumSimulator(Device):
     """
     Amazon Braket implementation of a quantum simulator.

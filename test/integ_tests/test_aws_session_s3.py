@@ -15,19 +15,7 @@ import json
 
 import pytest
 
-from braket.aws import AwsQpuArns
-
-TEST_S3_OBJ_CONTENTS = {
-    "TaskMetadata": {
-        "Id": "UUID_blah",
-        "Status": "COMPLETED",
-        "BackendArn": AwsQpuArns.RIGETTI,
-        "CwLogGroupArn": "blah",
-        "Program": "....",
-        "CreatedAt": "02/12/22 21:23",
-        "UpdatedAt": "02/13/22 21:23",
-    }
-}
+TEST_S3_OBJ_CONTENTS = {"TaskMetadata": {"Id": "blah", "Status": "COMPLETED",}}
 
 
 @pytest.fixture()

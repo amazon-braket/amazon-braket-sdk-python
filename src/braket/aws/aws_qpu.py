@@ -17,13 +17,13 @@ import boto3
 from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
-from braket.aws.aws_qpu_arns import AwsQpuArns
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.devices.device import Device
 
 
+# TODO: deprecate
 class AwsQpu(Device):
     """
     Amazon Braket implementation of a Quantum Processing Unit (QPU).
@@ -32,9 +32,9 @@ class AwsQpu(Device):
     """
 
     QPU_REGIONS = {
-        AwsQpuArns.RIGETTI: ["us-west-1"],
-        AwsQpuArns.IONQ: ["us-east-1"],
-        AwsQpuArns.DWAVE: ["us-west-2"],
+        "rigetti": ["us-west-1"],
+        "ionq": ["us-east-1"],
+        "d-wave": ["us-west-2"],
     }
 
     DEFAULT_SHOTS_QPU = 1000
@@ -206,10 +206,8 @@ class AwsQpu(Device):
 
         See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located in.
         """
-
-        qpu_regions = AwsQpu.QPU_REGIONS.get(qpu_arn, [])
-        if not qpu_regions:
-            raise ValueError(f"Unknown QPU {qpu_arn} was supplied.")
+        region_key = qpu_arn.split("/")[-2]
+        qpu_regions = AwsQpu.QPU_REGIONS.get(region_key, [])
 
         if aws_session:
             if aws_session.boto_session.region_name in qpu_regions:
