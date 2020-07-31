@@ -17,16 +17,16 @@ with open("src/braket/_sdk/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 setup(
-    name="braket-sdk",
+    name="amazon-braket-sdk",
     version=version,
     license="Apache License 2.0",
     python_requires=">= 3.7.2",
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "braket-ir @ git+https://github.com/aws/braket-python-ir.git",
+        "amazon-braket-schemas @ git+https://github.com/aws/amazon-braket-schemas-python.git",
         (
-            "amazon-braket-default-simulator-python @"
+            "amazon-braket-default-simulator @ "
             "git+https://github.com/aws/amazon-braket-default-simulator-python.git"
         ),
         "backoff",

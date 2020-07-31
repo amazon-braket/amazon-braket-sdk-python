@@ -4,7 +4,7 @@ import datetime
 import pkg_resources
 
 # Sphinx configuration below.
-project = "braket-sdk"
+project = "amazon-braket-sdk"
 version = pkg_resources.require(project)[0].version
 release = version
 copyright = "{}, Amazon.com".format(datetime.datetime.now().year)

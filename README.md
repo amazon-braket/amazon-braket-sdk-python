@@ -4,11 +4,7 @@ The Amazon Braket Python SDK is an open source library that provides a framework
 
 **Getting the latest version**
 
-Get the latest version of the SDK. If you receive a notice that a new version of the SDK is available, you can update to the latest version. For more information, see [Updating to the latest release](https://github.com/aws/braket-python-sdk/tree/stable/latest#updating-to-the-latest-release). View the [Releases](https://github.com/aws/braket-python-sdk/releases) page for more information.
-
-**Use the stable/latest branch**
-
-You should always use the stable/latest branch of this repo, which includes the latest stable version of the SDK. The master branch includes in-progress features and will not work.
+Get the latest version of the SDK. If you receive a notice that a new version of the SDK is available, you can update to the latest version. For more information, see [Updating to the latest release](https://github.com/aws/amazon-braket-sdk-python/tree/main#updating-to-the-latest-release). View the [Releases](https://github.com/aws/amazon-braket-sdk-python/releases) page for more information.
 
 **Providing Feedback and Getting Help**
 
@@ -118,36 +114,34 @@ Use the steps in this section to install and configure the Amazon Braket Python 
 The easiest way to get the SDKs is to download them directly from the GitHub site. Because the repositories are private during the Private Beta period, an SSH key is required to access the files remotely from a terminal session. If you download them directly from the GitHub site, you can just extract the files to your system or virtual environment without the extra steps of using an SSH key. You need to log in to GitHub using the account that was whitelisted for the Amazon Braket (Private Beta).
 
 Use the following links to download the Amazon Braket Python SDK repos:
-- [braket-python-ir](https://github.com/aws/braket-python-ir/archive/stable/latest.zip)
-- [amazon-braket-default-simulator-python](https://github.com/aws/amazon-braket-default-simulator-python/archive/stable/latest.zip)
-- [braket-python-sdk](https://github.com/aws/braket-python-sdk/archive/stable/latest.zip)
+- [amazon-braket-schemas-python](https://github.com/aws/amazon-braket-schemas-python/archive/main.zip)
+- [amazon-braket-default-simulator-python](https://github.com/aws/amazon-braket-default-simulator-python/archive/main.zip)
+- [amazon-braket-sdk-python](https://github.com/aws/amazon-braket-sdk-python/archive/main.zip)
 
 ### Extract the SDK .zip files
-Because the files were downloaded directly from GitHub, the folder in the .zip file includes the name of the branch of the GitHub repo that was downloaded, in this case the `stable/latest` branch. But to use the files in the SDK, we need to rename the folder to the original name.
-
-Note: Make sure you are always using the branch 'stable/latest' and not 'master'. The 'master' branch may contain in-progress changes that result in errors.
+Because the files were downloaded directly from GitHub, the folder in the .zip file includes the name of the branch of the GitHub repo that was downloaded, in this case the `main` branch. But to use the files in the SDK, we need to rename the folder to the original name.
 
 **To rename the folders in the SDK .zip files**
 First, extract the .zip files to a location of your choosing. Then open the location where you extracted the folders to. You can use either the GUI file system tools in your OS, or the command line. You should see 3 folders with the following names:
-- braket-python-ir-stable-latest
-- amazon-braket-default-simulator-python-stable-latest
-- braket-python-sdk-stable-latest
+- amazon-braket-schemas-python-main
+- amazon-braket-default-simulator-python-main
+- amazon-braket-sdk-python-main
 
 Rename the folders to the following:
-- braket-python-ir
+- amazon-braket-schemas-python
 - amazon-braket-default-simulator-python
-- braket-python-sdk
+- amazon-braket-sdk-python
 
 Then copy the renamed files and paste them into the `braketvirtenv` folder where you created a virtual environment. Your folder structure should look like this:
 ```bash
-..\YourFolder\braketvirtenv\braket-python-ir\
+..\YourFolder\braketvirtenv\amazon-braket-schemas-python\
 ```
 
 ### Install the SDK packages
 Use the following commands to install the SDKs in the order that they appear:
 
 ```bash
-pip install -e braket-python-ir
+pip install -e amazon-braket-schemas-python
 ```
 
 ```bash
@@ -155,7 +149,7 @@ pip install -e amazon-braket-default-simulator-python
 ```
 
 ```bash
-pip install -e braket-python-sdk
+pip install -e amazon-braket-sdk-python
 ```
 
 ### Install latest Amazon Braket model in AWS CLI
@@ -199,11 +193,11 @@ There is currently one AWS simulator available:
 - `arn:aws:braket:::device/quantum-simulator/amazon/sv1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector.
 
 #### To validate your configuration using a Python file
-1. Open a text editor with example file `../braket-python-sdk/examples/bell.py`.
+1. Open a text editor with example file `../amazon-braket-sdk-python/examples/bell.py`.
 1. If desired, modify `folder-name` to the name of the folder to create/use for results in following line:
    `s3_folder = (f"braket-output-{aws_account_id}", "folder-name")`. Save the file.
 1. Make sure the virtualenv (`braketvirtenv`) is activated, and then position the cursor in the `/examples` folder of the repo. Assuming you created a virtual environment on your `C:` drive in a folder named `braket`, the cursor should be at the following location:
-`c:\braket\braketvirtenv\braket-python-sdk\examples\`.
+`c:\braket\braketvirtenv\amazon-braket-sdk-python\examples\`.
 1. Then use the following command to run the sample:
 
    ```bash
@@ -315,11 +309,11 @@ We will periodically make updates and changes the SDK or the model. When you are
 You can view the version of the braket packages that you have installed by using the following commands in the virtual environment:
 ```bash
 pip show amazon-braket-default-simulator-python
-pip show braket-ir
-pip show braket-sdk
+pip show amazon-braket-schemas
+pip show amazon-braket-sdk
 ```
 
-You can also check your version of `braket-python-sdk` from within Python:
+You can also check your version of `amazon-braket-sdk-python` from within Python:
 
 ```
 >>> import braket._sdk as braket_sdk
@@ -328,13 +322,13 @@ You can also check your version of `braket-python-sdk` from within Python:
 
 Compare the version displayed in your local environment with the latest version listed for each of the following release pages:
 - [amazon-braket-default-simulator-python](https://github.com/aws/amazon-braket-default-simulator-python/releases) 
-- [braket-python-ir](https://github.com/aws/braket-python-ir/releases)
-- [braket-python-sdk](https://github.com/aws/braket-python-sdk/releases) 
+- [amazon-braket-schemas-python](https://github.com/aws/amazon-braket-schemas-python/releases)
+- [amazon-braket-sdk-python](https://github.com/aws/amazon-braket-sdk-python/releases) 
 
 If the version listed is higher than your local version, you should update to the latest release.
 
 ### To get the lastest updates
-Perform the steps described in the [Setting up the Amazon Braket Python SDKs](https://github.com/aws/braket-python-sdk/tree/stable/latest#setting-up-the-amazon-braket-python-sdks) section of this document. The links in that section point to the most recent version of the braket-python-sdk, braket-python-ir, amazon-braket-default-simulator-python, and model file you need to set up the new version of the SDK.
+Perform the steps described in the [Setting up the Amazon Braket Python SDKs](https://github.com/aws/amazon-braket-sdk-python/tree/main#setting-up-the-amazon-amazon-braket-sdk-pythons) section of this document. The links in that section point to the most recent version of the amazon-braket-sdk-python, amazon-braket-schemas-python, amazon-braket-default-simulator-python, and model file you need to set up the new version of the SDK.
 
 You can extract the file to the same location you are using and replace the existing files with the updated SDK. This lets you continue to use the same virtual environment.
 
@@ -354,19 +348,19 @@ Then extract the `braket-sdk-documentation.zip` file to your local environment. 
 
 **To generate the API Reference HTML in your local environment**
 
-To generate the HTML, first change directories (`cd`) to position the cursor in the `braket-python-sdk` directory. Then, run the following command to generate the HTML documentation files:
+To generate the HTML, first change directories (`cd`) to position the cursor in the `amazon-braket-sdk-python` directory. Then, run the following command to generate the HTML documentation files:
 
 ```bash
 tox -e docs
 ```
 
 To view the generated documentation, open the following file in a browser:
-`../braket-python-sdk/build/documentation/html/index.html`
+`../amazon-braket-sdk-python/build/documentation/html/index.html`
 
 ## Install the SDK for Testing
 Make sure to install test dependencies first:
 ```bash
-pip install -e "braket-python-sdk[test]"
+pip install -e "amazon-braket-sdk-python[test]"
 ```
 
 ### Unit Tests
