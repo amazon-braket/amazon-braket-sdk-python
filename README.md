@@ -308,7 +308,7 @@ We will periodically make updates and changes the SDK or the model. When you are
 ### Check the version you have installed
 You can view the version of the braket packages that you have installed by using the following commands in the virtual environment:
 ```bash
-pip show amazon-braket-default-simulator-python
+pip show amazon-braket-default-simulator
 pip show amazon-braket-schemas
 pip show amazon-braket-sdk
 ```
