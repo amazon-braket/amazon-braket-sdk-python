@@ -101,7 +101,7 @@ class AwsSession(object):
         Gets the quantum task.
 
         Args:
-            arn (str): The ARN of the quantum task to cancel.
+            arn (str): The ARN of the quantum task to get.
 
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
