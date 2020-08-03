@@ -357,3 +357,40 @@ tox -e docs
 To view the generated documentation, open the following file in a browser:
 `../amazon-braket-sdk-python/build/documentation/html/index.html`
 
+## Testing
+
+This repository has both unit and integration tests.
+
+To run the tests, make sure to install test dependencies first:
+```bash
+pip install -e "amazon-braket-sdk-python[test]"
+```
+
+### Unit Tests
+```bash
+tox -e unit-tests
+```
+
+You can also pass in various pytest arguments `tox -e integ-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+
+
+To run linters and doc generators and unit tests
+```bash
+tox
+```
+
+### Integration Tests
+Set the `AWS_PROFILE` information in the Prerequisites section of this document.
+```bash
+export AWS_PROFILE=Your_Profile_Name
+```
+
+Run the tests
+```bash
+tox -e integ-tests
+```
+
+You can also pass in various pytest arguments `tox -e integ-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+
+## License
+This project is licensed under the Apache-2.0 License.
