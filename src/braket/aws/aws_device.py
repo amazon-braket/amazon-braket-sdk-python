@@ -57,6 +57,9 @@ class AwsDevice(Device):
             self._device = AwsQpu(arn, aws_session)
         else:
             self._device = AwsQuantumSimulator(arn, aws_session)
+        self._name = self._device.name
+        self._status = self._device.status
+        self._status_reason = self._device.status_reason
 
     def run(
         self,
