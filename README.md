@@ -134,7 +134,7 @@ Rename the folders to the following:
 
 Then copy the renamed files and paste them into the `braketvirtenv` folder where you created a virtual environment. Your folder structure should look like this:
 ```bash
-..\YourFolder\braketvirtenv\amazon-braket-schemas-python\
+..\YourFolder\braketvirtenv\amazon-braket-sdk-python\
 ```
 
 ### Install the SDK packages
