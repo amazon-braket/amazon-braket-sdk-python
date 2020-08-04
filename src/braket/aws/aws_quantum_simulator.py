@@ -39,7 +39,7 @@ class AwsQuantumSimulator(Device):
                 "arn:aws:aqx:::quantum-simulator:aqx:qs1".
             aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
         """
-        super().__init__(name=None, status=None, status_reason=None)
+        super().__init__(name=None, status=None)
         self._arn = arn
         self._aws_session = aws_session or AwsSession()
         self._properties: Dict[str, Any] = None
@@ -110,7 +110,6 @@ class AwsQuantumSimulator(Device):
         simulator_metadata = self._aws_session.get_simulator_metadata(self._arn)
         self._name = simulator_metadata.get("name")
         self._status = simulator_metadata.get("status")
-        self._status_reason = simulator_metadata.get("statusReason")
         self._properties = {
             k: simulator_metadata.get(k)
             for k in ["supportedQuantumOperations", "qubitCount", "supportedResultTypes"]

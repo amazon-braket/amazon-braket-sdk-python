@@ -48,7 +48,6 @@ class LocalSimulator(Device):
         super().__init__(
             name=delegate.__class__.__name__,
             status="AVAILABLE",
-            status_reason="Local simulator loaded successfully",
         )
         self._delegate = delegate
 

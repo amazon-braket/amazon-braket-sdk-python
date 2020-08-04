@@ -92,6 +92,15 @@ def test_retrieve_s3_object_body_client_error(boto_session):
     aws_session.retrieve_s3_object_body(bucket_name, filename)
 
 
+def test_get_device(boto_session):
+    braket_client = Mock()
+    return_val = {"deviceArn": "arn1", "deviceName": "name1"}
+    braket_client.get_device.return_value = return_val
+    aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
+    metadata = aws_session.get_device("arn1")
+    assert return_val ==  metadata
+
+
 def test_get_qpu_metadata_success(boto_session):
     braket_client = Mock()
     braket_client.describe_qpus.return_value = {"qpus": [MockDevices.MOCK_RIGETTI_QPU_1]}

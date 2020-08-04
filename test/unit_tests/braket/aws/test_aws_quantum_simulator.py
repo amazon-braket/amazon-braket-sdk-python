@@ -55,7 +55,6 @@ def test_simulator_refresh_metadata_success():
         "supportedResultTypes"
     )
     assert simulator.status == expected_metadata.get("status")
-    assert simulator.status_reason is None
 
     # describe_simulators now returns new metadata
     expected_metadata = MockDevices.MOCK_QS1_SIMULATOR_2
@@ -71,7 +70,6 @@ def test_simulator_refresh_metadata_success():
         "supportedResultTypes"
     )
     assert simulator.status == expected_metadata.get("status")
-    assert simulator.status_reason == expected_metadata.get("statusReason")
 
 
 def test_simulator_refresh_metadata_error():

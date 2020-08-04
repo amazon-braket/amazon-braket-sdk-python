@@ -59,7 +59,7 @@ class AwsQpu(Device):
             See `braket.aws.aws_qpu.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located
             in.
         """
-        super().__init__(name=None, status=None, status_reason=None)
+        super().__init__(name=None, status=None)
         self._arn = arn
         self._aws_session = self._aws_session_for_qpu(arn, aws_session)
         self._properties = None
@@ -140,7 +140,6 @@ class AwsQpu(Device):
         qpu_metadata = self._aws_session.get_qpu_metadata(self._arn)
         self._name = qpu_metadata.get("name")
         self._status = qpu_metadata.get("status")
-        self._status_reason = qpu_metadata.get("statusReason")
         qpu_properties = qpu_metadata.get("properties")
         self._properties = (
             qpu_properties.get("annealingModelProperties", {}).get("dWaveProperties")

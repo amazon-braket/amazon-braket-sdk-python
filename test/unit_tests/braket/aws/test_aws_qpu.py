@@ -314,5 +314,4 @@ def _assert_qpu_fields(qpu, properties_keys, expected_qpu_data):
     for property_name in expected_qpu_properties:
         assert qpu.properties[property_name] == expected_qpu_properties.get(property_name)
     assert qpu.status == expected_qpu_data.get("status")
-    assert qpu.status_reason == expected_qpu_data.get("statusReason")
     assert qpu.topology_graph.edges == qpu._construct_topology_graph().edges

@@ -25,8 +25,6 @@ class AwsSession(object):
 
     BRAKET_REGIONS = ["us-east-1", "us-west-1", "us-west-2"]
 
-    # similar to sagemaker sdk:
-    # https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/session.py
     def __init__(self, boto_session=None, braket_client=None):
         """
         Args:
@@ -154,3 +152,17 @@ class AwsSession(object):
             return simulator_metadata
         except Exception as e:
             raise e
+
+
+    def get_device(self, arn: str) -> Dict[str, Any]:
+        """
+        Calls the Amazon Braket `GetDevice` (`get_device`) to
+        retrieve device metadata
+
+        Args:
+            arn (str): The ARN of the device
+
+        Returns:
+            Dict[str, Any]: Device metadata
+        """
+        return self.braket_client.get_device(deviceArn=arn)

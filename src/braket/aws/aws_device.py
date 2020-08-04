@@ -31,6 +31,12 @@ class AwsDevice(Device):
     device.
     """
 
+    QPU_REGIONS = {
+        "rigetti": ["us-west-1"],
+        "ionq": ["us-east-1"],
+        "d-wave": ["us-west-2"],
+    }
+
     _DUMMY_SHOTS = -1
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
@@ -52,13 +58,12 @@ class AwsDevice(Device):
             physically located. When this occurs, a cloned `aws_session` is created for the Region
             the QPU is located in.
         """
-        super().__init__(name=None, status=None, status_reason=None)
-        if "qpu" in arn:
-            self._device = AwsQpu(arn, aws_session)
-        else:
-            self._device = AwsQuantumSimulator(arn, aws_session)
-        self._name = self._device.name
-        self._status = self._device.status
+        super().__init__(name=None, status=None)
+        self._arn = arn
+        self._aws_session = self._aws_session_for_device(arn, aws_session)
+        self._properties = None
+        self.refresh_metadata()
+
 
     def run(
         self,
