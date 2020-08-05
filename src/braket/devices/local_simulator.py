@@ -12,13 +12,14 @@
 # language governing permissions and limitations under the License.
 
 from functools import singledispatch
-from typing import Any, Dict, Optional, Set, Union
+from typing import Optional, Set, Union
 
 import pkg_resources
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.device_schema import DeviceCapabilities, DeviceActionType
 from braket.devices.device import Device
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -82,8 +83,8 @@ class LocalSimulator(Device):
         return LocalQuantumTask(result)
 
     @property
-    def properties(self) -> Dict[str, Any]:
-        """ Dict[str, Any]: Properties of the LocalSimulator device """
+    def properties(self) -> DeviceCapabilities:
+        """ DeviceCapabilities: Properties of the LocalSimulator device """
         return self._delegate.properties
 
     @staticmethod
@@ -125,7 +126,7 @@ def _run_internal(
 
 @_run_internal.register
 def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
-    if "jaqcd" not in simulator.properties["supportedIrTypes"]:
+    if DeviceActionType.JAQCD not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
     validate_circuit_and_shots(circuit, shots)
     program = circuit.to_ir()
@@ -136,7 +137,7 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
 
 @_run_internal.register
 def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
-    if "annealing" not in simulator.properties["supportedIrTypes"]:
+    if DeviceActionType.ANNEALING not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
     ir = problem.to_ir()
     results = simulator.run(ir, shots, *args, *kwargs)

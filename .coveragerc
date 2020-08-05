@@ -9,6 +9,7 @@ omit =
     **/braket/schema_common/*
     **/braket/task_result/*
     **/braket/simulator/*
+     **/braket/device_schema/*
 
 [paths]
 source =
