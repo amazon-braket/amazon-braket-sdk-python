@@ -5,6 +5,7 @@ source =
     braket
 omit = 
     **/braket/ir/*
+    **/braket/device_schema/*
     **/braket/schema_common/*
     **/braket/task_result/*
     **/braket/simulator/*
