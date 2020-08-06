@@ -23,11 +23,7 @@ class AwsSession(object):
 
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
-    BRAKET_ENDPOINTS = {
-        "us-west-1": "https://fdoco1n1x7.execute-api.us-west-1.amazonaws.com/V4",
-        "us-west-2": "https://xe15dbdvw6.execute-api.us-west-2.amazonaws.com/V4",
-        "us-east-1": "https://kqjovr0n70.execute-api.us-east-1.amazonaws.com/V4",
-    }
+    BRAKET_REGIONS = ["us-east-1", "us-west-1", "us-west-2"]
 
     # similar to sagemaker sdk:
     # https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/session.py
@@ -47,14 +43,12 @@ class AwsSession(object):
             self.braket_client = braket_client
         else:
             region = self.boto_session.region_name
-            endpoint = AwsSession.BRAKET_ENDPOINTS.get(region, None)
-            if not endpoint:
-                supported_regions = list(AwsSession.BRAKET_ENDPOINTS.keys())
+            if region not in AwsSession.BRAKET_REGIONS:
                 raise ValueError(
-                    f"No braket endpoint for {region}, supported Regions are {supported_regions}"
+                    f"No braket endpoint for {region}, "
+                    + f"supported Regions are {AwsSession.BRAKET_REGIONS}"
                 )
-
-            self.braket_client = self.boto_session.client("braket", endpoint_url=endpoint)
+            self.braket_client = self.boto_session.client("braket")
 
     #
     # Quantum Tasks
