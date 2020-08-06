@@ -42,12 +42,9 @@ def test_no_endpoint_for_region():
     AwsSession(boto_session=boto_session, braket_client=None)
 
 
-def test_uses_endpoint_for_region(boto_session):
+def test_initializes_boto_client_if_required(boto_session):
     AwsSession(boto_session=boto_session, braket_client=None)
-
-    boto_session.client.assert_called_with(
-        "braket", endpoint_url=AwsSession.BRAKET_ENDPOINTS[boto_session.region_name]
-    )
+    boto_session.client.assert_called_with("braket")
 
 
 def test_uses_supplied_braket_client():
