@@ -22,9 +22,14 @@ SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
 
 @pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (DWAVE_ARN), (SIMULATOR_ARN)])
-def test_qpu_creation(arn, aws_session):
+def test_device_creation(arn, aws_session):
     device = AwsDevice(arn, aws_session=aws_session)
     assert device.arn == arn
+    assert device.name
+    assert device.status
+    assert device.type
+    assert device.providerName
+    assert device.properties
 
 
 def test_device_across_regions(aws_session):

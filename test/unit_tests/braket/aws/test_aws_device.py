@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
 from unittest.mock import Mock, patch
 
 import pytest
@@ -56,7 +55,7 @@ MOCK_GATE_MODEL_QPU_1 = {
     "deviceType": "QPU",
     "providerName": "provider1",
     "deviceStatus": "OFFLINE",
-    "deviceCapabilities": json.loads(MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json()),
+    "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
 }
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_2 = RigettiDeviceCapabilities.parse_obj(
@@ -92,7 +91,7 @@ MOCK_GATE_MODEL_QPU_2 = {
     "deviceType": "QPU",
     "providerName": "blahhhh",
     "deviceStatus": "OFFLINE",
-    "deviceCapabilities": json.loads(MOCK_GATE_MODEL_QPU_CAPABILITIES_2.json()),
+    "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_2.json(),
 }
 
 MOCK_DWAVE_QPU_CAPABILITIES = DwaveDeviceCapabilities.parse_obj(
@@ -146,7 +145,7 @@ MOCK_DWAVE_QPU = {
     "deviceType": "QPU",
     "providerName": "provider1",
     "deviceStatus": "ONLINE",
-    "deviceCapabilities": json.loads(MOCK_DWAVE_QPU_CAPABILITIES.json()),
+    "deviceCapabilities": MOCK_DWAVE_QPU_CAPABILITIES.json(),
 }
 
 MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.parse_obj(
@@ -178,7 +177,7 @@ MOCK_GATE_MODEL_SIMULATOR = {
     "deviceType": "SIMULATOR",
     "providerName": "provider1",
     "deviceStatus": "ONLINE",
-    "deviceCapabilities": json.loads(MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json()),
+    "deviceCapabilities": MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json(),
 }
 
 RIGETTI_REGION_KEY = "rigetti"

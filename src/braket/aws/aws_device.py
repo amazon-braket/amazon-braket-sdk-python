@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
 from enum import Enum
 from typing import Union
 
@@ -158,7 +157,7 @@ class AwsDevice(Device):
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
         qpu_properties = metadata.get("deviceCapabilities")
-        self._properties = BraketSchemaBase.parse_raw_schema(json.dumps(qpu_properties))
+        self._properties = BraketSchemaBase.parse_raw_schema(qpu_properties)
         self._topology_graph = self._construct_topology_graph()
 
     @property
