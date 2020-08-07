@@ -115,44 +115,6 @@ class AwsSession(object):
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
 
-    # TODO: add in boto3 exception handling once we have exception types in API
-    def get_qpu_metadata(self, arn: str) -> Dict[str, Any]:
-        """
-        Calls the Amazon Braket `DescribeQpus` (`describe_qpus`) operation to retrieve
-        QPU metadata.
-
-        Args:
-            arn (str): The ARN of the QPU to retrieve metadata from
-
-        Returns:
-            Dict[str, Any]: QPU metadata
-        """
-        try:
-            response = self.braket_client.describe_qpus(qpuArns=[arn])
-            qpu_metadata = response.get("qpus")[0]
-            return qpu_metadata
-        except Exception as e:
-            raise e
-
-    # TODO: add in boto3 exception handling once we have exception types in API
-    def get_simulator_metadata(self, arn: str) -> Dict[str, Any]:
-        """
-        Calls the Amazon Braket `DescribeQuantumSimulators` (`describe_quantum_simulators`) to
-        retrieve simulator metadata
-
-        Args:
-            arn (str): The ARN of the simulator to retrieve metadata from
-
-        Returns:
-            Dict[str, Any]: Simulator metadata
-        """
-        try:
-            response = self.braket_client.describe_quantum_simulators(quantumSimulatorArns=[arn])
-            simulator_metadata = response.get("quantumSimulators")[0]
-            return simulator_metadata
-        except Exception as e:
-            raise e
-
     def get_device(self, arn: str) -> Dict[str, Any]:
         """
         Calls the Amazon Braket `GetDevice` (`get_device`) to
