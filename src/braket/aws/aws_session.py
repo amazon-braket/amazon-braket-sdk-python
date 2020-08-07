@@ -153,7 +153,6 @@ class AwsSession(object):
         except Exception as e:
             raise e
 
-
     def get_device(self, arn: str) -> Dict[str, Any]:
         """
         Calls the Amazon Braket `GetDevice` (`get_device`) to

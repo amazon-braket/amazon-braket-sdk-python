@@ -19,7 +19,7 @@ import pkg_resources
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from braket.device_schema import DeviceCapabilities, DeviceActionType
+from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -46,8 +46,7 @@ class LocalSimulator(Device):
         """
         delegate = _get_simulator(backend)
         super().__init__(
-            name=delegate.__class__.__name__,
-            status="AVAILABLE",
+            name=delegate.__class__.__name__, status="AVAILABLE",
         )
         self._delegate = delegate
 

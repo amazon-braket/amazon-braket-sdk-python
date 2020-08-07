@@ -138,7 +138,10 @@ class DummyAnnealingSimulator(BraketSimulator):
                     "shotsRange": [1, 10],
                 },
                 "action": {
-                    "braket.ir.annealing.problem": {"actionType": "braket.ir.annealing.problem", "version": ["1"],}
+                    "braket.ir.annealing.problem": {
+                        "actionType": "braket.ir.annealing.problem",
+                        "version": ["1"],
+                    }
                 },
                 "deviceParameters": {},
             }

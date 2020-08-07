@@ -35,11 +35,7 @@ class Device(ABC):
 
     @abstractmethod
     def run(
-        self,
-        task_specification: Union[Circuit, Problem],
-        shots: Optional[int],
-        *args,
-        **kwargs
+        self, task_specification: Union[Circuit, Problem], shots: Optional[int], *args, **kwargs
     ) -> QuantumTask:
         """ Run a quantum task specification on this quantum device. A task can be a circuit
         or an annealing problem.

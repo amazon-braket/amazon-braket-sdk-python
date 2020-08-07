@@ -98,7 +98,7 @@ def test_get_device(boto_session):
     braket_client.get_device.return_value = return_val
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
     metadata = aws_session.get_device("arn1")
-    assert return_val ==  metadata
+    assert return_val == metadata
 
 
 def test_get_qpu_metadata_success(boto_session):
