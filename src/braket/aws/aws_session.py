@@ -117,7 +117,7 @@ class AwsSession(object):
 
     def get_device(self, arn: str) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `GetDevice` (`get_device`) to
+        Calls the Amazon Braket `get_device` API to
         retrieve device metadata
 
         Args:
