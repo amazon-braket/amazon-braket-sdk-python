@@ -125,7 +125,9 @@ class AwsDevice(Device):
             >>> )
             >>> device = AwsDevice("arn3")
             >>> device.run(problem, ("bucket-foo", "key-bar"),
-            >>>     device_parameters = {"dWaveParameters": {"postprocessingType": "SAMPLING"}})
+            >>>     device_parameters={
+            >>>         "providerLevelParameters": {"postprocessingType": "SAMPLING"}}
+            >>> )
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`

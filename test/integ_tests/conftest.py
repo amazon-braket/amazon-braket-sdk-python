@@ -42,7 +42,7 @@ def s3_bucket(s3_resource, boto_session):
 
     region_name = boto_session.region_name
     account_id = boto_session.client("sts").get_caller_identity()["Account"]
-    bucket_name = f"braket-sdk-integ-tests-{account_id}"
+    bucket_name = f"amazon-braket-sdk-integ-tests-{account_id}"
     bucket = s3_resource.Bucket(bucket_name)
 
     try:
