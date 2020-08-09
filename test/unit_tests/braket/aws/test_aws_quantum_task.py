@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
-import json
 import threading
 import time
 from unittest.mock import MagicMock, Mock, patch
@@ -24,6 +23,11 @@ from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.device_schema import GateModelParameters
+from braket.device_schema.dwave import DwaveDeviceParameters
+from braket.device_schema.ionq import IonqDeviceParameters
+from braket.device_schema.rigetti import RigettiDeviceParameters
+from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
@@ -240,7 +244,7 @@ def test_timeout_completed(aws_session):
 
     # Setup the poll timing such that the timeout will occur after one API poll
     quantum_task = AwsQuantumTask(
-        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1,
+        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1
     )
     assert quantum_task.result() is None
     _mock_metadata(aws_session, "COMPLETED")
@@ -256,7 +260,7 @@ def test_timeout_no_result_terminal_state(aws_session):
 
     # Setup the poll timing such that the timeout will occur after one API poll
     quantum_task = AwsQuantumTask(
-        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1,
+        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1
     )
     assert quantum_task.result() is None
 
@@ -276,23 +280,33 @@ def test_create_invalid_task_specification(aws_session, arn):
     AwsQuantumTask.create(aws_session, arn, "foo", S3_TARGET, 1000)
 
 
-def test_from_circuit_with_shots(aws_session, arn, circuit):
+@pytest.mark.parametrize(
+    "device_arn,device_parameters_class",
+    [
+        ("device/qpu/ionq", IonqDeviceParameters),
+        ("device/qpu/rigetti", RigettiDeviceParameters),
+        ("device/quantum-simulator", GateModelSimulatorDeviceParameters),
+    ],
+)
+def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_session, circuit):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
     shots = 53
 
-    task = AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, shots)
+    task = AwsQuantumTask.create(aws_session, device_arn, circuit, S3_TARGET, shots)
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
     )
 
     _assert_create_quantum_task_called_with(
         aws_session,
-        arn,
+        device_arn,
         circuit,
         S3_TARGET,
         shots,
-        {"gateModelParameters": {"qubitCount": circuit.qubit_count}},
+        device_parameters_class(
+            paradigmParameters=GateModelParameters(qubitCount=circuit.qubit_count)
+        ),
     )
 
 
@@ -303,17 +317,20 @@ def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
     AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, 0)
 
 
-def test_from_annealing(aws_session, arn, problem):
+@pytest.mark.parametrize(
+    "device_parameters",
+    [
+        {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
+        DwaveDeviceParameters.parse_obj(
+            {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+        ),
+    ],
+)
+def test_from_annealing(device_parameters, aws_session, arn, problem):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
-
     task = AwsQuantumTask.create(
-        aws_session,
-        arn,
-        problem,
-        S3_TARGET,
-        1000,
-        device_parameters={"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}},
+        aws_session, arn, problem, S3_TARGET, 1000, device_parameters=device_parameters
     )
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, AnnealingQuantumTaskResult.from_string
@@ -325,7 +342,7 @@ def test_from_annealing(aws_session, arn, problem):
         problem,
         S3_TARGET,
         1000,
-        {"annealingModelParameters": {"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}},
+        DwaveDeviceParameters.parse_obj(device_parameters),
     )
 
 
@@ -361,7 +378,7 @@ def _assert_create_quantum_task_called_with(
             "outputS3Bucket": s3_results_prefix[0],
             "outputS3KeyPrefix": s3_results_prefix[1],
             "action": task_description.to_ir().json(),
-            "deviceParameters": json.dumps(device_parameters),
+            "deviceParameters": device_parameters.json(),
             "shots": shots,
         }
     )
