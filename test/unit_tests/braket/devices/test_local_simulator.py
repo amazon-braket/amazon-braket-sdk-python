@@ -19,6 +19,7 @@ import pytest
 import braket.ir as ir
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
+from braket.device_schema import DeviceCapabilities
 from braket.devices import LocalSimulator, local_simulator
 from braket.simulator import BraketSimulator
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult
@@ -88,8 +89,28 @@ class DummyCircuitSimulator(BraketSimulator):
         return GATE_MODEL_RESULT
 
     @property
-    def properties(self) -> Dict[str, Any]:
-        return {"supportedIrTypes": ["jaqcd"], "supportedQuantumOperations": ["I", "X"]}
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "11:00",
+                            "windowEndHour": "12:00",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.jaqcd.program": {
+                        "actionType": "braket.ir.jaqcd.program",
+                        "version": ["1"],
+                    }
+                },
+                "deviceParameters": {},
+            }
+        )
 
     def assert_shots(self, shots):
         assert self._shots == shots
@@ -103,8 +124,28 @@ class DummyAnnealingSimulator(BraketSimulator):
         return ANNEALING_RESULT
 
     @property
-    def properties(self) -> Dict[str, Any]:
-        return {"supportedIrTypes": ["annealing"]}
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "11:00",
+                            "windowEndHour": "12:00",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.annealing.problem": {
+                        "actionType": "braket.ir.annealing.problem",
+                        "version": ["1"],
+                    }
+                },
+                "deviceParameters": {},
+            }
+        )
 
 
 mock_entry = Mock()
@@ -173,9 +214,7 @@ def test_run_qubit_gate_unsupported():
 
 
 def test_properties():
-    sim = LocalSimulator(DummyCircuitSimulator())
-    expected_properties = {
-        "supportedIrTypes": ["jaqcd"],
-        "supportedQuantumOperations": ["I", "X"],
-    }
+    dummy = DummyCircuitSimulator()
+    sim = LocalSimulator(dummy)
+    expected_properties = dummy.properties
     assert sim.properties == expected_properties

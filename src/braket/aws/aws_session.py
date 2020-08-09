@@ -25,8 +25,6 @@ class AwsSession(object):
 
     BRAKET_REGIONS = ["us-east-1", "us-west-1", "us-west-2"]
 
-    # similar to sagemaker sdk:
-    # https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/session.py
     def __init__(self, boto_session=None, braket_client=None):
         """
         Args:
@@ -117,40 +115,15 @@ class AwsSession(object):
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
 
-    # TODO: add in boto3 exception handling once we have exception types in API
-    def get_qpu_metadata(self, arn: str) -> Dict[str, Any]:
+    def get_device(self, arn: str) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `DescribeQpus` (`describe_qpus`) operation to retrieve
-        QPU metadata.
+        Calls the Amazon Braket `get_device` API to
+        retrieve device metadata
 
         Args:
-            arn (str): The ARN of the QPU to retrieve metadata from
+            arn (str): The ARN of the device
 
         Returns:
-            Dict[str, Any]: QPU metadata
+            Dict[str, Any]: Device metadata
         """
-        try:
-            response = self.braket_client.describe_qpus(qpuArns=[arn])
-            qpu_metadata = response.get("qpus")[0]
-            return qpu_metadata
-        except Exception as e:
-            raise e
-
-    # TODO: add in boto3 exception handling once we have exception types in API
-    def get_simulator_metadata(self, arn: str) -> Dict[str, Any]:
-        """
-        Calls the Amazon Braket `DescribeQuantumSimulators` (`describe_quantum_simulators`) to
-        retrieve simulator metadata
-
-        Args:
-            arn (str): The ARN of the simulator to retrieve metadata from
-
-        Returns:
-            Dict[str, Any]: Simulator metadata
-        """
-        try:
-            response = self.braket_client.describe_quantum_simulators(quantumSimulatorArns=[arn])
-            simulator_metadata = response.get("quantumSimulators")[0]
-            return simulator_metadata
-        except Exception as e:
-            raise e
+        return self.braket_client.get_device(deviceArn=arn)

@@ -24,25 +24,18 @@ class Device(ABC):
 
     """
 
-    def __init__(self, name: str, status: str, status_reason: str):
+    def __init__(self, name: str, status: str):
         """
         Args:
-            name: Name of quantum device
-            status: Status of quantum device
-            status_reason: Status reason of quantum device
+            name (str): Name of quantum device
+            status (str): Status of quantum device
         """
         self._name = name
         self._status = status
-        self._status_reason = status_reason
 
     @abstractmethod
     def run(
-        self,
-        task_specification: Union[Circuit, Problem],
-        location,
-        shots: Optional[int],
-        *args,
-        **kwargs
+        self, task_specification: Union[Circuit, Problem], shots: Optional[int], *args, **kwargs
     ) -> QuantumTask:
         """ Run a quantum task specification on this quantum device. A task can be a circuit
         or an annealing problem.
@@ -50,8 +43,6 @@ class Device(ABC):
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of a task
                 to run on device.
-
-            location: The location to save the task's results
 
             shots (int): The number of times to run the task on the device. Default is 1_000.
 
@@ -76,12 +67,3 @@ class Device(ABC):
             str: The status of this Device
         """
         return self._status
-
-    @property
-    def status_reason(self) -> str:
-        """ Return the status reason of this Device.
-
-        Returns:
-            str: The reason that the device is in the current status
-        """
-        return self._status_reason

@@ -11,17 +11,27 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Dict, Union
+from enum import Enum
+from typing import Union
 
-from networkx import Graph
+import boto3
+from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
-from braket.aws.aws_qpu import AwsQpu
-from braket.aws.aws_quantum_simulator import AwsQuantumSimulator
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmProperties
+from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
+from braket.schema_common import BraketSchemaBase
+
+
+class AwsDeviceType(str, Enum):
+    """Possible AWS device types"""
+
+    SIMULATOR = "SIMULATOR"
+    QPU = "QPU"
 
 
 class AwsDevice(Device):
@@ -30,6 +40,12 @@ class AwsDevice(Device):
     Use this class to retrieve the latest metadata about the device and to run a quantum task on the
     device.
     """
+
+    QPU_REGIONS = {
+        "rigetti": ["us-west-1"],
+        "ionq": ["us-east-1"],
+        "d-wave": ["us-west-2"],
+    }
 
     _DUMMY_SHOTS = -1
     DEFAULT_SHOTS_QPU = 1000
@@ -43,23 +59,22 @@ class AwsDevice(Device):
             arn (str): The ARN of the device
             aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
 
-        Raises:
-            ValueError: If an unknown `arn` is specified.
-
         Note:
             Some devices (QPUs) are physically located in specific AWS Regions. In some cases,
             the current `aws_session` connects to a Region other than the Region in which the QPU is
             physically located. When this occurs, a cloned `aws_session` is created for the Region
             the QPU is located in.
+
+            See `braket.aws.aws_device.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located
+            in.
         """
-        super().__init__(name=None, status=None, status_reason=None)
-        if "qpu" in arn:
-            self._device = AwsQpu(arn, aws_session)
-        else:
-            self._device = AwsQuantumSimulator(arn, aws_session)
-        self._name = self._device.name
-        self._status = self._device.status
-        self._status_reason = self._device.status_reason
+        super().__init__(name=None, status=None)
+        self._arn = arn
+        self._aws_session = AwsDevice._aws_session_for_device(arn, aws_session)
+        self._properties = None
+        self._provider_name = None
+        self._type = None
+        self.refresh_metadata()
 
     def run(
         self,
@@ -120,7 +135,9 @@ class AwsDevice(Device):
                 shots = AwsDevice.DEFAULT_SHOTS_QPU
             else:
                 shots = AwsDevice.DEFAULT_SHOTS_SIMULATOR
-        return self._device.run(
+        return AwsQuantumTask.create(
+            self._aws_session,
+            self._arn,
             task_specification,
             s3_destination_folder,
             shots,
@@ -134,18 +151,35 @@ class AwsDevice(Device):
         """
         Refresh the `AwsDevice` object with the most recent Device metadata.
         """
-        self._device.refresh_metadata()
+        metadata = self._aws_session.get_device(self._arn)
+        self._name = metadata.get("deviceName")
+        self._status = metadata.get("deviceStatus")
+        self._type = AwsDeviceType(metadata.get("deviceType"))
+        self._provider_name = metadata.get("providerName")
+        qpu_properties = metadata.get("deviceCapabilities")
+        self._properties = BraketSchemaBase.parse_raw_schema(qpu_properties)
+        self._topology_graph = self._construct_topology_graph()
+
+    @property
+    def type(self) -> str:
+        """str: Return the device type"""
+        return self._type
+
+    @property
+    def provider_name(self) -> str:
+        """str: Return the provider name"""
+        return self._provider_name
 
     @property
     def arn(self) -> str:
         """str: Return the ARN of the device"""
-        return self._device.arn
+        return self._arn
 
     @property
     # TODO: Add a link to the boto3 docs
-    def properties(self) -> Dict[str, Any]:
-        """Dict[str, Any]: Return the device properties"""
-        return self._device.properties
+    def properties(self) -> DeviceCapabilities:
+        """DeviceCapabilities: Return the device properties"""
+        return self._properties
 
     @property
     def topology_graph(self) -> Graph:
@@ -162,10 +196,68 @@ class AwsDevice(Device):
 
             >>> print(device.topology_graph.edges)
         """
-        if hasattr(self._device, "topology_graph"):
-            return self._device.topology_graph
+        return self._topology_graph
+
+    def _construct_topology_graph(self) -> Graph:
+        """
+        Construct topology graph. If no such metadata is available, return None.
+
+        Returns:
+            Graph: topology of QPU as a networkx Graph object
+        """
+        if hasattr(self.properties, "paradigm") and isinstance(
+            self.properties.paradigm, GateModelQpuParadigmProperties
+        ):
+            if self.properties.paradigm.connectivity.fullyConnected:
+                return complete_graph(int(self.properties.paradigm.qubitCount))
+            adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
+            edges = []
+            for item in adjacency_lists.items():
+                i = item[0]
+                edges.extend([(int(i), int(j)) for j in item[1]])
+            return from_edgelist(edges)
+        elif hasattr(self.properties, "provider") and isinstance(
+            self.properties.provider, DwaveProviderProperties
+        ):
+            edges = self.properties.provider.couplers
+            return from_edgelist(edges)
         else:
             return None
+
+    @staticmethod
+    def _aws_session_for_device(device_arn: str, aws_session: AwsSession) -> AwsSession:
+        """AwsSession: Returns an AwsSession for the device ARN. """
+        if "qpu" in device_arn:
+            return AwsDevice._aws_session_for_qpu(device_arn, aws_session)
+        else:
+            return aws_session or AwsSession()
+
+    @staticmethod
+    def _aws_session_for_qpu(device_arn: str, aws_session: AwsSession) -> AwsSession:
+        """
+        Get an AwsSession for the device ARN. QPUs are physically located in specific AWS Regions.
+        The AWS sessions should connect to the Region that the QPU is located in.
+
+        See `braket.aws.aws_qpu.AwsDevice.QPU_REGIONS` for the AWS Regions the QPUs are located in.
+        """
+        region_key = device_arn.split("/")[-2]
+        qpu_regions = AwsDevice.QPU_REGIONS.get(region_key, [])
+
+        if aws_session:
+            if aws_session.boto_session.region_name in qpu_regions:
+                return aws_session
+            else:
+                creds = aws_session.boto_session.get_credentials()
+                boto_session = boto3.Session(
+                    aws_access_key_id=creds.access_key,
+                    aws_secret_access_key=creds.secret_key,
+                    aws_session_token=creds.token,
+                    region_name=qpu_regions[0],
+                )
+                return AwsSession(boto_session=boto_session)
+        else:
+            boto_session = boto3.Session(region_name=qpu_regions[0])
+            return AwsSession(boto_session=boto_session)
 
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
