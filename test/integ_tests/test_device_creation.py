@@ -28,7 +28,7 @@ def test_device_creation(arn, aws_session):
     assert device.name
     assert device.status
     assert device.type
-    assert device.providerName
+    assert device.provider_name
     assert device.properties
 
 
