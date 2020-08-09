@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
@@ -26,6 +25,11 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.device_schema import GateModelParameters
+from braket.device_schema.dwave import DwaveDeviceParameters
+from braket.device_schema.ionq import IonqDeviceParameters
+from braket.device_schema.rigetti import RigettiDeviceParameters
+from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
@@ -80,7 +84,7 @@ class AwsQuantumTask(QuantumTask):
 
             device_parameters (Dict[str, Any]): Additional parameters to send to the device.
                 For example, for D-Wave:
-                `{"dWaveParameters": {"postprocessingType": "OPTIMIZATION"}}`
+                `{"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
@@ -110,6 +114,7 @@ class AwsQuantumTask(QuantumTask):
             aws_session,
             create_task_kwargs,
             device_parameters or {},
+            device_arn,
             *args,
             **kwargs,
         )
@@ -346,7 +351,8 @@ def _create_internal(
     task_specification: Union[Circuit, Problem],
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Dict[str, Any],
+    device_parameters: Union[dict, BraketSchemaBase],
+    device_arn: str,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -358,18 +364,27 @@ def _(
     circuit: Circuit,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Dict[str, Any],
+    device_parameters: Union[dict, BraketSchemaBase],
+    device_arn: str,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
     validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
+
+    # TODO: Update this to use `deviceCapabilities` from Amazon Braket's GetDevice operation
+    # in order to decide what parameters to build.
+    paradigm_paramters = GateModelParameters(qubitCount=circuit.qubit_count)
+    if "ionq" in device_arn:
+        device_parameters = IonqDeviceParameters(paradigmParameters=paradigm_paramters)
+    elif "rigetti" in device_arn:
+        device_parameters = RigettiDeviceParameters(paradigmParameters=paradigm_paramters)
+    else:  # default to use simulator
+        device_parameters = GateModelSimulatorDeviceParameters(
+            paradigmParameters=paradigm_paramters
+        )
+
     create_task_kwargs.update(
-        {
-            "action": circuit.to_ir().json(),
-            "deviceParameters": json.dumps(
-                {"gateModelParameters": {"qubitCount": circuit.qubit_count}}
-            ),
-        }
+        {"action": circuit.to_ir().json(), "deviceParameters": device_parameters.json()}
     )
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
@@ -380,14 +395,15 @@ def _(
     problem: Problem,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Dict[str, Any],
+    device_parameters: Union[dict, DwaveDeviceParameters],
+    device_arn: str,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
-            "deviceParameters": json.dumps({"annealingModelParameters": device_parameters}),
+            "deviceParameters": DwaveDeviceParameters.parse_obj(device_parameters).json(),
         }
     )
 
