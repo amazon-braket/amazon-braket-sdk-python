@@ -123,7 +123,7 @@ For the rest of the message, use imperative style and keep things concise but in
 
 ### Send a Pull Request
 
-GitHub provides additional document on [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/).
+GitHub provides additional documentation on [Creating a Pull Request](https://help.github.com/articles/creating-a-pull-request/).
 
 Please remember to:
 * Use commit messages (and PR titles) that follow the guidelines under [Commit Your Change](#commit-your-change).
