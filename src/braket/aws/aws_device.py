@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from enum import Enum
-from typing import Union
+from typing import Optional, Union
 
 import boto3
 from networkx import Graph, complete_graph, from_edgelist
@@ -47,7 +47,6 @@ class AwsDevice(Device):
         "d-wave": ["us-west-2"],
     }
 
-    _DUMMY_SHOTS = -1
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
     DEFAULT_RESULTS_POLL_TIMEOUT = 432000
@@ -80,7 +79,7 @@ class AwsDevice(Device):
         self,
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int = _DUMMY_SHOTS,
+        shots: Optional[int] = None,
         poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
@@ -132,7 +131,7 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        if shots == AwsDevice._DUMMY_SHOTS:
+        if shots is None:
             if "qpu" in self.arn:
                 shots = AwsDevice.DEFAULT_SHOTS_QPU
             else:
