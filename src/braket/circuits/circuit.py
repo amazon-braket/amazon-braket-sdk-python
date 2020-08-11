@@ -31,8 +31,6 @@ SubroutineReturn = TypeVar(
 SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., SubroutineReturn])
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 
-# TODO: Add parameterization
-
 
 class Circuit:
     """
