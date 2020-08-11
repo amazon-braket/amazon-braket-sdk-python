@@ -31,9 +31,11 @@ Use the steps in this section to install and configure the Amazon Braket Python 
 
 You can install from source by cloning this repository and running a pip install command in the root directory of the repository:
 
+```bash
 git clone https://github.com/aws/amazon-braket-sdk-python.git
 cd amazon-braket-sdk-python
 pip install .
+```
 
 ## Usage
 
