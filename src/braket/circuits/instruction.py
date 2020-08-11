@@ -19,9 +19,6 @@ from braket.circuits.gate import Gate
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
-# TODO: Add parameters support
-# TODO: Rename to QuantumInstruction, and change Operator to Gate, then rename "target" to "qubits"
-
 # InstructionOperator is a type alias, and it can be expanded to include other operators
 InstructionOperator = Gate
 
