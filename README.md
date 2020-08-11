@@ -83,7 +83,7 @@ from braket.aws import AwsDevice
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
 device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
-s3_folder = (f"braket-output-{aws_account_id}", "RIGETTI")
+s3_folder = (f"amazon-braket-output-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, s3_folder) 
