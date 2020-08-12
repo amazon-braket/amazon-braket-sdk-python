@@ -19,7 +19,7 @@ from braket.circuits import Circuit
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-s3_folder = (f"braket-output-{aws_account_id}", "folder-name")
+s3_folder = (f"amazon-braket-output-{aws_account_id}", "folder-name")
 
 # https://wikipedia.org/wiki/Bell_state
 bell = Circuit().h(0).cnot(0, 1)
