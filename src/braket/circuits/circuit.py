@@ -31,8 +31,6 @@ SubroutineReturn = TypeVar(
 SubroutineCallable = TypeVar("SubroutineCallable", bound=Callable[..., SubroutineReturn])
 AddableTypes = TypeVar("AddableTypes", SubroutineReturn, SubroutineCallable)
 
-# TODO: Add parameterization
-
 
 class Circuit:
     """
@@ -112,6 +110,7 @@ class Circuit:
         self._moments: Moments = Moments()
         self._result_types: List[ResultType] = []
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
+        self._qubit_target_mapping: Dict[int, List[int]] = {}
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -276,13 +275,23 @@ class Circuit:
 
         for target in targets:
             current_observable = all_qubits_observable or self._qubit_observable_mapping.get(target)
+            current_target = self._qubit_target_mapping.get(target)
             if current_observable and current_observable != observable:
                 raise ValueError(
                     f"Existing result type for observable {current_observable} for target {target}"
                     f" conflicts with observable {observable} for new result type"
                 )
+
             if result_type.target:
+                # The only way this can happen is if the observables (acting on multiple target
+                # qubits) and target qubits are the same, but the new target is the wrong order;
+                if current_target and current_target != targets:
+                    raise ValueError(
+                        f"Target order {current_target} of existing result type with observable"
+                        f" {current_observable} conflicts with order {targets} of new result type"
+                    )
                 self._qubit_observable_mapping[target] = observable
+                self._qubit_target_mapping[target] = targets
 
         if not result_type.target:
             self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable
