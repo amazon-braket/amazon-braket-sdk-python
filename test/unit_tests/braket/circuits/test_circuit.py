@@ -193,6 +193,15 @@ def test_add_result_type_observable_no_conflict_state_vector_obs_return_value():
     assert circ.result_types == expected
 
 
+@pytest.mark.xfail(raises=ValueError)
+def test_add_result_type_same_observable_wrong_target_order():
+    Circuit().add_result_type(
+        ResultType.Expectation(observable=Observable.Y() @ Observable.X(), target=[0, 1])
+    ).add_result_type(
+        ResultType.Variance(observable=Observable.Y() @ Observable.X(), target=[1, 0])
+    )
+
+
 @pytest.mark.xfail(raises=TypeError)
 def test_add_result_type_with_target_and_mapping(prob):
     Circuit().add_result_type(prob, target=[10], target_mapping={0: 10})
