@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
+
 from typing import Any, List, Sequence
 
 import numpy as np
@@ -86,12 +88,12 @@ class QuantumOperator(Operator):
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
-    def matrix_equivalence(self, other):
+    def matrix_equivalence(self, other: QuantumOperator):
         """
-        Whether the matrix form of two gates are equivalent
+        Whether the matrix form of two quantum operators are equivalent
 
         Args:
-            other (Gate): Gate instance to compare this quantum operator to
+            other (QuantumOperator): Quantum operator instance to compare this quantum operator to
 
         Returns:
             bool: If matrix forms of this quantum operator and the other quantum operator

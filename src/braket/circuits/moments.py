@@ -38,17 +38,17 @@ class MomentsKey(NamedTuple):
 class Moments(Mapping[MomentsKey, Instruction]):
     """
     An ordered mapping of `MomentsKey` to `Instruction`. The core data structure that
-        contains instructions, ordering they are inserted in, and time slices when they
-        occur. `Moments` implements `Mapping` and functions the same as a read-only
-        dictionary. It is mutable only through the `add()` method.
+    contains instructions, ordering they are inserted in, and time slices when they
+    occur. `Moments` implements `Mapping` and functions the same as a read-only
+    dictionary. It is mutable only through the `add()` method.
 
     This data structure is useful to determine a dependency of instructions, such as
-        printing or optimizing circuit structure, before sending it to a quantum
-        device. The original insertion order is preserved and can be retrieved via the `values()`
-        method.
+    printing or optimizing circuit structure, before sending it to a quantum
+    device. The original insertion order is preserved and can be retrieved via the `values()`
+    method.
 
     Args:
-        instructions (Iterable[Instruction], optional): Instructions to initialize self with.
+        instructions (Iterable[Instruction], optional): Instructions to initialize self.
             Default = [].
 
     Examples:

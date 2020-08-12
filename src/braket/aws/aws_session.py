@@ -23,16 +23,11 @@ class AwsSession(object):
 
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
-    BRAKET_REGIONS = ["us-east-1", "us-west-1", "us-west-2"]
-
     def __init__(self, boto_session=None, braket_client=None):
         """
         Args:
             boto_session: A boto3 session object
             braket_client: A boto3 Braket client
-
-        Raises:
-            ValueError: If Braket is not available in the Region used for the boto3 session.
         """
 
         self.boto_session = boto_session or boto3.Session()
@@ -40,12 +35,6 @@ class AwsSession(object):
         if braket_client:
             self.braket_client = braket_client
         else:
-            region = self.boto_session.region_name
-            if region not in AwsSession.BRAKET_REGIONS:
-                raise ValueError(
-                    f"No braket endpoint for {region}, "
-                    + f"supported Regions are {AwsSession.BRAKET_REGIONS}"
-                )
             self.braket_client = self.boto_session.client("braket")
 
     #

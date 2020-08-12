@@ -273,7 +273,7 @@ class Hermitian(Observable):
                 or has a dimension length that is not a positive exponent of 2,
                 or is non-hermitian.
 
-        Example:
+        Examples:
             >>> Observable.Hermitian(matrix=np.array([[0, 1],[1, 0]]))
         """
         verify_quantum_operator_matrix_dimensions(matrix)
