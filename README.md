@@ -37,6 +37,19 @@ cd amazon-braket-sdk-python
 pip install .
 ```
 
+### Check the version you have installed
+You can view the version of the amazon-braket-sdk you have installed by using the following command:
+```bash
+pip show amazon-braket-sdk
+```
+
+You can also check your version of `amazon-braket-sdk` from within Python:
+
+```
+>>> import braket._sdk as braket_sdk
+>>> braket_sdk.__version__
+```
+
 ## Usage
 
 ### Running a circuit on an AWS simulator
@@ -106,34 +119,6 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 
 ### Using Amazon Braket with D-Wave QPU
 If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [README](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.
-
-## Updating to the latest release
-We will periodically release new changes to Amazon Braket packages.
-
-### Check the version you have installed
-You can view the version of the braket packages that you have installed by using the following commands in the virtual environment:
-```bash
-pip show amazon-braket-default-simulator
-pip show amazon-braket-schemas
-pip show amazon-braket-sdk
-```
-
-You can also check your version of `amazon-braket-sdk-python` from within Python:
-
-```
->>> import braket._sdk as braket_sdk
->>> braket_sdk.__version__
-```
-
-Compare the version displayed in your local environment with the latest version listed for each of the following release pages:
-- [amazon-braket-default-simulator-python](https://github.com/aws/amazon-braket-default-simulator-python/releases)
-- [amazon-braket-schemas-python](https://github.com/aws/amazon-braket-schemas-python/releases)
-- [amazon-braket-sdk-python](https://github.com/aws/amazon-braket-sdk-python/releases)
-
-If the version listed is higher than your local version, you can update to the latest release.
-
-### To get the latest updates
-Perform the steps described in the [Install the Amazon Braket Python SDK](https://github.com/aws/amazon-braket-sdk-python/tree/main#installing-the-amazon-amazon-braket-sdk-pythons) section of this document. The links in that section point to the most recent version of the amazon-braket-sdk-python, amazon-braket-schemas-python, amazon-braket-default-simulator-python, and model file you need to set up the new version of the SDK.
 
 ## Sample Notebooks
 Coming soon
