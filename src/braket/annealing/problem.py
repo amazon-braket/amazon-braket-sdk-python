@@ -21,7 +21,9 @@ import braket.ir.annealing as ir
 
 class ProblemType(str, Enum):
     """ The type of annealing problem.
+
     QUBO: Quadratic Unconstrained Binary Optimization, with values 1 and 0
+
     ISING: Ising model, with values +/-1
     """
 
@@ -30,9 +32,7 @@ class ProblemType(str, Enum):
 
 
 class Problem:
-    """ Represents an annealing problem.
-
-    """
+    """ Represents an annealing problem."""
 
     def __init__(
         self,

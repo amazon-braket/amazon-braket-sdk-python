@@ -28,5 +28,5 @@ class CircuitDiagram(ABC):
 
         Returns:
             str: String representation for the circuit diagram.
-                An empty string is returned for an empty circuit.
+            An empty string is returned for an empty circuit.
         """

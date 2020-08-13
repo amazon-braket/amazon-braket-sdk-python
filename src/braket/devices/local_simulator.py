@@ -42,7 +42,7 @@ class LocalSimulator(Device):
         Args:
             backend (Union[str, BraketSimulator]): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
-                "default" simulator backend name.
+                `default` simulator backend name.
         """
         delegate = _get_simulator(backend)
         super().__init__(
@@ -61,8 +61,8 @@ class LocalSimulator(Device):
                 Default is 0, which means that the simulator will compute the exact
                 results based on the task specification.
                 Sampling is not supported for shots=0.
-            *args: Positional args to pass to the IR simulator
-            **kwargs: Keyword arguments to pass to the IR simulator
+            *args: Positional args to pass to the `BraketSimulator`
+            **kwargs: Keyword arguments to pass to the `BraketSimulator`
 
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results
@@ -82,7 +82,11 @@ class LocalSimulator(Device):
 
     @property
     def properties(self) -> DeviceCapabilities:
-        """ DeviceCapabilities: Properties of the LocalSimulator device """
+        """DeviceCapabilities: Return the device properties
+
+        Please see `braket.device_schema` in amazon-braket-schemas-python_
+
+        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
         return self._delegate.properties
 
     @staticmethod

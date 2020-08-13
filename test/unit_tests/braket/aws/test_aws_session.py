@@ -34,13 +34,6 @@ def aws_session(boto_session):
     return AwsSession(boto_session=boto_session, braket_client=Mock())
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_no_endpoint_for_region():
-    boto_session = Mock()
-    boto_session.region_name = "foobar"
-    AwsSession(boto_session=boto_session, braket_client=None)
-
-
 def test_initializes_boto_client_if_required(boto_session):
     AwsSession(boto_session=boto_session, braket_client=None)
     boto_session.client.assert_called_with("braket")

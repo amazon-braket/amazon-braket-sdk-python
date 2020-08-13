@@ -179,7 +179,11 @@ class AwsDevice(Device):
     @property
     # TODO: Add a link to the boto3 docs
     def properties(self) -> DeviceCapabilities:
-        """DeviceCapabilities: Return the device properties"""
+        """DeviceCapabilities: Return the device properties
+
+        Please see `braket.device_schema` in amazon-braket-schemas-python_
+
+        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
         return self._properties
 
     @property
