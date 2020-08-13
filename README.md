@@ -27,9 +27,14 @@ Follow the installation [instructions](https://boto3.amazonaws.com/v1/documentat
 If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://console.aws.amazon.com/braket/home ).
 
 ## Installing the Amazon Braket Python SDK
-Use the steps in this section to install and configure the Amazon Braket Python SDK for your environment.
 
-You can install from source by cloning this repository and running a pip install command in the root directory of the repository:
+The Amazon Braket Ocean Plugin can be installed with pip as follows:
+
+```bash
+pip install amazon-braket-sdk
+```
+
+You can also install from source by cloning this repository and running a pip install command in the root directory of the repository:
 
 ```bash
 git clone https://github.com/aws/amazon-braket-sdk-python.git
