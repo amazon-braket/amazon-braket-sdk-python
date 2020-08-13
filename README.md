@@ -73,7 +73,9 @@ The code sample imports the Amazon Braket framework, then defines the device to 
 
 ### Available Simulators
 There is currently one AWS simulator available:
-- `arn:aws:braket:::device/quantum-simulator/amazon/sv1` – SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
+- `arn:aws:braket:::device/quantum-simulator/amazon/sv1`
+
+SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
 
 ### Running a circuit locally
 
