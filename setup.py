@@ -13,6 +13,9 @@
 
 from setuptools import find_namespace_packages, setup
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 with open("src/braket/_sdk/_version.py") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
@@ -48,4 +51,21 @@ setup(
             "tox",
         ]
     },
+    url="https://github.com/aws/amazon-braket-sdk-python",
+    author="Amazon Web Services",
+    description=(
+        "An open source library for interacting with quantum computing devices on Amazon Braket"
+    ),
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    keywords="Amazon AWS Quantum",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Natural Language :: English",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+    ],
 )
