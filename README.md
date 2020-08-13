@@ -72,16 +72,11 @@ print(task.result().measurement_counts)
 The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). The `s3_folder` statement defines the Amazon S3 bucket for the task result and the folder in the bucket to store the task result. This folder is created when you run the task. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job. This example can be found in `../examples/bell.py`.
 
 ### Available Simulators
-There is currently one AWS simulator available:
-- `arn:aws:braket:::device/quantum-simulator/amazon/sv1`
+Amazon Braket provides access to two simulators: a fully managed statevector simulator, SV1, and a local simulator that is part of the Amazon Braket SDK.
 
-SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
+- `arn:aws:braket:::device/quantum-simulator/amazon/sv1` - SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
 
-### Running a circuit locally
-
-The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. You can use the local simulator to test quantum tasks constructed using the SDK before you submit them to the Amazon Braket service for execution. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
-
-The local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment.
+- `LocalSimulator()` - The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. The local simulator (`LocalSimulator()`) is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
 
 ### Debugging logs
 
