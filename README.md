@@ -24,7 +24,7 @@ To learn more about IAM user, roles, and policies, see [Adding and Removing IAM 
 Follow the installation [instructions](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html) for Boto3 and setting up AWS credentials.
 
 ### Configure your AWS account with the resources necessary for Amazon Braket
-If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://aws.amazon.com/braket/).
+If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://console.aws.amazon.com/braket/home ).
 
 ## Installing the Amazon Braket Python SDK
 Use the steps in this section to install and configure the Amazon Braket Python SDK for your environment.
@@ -72,12 +72,11 @@ print(task.result().measurement_counts)
 The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). The `s3_folder` statement defines the Amazon S3 bucket for the task result and the folder in the bucket to store the task result. This folder is created when you run the task. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job. This example can be found in `../examples/bell.py`.
 
 ### Available Simulators
-There is currently one AWS simulator available:
-- `arn:aws:braket:::device/quantum-simulator/amazon/sv1` – a Schrödinger simulator. Simulates exactly running a job on a quantum computer. Limit of 25 qubits. This simulator samples only from the state vector and outputs an array of bit strings that appears as though it came from a quantum computer. Does not provide a state vector.
+Amazon Braket provides access to two simulators: a fully managed statevector simulator, SV1, and a local simulator that is part of the Amazon Braket SDK.
 
-### Running a circuit locally
+- `arn:aws:braket:::device/quantum-simulator/amazon/sv1` - SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
 
-The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. You can use the local simulator to test quantum tasks constructed using the SDK before you submit them to the Amazon Braket service for execution. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
+- `LocalSimulator()` - The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. The local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
 
 ### Debugging logs
 
@@ -115,10 +114,10 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 - **Rigetti** "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
 - **D-Wave** "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6" (See the next section in this document for more information about using D-Wave.)
 
-**Important** Tasks may not run immediately on the QPU. The QPUs only execute tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://aws.amazon.com/braket/) in the "Devices" tab.
+**Important** Tasks may not run immediately on the QPU. The QPUs only execute tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
 
 ### Using Amazon Braket with D-Wave QPU
-If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [braket-ocean-python-plugin](https://github.com/aws/braket-ocean-python-plugin). Information about how to install the plugin is provided in the [README](https://github.com/aws/braket-ocean-python-plugin/blob/master/README.md) for the repo.
+If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [amazon-braket-ocean-plugin-python](https://github.com/aws/amazon-braket-ocean-plugin-python). Information about how to install the plugin is provided in the [README](https://github.com/aws/amazon-braket-ocean-plugin-python/blob/master/README.md) for the repo.
 
 ## Sample Notebooks
 Coming soon
