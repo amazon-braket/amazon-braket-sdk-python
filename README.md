@@ -28,7 +28,7 @@ If you are new to Amazon Braket, onboard to the service and create the resources
 
 ## Installing the Amazon Braket Python SDK
 
-The Amazon Braket Ocean Plugin can be installed with pip as follows:
+The Amazon Braket Python SDK can be installed with pip as follows:
 
 ```bash
 pip install amazon-braket-sdk
