@@ -24,11 +24,7 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas @ git+https://github.com/aws/amazon-braket-schemas-python.git",
-        (
-            "amazon-braket-default-simulator @ "
-            "git+https://github.com/aws/amazon-braket-default-simulator-python.git"
-        ),
+        "amazon-braket-default-simulator",
         "backoff",
         "boltons",
         "boto3",
