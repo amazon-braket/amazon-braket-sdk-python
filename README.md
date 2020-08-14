@@ -129,6 +129,8 @@ Coming soon
 
 ## Braket Python SDK API Reference Documentation
 
+The API reference, can be found on [Read the Docs](https://amazon-braket-sdk-python.readthedocs.io/en/latest/).
+
 **To generate the API Reference HTML in your local environment**
 
 To generate the HTML, first change directories (`cd`) to position the cursor in the `amazon-braket-sdk-python` directory. Then, run the following command to generate the HTML documentation files:
