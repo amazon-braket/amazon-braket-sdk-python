@@ -310,6 +310,7 @@ class AwsQuantumTask(QuantumTask):
                     current_metadata["outputS3Bucket"],
                     current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
                 )
+                print(f"Result string is \n {result_string}")
                 self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
                 return self._result
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
@@ -426,6 +427,12 @@ def _format_result(result):
 
 @_format_result.register
 def _(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
+    if result.resultTypes:
+        for result_type in result.resultTypes:
+            type = result_type.type.type
+            if type == "amplitude":
+                for state in result_type.value:
+                    result_type.value[state] = complex(*result_type.value[state])
     return GateModelQuantumTaskResult.from_object(result)
 
 

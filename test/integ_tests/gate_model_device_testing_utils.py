@@ -51,27 +51,31 @@ def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]
     assert len(result.measurements) == shots
 
 
-def result_types_zero_shots_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+def result_types_zero_shots_bell_pair_testing(
+    device: Device, include_state_vector: bool, run_kwargs: Dict[str, Any]
+):
     circuit = (
         Circuit()
         .h(0)
         .cnot(0, 1)
         .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        .state_vector()
         .amplitude(["01", "10", "00", "11"])
     )
+    if include_state_vector:
+        circuit.state_vector()
     result = device.run(circuit, **run_kwargs).result()
-    assert len(result.result_types) == 3
+    assert len(result.result_types) == 3 if include_state_vector else 2
     assert np.allclose(
         result.get_value_by_result_type(
             ResultType.Expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
         ),
         1 / np.sqrt(2),
     )
-    assert np.allclose(
-        result.get_value_by_result_type(ResultType.StateVector()),
-        np.array([1, 0, 0, 1]) / np.sqrt(2),
-    )
+    if include_state_vector:
+        assert np.allclose(
+            result.get_value_by_result_type(ResultType.StateVector()),
+            np.array([1, 0, 0, 1]) / np.sqrt(2),
+        )
     assert result.get_value_by_result_type(ResultType.Amplitude(["01", "10", "00", "11"])) == {
         "01": 0j,
         "10": 0j,
