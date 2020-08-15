@@ -310,7 +310,6 @@ class AwsQuantumTask(QuantumTask):
                     current_metadata["outputS3Bucket"],
                     current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
                 )
-                print(f"Result string is \n {result_string}")
                 self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
                 return self._result
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
