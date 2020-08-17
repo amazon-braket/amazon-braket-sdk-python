@@ -31,3 +31,5 @@ from braket.circuits.quantum_operator import QuantumOperator  # noqa: F401
 from braket.circuits.qubit import Qubit, QubitInput  # noqa: F401
 from braket.circuits.qubit_set import QubitSet, QubitSetInput  # noqa: F401
 from braket.circuits.result_type import ObservableResultType, ResultType  # noqa: F401
+import braket.circuits.noises as noises # noqa: F401
+from braket.circuits.noise import Noise # noqa: F401
