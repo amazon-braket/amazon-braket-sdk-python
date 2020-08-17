@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from functools import lru_cache
+from typing import Iterable
 
 import numpy as np
 
@@ -74,6 +75,23 @@ def is_unitary(matrix: np.array) -> bool:
         bool: If matrix is unitary
     """
     return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
+
+
+def is_CPTP(matrices: Iterable[np.array]) -> bool:
+    """
+    Whether a transformation defined by these matrics as Kraus operators is a
+    completely positive trace preserving (CPTP) map. This is the requirement for
+    a transformation to be a quantum channel.
+    Reference: Theorem 8.1 in Nielsen & Chuang (2010) 10th edition.
+
+    Args:
+        matrices (Iterable[np.array]): a list of matrices representing Kraus operators.
+
+    Return:
+        bool: if the matrices define a CPTP map.
+    """
+    E = sum([np.dot(matrix.T.conjugate() , matrix) for matrix in matrices])
+    return np.allclose(E, np.eye(*E.shape))
 
 
 @lru_cache()
