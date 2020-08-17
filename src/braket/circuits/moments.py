@@ -26,6 +26,7 @@ from typing import (
 from braket.circuits.instruction import Instruction
 from braket.circuits.qubit import Qubit
 from braket.circuits.qubit_set import QubitSet
+from braket.circuits.noise import Noise
 
 
 class MomentsKey(NamedTuple):
@@ -33,6 +34,13 @@ class MomentsKey(NamedTuple):
 
     time: int
     qubits: QubitSet
+
+
+class NoiseMomentsKey(NamedTuple):
+    """Key of the Moments mapping for Noise."""
+    time: int
+    qubits: QubitSet
+    noise_index: int
 
 
 class Moments(Mapping[MomentsKey, Instruction]):
@@ -138,16 +146,29 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._add(instruction)
 
     def _add(self, instruction: Instruction) -> None:
-        qubit_range = instruction.target
-        time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
+        if isinstance(instruction.operator, Noise):
+            qubit_range = instruction.target
+            time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
 
-        # Mark all qubits in qubit_range with max_time
-        for qubit in qubit_range:
-            self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
+            # Find the maximum noise_index at the time. The new noise is added to
+            # noise_index = maximum noise_index + 1.
+            max_noise_index = max([0,]+[k.noise_index for k in self._moments
+                            if (k.time==time and isinstance(k, NoiseMomentsKey))])
 
-        self._moments[MomentsKey(time, instruction.target)] = instruction
-        self._qubits.update(instruction.target)
-        self._depth = max(self._depth, time + 1)
+            noise_key = NoiseMomentsKey(time, instruction.target, max_noise_index+1)
+            self._moments[noise_key] = instruction
+            self._qubits.update(instruction.target)
+        else:
+            qubit_range = instruction.target
+            time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
+
+            # Mark all qubits in qubit_range with max_time
+            for qubit in qubit_range:
+                self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
+
+            self._moments[MomentsKey(time, instruction.target)] = instruction
+            self._qubits.update(instruction.target)
+            self._depth = max(self._depth, time + 1)
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)
