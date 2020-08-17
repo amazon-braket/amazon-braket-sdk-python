@@ -23,6 +23,8 @@ from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
+from braket.circuits.noise import Noise
+from braket.circuits.noise_helpers import _add_noise
 from braket.ir.jaqcd import Program
 
 SubroutineReturn = TypeVar(
@@ -437,6 +439,138 @@ class Circuit:
             self.add_result_type(result_type, target_mapping=target_mapping)
 
         return self
+
+    def add_noise(self,
+                   noise: Noise,
+                   target_gates: Union[str, List[str]] = None,
+                   target_qubits: QubitSetInput = None,
+                   target_times: Union[int, List[int]] = None,
+                   insert_strategy: str = "inclusive",
+    )->Circuit:
+        """
+        Add the provided `noise` to gates, qubits and time specified by `target_gates`,
+         `target_qubits` and `target_times`. When `target_gates`=None, `noise` is added
+        to the specified qubits and time. When `target_qubits`=None, `noise` is added to
+        the specified gates and time at all qubits. When `target_times`=None, `noise` is
+        added to the specified gates and qubits at all time. If all `target_gates`,
+        `target_qubits` and `target_times` are None, `noise` is added to every qubit at
+        every time in a circuit.
+
+        When `target_gates` is not None and `noise.qubit_count`>1, `noise.qubit_count`
+        must be the same as `qubit_count` of gates specified by `target_gates`. When
+        `noise.qubit_count`==1, ie. `noise` is a single-qubit noise, `noise` is added
+        to all qubits in `target_qubits` that interact with the target gates.
+
+        Args:
+            noise (Noise): Noise to be added to the circuit. When `noise.qubit_count`>1,
+                `noise.qubit_count` must be the same as `qubit_count` of gates specified by
+                `target_gates`.
+            targer_gates (Union[str, List[str]): Name or List of name of gates which
+                `noise` is added to. If None, `noise` is added only according to
+                `target_qubits` and `target_times`. None should be used when users want
+                to add `noise` to a ciruit moment that has no gate.
+            target_qubits (QubitSetInput): Index or indices of qubit(s). When `target_gates`
+                is not None, the usage of `target_qubits` is determined by `insert_strategy`.
+                Default=None.
+            target_times (Union[int, List[int]]): Index of indices of time which `noise`
+                is added to. Default=None.
+            insert_strategy (str): Rule of how `target_qubit` is used. `insert_strategy`
+                is usded only when `target_gates` is not None. Default="inclusive".
+                Options:
+                    "strict": Insert noise to a gate when `gate.target` exactly matches
+                        `target_qubits`. Sensitive to the order of qubits.
+                    "inclusive": Insert noise to a gate when `gate.target` is a subset
+                        of `target_qubits`.
+
+        Returns:
+            Circuit: self
+
+        Raises:
+                TypeError: If `noise` is not Noise type, `target_gates` is not str, List[str] or None,
+                `target_times` is not int or List[int].
+
+        Example:
+        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+        >>> print(circ)
+            T  : |0|1|2|
+            q0 : -X-Z-C-
+                      |
+            q1 : -Y-X-X-
+            T  : |0|1|2|
+        >>> noise = Noise.Bit_Flip(prob=0.1)
+        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+        >>> print(circ.add_noise(noise, target_gates = 'X'))
+            T  : |    0    |    1    |2|
+            q0 : -X-NB(0.1)-Z---------C-
+                                      |
+            q1 : -Y---------X-NB(0.1)-X-
+            T  : |    0    |    1    |2|
+        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+        >>> print(circ.add_noise(noise, target_qubits = 1))
+            T  : |    0    |    1    |    2    |
+            q0 : -X---------Z---------C---------
+                                      |
+            q1 : -Y-NB(0.1)-X-NB(0.1)-X-NB(0.1)-
+            T  : |    0    |    1    |    2    |
+        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+        >>> print(circ.add_noise(noise, target_gates = 'X', target_qubits = 1))
+            T  : |0|    1    |2|
+            q0 : -X-Z---------C-
+                              |
+            q1 : -Y-X-NB(0.1)-X-
+            T  : |0|    1    |2|
+        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+        >>> print(circ.add_noise(noise, target_gates = ['X','Y'], target_qubits = [0,1]))
+            T  : |    0    |    1    |2|
+            q0 : -X-NB(0.1)-Z---------C-
+                                      |
+            q1 : -Y-NB(0.1)-X-NB(0.1)-X-
+            T  : |    0    |    1    |2|
+        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+        >>> print(circ.add_noise(noise, target_times=[0,2]))
+            T  : |    0    |1|    2    |
+            q0 : -X-NB(0.1)-Z-C-NB(0.1)-
+                              |
+            q1 : -Y-NB(0.1)-X-X-NB(0.1)-
+            T  : |    0    |1|    2    |
+        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+        >>> print(circ.add_noise(noise,
+        ...                      target_gates = ['X','Y'],
+        ...                      target_qubits = [0,1],
+        ...                      target_times=1)
+        ... )
+            T  : |0|    1    |2|
+            q0 : -X-Z---------C-
+                              |
+            q1 : -Y-X-NB(0.1)-X-
+            T  : |0|    1    |2|
+
+        """
+
+        if isinstance(target_gates, str):
+            target_gates = [target_gates]
+        if target_qubits is None:
+            target_qubits = QubitSet(range(self.qubit_count))
+        else:
+            target_qubits = QubitSet(target_qubits)
+        if target_times is None:
+            target_times = range(self.depth)
+        if isinstance(target_times, int):
+            target_times = [target_times]
+
+        if not isinstance(noise, Noise):
+            raise TypeError("noise must be a Noise class")
+        if target_gates and not all(isinstance(s, str) for s in target_gates):
+            raise TypeError(f"all elements in {target_gates} must be str")
+        if not all(isinstance(time, int) for time in target_times):
+            raise TypeError("target_times must be int or List[int]")
+
+        return _add_noise(self, noise,
+                                target_gates,
+                                target_qubits,
+                                target_times,
+                                insert_strategy)
+
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """
