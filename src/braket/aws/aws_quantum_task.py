@@ -426,12 +426,7 @@ def _format_result(result):
 
 @_format_result.register
 def _(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
-    if result.resultTypes:
-        for result_type in result.resultTypes:
-            type = result_type.type.type
-            if type == "amplitude":
-                for state in result_type.value:
-                    result_type.value[state] = complex(*result_type.value[state])
+    GateModelQuantumTaskResult.cast_result_types(result)
     return GateModelQuantumTaskResult.from_object(result)
 
 
