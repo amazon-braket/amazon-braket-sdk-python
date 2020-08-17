@@ -1,4 +1,4 @@
-## Amazon Braket Python SDK
+# Amazon Braket Python SDK
 
 [![Latest Version](https://img.shields.io/pypi/v/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
