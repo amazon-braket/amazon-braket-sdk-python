@@ -15,6 +15,7 @@ from typing import List, Tuple, Union
 
 from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.gate import Gate
+from braket.circuits.noise import Noise
 from braket.circuits.instruction import Instruction
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.result_type import ResultType
@@ -101,8 +102,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
         """
         groupings = []
         for item in items:
-            # Can only print Gate operators for instructions at the moment
-            if isinstance(item, Instruction) and not isinstance(item.operator, Gate):
+            # Can only print Gate and Noise operators for instructions at the moment
+            if isinstance(item, Instruction) and not isinstance(item.operator, (Gate, Noise)):
                 continue
 
             if isinstance(item, ResultType) and not item.target:
