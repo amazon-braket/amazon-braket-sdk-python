@@ -1,4 +1,5 @@
 import pytest
+
 from braket.circuits import Noise, Operator
 
 

@@ -1,17 +1,17 @@
-import braket.ir.jaqcd as ir
 import numpy as np
 import pytest
-from braket.circuits import Circuit, Noise, Instruction, QubitSet
+
+import braket.ir.jaqcd as ir
+from braket.circuits import Circuit, Instruction, Noise, QubitSet
 from braket.ir.jaqcd.shared_models import (
-    Probability,
     DoubleControl,
     DoubleTarget,
     MultiTarget,
+    Probability,
     SingleControl,
     SingleTarget,
     TwoDimensionalMatrixList,
 )
-
 
 # testdata = [(Noise.Bit_Flip, "bit_flip", ir.Bit_Flip, [SingleTarget, Probability], {})]
 
@@ -19,7 +19,13 @@ testdata = [
     (Noise.Bit_Flip, "bit_flip", ir.Bit_Flip, [SingleTarget, Probability], {}),
     (Noise.Phase_Flip, "phase_flip", ir.Phase_Flip, [SingleTarget, Probability], {}),
     (Noise.Depolarizing, "depolarizing", ir.Depolarizing, [SingleTarget, Probability], {}),
-    (Noise.Amplitude_Damping, "amplitude_damping", ir.Amplitude_Damping, [SingleTarget, Probability], {}),
+    (
+        Noise.Amplitude_Damping,
+        "amplitude_damping",
+        ir.Amplitude_Damping,
+        [SingleTarget, Probability],
+        {},
+    ),
     (
         Noise.Kraus,
         "kraus",
@@ -34,13 +40,7 @@ testdata = [
         [TwoDimensionalMatrixList, MultiTarget],
         {"input_type": float},
     ),
-    (
-        Noise.Kraus,
-        "kraus",
-        ir.Kraus,
-        [TwoDimensionalMatrixList, MultiTarget],
-        {"input_type": int},
-    ),
+    (Noise.Kraus, "kraus", ir.Kraus, [TwoDimensionalMatrixList, MultiTarget], {"input_type": int},),
 ]
 
 
@@ -51,7 +51,7 @@ invalid_kraus_matrices = [
     ([np.array([[0, 1], [1, 2], [3, 4]])]),
     ([np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])]),
     ([np.array([[0, 1], [1, 1]])]),
-    ([np.array([[1, 0], [0, 1]]), np.array([[0, 1], [1, 0]])])
+    ([np.array([[1, 0], [0, 1]]), np.array([[0, 1], [1, 0]])]),
 ]
 
 
@@ -93,7 +93,8 @@ def two_dimensional_matrix_list_valid_ir_input(**kwargs):
 
 def two_dimensional_matrix_list_valid_input(**kwargs):
     input_type = kwargs.get("input_type")
-    return {"matrices": [np.array([[input_type(0), input_type(1)], [input_type(1), input_type(0)]])]
+    return {
+        "matrices": [np.array([[input_type(0), input_type(1)], [input_type(1), input_type(0)]])]
     }
 
 
@@ -241,7 +242,7 @@ def test_noise_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwar
     noise1 = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
     noise2 = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
     assert all(isinstance(matrix, np.ndarray) for matrix in noise1.to_matrix())
-    assert all(np.allclose(m1,m2) for m1,m2 in zip(noise1.to_matrix(),noise2.to_matrix()))
+    assert all(np.allclose(m1, m2) for m1, m2 in zip(noise1.to_matrix(), noise2.to_matrix()))
 
 
 # Additional Unitary noise tests
@@ -251,6 +252,7 @@ def test_noise_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwar
 @pytest.mark.parametrize("matrices", invalid_kraus_matrices)
 def test_kraus_invalid_matrix(matrices):
     Noise.Kraus(matrices=matrices)
+
 
 """
 @pytest.mark.xfail(raises=ValueError)

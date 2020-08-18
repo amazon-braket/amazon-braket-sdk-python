@@ -1,23 +1,24 @@
 from __future__ import annotations
-from typing import List, Union, Callable, TYPE_CHECKING
-from enum import Enum
+
+from typing import TYPE_CHECKING, List
 
 from braket.circuits.instruction import Instruction
+from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
-from braket.circuits.gate import Gate
-from braket.circuits.moments import Moments, NoiseMomentsKey
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+
 if TYPE_CHECKING:
     from braket.circuits.circuit import Circuit
 
 
-def _add_noise(circ: Circuit,
-               noise: Noise,
-               target_gates: List[str],
-               target_qubits: QubitSetInput,
-               target_times: List[int],
-               insert_strategy: str,
-)->Circuit:
+def _add_noise(
+    circ: Circuit,
+    noise: Noise,
+    target_gates: List[str],
+    target_qubits: QubitSetInput,
+    target_times: List[int],
+    insert_strategy: str,
+) -> Circuit:
     """ Insert noise into circuit.
     Add the provided `noise` to gates, qubits and time specified by `target_gates`
     , `target_qubits` and `target_times`. See the description of circuit.add_noise().
@@ -43,17 +44,18 @@ def _add_noise(circ: Circuit,
         Circuit: modified circuit.
     """
     if target_gates:
-        circ = _add_noise_to_gates(circ, noise, target_gates, target_qubits, target_times, insert_strategy)
+        circ = _add_noise_to_gates(
+            circ, noise, target_gates, target_qubits, target_times, insert_strategy
+        )
     else:
         circ = _add_noise_to_qubits(circ, noise, target_qubits, target_times)
 
     return circ
 
 
-def _add_noise_to_qubits(circ: Circuit,
-                         noise: Noise,
-                         target_qubits: QubitSet,
-                         target_times: List[int]) -> Circuit:
+def _add_noise_to_qubits(
+    circ: Circuit, noise: Noise, target_qubits: QubitSet, target_times: List[int]
+) -> Circuit:
     """ Insert noise to the given time and qubits.
 
     Args:
@@ -65,7 +67,7 @@ def _add_noise_to_qubits(circ: Circuit,
     Returns:
         Circuit: modified circuit.
     """
-    if noise.qubit_count==1:
+    if noise.qubit_count == 1:
         noise_instructions = [Instruction(noise, qubit) for qubit in target_qubits]
     else:
         noise_instructions = [Instruction(noise, target_qubits)]
@@ -83,12 +85,14 @@ def _add_noise_to_qubits(circ: Circuit,
     return circ
 
 
-def _add_noise_to_gates(circ: Circuit,
-                        noise: Noise,
-                        target_gates: List[str],
-                        target_qubits: QubitSet,
-                        target_times: List[int],
-                        insert_strategy: str) -> Circuit:
+def _add_noise_to_gates(
+    circ: Circuit,
+    noise: Noise,
+    target_gates: List[str],
+    target_qubits: QubitSet,
+    target_times: List[int],
+    insert_strategy: str,
+) -> Circuit:
     """ Insert noise to the given time, qubits and gates.
 
     Args:
@@ -109,10 +113,8 @@ def _add_noise_to_gates(circ: Circuit,
         instruction = circ.moments[moment_key]
         new_moments.add([instruction])
         # add noise
-        if (instruction.operator.name in target_gates
-            and moment_key.time in target_times
-        ):
-            if noise.qubit_count==1:
+        if instruction.operator.name in target_gates and moment_key.time in target_times:
+            if noise.qubit_count == 1:
                 strategy._add_1qubit_noise(new_moments, instruction, noise, target_qubits)
             else:
                 strategy._add_Nqubit_noise(new_moments, instruction, noise, target_qubits)
@@ -124,6 +126,7 @@ def _add_noise_to_gates(circ: Circuit,
 class NoiseInsertStrategy:
     """ Base class of noise insert strategy.
     """
+
     @staticmethod
     def _add_1qubit_noise():
         raise NotImplementedError("_add_1qubit_noise has not been implemented yet.")
@@ -146,23 +149,23 @@ class InclusiveStrategy(NoiseInsertStrategy):
     """ Inclusive strategy for noise insertion.
     Insert noise to a gate when the target of the gate is a subset of `target_qubits`.
     """
+
     @staticmethod
-    def _add_1qubit_noise(new_moments: Moments,
-                          instruction: Instruction,
-                          noise: Noise,
-                          target_qubits: QubitSet):
+    def _add_1qubit_noise(
+        new_moments: Moments, instruction: Instruction, noise: Noise, target_qubits: QubitSet
+    ):
         for qubit in instruction.target.intersection(target_qubits):
             new_moments.add([Instruction(noise, qubit)])
 
     @staticmethod
-    def _add_Nqubit_noise(new_moments: Moments,
-                          instruction: Instruction,
-                          noise: Noise,
-                          target_qubits: QubitSet):
-        if (instruction.operator.qubit_count == noise.qubit_count
-            and instruction.target.issubset(target_qubits)
+    def _add_Nqubit_noise(
+        new_moments: Moments, instruction: Instruction, noise: Noise, target_qubits: QubitSet
+    ):
+        if instruction.operator.qubit_count == noise.qubit_count and instruction.target.issubset(
+            target_qubits
         ):
             new_moments.add([Instruction(noise, instruction.target)])
+
 
 NoiseInsertStrategy.register_strategy("inclusive", InclusiveStrategy)
 
@@ -172,21 +175,21 @@ class StrictStrategy(NoiseInsertStrategy):
     Insert noise to a gate when `gate.target` exactly matches `target_qubits`.
     Sensitive to order of qubits.
     """
+
     @staticmethod
-    def _add_1qubit_noise(new_moments: Moments,
-                          instruction: Instruction,
-                          noise: Noise,
-                          target_qubits: QubitSet):
+    def _add_1qubit_noise(
+        new_moments: Moments, instruction: Instruction, noise: Noise, target_qubits: QubitSet
+    ):
         if instruction.target == target_qubits:
             for qubit in target_qubits:
                 new_moments.add([Instruction(noise, qubit)])
 
     @staticmethod
-    def _add_Nqubit_noise(new_moments: Moments,
-                          instruction: Instruction,
-                          noise: Noise,
-                          target_qubits: QubitSet):
+    def _add_Nqubit_noise(
+        new_moments: Moments, instruction: Instruction, noise: Noise, target_qubits: QubitSet
+    ):
         if instruction.target == target_qubits:
             new_moments.add([Instruction(noise, instruction.target)])
+
 
 NoiseInsertStrategy.register_strategy("strict", StrictStrategy)

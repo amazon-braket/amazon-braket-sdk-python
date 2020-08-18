@@ -15,8 +15,8 @@ from typing import List, Tuple, Union
 
 from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.gate import Gate
-from braket.circuits.noise import Noise
 from braket.circuits.instruction import Instruction
+from braket.circuits.noise import Noise
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.result_type import ResultType
 

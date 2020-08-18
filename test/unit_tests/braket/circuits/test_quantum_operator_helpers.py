@@ -5,16 +5,19 @@ import pytest
 
 from braket.circuits.quantum_operator_helpers import (
     get_pauli_eigenvalues,
+    is_CPTP,
     is_hermitian,
     is_square_matrix,
     is_unitary,
-    is_CPTP,
     verify_quantum_operator_matrix_dimensions,
 )
 
 valid_unitary_hermitian_matrix = np.array([[0, 1], [1, 0]])
 
-valid_CPTP_matrices = [np.array([[0, 1], [1, 0]])/np.sqrt(2), np.array([[0, 1], [1, 0]])/np.sqrt(2)]
+valid_CPTP_matrices = [
+    np.array([[0, 1], [1, 0]]) / np.sqrt(2),
+    np.array([[0, 1], [1, 0]]) / np.sqrt(2),
+]
 
 invalid_dimension_matrices = [
     (np.array([[1]])),

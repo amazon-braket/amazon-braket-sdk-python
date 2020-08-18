@@ -24,9 +24,9 @@ from typing import (
 )
 
 from braket.circuits.instruction import Instruction
+from braket.circuits.noise import Noise
 from braket.circuits.qubit import Qubit
 from braket.circuits.qubit_set import QubitSet
-from braket.circuits.noise import Noise
 
 
 class MomentsKey(NamedTuple):
@@ -38,6 +38,7 @@ class MomentsKey(NamedTuple):
 
 class NoiseMomentsKey(NamedTuple):
     """Key of the Moments mapping for Noise."""
+
     time: int
     qubits: QubitSet
     noise_index: int
@@ -152,10 +153,16 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
             # Find the maximum noise_index at the time. The new noise is added to
             # noise_index = maximum noise_index + 1.
-            max_noise_index = max([0,]+[k.noise_index for k in self._moments
-                            if (k.time==time and isinstance(k, NoiseMomentsKey))])
+            max_noise_index = max(
+                [0,]
+                + [
+                    k.noise_index
+                    for k in self._moments
+                    if (k.time == time and isinstance(k, NoiseMomentsKey))
+                ]
+            )
 
-            noise_key = NoiseMomentsKey(time, instruction.target, max_noise_index+1)
+            noise_key = NoiseMomentsKey(time, instruction.target, max_noise_index + 1)
             self._moments[noise_key] = instruction
             self._qubits.update(instruction.target)
         else:

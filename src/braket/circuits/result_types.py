@@ -102,6 +102,7 @@ class DensityMatrix(ResultType):
     def __copy__(self) -> DensityMatrix:
         return type(self)()
 
+
 ResultType.register_result_type(DensityMatrix)
 
 

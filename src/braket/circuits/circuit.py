@@ -18,13 +18,13 @@ from typing import Callable, Dict, Iterable, List, TypeVar, Union
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
+from braket.circuits.noise import Noise
+from braket.circuits.noise_helpers import _add_noise
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
-from braket.circuits.noise import Noise
-from braket.circuits.noise_helpers import _add_noise
 from braket.ir.jaqcd import Program
 
 SubroutineReturn = TypeVar(
@@ -440,13 +440,14 @@ class Circuit:
 
         return self
 
-    def add_noise(self,
-                   noise: Noise,
-                   target_gates: Union[str, List[str]] = None,
-                   target_qubits: QubitSetInput = None,
-                   target_times: Union[int, List[int]] = None,
-                   insert_strategy: str = "inclusive",
-    )->Circuit:
+    def add_noise(
+        self,
+        noise: Noise,
+        target_gates: Union[str, List[str]] = None,
+        target_qubits: QubitSetInput = None,
+        target_times: Union[int, List[int]] = None,
+        insert_strategy: str = "inclusive",
+    ) -> Circuit:
         """
         Add the provided `noise` to gates, qubits and time specified by `target_gates`,
          `target_qubits` and `target_times`. When `target_gates`=None, `noise` is added
@@ -486,8 +487,8 @@ class Circuit:
             Circuit: self
 
         Raises:
-                TypeError: If `noise` is not Noise type, `target_gates` is not str, List[str] or None,
-                `target_times` is not int or List[int].
+                TypeError: If `noise` is not Noise type, `target_gates` is not str,
+                List[str] or None, `target_times` is not int or List[int].
 
         Example:
         >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
@@ -565,12 +566,7 @@ class Circuit:
         if not all(isinstance(time, int) for time in target_times):
             raise TypeError("target_times must be int or List[int]")
 
-        return _add_noise(self, noise,
-                                target_gates,
-                                target_qubits,
-                                target_times,
-                                insert_strategy)
-
+        return _add_noise(self, noise, target_gates, target_qubits, target_times, insert_strategy)
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """

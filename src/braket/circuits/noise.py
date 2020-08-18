@@ -1,4 +1,4 @@
-from typing import Any, Sequence, List
+from typing import Any, List, Sequence
 
 from braket.circuits.operator import Operator
 from braket.circuits.qubit_set import QubitSet
@@ -13,16 +13,16 @@ class Noise(Operator):
     what a noise channel is and what it does.
     """
 
-    def __init__(self,
-        qubit_count: int,
-        ascii_symbols: Sequence[str],
+    def __init__(
+        self, qubit_count: int, ascii_symbols: Sequence[str],
     ):
         """
         Args:
             qubit_count (int): Number of qubits this noise channel interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for this noise channel. These are
                 used when printing a diagram of circuits. Length must be the same as `qubit_count`
-                , and index ordering is expected to correlate with target ordering on the instruction.
+                , and index ordering is expected to correlate with target ordering on the
+                instruction.
 
         Raises:
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are None, or
@@ -40,18 +40,15 @@ class Noise(Operator):
             raise ValueError(msg)
         self._ascii_symbols = tuple(ascii_symbols)
 
-
     @property
     def qubit_count(self) -> int:
         """int: Returns number of qubits this quantum operator interacts with."""
         return self._qubit_count
 
-
     @property
     def ascii_symbols(self) -> List[str]:
         """List[str]: Returns the ascii symbols for the quantum operator."""
         return self._ascii_symbols
-
 
     @property
     def name(self) -> str:
@@ -63,7 +60,6 @@ class Noise(Operator):
         """
         return self.__class__.__name__
 
-
     def to_ir(self, target: QubitSet) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -74,27 +70,23 @@ class Noise(Operator):
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
-
     def to_matrix(self, *args, **kwargs) -> Any:
-            """Returns a list of matrices defining the Kraus matrices of
+        """Returns a list of matrices defining the Kraus matrices of
                 the noise channel.
 
             Returns:
                 Iterable[np.ndarray]: list of matrices defining the Kraus
                     matrices of the noise channel.
             """
-            raise NotImplementedError("to_matrix has not been implemented yet.")
-
+        raise NotImplementedError("to_matrix has not been implemented yet.")
 
     def __eq__(self, other):
         if isinstance(other, Noise):
             return self.name == other.name
         return NotImplemented
 
-
     def __repr__(self):
         return f"{self.name}('qubit_count': {self.qubit_count})"
-
 
     @classmethod
     def register_noise(cls, noise: "Noise"):
@@ -104,7 +96,6 @@ class Noise(Operator):
             noise (Noise): Noise class to register.
         """
         setattr(cls, noise.__name__, noise)
-
 
 
 class ProbabilityNoise(Noise):
@@ -135,7 +126,6 @@ class ProbabilityNoise(Noise):
             raise ValueError("prob must a real number in the interval [0,1]")
         self._prob = prob
 
-
     @property
     def prob(self) -> float:
         """ Returns the probability parameter for the noise.
@@ -144,7 +134,6 @@ class ProbabilityNoise(Noise):
             prob (float): The probability that parameterizes the Kraus matrices.
         """
         return self._prob
-
 
     def __repr__(self):
         return f"{self.name}('prob': {self.prob}, 'qubit_count': {self.qubit_count})"
