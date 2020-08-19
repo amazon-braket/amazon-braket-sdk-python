@@ -217,16 +217,7 @@ class GateModelQuantumTaskResult:
                 in the result dict
         """
         obj = GateModelTaskResult.parse_raw(result)
-        if obj.resultTypes:
-            for result_type in obj.resultTypes:
-                type = result_type.type.type
-                if type == "probability":
-                    result_type.value = np.array(result_type.value)
-                elif type == "statevector":
-                    result_type.value = np.array([complex(*value) for value in result_type.value])
-                elif type == "amplitude":
-                    for state in result_type.value:
-                        result_type.value[state] = complex(*result_type.value[state])
+        GateModelQuantumTaskResult.cast_result_types(obj)
         return GateModelQuantumTaskResult._from_object_internal(obj)
 
     @classmethod
@@ -302,6 +293,26 @@ class GateModelQuantumTaskResult:
             result_types=result_types,
             values=values,
         )
+
+    @staticmethod
+    def cast_result_types(gate_model_task_result: GateModelTaskResult) -> None:
+        """
+        Casts the result types to the types expected by the SDK.
+
+        Args:
+            gate_model_task_result (GateModelTaskResult): GateModelTaskResult representing the
+                results.
+        """
+        if gate_model_task_result.resultTypes:
+            for result_type in gate_model_task_result.resultTypes:
+                type = result_type.type.type
+                if type == "probability":
+                    result_type.value = np.array(result_type.value)
+                elif type == "statevector":
+                    result_type.value = np.array([complex(*value) for value in result_type.value])
+                elif type == "amplitude":
+                    for state in result_type.value:
+                        result_type.value[state] = complex(*result_type.value[state])
 
     @staticmethod
     def _calculate_result_types(

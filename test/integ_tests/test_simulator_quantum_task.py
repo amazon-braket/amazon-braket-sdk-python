@@ -26,6 +26,7 @@ from gate_model_device_testing_utils import (
     result_types_tensor_z_h_y_testing,
     result_types_tensor_z_hermitian_testing,
     result_types_tensor_z_z_testing,
+    result_types_zero_shots_bell_pair_testing,
 )
 
 from braket.aws import AwsDevice
@@ -46,6 +47,14 @@ def test_no_result_types_bell_pair(simulator_arn, aws_session, s3_destination_fo
 def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     qubit_ordering_testing(device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder})
+
+
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+def test_result_types_no_shots(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    result_types_zero_shots_bell_pair_testing(
+        device, False, {"shots": 0, "s3_destination_folder": s3_destination_folder}
+    )
 
 
 @pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
@@ -74,7 +83,7 @@ def test_result_types_bell_pair_marginal_probability(
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
 def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_x_y_testing(
@@ -82,7 +91,7 @@ def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destinati
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
 def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_h_y_testing(
@@ -90,7 +99,7 @@ def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destina
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
 def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_hermitian_testing(
@@ -98,7 +107,7 @@ def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destinatio
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
 def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_z_testing(
@@ -106,7 +115,7 @@ def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destinati
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
 def test_result_types_tensor_hermitian_hermitian(
     simulator_arn, shots, aws_session, s3_destination_folder
 ):
@@ -116,7 +125,7 @@ def test_result_types_tensor_hermitian_hermitian(
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
 def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_y_hermitian_testing(
@@ -124,7 +133,7 @@ def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_d
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
 def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_hermitian_testing(

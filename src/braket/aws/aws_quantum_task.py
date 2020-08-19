@@ -426,6 +426,7 @@ def _format_result(result):
 
 @_format_result.register
 def _(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
+    GateModelQuantumTaskResult.cast_result_types(result)
     return GateModelQuantumTaskResult.from_object(result)
 
 
