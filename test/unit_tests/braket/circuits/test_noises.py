@@ -254,10 +254,8 @@ def test_kraus_invalid_matrix(matrices):
     Noise.Kraus(matrices=matrices)
 
 
-"""
 @pytest.mark.xfail(raises=ValueError)
 def test_kraus_matrix_target_size_mismatch():
     Circuit().kraus(
-        matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
+        matrices=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
     )
-"""
