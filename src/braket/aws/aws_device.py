@@ -17,6 +17,7 @@ from enum import Enum
 from typing import List, Optional, Set, Union
 
 import boto3
+from boltons.dictutils import FrozenDict
 from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
@@ -43,12 +44,14 @@ class AwsDevice(Device):
     device.
     """
 
-    DEVICE_REGIONS = {
-        "rigetti": ["us-west-1"],
-        "ionq": ["us-east-1"],
-        "d-wave": ["us-west-2"],
-        "amazon": ["us-west-2", "us-west-1", "us-east-1"],
-    }
+    DEVICE_REGIONS = FrozenDict(
+        {
+            "rigetti": ["us-west-1"],
+            "ionq": ["us-east-1"],
+            "d-wave": ["us-west-2"],
+            "amazon": ["us-west-2", "us-west-1", "us-east-1"],
+        }
+    )
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
@@ -251,12 +254,12 @@ class AwsDevice(Device):
         """
         region_key = device_arn.split("/")[-2]
         qpu_regions = AwsDevice.DEVICE_REGIONS.get(region_key, [])
-        return AwsDevice._copy_aws_session(aws_session, qpu_regions[0])
+        return AwsDevice._copy_aws_session(aws_session, qpu_regions)
 
     @staticmethod
-    def _copy_aws_session(aws_session: Optional[AwsSession], region: str) -> AwsSession:
+    def _copy_aws_session(aws_session: Optional[AwsSession], regions: List[str]) -> AwsSession:
         if aws_session:
-            if aws_session.boto_session.region_name == region:
+            if aws_session.boto_session.region_name in regions:
                 return aws_session
             else:
                 creds = aws_session.boto_session.get_credentials()
@@ -264,11 +267,11 @@ class AwsDevice(Device):
                     aws_access_key_id=creds.access_key,
                     aws_secret_access_key=creds.secret_key,
                     aws_session_token=creds.token,
-                    region_name=region,
+                    region_name=regions[0],
                 )
                 return AwsSession(boto_session=boto_session)
         else:
-            boto_session = boto3.Session(region_name=region)
+            boto_session = boto3.Session(region_name=regions[0])
             return AwsSession(boto_session=boto_session)
 
     def __repr__(self):
@@ -304,7 +307,7 @@ class AwsDevice(Device):
             types (List[AwsDeviceType], optional): device type list, default is `None`
             statuses (List[str], optional): device status list, default is `None`
             provider_names (List[str], optional): provider name list, default is `None`
-            order_by (List[str], optional): field to order result by, default is `name`.
+            order_by (str, optional): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
             aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
 
@@ -317,7 +320,7 @@ class AwsDevice(Device):
         device_regions_set = AwsDevice._get_devices_regions_set(arns, provider_names, types)
         results = []
         for region in device_regions_set:
-            aws_session = AwsDevice._copy_aws_session(aws_session, region)
+            aws_session = AwsDevice._copy_aws_session(aws_session, [region])
             results.extend(
                 aws_session.search_devices(
                     arns=arns,
