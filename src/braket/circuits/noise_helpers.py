@@ -178,8 +178,9 @@ class InclusiveStrategy(NoiseInsertStrategy):
     def _add_1qubit_noise(
         new_moments: Moments, instruction: Instruction, noise: Noise, target_qubits: QubitSet
     ):
-        for qubit in instruction.target.intersection(target_qubits):
-            new_moments.add([Instruction(noise, qubit)])
+        if instruction.target.issubset(target_qubits):
+            for qubit in instruction.target.intersection(target_qubits):
+                new_moments.add([Instruction(noise, qubit)])
 
     @staticmethod
     def _add_Nqubit_noise(
