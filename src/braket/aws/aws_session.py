@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Dict, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
 import boto3
@@ -113,6 +113,47 @@ class AwsSession(object):
             arn (str): The ARN of the device
 
         Returns:
-            Dict[str, Any]: Device metadata
+            Dict[str, Any]: The response from the Amazon Braket `GetDevice` operation.
         """
         return self.braket_client.get_device(deviceArn=arn)
+
+    def search_devices(
+        self,
+        arns: Optional[List[str]] = None,
+        names: Optional[List[str]] = None,
+        types: Optional[List[str]] = None,
+        statuses: Optional[List[str]] = None,
+        provider_names: Optional[List[str]] = None,
+    ):
+        """
+        Get devices based on filters. The result is the AND of
+        all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
+
+        Args:
+            arns (List[str], optional): device ARN list, default is `None`
+            names (List[str], optional): device name list, default is `None`
+            types (List[str], optional): device type list, default is `None`
+            statuses (List[str], optional): device status list, default is `None`
+            provider_names (List[str], optional): provider name list, default is `None`
+
+        Returns:
+            List[Dict[str, Any]: The response from the Amazon Braket `SearchDevices` operation.
+        """
+        filters = []
+        if arns:
+            filters.append({"name": "deviceArn", "values": arns})
+        paginator = self.braket_client.get_paginator("search_devices")
+        page_iterator = paginator.paginate(filters=filters, PaginationConfig={"MaxItems": 100})
+        results = []
+        for page in page_iterator:
+            for result in page["devices"]:
+                if names and result["deviceName"] not in names:
+                    continue
+                if types and result["deviceType"] not in types:
+                    continue
+                if statuses and result["deviceStatus"] not in statuses:
+                    continue
+                if provider_names and result["providerName"] not in provider_names:
+                    continue
+                results.append(result)
+        return results

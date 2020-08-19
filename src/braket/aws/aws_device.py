@@ -11,8 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from enum import Enum
-from typing import Optional, Union
+from typing import List, Optional, Set, Union
 
 import boto3
 from networkx import Graph, complete_graph, from_edgelist
@@ -41,10 +43,11 @@ class AwsDevice(Device):
     device.
     """
 
-    QPU_REGIONS = {
+    DEVICE_REGIONS = {
         "rigetti": ["us-west-1"],
         "ionq": ["us-east-1"],
         "d-wave": ["us-west-2"],
+        "amazon": ["us-west-2", "us-west-1", "us-east-1"],
     }
 
     DEFAULT_SHOTS_QPU = 1000
@@ -52,7 +55,7 @@ class AwsDevice(Device):
     DEFAULT_RESULTS_POLL_TIMEOUT = 432000
     DEFAULT_RESULTS_POLL_INTERVAL = 1
 
-    def __init__(self, arn: str, aws_session=None):
+    def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
         Args:
             arn (str): The ARN of the device
@@ -64,8 +67,8 @@ class AwsDevice(Device):
             physically located. When this occurs, a cloned `aws_session` is created for the Region
             the QPU is located in.
 
-            See `braket.aws.aws_device.AwsQpu.QPU_REGIONS` for the AWS Regions the QPUs are located
-            in.
+            See `braket.aws.aws_device.AwsDevice.DEVICE_REGIONS` for the AWS Regions provider
+            devices are located in.
         """
         super().__init__(name=None, status=None)
         self._arn = arn
@@ -80,8 +83,8 @@ class AwsDevice(Device):
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: Optional[int] = None,
-        poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: Optional[int] = DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: Optional[int] = DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -230,7 +233,7 @@ class AwsDevice(Device):
             return None
 
     @staticmethod
-    def _aws_session_for_device(device_arn: str, aws_session: AwsSession) -> AwsSession:
+    def _aws_session_for_device(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
         """AwsSession: Returns an AwsSession for the device ARN. """
         if "qpu" in device_arn:
             return AwsDevice._aws_session_for_qpu(device_arn, aws_session)
@@ -238,18 +241,22 @@ class AwsDevice(Device):
             return aws_session or AwsSession()
 
     @staticmethod
-    def _aws_session_for_qpu(device_arn: str, aws_session: AwsSession) -> AwsSession:
+    def _aws_session_for_qpu(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
         """
         Get an AwsSession for the device ARN. QPUs are physically located in specific AWS Regions.
         The AWS sessions should connect to the Region that the QPU is located in.
 
-        See `braket.aws.aws_qpu.AwsDevice.QPU_REGIONS` for the AWS Regions the QPUs are located in.
+        See `braket.aws.aws_qpu.AwsDevice.DEVICE_REGIONS` for the
+        AWS Regions the devices are located in.
         """
         region_key = device_arn.split("/")[-2]
-        qpu_regions = AwsDevice.QPU_REGIONS.get(region_key, [])
+        qpu_regions = AwsDevice.DEVICE_REGIONS.get(region_key, [])
+        return AwsDevice._copy_aws_session(aws_session, qpu_regions[0])
 
+    @staticmethod
+    def _copy_aws_session(aws_session: Optional[AwsSession], region: str) -> AwsSession:
         if aws_session:
-            if aws_session.boto_session.region_name in qpu_regions:
+            if aws_session.boto_session.region_name == region:
                 return aws_session
             else:
                 creds = aws_session.boto_session.get_credentials()
@@ -257,11 +264,11 @@ class AwsDevice(Device):
                     aws_access_key_id=creds.access_key,
                     aws_secret_access_key=creds.secret_key,
                     aws_session_token=creds.token,
-                    region_name=qpu_regions[0],
+                    region_name=region,
                 )
                 return AwsSession(boto_session=boto_session)
         else:
-            boto_session = boto3.Session(region_name=qpu_regions[0])
+            boto_session = boto3.Session(region_name=region)
             return AwsSession(boto_session=boto_session)
 
     def __repr__(self):
@@ -271,3 +278,83 @@ class AwsDevice(Device):
         if isinstance(other, AwsDevice):
             return self.arn == other.arn
         return NotImplemented
+
+    @staticmethod
+    def get_devices(
+        arns: Optional[List[str]] = None,
+        names: Optional[List[str]] = None,
+        types: Optional[List[AwsDeviceType]] = None,
+        statuses: Optional[List[str]] = None,
+        provider_names: Optional[List[str]] = None,
+        order_by: str = "name",
+        aws_session: Optional[AwsSession] = None,
+    ) -> List[AwsDevice]:
+        """
+        Get devices based on filters and desired ordering. The result is the AND of
+        all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
+
+        Examples:
+            >>> AwsDevice.get_devices(provider_names=['Rigetti'], statuses=['ONLINE'])
+            >>> AwsDevice.get_devices(order_by='provider_name')
+            >>> AwsDevice.get_devices(types=['SIMULATOR'])
+
+        Args:
+            arns (List[str], optional): device ARN list, default is `None`
+            names (List[str], optional): device name list, default is `None`
+            types (List[AwsDeviceType], optional): device type list, default is `None`
+            statuses (List[str], optional): device status list, default is `None`
+            provider_names (List[str], optional): provider name list, default is `None`
+            order_by (List[str], optional): field to order result by, default is `name`.
+                Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
+            aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
+
+        Returns:
+            List[AwsDevice]: list of AWS devices
+        """
+        order_by_list = ["arn", "name", "type", "provider_name", "status"]
+        if order_by not in order_by_list:
+            raise ValueError(f"order_by '{order_by}' must be in {order_by_list}")
+        device_regions_set = AwsDevice._get_devices_regions_set(arns, provider_names, types)
+        results = []
+        for region in device_regions_set:
+            aws_session = AwsDevice._copy_aws_session(aws_session, region)
+            results.extend(
+                aws_session.search_devices(
+                    arns=arns,
+                    names=names,
+                    types=types,
+                    statuses=statuses,
+                    provider_names=provider_names,
+                )
+            )
+        arns = set([result["deviceArn"] for result in results])
+        devices = [AwsDevice(arn, aws_session) for arn in arns]
+        devices.sort(key=lambda x: getattr(x, order_by))
+        return devices
+
+    @staticmethod
+    def _get_devices_regions_set(
+        arns: Optional[List[str]],
+        provider_names: Optional[List[str]],
+        types: Optional[List[AwsDeviceType]],
+    ) -> Set[str]:
+        """Get the set of regions to call `SearchDevices` API given filters"""
+        device_regions_set = set(
+            AwsDevice.DEVICE_REGIONS[key][0] for key in AwsDevice.DEVICE_REGIONS
+        )
+        if provider_names:
+            provider_region_set = set()
+            for provider in provider_names:
+                for key in AwsDevice.DEVICE_REGIONS:
+                    if key in provider.lower():
+                        provider_region_set.add(AwsDevice.DEVICE_REGIONS[key][0])
+                        break
+            device_regions_set = device_regions_set.intersection(provider_region_set)
+        if arns:
+            arns_region_set = set([AwsDevice.DEVICE_REGIONS[arn.split("/")[-2]][0] for arn in arns])
+            device_regions_set = device_regions_set.intersection(arns_region_set)
+        if types and types == [AwsDeviceType.SIMULATOR]:
+            device_regions_set = device_regions_set.intersection(
+                [AwsDevice.DEVICE_REGIONS["amazon"][0]]
+            )
+        return device_regions_set
