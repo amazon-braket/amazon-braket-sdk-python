@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
-if TYPE_CHECKING: # pragma: no cover
+if TYPE_CHECKING:  # pragma: no cover
     from braket.circuits.circuit import Circuit
 
 
@@ -129,11 +129,9 @@ def type_check_target_gates(target_gates):
 
     Returns: bool
     """
-    if target_gates == None:
+    if target_gates is None:
         return True
-    if (isinstance(target_gates, Iterable)
-        and all(isinstance(s, str) for s in target_gates)
-    ):
+    if isinstance(target_gates, Iterable) and all(isinstance(s, str) for s in target_gates):
         return True
     return False
 
@@ -144,8 +142,8 @@ def type_check_target_times(target_times):
 
     Returns: bool
     """
-    return (isinstance(target_times, Iterable)
-            and all(isinstance(time, int) for time in target_times)
+    return isinstance(target_times, Iterable) and all(
+        isinstance(time, int) for time in target_times
     )
 
 
@@ -187,8 +185,8 @@ class InclusiveStrategy(NoiseInsertStrategy):
     def _add_Nqubit_noise(
         new_moments: Moments, instruction: Instruction, noise: Noise, target_qubits: QubitSet
     ):
-        if (instruction.operator.qubit_count == noise.qubit_count
-            and instruction.target.issubset(target_qubits)
+        if instruction.operator.qubit_count == noise.qubit_count and instruction.target.issubset(
+            target_qubits
         ):
             new_moments.add([Instruction(noise, instruction.target)])
 

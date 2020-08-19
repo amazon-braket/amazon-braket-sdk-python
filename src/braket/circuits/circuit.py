@@ -15,11 +15,11 @@ from __future__ import annotations
 
 from typing import Callable, Dict, Iterable, List, TypeVar, Union
 
+from braket.circuits import noise_helpers
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
-from braket.circuits import noise_helpers
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
@@ -566,11 +566,9 @@ class Circuit:
         if not noise_helpers.type_check_target_times(target_times):
             raise TypeError("target_times must be int or Iterable[int]")
 
-        return noise_helpers._add_noise(self, noise,
-                                        target_gates,
-                                        target_qubits,
-                                        target_times,
-                                        insert_strategy)
+        return noise_helpers._add_noise(
+            self, noise, target_gates, target_qubits, target_times, insert_strategy
+        )
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """

@@ -122,7 +122,7 @@ class ProbabilityNoise(Noise):
 
         if not isinstance(prob, float):
             raise ValueError("prob must be float type")
-        if not (prob<=1.0 and prob>=0.0):
+        if not (prob <= 1.0 and prob >= 0.0):
             raise ValueError("prob must a real number in the interval [0,1]")
         self._prob = prob
 

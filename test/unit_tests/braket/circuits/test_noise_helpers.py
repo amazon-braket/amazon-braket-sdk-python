@@ -5,13 +5,12 @@ from braket.circuits.circuit import Circuit
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
-from braket.circuits.noise_helpers import _add_noise, NoiseInsertStrategy
+from braket.circuits.noise_helpers import NoiseInsertStrategy
 from braket.circuits.qubit_set import QubitSet
-
 
 invalid_data_noise_type = [Gate.X(), None, 1.5]
 invalid_data_target_gates_type = [([-1, "foo"]), ([1.5, None, -1])]
-invalid_data_target_times_type = [1.5, "foo", ["foo",1]]
+invalid_data_target_times_type = [1.5, "foo", ["foo", 1]]
 
 
 @pytest.fixture
@@ -36,24 +35,22 @@ def noise_2qubit():
     return Noise.Kraus(matrices=[E0, E1])
 
 
-
 @pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("noise", invalid_data_noise_type)
 def test_add_noise_invalid_noise_type(circuit_2qubit, noise):
-    circ = circuit_2qubit.add_noise(noise)
+    circuit_2qubit.add_noise(noise)
 
 
 @pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("target_gates", invalid_data_target_gates_type)
 def test_add_noise_invalid_target_gates_type(circuit_2qubit, noise_1qubit, target_gates):
-    circ = circuit_2qubit.add_noise(noise_1qubit, target_gates=target_gates)
+    circuit_2qubit.add_noise(noise_1qubit, target_gates=target_gates)
 
 
 @pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("target_times", invalid_data_target_times_type)
 def test_add_noise_invalid_target_times_type(circuit_2qubit, noise_1qubit, target_times):
-    circ = circuit_2qubit.add_noise(noise_1qubit, target_times=target_times)
-
+    circuit_2qubit.add_noise(noise_1qubit, target_times=target_times)
 
 
 def test_add_noise_1QubitNoise_inclusive_1(circuit_2qubit, noise_1qubit):
@@ -253,7 +250,7 @@ def test_add_noise_2QubitNoise_inclusive_3(circuit_3qubit, noise_2qubit):
         noise_2qubit,
         target_gates="CZ",
         target_qubits=QubitSet([1, 2]),
-        target_times=[0,1],
+        target_times=[0, 1],
         insert_strategy="inclusive",
     )
 

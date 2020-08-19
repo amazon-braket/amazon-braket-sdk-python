@@ -6,7 +6,7 @@ from braket.circuits.noise import Noise, ProbabilityNoise
 invalid_data_qubit_count = [(0, ["foo"])]
 invalid_data_ascii_symbols = [(1, None)]
 invalid_data_ascii_symbols_length = [(2, ["foo", "boo", "braket"])]
-invalid_data_prob = ["a", float("nan"), float("inf"), float("-inf"), 1+1j, 1.5, -2.6]
+invalid_data_prob = ["a", float("nan"), float("inf"), float("-inf"), 1 + 1j, 1.5, -2.6]
 
 
 @pytest.fixture
@@ -22,19 +22,19 @@ def probability_noise():
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("qubit_count, ascii_symbols", invalid_data_qubit_count)
 def test_invalid_data_qubit_count(qubit_count, ascii_symbols):
-    noise = Noise(qubit_count, ascii_symbols)
+    Noise(qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("qubit_count, ascii_symbols", invalid_data_ascii_symbols)
 def test_invalid_data_ascii_symbols(qubit_count, ascii_symbols):
-    noise = Noise(qubit_count, ascii_symbols)
+    Noise(qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("qubit_count, ascii_symbols", invalid_data_ascii_symbols_length)
 def test_invalid_data_ascii_symbols_length(qubit_count, ascii_symbols):
-    noise = Noise(qubit_count, ascii_symbols)
+    Noise(qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -42,7 +42,7 @@ def test_invalid_data_ascii_symbols_length(qubit_count, ascii_symbols):
 def test_invalid_data_prob(prob):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    noise = ProbabilityNoise(prob, qubit_count, ascii_symbols)
+    ProbabilityNoise(prob, qubit_count, ascii_symbols)
 
 
 def test_ascii_symbols(noise):
@@ -69,9 +69,9 @@ def test_noise_str(noise):
 
 
 def test_probability_noise_str(probability_noise):
-    expected = "{}('prob': {}, 'qubit_count': {})".format(probability_noise.name,
-                                                          probability_noise.prob,
-                                                          probability_noise.qubit_count)
+    expected = "{}('prob': {}, 'qubit_count': {})".format(
+        probability_noise.name, probability_noise.prob, probability_noise.qubit_count
+    )
     assert str(probability_noise) == expected
 
 
