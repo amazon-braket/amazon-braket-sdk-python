@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-publish:
-    name: Build and publish distribution 📦to PyPI and TestPyPI
+    name: Build and publish distribution to PyPi
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
