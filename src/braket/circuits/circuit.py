@@ -19,7 +19,7 @@ from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
-from braket.circuits.noise_helpers import _add_noise
+from braket.circuits import noise_helpers
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
@@ -443,9 +443,9 @@ class Circuit:
     def add_noise(
         self,
         noise: Noise,
-        target_gates: Union[str, List[str]] = None,
+        target_gates: Union[str, Iterable[str]] = None,
         target_qubits: QubitSetInput = None,
-        target_times: Union[int, List[int]] = None,
+        target_times: Union[int, Iterable[int]] = None,
         insert_strategy: str = "inclusive",
     ) -> Circuit:
         """
@@ -466,14 +466,14 @@ class Circuit:
             noise (Noise): Noise to be added to the circuit. When `noise.qubit_count`>1,
                 `noise.qubit_count` must be the same as `qubit_count` of gates specified by
                 `target_gates`.
-            targer_gates (Union[str, List[str]): Name or List of name of gates which
+            targer_gates (Union[str, Iterable[str]): Name or List of name of gates which
                 `noise` is added to. If None, `noise` is added only according to
                 `target_qubits` and `target_times`. None should be used when users want
                 to add `noise` to a ciruit moment that has no gate.
             target_qubits (QubitSetInput): Index or indices of qubit(s). When `target_gates`
                 is not None, the usage of `target_qubits` is determined by `insert_strategy`.
                 Default=None.
-            target_times (Union[int, List[int]]): Index of indices of time which `noise`
+            target_times (Union[int, Iterable[int]]): Index of indices of time which `noise`
                 is added to. Default=None.
             insert_strategy (str): Rule of how `target_qubit` is used. `insert_strategy`
                 is usded only when `target_gates` is not None. Default="inclusive".
@@ -488,7 +488,7 @@ class Circuit:
 
         Raises:
                 TypeError: If `noise` is not Noise type, `target_gates` is not str,
-                List[str] or None, `target_times` is not int or List[int].
+                Iterable[str] or None, `target_times` is not int or Iterable[int].
 
         Example:
         >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
@@ -561,12 +561,16 @@ class Circuit:
 
         if not isinstance(noise, Noise):
             raise TypeError("noise must be a Noise class")
-        if target_gates and not all(isinstance(s, str) for s in target_gates):
+        if not noise_helpers.type_check_target_gates(target_gates):
             raise TypeError(f"all elements in {target_gates} must be str")
-        if not all(isinstance(time, int) for time in target_times):
-            raise TypeError("target_times must be int or List[int]")
+        if not noise_helpers.type_check_target_times(target_times):
+            raise TypeError("target_times must be int or Iterable[int]")
 
-        return _add_noise(self, noise, target_gates, target_qubits, target_times, insert_strategy)
+        return noise_helpers._add_noise(self, noise,
+                                        target_gates,
+                                        target_qubits,
+                                        target_times,
+                                        insert_strategy)
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """
