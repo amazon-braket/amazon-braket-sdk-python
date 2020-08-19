@@ -268,6 +268,29 @@ def test_add_noise_2QubitNoise_inclusive_3(circuit_3qubit, noise_2qubit):
     assert circ == expected
 
 
+def test_add_noise_2QubitNoise_inclusive_4(circuit_3qubit, noise_2qubit):
+    circ = circuit_3qubit.add_noise(
+        noise_2qubit,
+        target_gates="CZ",
+        target_qubits=QubitSet(0),
+        target_times=None,
+        insert_strategy="inclusive",
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.Z(), 2))
+        .add_instruction(Instruction(Gate.CZ(), [2, 1]))
+        .add_instruction(Instruction(Gate.CNot(), [0, 2]))
+        .add_instruction(Instruction(Gate.CZ(), [1, 2]))
+    )
+
+    assert circ == expected
+
+
 def test_add_noise_2QubitNoise_strict_1(circuit_3qubit, noise_2qubit):
     circ = circuit_3qubit.add_noise(
         noise_2qubit,
