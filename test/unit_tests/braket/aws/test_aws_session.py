@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from botocore.exceptions import ClientError
@@ -171,3 +171,188 @@ def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
     with pytest.raises(ClientError):
         aws_session.get_quantum_task("some-arn")
     aws_session.braket_client.get_quantum_task.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "input,output",
+    [
+        (
+            {},
+            [
+                {
+                    "deviceArn": "arn1",
+                    "deviceName": "name1",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname1",
+                },
+                {
+                    "deviceArn": "arn2",
+                    "deviceName": "name2",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "OFFLINE",
+                    "providerName": "pname1",
+                },
+                {
+                    "deviceArn": "arn3",
+                    "deviceName": "name3",
+                    "deviceType": "QPU",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname2",
+                },
+            ],
+        ),
+        (
+            {"names": ["name1"]},
+            [
+                {
+                    "deviceArn": "arn1",
+                    "deviceName": "name1",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname1",
+                },
+            ],
+        ),
+        (
+            {"types": ["SIMULATOR"]},
+            [
+                {
+                    "deviceArn": "arn1",
+                    "deviceName": "name1",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname1",
+                },
+                {
+                    "deviceArn": "arn2",
+                    "deviceName": "name2",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "OFFLINE",
+                    "providerName": "pname1",
+                },
+            ],
+        ),
+        (
+            {"statuses": ["ONLINE"]},
+            [
+                {
+                    "deviceArn": "arn1",
+                    "deviceName": "name1",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname1",
+                },
+                {
+                    "deviceArn": "arn3",
+                    "deviceName": "name3",
+                    "deviceType": "QPU",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname2",
+                },
+            ],
+        ),
+        (
+            {"provider_names": ["pname2"]},
+            [
+                {
+                    "deviceArn": "arn3",
+                    "deviceName": "name3",
+                    "deviceType": "QPU",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname2",
+                },
+            ],
+        ),
+        (
+            {
+                "provider_names": ["pname2"],
+                "types": ["QPU"],
+                "statuses": ["ONLINE"],
+                "names": ["name3"],
+            },
+            [
+                {
+                    "deviceArn": "arn3",
+                    "deviceName": "name3",
+                    "deviceType": "QPU",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname2",
+                },
+            ],
+        ),
+        (
+            {"provider_names": ["pname1"], "types": ["SIMULATOR"], "statuses": ["ONLINE"],},
+            [
+                {
+                    "deviceArn": "arn1",
+                    "deviceName": "name1",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname1",
+                },
+            ],
+        ),
+    ],
+)
+def test_search_devices(input, output, aws_session):
+    return_value = [
+        {
+            "devices": [
+                {
+                    "deviceArn": "arn1",
+                    "deviceName": "name1",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname1",
+                },
+                {
+                    "deviceArn": "arn2",
+                    "deviceName": "name2",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "OFFLINE",
+                    "providerName": "pname1",
+                },
+                {
+                    "deviceArn": "arn3",
+                    "deviceName": "name3",
+                    "deviceType": "QPU",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname2",
+                },
+            ]
+        }
+    ]
+    mock_paginator = Mock()
+    mock_iterator = MagicMock()
+    aws_session.braket_client.get_paginator.return_value = mock_paginator
+    mock_paginator.paginate.return_value = mock_iterator
+    mock_iterator.__iter__.return_value = return_value
+
+    assert aws_session.search_devices(**input) == output
+
+
+def test_search_devices_arns(aws_session):
+    return_value = [
+        {
+            "devices": [
+                {
+                    "deviceArn": "arn1",
+                    "deviceName": "name1",
+                    "deviceType": "SIMULATOR",
+                    "deviceStatus": "ONLINE",
+                    "providerName": "pname1",
+                }
+            ]
+        }
+    ]
+    mock_paginator = Mock()
+    mock_iterator = MagicMock()
+    aws_session.braket_client.get_paginator.return_value = mock_paginator
+    mock_paginator.paginate.return_value = mock_iterator
+    mock_iterator.__iter__.return_value = return_value
+
+    assert aws_session.search_devices(arns=["arn1"]) == return_value[0]["devices"]
+    mock_paginator.paginate.assert_called_with(
+        filters=[{"name": "deviceArn", "values": ["arn1"]},], PaginationConfig={"MaxItems": 100}
+    )
