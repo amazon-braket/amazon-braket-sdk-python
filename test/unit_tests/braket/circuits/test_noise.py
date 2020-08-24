@@ -16,7 +16,7 @@ def noise():
 
 @pytest.fixture
 def probability_noise():
-    return ProbabilityNoise(prob=0.1, qubit_count=1, ascii_symbols=["foo"])
+    return ProbabilityNoise(probability=0.1, qubit_count=1, ascii_symbols=["foo"])
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -38,11 +38,11 @@ def test_invalid_data_ascii_symbols_length(qubit_count, ascii_symbols):
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("prob", invalid_data_prob)
-def test_invalid_data_prob(prob):
+@pytest.mark.parametrize("probability", invalid_data_prob)
+def test_invalid_data_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    ProbabilityNoise(prob, qubit_count, ascii_symbols)
+    ProbabilityNoise(probability, qubit_count, ascii_symbols)
 
 
 def test_ascii_symbols(noise):
@@ -69,8 +69,8 @@ def test_noise_str(noise):
 
 
 def test_probability_noise_str(probability_noise):
-    expected = "{}('prob': {}, 'qubit_count': {})".format(
-        probability_noise.name, probability_noise.prob, probability_noise.qubit_count
+    expected = "{}('probability': {}, 'qubit_count': {})".format(
+        probability_noise.name, probability_noise.probability, probability_noise.qubit_count
     )
     assert str(probability_noise) == expected
 
@@ -78,7 +78,7 @@ def test_probability_noise_str(probability_noise):
 def test_equality():
     noise_1 = Noise(qubit_count=1, ascii_symbols=["foo"])
     noise_2 = Noise(qubit_count=1, ascii_symbols=["foo"])
-    other_noise = Noise.Amplitude_Damping(prob=0.5)
+    other_noise = Noise.AmplitudeDamping(probability=0.5)
     non_noise = "non noise"
 
     assert noise_1 == noise_2

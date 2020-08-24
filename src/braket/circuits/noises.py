@@ -16,171 +16,184 @@ from braket.circuits.qubit_set import QubitSet, QubitSetInput
 To add a new noise:
     1. Implement the class and extend `Noise`
     2. Add a method with the `@circuit.subroutine(register=True)` decorator. Method name
-       will be added into the `Circuit` class. This method is the default way
-       clients add this noise to a circuit.
+       will be added into the `Circuit` class. This method is the default way clients add
+       this noise to a circuit.
     3. Register the class with the `Noise` class via `Noise.register_noise()`.
 """
 
 
-class Bit_Flip(ProbabilityNoise):
+class BitFlip(ProbabilityNoise):
     """Bit flip noise channel."""
 
-    def __init__(self, prob: float):
+    def __init__(self, probability: float):
         super().__init__(
-            prob=prob, qubit_count=1, ascii_symbols=["NB({:.2g})".format(prob)],
+            probability=probability,
+            qubit_count=1,
+            ascii_symbols=["NB({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.Bit_Flip.construct(target=target[0], prob=self.prob)
+        return ir.BitFlip.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.sqrt(1 - self.prob) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
-        K1 = np.sqrt(self.prob) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
+        K0 = np.sqrt(1 - self.probability) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        K1 = np.sqrt(self.probability) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
         return [K0, K1]
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def bit_flip(target: QubitSetInput, prob: float) -> Iterable[Instruction]:
+    def bit_flip(target: QubitSetInput, probability: float) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
-            prob (float): Probability of bit flipping.
+            probability (float): Probability of bit flipping.
 
         Returns:
-            Iterable[Instruction]: `Iterable` of Bit_Flip instructions.
+            Iterable[Instruction]: `Iterable` of BitFlip instructions.
 
         Examples:
-            >>> circ = Circuit().bit_flip(0, prob=0.1)
-        """
-        return [Instruction(Noise.Bit_Flip(prob=prob), target=qubit) for qubit in QubitSet(target)]
-
-
-Noise.register_noise(Bit_Flip)
-
-
-class Phase_Flip(ProbabilityNoise):
-    """Phase flip noise channel."""
-
-    def __init__(self, prob: float):
-        super().__init__(
-            prob=prob, qubit_count=1, ascii_symbols=["NP({:.2g})".format(prob)],
-        )
-
-    def to_ir(self, target: QubitSet):
-        return ir.Phase_Flip.construct(target=target[0], prob=self.prob)
-
-    def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.sqrt(1 - self.prob) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
-        K1 = np.sqrt(self.prob) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
-        return [K0, K1]
-
-    @staticmethod
-    @circuit.subroutine(register=True)
-    def phase_flip(target: QubitSetInput, prob: float) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
-
-        Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
-            prob (float): Probability of phase flipping.
-
-        Returns:
-            Iterable[Instruction]: `Iterable` of Phase_Flip instructions.
-
-        Examples:
-            >>> circ = Circuit().phase_flip(0, prob=0.1)
+            >>> circ = Circuit().bit_flip(0, probability=0.1)
         """
         return [
-            Instruction(Noise.Phase_Flip(prob=prob), target=qubit) for qubit in QubitSet(target)
+            Instruction(Noise.BitFlip(probability=probability), target=qubit)
+            for qubit in QubitSet(target)
         ]
 
 
-Noise.register_noise(Phase_Flip)
+Noise.register_noise(BitFlip)
+
+
+class PhaseFlip(ProbabilityNoise):
+    """Phase flip noise channel."""
+
+    def __init__(self, probability: float):
+        super().__init__(
+            probability=probability,
+            qubit_count=1,
+            ascii_symbols=["NP({:.2g})".format(probability)],
+        )
+
+    def to_ir(self, target: QubitSet):
+        return ir.PhaseFlip.construct(target=target[0], probability=self.probability)
+
+    def to_matrix(self) -> Iterable[np.ndarray]:
+        K0 = np.sqrt(1 - self.probability) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        K1 = np.sqrt(self.probability) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
+        return [K0, K1]
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def phase_flip(target: QubitSetInput, probability: float) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            probability (float): Probability of phase flipping.
+
+        Returns:
+            Iterable[Instruction]: `Iterable` of PhaseFlip instructions.
+
+        Examples:
+            >>> circ = Circuit().phase_flip(0, probability=0.1)
+        """
+        return [
+            Instruction(Noise.PhaseFlip(probability=probability), target=qubit)
+            for qubit in QubitSet(target)
+        ]
+
+
+Noise.register_noise(PhaseFlip)
 
 
 class Depolarizing(ProbabilityNoise):
     """Depolarizing noise channel."""
 
-    def __init__(self, prob: float):
+    def __init__(self, probability: float):
         super().__init__(
-            prob=prob, qubit_count=1, ascii_symbols=["ND({:.2g})".format(prob)],
+            probability=probability,
+            qubit_count=1,
+            ascii_symbols=["ND({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.Depolarizing.construct(target=target[0], prob=self.prob)
+        return ir.Depolarizing.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.sqrt(1 - self.prob) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
-        K1 = np.sqrt(self.prob / 3) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
-        K2 = np.sqrt(self.prob / 3) * 1j * np.array([[0.0, -1.0], [1.0, 0.0]], dtype=complex)
-        K3 = np.sqrt(self.prob / 3) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
+        K0 = np.sqrt(1 - self.probability) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        K1 = np.sqrt(self.probability / 3) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
+        K2 = np.sqrt(self.probability / 3) * 1j * np.array([[0.0, -1.0], [1.0, 0.0]], dtype=complex)
+        K3 = np.sqrt(self.probability / 3) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
         return [K0, K1, K2, K3]
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def depolarizing(target: QubitSetInput, prob: float) -> Iterable[Instruction]:
+    def depolarizing(target: QubitSetInput, probability: float) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
-            prob (float): Probability of depolarizing.
+            probability (float): Probability of depolarizing.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Depolarizing instructions.
 
         Examples:
-            >>> circ = Circuit().depolarizing(0, prob=0.1)
+            >>> circ = Circuit().depolarizing(0, probability=0.1)
         """
         return [
-            Instruction(Noise.Depolarizing(prob=prob), target=qubit) for qubit in QubitSet(target)
+            Instruction(Noise.Depolarizing(probability=probability), target=qubit)
+            for qubit in QubitSet(target)
         ]
 
 
 Noise.register_noise(Depolarizing)
 
 
-class Amplitude_Damping(ProbabilityNoise):
+class AmplitudeDamping(ProbabilityNoise):
     """Phase flip noise channel."""
 
-    def __init__(self, prob: float):
+    def __init__(self, probability: float):
         super().__init__(
-            prob=prob, qubit_count=1, ascii_symbols=["NA({:.2g})".format(prob)],
+            probability=probability,
+            qubit_count=1,
+            ascii_symbols=["NA({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.Amplitude_Damping.construct(target=target[0], prob=self.prob)
+        return ir.AmplitudeDamping.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.prob)]], dtype=complex)
-        K1 = np.array([[0.0, np.sqrt(self.prob)], [0.0, 0.0]], dtype=complex)
+        K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.probability)]], dtype=complex)
+        K1 = np.array([[0.0, np.sqrt(self.probability)], [0.0, 0.0]], dtype=complex)
         return [K0, K1]
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def amplitude_damping(target: QubitSetInput, prob: float) -> Iterable[Instruction]:
+    def amplitude_damping(target: QubitSetInput, probability: float) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
-            prob (float): Probability of amplitude damping.
+            probability (float): Probability of amplitude damping.
 
         Returns:
-            Iterable[Instruction]: `Iterable` of Amplitude_Damping instructions.
+            Iterable[Instruction]: `Iterable` of AmplitudeDamping instructions.
 
         Examples:
-            >>> circ = Circuit().amplitude_damping(0, prob=0.1)
+            >>> circ = Circuit().amplitude_damping(0, probability=0.1)
         """
         return [
-            Instruction(Noise.Amplitude_Damping(prob=prob), target=qubit)
+            Instruction(Noise.AmplitudeDamping(probability=probability), target=qubit)
             for qubit in QubitSet(target)
         ]
 
 
-Noise.register_noise(Amplitude_Damping)
+Noise.register_noise(AmplitudeDamping)
 
 
 class Kraus(Noise):
-    """User-defined noise channel
+    """User-defined noise channel that uses the provided matrices as Kraus operators
 
     Args:
         matrices (Iterable[np.array]): A list of matrices that define a noise

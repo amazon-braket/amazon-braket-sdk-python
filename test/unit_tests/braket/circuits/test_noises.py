@@ -13,16 +13,14 @@ from braket.ir.jaqcd.shared_models import (
     TwoDimensionalMatrixList,
 )
 
-# testdata = [(Noise.Bit_Flip, "bit_flip", ir.Bit_Flip, [SingleTarget, Probability], {})]
-
 testdata = [
-    (Noise.Bit_Flip, "bit_flip", ir.Bit_Flip, [SingleTarget, Probability], {}),
-    (Noise.Phase_Flip, "phase_flip", ir.Phase_Flip, [SingleTarget, Probability], {}),
+    (Noise.BitFlip, "bit_flip", ir.BitFlip, [SingleTarget, Probability], {}),
+    (Noise.PhaseFlip, "phase_flip", ir.PhaseFlip, [SingleTarget, Probability], {}),
     (Noise.Depolarizing, "depolarizing", ir.Depolarizing, [SingleTarget, Probability], {}),
     (
-        Noise.Amplitude_Damping,
+        Noise.AmplitudeDamping,
         "amplitude_damping",
-        ir.Amplitude_Damping,
+        ir.AmplitudeDamping,
         [SingleTarget, Probability],
         {},
     ),
@@ -68,7 +66,7 @@ def double_target_valid_input(**kwargs):
 
 
 def probability_valid_input(**kwargs):
-    return {"prob": 0.1234}
+    return {"probability": 0.1234}
 
 
 def single_control_valid_input(**kwargs):

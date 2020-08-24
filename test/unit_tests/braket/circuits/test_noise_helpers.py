@@ -25,7 +25,7 @@ def circuit_3qubit():
 
 @pytest.fixture
 def noise_1qubit():
-    return Noise.Bit_Flip(prob=0.1)
+    return Noise.BitFlip(probability=0.1)
 
 
 @pytest.fixture

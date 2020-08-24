@@ -20,17 +20,17 @@ def _add_noise(
     insert_strategy: str,
 ) -> Circuit:
     """ Insert noise into circuit.
-    Add the provided `noise` to gates, qubits and time specified by `target_gates`
-    , `target_qubits` and `target_times`. See the description of circuit.add_noise().
+    Add the provided `noise` to gates, qubits and time specified by `target_gates`,
+    `target_qubits` and `target_times`. See the description of circuit.add_noise().
 
     Args:
-        circ (Circuit): A ciruit where `noise` is added to.
+        circ (Circuit): A circuit where `noise` is added to.
         noise (Noise): A `Noise` class object to be added to the circuit.
-        target_gates (Iterable[str] or None): List of name of gates which `noise` is added to.
-            If None, `noise` is added only according to `target_qubits` and
+        target_gates (Iterable[str] or None): List of name of gates which `noise` is
+            added to. If None, `noise` is added only according to `target_qubits` and
             `target_times`. None should be used when users want to add `noise` to
             a ciruit moment that has no gate.
-        target_qubits (QubitSet): Index or indices of qubit. When `target_gates` is
+        target_qubits (QubitSet): Index or indices of qubits. When `target_gates` is
             not None, the usage of `target_qubits` is determined by `insert_strategy`.
         target_times (Iterable[int]): List of time which `noise` is added to.
         insert_strategy (str): Rule of how `target_qubit` is used. `insert_strategy`
@@ -61,7 +61,7 @@ def _add_noise_to_qubits(
     Args:
         circ (Circuit): A ciruit where `noise` is added to.
         noise (Noise): A Noise class object to be added to the circuit.
-        target_qubits (QubitSet): Index or indices of qubit. `noise` is added to.
+        target_qubits (QubitSet): Index or indices of qubits. `noise` is added to.
         target_times (List[int]): List of time which `noise` is added to.
 
     Returns:
@@ -99,7 +99,7 @@ def _add_noise_to_gates(
         circ (Circuit): A ciruit where `noise` is added to.
         noise (Noise): A `Noise` class object to be added to the circuit.
         target_gates (Iterable[str]): List of name of gates which `noise` is added to.
-        target_qubits (QubitSet): Index or indices of qubit which `noise` is added to.
+        target_qubits (QubitSet): Index or indices of qubits which `noise` is added to.
         target_times (Iterable[int]): List of time which `noise` is added to.
         insert_strategy (str): Rule of how `target_qubit` is used.
 
@@ -153,11 +153,11 @@ class NoiseInsertStrategy:
 
     @staticmethod
     def _add_1qubit_noise():
-        raise NotImplementedError("_add_1qubit_noise has not been implemented yet.")
+        raise NotImplementedError("_add_1qubit_noise is not implemented.")
 
     @staticmethod
     def _add_Nqubit_noise():
-        raise NotImplementedError("_add_Nqubit_noise has not been implemented yet.")
+        raise NotImplementedError("_add_Nqubit_noise is not implemented.")
 
     @classmethod
     def register_strategy(cls, name: str, strategy: "NoiseInsertStrategy"):

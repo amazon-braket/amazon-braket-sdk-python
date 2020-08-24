@@ -1,16 +1,16 @@
 from typing import Any, List, Sequence
 
-from braket.circuits.operator import Operator
+from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
 
 
-class Noise(Operator):
+class Noise(QuantumOperator):
     """
-    Class `Noise` represents a noise channel that operates on N qubits. Noise are considered as
-    building blocks of quantum circuits that simulate noise. It can be used as an operator in an
-    Instruction() object. It appears in the diagram when user prints a circuit with Noise.
-    This class is considered the noise channel definition containing the metadata that defines
-    what a noise channel is and what it does.
+    Class `Noise` represents a noise channel that operates on one or multiple qubits. Noise
+    are considered as building blocks of quantum circuits that simulate noise. It can be
+    used as an operator in an Instruction() object. It appears in the diagram when user prints
+    a circuit with Noise. This class is considered the noise channel definition containing
+    the metadata that defines what a noise channel is and what it does.
     """
 
     def __init__(
@@ -19,10 +19,10 @@ class Noise(Operator):
         """
         Args:
             qubit_count (int): Number of qubits this noise channel interacts with.
-            ascii_symbols (Sequence[str]): ASCII string symbols for this noise channel. These are
-                used when printing a diagram of circuits. Length must be the same as `qubit_count`
-                , and index ordering is expected to correlate with target ordering on the
-                instruction.
+            ascii_symbols (Sequence[str]): ASCII string symbols for this noise channel. These
+                are used when printing a diagram of circuits. Length must be the same as
+                `qubit_count`, and index ordering is expected to correlate with target ordering
+                on the instruction.
 
         Raises:
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are None, or
@@ -104,10 +104,11 @@ class ProbabilityNoise(Noise):
     and is parameterized by a probability.
     """
 
-    def __init__(self, prob: float, qubit_count: int, ascii_symbols: Sequence[str]):
+    def __init__(self, probability: float, qubit_count: int, ascii_symbols: Sequence[str]):
         """
         Args:
-            prob (float): The probability of noise, a parameter that generates Kraus matrices.
+            probability (float): The probability of noise, a parameter that generates Kraus
+                matrices.
             qubit_count (int): The number of qubits that this noise interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -115,25 +116,25 @@ class ProbabilityNoise(Noise):
 
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `prob` is not `float`, `prob`>1.0, pr
-                `prob`<0.0
+                `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
+                `probability`>1.0, or `probability`<0.0
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(prob, float):
-            raise ValueError("prob must be float type")
-        if not (prob <= 1.0 and prob >= 0.0):
-            raise ValueError("prob must a real number in the interval [0,1]")
-        self._prob = prob
+        if not isinstance(probability, float):
+            raise ValueError("probability must be float type")
+        if not (probability <= 1.0 and probability >= 0.0):
+            raise ValueError("probability must be a real number in the interval [0,1]")
+        self._probability = probability
 
     @property
-    def prob(self) -> float:
+    def probability(self) -> float:
         """ Returns the probability parameter for the noise.
 
         Returns:
-            prob (float): The probability that parameterizes the Kraus matrices.
+            probability (float): The probability that parameterizes the Kraus matrices.
         """
-        return self._prob
+        return self._probability
 
     def __repr__(self):
-        return f"{self.name}('prob': {self.prob}, 'qubit_count': {self.qubit_count})"
+        return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"

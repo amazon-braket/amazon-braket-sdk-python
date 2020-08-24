@@ -449,34 +449,32 @@ class Circuit:
         insert_strategy: str = "inclusive",
     ) -> Circuit:
         """
-        Add the provided `noise` to gates, qubits and time specified by `target_gates`,
-         `target_qubits` and `target_times`. When `target_gates`=None, `noise` is added
-        to the specified qubits and time. When `target_qubits`=None, `noise` is added to
-        the specified gates and time at all qubits. When `target_times`=None, `noise` is
-        added to the specified gates and qubits at all time. If all `target_gates`,
-        `target_qubits` and `target_times` are None, `noise` is added to every qubit at
-        every time in a circuit.
+        For any parameter that is None, that specification is ignored (e.g. if 'target_gates'
+        and 'target_qubits' are None then the noise is added to all qubits at target_times).
+        If 'target_gates', 'target_qubits', and 'target_times' are all None, then 'noise' is
+        added to every qubit at every moment.
 
         When `target_gates` is not None and `noise.qubit_count`>1, `noise.qubit_count`
         must be the same as `qubit_count` of gates specified by `target_gates`. When
-        `noise.qubit_count`==1, ie. `noise` is a single-qubit noise, `noise` is added
+        `noise.qubit_count`==1, ie. `noise` is single-qubit, `noise` is added
         to all qubits in `target_qubits` that interact with the target gates.
 
         Args:
-            noise (Noise): Noise to be added to the circuit. When `noise.qubit_count`>1,
+            noise (Noise): Noise to be added to the circuit. When `noise.qubit_count` > 1,
                 `noise.qubit_count` must be the same as `qubit_count` of gates specified by
                 `target_gates`.
-            targer_gates (Union[str, Iterable[str]): Name or List of name of gates which
-                `noise` is added to. If None, `noise` is added only according to
+            target_gates (Union[str, Iterable[str], optional]): Name or List of name of gates
+                which `noise` is added to. If None, `noise` is added only according to
                 `target_qubits` and `target_times`. None should be used when users want
                 to add `noise` to a ciruit moment that has no gate.
-            target_qubits (QubitSetInput): Index or indices of qubit(s). When `target_gates`
-                is not None, the usage of `target_qubits` is determined by `insert_strategy`.
-                Default=None.
-            target_times (Union[int, Iterable[int]]): Index of indices of time which `noise`
-                is added to. Default=None.
-            insert_strategy (str): Rule of how `target_qubit` is used. `insert_strategy`
-                is usded only when `target_gates` is not None. Default="inclusive".
+            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s). When
+                `target_gates` is not None, the usage of `target_qubits` is determined by
+                `insert_strategy`. Default=None.
+            target_times (Union[int, Iterable[int], optional]): Index of indices of time which
+                `noise` is added to. Default=None.
+            insert_strategy (Union[str, optional]): Rule of how `target_qubit` is used.
+                `insert_strategy` is used only when `target_gates` is not None.
+                Default="inclusive".
                 Options:
                     "strict": Insert noise to a gate when `gate.target` exactly matches
                         `target_qubits`. Sensitive to the order of qubits.
@@ -498,7 +496,7 @@ class Circuit:
                       |
             q1 : -Y-X-X-
             T  : |0|1|2|
-        >>> noise = Noise.Bit_Flip(prob=0.1)
+        >>> noise = Noise.Bit_Flip(probability=0.1)
         >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
         >>> print(circ.add_noise(noise, target_gates = 'X'))
             T  : |    0    |    1    |2|
