@@ -7,21 +7,21 @@ from braket.ir.jaqcd.shared_models import (
     DoubleControl,
     DoubleTarget,
     MultiTarget,
-    Probability,
     SingleControl,
+    SingleProbability,
     SingleTarget,
     TwoDimensionalMatrixList,
 )
 
 testdata = [
-    (Noise.BitFlip, "bit_flip", ir.BitFlip, [SingleTarget, Probability], {}),
-    (Noise.PhaseFlip, "phase_flip", ir.PhaseFlip, [SingleTarget, Probability], {}),
-    (Noise.Depolarizing, "depolarizing", ir.Depolarizing, [SingleTarget, Probability], {}),
+    (Noise.BitFlip, "bit_flip", ir.BitFlip, [SingleTarget, SingleProbability], {}),
+    (Noise.PhaseFlip, "phase_flip", ir.PhaseFlip, [SingleTarget, SingleProbability], {}),
+    (Noise.Depolarizing, "depolarizing", ir.Depolarizing, [SingleTarget, SingleProbability], {}),
     (
         Noise.AmplitudeDamping,
         "amplitude_damping",
         ir.AmplitudeDamping,
-        [SingleTarget, Probability],
+        [SingleTarget, SingleProbability],
         {},
     ),
     (
@@ -99,7 +99,7 @@ def two_dimensional_matrix_list_valid_input(**kwargs):
 valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
-    "Probability": probability_valid_input,
+    "SingleProbability": probability_valid_input,
     "SingleControl": single_control_valid_input,
     "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
@@ -148,7 +148,7 @@ def create_valid_target_input(irsubclasses):
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif subclass == Probability or subclass == TwoDimensionalMatrixList:
+        elif subclass == SingleProbability or subclass == TwoDimensionalMatrixList:
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -158,7 +158,7 @@ def create_valid_target_input(irsubclasses):
 
 def create_valid_noise_class_input(irsubclasses, **kwargs):
     input = {}
-    if Probability in irsubclasses:
+    if SingleProbability in irsubclasses:
         input.update(probability_valid_input())
     if TwoDimensionalMatrixList in irsubclasses:
         input.update(two_dimensional_matrix_list_valid_input(**kwargs))
@@ -184,7 +184,7 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif subclass == Probability or subclass == TwoDimensionalMatrixList:
+        elif subclass == SingleProbability or subclass == TwoDimensionalMatrixList:
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -227,7 +227,7 @@ def test_noise_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwa
             )
         subroutine = getattr(Circuit(), subroutine_name)
         subroutine_input = {"target": multi_targets}
-        if Probability in irsubclasses:
+        if SingleProbability in irsubclasses:
             subroutine_input.update(probability_valid_input())
 
         circuit1 = subroutine(**subroutine_input)
