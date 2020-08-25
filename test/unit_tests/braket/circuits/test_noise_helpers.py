@@ -53,6 +53,30 @@ def test_add_noise_invalid_target_times_type(circuit_2qubit, noise_1qubit, targe
     circuit_2qubit.add_noise(noise_1qubit, target_times=target_times)
 
 
+def test_add_for_noise(circuit_2qubit, noise_1qubit):
+    circ = circuit_2qubit.add(
+        noise_1qubit,
+        target_gates="X",
+        target_qubits=None,
+        target_times=range(circuit_2qubit.depth),
+        insert_strategy="inclusive",
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+    )
+
+    assert circ == expected
+
+
 def test_add_noise_1QubitNoise_inclusive_1(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.add_noise(
         noise_1qubit,

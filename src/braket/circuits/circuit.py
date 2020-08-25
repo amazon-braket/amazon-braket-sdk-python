@@ -615,7 +615,9 @@ class Circuit:
                 yield addable
 
         for item in _flatten(addable):
-            if isinstance(item, Instruction):
+            if isinstance(item, Noise):
+                self.add_noise(item, *args, **kwargs)
+            elif isinstance(item, Instruction):
                 self.add_instruction(item, *args, **kwargs)
             elif isinstance(item, ResultType):
                 self.add_result_type(item, *args, **kwargs)
