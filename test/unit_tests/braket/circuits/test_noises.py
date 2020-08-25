@@ -24,6 +24,7 @@ testdata = [
         [SingleTarget, SingleProbability],
         {},
     ),
+    (Noise.PhaseDamping, "phase_damping", ir.PhaseDamping, [SingleTarget, SingleProbability], {},),
     (
         Noise.Kraus,
         "kraus",

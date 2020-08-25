@@ -151,7 +151,7 @@ Noise.register_noise(Depolarizing)
 
 
 class AmplitudeDamping(ProbabilityNoise):
-    """Phase flip noise channel."""
+    """AmplitudeDamping noise channel."""
 
     def __init__(self, probability: float):
         super().__init__(
@@ -190,6 +190,48 @@ class AmplitudeDamping(ProbabilityNoise):
 
 
 Noise.register_noise(AmplitudeDamping)
+
+
+class PhaseDamping(ProbabilityNoise):
+    """Phase damping noise channel."""
+
+    def __init__(self, probability: float):
+        super().__init__(
+            probability=probability,
+            qubit_count=1,
+            ascii_symbols=["NPD({:.2g})".format(probability)],
+        )
+
+    def to_ir(self, target: QubitSet):
+        return ir.PhaseDamping.construct(target=target[0], probability=self.probability)
+
+    def to_matrix(self) -> Iterable[np.ndarray]:
+        K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.probability)]], dtype=complex)
+        K1 = np.array([[0.0, 0.0], [0.0, np.sqrt(self.probability)]], dtype=complex)
+        return [K0, K1]
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def phase_damping(target: QubitSetInput, probability: float) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            probability (float): Probability of phase damping.
+
+        Returns:
+            Iterable[Instruction]: `Iterable` of PhaseDamping instructions.
+
+        Examples:
+            >>> circ = Circuit().phase_damping(0, probability=0.1)
+        """
+        return [
+            Instruction(Noise.PhaseDamping(probability=probability), target=qubit)
+            for qubit in QubitSet(target)
+        ]
+
+
+Noise.register_noise(PhaseDamping)
 
 
 class Kraus(Noise):
