@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _add_noise(
-    circ: Circuit,
+    circuit: Circuit,
     noise: Noise,
     target_gates: Iterable[str],
     target_qubits: QubitSetInput,
@@ -24,7 +24,7 @@ def _add_noise(
     `target_qubits` and `target_times`. See the description of circuit.add_noise().
 
     Args:
-        circ (Circuit): A circuit where `noise` is added to.
+        circuit (Circuit): A circuit where `noise` is added to.
         noise (Noise): A `Noise` class object to be added to the circuit.
         target_gates (Iterable[str] or None): List of name of gates which `noise` is
             added to. If None, `noise` is added only according to `target_qubits` and
@@ -34,32 +34,32 @@ def _add_noise(
             not None, the usage of `target_qubits` is determined by `insert_strategy`.
         target_times (Iterable[int]): List of time which `noise` is added to.
         insert_strategy (str): Rule of how `target_qubit` is used. `insert_strategy`
-            is usded only when `target_gates` is not None.
+            is used only when `target_gates` is not None.
             "strict": Insert noise to a gate when `gate.target` exactly matches
                 `target_qubits`. Sensitive to order of qubits.
-            "inclusive":Insert noise to a gate when the target of the gate is a subset
+            "inclusive": Insert noise to a gate when the target of the gate is a subset
                 of `target_qubits`.
 
     Returns:
         Circuit: modified circuit.
     """
     if target_gates:
-        circ = _add_noise_to_gates(
-            circ, noise, target_gates, target_qubits, target_times, insert_strategy
+        circuit = _add_noise_to_gates(
+            circuit, noise, target_gates, target_qubits, target_times, insert_strategy
         )
     else:
-        circ = _add_noise_to_qubits(circ, noise, target_qubits, target_times)
+        circuit = _add_noise_to_qubits(circuit, noise, target_qubits, target_times)
 
-    return circ
+    return circuit
 
 
 def _add_noise_to_qubits(
-    circ: Circuit, noise: Noise, target_qubits: QubitSet, target_times: Iterable[int]
+    circuit: Circuit, noise: Noise, target_qubits: QubitSet, target_times: Iterable[int]
 ) -> Circuit:
     """ Insert noise to the given time and qubits.
 
     Args:
-        circ (Circuit): A ciruit where `noise` is added to.
+        circuit (Circuit): A ciruit where `noise` is added to.
         noise (Noise): A Noise class object to be added to the circuit.
         target_qubits (QubitSet): Index or indices of qubits. `noise` is added to.
         target_times (List[int]): List of time which `noise` is added to.
@@ -73,20 +73,20 @@ def _add_noise_to_qubits(
         noise_instructions = [Instruction(noise, target_qubits)]
 
     new_moments = Moments()
-    time_slices = circ.moments.time_slices()
-    for time in range(circ.depth):
+    time_slices = circuit.moments.time_slices()
+    for time in range(circuit.depth):
         # add existing instructions
         new_moments.add(time_slices[time])
         # add noise
         if time in target_times:
             new_moments.add(noise_instructions)
 
-    circ._moments = new_moments
-    return circ
+    circuit._moments = new_moments
+    return circuit
 
 
 def _add_noise_to_gates(
-    circ: Circuit,
+    circuit: Circuit,
     noise: Noise,
     target_gates: Iterable[str],
     target_qubits: QubitSet,
@@ -96,7 +96,7 @@ def _add_noise_to_gates(
     """ Insert noise to the given time, qubits and gates.
 
     Args:
-        circ (Circuit): A ciruit where `noise` is added to.
+        circuit (Circuit): A ciruit where `noise` is added to.
         noise (Noise): A `Noise` class object to be added to the circuit.
         target_gates (Iterable[str]): List of name of gates which `noise` is added to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is added to.
@@ -108,9 +108,9 @@ def _add_noise_to_gates(
     """
     strategy = getattr(NoiseInsertStrategy, insert_strategy)
     new_moments = Moments()
-    for moment_key in circ.moments:
+    for moment_key in circuit.moments:
         # add existing instruction
-        instruction = circ.moments[moment_key]
+        instruction = circuit.moments[moment_key]
         new_moments.add([instruction])
         # add noise
         if instruction.operator.name in target_gates and moment_key.time in target_times:
@@ -119,8 +119,8 @@ def _add_noise_to_gates(
             else:
                 strategy._add_Nqubit_noise(new_moments, instruction, noise, target_qubits)
 
-    circ._moments = new_moments
-    return circ
+    circuit._moments = new_moments
+    return circuit
 
 
 def type_check_target_gates(target_gates):

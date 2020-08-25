@@ -454,9 +454,9 @@ class Circuit:
         If 'target_gates', 'target_qubits', and 'target_times' are all None, then 'noise' is
         added to every qubit at every moment.
 
-        When `target_gates` is not None and `noise.qubit_count`>1, `noise.qubit_count`
+        When `target_gates` is not None and `noise.qubit_count` > 1, `noise.qubit_count`
         must be the same as `qubit_count` of gates specified by `target_gates`. When
-        `noise.qubit_count`==1, ie. `noise` is single-qubit, `noise` is added
+        `noise.qubit_count` == 1, ie. `noise` is single-qubit, `noise` is added
         to all qubits in `target_qubits` that interact with the target gates.
 
         Args:
@@ -489,55 +489,55 @@ class Circuit:
                 Iterable[str] or None, `target_times` is not int or Iterable[int].
 
         Example:
-        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-        >>> print(circ)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ)
             T  : |0|1|2|
             q0 : -X-Z-C-
                       |
             q1 : -Y-X-X-
             T  : |0|1|2|
-        >>> noise = Noise.Bit_Flip(probability=0.1)
-        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-        >>> print(circ.add_noise(noise, target_gates = 'X'))
+            >>> noise = Noise.Bit_Flip(probability=0.1)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.add_noise(noise, target_gates = 'X'))
             T  : |    0    |    1    |2|
             q0 : -X-NB(0.1)-Z---------C-
                                       |
             q1 : -Y---------X-NB(0.1)-X-
             T  : |    0    |    1    |2|
-        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-        >>> print(circ.add_noise(noise, target_qubits = 1))
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.add_noise(noise, target_qubits = 1))
             T  : |    0    |    1    |    2    |
             q0 : -X---------Z---------C---------
                                       |
             q1 : -Y-NB(0.1)-X-NB(0.1)-X-NB(0.1)-
             T  : |    0    |    1    |    2    |
-        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-        >>> print(circ.add_noise(noise, target_gates = 'X', target_qubits = 1))
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.add_noise(noise, target_gates = 'X', target_qubits = 1))
             T  : |0|    1    |2|
             q0 : -X-Z---------C-
                               |
             q1 : -Y-X-NB(0.1)-X-
             T  : |0|    1    |2|
-        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-        >>> print(circ.add_noise(noise, target_gates = ['X','Y'], target_qubits = [0,1]))
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.add_noise(noise, target_gates = ['X','Y'], target_qubits = [0,1]))
             T  : |    0    |    1    |2|
             q0 : -X-NB(0.1)-Z---------C-
                                       |
             q1 : -Y-NB(0.1)-X-NB(0.1)-X-
             T  : |    0    |    1    |2|
-        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-        >>> print(circ.add_noise(noise, target_times=[0,2]))
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.add_noise(noise, target_times=[0,2]))
             T  : |    0    |1|    2    |
             q0 : -X-NB(0.1)-Z-C-NB(0.1)-
                               |
             q1 : -Y-NB(0.1)-X-X-NB(0.1)-
             T  : |    0    |1|    2    |
-        >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-        >>> print(circ.add_noise(noise,
-        ...                      target_gates = ['X','Y'],
-        ...                      target_qubits = [0,1],
-        ...                      target_times=1)
-        ... )
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.add_noise(noise,
+            ...                      target_gates = ['X','Y'],
+            ...                      target_qubits = [0,1],
+            ...                      target_times=1)
+            ... )
             T  : |0|    1    |2|
             q0 : -X-Z---------C-
                               |
