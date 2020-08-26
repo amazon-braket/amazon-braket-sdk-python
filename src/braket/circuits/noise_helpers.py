@@ -105,7 +105,12 @@ def _add_noise_to_gates(
         instruction = circuit.moments[moment_key]
         new_moments.add([instruction])
         # add noise
-        if _check_target(moment_key, instruction, target_gates, target_qubits, target_times):
+        # (If adding different insert strategies in the future, consider moving these rules
+        # to a separate function or class.)
+        gate_rule = instruction.operator.name in target_gates
+        qubit_rule = len(target_qubits) == 0 or instruction.target.issubset(target_qubits)
+        time_rule = target_times is None or moment_key.time in target_times
+        if gate_rule and qubit_rule and time_rule:
             if noise.qubit_count == 1:
                 for qubit in instruction.target:
                     new_moments.add([Instruction(noise, qubit)])
@@ -113,13 +118,3 @@ def _add_noise_to_gates(
                 new_moments.add([Instruction(noise, instruction.target)])
     circuit._moments = new_moments
     return circuit
-
-
-def _check_target(moment_key, instruction, target_gates, target_qubits, target_times):
-    """ Check if an instruction satisfies the target_gates, target_qubits and target_times.
-    """
-    gate_rule = instruction.operator.name in target_gates
-    qubit_rule = len(target_qubits) == 0 or instruction.target.issubset(target_qubits)
-    time_rule = target_times is None or moment_key.time in target_times
-
-    return gate_rule and qubit_rule and time_rule
