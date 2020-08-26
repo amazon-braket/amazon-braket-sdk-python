@@ -88,9 +88,10 @@ class Noise(QuantumOperator):
         setattr(cls, noise.__name__, noise)
 
 
-class ProbabilityNoise(Noise):
+class ProbabilisticNoise(Noise):
     """
-    Class `ProbabilityNoise` represents a noise channel on N qubits parameterized by a probability.
+    Class `ProbabilisticNoise` represents a noise channel on N qubits parameterized by
+    a probability.
     """
 
     def __init__(self, probability: float, qubit_count: int, ascii_symbols: Sequence[str]):

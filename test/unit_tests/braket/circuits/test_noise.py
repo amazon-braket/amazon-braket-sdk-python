@@ -1,7 +1,7 @@
 import pytest
 
 from braket.circuits import Operator
-from braket.circuits.noise import Noise, ProbabilityNoise
+from braket.circuits.noise import Noise, ProbabilisticNoise
 
 invalid_data_qubit_count = [(0, ["foo"])]
 invalid_data_ascii_symbols = [(1, None)]
@@ -16,7 +16,7 @@ def noise():
 
 @pytest.fixture
 def probability_noise():
-    return ProbabilityNoise(probability=0.1, qubit_count=1, ascii_symbols=["foo"])
+    return ProbabilisticNoise(probability=0.1, qubit_count=1, ascii_symbols=["foo"])
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -42,7 +42,7 @@ def test_invalid_data_ascii_symbols_length(qubit_count, ascii_symbols):
 def test_invalid_data_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    ProbabilityNoise(probability, qubit_count, ascii_symbols)
+    ProbabilisticNoise(probability, qubit_count, ascii_symbols)
 
 
 def test_ascii_symbols(noise):

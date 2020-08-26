@@ -5,7 +5,7 @@ import numpy as np
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.instruction import Instruction
-from braket.circuits.noise import Noise, ProbabilityNoise
+from braket.circuits.noise import Noise, ProbabilisticNoise
 from braket.circuits.quantum_operator_helpers import (
     is_CPTP,
     verify_quantum_operator_matrix_dimensions,
@@ -22,7 +22,7 @@ To add a new Noise implementation:
 """
 
 
-class BitFlip(ProbabilityNoise):
+class BitFlip(ProbabilisticNoise):
     """Bit flip noise channel."""
 
     def __init__(self, probability: float):
@@ -64,7 +64,7 @@ class BitFlip(ProbabilityNoise):
 Noise.register_noise(BitFlip)
 
 
-class PhaseFlip(ProbabilityNoise):
+class PhaseFlip(ProbabilisticNoise):
     """Phase flip noise channel."""
 
     def __init__(self, probability: float):
@@ -106,7 +106,7 @@ class PhaseFlip(ProbabilityNoise):
 Noise.register_noise(PhaseFlip)
 
 
-class Depolarizing(ProbabilityNoise):
+class Depolarizing(ProbabilisticNoise):
     """Depolarizing noise channel."""
 
     def __init__(self, probability: float):
@@ -150,7 +150,7 @@ class Depolarizing(ProbabilityNoise):
 Noise.register_noise(Depolarizing)
 
 
-class AmplitudeDamping(ProbabilityNoise):
+class AmplitudeDamping(ProbabilisticNoise):
     """AmplitudeDamping noise channel."""
 
     def __init__(self, probability: float):
@@ -192,7 +192,7 @@ class AmplitudeDamping(ProbabilityNoise):
 Noise.register_noise(AmplitudeDamping)
 
 
-class PhaseDamping(ProbabilityNoise):
+class PhaseDamping(ProbabilisticNoise):
     """Phase damping noise channel."""
 
     def __init__(self, probability: float):
