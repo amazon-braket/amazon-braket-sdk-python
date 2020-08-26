@@ -35,6 +35,8 @@ class BitFlip(ProbabilisticNoise):
               [1.  0.]
 
         p = probability
+
+    This noise channel is shown as `NBF` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
@@ -89,6 +91,8 @@ class PhaseFlip(ProbabilisticNoise):
               [0.  -1.]
 
         p = probability
+
+    This noise channel is shown as `NPF` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
@@ -152,6 +156,8 @@ class Depolarizing(ProbabilisticNoise):
               [0.  -1.]
 
         p = probability
+
+    This noise channel is shown as `ND` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
@@ -208,6 +214,8 @@ class AmplitudeDamping(ProbabilisticNoise):
                 [0.  0.     ]
 
         p = probability
+
+    This noise channel is shown as `NAD` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
@@ -262,6 +270,8 @@ class PhaseDamping(ProbabilisticNoise):
                 [0.  sqrt(p)]
 
         p = probability
+
+    This noise channel is shown as `NPD` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
@@ -305,6 +315,7 @@ Noise.register_noise(PhaseDamping)
 
 class Kraus(Noise):
     """User-defined noise channel that uses the provided matrices as Kraus operators
+    This noise channel is shown as `NK` in circuit diagrams.     
 
     Args:
         matrices (Iterable[np.array]): A list of matrices that define a noise
