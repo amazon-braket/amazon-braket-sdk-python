@@ -36,3 +36,27 @@ def test_device_across_regions(aws_session):
     # assert QPUs across different regions can be created using the same aws_session
     AwsDevice(RIGETTI_ARN, aws_session)
     AwsDevice(IONQ_ARN, aws_session)
+
+
+@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (DWAVE_ARN), (SIMULATOR_ARN)])
+def test_get_devices_arn(arn):
+    results = AwsDevice.get_devices(arns=[arn])
+    assert results[0].arn == arn
+
+
+def test_get_devices_others():
+    provider_names = ["Amazon Braket"]
+    types = ["SIMULATOR"]
+    statuses = ["ONLINE"]
+    results = AwsDevice.get_devices(provider_names=provider_names, types=types, statuses=statuses)
+    assert results
+    for result in results:
+        assert result.provider_name in provider_names
+        assert result.type in types
+        assert result.status in statuses
+
+
+def test_get_devices_all():
+    result_arns = [result.arn for result in AwsDevice.get_devices()]
+    for arn in [DWAVE_ARN, RIGETTI_ARN, IONQ_ARN, SIMULATOR_ARN]:
+        assert arn in result_arns
