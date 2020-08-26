@@ -446,7 +446,6 @@ class Circuit:
         target_gates: Union[str, Iterable[str]] = None,
         target_qubits: QubitSetInput = None,
         target_times: Union[int, Iterable[int]] = None,
-        insert_strategy: str = "inclusive",
     ) -> Circuit:
         """
         For any parameter that is None, that specification is ignored (e.g. if 'target_gates'
@@ -472,14 +471,6 @@ class Circuit:
                 `insert_strategy`. Default=None.
             target_times (Union[int, Iterable[int], optional]): Index of indices of time which
                 `noise` is added to. Default=None.
-            insert_strategy (Union[str, optional]): Rule of how `target_qubit` is used.
-                `insert_strategy` is used only when `target_gates` is not None.
-                Default="inclusive".
-                Options:
-                    "strict": Insert noise to a gate when `gate.target` exactly matches
-                        `target_qubits`. Sensitive to the order of qubits.
-                    "inclusive": Insert noise to a gate when `gate.target` is a subset
-                        of `target_qubits`.
 
         Returns:
             Circuit: self
@@ -548,25 +539,25 @@ class Circuit:
 
         if isinstance(target_gates, str):
             target_gates = [target_gates]
-        if target_qubits is None:
-            target_qubits = QubitSet(range(self.qubit_count))
-        else:
-            target_qubits = QubitSet(target_qubits)
-        if target_times is None:
-            target_times = range(self.depth)
         if isinstance(target_times, int):
             target_times = [target_times]
+        target_qubits = QubitSet(target_qubits)
 
         if not isinstance(noise, Noise):
             raise TypeError("noise must be a Noise class")
-        if not noise_helpers.type_check_target_gates(target_gates):
-            raise TypeError(f"all elements in {target_gates} must be str")
-        if not noise_helpers.type_check_target_times(target_times):
-            raise TypeError("target_times must be int or Iterable[int]")
+        if target_gates is not None:
+            if not (
+                isinstance(target_gates, Iterable) and all(isinstance(s, str) for s in target_gates)
+            ):
+                raise TypeError(f"all elements in {target_gates} must be str")
+        if target_times is not None:
+            if not (
+                isinstance(target_times, Iterable) and all(isinstance(t, int) for t in target_times)
+            ):
+                raise TypeError("target_times must be int or Iterable[int]")
+        # check noise.qubit_count
 
-        return noise_helpers._add_noise(
-            self, noise, target_gates, target_qubits, target_times, insert_strategy
-        )
+        return noise_helpers._add_noise(self, noise, target_gates, target_qubits, target_times)
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """
