@@ -13,7 +13,7 @@ from braket.circuits.quantum_operator_helpers import (
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 """
-To add a new noise:
+To add a new Noise implementation:
     1. Implement the class and extend `Noise`
     2. Add a method with the `@circuit.subroutine(register=True)` decorator. Method name
        will be added into the `Circuit` class. This method is the default way clients add
@@ -36,7 +36,7 @@ class BitFlip(ProbabilityNoise):
         return ir.BitFlip.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.sqrt(1 - self.probability) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
         return [K0, K1]
 
@@ -78,7 +78,7 @@ class PhaseFlip(ProbabilityNoise):
         return ir.PhaseFlip.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.sqrt(1 - self.probability) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
         return [K0, K1]
 
@@ -120,7 +120,7 @@ class Depolarizing(ProbabilityNoise):
         return ir.Depolarizing.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.sqrt(1 - self.probability) * np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability / 3) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
         K2 = np.sqrt(self.probability / 3) * 1j * np.array([[0.0, -1.0], [1.0, 0.0]], dtype=complex)
         K3 = np.sqrt(self.probability / 3) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)

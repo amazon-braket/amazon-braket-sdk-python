@@ -8,7 +8,7 @@ class Noise(QuantumOperator):
     """
     Class `Noise` represents a noise channel that operates on one or multiple qubits. Noise
     are considered as building blocks of quantum circuits that simulate noise. It can be
-    used as an operator in an Instruction() object. It appears in the diagram when user prints
+    used as an operator in an Instruction object. It appears in the diagram when user prints
     a circuit with Noise. This class is considered the noise channel definition containing
     the metadata that defines what a noise channel is and what it does.
     """
@@ -100,8 +100,7 @@ class Noise(QuantumOperator):
 
 class ProbabilityNoise(Noise):
     """
-    Class `ProbabilityNoise` represents a noise channel that operates on N qubits
-    and is parameterized by a probability.
+    Class `ProbabilityNoise` represents a noise channel on N qubits parameterized by a probability.
     """
 
     def __init__(self, probability: float, qubit_count: int, ascii_symbols: Sequence[str]):

@@ -29,9 +29,9 @@ def _add_noise(
             added to. If None, `noise` is added only according to `target_qubits` and
             `target_times`. None should be used when users want to add `noise` to
             a ciruit moment that has no gate.
-        target_qubits (QubitSet): Index or indices of qubits. When `target_gates` is
+        target_qubits (QubitSet or None): Index or indices of qubits. When `target_gates` is
             not None, the usage of `target_qubits` is determined by `insert_strategy`.
-        target_times (Iterable[int]): List of time which `noise` is added to.
+        target_times (Iterable[int] or None): List of time which `noise` is added to.
 
     Returns:
         Circuit: modified circuit.
@@ -42,7 +42,7 @@ def _add_noise(
         for instr in circuit.instructions:
             if (
                 instr.operator.name in target_gates
-                and not instr.operator.qubit_count == len(noise.target)
+                and not instr.operator.qubit_count == noise.qubit_count
             ):
                 raise ValueError("the qubit count of target gates might be the same as the noise")
         circuit = _add_noise_to_gates(circuit, noise, target_gates, target_qubits, target_times)
@@ -64,7 +64,7 @@ def _add_noise_to_qubits(
     Returns:
         Circuit: modified circuit.
     """
-    if len(target_qubits) == 0:
+    if target_qubits is None:
         target_qubits = circuit.qubits
 
     if noise.qubit_count == 1:
@@ -114,7 +114,7 @@ def _add_noise_to_gates(
         # (If adding different insert strategies in the future, consider moving these rules
         # to a separate function or class.)
         gate_rule = instruction.operator.name in target_gates
-        qubit_rule = len(target_qubits) == 0 or instruction.target.issubset(target_qubits)
+        qubit_rule = target_qubits is None or instruction.target.issubset(target_qubits)
         time_rule = target_times is None or moment_key.time in target_times
         if gate_rule and qubit_rule and time_rule:
             if noise.qubit_count == 1:

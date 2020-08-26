@@ -45,7 +45,7 @@ def is_hermitian(matrix: np.array) -> bool:
     Args:
         matrix (np.ndarray): matrix to verify
 
-    Return:
+    Returns:
         bool: If matrix is Hermitian
     """
     return np.allclose(matrix, matrix.conj().T)
@@ -58,7 +58,7 @@ def is_square_matrix(matrix: np.array) -> bool:
     Args:
         matrix (np.ndarray): matrix to verify
 
-    Return:
+    Returns:
         bool: If matrix is square
     """
     return len(matrix.shape) == 2 and matrix.shape[0] == matrix.shape[1]
@@ -71,7 +71,7 @@ def is_unitary(matrix: np.array) -> bool:
     Args:
         matrix (np.ndarray): matrix to verify
 
-    Return:
+    Returns:
         bool: If matrix is unitary
     """
     return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
@@ -85,10 +85,10 @@ def is_CPTP(matrices: Iterable[np.array]) -> bool:
     Reference: Theorem 8.1 in Nielsen & Chuang (2010) 10th edition.
 
     Args:
-        matrices (Iterable[np.array]): a list of matrices representing Kraus operators.
+        matrices (Iterable[np.array]): List of matrices representing Kraus operators.
 
-    Return:
-        bool: if the matrices define a CPTP map.
+    Returns:
+        bool: If the matrices define a CPTP map.
     """
     E = sum([np.dot(matrix.T.conjugate(), matrix) for matrix in matrices])
     return np.allclose(E, np.eye(*E.shape))

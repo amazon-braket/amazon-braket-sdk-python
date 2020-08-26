@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, TypeVar, Union
+from typing import Callable, Dict, Iterable, List, Optional, TypeVar, Union
 
 from braket.circuits import noise_helpers
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
@@ -443,11 +443,13 @@ class Circuit:
     def add_noise(
         self,
         noise: Noise,
-        target_gates: Union[str, Iterable[str]] = None,
-        target_qubits: QubitSetInput = None,
-        target_times: Union[int, Iterable[int]] = None,
+        target_gates: Optional[Union[str, Iterable[str]]] = None,
+        target_qubits: Optional[QubitSetInput] = None,
+        target_times: Optional[Union[int, Iterable[int]]] = None,
     ) -> Circuit:
-        """
+        """ Add `noise` to the circuit according to `target_gates`, `target_qubits` and
+        `target_times`.
+
         For any parameter that is None, that specification is ignored (e.g. if 'target_gates'
         and 'target_qubits' are None then the noise is added to all qubits at target_times).
         If 'target_gates', 'target_qubits', and 'target_times' are all None, then 'noise' is
@@ -477,7 +479,9 @@ class Circuit:
 
         Raises:
                 TypeError: If `noise` is not Noise type, `target_gates` is not str,
-                Iterable[str] or None, `target_times` is not int or Iterable[int].
+                    Iterable[str] or None, `target_times` is not int or Iterable[int],
+                    len(target_gates) is not equal to noise.qubit_count when target_gates is
+                    not None
 
         Example:
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
@@ -541,7 +545,8 @@ class Circuit:
             target_gates = [target_gates]
         if isinstance(target_times, int):
             target_times = [target_times]
-        target_qubits = QubitSet(target_qubits)
+        if target_qubits is not None:
+            target_qubits = QubitSet(target_qubits)
 
         if not isinstance(noise, Noise):
             raise TypeError("noise must be a Noise class")
