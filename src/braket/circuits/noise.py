@@ -1,4 +1,4 @@
-from typing import Any, List, Sequence
+from typing import Any, Sequence
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -39,16 +39,6 @@ class Noise(QuantumOperator):
             msg = f"ascii_symbols, {ascii_symbols}, length must equal qubit_count, {qubit_count}"
             raise ValueError(msg)
         self._ascii_symbols = tuple(ascii_symbols)
-
-    @property
-    def qubit_count(self) -> int:
-        """int: Returns number of qubits this quantum operator interacts with."""
-        return self._qubit_count
-
-    @property
-    def ascii_symbols(self) -> List[str]:
-        """List[str]: Returns the ascii symbols for the quantum operator."""
-        return self._ascii_symbols
 
     @property
     def name(self) -> str:
