@@ -555,7 +555,6 @@ class Circuit:
                 isinstance(target_times, Iterable) and all(isinstance(t, int) for t in target_times)
             ):
                 raise TypeError("target_times must be int or Iterable[int]")
-        # check noise.qubit_count
 
         return noise_helpers._add_noise(self, noise, target_gates, target_qubits, target_times)
 

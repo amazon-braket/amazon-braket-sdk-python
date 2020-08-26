@@ -39,6 +39,12 @@ def _add_noise(
     if target_gates is None:
         circuit = _add_noise_to_qubits(circuit, noise, target_qubits, target_times)
     else:
+        for instr in circuit.instructions:
+            if (
+                instr.operator.name in target_gates
+                and not instr.operator.qubit_count == len(noise.target)
+            ):
+                raise ValueError("the qubit count of target gates might be the same as the noise")
         circuit = _add_noise_to_gates(circuit, noise, target_gates, target_qubits, target_times)
 
     return circuit
