@@ -374,3 +374,35 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_noise_1qubit():
+    circ = Circuit().h(0).x(1).bit_flip(1, 0.1)
+    expected = (
+        "T  : |    0     |",
+        "                 ",
+        "q0 : -H----------",
+        "                 ",
+        "q1 : -X-NBF(0.1)-",
+        "",
+        "T  : |    0     |",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_noise_2qubit():
+    circ = Circuit().h(1).kraus((0, 2), [np.eye(4)])
+    expected = (
+        "T  : | 0  |",
+        "           ",
+        "q0 : ---NK-",
+        "        |  ",
+        "q1 : -H-|--",
+        "        |  ",
+        "q2 : ---NK-",
+        "",
+        "T  : | 0  |",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected

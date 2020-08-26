@@ -491,41 +491,27 @@ class Circuit:
                       |
             q1 : -Y-X-X-
             T  : |0|1|2|
-            >>> noise = Noise.Bit_Flip(probability=0.1)
+            >>> noise = Noise.Depolarizing(probability=0.1)
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ.add_noise(noise, target_gates = 'X'))
             T  : |    0    |    1    |2|
-            q0 : -X-NB(0.1)-Z---------C-
+            q0 : -X-ND(0.1)-Z---------C-
                                       |
-            q1 : -Y---------X-NB(0.1)-X-
+            q1 : -Y---------X-ND(0.1)-X-
             T  : |    0    |    1    |2|
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ.add_noise(noise, target_qubits = 1))
             T  : |    0    |    1    |    2    |
             q0 : -X---------Z---------C---------
                                       |
-            q1 : -Y-NB(0.1)-X-NB(0.1)-X-NB(0.1)-
+            q1 : -Y-ND(0.1)-X-ND(0.1)-X-ND(0.1)-
             T  : |    0    |    1    |    2    |
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.add_noise(noise, target_gates = 'X', target_qubits = 1))
-            T  : |0|    1    |2|
-            q0 : -X-Z---------C-
-                              |
-            q1 : -Y-X-NB(0.1)-X-
-            T  : |0|    1    |2|
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.add_noise(noise, target_gates = ['X','Y'], target_qubits = [0,1]))
-            T  : |    0    |    1    |2|
-            q0 : -X-NB(0.1)-Z---------C-
-                                      |
-            q1 : -Y-NB(0.1)-X-NB(0.1)-X-
-            T  : |    0    |    1    |2|
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ.add_noise(noise, target_times=[0,2]))
             T  : |    0    |1|    2    |
-            q0 : -X-NB(0.1)-Z-C-NB(0.1)-
+            q0 : -X-ND(0.1)-Z-C-ND(0.1)-
                               |
-            q1 : -Y-NB(0.1)-X-X-NB(0.1)-
+            q1 : -Y-ND(0.1)-X-X-ND(0.1)-
             T  : |    0    |1|    2    |
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ.add_noise(noise,
@@ -536,7 +522,7 @@ class Circuit:
             T  : |0|    1    |2|
             q0 : -X-Z---------C-
                               |
-            q1 : -Y-X-NB(0.1)-X-
+            q1 : -Y-X-ND(0.1)-X-
             T  : |0|    1    |2|
 
         """

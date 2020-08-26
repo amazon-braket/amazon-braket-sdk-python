@@ -23,13 +23,25 @@ To add a new Noise implementation:
 
 
 class BitFlip(ProbabilisticNoise):
-    """Bit flip noise channel."""
+    """Bit flip noise channel which transforms a density matrix D according to:
+
+    .. math:: D \\Rightarrow (1-p) D + p X D X^{\\dagger}
+    where
+    ::
+        I  =  [1.  0.]
+              [0.  1.]
+
+        X  =  [0.  1.]
+              [1.  0.]
+
+        p = probability
+    """
 
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["NB({:.2g})".format(probability)],
+            ascii_symbols=["NBF({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
@@ -65,13 +77,25 @@ Noise.register_noise(BitFlip)
 
 
 class PhaseFlip(ProbabilisticNoise):
-    """Phase flip noise channel."""
+    """Phase flip noise channel which transforms a density matrix D according to:
+
+    .. math:: D \\Rightarrow (1-p) D + p Z D Z^{\\dagger}
+    where
+    ::
+        I  =  [1.  0.]
+              [0.  1.]
+
+        Z  =  [1.   0.]
+              [0.  -1.]
+
+        p = probability
+    """
 
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["NP({:.2g})".format(probability)],
+            ascii_symbols=["NPF({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
@@ -107,7 +131,28 @@ Noise.register_noise(PhaseFlip)
 
 
 class Depolarizing(ProbabilisticNoise):
-    """Depolarizing noise channel."""
+    """Depolarizing noise channel which transforms a density matrix D according to:
+
+    .. math::
+        D \\Rightarrow (1-p) D + \\frac{p}{3} X D X^{\\dagger} + \\frac{p}{3} Y D Y^{\\dagger}
+        + \\frac{p}{3} Z D Z^{\\dagger}
+
+    where
+    ::
+        I  =  [1.  0.]
+              [0.  1.]
+
+        X  =  [0.  1.]
+              [1.  0.]
+
+        Y  =  [0.  -i ]
+              [i    0.]
+
+        Z  =  [1.   0.]
+              [0.  -1.]
+
+        p = probability
+    """
 
     def __init__(self, probability: float):
         super().__init__(
@@ -151,13 +196,25 @@ Noise.register_noise(Depolarizing)
 
 
 class AmplitudeDamping(ProbabilisticNoise):
-    """AmplitudeDamping noise channel."""
+    """AmplitudeDamping noise channel which transforms a density matrix D according to:
+
+    .. math:: D \\Rightarrow E_0 D E_0^{\\dagger} + E_1 D E1^{\\dagger}
+    where
+    ::
+        E_0  =  [1.  0.       ]
+                [0.  sqrt(1-p)]
+
+        E_1  =  [0.  sqrt(p)]
+                [0.  0.     ]
+
+        p = probability
+    """
 
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["NA({:.2g})".format(probability)],
+            ascii_symbols=["NAD({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
@@ -193,7 +250,19 @@ Noise.register_noise(AmplitudeDamping)
 
 
 class PhaseDamping(ProbabilisticNoise):
-    """Phase damping noise channel."""
+    """Phase damping noise channel which transforms a density matrix D according to:
+
+    .. math:: D \\Rightarrow E_0 D E_0^{\\dagger} + E_1 D E1^{\\dagger}
+    where
+    ::
+        E_0  =  [1.  0.       ]
+                [0.  sqrt(1-p)]
+
+        E_1  =  [0.  0.     ]
+                [0.  sqrt(p)]
+
+        p = probability
+    """
 
     def __init__(self, probability: float):
         super().__init__(
