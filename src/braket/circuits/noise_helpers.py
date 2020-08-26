@@ -37,14 +37,23 @@ def _add_noise(
         Circuit: modified circuit.
     """
     if target_gates is None:
+        if noise.qubit_count > 1 and not noise.qubit_count == len(target_qubits):
+            raise ValueError(
+                "the qubit count of multiple-qubit noise must be the same "
+                "as the length of target qubits"
+            )
         circuit = _add_noise_to_qubits(circuit, noise, target_qubits, target_times)
     else:
-        for instr in circuit.instructions:
-            if (
-                instr.operator.name in target_gates
-                and not instr.operator.qubit_count == noise.qubit_count
-            ):
-                raise ValueError("the qubit count of target gates might be the same as the noise")
+        if noise.qubit_count > 1:
+            for instr in circuit.instructions:
+                if (
+                    instr.operator.name in target_gates
+                    and not instr.operator.qubit_count == noise.qubit_count
+                ):
+                    raise ValueError(
+                        "the qubit count of multiple-qubit noise must be "
+                        "the same as the qubit count of target gates"
+                    )
         circuit = _add_noise_to_gates(circuit, noise, target_gates, target_qubits, target_times)
 
     return circuit
