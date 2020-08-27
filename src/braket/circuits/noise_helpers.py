@@ -18,7 +18,7 @@ def _add_noise(
     target_qubits: QubitSetInput,
     target_times: Iterable[int],
 ) -> Circuit:
-    """ Insert noise into circuit.
+    """Insert noise into circuit.
     Add the provided `noise` to gates, qubits and time specified by `target_gates`,
     `target_qubits` and `target_times`. See the description of circuit.add_noise().
 
@@ -62,7 +62,7 @@ def _add_noise(
 def _add_noise_to_qubits(
     circuit: Circuit, noise: Noise, target_qubits: QubitSet, target_times: Iterable[int]
 ) -> Circuit:
-    """ Insert noise to the given time and qubits.
+    """Insert noise to the given time and qubits.
 
     Args:
         circuit (Circuit): A ciruit where `noise` is added to.
@@ -101,7 +101,7 @@ def _add_noise_to_gates(
     target_qubits: QubitSet,
     target_times: Iterable[int],
 ) -> Circuit:
-    """ Insert noise to the given time, qubits and gates.
+    """Insert noise to the given time, qubits and gates.
 
     Args:
         circuit (Circuit): A ciruit where `noise` is added to.

@@ -315,7 +315,7 @@ Noise.register_noise(PhaseDamping)
 
 class Kraus(Noise):
     """User-defined noise channel that uses the provided matrices as Kraus operators
-    This noise channel is shown as `NK` in circuit diagrams.     
+    This noise channel is shown as `NK` in circuit diagrams.
 
     Args:
         matrices (Iterable[np.array]): A list of matrices that define a noise

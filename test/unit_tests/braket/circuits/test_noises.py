@@ -24,7 +24,13 @@ testdata = [
         [SingleTarget, SingleProbability],
         {},
     ),
-    (Noise.PhaseDamping, "phase_damping", ir.PhaseDamping, [SingleTarget, SingleProbability], {},),
+    (
+        Noise.PhaseDamping,
+        "phase_damping",
+        ir.PhaseDamping,
+        [SingleTarget, SingleProbability],
+        {},
+    ),
     (
         Noise.Kraus,
         "kraus",
@@ -39,7 +45,13 @@ testdata = [
         [TwoDimensionalMatrixList, MultiTarget],
         {"input_type": float},
     ),
-    (Noise.Kraus, "kraus", ir.Kraus, [TwoDimensionalMatrixList, MultiTarget], {"input_type": int},),
+    (
+        Noise.Kraus,
+        "kraus",
+        ir.Kraus,
+        [TwoDimensionalMatrixList, MultiTarget],
+        {"input_type": int},
+    ),
 ]
 
 

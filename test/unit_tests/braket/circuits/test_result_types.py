@@ -28,7 +28,13 @@ testdata = [
         {"target": [0, 1]},
         {"targets": [0, 1]},
     ),
-    (ResultType.Probability, "probability", ir.Probability, {"target": None}, {},),
+    (
+        ResultType.Probability,
+        "probability",
+        ir.Probability,
+        {"target": None},
+        {},
+    ),
     (
         ResultType.Expectation,
         "expectation",

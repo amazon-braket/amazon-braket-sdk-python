@@ -31,7 +31,7 @@ _simulator_devices = {
 
 
 class LocalSimulator(Device):
-    """ A simulator meant to run directly on the user's machine.
+    """A simulator meant to run directly on the user's machine.
 
     This class wraps a BraketSimulator object so that it can be run and returns
     results using constructs from the SDK rather than Braket IR.
@@ -46,14 +46,19 @@ class LocalSimulator(Device):
         """
         delegate = _get_simulator(backend)
         super().__init__(
-            name=delegate.__class__.__name__, status="AVAILABLE",
+            name=delegate.__class__.__name__,
+            status="AVAILABLE",
         )
         self._delegate = delegate
 
     def run(
-        self, task_specification: Union[Circuit, Problem], shots: int = 0, *args, **kwargs,
+        self,
+        task_specification: Union[Circuit, Problem],
+        shots: int = 0,
+        *args,
+        **kwargs,
     ) -> LocalQuantumTask:
-        """ Runs the given task with the wrapped local simulator.
+        """Runs the given task with the wrapped local simulator.
 
         Args:
             task_specification (Union[Circuit, Problem]):
@@ -91,7 +96,7 @@ class LocalSimulator(Device):
 
     @staticmethod
     def registered_backends() -> Set[str]:
-        """ Gets the backends that have been registered as entry points
+        """Gets the backends that have been registered as entry points
 
         Returns:
             Set[str]: The names of the available backends that can be passed

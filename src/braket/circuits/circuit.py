@@ -150,9 +150,11 @@ class Circuit:
         added_observables_targets = set()
         for return_type in observable_return_types:
             observable: Observable = return_type.observable
-            targets: List[List[int]] = [list(return_type.target)] if return_type.target else [
-                list([qubit]) for qubit in self._moments.qubits
-            ]
+            targets: List[List[int]] = (
+                [list(return_type.target)]
+                if return_type.target
+                else [list([qubit]) for qubit in self._moments.qubits]
+            )
 
             for target in targets:
                 # only add gates for observables and targets that
@@ -447,7 +449,7 @@ class Circuit:
         target_qubits: Optional[QubitSetInput] = None,
         target_times: Optional[Union[int, Iterable[int]]] = None,
     ) -> Circuit:
-        """ Add `noise` to the circuit according to `target_gates`, `target_qubits` and
+        """Add `noise` to the circuit according to `target_gates`, `target_qubits` and
         `target_times`.
 
         For any parameter that is None, that specification is ignored (e.g. if 'target_gates'

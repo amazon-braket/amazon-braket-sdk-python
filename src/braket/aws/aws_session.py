@@ -67,7 +67,10 @@ class AwsSession(object):
         return not (
             isinstance(err, ClientError)
             and err.response["Error"]["Code"]
-            in ["ResourceNotFoundException", "ThrottlingException",]
+            in [
+                "ResourceNotFoundException",
+                "ThrottlingException",
+            ]
         )
 
     @backoff.on_exception(

@@ -66,7 +66,10 @@ def test_add_noise_mismatch_qubit_count_with_target_qubits(noise_2qubit):
 
 def test_circuit_add_with_noise(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.add(
-        noise_1qubit, target_gates="X", target_qubits=None, target_times=None,
+        noise_1qubit,
+        target_gates="X",
+        target_qubits=None,
+        target_times=None,
     )
 
     expected = (
@@ -86,7 +89,10 @@ def test_circuit_add_with_noise(circuit_2qubit, noise_1qubit):
 
 def test_add_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.add_noise(
-        noise_1qubit, target_gates="X", target_qubits=None, target_times=None,
+        noise_1qubit,
+        target_gates="X",
+        target_qubits=None,
+        target_times=None,
     )
 
     expected = (
@@ -106,7 +112,10 @@ def test_add_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
 
 def test_add_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.add_noise(
-        noise_1qubit, target_gates="X", target_qubits=QubitSet(0), target_times=1,
+        noise_1qubit,
+        target_gates="X",
+        target_qubits=QubitSet(0),
+        target_times=1,
     )
 
     expected = (
@@ -124,7 +133,10 @@ def test_add_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit):
 
 def test_add_noise_1QubitNoise_no_target_gates_1(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.add_noise(
-        noise_1qubit, target_gates=None, target_qubits=None, target_times=None,
+        noise_1qubit,
+        target_gates=None,
+        target_qubits=None,
+        target_times=None,
     )
 
     expected = (
@@ -147,7 +159,10 @@ def test_add_noise_1QubitNoise_no_target_gates_1(circuit_2qubit, noise_1qubit):
 
 def test_add_noise_1QubitNoise_no_target_gates_2(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.add_noise(
-        noise_1qubit, target_gates=None, target_qubits=QubitSet(1), target_times=[0, 2],
+        noise_1qubit,
+        target_gates=None,
+        target_qubits=QubitSet(1),
+        target_times=[0, 2],
     )
 
     expected = (
@@ -189,7 +204,10 @@ def test_add_noise_2QubitNoise_1(circuit_3qubit, noise_2qubit):
 
 def test_add_noise_2QubitNoise_2(circuit_3qubit, noise_2qubit):
     circ = circuit_3qubit.add_noise(
-        noise_2qubit, target_gates="CZ", target_qubits=QubitSet([1, 2]), target_times=[1, 2],
+        noise_2qubit,
+        target_gates="CZ",
+        target_qubits=QubitSet([1, 2]),
+        target_times=[1, 2],
     )
 
     expected = (
@@ -209,7 +227,10 @@ def test_add_noise_2QubitNoise_2(circuit_3qubit, noise_2qubit):
 
 def test_add_noise_2QubitNoise_3(circuit_3qubit, noise_2qubit):
     circ = circuit_3qubit.add_noise(
-        noise_2qubit, target_gates="CZ", target_qubits=QubitSet([1, 2]), target_times=[0, 1],
+        noise_2qubit,
+        target_gates="CZ",
+        target_qubits=QubitSet([1, 2]),
+        target_times=[0, 1],
     )
 
     expected = (
@@ -228,7 +249,10 @@ def test_add_noise_2QubitNoise_3(circuit_3qubit, noise_2qubit):
 
 def test_add_noise_2QubitNoise_4(circuit_3qubit, noise_2qubit):
     circ = circuit_3qubit.add_noise(
-        noise_2qubit, target_gates="CZ", target_qubits=QubitSet(0), target_times=None,
+        noise_2qubit,
+        target_gates="CZ",
+        target_qubits=QubitSet(0),
+        target_times=None,
     )
 
     expected = (
@@ -247,7 +271,10 @@ def test_add_noise_2QubitNoise_4(circuit_3qubit, noise_2qubit):
 
 def test_add_noise_2QubitNoise_no_targetgates(circuit_3qubit, noise_2qubit):
     circ = circuit_3qubit.add_noise(
-        noise_2qubit, target_gates=None, target_qubits=QubitSet([2, 1]), target_times=[4],
+        noise_2qubit,
+        target_gates=None,
+        target_qubits=QubitSet([2, 1]),
+        target_times=[4],
     )
 
     expected = (

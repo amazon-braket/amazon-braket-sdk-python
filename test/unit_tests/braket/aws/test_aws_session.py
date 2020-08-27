@@ -19,7 +19,11 @@ from botocore.exceptions import ClientError
 
 from braket.aws import AwsSession
 
-TEST_S3_OBJ_CONTENTS = {"TaskMetadata": {"Id": "blah",}}
+TEST_S3_OBJ_CONTENTS = {
+    "TaskMetadata": {
+        "Id": "blah",
+    }
+}
 
 
 @pytest.fixture
@@ -129,9 +133,17 @@ def test_get_quantum_task_retry(aws_session):
     return_value = {"quantumTaskArn": arn}
 
     resource_not_found_response = {
-        "Error": {"Code": "ResourceNotFoundException", "Message": "unit-test-error",}
+        "Error": {
+            "Code": "ResourceNotFoundException",
+            "Message": "unit-test-error",
+        }
     }
-    throttling_response = {"Error": {"Code": "ThrottlingException", "Message": "unit-test-error",}}
+    throttling_response = {
+        "Error": {
+            "Code": "ThrottlingException",
+            "Message": "unit-test-error",
+        }
+    }
 
     aws_session.braket_client.get_quantum_task.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
@@ -146,9 +158,17 @@ def test_get_quantum_task_retry(aws_session):
 
 def test_get_quantum_task_fail_after_retries(aws_session):
     resource_not_found_response = {
-        "Error": {"Code": "ResourceNotFoundException", "Message": "unit-test-error",}
+        "Error": {
+            "Code": "ResourceNotFoundException",
+            "Message": "unit-test-error",
+        }
     }
-    throttling_response = {"Error": {"Code": "ThrottlingException", "Message": "unit-test-error",}}
+    throttling_response = {
+        "Error": {
+            "Code": "ThrottlingException",
+            "Message": "unit-test-error",
+        }
+    }
 
     aws_session.braket_client.get_quantum_task.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
@@ -162,7 +182,12 @@ def test_get_quantum_task_fail_after_retries(aws_session):
 
 
 def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
-    exception_response = {"Error": {"Code": "SomeOtherException", "Message": "unit-test-error",}}
+    exception_response = {
+        "Error": {
+            "Code": "SomeOtherException",
+            "Message": "unit-test-error",
+        }
+    }
 
     aws_session.braket_client.get_quantum_task.side_effect = [
         ClientError(exception_response, "unit-test"),

@@ -14,7 +14,9 @@ class Noise(QuantumOperator):
     """
 
     def __init__(
-        self, qubit_count: int, ascii_symbols: Sequence[str],
+        self,
+        qubit_count: int,
+        ascii_symbols: Sequence[str],
     ):
         """
         Args:
@@ -62,12 +64,12 @@ class Noise(QuantumOperator):
 
     def to_matrix(self, *args, **kwargs) -> Any:
         """Returns a list of matrices defining the Kraus matrices of
-                the noise channel.
+            the noise channel.
 
-            Returns:
-                Iterable[np.ndarray]: list of matrices defining the Kraus
-                    matrices of the noise channel.
-            """
+        Returns:
+            Iterable[np.ndarray]: list of matrices defining the Kraus
+                matrices of the noise channel.
+        """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
     def __eq__(self, other):
@@ -119,7 +121,7 @@ class ProbabilisticNoise(Noise):
 
     @property
     def probability(self) -> float:
-        """ Returns the probability parameter for the noise.
+        """Returns the probability parameter for the noise.
 
         Returns:
             probability (float): The probability that parameterizes the Kraus matrices.

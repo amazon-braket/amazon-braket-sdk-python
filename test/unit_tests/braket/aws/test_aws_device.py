@@ -30,7 +30,11 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
         },
         "service": {
             "executionWindows": [
-                {"executionDay": "Everyday", "windowStartHour": "11:00", "windowEndHour": "12:00",}
+                {
+                    "executionDay": "Everyday",
+                    "windowStartHour": "11:00",
+                    "windowEndHour": "12:00",
+                }
             ],
             "shotsRange": [1, 10],
         },
@@ -66,7 +70,11 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_2 = RigettiDeviceCapabilities.parse_obj(
         },
         "service": {
             "executionWindows": [
-                {"executionDay": "Everyday", "windowStartHour": "11:00", "windowEndHour": "12:00",}
+                {
+                    "executionDay": "Everyday",
+                    "windowStartHour": "11:00",
+                    "windowEndHour": "12:00",
+                }
             ],
             "shotsRange": [1, 10],
         },
@@ -156,7 +164,11 @@ MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.pa
         },
         "service": {
             "executionWindows": [
-                {"executionDay": "Everyday", "windowStartHour": "11:00", "windowEndHour": "12:00",}
+                {
+                    "executionDay": "Everyday",
+                    "windowStartHour": "11:00",
+                    "windowEndHour": "12:00",
+                }
             ],
             "shotsRange": [1, 10],
         },
@@ -337,7 +349,10 @@ def test_device_no_aws_session_supplied(
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_no_extra(aws_quantum_task_mock, device, circuit, s3_destination_folder):
     _run_and_assert(
-        aws_quantum_task_mock, device, circuit, s3_destination_folder,
+        aws_quantum_task_mock,
+        device,
+        circuit,
+        s3_destination_folder,
     )
 
 

@@ -107,7 +107,8 @@ def test_get_pauli_eigenvalues_correct_eigenvalues_two_qubits():
 def test_get_pauli_eigenvalues_correct_eigenvalues_three_qubits():
     """Test the get_pauli_eigenvalues function for three qubits"""
     assert np.array_equal(
-        get_pauli_eigenvalues(3), np.diag(np.kron(z_matrix, np.kron(z_matrix, z_matrix))),
+        get_pauli_eigenvalues(3),
+        np.diag(np.kron(z_matrix, np.kron(z_matrix, z_matrix))),
     )
 
 

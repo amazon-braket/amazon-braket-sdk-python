@@ -87,7 +87,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
     @staticmethod
     def _ascii_group_items(
-        circuit_qubits: QubitSet, items: List[Union[Instruction, ResultType]],
+        circuit_qubits: QubitSet,
+        items: List[Union[Instruction, ResultType]],
     ) -> List[Tuple[QubitSet, List[Instruction]]]:
         """
         Group instructions in a moment for ASCII diagram

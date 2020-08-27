@@ -154,7 +154,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
             # Find the maximum noise_index at the time. The new noise is added to
             # noise_index = maximum noise_index + 1.
             max_noise_index = max(
-                [0,]
+                [
+                    0,
+                ]
                 + [
                     k.noise_index
                     for k in self._moments
