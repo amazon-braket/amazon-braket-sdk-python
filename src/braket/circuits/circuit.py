@@ -13,10 +13,11 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Optional, TypeVar, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
 
 from braket.circuits import noise_helpers
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
+from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
@@ -445,7 +446,7 @@ class Circuit:
     def add_noise(
         self,
         noise: Noise,
-        target_gates: Optional[Union[str, Iterable[str]]] = None,
+        target_gates: Optional[Union[Type[Gate], Iterable[Type[Gate]]]] = None,
         target_qubits: Optional[QubitSetInput] = None,
         target_times: Optional[Union[int, Iterable[int]]] = None,
     ) -> Circuit:
@@ -466,13 +467,11 @@ class Circuit:
             noise (Noise): Noise to be added to the circuit. When `noise.qubit_count` > 1,
                 `noise.qubit_count` must be the same as `qubit_count` of gates specified by
                 `target_gates`.
-            target_gates (Union[str, Iterable[str], optional]): Name or List of name of gates
-                which `noise` is added to. If None, `noise` is added only according to
-                `target_qubits` and `target_times`. None should be used when users want
-                to add `noise` to a ciruit moment that has no gate.
-            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s). When
-                `target_gates` is not None, the usage of `target_qubits` is determined by
-                `insert_strategy`. Default=None.
+            target_gates (Union[Type[Gate], Iterable[Type[Gate]], optional]): Gate class or
+                List of Gate classes which `noise` is added to. If None, `noise` is added only
+                according to `target_qubits` and `target_times`.
+            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
+                Default=None.
             target_times (Union[int, Iterable[int], optional]): Index of indices of time which
                 `noise` is added to. Default=None.
 
@@ -480,10 +479,10 @@ class Circuit:
             Circuit: self
 
         Raises:
-                TypeError: If `noise` is not Noise type, `target_gates` is not str,
-                    Iterable[str] or None, `target_times` is not int or Iterable[int],
-                    len(target_gates) is not equal to noise.qubit_count when target_gates is
-                    not None
+            TypeError: If `noise` is not Noise type, `target_gates` is not a Gate class,
+                Iterable[Gate] or None, `target_times` is not int or Iterable[int],
+                len(target_gates) is not equal to noise.qubit_count when target_gates is
+                not None
 
         Example:
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
@@ -529,7 +528,7 @@ class Circuit:
 
         """
 
-        if isinstance(target_gates, str):
+        if isinstance(target_gates, type) and issubclass(target_gates, Gate):
             target_gates = [target_gates]
         if isinstance(target_times, int):
             target_times = [target_times]
@@ -540,14 +539,15 @@ class Circuit:
             raise TypeError("noise must be a Noise class")
         if target_gates is not None:
             if not (
-                isinstance(target_gates, Iterable) and all(isinstance(s, str) for s in target_gates)
+                isinstance(target_gates, Iterable)
+                and all(isinstance(g, type) and issubclass(g, Gate) for g in target_gates)
             ):
-                raise TypeError(f"all elements in {target_gates} must be str")
+                raise TypeError("all elements in target_gates must be a Gate class")
         if target_times is not None:
             if not (
                 isinstance(target_times, Iterable) and all(isinstance(t, int) for t in target_times)
             ):
-                raise TypeError("target_times must be int or Iterable[int]")
+                raise TypeError("all elements in target_times must be int")
 
         return noise_helpers._add_noise(self, noise, target_gates, target_qubits, target_times)
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Type
 
+from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
@@ -14,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def _add_noise(
     circuit: Circuit,
     noise: Noise,
-    target_gates: Iterable[str],
+    target_gates: Iterable[Type[Gate]],
     target_qubits: QubitSetInput,
     target_times: Iterable[int],
 ) -> Circuit:
@@ -25,12 +26,11 @@ def _add_noise(
     Args:
         circuit (Circuit): A circuit where `noise` is added to.
         noise (Noise): A `Noise` class object to be added to the circuit.
-        target_gates (Iterable[str] or None): List of name of gates which `noise` is
+        target_gates (Iterable[Type[Gate]] or None): List of Gate classes which `noise` is
             added to. If None, `noise` is added only according to `target_qubits` and
             `target_times`. None should be used when users want to add `noise` to
             a ciruit moment that has no gate.
-        target_qubits (QubitSet or None): Index or indices of qubits. When `target_gates` is
-            not None, the usage of `target_qubits` is determined by `insert_strategy`.
+        target_qubits (QubitSet or None): Index or indices of qubits.
         target_times (Iterable[int] or None): List of time which `noise` is added to.
 
     Returns:
@@ -44,16 +44,6 @@ def _add_noise(
             )
         circuit = _add_noise_to_qubits(circuit, noise, target_qubits, target_times)
     else:
-        if noise.qubit_count > 1:
-            for instr in circuit.instructions:
-                if (
-                    instr.operator.name in target_gates
-                    and not instr.operator.qubit_count == noise.qubit_count
-                ):
-                    raise ValueError(
-                        "the qubit count of multiple-qubit noise must be "
-                        "the same as the qubit count of target gates"
-                    )
         circuit = _add_noise_to_gates(circuit, noise, target_gates, target_qubits, target_times)
 
     return circuit
@@ -97,7 +87,7 @@ def _add_noise_to_qubits(
 def _add_noise_to_gates(
     circuit: Circuit,
     noise: Noise,
-    target_gates: Iterable[str],
+    target_gates: Iterable[Type[Gate]],
     target_qubits: QubitSet,
     target_times: Iterable[int],
 ) -> Circuit:
@@ -106,10 +96,9 @@ def _add_noise_to_gates(
     Args:
         circuit (Circuit): A ciruit where `noise` is added to.
         noise (Noise): A `Noise` class object to be added to the circuit.
-        target_gates (Iterable[str]): List of name of gates which `noise` is added to.
+        target_gates (Iterable[Type[Gate]]): List of Gate classes which `noise` is added to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is added to.
         target_times (Iterable[int]): List of time which `noise` is added to.
-        insert_strategy (str): Rule of how `target_qubit` is used.
 
     Returns:
         Circuit: modified circuit.
@@ -122,7 +111,7 @@ def _add_noise_to_gates(
         # add noise
         # (If adding different insert strategies in the future, consider moving these rules
         # to a separate function or class.)
-        gate_rule = instruction.operator.name in target_gates
+        gate_rule = instruction.operator.name in [g.__name__ for g in target_gates]
         qubit_rule = target_qubits is None or instruction.target.issubset(target_qubits)
         time_rule = target_times is None or moment_key.time in target_times
         if gate_rule and qubit_rule and time_rule:
@@ -130,6 +119,12 @@ def _add_noise_to_gates(
                 for qubit in instruction.target:
                     new_moments.add([Instruction(noise, qubit)])
             else:
-                new_moments.add([Instruction(noise, instruction.target)])
+                if instruction.operator.qubit_count == noise.qubit_count:
+                    new_moments.add([Instruction(noise, instruction.target)])
+                else:
+                    raise ValueError(
+                        "the qubit count of multiple-qubit noise must be "
+                        "the same as the qubit count of target gates"
+                    )
     circuit._moments = new_moments
     return circuit
