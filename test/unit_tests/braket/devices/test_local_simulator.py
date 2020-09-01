@@ -50,7 +50,11 @@ ANNEALING_RESULT = AnnealingTaskResult(
         "solutionCounts": [3, 2, 4],
         "values": [0.0, 1.0, 2.0],
         "variableCount": 4,
-        "taskMetadata": {"id": "task_arn", "shots": 100, "deviceId": "device_id",},
+        "taskMetadata": {
+            "id": "task_arn",
+            "shots": 100,
+            "deviceId": "device_id",
+        },
         "additionalMetadata": {
             "action": {
                 "type": "ISING",

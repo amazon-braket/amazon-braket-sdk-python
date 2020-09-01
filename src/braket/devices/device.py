@@ -20,9 +20,7 @@ from braket.tasks.quantum_task import QuantumTask
 
 
 class Device(ABC):
-    """ An abstraction over quantum devices that includes quantum computers and simulators.
-
-    """
+    """An abstraction over quantum devices that includes quantum computers and simulators."""
 
     def __init__(self, name: str, status: str):
         """
@@ -37,7 +35,7 @@ class Device(ABC):
     def run(
         self, task_specification: Union[Circuit, Problem], shots: Optional[int], *args, **kwargs
     ) -> QuantumTask:
-        """ Run a quantum task specification on this quantum device. A task can be a circuit
+        """Run a quantum task specification on this quantum device. A task can be a circuit
         or an annealing problem.
 
         Args:
@@ -52,7 +50,7 @@ class Device(ABC):
 
     @property
     def name(self) -> str:
-        """ Return the name of this Device.
+        """Return the name of this Device.
 
         Returns:
             str: The name of this Device
@@ -61,7 +59,7 @@ class Device(ABC):
 
     @property
     def status(self) -> str:
-        """ Return the status of this Device.
+        """Return the status of this Device.
 
         Returns:
             str: The status of this Device

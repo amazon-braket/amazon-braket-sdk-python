@@ -35,7 +35,7 @@ class Observable(QuantumOperator):
 
     def to_ir(self) -> List[Union[str, List[List[List[float]]]]]:
         """List[Union[str, List[List[List[float]]]]]: Returns the IR
-            representation for the observable"""
+        representation for the observable"""
         raise NotImplementedError
 
     @property

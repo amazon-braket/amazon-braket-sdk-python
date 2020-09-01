@@ -148,9 +148,11 @@ class Circuit:
         added_observables_targets = set()
         for return_type in observable_return_types:
             observable: Observable = return_type.observable
-            targets: List[List[int]] = [list(return_type.target)] if return_type.target else [
-                list([qubit]) for qubit in self._moments.qubits
-            ]
+            targets: List[List[int]] = (
+                [list(return_type.target)]
+                if return_type.target
+                else [list([qubit]) for qubit in self._moments.qubits]
+            )
 
             for target in targets:
                 # only add gates for observables and targets that

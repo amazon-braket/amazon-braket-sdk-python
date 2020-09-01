@@ -20,7 +20,7 @@ import braket.ir.annealing as ir
 
 
 class ProblemType(str, Enum):
-    """ The type of annealing problem.
+    """The type of annealing problem.
 
     QUBO: Quadratic Unconstrained Binary Optimization, with values 1 and 0
 
@@ -63,7 +63,7 @@ class Problem:
 
     @property
     def problem_type(self) -> ProblemType:
-        """ The type of annealing problem.
+        """The type of annealing problem.
 
         Returns:
             ProblemType: The type of annealing problem
@@ -72,7 +72,7 @@ class Problem:
 
     @property
     def linear(self) -> Dict[int, float]:
-        """ The linear terms of this problem.
+        """The linear terms of this problem.
 
         Returns:
             Dict[int, float]: The linear terms of this problem, as a map of variable to coefficient
@@ -81,7 +81,7 @@ class Problem:
 
     @property
     def quadratic(self) -> Dict[Tuple[int, int], float]:
-        """ The quadratic terms of this problem.
+        """The quadratic terms of this problem.
 
         Returns:
             Dict[Tuple[int, int], float]: The quadratic terms of this problem,
@@ -90,7 +90,7 @@ class Problem:
         return self._quadratic
 
     def add_linear_term(self, term: int, coefficient: float) -> Problem:
-        """ Adds a linear term to the problem.
+        """Adds a linear term to the problem.
 
         Args:
             term (int): The variable of the linear term
@@ -103,7 +103,7 @@ class Problem:
         return self
 
     def add_linear_terms(self, coefficients: Dict[int, float]) -> Problem:
-        """ Adds linear terms to the problem.
+        """Adds linear terms to the problem.
 
         Args:
             coefficients (Dict[int, float]): A map of variable to coefficient
@@ -115,7 +115,7 @@ class Problem:
         return self
 
     def add_quadratic_term(self, term: Tuple[int, int], coefficient: float) -> Problem:
-        """ Adds a quadratic term to the problem.
+        """Adds a quadratic term to the problem.
 
         Args:
             term (Tuple[int, int]): The variables of the quadratic term
@@ -128,7 +128,7 @@ class Problem:
         return self
 
     def add_quadratic_terms(self, coefficients: Dict[Tuple[int, int], float]) -> Problem:
-        """ Adds quadratic terms to the problem.
+        """Adds quadratic terms to the problem.
 
         Args:
             coefficients (Dict[Tuple[int, int], float]): A map of variables to coefficient
@@ -140,7 +140,7 @@ class Problem:
         return self
 
     def to_ir(self):
-        """ Converts this problem into IR representation.
+        """Converts this problem into IR representation.
 
         Returns:
             ir.Problem: IR representation of this problem object

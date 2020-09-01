@@ -15,7 +15,12 @@ import json
 
 import pytest
 
-TEST_S3_OBJ_CONTENTS = {"TaskMetadata": {"Id": "blah", "Status": "COMPLETED",}}
+TEST_S3_OBJ_CONTENTS = {
+    "TaskMetadata": {
+        "Id": "blah",
+        "Status": "COMPLETED",
+    }
+}
 
 
 @pytest.fixture()
