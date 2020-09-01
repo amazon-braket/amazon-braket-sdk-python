@@ -18,7 +18,7 @@ from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult,
 
 
 class LocalQuantumTask(QuantumTask):
-    """ A task containing the results of a local simulation.
+    """A task containing the results of a local simulation.
 
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
     """

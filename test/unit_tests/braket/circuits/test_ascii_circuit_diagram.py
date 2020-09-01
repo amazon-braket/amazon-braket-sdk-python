@@ -355,7 +355,10 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
         .variance(observable=Observable.Y(), target=0)
         .expectation(observable=Observable.Y(), target=3)
         .expectation(
-            observable=Observable.Hermitian(matrix=herm_matrix, display_name="MyHerm",),
+            observable=Observable.Hermitian(
+                matrix=herm_matrix,
+                display_name="MyHerm",
+            ),
             target=[1, 2],
         )
     )
