@@ -10,7 +10,7 @@ class Noise(QuantumOperator):
     are considered as building blocks of quantum circuits that simulate noise. It can be
     used as an operator in an Instruction object. It appears in the diagram when user prints
     a circuit with Noise. This class is considered the noise channel definition containing
-    the metadata that defines what a noise channel is and what it does.
+    the metadata that defines what the noise channel is and what it does.
     """
 
     def __init__(

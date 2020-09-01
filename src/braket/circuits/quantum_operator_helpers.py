@@ -77,7 +77,7 @@ def is_unitary(matrix: np.array) -> bool:
     return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
 
 
-def is_CPTP(matrices: Iterable[np.array]) -> bool:
+def is_cptp(matrices: Iterable[np.array]) -> bool:
     """
     Whether a transformation defined by these matrics as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for

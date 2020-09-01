@@ -7,7 +7,7 @@ from braket.circuits import circuit
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise, ProbabilisticNoise
 from braket.circuits.quantum_operator_helpers import (
-    is_CPTP,
+    is_cptp,
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
@@ -336,7 +336,7 @@ class Kraus(Noise):
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
         qubit_count = int(np.log2(self._matrices[0].shape[0]))
 
-        if not is_CPTP(self._matrices):
+        if not is_cptp(self._matrices):
             raise ValueError(
                 "The input matrices do not define a completely-positive trace-preserving map."
             )
@@ -377,7 +377,9 @@ class Kraus(Noise):
             Iterable[Instruction]: `Iterable` of Kraus instructions.
 
         Examples:
-            >>> circ = Circuit().kraus(0, matrices=matrices)
+            >>> K0 = np.eye(4) * sqrt(0.9)
+            >>> K1 = np.kron([[1., 0.],[0., 1.]], [[0., 1.],[1., 0.]]) * sqrt(0.1)
+            >>> circ = Circuit().kraus(0, matrices=[K0, K1])
         """
         return Instruction(
             Noise.Kraus(matrices=matrices, display_name=display_name), target=targets

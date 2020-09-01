@@ -484,7 +484,7 @@ class Circuit:
                 len(target_gates) is not equal to noise.qubit_count when target_gates is
                 not None
 
-        Example:
+        Examples:
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ)
             T  : |0|1|2|
@@ -536,7 +536,7 @@ class Circuit:
             target_qubits = QubitSet(target_qubits)
 
         if not isinstance(noise, Noise):
-            raise TypeError("noise must be a Noise class")
+            raise TypeError("noise must be an instance of the Noise class")
         if target_gates is not None:
             if not (
                 isinstance(target_gates, Iterable)
@@ -555,9 +555,9 @@ class Circuit:
         """
         Generic add method for adding item(s) to self. Any arguments that
         `add_circuit()` and / or `add_instruction()` and / or `add_result_type`
-        supports are supported by this method. If adding a subroutine,
-        check with that subroutines documentation to determine what input it
-        allows.
+        and / or `add_noise` supports are supported by this method. If adding a
+        subroutine, check with that subroutines documentation to determine what
+        input it allows.
 
         Args:
             addable (AddableTypes): The item(s) to add to self. Default = `None`.
@@ -576,6 +576,8 @@ class Circuit:
             `add_instruction()`
 
             `add_result_type()`
+
+            `add_noise()`
 
         Examples:
             >>> circ = Circuit().add([Instruction(Gate.H(), 4), Instruction(Gate.CNot(), [4, 5])])

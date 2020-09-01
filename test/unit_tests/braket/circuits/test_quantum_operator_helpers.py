@@ -5,7 +5,7 @@ import pytest
 
 from braket.circuits.quantum_operator_helpers import (
     get_pauli_eigenvalues,
-    is_CPTP,
+    is_cptp,
     is_hermitian,
     is_square_matrix,
     is_unitary,
@@ -51,8 +51,8 @@ def test_is_hermitian_true():
     assert is_hermitian(valid_unitary_hermitian_matrix)
 
 
-def test_is_CPTP_true():
-    assert is_CPTP(valid_CPTP_matrices)
+def test_is_cptp_true():
+    assert is_cptp(valid_CPTP_matrices)
 
 
 def test_is_square_matrix():
@@ -75,8 +75,8 @@ def test_is_hermitian_false(matrix):
     assert not is_hermitian(matrix)
 
 
-def test_is_CPTP_false():
-    assert not is_CPTP(invalid_CPTP_matrices_false)
+def test_is_cptp_false():
+    assert not is_cptp(invalid_CPTP_matrices_false)
 
 
 @pytest.mark.xfail(raises=Exception)
@@ -90,8 +90,8 @@ def test_is_unitary_exception():
 
 
 @pytest.mark.xfail(raises=Exception)
-def test_is_CPTP_exception():
-    is_CPTP([invalid_matrix_type_error])
+def test_is_cptp_exception():
+    is_cptp([invalid_matrix_type_error])
 
 
 def test_get_pauli_eigenvalues_correct_eigenvalues_one_qubit():
