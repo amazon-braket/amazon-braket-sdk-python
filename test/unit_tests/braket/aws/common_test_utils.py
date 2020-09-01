@@ -93,7 +93,11 @@ class MockS3:
             "solutionCounts": [3, 2, 4],
             "values": [0.0, 1.0, 2.0],
             "variableCount": 4,
-            "taskMetadata": {"id": "task_arn", "shots": 100, "deviceId": DWAVE_ARN,},
+            "taskMetadata": {
+                "id": "task_arn",
+                "shots": 100,
+                "deviceId": DWAVE_ARN,
+            },
             "additionalMetadata": {
                 "action": {
                     "type": "ISING",
