@@ -236,7 +236,8 @@ class AwsQuantumTask(QuantumTask):
         Consecutive calls to this method return a cached result from the preceding request.
         """
         try:
-            return asyncio.get_event_loop().run_until_complete(self.async_result())
+            async_result = self.async_result()
+            return asyncio.get_event_loop().run_until_complete(async_result)
         except asyncio.CancelledError:
             # Future was cancelled, return whatever is in self._result if anything
             self._logger.warning("Task future was cancelled")

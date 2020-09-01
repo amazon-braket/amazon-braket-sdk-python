@@ -13,6 +13,7 @@
 
 from typing import Any, Dict
 
+import concurrent.futures
 import numpy as np
 
 from braket.circuits import Circuit, Observable, ResultType
@@ -404,3 +405,26 @@ def result_types_tensor_y_hermitian_testing(device: Device, run_kwargs: Dict[str
     assert_variance_expectation_sample_result(
         result, shots, expected_var, expected_mean, expected_eigs
     )
+
+
+def multithreaded_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+    shots = run_kwargs["shots"]
+    tol = get_tol(shots)
+    bell = Circuit().h(0).cnot(0, 1)
+
+    def run_circuit(circuit):
+        task = device.run(circuit, **run_kwargs)
+        return task.result()
+
+    futures = []
+    num_threads = 2
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for _ in range(num_threads):
+            future = executor.submit(run_circuit, bell)
+            futures.append(future)
+    for future in futures:
+        result = future.result()
+        assert np.allclose(result.measurement_probabilities["00"], 0.5, **tol)
+        assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
+        assert len(result.measurements) == shots
