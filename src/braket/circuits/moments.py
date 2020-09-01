@@ -44,12 +44,12 @@ class NoiseMomentsKey(NamedTuple):
     noise_index: int
 
 
-class Moments(Mapping[MomentsKey, Instruction]):
+class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
     """
-    An ordered mapping of `MomentsKey` to `Instruction`. The core data structure that
-    contains instructions, ordering they are inserted in, and time slices when they
-    occur. `Moments` implements `Mapping` and functions the same as a read-only
-    dictionary. It is mutable only through the `add()` method.
+    An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
+    core data structure that contains instructions, ordering they are inserted in, and
+    time slices when they occur. `Moments` implements `Mapping` and functions the same as
+    a read-only dictionary. It is mutable only through the `add()` method.
 
     This data structure is useful to determine a dependency of instructions, such as
     printing or optimizing circuit structure, before sending it to a quantum
@@ -84,7 +84,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     """
 
     def __init__(self, instructions: Iterable[Instruction] = []):
-        self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
+        self._moments: OrderedDict[Union[MomentsKey, NoiseMomentsKey], Instruction] = OrderedDict()
         self._max_times: Dict[Qubit, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
