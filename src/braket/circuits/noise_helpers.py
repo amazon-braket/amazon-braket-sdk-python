@@ -78,7 +78,8 @@ def _add_noise_to_qubits(
         new_moments.add(time_slices[time])
         # add noise
         if target_times is None or time in target_times:
-            new_moments.add(noise_instructions)
+            for instruction in noise_instructions:
+                new_moments._add_noise(instruction, time)
 
     circuit._moments = new_moments
     return circuit

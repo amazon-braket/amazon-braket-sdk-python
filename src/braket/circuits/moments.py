@@ -20,8 +20,8 @@ from typing import (
     Mapping,
     NamedTuple,
     OrderedDict,
+    Union,
     ValuesView,
-    Union
 )
 
 from braket.circuits.instruction import Instruction
@@ -150,11 +150,7 @@ class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
 
     def _add(self, instruction: Instruction) -> None:
         if isinstance(instruction.operator, Noise):
-            qubit_range = instruction.target
-            time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
-            noise_key = NoiseMomentsKey(time, instruction.target, self._max_noise_index_for_time(time) + 1)
-            self._moments[noise_key] = instruction
-            self._qubits.update(instruction.target)
+            self._add_noise(instruction)
         else:
             qubit_range = instruction.target
             time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
@@ -166,6 +162,16 @@ class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
             self._moments[MomentsKey(time, instruction.target)] = instruction
             self._qubits.update(instruction.target)
             self._depth = max(self._depth, time + 1)
+
+    def _add_noise(self, instruction: Instruction, time: int = None) -> None:
+        qubit_range = instruction.target
+        if time is None:
+            time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
+        noise_key = NoiseMomentsKey(
+            time, instruction.target, self._max_noise_index_for_time(time) + 1
+        )
+        self._moments[noise_key] = instruction
+        self._qubits.update(instruction.target)
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)
