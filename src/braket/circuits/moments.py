@@ -21,6 +21,7 @@ from typing import (
     NamedTuple,
     OrderedDict,
     ValuesView,
+    Union
 )
 
 from braket.circuits.instruction import Instruction
@@ -86,6 +87,7 @@ class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
     def __init__(self, instructions: Iterable[Instruction] = []):
         self._moments: OrderedDict[Union[MomentsKey, NoiseMomentsKey], Instruction] = OrderedDict()
         self._max_times: Dict[Qubit, int] = {}
+        self._max_noise_index: Dict[int, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
 
@@ -150,21 +152,7 @@ class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
         if isinstance(instruction.operator, Noise):
             qubit_range = instruction.target
             time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
-
-            # Find the maximum noise_index at the time. The new noise is added to
-            # noise_index = maximum noise_index + 1.
-            max_noise_index = max(
-                [
-                    0,
-                ]
-                + [
-                    k.noise_index
-                    for k in self._moments
-                    if (k.time == time and isinstance(k, NoiseMomentsKey))
-                ]
-            )
-
-            noise_key = NoiseMomentsKey(time, instruction.target, max_noise_index + 1)
+            noise_key = NoiseMomentsKey(time, instruction.target, self._max_noise_index_for_time(time) + 1)
             self._moments[noise_key] = instruction
             self._qubits.update(instruction.target)
         else:
@@ -181,6 +169,9 @@ class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)
+
+    def _max_noise_index_for_time(self, time: int) -> int:
+        return self._max_noise_index.get(time, -1)
 
     #
     # Implement abstract methods, default to calling selfs underlying dictionary
