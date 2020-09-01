@@ -13,6 +13,7 @@
 
 import pytest
 from gate_model_device_testing_utils import (
+    multithreaded_bell_pair_testing,
     no_result_types_bell_pair_testing,
     qubit_ordering_testing,
     result_types_all_selected_testing,
@@ -33,6 +34,10 @@ from braket.devices import LocalSimulator
 
 DEVICE = LocalSimulator()
 SHOTS = 8000
+
+
+def test_multithreaded_bell_pair():
+    multithreaded_bell_pair_testing(DEVICE, {"shots": SHOTS})
 
 
 def test_no_result_types_bell_pair():

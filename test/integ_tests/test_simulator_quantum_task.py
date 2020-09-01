@@ -13,6 +13,7 @@
 
 import pytest
 from gate_model_device_testing_utils import (
+    multithreaded_bell_pair_testing,
     no_result_types_bell_pair_testing,
     qubit_ordering_testing,
     result_types_all_selected_testing,
@@ -33,6 +34,14 @@ from braket.aws import AwsDevice
 
 SHOTS = 8000
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+
+
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+def test_multithreaded_bell_pair(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    multithreaded_bell_pair_testing(
+        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
+    )
 
 
 @pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
