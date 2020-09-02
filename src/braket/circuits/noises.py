@@ -23,18 +23,27 @@ To add a new Noise implementation:
 
 
 class BitFlip(ProbabilisticNoise):
-    """Bit flip noise channel which transforms a density matrix D according to:
+    """Bit flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
-    .. math:: D \\Rightarrow (1-p) D + p X D X^{\\dagger}
+    .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
     where
-    ::
-        I  =  [1.  0.]
-              [0.  1.]
 
-        X  =  [0.  1.]
-              [1.  0.]
+    .. math::
+        I = \left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & 1
+                \end{matrix}
+            \\right)
 
-        p = probability
+        X = \left(
+                \\begin{matrix}
+                    0 & 1 \\\\
+                    1 & 0
+                \end{matrix}
+            \\right)
+
+        p = \\text{probability}
 
     This noise channel is shown as `NBF` in circuit diagrams.
     """
@@ -79,18 +88,27 @@ Noise.register_noise(BitFlip)
 
 
 class PhaseFlip(ProbabilisticNoise):
-    """Phase flip noise channel which transforms a density matrix D according to:
+    """Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
-    .. math:: D \\Rightarrow (1-p) D + p Z D Z^{\\dagger}
+    .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
     where
-    ::
-        I  =  [1.  0.]
-              [0.  1.]
 
-        Z  =  [1.   0.]
-              [0.  -1.]
+    .. math::
+        I = \left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & 1
+                \end{matrix}
+            \\right)
 
-        p = probability
+        Z = \left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & -1
+                \end{matrix}
+            \\right)
+
+        p = \\text{probability}
 
     This noise channel is shown as `NPF` in circuit diagrams.
     """
@@ -135,27 +153,45 @@ Noise.register_noise(PhaseFlip)
 
 
 class Depolarizing(ProbabilisticNoise):
-    """Depolarizing noise channel which transforms a density matrix D according to:
+    """Depolarizing noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
-        D \\Rightarrow (1-p) D + \\frac{p}{3} X D X^{\\dagger} + \\frac{p}{3} Y D Y^{\\dagger}
-        + \\frac{p}{3} Z D Z^{\\dagger}
-
+        \\rho \\Rightarrow (1-p) \\rho
+            + p X \\rho X^{\\dagger}
+            + p Y \\rho Y^{\\dagger}
+            + p Z \\rho Z^{\\dagger}
     where
-    ::
-        I  =  [1.  0.]
-              [0.  1.]
 
-        X  =  [0.  1.]
-              [1.  0.]
+    .. math::
+        I = \left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & 1
+                \end{matrix}
+            \\right)
 
-        Y  =  [0.  -i ]
-              [i    0.]
+        X = \left(
+                \\begin{matrix}
+                    0 & 1 \\\\
+                    1 & 0
+                \end{matrix}
+            \\right)
 
-        Z  =  [1.   0.]
-              [0.  -1.]
+        Y = \left(
+                \\begin{matrix}
+                    0 & -i \\\\
+                    i &  0
+                \end{matrix}
+            \\right)
 
-        p = probability
+        Z = \left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & -1
+                \end{matrix}
+            \\right)
+
+        p = \\text{probability}
 
     This noise channel is shown as `ND` in circuit diagrams.
     """
@@ -202,18 +238,27 @@ Noise.register_noise(Depolarizing)
 
 
 class AmplitudeDamping(ProbabilisticNoise):
-    """AmplitudeDamping noise channel which transforms a density matrix D according to:
+    """AmplitudeDamping noise channel which transforms a density matrix :math:`\\rho` according to:
 
-    .. math:: D \\Rightarrow E_0 D E_0^{\\dagger} + E_1 D E1^{\\dagger}
+    .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
     where
-    ::
-        E_0  =  [1.  0.       ]
-                [0.  sqrt(1-p)]
 
-        E_1  =  [0.  sqrt(p)]
-                [0.  0.     ]
+    .. math::
+        E_0 = \left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & \sqrt{1-p}
+                \end{matrix}
+              \\right)
 
-        p = probability
+        E_1 = \left(
+                \\begin{matrix}
+                    0 & \sqrt{p} \\\\
+                    0 & 0
+                \end{matrix}
+              \\right)
+
+        p = \\text{probability}
 
     This noise channel is shown as `NAD` in circuit diagrams.
     """
@@ -258,18 +303,27 @@ Noise.register_noise(AmplitudeDamping)
 
 
 class PhaseDamping(ProbabilisticNoise):
-    """Phase damping noise channel which transforms a density matrix D according to:
+    """Phase damping noise channel which transforms a density matrix :math:`\\rho` according to:
 
-    .. math:: D \\Rightarrow E_0 D E_0^{\\dagger} + E_1 D E1^{\\dagger}
+    .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
     where
-    ::
-        E_0  =  [1.  0.       ]
-                [0.  sqrt(1-p)]
 
-        E_1  =  [0.  0.     ]
-                [0.  sqrt(p)]
+    .. math::
+        E_0 = \left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & \sqrt{1-p}
+                \end{matrix}
+              \\right)
 
-        p = probability
+        E_1 = \left(
+                \\begin{matrix}
+                    0 & 0 \\\\
+                    0 & \sqrt{p}
+                \end{matrix}
+              \\right)
+
+        p = \\text{probability}
 
     This noise channel is shown as `NPD` in circuit diagrams.
     """
