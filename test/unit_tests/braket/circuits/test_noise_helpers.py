@@ -6,10 +6,11 @@ from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
+from braket.circuits.noise_helpers import add_noise_to_gates, add_noise_to_moments
 from braket.circuits.qubit_set import QubitSet
 
-invalid_data_noise_type = [Gate.X(), None, 1.5]
-invalid_data_target_gates_type = [([-1, "foo"]), ([1.5, None, -1]), "X"]
+invalid_data_noise_type = [Gate.X(), Gate.X, None, 1.5]
+invalid_data_target_gates_type = [([-1, "foo"]), ([1.5, None, -1]), "X", ([Gate.X, "CNot"])]
 invalid_data_target_times_type = [1.5, "foo", ["foo", 1]]
 
 
@@ -94,10 +95,11 @@ def test_circuit_add_with_noise(circuit_2qubit, noise_1qubit):
     assert circ == expected
 
 
-def test_add_noise_1QubitNoise_with_target_gates_1(circuit_2qubit, noise_1qubit):
-    circ = circuit_2qubit.add_noise(
+def test_add_noise_to_gates_1QubitNoise_1(circuit_2qubit, noise_1qubit):
+    circ = add_noise_to_gates(
+        circuit_2qubit,
         noise_1qubit,
-        target_gates=Gate.X,
+        target_gates=[Gate.X],
         target_qubits=None,
         target_times=None,
     )
@@ -117,12 +119,13 @@ def test_add_noise_1QubitNoise_with_target_gates_1(circuit_2qubit, noise_1qubit)
     assert circ == expected
 
 
-def test_add_noise_1QubitNoise_with_target_gates_2(circuit_2qubit, noise_1qubit):
-    circ = circuit_2qubit.add_noise(
+def test_add_noise_to_gates_1QubitNoise_2(circuit_2qubit, noise_1qubit):
+    circ = add_noise_to_gates(
+        circuit_2qubit,
         noise_1qubit,
-        target_gates=Gate.X,
+        target_gates=[Gate.X],
         target_qubits=QubitSet(0),
-        target_times=1,
+        target_times=[1],
     )
 
     expected = (
@@ -138,84 +141,15 @@ def test_add_noise_1QubitNoise_with_target_gates_2(circuit_2qubit, noise_1qubit)
     assert circ == expected
 
 
-def test_add_noise_1QubitNoise_no_target_gates_1(circuit_2qubit, noise_1qubit):
-    circ = circuit_2qubit.add_noise(
-        noise_1qubit,
-        target_gates=None,
-        target_qubits=None,
-        target_times=None,
-    )
-
-    expected = (
-        Circuit()
-        .add_instruction(Instruction(Gate.X(), 0))
-        .add_instruction(Instruction(Gate.Y(), 1))
-        .add_instruction(Instruction(noise_1qubit, 0))
-        .add_instruction(Instruction(noise_1qubit, 1))
-        .add_instruction(Instruction(Gate.X(), 0))
-        .add_instruction(Instruction(Gate.X(), 1))
-        .add_instruction(Instruction(noise_1qubit, 0))
-        .add_instruction(Instruction(noise_1qubit, 1))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(noise_1qubit, 0))
-        .add_instruction(Instruction(noise_1qubit, 1))
-    )
-
-    assert circ == expected
-
-
-def test_add_noise_1QubitNoise_no_target_gates_2(circuit_2qubit, noise_1qubit):
-    circ = circuit_2qubit.add_noise(
-        noise_1qubit,
-        target_gates=None,
-        target_qubits=QubitSet(1),
-        target_times=[0, 2],
-    )
-
-    expected = (
-        Circuit()
-        .add_instruction(Instruction(Gate.X(), 0))
-        .add_instruction(Instruction(Gate.Y(), 1))
-        .add_instruction(Instruction(noise_1qubit, 1))
-        .add_instruction(Instruction(Gate.X(), 0))
-        .add_instruction(Instruction(Gate.X(), 1))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(noise_1qubit, 1))
-    )
-
-    assert circ == expected
-
-
-def test_add_noise_1QubitNoise_no_target_gates_3(circuit_2qubit_not_dense, noise_1qubit):
-    circ = circuit_2qubit_not_dense.add_noise(
-        noise_1qubit,
-        target_gates=None,
-        target_qubits=None,
-        target_times=None,
-    )
-
-    expected_moments = Moments()
-    expected_moments._add(Instruction(Gate.X(), 0))
-    expected_moments._add(Instruction(Gate.Y(), 1))
-    expected_moments._add_noise(Instruction(noise_1qubit, 0))
-    expected_moments._add_noise(Instruction(noise_1qubit, 1))
-    expected_moments._add(Instruction(Gate.X(), 0))
-    expected_moments._add_noise(Instruction(noise_1qubit, 0))
-    expected_moments._add_noise(Instruction(noise_1qubit, 1), 1)
-    expected_moments._add(Instruction(Gate.CNot(), [0, 1]))
-    expected_moments._add_noise(Instruction(noise_1qubit, 0))
-    expected_moments._add_noise(Instruction(noise_1qubit, 1))
-
-    assert circ.moments == expected_moments
-
-
-def test_add_noise_2QubitNoise_with_target_gates_1(circuit_3qubit, noise_2qubit):
-    circ = circuit_3qubit.add_noise(
+def test_add_noise_to_gates_2QubitNoise_1(circuit_3qubit, noise_2qubit):
+    circ = add_noise_to_gates(
+        circuit_3qubit,
         noise_2qubit,
-        target_gates=Gate.CNot,
-        target_qubits=circuit_3qubit.qubits,
-        target_times=range(circuit_3qubit.depth),
+        target_gates=[Gate.CNot],
+        target_qubits=None,
+        target_times=None,
     )
+
     expected = (
         Circuit()
         .add_instruction(Instruction(Gate.X(), 0))
@@ -232,10 +166,11 @@ def test_add_noise_2QubitNoise_with_target_gates_1(circuit_3qubit, noise_2qubit)
     assert circ == expected
 
 
-def test_add_noise_2QubitNoise_with_target_gates_2(circuit_3qubit, noise_2qubit):
-    circ = circuit_3qubit.add_noise(
+def test_add_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit):
+    circ = add_noise_to_gates(
+        circuit_3qubit,
         noise_2qubit,
-        target_gates=Gate.CZ,
+        target_gates=[Gate.CZ],
         target_qubits=QubitSet([1, 2]),
         target_times=[1, 2],
     )
@@ -255,33 +190,11 @@ def test_add_noise_2QubitNoise_with_target_gates_2(circuit_3qubit, noise_2qubit)
     assert circ == expected
 
 
-def test_add_noise_2QubitNoise_with_target_gates_3(circuit_3qubit, noise_2qubit):
-    circ = circuit_3qubit.add_noise(
-        noise_2qubit,
-        target_gates=Gate.CZ,
-        target_qubits=QubitSet([1, 2]),
-        target_times=[0, 1],
-    )
-
-    expected = (
-        Circuit()
-        .add_instruction(Instruction(Gate.X(), 0))
-        .add_instruction(Instruction(Gate.Y(), 1))
-        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Gate.Z(), 2))
-        .add_instruction(Instruction(Gate.CZ(), [2, 1]))
-        .add_instruction(Instruction(Gate.CNot(), [0, 2]))
-        .add_instruction(Instruction(Gate.CZ(), [1, 2]))
-    )
-
-    assert circ == expected
-
-
-def test_add_noise_2QubitNoise_with_target_gates_4(circuit_3qubit, noise_2qubit):
-    circ = circuit_3qubit.add_noise(
-        noise_2qubit,
-        target_gates=Gate.CZ,
-        target_qubits=QubitSet(0),
+def test_add_noise_to_moments_1QubitNoise_1(circuit_2qubit, noise_1qubit):
+    circ = add_noise_to_moments(
+        circuit_2qubit,
+        noise_1qubit,
+        target_qubits=None,
         target_times=None,
     )
 
@@ -289,20 +202,69 @@ def test_add_noise_2QubitNoise_with_target_gates_4(circuit_3qubit, noise_2qubit)
         Circuit()
         .add_instruction(Instruction(Gate.X(), 0))
         .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(noise_1qubit, 1))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
-        .add_instruction(Instruction(Gate.Z(), 2))
-        .add_instruction(Instruction(Gate.CZ(), [2, 1]))
-        .add_instruction(Instruction(Gate.CNot(), [0, 2]))
-        .add_instruction(Instruction(Gate.CZ(), [1, 2]))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(noise_1qubit, 1))
     )
 
     assert circ == expected
 
 
-def test_add_noise_2QubitNoise_no_targetgates(circuit_3qubit, noise_2qubit):
-    circ = circuit_3qubit.add_noise(
+def test_add_noise_to_moments_1QubitNoise_2(circuit_2qubit, noise_1qubit):
+    circ = add_noise_to_moments(
+        circuit_2qubit,
+        noise_1qubit,
+        target_qubits=QubitSet(1),
+        target_times=[0, 2],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(noise_1qubit, 1))
+    )
+
+    assert circ == expected
+
+
+def test_add_noise_to_moments_1QubitNoise_not_dense(circuit_2qubit_not_dense, noise_1qubit):
+    circ = add_noise_to_moments(
+        circuit_2qubit_not_dense,
+        noise_1qubit,
+        target_qubits=None,
+        target_times=None,
+    )
+
+    expected_moments = Moments()
+    expected_moments._add(Instruction(Gate.X(), 0))
+    expected_moments._add(Instruction(Gate.Y(), 1))
+    expected_moments._add_noise(Instruction(noise_1qubit, 0))
+    expected_moments._add_noise(Instruction(noise_1qubit, 1))
+    expected_moments._add(Instruction(Gate.X(), 0))
+    expected_moments._add_noise(Instruction(noise_1qubit, 0))
+    expected_moments._add_noise(Instruction(noise_1qubit, 1), 1)
+    expected_moments._add(Instruction(Gate.CNot(), [0, 1]))
+    expected_moments._add_noise(Instruction(noise_1qubit, 0))
+    expected_moments._add_noise(Instruction(noise_1qubit, 1))
+
+    assert circ.moments == expected_moments
+
+
+def test_add_noise_to_moments_2QubitNoise(circuit_3qubit, noise_2qubit):
+    circ = add_noise_to_moments(
+        circuit_3qubit,
         noise_2qubit,
-        target_gates=None,
         target_qubits=QubitSet([2, 1]),
         target_times=[4],
     )
@@ -320,3 +282,46 @@ def test_add_noise_2QubitNoise_no_targetgates(circuit_3qubit, noise_2qubit):
     )
 
     assert circ == expected
+
+
+def test_add_noise_with_target_gates(circuit_2qubit, noise_1qubit):
+    circ1 = circuit_2qubit.copy()
+    circ2 = circuit_2qubit.copy()
+
+    circ1 = circ1.add(
+        noise_1qubit,
+        target_gates=Gate.X,
+        target_qubits=None,
+        target_times=None,
+    )
+
+    circ2 = add_noise_to_gates(
+        circ2,
+        noise_1qubit,
+        target_gates=[Gate.X],
+        target_qubits=None,
+        target_times=None,
+    )
+
+    assert circ1 == circ2
+
+
+def test_add_noise_no_target_gates(circuit_2qubit, noise_1qubit):
+    circ1 = circuit_2qubit.copy()
+    circ2 = circuit_2qubit.copy()
+
+    circ1 = circ1.add(
+        noise_1qubit,
+        target_gates=None,
+        target_qubits=0,
+        target_times=1,
+    )
+
+    circ2 = add_noise_to_moments(
+        circ2,
+        noise_1qubit,
+        target_qubits=[0],
+        target_times=[1],
+    )
+
+    assert circ1 == circ2

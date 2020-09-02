@@ -15,12 +15,12 @@ from __future__ import annotations
 
 from typing import Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
 
-from braket.circuits import noise_helpers
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
+from braket.circuits.noise_helpers import add_noise_to_gates, add_noise_to_moments
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
@@ -485,7 +485,7 @@ class Circuit:
             TypeError: If `noise` is not Noise type, `target_gates` is not a Gate class,
                 Iterable[Gate] or None, `target_times` is not int or Iterable[int] or None.
             ValueError:
-                If `noise.qubit_count` is not equal to `len(gate.target)` of gates in
+                If `noise.qubit_count` is not equal to `len(gate.target)` for gates in
                 `target_gates`. If `noise.qubit_count` is not equal to `len(target_qubits)`
                 when `target_gates` is None.
 
@@ -554,7 +554,10 @@ class Circuit:
             ):
                 raise TypeError("all elements in target_times must be int")
 
-        return noise_helpers._add_noise(self, noise, target_gates, target_qubits, target_times)
+        if target_gates is None:
+            return add_noise_to_moments(self, noise, target_qubits, target_times)
+        else:
+            return add_noise_to_gates(self, noise, target_gates, target_qubits, target_times)
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """
