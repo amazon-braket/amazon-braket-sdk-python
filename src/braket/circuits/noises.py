@@ -29,18 +29,18 @@ class BitFlip(ProbabilisticNoise):
     where
 
     .. math::
-        I = \left(
+        I = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
                     0 & 1
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
-        X = \left(
+        X = \\left(
                 \\begin{matrix}
                     0 & 1 \\\\
                     1 & 0
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
         p = \\text{probability}
@@ -94,18 +94,18 @@ class PhaseFlip(ProbabilisticNoise):
     where
 
     .. math::
-        I = \left(
+        I = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
                     0 & 1
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
-        Z = \left(
+        Z = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
                     0 & -1
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
         p = \\text{probability}
@@ -163,32 +163,32 @@ class Depolarizing(ProbabilisticNoise):
     where
 
     .. math::
-        I = \left(
+        I = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
                     0 & 1
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
-        X = \left(
+        X = \\left(
                 \\begin{matrix}
                     0 & 1 \\\\
                     1 & 0
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
-        Y = \left(
+        Y = \\left(
                 \\begin{matrix}
                     0 & -i \\\\
                     i &  0
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
-        Z = \left(
+        Z = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
                     0 & -1
-                \end{matrix}
+                \\end{matrix}
             \\right)
 
         p = \\text{probability}
@@ -244,18 +244,18 @@ class AmplitudeDamping(ProbabilisticNoise):
     where
 
     .. math::
-        E_0 = \left(
+        E_0 = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
-                    0 & \sqrt{1-p}
-                \end{matrix}
+                    0 & \\sqrt{1-p}
+                \\end{matrix}
               \\right)
 
-        E_1 = \left(
+        E_1 = \\left(
                 \\begin{matrix}
-                    0 & \sqrt{p} \\\\
+                    0 & \\sqrt{p} \\\\
                     0 & 0
-                \end{matrix}
+                \\end{matrix}
               \\right)
 
         p = \\text{probability}
@@ -309,18 +309,18 @@ class PhaseDamping(ProbabilisticNoise):
     where
 
     .. math::
-        E_0 = \left(
+        E_0 = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
-                    0 & \sqrt{1-p}
-                \end{matrix}
+                    0 & \\sqrt{1-p}
+                \\end{matrix}
               \\right)
 
-        E_1 = \left(
+        E_1 = \\left(
                 \\begin{matrix}
                     0 & 0 \\\\
-                    0 & \sqrt{p}
-                \end{matrix}
+                    0 & \\sqrt{p}
+                \\end{matrix}
               \\right)
 
         p = \\text{probability}

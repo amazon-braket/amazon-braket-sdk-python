@@ -453,23 +453,26 @@ class Circuit:
         """Add `noise` to the circuit according to `target_gates`, `target_qubits` and
         `target_times`.
 
-        For any parameter that is None, that specification is ignored (e.g. if 'target_gates'
-        and 'target_qubits' are None then the noise is added to all qubits at target_times).
-        If 'target_gates', 'target_qubits', and 'target_times' are all None, then 'noise' is
+        For any parameter that is None, that specification is ignored (e.g. if `target_gates`
+        and `target_qubits` are None then the noise is added to all qubits at `target_times`).
+        If `target_gates`, `target_qubits`, and `target_times` are all None, then `noise` is
         added to every qubit at every moment.
 
-        When `target_gates` is not None and `noise.qubit_count` > 1, `noise.qubit_count`
-        must be the same as `qubit_count` of gates specified by `target_gates`. When
-        `noise.qubit_count` == 1, ie. `noise` is single-qubit, `noise` is added
-        to all qubits in `target_qubits` that interact with the target gates.
+        When `noise.qubit_count` == 1, ie. `noise` is single-qubit, `noise` is added to all
+        qubits in `target_gates` (or to all qubits in `target_qubits` if `target_gates` is None).
+
+        When `noise.qubit_count` > 1 and `target_gates` is not None, `noise.qubit_count`
+        must be the same as `qubit_count` of gates specified by `target_gates`.
+
+        When `noise.qubit_count` > 1 and `target_gates` is None, `noise.qubit_count` must
+        be the same as the length of  `target_qubits`.
 
         Args:
             noise (Noise): Noise to be added to the circuit. When `noise.qubit_count` > 1,
                 `noise.qubit_count` must be the same as `qubit_count` of gates specified by
                 `target_gates`.
             target_gates (Union[Type[Gate], Iterable[Type[Gate]], optional]): Gate class or
-                List of Gate classes which `noise` is added to. If None, `noise` is added only
-                according to `target_qubits` and `target_times`.
+                List of Gate classes which `noise` is added to. Default=None.
             target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
                 Default=None.
             target_times (Union[int, Iterable[int], optional]): Index of indices of time which
@@ -480,9 +483,11 @@ class Circuit:
 
         Raises:
             TypeError: If `noise` is not Noise type, `target_gates` is not a Gate class,
-                Iterable[Gate] or None, `target_times` is not int or Iterable[int],
-                len(target_gates) is not equal to noise.qubit_count when target_gates is
-                not None
+                Iterable[Gate] or None, `target_times` is not int or Iterable[int] or None.
+            ValueError:
+                If `noise.qubit_count` is not equal to `len(gate.target)` of gates in
+                `target_gates`. If `noise.qubit_count` is not equal to `len(target_qubits)`
+                when `target_gates` is None.
 
         Examples:
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)

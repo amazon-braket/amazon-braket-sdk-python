@@ -8,8 +8,8 @@ class Noise(QuantumOperator):
     """
     Class `Noise` represents a noise channel that operates on one or multiple qubits. Noise
     are considered as building blocks of quantum circuits that simulate noise. It can be
-    used as an operator in an Instruction object. It appears in the diagram when user prints
-    a circuit with Noise. This class is considered the noise channel definition containing
+    used as an operator in an `Instruction` object. It appears in the diagram when user prints
+    a circuit with `Noise`. This class is considered the noise channel definition containing
     the metadata that defines what the noise channel is and what it does.
     """
 
@@ -28,7 +28,7 @@ class Noise(QuantumOperator):
 
         Raises:
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are None, or
-                `ascii_symbols` length != `qubit_count`
+                length of `ascii_symbols` is not equal to `qubit_count`
         """
         if qubit_count < 1:
             raise ValueError(f"qubit_count, {qubit_count}, must be greater than zero")
@@ -63,12 +63,10 @@ class Noise(QuantumOperator):
         raise NotImplementedError("to_ir has not been implemented yet.")
 
     def to_matrix(self, *args, **kwargs) -> Any:
-        """Returns a list of matrices defining the Kraus matrices of
-            the noise channel.
+        """Returns a list of matrices defining the Kraus matrices of the noise channel.
 
         Returns:
-            Iterable[np.ndarray]: list of matrices defining the Kraus
-                matrices of the noise channel.
+            Iterable[np.ndarray]: list of matrices defining the Kraus matrices of the noise channel.
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
@@ -109,7 +107,7 @@ class ProbabilisticNoise(Noise):
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
-                `probability`>1.0, or `probability`<0.0
+                `probability` > 1.0, or `probability` < 0.0
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 

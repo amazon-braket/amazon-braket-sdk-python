@@ -82,7 +82,7 @@ def is_cptp(matrices: Iterable[np.array]) -> bool:
     Whether a transformation defined by these matrics as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for
     a transformation to be a quantum channel.
-    Reference: Theorem 8.1 in Nielsen & Chuang (2010) 10th edition.
+    Reference: Section 8.2.3 in Nielsen & Chuang (2010) 10th edition.
 
     Args:
         matrices (Iterable[np.array]): List of matrices representing Kraus operators.

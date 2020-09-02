@@ -142,8 +142,8 @@ class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
         Add instructions to self.
 
         Args:
-            instructions (Iterable[Instruction]): Instructions to add to self. The instruction
-            is added to the max time slice in which the instruction fits.
+            instructions (Iterable[Instruction]): Instructions to add to self. The instruction is
+                added to the max time slice in which the instruction fits.
         """
         for instruction in instructions:
             self._add(instruction)
