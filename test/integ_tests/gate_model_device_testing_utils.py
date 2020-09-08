@@ -11,9 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import concurrent.futures
 from typing import Any, Dict
 
-import concurrent.futures
 import numpy as np
 
 from braket.circuits import Circuit, Observable, ResultType
@@ -24,7 +24,7 @@ from braket.tasks import GateModelQuantumTaskResult
 
 def get_tol(shots: int) -> Dict[str, float]:
     if shots:
-        return {"atol": 0.05, "rtol": 0.1}
+        return {"atol": 0.1, "rtol": 0.15}
     else:
         return {"atol": 0.01, "rtol": 0}
 
