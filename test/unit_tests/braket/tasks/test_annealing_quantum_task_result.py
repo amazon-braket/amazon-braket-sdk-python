@@ -115,6 +115,19 @@ def result_str_2(solutions, values, variable_count, task_metadata, additional_me
 
 
 @pytest.fixture
+def result_str_3(solutions, values, variable_count, task_metadata, additional_metadata):
+    result = AnnealingTaskResult(
+        solutionCounts=[],
+        solutions=solutions,
+        variableCount=variable_count,
+        values=values,
+        taskMetadata=task_metadata,
+        additionalMetadata=additional_metadata,
+    )
+    return result.json()
+
+
+@pytest.fixture
 def annealing_result(
     solutions,
     values,
@@ -189,6 +202,11 @@ def test_from_string(
 
 def test_from_string_solution_counts_none(result_str_2, solutions):
     result = AnnealingQuantumTaskResult.from_string(result_str_2)
+    np.testing.assert_equal(result.record_array.solution_count, np.ones(len(solutions), dtype=int))
+
+
+def test_from_string_solution_counts_empty_list(result_str_3, solutions):
+    result = AnnealingQuantumTaskResult.from_string(result_str_3)
     np.testing.assert_equal(result.record_array.solution_count, np.ones(len(solutions), dtype=int))
 
 

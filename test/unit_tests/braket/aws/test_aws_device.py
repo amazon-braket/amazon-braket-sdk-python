@@ -14,7 +14,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from common_test_utils import RIGETTI_ARN, run_and_assert
+from common_test_utils import DWAVE_ARN, IONQ_ARN, RIGETTI_ARN, SIMULATOR_ARN, run_and_assert
 
 from braket.aws import AwsDevice, AwsDeviceType
 from braket.circuits import Circuit
@@ -55,7 +55,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
 )
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "name1",
+    "deviceName": "Aspen-8",
     "deviceType": "QPU",
     "providerName": "provider1",
     "deviceStatus": "OFFLINE",
@@ -185,7 +185,7 @@ MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.pa
 )
 
 MOCK_GATE_MODEL_SIMULATOR = {
-    "deviceName": "name2",
+    "deviceName": "SV1",
     "deviceType": "SIMULATOR",
     "providerName": "provider1",
     "deviceStatus": "ONLINE",
@@ -213,14 +213,14 @@ def circuit():
 @pytest.fixture
 def boto_session():
     _boto_session = Mock()
-    _boto_session.region_name = AwsDevice.QPU_REGIONS[RIGETTI_REGION_KEY][0]
+    _boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
     return _boto_session
 
 
 @pytest.fixture
 def aws_session():
     _boto_session = Mock()
-    _boto_session.region_name = AwsDevice.QPU_REGIONS[RIGETTI_REGION_KEY][0]
+    _boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
     _aws_session = Mock()
     _aws_session.boto_session = _boto_session
     return _aws_session
@@ -285,7 +285,7 @@ def test_repr(arn):
 
 def test_device_aws_session_in_qpu_region(aws_session):
     arn = RIGETTI_ARN
-    aws_session.boto_session.region_name = AwsDevice.QPU_REGIONS[RIGETTI_REGION_KEY][0]
+    aws_session.boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
     aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     AwsDevice(arn, aws_session)
 
@@ -298,7 +298,7 @@ def test_aws_session_in_another_qpu_region(
     boto_session_init, aws_session_init, boto_session, aws_session
 ):
     arn = RIGETTI_ARN
-    region = AwsDevice.QPU_REGIONS.get(RIGETTI_REGION_KEY)[0]
+    region = AwsDevice.DEVICE_REGIONS.get(RIGETTI_REGION_KEY)[0]
 
     boto_session_init.return_value = boto_session
     aws_session_init.return_value = aws_session
@@ -334,7 +334,7 @@ def test_device_no_aws_session_supplied(
     boto_session_init, aws_session_init, boto_session, aws_session
 ):
     arn = RIGETTI_ARN
-    region = AwsDevice.QPU_REGIONS.get(RIGETTI_REGION_KEY)[0]
+    region = AwsDevice.DEVICE_REGIONS.get(RIGETTI_REGION_KEY)[0]
 
     boto_session_init.return_value = boto_session
     aws_session_init.return_value = aws_session
@@ -476,3 +476,75 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
     assert device.type == AwsDeviceType(expected_device_data.get("deviceType"))
     if device.topology_graph:
         assert device.topology_graph.edges == device._construct_topology_graph().edges
+
+
+@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
+def test_get_devices(mock_copy_aws_session):
+    aws_session = Mock()
+    mock_copy_aws_session.return_value = aws_session
+    aws_session.search_devices.side_effect = [
+        [
+            {
+                "deviceArn": SIMULATOR_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            }
+        ],
+        [
+            {
+                "deviceArn": RIGETTI_ARN,
+                "deviceName": "Aspen-8",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "Rigetti",
+            },
+            {
+                "deviceArn": SIMULATOR_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            },
+        ],
+    ]
+    aws_session.get_device.side_effect = [MOCK_GATE_MODEL_SIMULATOR, MOCK_GATE_MODEL_QPU_1]
+    results = AwsDevice.get_devices(
+        arns=[SIMULATOR_ARN, RIGETTI_ARN],
+        types=["SIMULATOR", "QPU"],
+        provider_names=["Amazon Braket", "Rigetti"],
+        statuses=["ONLINE"],
+    )
+    assert [result.name for result in results] == ["Aspen-8", "SV1"]
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_get_devices_invalid_order_by():
+    AwsDevice.get_devices(order_by="foo")
+
+
+@pytest.mark.parametrize(
+    "input,output",
+    [
+        (
+            {"arns": None, "types": None, "provider_names": None},
+            {"us-west-2", "us-west-1", "us-east-1"},
+        ),
+        ({"arns": None, "types": ["SIMULATOR"], "provider_names": None}, {"us-west-2"}),
+        (
+            {"arns": [RIGETTI_ARN, DWAVE_ARN], "types": ["QPU"], "provider_names": None},
+            {"us-west-2", "us-west-1"},
+        ),
+        (
+            {
+                "arns": [RIGETTI_ARN, DWAVE_ARN, IONQ_ARN],
+                "types": ["QPU"],
+                "provider_names": ["Rigetti", "Amazon Braket", "IONQ", "FOO"],
+            },
+            {"us-west-2", "us-west-1", "us-east-1"},
+        ),
+    ],
+)
+def test_get_devices_regions_set(input, output):
+    assert AwsDevice._get_devices_regions_set(**input) == output

@@ -123,7 +123,7 @@ class AnnealingQuantumTaskResult:
     def _from_object(cls, result: AnnealingTaskResult):
         solutions = numpy.asarray(result.solutions, dtype=int)
         values = numpy.asarray(result.values, dtype=float)
-        if result.solutionCounts is None:
+        if not result.solutionCounts:
             solution_counts = numpy.ones(len(solutions), dtype=int)
         else:
             solution_counts = numpy.asarray(result.solutionCounts, dtype=int)

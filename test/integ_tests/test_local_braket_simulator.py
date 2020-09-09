@@ -13,6 +13,7 @@
 
 import pytest
 from gate_model_device_testing_utils import (
+    multithreaded_bell_pair_testing,
     no_result_types_bell_pair_testing,
     qubit_ordering_testing,
     result_types_all_selected_testing,
@@ -35,6 +36,10 @@ DEVICE = LocalSimulator()
 SHOTS = 8000
 
 
+def test_multithreaded_bell_pair():
+    multithreaded_bell_pair_testing(DEVICE, {"shots": SHOTS})
+
+
 def test_no_result_types_bell_pair():
     no_result_types_bell_pair_testing(DEVICE, {"shots": SHOTS})
 
@@ -44,7 +49,7 @@ def test_qubit_ordering():
 
 
 def test_result_types_no_shots():
-    result_types_zero_shots_bell_pair_testing(DEVICE, {"shots": 0})
+    result_types_zero_shots_bell_pair_testing(DEVICE, True, {"shots": 0})
 
 
 def test_result_types_nonzero_shots_bell_pair():

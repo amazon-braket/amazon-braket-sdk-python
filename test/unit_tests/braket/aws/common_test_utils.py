@@ -45,6 +45,44 @@ class MockS3:
         }
     )
 
+    MOCK_S3_RESULT_GATE_MODEL_WITH_RESULT_TYPES = json.dumps(
+        {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.gate_model_task_result",
+                "version": "1",
+            },
+            "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+            "measuredQubits": [0, 1],
+            "resultTypes": [
+                {
+                    "type": {"observable": ["h", "x"], "targets": [0, 1], "type": "expectation"},
+                    "value": 0.7071067811865474,
+                },
+                {
+                    "type": {"states": ["01", "10", "00", "11"], "type": "amplitude"},
+                    "value": {
+                        "01": [0.0, 0.0],
+                        "10": [0.0, 0.0],
+                        "00": [0.7071067811865475, 0.0],
+                        "11": [0.7071067811865475, 0.0],
+                    },
+                },
+            ],
+            "taskMetadata": {
+                "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+                "id": "task_arn",
+                "shots": 100,
+                "deviceId": "default",
+            },
+            "additionalMetadata": {
+                "action": {
+                    "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                    "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
+                },
+            },
+        }
+    )
+
     MOCK_S3_RESULT_ANNEALING = json.dumps(
         {
             "braketSchemaHeader": {
