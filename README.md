@@ -85,7 +85,7 @@ Amazon Braket provides access to two simulators: a fully managed statevector sim
 
 - `arn:aws:braket:::device/quantum-simulator/amazon/sv1` - SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
 
-- `LocalSimulator()` - The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. The local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
+- `LocalSimulator()` - The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. The local simulator is well suited for rapid prototyping on small circuits up to 25 qubits or on small noisy circuits up to 13 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py` and `../examples/local_noise_simulation.py`.
 
 ### Debugging logs
 
@@ -107,14 +107,14 @@ device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
 s3_folder = (f"amazon-braket-output-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder) 
+task = device.run(bell, s3_folder)
 print(task.result().measurement_counts)
 ```
 
 When you execute your task, Amazon Braket polls for a result. By default, Braket polls for 5 days; however, it is possible to change this by modifying the `poll_timeout_seconds` parameter in `AwsDevice.run`, as in the example below. Keep in mind that if your polling timeout is too short, results may not be returned within the polling time, such as when a QPU is unavailable, and a local timeout error is returned. You can always restart the polling by using `task.result()`.
 
 ```python
-task = device.run(bell, s3_folder, poll_timeout_seconds=86400)  # 1 day 
+task = device.run(bell, s3_folder, poll_timeout_seconds=86400)  # 1 day
 print(task.result().measurement_counts)
 ```
 
