@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.1.post1 (2020-09-10)
+
+### Testing and Release Infrastructure
+
+ * fix black formatting
+
 ## v1.1.1.post0 (2020-09-09)
 
 ### Testing and Release Infrastructure
