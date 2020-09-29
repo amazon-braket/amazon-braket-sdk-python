@@ -121,7 +121,9 @@ print(task.result().measurement_counts)
 Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
 - **IonQ** "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 - **Rigetti** "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
-- **D-Wave** "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6" (See the next section in this document for more information about using D-Wave.)
+- **D-Wave** (See the next section in this document for more information about using D-Wave.)
+    - **D-Wave 2000Q_6** "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
+    - **D-Wave Advantage_system1** "arn:aws:braket:::device/qpu/d-wave/Advantage_system1"
 
 **Important** Tasks may not run immediately on the QPU. The QPUs only execute tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
 
