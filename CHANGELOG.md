@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.1.post2 (2020-09-29)
+
+### Documentation Changes
+
+ * Add D-Wave Advantage_system1 arn
+
 ## v1.1.1.post1 (2020-09-10)
 
 ### Testing and Release Infrastructure
