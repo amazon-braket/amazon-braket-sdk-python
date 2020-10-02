@@ -15,7 +15,6 @@ import os
 
 import boto3
 import pytest
-from botocore.exceptions import ClientError
 
 from braket.aws.aws_session import AwsSession
 
@@ -44,20 +43,8 @@ def s3_bucket(s3_resource, boto_session):
     account_id = boto_session.client("sts").get_caller_identity()["Account"]
     bucket_name = f"amazon-braket-sdk-integ-tests-{account_id}"
     bucket = s3_resource.Bucket(bucket_name)
-
-    try:
+    if not bucket.creation_date:
         bucket.create(ACL="private", CreateBucketConfiguration={"LocationConstraint": region_name})
-    except ClientError as e:
-        code = e.response["Error"]["Code"]
-
-        # Bucket exists in profile region
-        if code == "BucketAlreadyOwnedByYou":
-            pass
-        # Bucket exists in another region
-        elif code == "IllegalLocationConstraintException" and bucket.creation_date:
-            pass
-        else:
-            raise e
 
     return bucket_name
 
