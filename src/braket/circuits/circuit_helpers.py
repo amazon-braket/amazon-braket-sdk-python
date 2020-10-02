@@ -23,10 +23,12 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
         shots (int): shots to validate
 
     Raises:
-        ValueError: If no result types specified for circuit and `shots=0`.
-            See `braket.circuit.result_types`. Or, if `StateVector` or `Amplitude`
-            are specified as result types when `shots > 0`.
+        ValueError: If circuit has no instructions. Also, if no result types
+            specified for circuit and `shots=0`. See `braket.circuit.result_types`.
+            Or, if `StateVector` or `Amplitude` are specified as result types when `shots > 0`.
     """
+    if not circuit.instructions:
+        raise ValueError("Circuit must have instructions to run on a device")
     if not shots and not circuit.result_types:
         raise ValueError(
             "No result types specified for circuit and shots=0. See `braket.circuit.result_types`"
