@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.1.2 (2020-10-02)
+
+### Bug Fixes and Other Changes
+
+ * Add error for target qubit set size not equal to operator qubit size in instruction
+ * Add error message for running a circuit without instructions
+
+### Documentation Changes
+
+ * Update docstring for measurement_counts
+
 ## v1.1.1.post2 (2020-09-29)
 
 ### Documentation Changes
