@@ -56,9 +56,10 @@ class GateModelQuantumTaskResult:
         measured_qubits (List[int], optional): The indices of the measured qubits. Default
             is None. Only available when shots > 0. Indicates which qubits are in
             `measurements`.
-        measurement_counts (Counter, optional): A Counter of measurements. Key is the measurements
+        measurement_counts (Counter, optional): A `Counter` of measurements. Key is the measurements
             in a big endian binary string. Value is the number of times that measurement occurred.
-            Default is None. Only available when shots > 0.
+            Default is None. Only available when shots > 0. Note that the keys in `Counter` are
+            unordered.
         measurement_probabilities (Dict[str, float], optional):
             A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
