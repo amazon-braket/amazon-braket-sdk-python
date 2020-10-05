@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.2.post0 (2020-10-05)
+
+### Testing and Release Infrastructure
+
+ * change check for s3 bucket exists
+ * change bucket creation setup for integ tests
+
 ## v1.1.2 (2020-10-02)
 
 ### Bug Fixes and Other Changes
