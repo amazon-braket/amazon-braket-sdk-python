@@ -131,7 +131,7 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [amazon-braket-ocean-plugin-python](https://github.com/aws/amazon-braket-ocean-plugin-python). Information about how to install the plugin is provided in the [README](https://github.com/aws/amazon-braket-ocean-plugin-python/blob/master/README.md) for the repo.
 
 ## Sample Notebooks
-Coming soon
+Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/aws/amazon-braket-examples/) repo.
 
 ## Braket Python SDK API Reference Documentation
 
