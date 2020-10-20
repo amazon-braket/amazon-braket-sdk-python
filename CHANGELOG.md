@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.2.post1 (2020-10-15)
+
+### Documentation Changes
+
+ * add sample notebooks link
+
 ## v1.1.2.post0 (2020-10-05)
 
 ### Testing and Release Infrastructure
