@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.3 (2020-10-20)
+
+### Bug Fixes and Other Changes
+
+ * add observable targets not in instructions to circuit qubit count and qubits
+
 ## v1.1.2.post1 (2020-10-15)
 
 ### Documentation Changes
