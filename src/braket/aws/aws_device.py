@@ -78,6 +78,7 @@ class AwsDevice(Device):
         self._aws_session = AwsDevice._aws_session_for_device(arn, aws_session)
         self._properties = None
         self._provider_name = None
+        self._topology_graph = None
         self._type = None
         self.refresh_metadata()
 
@@ -86,8 +87,8 @@ class AwsDevice(Device):
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: Optional[int] = None,
-        poll_timeout_seconds: Optional[int] = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: Optional[int] = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -101,9 +102,9 @@ class AwsDevice(Device):
             s3_destination_folder: The S3 location to save the task's results
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            poll_timeout_seconds (int): The polling timeout for AwsQuantumTask.result(), in seconds.
-                Default: 5 days.
-            poll_interval_seconds (int): The polling interval for AwsQuantumTask.result(),
+            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for AwsQuantumTask.result(),
                 in seconds. Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
@@ -123,12 +124,17 @@ class AwsDevice(Device):
             >>> device.run(task_specification=circuit,
             >>>     s3_destination_folder=("bucket-foo", "key-bar"))
 
+            >>> circuit = Circuit().h(0).cnot(0, 1)
+            >>> device = AwsDevice("arn3")
+            >>> device.run(task_specification=circuit,
+            >>>     s3_destination_folder=("bucket-foo", "key-bar"), disable_qubit_rewiring=True)
+
             >>> problem = Problem(
             >>>     ProblemType.ISING,
             >>>     linear={1: 3.14},
             >>>     quadratic={(1, 2): 10.08},
             >>> )
-            >>> device = AwsDevice("arn3")
+            >>> device = AwsDevice("arn4")
             >>> device.run(problem, ("bucket-foo", "key-bar"),
             >>>     device_parameters={
             >>>         "providerLevelParameters": {"postprocessingType": "SAMPLING"}}
