@@ -608,6 +608,64 @@ def test_qubit_count_setter(h):
     h.qubit_count = 1
 
 
+@pytest.mark.parametrize(
+    "circuit,expected_qubit_count",
+    [
+        (Circuit().h(0).h(1).h(2), 3),
+        (
+            Circuit()
+            .h(0)
+            .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
+            .sample(observable=Observable.H() @ Observable.X(), target=[0, 1]),
+            2,
+        ),
+        (
+            Circuit().h(0).probability([1, 2]).state_vector(),
+            1,
+        ),
+        (
+            Circuit()
+            .h(0)
+            .variance(observable=Observable.H(), target=1)
+            .state_vector()
+            .amplitude(["01"]),
+            2,
+        ),
+    ],
+)
+def test_qubit_count(circuit, expected_qubit_count):
+    assert circuit.qubit_count == expected_qubit_count
+
+
+@pytest.mark.parametrize(
+    "circuit,expected_qubits",
+    [
+        (Circuit().h(0).h(1).h(2), QubitSet([0, 1, 2])),
+        (
+            Circuit()
+            .h(0)
+            .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
+            .sample(observable=Observable.H() @ Observable.X(), target=[0, 1]),
+            QubitSet([0, 1]),
+        ),
+        (
+            Circuit().h(0).probability([1, 2]).state_vector(),
+            QubitSet([0]),
+        ),
+        (
+            Circuit()
+            .h(0)
+            .variance(observable=Observable.H(), target=1)
+            .state_vector()
+            .amplitude(["01"]),
+            QubitSet([0, 1]),
+        ),
+    ],
+)
+def test_circuit_qubits(circuit, expected_qubits):
+    assert circuit.qubits == expected_qubits
+
+
 def test_qubits_getter(h):
     assert h.qubits == h._moments.qubits
     assert h.qubits is not h._moments.qubits

@@ -21,6 +21,7 @@ from gate_model_device_testing_utils import (
     result_types_bell_pair_marginal_probability_testing,
     result_types_hermitian_testing,
     result_types_nonzero_shots_bell_pair_testing,
+    result_types_observable_not_in_instructions,
     result_types_tensor_hermitian_hermitian_testing,
     result_types_tensor_x_y_testing,
     result_types_tensor_y_hermitian_testing,
@@ -104,3 +105,8 @@ def test_result_types_tensor_y_hermitian(shots):
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_all_selected(shots):
     result_types_all_selected_testing(DEVICE, {"shots": shots})
+
+
+@pytest.mark.parametrize("shots", [0, SHOTS])
+def test_result_types_observable_not_in_instructions(shots):
+    result_types_observable_not_in_instructions(DEVICE, {"shots": shots})

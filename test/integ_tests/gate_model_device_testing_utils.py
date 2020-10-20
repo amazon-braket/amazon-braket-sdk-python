@@ -52,6 +52,21 @@ def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]
     assert len(result.measurements) == shots
 
 
+def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict[str, Any]):
+    shots = run_kwargs["shots"]
+    tol = get_tol(shots)
+    bell = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.X(), target=[2])
+        .variance(observable=Observable.Y(), target=[3])
+    )
+    result = device.run(bell, **run_kwargs).result()
+    assert np.allclose(result.values[0], 0, **tol)
+    assert np.allclose(result.values[1], 1, **tol)
+
+
 def result_types_zero_shots_bell_pair_testing(
     device: Device, include_state_vector: bool, run_kwargs: Dict[str, Any]
 ):
