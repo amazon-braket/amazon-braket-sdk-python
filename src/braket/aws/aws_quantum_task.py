@@ -55,6 +55,7 @@ class AwsQuantumTask(QuantumTask):
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
+        tags: Dict[str, str] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -83,6 +84,9 @@ class AwsQuantumTask(QuantumTask):
                 For example, for D-Wave:
                 `{"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
+            tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task,
+                Example: {"state": "washington"}
+
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
 
@@ -106,6 +110,8 @@ class AwsQuantumTask(QuantumTask):
             s3_destination_folder,
             shots if shots is not None else AwsQuantumTask.DEFAULT_SHOTS,
         )
+        if tags is not None:
+            create_task_kwargs.update({"tags": tags})
         return _create_internal(
             task_specification,
             aws_session,
