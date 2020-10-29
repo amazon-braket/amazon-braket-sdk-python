@@ -84,8 +84,9 @@ class AwsQuantumTask(QuantumTask):
                 For example, for D-Wave:
                 `{"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
-            tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task,
-                Example: {"state": "washington"}
+            tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
+                An example would be:
+                `{"state": "washington"}`
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
