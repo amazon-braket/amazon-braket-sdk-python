@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.4 (2020-10-29)
+
+### Bug Fixes and Other Changes
+
+ * Enable simultaneous measurement of observables with shared factors
+ * Add optimization to only poll during execution window
+
 ## v1.1.3 (2020-10-20)
 
 ### Bug Fixes and Other Changes
