@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, TypeVar, Union
+from typing import Callable, Dict, Iterable, List, Tuple, TypeVar, Union
 
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
@@ -110,7 +110,7 @@ class Circuit:
         self._moments: Moments = Moments()
         self._result_types: List[ResultType] = []
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
-        self._qubit_target_mapping: Dict[int, List[int]] = {}
+        self._qubit_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
 
         if addable is not None:
@@ -140,43 +140,25 @@ class Circuit:
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
         basis_rotation_instructions = []
-        observable_return_types = (
-            result_type
-            for result_type in self._result_types
-            if isinstance(result_type, ObservableResultType)
-        )
-
-        added_observables_targets = set()
-        for return_type in observable_return_types:
-            observable: Observable = return_type.observable
-            targets: List[List[int]] = (
-                [list(return_type.target)]
-                if return_type.target
-                else [list([qubit]) for qubit in self._moments.qubits]
-            )
-
-            for target in targets:
-                # only add gates for observables and targets that
-                # have not been processed
-                str_observables_target = f"{observable}; {target}"
-                if str_observables_target in added_observables_targets:
-                    continue
-                added_observables_targets.add(str_observables_target)
+        all_qubit_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
+        if all_qubit_observable:
+            for target in self.qubits:
                 basis_rotation_instructions += Circuit._observable_to_instruction(
-                    observable, target
+                    all_qubit_observable, target
                 )
+            return basis_rotation_instructions
+
+        target_lists = sorted(list(set(self._qubit_target_mapping.values())))
+        for target_list in target_lists:
+            observable = self._qubit_observable_mapping[target_list[0]]
+            basis_rotation_instructions += Circuit._observable_to_instruction(
+                observable, target_list
+            )
         return basis_rotation_instructions
 
     @staticmethod
     def _observable_to_instruction(observable: Observable, target_list: List[int]):
-        if isinstance(observable, TensorProduct):
-            instructions = []
-            for factor in observable.factors:
-                target = [target_list.pop(0) for _ in range(factor.qubit_count)]
-                instructions += Circuit._observable_to_instruction(factor, target)
-            return instructions
-        else:
-            return [Instruction(gate, target_list) for gate in observable.basis_rotation_gates]
+        return [Instruction(gate, target_list) for gate in observable.basis_rotation_gates]
 
     @property
     def moments(self) -> Moments:
@@ -263,8 +245,8 @@ class Circuit:
 
         if result_type_to_add not in self._result_types:
             self._add_to_qubit_observable_mapping(result_type_to_add)
-            self._result_types.append(result_type_to_add)
             self._add_to_qubit_observable_set(result_type_to_add)
+            self._result_types.append(result_type_to_add)
         return self
 
     def _add_to_qubit_observable_mapping(self, result_type: ResultType) -> None:
@@ -274,32 +256,70 @@ class Circuit:
             observable = result_type.observable
         else:
             return
-
-        targets = result_type.target or self._qubit_observable_mapping.keys()
+        targets = result_type.target or list(self._qubit_observable_set)
         all_qubits_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
 
-        for target in targets:
+        for i in range(len(targets)):
+            target = targets[i]
+            tensor_product_dict = (
+                Circuit._tensor_product_index_dict(observable)
+                if isinstance(observable, TensorProduct)
+                else None
+            )
+            new_observable = tensor_product_dict[i][0] if tensor_product_dict else observable
             current_observable = all_qubits_observable or self._qubit_observable_mapping.get(target)
-            current_target = self._qubit_target_mapping.get(target)
-            if current_observable and current_observable != observable:
+            if current_observable and current_observable != new_observable:
                 raise ValueError(
                     f"Existing result type for observable {current_observable} for target {target}"
-                    f" conflicts with observable {observable} for new result type"
+                    f" conflicts with observable {new_observable} for new result type"
                 )
 
             if result_type.target:
-                # The only way this can happen is if the observables (acting on multiple target
-                # qubits) and target qubits are the same, but the new target is the wrong order;
-                if current_target and current_target != targets:
-                    raise ValueError(
-                        f"Target order {current_target} of existing result type with observable"
-                        f" {current_observable} conflicts with order {targets} of new result type"
+                if new_observable.qubit_count > 1:
+                    new_targets = (
+                        tuple(
+                            result_type.target[
+                                tensor_product_dict[i][1][0] : tensor_product_dict[i][1][1]
+                            ]
+                        )
+                        if tensor_product_dict
+                        else tuple(result_type.target)
                     )
-                self._qubit_observable_mapping[target] = observable
-                self._qubit_target_mapping[target] = targets
+                    current_target = self._qubit_target_mapping.get(target)
+                    if current_target and current_target != new_targets:
+                        raise ValueError(
+                            f"Target order {current_target} of existing result type with observable"
+                            f" {current_observable} conflicts with order {targets} of new"
+                            " result type"
+                        )
+                    self._qubit_target_mapping[target] = new_targets
+                else:
+                    self._qubit_target_mapping[target] = tuple([target])
+                self._qubit_observable_mapping[target] = new_observable
 
         if not result_type.target:
+            if all_qubits_observable and all_qubits_observable != observable:
+                raise ValueError(
+                    f"Existing result type for observable {all_qubits_observable} for all qubits"
+                    f" conflicts with observable {observable} for new result type"
+                )
             self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable
+
+    @staticmethod
+    def _tensor_product_index_dict(observable: TensorProduct) -> Dict[int, Observable]:
+        obj_dict = {}
+        i = 0
+        factors = list(observable.factors)
+        total = factors[0].qubit_count
+        while factors:
+            if i >= total:
+                factors.pop(0)
+                if factors:
+                    total += factors[0].qubit_count
+            if factors:
+                obj_dict[i] = (factors[0], (total - factors[0].qubit_count, total))
+            i += 1
+        return obj_dict
 
     def _add_to_qubit_observable_set(self, result_type: ResultType) -> None:
         if isinstance(result_type, ObservableResultType) and result_type.target:
