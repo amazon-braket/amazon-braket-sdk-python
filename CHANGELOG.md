@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.0 (2020-11-02)
+
+### Features
+
+ * support tags parameter for create method in AwsQuantumTask
+
 ## v1.1.4.post0 (2020-10-30)
 
 ### Testing and Release Infrastructure
