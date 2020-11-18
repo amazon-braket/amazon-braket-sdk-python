@@ -14,7 +14,14 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from common_test_utils import DWAVE_ARN, IONQ_ARN, RIGETTI_ARN, SIMULATOR_ARN, run_and_assert
+from common_test_utils import (
+    DWAVE_ARN,
+    IONQ_ARN,
+    RIGETTI_ARN,
+    SIMULATOR_ARN,
+    run_and_assert,
+    run_batch_and_assert,
+)
 
 from braket.aws import AwsDevice, AwsDeviceType
 from braket.circuits import Circuit
@@ -441,6 +448,38 @@ def test_run_with_positional_args_and_kwargs(
     )
 
 
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_no_extra(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_shots(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+    _run_batch_and_assert(
+        aws_quantum_task_mock, device, [circuit for _ in range(10)], s3_destination_folder, 100
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_max_parallel_and_kwargs(
+    aws_quantum_task_mock, device, circuit, s3_destination_folder
+):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+        100,
+        20,
+        extra_kwargs={"bar": 1, "baz": 2},
+    )
+
+
 def _run_and_assert(
     aws_quantum_task_mock,
     device_factory,
@@ -462,6 +501,32 @@ def _run_and_assert(
         s3_destination_folder,
         shots,
         poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
+    )
+
+
+def _run_batch_and_assert(
+    aws_quantum_task_mock,
+    device_factory,
+    circuits,
+    s3_destination_folder,
+    shots=None,  # Treated as positional arg
+    max_parallel=None,  # Treated as positional arg
+    poll_interval_seconds=None,  # Treated as positional arg
+    extra_args=None,
+    extra_kwargs=None,
+):
+    run_batch_and_assert(
+        aws_quantum_task_mock,
+        device_factory("foo_bar"),
+        AwsDevice.DEFAULT_SHOTS_SIMULATOR,
+        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        circuits,
+        s3_destination_folder,
+        shots,
+        max_parallel,
         poll_interval_seconds,
         extra_args,
         extra_kwargs,

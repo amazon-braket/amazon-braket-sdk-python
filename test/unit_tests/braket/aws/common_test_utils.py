@@ -152,7 +152,6 @@ def run_and_assert(
     if poll_interval_seconds is not None:
         run_args.append(poll_interval_seconds)
     run_args += extra_args if extra_args else []
-
     run_kwargs = extra_kwargs or {}
 
     task = device.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
@@ -160,7 +159,6 @@ def run_and_assert(
 
     create_args = [shots if shots is not None else default_shots]
     create_args += extra_args if extra_args else []
-
     create_kwargs = extra_kwargs or {}
     create_kwargs.update(
         {
@@ -172,10 +170,62 @@ def run_and_assert(
             else default_poll_interval,
         }
     )
+
     aws_quantum_task_mock.assert_called_with(
         device._aws_session,
         device.arn,
         circuit,
+        s3_destination_folder,
+        *create_args,
+        **create_kwargs
+    )
+
+
+def run_batch_and_assert(
+    aws_quantum_task_mock,
+    device,
+    default_shots,
+    default_poll_interval,
+    circuits,
+    s3_destination_folder,
+    shots,
+    max_parallel,
+    poll_interval_seconds,
+    extra_args,
+    extra_kwargs,
+):
+    task_mock = Mock()
+    task_mock.state.return_value = "COMPLETED"
+    aws_quantum_task_mock.return_value = task_mock
+
+    run_args = []
+    if shots is not None:
+        run_args.append(shots)
+    if max_parallel is not None:
+        run_args.append(max_parallel)
+    if poll_interval_seconds is not None:
+        run_args.append(poll_interval_seconds)
+    run_args += extra_args if extra_args else []
+    run_kwargs = extra_kwargs or {}
+
+    batch = device.run_batch(circuits, s3_destination_folder, *run_args, **run_kwargs)
+    assert batch.tasks == [task_mock for _ in range(len(circuits))]
+
+    create_args = [shots if shots is not None else default_shots]
+    create_args += extra_args if extra_args else []
+    create_kwargs = extra_kwargs or {}
+    create_kwargs.update(
+        {
+            "poll_interval_seconds": poll_interval_seconds
+            if poll_interval_seconds is not None
+            else default_poll_interval,
+        }
+    )
+
+    aws_quantum_task_mock.assert_called_with(
+        device._aws_session,
+        device.arn,
+        circuits[0],
         s3_destination_folder,
         *create_args,
         **create_kwargs

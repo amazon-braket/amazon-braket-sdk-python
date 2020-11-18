@@ -163,7 +163,7 @@ pip install -e "amazon-braket-sdk-python[test]"
 tox -e unit-tests
 ```
 
-You can also pass in various pytest arguments `tox -e integ-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+You can also pass in various pytest arguments `tox -e unit-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
 
 
 To run linters and doc generators and unit tests

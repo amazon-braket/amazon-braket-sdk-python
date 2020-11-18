@@ -16,6 +16,7 @@ from typing import Any, Dict
 
 import numpy as np
 
+from braket.aws import AwsDevice
 from braket.circuits import Circuit, Observable, ResultType
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 from braket.devices import Device
@@ -23,10 +24,7 @@ from braket.tasks import GateModelQuantumTaskResult
 
 
 def get_tol(shots: int) -> Dict[str, float]:
-    if shots:
-        return {"atol": 0.1, "rtol": 0.15}
-    else:
-        return {"atol": 0.01, "rtol": 0}
+    return {"atol": 0.1, "rtol": 0.15} if shots else {"atol": 0.01, "rtol": 0}
 
 
 def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
@@ -440,6 +438,18 @@ def multithreaded_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
             futures.append(future)
     for future in futures:
         result = future.result()
+        assert np.allclose(result.measurement_probabilities["00"], 0.5, **tol)
+        assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
+        assert len(result.measurements) == shots
+
+
+def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
+    shots = run_kwargs["shots"]
+    tol = get_tol(shots)
+    circuits = [Circuit().h(0).cnot(0, 1) for _ in range(10)]
+
+    batch = device.run_batch(circuits, max_parallel=5, **run_kwargs)
+    for result in batch.results():
         assert np.allclose(result.measurement_probabilities["00"], 0.5, **tol)
         assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
         assert len(result.measurements) == shots

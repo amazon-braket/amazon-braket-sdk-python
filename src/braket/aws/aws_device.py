@@ -22,6 +22,7 @@ from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
+from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmProperties
@@ -96,7 +97,7 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]):  Specification of task
+            task_specification (Union[Circuit, Problem]): Specification of task
                 (circuit or annealing problem) to run on device.
             s3_destination_folder: The S3 location to save the task's results
             shots (int, optional): The number of times to run the circuit or annealing problem.
@@ -137,18 +138,59 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        if shots is None:
-            if "qpu" in self.arn:
-                shots = AwsDevice.DEFAULT_SHOTS_QPU
-            else:
-                shots = AwsDevice.DEFAULT_SHOTS_SIMULATOR
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
             task_specification,
             s3_destination_folder,
-            shots,
+            shots if shots is not None else self._default_shots,
             poll_timeout_seconds=poll_timeout_seconds,
+            poll_interval_seconds=poll_interval_seconds,
+            *aws_quantum_task_args,
+            **aws_quantum_task_kwargs,
+        )
+
+    def run_batch(
+        self,
+        task_specifications: List[Union[Circuit, Problem]],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: Optional[int] = None,
+        max_parallel: Optional[int] = None,
+        poll_interval_seconds: Optional[int] = DEFAULT_RESULTS_POLL_INTERVAL,
+        *aws_quantum_task_args,
+        **aws_quantum_task_kwargs,
+    ) -> AwsQuantumTaskBatch:
+        """Executes a batch of tasks in parallel
+
+        Args:
+            task_specifications (List[Union[Circuit, Problem]]): List of  circuits
+                or annealing problems to run on device.
+            s3_destination_folder: The S3 location to save the tasks' results
+            shots (int, optional): The number of times to run the circuit or annealing problem.
+                Default is 1000 for QPUs and 0 for simulators.
+            max_parallel (int): The maximum number of tasks to run on AWS in parallel.
+                Batch creation will fail if this value is greater than the maximum allowed
+                concurrent tasks on the device. Default: 10
+            poll_interval_seconds (int): The polling interval for results and
+                and, in seconds. Default: 1 second.
+            *aws_quantum_task_args: Variable length positional arguments for
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
+            **aws_quantum_task_kwargs: Variable length keyword arguments for
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
+
+        Returns:
+            AwsQuantumTaskBatch: A batch containing all of the tasks run
+
+        See Also:
+            `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
+        """
+        return AwsQuantumTaskBatch(
+            self._aws_session,
+            self._arn,
+            task_specifications,
+            s3_destination_folder,
+            shots if shots is not None else self._default_shots,
+            max_parallel=max_parallel,
             poll_interval_seconds=poll_interval_seconds,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
@@ -234,6 +276,12 @@ class AwsDevice(Device):
             return from_edgelist(edges)
         else:
             return None
+
+    @property
+    def _default_shots(self):
+        return (
+            AwsDevice.DEFAULT_SHOTS_QPU if "qpu" in self.arn else AwsDevice.DEFAULT_SHOTS_SIMULATOR
+        )
 
     @staticmethod
     def _aws_session_for_device(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:

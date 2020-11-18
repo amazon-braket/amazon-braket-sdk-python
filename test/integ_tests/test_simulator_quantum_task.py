@@ -13,6 +13,7 @@
 
 import pytest
 from gate_model_device_testing_utils import (
+    batch_bell_pair_testing,
     multithreaded_bell_pair_testing,
     no_result_types_bell_pair_testing,
     qubit_ordering_testing,
@@ -166,4 +167,12 @@ def test_result_types_observable_not_in_instructions(
     device = AwsDevice(simulator_arn, aws_session)
     result_types_observable_not_in_instructions(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
+    )
+
+
+@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+def test_batch_bell_pair(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    batch_bell_pair_testing(
+        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
