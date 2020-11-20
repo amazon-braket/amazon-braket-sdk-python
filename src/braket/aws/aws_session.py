@@ -23,19 +23,21 @@ class AwsSession(object):
 
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
-    def __init__(self, boto_session=None, braket_client=None):
+    def __init__(self, boto_session=None, braket_client=None, config=None):
         """
         Args:
             boto_session: A boto3 session object
             braket_client: A boto3 Braket client
+            config: A botocore Config object
         """
 
         self.boto_session = boto_session or boto3.Session()
+        self._config = config
 
         if braket_client:
             self.braket_client = braket_client
         else:
-            self.braket_client = self.boto_session.client("braket")
+            self.braket_client = self.boto_session.client("braket", config=self._config)
 
     #
     # Quantum Tasks
@@ -103,7 +105,7 @@ class AwsSession(object):
         Returns:
             str: The body of the S3 object
         """
-        s3 = self.boto_session.resource("s3")
+        s3 = self.boto_session.resource("s3", config=self._config)
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
 

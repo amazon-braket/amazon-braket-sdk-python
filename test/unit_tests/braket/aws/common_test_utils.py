@@ -14,6 +14,8 @@
 import json
 from unittest.mock import Mock
 
+from braket.aws import AwsQuantumTaskBatch
+
 DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
 RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
@@ -131,7 +133,7 @@ def run_and_assert(
     aws_quantum_task_mock,
     device,
     default_shots,
-    default_timeout,
+    default_poll_timeout,
     default_poll_interval,
     circuit,
     s3_destination_folder,
@@ -152,26 +154,22 @@ def run_and_assert(
     if poll_interval_seconds is not None:
         run_args.append(poll_interval_seconds)
     run_args += extra_args if extra_args else []
-
     run_kwargs = extra_kwargs or {}
 
     task = device.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
     assert task == task_mock
 
-    create_args = [shots if shots is not None else default_shots]
-    create_args += extra_args if extra_args else []
-
-    create_kwargs = extra_kwargs or {}
-    create_kwargs.update(
-        {
-            "poll_timeout_seconds": poll_timeout_seconds
-            if poll_timeout_seconds is not None
-            else default_timeout,
-            "poll_interval_seconds": poll_interval_seconds
-            if poll_interval_seconds is not None
-            else default_poll_interval,
-        }
+    create_args, create_kwargs = _create_task_args_and_kwargs(
+        default_shots,
+        default_poll_timeout,
+        default_poll_interval,
+        shots,
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
     )
+
     aws_quantum_task_mock.assert_called_with(
         device._aws_session,
         device.arn,
@@ -180,3 +178,94 @@ def run_and_assert(
         *create_args,
         **create_kwargs
     )
+
+
+def run_batch_and_assert(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    device,
+    default_shots,
+    default_poll_timeout,
+    default_poll_interval,
+    circuits,
+    s3_destination_folder,
+    shots,
+    max_parallel,
+    max_connections,
+    poll_timeout_seconds,
+    poll_interval_seconds,
+    extra_args,
+    extra_kwargs,
+):
+    task_mock = Mock()
+    task_mock.state.return_value = "COMPLETED"
+    aws_quantum_task_mock.return_value = task_mock
+    new_session_mock = Mock()
+    aws_session_mock.return_value = new_session_mock
+
+    run_args = []
+    if shots is not None:
+        run_args.append(shots)
+    if max_parallel is not None:
+        run_args.append(max_parallel)
+    if max_connections is not None:
+        run_args.append(max_connections)
+    if poll_timeout_seconds is not None:
+        run_args.append(poll_timeout_seconds)
+    if poll_interval_seconds is not None:
+        run_args.append(poll_interval_seconds)
+    run_args += extra_args if extra_args else []
+    run_kwargs = extra_kwargs or {}
+
+    batch = device.run_batch(circuits, s3_destination_folder, *run_args, **run_kwargs)
+    assert batch.tasks == [task_mock for _ in range(len(circuits))]
+
+    create_args, create_kwargs = _create_task_args_and_kwargs(
+        default_shots,
+        default_poll_timeout,
+        default_poll_interval,
+        shots,
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
+    )
+
+    max_pool_connections = max_connections or AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT
+
+    # aws_session_mock.call_args.kwargs syntax is newer than Python 3.7
+    assert aws_session_mock.call_args[1]["config"].max_pool_connections == max_pool_connections
+    aws_quantum_task_mock.assert_called_with(
+        new_session_mock,
+        device.arn,
+        circuits[0],
+        s3_destination_folder,
+        *create_args,
+        **create_kwargs
+    )
+
+
+def _create_task_args_and_kwargs(
+    default_shots,
+    default_poll_timeout,
+    default_poll_interval,
+    shots,
+    poll_timeout_seconds,
+    poll_interval_seconds,
+    extra_args,
+    extra_kwargs,
+):
+    create_args = [shots if shots is not None else default_shots]
+    create_args += extra_args if extra_args else []
+    create_kwargs = extra_kwargs or {}
+    create_kwargs.update(
+        {
+            "poll_timeout_seconds": poll_timeout_seconds
+            if poll_timeout_seconds is not None
+            else default_poll_timeout,
+            "poll_interval_seconds": poll_interval_seconds
+            if poll_interval_seconds is not None
+            else default_poll_interval,
+        }
+    )
+    return create_args, create_kwargs
