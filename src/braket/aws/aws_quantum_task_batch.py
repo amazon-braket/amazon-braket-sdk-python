@@ -110,8 +110,8 @@ class AwsQuantumTaskBatch:
         *args,
         **kwargs,
     ):
-        # Tracks the number of remaining and currently executing tasks
-        # This also serves as a lock, because appending and popping are atomic
+        # This list tracks the number of remaining and currently executing tasks
+        # It also serves as a lock, because appending and popping are atomic
         remaining = [0 for _ in task_specifications]
         executing = Queue(maxsize=max_parallel)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
