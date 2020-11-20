@@ -37,9 +37,6 @@ class AwsQuantumTaskBatch:
 
     MAX_PARALLEL_DEFAULT = 10
     MAX_CONNECTIONS_DEFAULT = 100
-    TERMINAL_STATES = AwsQuantumTask.NO_RESULT_TERMINAL_STATES.union(
-        AwsQuantumTask.RESULTS_READY_STATES
-    )
 
     def __init__(
         self,
@@ -168,7 +165,7 @@ class AwsQuantumTaskBatch:
         # If the task hits a terminal state before all tasks have been created,
         # it can be returned immediately
         while remaining:
-            if task.state() in AwsQuantumTaskBatch.TERMINAL_STATES:
+            if task.state() in AwsQuantumTask.TERMINAL_STATES:
                 executing.get()
                 break
             time.sleep(poll_interval_seconds)
@@ -231,7 +228,7 @@ class AwsQuantumTaskBatch:
         unfinished = set()
         for task_id in status_futures:
             status = status_futures[task_id].result()
-            if status not in AwsQuantumTaskBatch.TERMINAL_STATES:
+            if status not in AwsQuantumTask.TERMINAL_STATES:
                 unfinished.add(task_id)
             if status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
                 self._unsuccessful.add(task_id)
