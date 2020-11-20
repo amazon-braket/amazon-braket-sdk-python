@@ -82,7 +82,7 @@ The code sample imports the Amazon Braket framework, then defines the device to 
 
 ### Running multiple tasks at once
 
-Many quantum algorithms need to run multiple independent circuits, and running the circuits in parallel is much faster than running them one at a time. The following example shows how to run a batch of tasks:
+Many quantum algorithms need to run multiple independent circuits, and submitting the circuits in parallel can be faster than submitting them one at a time. In particular, parallel task processing provides a significant speed up when using simulator devices. The following example shows how to run a batch of tasks on SV1:
 
 ```python
 circuits = [bell for _ in range(5)]

@@ -319,9 +319,9 @@ def test_aws_session_in_another_qpu_region(
     aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
 
     creds = Mock()
-    creds.access_key = "foo"
-    creds.secret_key = "bar"
-    creds.token = "baz"
+    creds.access_key = "a"
+    creds.secret_key = "b"
+    creds.token = "c"
 
     different_region_aws_session = Mock()
     different_region_aws_session.boto_session.get_credentials.return_value = creds
