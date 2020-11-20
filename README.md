@@ -80,6 +80,16 @@ print(task.result().measurement_counts)
 
 The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). The `s3_folder` statement defines the Amazon S3 bucket for the task result and the folder in the bucket to store the task result. This folder is created when you run the task. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job. This example can be found in `../examples/bell.py`.
 
+### Running multiple tasks at once
+
+Many quantum algorithms need to run multiple independent circuits, and submitting the circuits in parallel can be faster than submitting them one at a time. In particular, parallel task processing provides a significant speed up when using simulator devices. The following example shows how to run a batch of tasks on SV1:
+
+```python
+circuits = [bell for _ in range(5)]
+batch = device.run_batch(circuits, s3_folder, shots=100)
+print(batch.results()[0].measurement_counts)  # The result of the first task in the batch
+```
+
 ### Available Simulators
 Amazon Braket provides access to two simulators: a fully managed statevector simulator, SV1, and a local simulator that is part of the Amazon Braket SDK.
 
@@ -163,7 +173,7 @@ pip install -e "amazon-braket-sdk-python[test]"
 tox -e unit-tests
 ```
 
-You can also pass in various pytest arguments `tox -e integ-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+You can also pass in various pytest arguments `tox -e unit-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
 
 
 To run linters and doc generators and unit tests

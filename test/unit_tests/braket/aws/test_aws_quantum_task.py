@@ -336,11 +336,26 @@ def test_result_annealing(annealing_task):
     )
 
 
+def test_result_circuit_cached(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
+    circuit_task._result = expected
+    assert circuit_task.result() == expected
+    assert not circuit_task._aws_session.retrieve_s3_object_body.called
+
+
+def test_no_result(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "FAILED")
+    circuit_task._result = None
+    assert circuit_task.result() is None
+    assert not circuit_task._aws_session.retrieve_s3_object_body.called
+
+
 @pytest.mark.parametrize(
     "result_string",
     [MockS3.MOCK_S3_RESULT_GATE_MODEL, MockS3.MOCK_S3_RESULT_GATE_MODEL_WITH_RESULT_TYPES],
 )
-def test_result_is_cached(circuit_task, result_string):
+def test_result_cached_future(circuit_task, result_string):
     _mock_metadata(circuit_task._aws_session, "COMPLETED")
     _mock_s3(circuit_task._aws_session, result_string)
     circuit_task.result()

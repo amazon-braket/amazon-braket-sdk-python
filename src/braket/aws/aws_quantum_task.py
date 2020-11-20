@@ -44,9 +44,10 @@ class AwsQuantumTask(QuantumTask):
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
     RESULTS_READY_STATES = {"COMPLETED"}
+    TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
 
-    DEFAULT_RESULTS_POLL_TIMEOUT = 120
-    DEFAULT_RESULTS_POLL_INTERVAL = 0.25
+    DEFAULT_RESULTS_POLL_TIMEOUT = 432000
+    DEFAULT_RESULTS_POLL_INTERVAL = 1
     RESULTS_FILENAME = "results.json"
 
     @staticmethod
@@ -140,9 +141,8 @@ class AwsQuantumTask(QuantumTask):
             aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the task.
-            poll_timeout_seconds (float): The polling timeout for result(), default is 120 seconds.
-            poll_interval_seconds (float): The polling interval for result(), default is 0.25
-                seconds.
+            poll_timeout_seconds (float): The polling timeout for result(). Default: 5 days.
+            poll_interval_seconds (float): The polling interval for result(). Default: 1 second.
             poll_outside_execution_window (bool): Whether or not to poll for result() when the
                 current time is outside of the execution window for the associated device,
                 default is False. Tasks are expected to only run during the execution window.
@@ -239,7 +239,13 @@ class AwsQuantumTask(QuantumTask):
         See Also:
             `metadata()`
         """
-        return self.metadata(use_cached_value).get("status")
+        return self._status(use_cached_value)
+
+    def _status(self, use_cached_value=False):
+        status = self.metadata(use_cached_value).get("status")
+        if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
+            self._logger.warning(f"Task is in terminal state {status} and no result is available")
+        return status
 
     def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
@@ -247,10 +253,17 @@ class AwsQuantumTask(QuantumTask):
         Once the task is completed, the result is retrieved from S3 and returned as a
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
-        This method is a blocking thread call and synchronously returns a result. Call
-        async_result() if you require an asynchronous invocation.
+        This method is a blocking thread call and synchronously returns a result.
+        Call async_result() if you require an asynchronous invocation.
         Consecutive calls to this method return a cached result from the preceding request.
+
+        Returns:
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: The result of the task,
+            if the task completed successfully; returns None if the task did not complete
+            successfully or the future timed out.
         """
+        if self._result or self._status(True) in self.NO_RESULT_TERMINAL_STATES:
+            return self._result
         try:
             async_result = self.async_result()
             return asyncio.get_event_loop().run_until_complete(async_result)
@@ -266,19 +279,15 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(e)
             self._logger.info("No event loop found; creating new event loop")
             asyncio.set_event_loop(asyncio.new_event_loop())
-
         if not hasattr(self, "_future"):
             self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         elif (
-            self._future.done() and not self._future.cancelled() and self._result is None
-        ):  # timed out and no result
-            task_status = self.metadata()["status"]
-            if task_status in self.NO_RESULT_TERMINAL_STATES:
-                self._logger.warning(
-                    f"Task is in terminal state {task_status} and no result is available"
-                )
-            else:
-                self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
+            self._future.done()
+            and not self._future.cancelled()
+            and self._result is None
+            and self._status() not in self.NO_RESULT_TERMINAL_STATES  # timed out and no result
+        ):
+            self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         return self._future
 
     def async_result(self) -> asyncio.Task:
@@ -331,8 +340,11 @@ class AwsQuantumTask(QuantumTask):
                     f" now."
                 )
                 continue
-            current_metadata = self.metadata()
-            task_status = current_metadata["status"]
+            # Used cached metadata if cached status is terminal
+            current_metadata = self.metadata(
+                self._status(False) not in AwsQuantumTask.TERMINAL_STATES
+            )
+            task_status = self._status(False)
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
@@ -342,9 +354,6 @@ class AwsQuantumTask(QuantumTask):
                 self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
                 return self._result
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
-                self._logger.warning(
-                    f"Task is in terminal state {task_status} and no result is available"
-                )
                 self._result = None
                 return None
             else:

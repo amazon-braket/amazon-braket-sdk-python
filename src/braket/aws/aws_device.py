@@ -18,10 +18,12 @@ from typing import List, Optional, Set, Union
 
 import boto3
 from boltons.dictutils import FrozenDict
+from botocore.config import Config
 from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
+from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmProperties
@@ -55,8 +57,6 @@ class AwsDevice(Device):
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
-    DEFAULT_RESULTS_POLL_TIMEOUT = 432000
-    DEFAULT_RESULTS_POLL_INTERVAL = 1
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
@@ -86,8 +86,8 @@ class AwsDevice(Device):
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: Optional[int] = None,
-        poll_timeout_seconds: Optional[int] = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: Optional[int] = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -96,14 +96,14 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]):  Specification of task
+            task_specification (Union[Circuit, Problem]): Specification of task
                 (circuit or annealing problem) to run on device.
             s3_destination_folder: The S3 location to save the task's results
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            poll_timeout_seconds (int): The polling timeout for AwsQuantumTask.result(), in seconds.
-                Default: 5 days.
-            poll_interval_seconds (int): The polling interval for AwsQuantumTask.result(),
+            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for AwsQuantumTask.result(),
                 in seconds. Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
@@ -137,17 +137,66 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        if shots is None:
-            if "qpu" in self.arn:
-                shots = AwsDevice.DEFAULT_SHOTS_QPU
-            else:
-                shots = AwsDevice.DEFAULT_SHOTS_SIMULATOR
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
             task_specification,
             s3_destination_folder,
-            shots,
+            shots if shots is not None else self._default_shots,
+            poll_timeout_seconds=poll_timeout_seconds,
+            poll_interval_seconds=poll_interval_seconds,
+            *aws_quantum_task_args,
+            **aws_quantum_task_kwargs,
+        )
+
+    def run_batch(
+        self,
+        task_specifications: List[Union[Circuit, Problem]],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: Optional[int] = None,
+        max_parallel: int = AwsQuantumTaskBatch.MAX_PARALLEL_DEFAULT,
+        max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        *aws_quantum_task_args,
+        **aws_quantum_task_kwargs,
+    ) -> AwsQuantumTaskBatch:
+        """Executes a batch of tasks in parallel
+
+        Args:
+            task_specifications (List[Union[Circuit, Problem]]): List of  circuits
+                or annealing problems to run on device.
+            s3_destination_folder: The S3 location to save the tasks' results
+            shots (int, optional): The number of times to run the circuit or annealing problem.
+                Default is 1000 for QPUs and 0 for simulators.
+            max_parallel (int): The maximum number of tasks to run on AWS in parallel.
+                Batch creation will fail if this value is greater than the maximum allowed
+                concurrent tasks on the device. Default: 10
+            max_connections (int): The maximum number of connections in the Boto3 connection pool.
+                Also the maximum number of thread pool workers for the batch. Default: 100
+            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for results in seconds.
+                Default: 1 second.
+            *aws_quantum_task_args: Variable length positional arguments for
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
+            **aws_quantum_task_kwargs: Variable length keyword arguments for
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
+
+        Returns:
+            AwsQuantumTaskBatch: A batch containing all of the tasks run
+
+        See Also:
+            `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
+        """
+        return AwsQuantumTaskBatch(
+            AwsDevice._copy_aws_session(self._aws_session, max_connections=max_connections),
+            self._arn,
+            task_specifications,
+            s3_destination_folder,
+            shots if shots is not None else self._default_shots,
+            max_parallel=max_parallel,
+            max_workers=max_connections,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
             *aws_quantum_task_args,
@@ -235,6 +284,12 @@ class AwsDevice(Device):
         else:
             return None
 
+    @property
+    def _default_shots(self):
+        return (
+            AwsDevice.DEFAULT_SHOTS_QPU if "qpu" in self.arn else AwsDevice.DEFAULT_SHOTS_SIMULATOR
+        )
+
     @staticmethod
     def _aws_session_for_device(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
         """AwsSession: Returns an AwsSession for the device ARN. """
@@ -257,9 +312,16 @@ class AwsDevice(Device):
         return AwsDevice._copy_aws_session(aws_session, qpu_regions)
 
     @staticmethod
-    def _copy_aws_session(aws_session: Optional[AwsSession], regions: List[str]) -> AwsSession:
+    def _copy_aws_session(
+        aws_session: Optional[AwsSession],
+        regions: List[str] = None,
+        max_connections: Optional[int] = None,
+    ) -> AwsSession:
+        config = Config(max_pool_connections=max_connections) if max_connections else None
         if aws_session:
-            if aws_session.boto_session.region_name in regions:
+            session_region = aws_session.boto_session.region_name
+            new_regions = regions or [session_region]
+            if session_region in new_regions and not config:
                 return aws_session
             else:
                 creds = aws_session.boto_session.get_credentials()
@@ -267,12 +329,12 @@ class AwsDevice(Device):
                     aws_access_key_id=creds.access_key,
                     aws_secret_access_key=creds.secret_key,
                     aws_session_token=creds.token,
-                    region_name=regions[0],
+                    region_name=session_region if session_region in new_regions else new_regions[0],
                 )
-                return AwsSession(boto_session=boto_session)
+                return AwsSession(boto_session=boto_session, config=config)
         else:
             boto_session = boto3.Session(region_name=regions[0])
-            return AwsSession(boto_session=boto_session)
+            return AwsSession(boto_session=boto_session, config=config)
 
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)

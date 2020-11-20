@@ -14,9 +14,16 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from common_test_utils import DWAVE_ARN, IONQ_ARN, RIGETTI_ARN, SIMULATOR_ARN, run_and_assert
+from common_test_utils import (
+    DWAVE_ARN,
+    IONQ_ARN,
+    RIGETTI_ARN,
+    SIMULATOR_ARN,
+    run_and_assert,
+    run_batch_and_assert,
+)
 
-from braket.aws import AwsDevice, AwsDeviceType
+from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.circuits import Circuit
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
@@ -221,6 +228,13 @@ def boto_session():
 def aws_session():
     _boto_session = Mock()
     _boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
+
+    creds = Mock()
+    creds.access_key = "access key"
+    creds.secret_key = "secret key"
+    creds.token = "token"
+    _boto_session.get_credentials.return_value = creds
+
     _aws_session = Mock()
     _aws_session.boto_session = _boto_session
     return _aws_session
@@ -305,9 +319,9 @@ def test_aws_session_in_another_qpu_region(
     aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
 
     creds = Mock()
-    creds.access_key = "access key"
-    creds.secret_key = "secret key"
-    creds.token = "token"
+    creds.access_key = "a"
+    creds.secret_key = "b"
+    creds.token = "c"
 
     different_region_aws_session = Mock()
     different_region_aws_session.boto_session.get_credentials.return_value = creds
@@ -397,8 +411,8 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
         aws_quantum_task_mock,
         device(RIGETTI_ARN),
         AwsDevice.DEFAULT_SHOTS_QPU,
-        AwsDevice.DEFAULT_RESULTS_POLL_TIMEOUT,
-        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuit,
         s3_destination_folder,
         None,
@@ -441,6 +455,53 @@ def test_run_with_positional_args_and_kwargs(
     )
 
 
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_no_extra(
+    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+    )
+
+
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_shots(
+    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+        1000,
+    )
+
+
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_max_parallel_and_kwargs(
+    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+        1000,
+        20,
+        50,
+        extra_kwargs={"bar": 1, "baz": 2},
+    )
+
+
 def _run_and_assert(
     aws_quantum_task_mock,
     device_factory,
@@ -456,11 +517,44 @@ def _run_and_assert(
         aws_quantum_task_mock,
         device_factory("foo_bar"),
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
-        AwsDevice.DEFAULT_RESULTS_POLL_TIMEOUT,
-        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuit,
         s3_destination_folder,
         shots,
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
+    )
+
+
+def _run_batch_and_assert(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    device_factory,
+    circuits,
+    s3_destination_folder,
+    shots=None,  # Treated as positional arg
+    max_parallel=None,  # Treated as positional arg
+    max_connections=None,  # Treated as positional arg
+    poll_timeout_seconds=None,  # Treated as a positional arg
+    poll_interval_seconds=None,  # Treated as positional arg
+    extra_args=None,
+    extra_kwargs=None,
+):
+    run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device_factory("foo_bar"),
+        AwsDevice.DEFAULT_SHOTS_SIMULATOR,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        circuits,
+        s3_destination_folder,
+        shots,
+        max_parallel,
+        max_connections,
         poll_timeout_seconds,
         poll_interval_seconds,
         extra_args,
