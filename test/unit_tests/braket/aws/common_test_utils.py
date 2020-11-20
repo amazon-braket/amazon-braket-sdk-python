@@ -133,7 +133,7 @@ def run_and_assert(
     aws_quantum_task_mock,
     device,
     default_shots,
-    default_timeout,
+    default_poll_timeout,
     default_poll_interval,
     circuit,
     s3_destination_folder,
@@ -159,18 +159,15 @@ def run_and_assert(
     task = device.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
     assert task == task_mock
 
-    create_args = [shots if shots is not None else default_shots]
-    create_args += extra_args if extra_args else []
-    create_kwargs = extra_kwargs or {}
-    create_kwargs.update(
-        {
-            "poll_timeout_seconds": poll_timeout_seconds
-            if poll_timeout_seconds is not None
-            else default_timeout,
-            "poll_interval_seconds": poll_interval_seconds
-            if poll_interval_seconds is not None
-            else default_poll_interval,
-        }
+    create_args, create_kwargs = _create_task_args_and_kwargs(
+        default_shots,
+        default_poll_timeout,
+        default_poll_interval,
+        shots,
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
     )
 
     aws_quantum_task_mock.assert_called_with(
@@ -188,12 +185,14 @@ def run_batch_and_assert(
     aws_session_mock,
     device,
     default_shots,
+    default_poll_timeout,
     default_poll_interval,
     circuits,
     s3_destination_folder,
     shots,
     max_parallel,
     max_connections,
+    poll_timeout_seconds,
     poll_interval_seconds,
     extra_args,
     extra_kwargs,
@@ -211,6 +210,8 @@ def run_batch_and_assert(
         run_args.append(max_parallel)
     if max_connections is not None:
         run_args.append(max_connections)
+    if poll_timeout_seconds is not None:
+        run_args.append(poll_timeout_seconds)
     if poll_interval_seconds is not None:
         run_args.append(poll_interval_seconds)
     run_args += extra_args if extra_args else []
@@ -219,15 +220,15 @@ def run_batch_and_assert(
     batch = device.run_batch(circuits, s3_destination_folder, *run_args, **run_kwargs)
     assert batch.tasks == [task_mock for _ in range(len(circuits))]
 
-    create_args = [shots if shots is not None else default_shots]
-    create_args += extra_args if extra_args else []
-    create_kwargs = extra_kwargs or {}
-    create_kwargs.update(
-        {
-            "poll_interval_seconds": poll_interval_seconds
-            if poll_interval_seconds is not None
-            else default_poll_interval,
-        }
+    create_args, create_kwargs = _create_task_args_and_kwargs(
+        default_shots,
+        default_poll_timeout,
+        default_poll_interval,
+        shots,
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
     )
 
     max_pool_connections = max_connections or AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT
@@ -242,3 +243,29 @@ def run_batch_and_assert(
         *create_args,
         **create_kwargs
     )
+
+
+def _create_task_args_and_kwargs(
+    default_shots,
+    default_poll_timeout,
+    default_poll_interval,
+    shots,
+    poll_timeout_seconds,
+    poll_interval_seconds,
+    extra_args,
+    extra_kwargs,
+):
+    create_args = [shots if shots is not None else default_shots]
+    create_args += extra_args if extra_args else []
+    create_kwargs = extra_kwargs or {}
+    create_kwargs.update(
+        {
+            "poll_timeout_seconds": poll_timeout_seconds
+            if poll_timeout_seconds is not None
+            else default_poll_timeout,
+            "poll_interval_seconds": poll_interval_seconds
+            if poll_interval_seconds is not None
+            else default_poll_interval,
+        }
+    )
+    return create_args, create_kwargs

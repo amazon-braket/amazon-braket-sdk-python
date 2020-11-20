@@ -23,7 +23,7 @@ from common_test_utils import (
     run_batch_and_assert,
 )
 
-from braket.aws import AwsDevice, AwsDeviceType
+from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.circuits import Circuit
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
@@ -411,8 +411,8 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
         aws_quantum_task_mock,
         device(RIGETTI_ARN),
         AwsDevice.DEFAULT_SHOTS_QPU,
-        AwsDevice.DEFAULT_RESULTS_POLL_TIMEOUT,
-        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuit,
         s3_destination_folder,
         None,
@@ -517,8 +517,8 @@ def _run_and_assert(
         aws_quantum_task_mock,
         device_factory("foo_bar"),
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
-        AwsDevice.DEFAULT_RESULTS_POLL_TIMEOUT,
-        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuit,
         s3_destination_folder,
         shots,
@@ -538,6 +538,7 @@ def _run_batch_and_assert(
     shots=None,  # Treated as positional arg
     max_parallel=None,  # Treated as positional arg
     max_connections=None,  # Treated as positional arg
+    poll_timeout_seconds=None,  # Treated as a positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
@@ -547,12 +548,14 @@ def _run_batch_and_assert(
         aws_session_mock,
         device_factory("foo_bar"),
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
-        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuits,
         s3_destination_folder,
         shots,
         max_parallel,
         max_connections,
+        poll_timeout_seconds,
         poll_interval_seconds,
         extra_args,
         extra_kwargs,

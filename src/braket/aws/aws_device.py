@@ -57,8 +57,6 @@ class AwsDevice(Device):
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
-    DEFAULT_RESULTS_POLL_TIMEOUT = 432000
-    DEFAULT_RESULTS_POLL_INTERVAL = 1
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
@@ -88,8 +86,8 @@ class AwsDevice(Device):
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: Optional[int] = None,
-        poll_timeout_seconds: Optional[int] = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: Optional[int] = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -103,9 +101,9 @@ class AwsDevice(Device):
             s3_destination_folder: The S3 location to save the task's results
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            poll_timeout_seconds (int): The polling timeout for AwsQuantumTask.result(), in seconds.
-                Default: 5 days.
-            poll_interval_seconds (int): The polling interval for AwsQuantumTask.result(),
+            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for AwsQuantumTask.result(),
                 in seconds. Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
@@ -158,7 +156,8 @@ class AwsDevice(Device):
         shots: Optional[int] = None,
         max_parallel: int = AwsQuantumTaskBatch.MAX_PARALLEL_DEFAULT,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
-        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -175,7 +174,9 @@ class AwsDevice(Device):
                 concurrent tasks on the device. Default: 10
             max_connections (int): The maximum number of connections in the Boto3 connection pool.
                 Also the maximum number of thread pool workers for the batch. Default: 100
-            poll_interval_seconds (int): The polling interval for results in seconds.
+            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
@@ -196,6 +197,7 @@ class AwsDevice(Device):
             shots if shots is not None else self._default_shots,
             max_parallel=max_parallel,
             max_workers=max_connections,
+            poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,

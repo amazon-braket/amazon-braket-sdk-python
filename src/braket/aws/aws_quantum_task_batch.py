@@ -50,6 +50,7 @@ class AwsQuantumTaskBatch:
         shots: int,
         max_parallel: int = MAX_PARALLEL_DEFAULT,
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
@@ -72,7 +73,10 @@ class AwsQuantumTaskBatch:
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent tasks on the device. Default: 10
             max_workers (int): The maximum number of thread pool workers. Default: 100
-            poll_interval_seconds (float): The polling interval for result().
+            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for results in seconds.
+                Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
@@ -86,6 +90,7 @@ class AwsQuantumTaskBatch:
             shots,
             max_parallel,
             max_workers,
+            poll_timeout_seconds,
             poll_interval_seconds,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
@@ -103,6 +108,7 @@ class AwsQuantumTaskBatch:
         shots,
         max_parallel,
         max_workers,
+        poll_timeout_seconds,
         poll_interval_seconds,
         *args,
         **kwargs,
@@ -122,6 +128,7 @@ class AwsQuantumTaskBatch:
                     task,
                     s3_destination_folder,
                     shots,
+                    poll_timeout_seconds=poll_timeout_seconds,
                     poll_interval_seconds=poll_interval_seconds,
                     *args,
                     **kwargs,

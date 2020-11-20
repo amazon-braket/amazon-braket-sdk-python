@@ -44,9 +44,10 @@ class AwsQuantumTask(QuantumTask):
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
     RESULTS_READY_STATES = {"COMPLETED"}
+    TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
 
-    DEFAULT_RESULTS_POLL_TIMEOUT = 120
-    DEFAULT_RESULTS_POLL_INTERVAL = 0.25
+    DEFAULT_RESULTS_POLL_TIMEOUT = 432000
+    DEFAULT_RESULTS_POLL_INTERVAL = 1
     RESULTS_FILENAME = "results.json"
 
     @staticmethod
@@ -140,9 +141,8 @@ class AwsQuantumTask(QuantumTask):
             aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the task.
-            poll_timeout_seconds (float): The polling timeout for result(), default is 120 seconds.
-            poll_interval_seconds (float): The polling interval for result(), default is 0.25
-                seconds.
+            poll_timeout_seconds (float): The polling timeout for result(). Default: 5 days.
+            poll_interval_seconds (float): The polling interval for result(). Default: 1 second.
             poll_outside_execution_window (bool): Whether or not to poll for result() when the
                 current time is outside of the execution window for the associated device,
                 default is False. Tasks are expected to only run during the execution window.
@@ -340,8 +340,11 @@ class AwsQuantumTask(QuantumTask):
                     f" now."
                 )
                 continue
-            task_status = self._status()
-            current_metadata = self.metadata(True)
+            # Used cached metadata if cached status is terminal
+            current_metadata = self.metadata(
+                self._status(False) not in AwsQuantumTask.TERMINAL_STATES
+            )
+            task_status = self._status(False)
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
