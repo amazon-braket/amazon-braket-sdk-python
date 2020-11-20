@@ -449,7 +449,9 @@ def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
     circuits = [Circuit().h(0).cnot(0, 1) for _ in range(10)]
 
     batch = device.run_batch(circuits, max_parallel=5, **run_kwargs)
-    for result in batch.results():
+    results = batch.results()
+    for result in results:
         assert np.allclose(result.measurement_probabilities["00"], 0.5, **tol)
         assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
         assert len(result.measurements) == shots
+    assert [task.result() for task in batch.tasks] == results

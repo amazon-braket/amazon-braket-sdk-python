@@ -39,8 +39,8 @@ def aws_session(boto_session):
 
 
 def test_initializes_boto_client_if_required(boto_session):
-    AwsSession(boto_session=boto_session, braket_client=None)
-    boto_session.client.assert_called_with("braket")
+    AwsSession(boto_session=boto_session)
+    boto_session.client.assert_called_with("braket", config=None)
 
 
 def test_uses_supplied_braket_client():
@@ -48,8 +48,13 @@ def test_uses_supplied_braket_client():
     boto_session.region_name = "foobar"
     braket_client = Mock()
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
-
     assert aws_session.braket_client == braket_client
+
+
+def test_config(boto_session):
+    config = Mock()
+    AwsSession(boto_session=boto_session, config=config)
+    boto_session.client.assert_called_with("braket", config=config)
 
 
 def test_retrieve_s3_object_body_success(boto_session):
@@ -70,6 +75,13 @@ def test_retrieve_s3_object_body_success(boto_session):
     aws_session = AwsSession(boto_session=boto_session)
     return_value = aws_session.retrieve_s3_object_body(bucket_name, filename)
     assert return_value == json.dumps(TEST_S3_OBJ_CONTENTS)
+    boto_session.resource.assert_called_with("s3", config=None)
+
+    config = Mock()
+    AwsSession(boto_session=boto_session, config=config).retrieve_s3_object_body(
+        bucket_name, filename
+    )
+    boto_session.resource.assert_called_with("s3", config=config)
 
 
 @pytest.mark.xfail(raises=ClientError)

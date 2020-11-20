@@ -239,7 +239,13 @@ class AwsQuantumTask(QuantumTask):
         See Also:
             `metadata()`
         """
-        return self.metadata(use_cached_value).get("status")
+        return self._status(use_cached_value)
+
+    def _status(self, use_cached_value=False):
+        status = self.metadata(use_cached_value).get("status")
+        if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
+            self._logger.warning(f"Task is in terminal state {status} and no result is available")
+        return status
 
     def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
@@ -247,10 +253,17 @@ class AwsQuantumTask(QuantumTask):
         Once the task is completed, the result is retrieved from S3 and returned as a
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
-        This method is a blocking thread call and synchronously returns a result. Call
-        async_result() if you require an asynchronous invocation.
+        This method is a blocking thread call and synchronously returns a result.
+        Call async_result() if you require an asynchronous invocation.
         Consecutive calls to this method return a cached result from the preceding request.
+
+        Returns:
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: The result of the task,
+            if the task completed successfully; returns None if the task did not complete
+            successfully or the future timed out.
         """
+        if self._result or self._status(True) in self.NO_RESULT_TERMINAL_STATES:
+            return self._result
         try:
             async_result = self.async_result()
             return asyncio.get_event_loop().run_until_complete(async_result)
@@ -266,19 +279,15 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(e)
             self._logger.info("No event loop found; creating new event loop")
             asyncio.set_event_loop(asyncio.new_event_loop())
-
         if not hasattr(self, "_future"):
             self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         elif (
-            self._future.done() and not self._future.cancelled() and self._result is None
-        ):  # timed out and no result
-            task_status = self.metadata()["status"]
-            if task_status in self.NO_RESULT_TERMINAL_STATES:
-                self._logger.warning(
-                    f"Task is in terminal state {task_status} and no result is available"
-                )
-            else:
-                self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
+            self._future.done()
+            and not self._future.cancelled()
+            and self._result is None
+            and self._status() not in self.NO_RESULT_TERMINAL_STATES  # timed out and no result
+        ):
+            self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         return self._future
 
     def async_result(self) -> asyncio.Task:
@@ -331,8 +340,8 @@ class AwsQuantumTask(QuantumTask):
                     f" now."
                 )
                 continue
-            current_metadata = self.metadata()
-            task_status = current_metadata["status"]
+            task_status = self._status()
+            current_metadata = self.metadata(True)
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
                 result_string = self._aws_session.retrieve_s3_object_body(
@@ -342,9 +351,6 @@ class AwsQuantumTask(QuantumTask):
                 self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
                 return self._result
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
-                self._logger.warning(
-                    f"Task is in terminal state {task_status} and no result is available"
-                )
                 self._result = None
                 return None
             else:

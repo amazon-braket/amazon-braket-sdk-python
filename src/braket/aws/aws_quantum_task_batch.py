@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
+from queue import Queue
 from typing import List, Set, Union
 
 from braket.annealing import Problem
@@ -24,7 +25,7 @@ from braket.circuits import Circuit
 
 
 class AwsQuantumTaskBatch:
-    """Executes and a batch of quantum tasks in parallel.
+    """Executes a batch of quantum tasks in parallel.
 
     Using this class can yield vast speedups over executing tasks sequentially,
     and is particularly useful for computations that can be parallelized,
@@ -34,8 +35,8 @@ class AwsQuantumTaskBatch:
     since results will not be available until the window opens.
     """
 
-    MAX_WORKERS = 100
     MAX_PARALLEL_DEFAULT = 10
+    MAX_CONNECTIONS_DEFAULT = 100
     TERMINAL_STATES = AwsQuantumTask.NO_RESULT_TERMINAL_STATES.union(
         AwsQuantumTask.RESULTS_READY_STATES
     )
@@ -48,6 +49,7 @@ class AwsQuantumTaskBatch:
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         max_parallel: int = MAX_PARALLEL_DEFAULT,
+        max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
@@ -69,8 +71,8 @@ class AwsQuantumTaskBatch:
             max_parallel (int): The maximum number of tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent tasks on the device. Default: 10
-            poll_interval_seconds (float): The polling interval for result(), default is 0.25
-                seconds.
+            max_workers (int): The maximum number of thread pool workers. Default: 100
+            poll_interval_seconds (float): The polling interval for result().
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
@@ -82,11 +84,13 @@ class AwsQuantumTaskBatch:
             task_specifications,
             s3_destination_folder,
             shots,
-            max_parallel or AwsQuantumTaskBatch.MAX_PARALLEL_DEFAULT,
+            max_parallel,
+            max_workers,
             poll_interval_seconds,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
+        self._aws_session = aws_session
         self._results = None
         self._unsuccessful = set()
 
@@ -98,15 +102,16 @@ class AwsQuantumTaskBatch:
         s3_destination_folder,
         shots,
         max_parallel,
+        max_workers,
         poll_interval_seconds,
         *args,
         **kwargs,
     ):
-        # These two lists track the number of remaining and currently executing tasks
-        # Since appending and popping are atomic, they serve as locks
+        # Tracks the number of remaining and currently executing tasks
+        # Since appending and popping are atomic, it serve as a lock too
         remaining = [0 for _ in task_specifications]
-        executing = []
-        with ThreadPoolExecutor(max_workers=AwsQuantumTaskBatch.MAX_WORKERS) as executor:
+        executing = Queue(maxsize=max_parallel)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             task_futures = [
                 executor.submit(
                     AwsQuantumTaskBatch._create_task,
@@ -117,7 +122,6 @@ class AwsQuantumTaskBatch:
                     task,
                     s3_destination_folder,
                     shots,
-                    max_parallel=max_parallel,
                     poll_interval_seconds=poll_interval_seconds,
                     *args,
                     **kwargs,
@@ -137,13 +141,10 @@ class AwsQuantumTaskBatch:
         s3_destination_folder,
         shots,
         poll_interval_seconds,
-        max_parallel,
         *args,
         **kwargs,
     ):
-        while len(executing) >= max_parallel:
-            time.sleep(poll_interval_seconds)
-        executing.append(0)
+        executing.put(0)
         remaining.pop()
 
         task = AwsQuantumTask.create(
@@ -161,7 +162,7 @@ class AwsQuantumTaskBatch:
         # it can be returned immediately
         while remaining:
             if task.state() in AwsQuantumTaskBatch.TERMINAL_STATES:
-                executing.pop()
+                executing.get()
                 break
             time.sleep(poll_interval_seconds)
         return task
@@ -169,7 +170,7 @@ class AwsQuantumTaskBatch:
     def results(self, fail_unsuccessful=False, retry=False):
         """Retrieves the result of every task in the batch.
 
-        Polling for results happens in parallel; this method returns when all all tasks
+        Polling for results happens in parallel; this method returns when all tasks
         have reached a terminal state. The result of this method is cached.
 
         Args:
@@ -184,7 +185,9 @@ class AwsQuantumTaskBatch:
         """
         if self._results and not retry:
             return list(self._results)
-        with ThreadPoolExecutor(max_workers=AwsQuantumTaskBatch.MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(
+            max_workers=AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT
+        ) as executor:
             result_futures = [
                 executor.submit(AwsQuantumTaskBatch._get_task_result, task, self._unsuccessful)
                 for task in self._tasks
@@ -214,7 +217,9 @@ class AwsQuantumTaskBatch:
     @property
     def unfinished(self) -> Set[str]:
         """Set[str]: The IDs of all the tasks in the batch that have yet to complete"""
-        with ThreadPoolExecutor(max_workers=AwsQuantumTaskBatch.MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(
+            max_workers=AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT
+        ) as executor:
             status_futures = {task.id: executor.submit(task.state) for task in self._tasks}
         unfinished = set()
         for task_id in status_futures:

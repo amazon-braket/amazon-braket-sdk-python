@@ -14,6 +14,8 @@
 import json
 from unittest.mock import Mock
 
+from braket.aws import AwsQuantumTaskBatch
+
 DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
 RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
@@ -183,6 +185,7 @@ def run_and_assert(
 
 def run_batch_and_assert(
     aws_quantum_task_mock,
+    aws_session_mock,
     device,
     default_shots,
     default_poll_interval,
@@ -190,6 +193,7 @@ def run_batch_and_assert(
     s3_destination_folder,
     shots,
     max_parallel,
+    max_connections,
     poll_interval_seconds,
     extra_args,
     extra_kwargs,
@@ -197,12 +201,16 @@ def run_batch_and_assert(
     task_mock = Mock()
     task_mock.state.return_value = "COMPLETED"
     aws_quantum_task_mock.return_value = task_mock
+    new_session_mock = Mock()
+    aws_session_mock.return_value = new_session_mock
 
     run_args = []
     if shots is not None:
         run_args.append(shots)
     if max_parallel is not None:
         run_args.append(max_parallel)
+    if max_connections is not None:
+        run_args.append(max_connections)
     if poll_interval_seconds is not None:
         run_args.append(poll_interval_seconds)
     run_args += extra_args if extra_args else []
@@ -222,8 +230,12 @@ def run_batch_and_assert(
         }
     )
 
+    max_pool_connections = max_connections or AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT
+
+    # aws_session_mock.call_args.kwargs syntax is newer than Python 3.7
+    assert aws_session_mock.call_args[1]["config"].max_pool_connections == max_pool_connections
     aws_quantum_task_mock.assert_called_with(
-        device._aws_session,
+        new_session_mock,
         device.arn,
         circuits[0],
         s3_destination_folder,

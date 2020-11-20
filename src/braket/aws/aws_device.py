@@ -18,6 +18,7 @@ from typing import List, Optional, Set, Union
 
 import boto3
 from boltons.dictutils import FrozenDict
+from botocore.config import Config
 from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
@@ -155,8 +156,9 @@ class AwsDevice(Device):
         task_specifications: List[Union[Circuit, Problem]],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: Optional[int] = None,
-        max_parallel: Optional[int] = None,
-        poll_interval_seconds: Optional[int] = DEFAULT_RESULTS_POLL_INTERVAL,
+        max_parallel: int = AwsQuantumTaskBatch.MAX_PARALLEL_DEFAULT,
+        max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
+        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -171,8 +173,10 @@ class AwsDevice(Device):
             max_parallel (int): The maximum number of tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent tasks on the device. Default: 10
-            poll_interval_seconds (int): The polling interval for results and
-                and, in seconds. Default: 1 second.
+            max_connections (int): The maximum number of connections in the Boto3 connection pool.
+                Also the maximum number of thread pool workers for the batch. Default: 100
+            poll_interval_seconds (int): The polling interval for results in seconds.
+                Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
             **aws_quantum_task_kwargs: Variable length keyword arguments for
@@ -185,12 +189,13 @@ class AwsDevice(Device):
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
         return AwsQuantumTaskBatch(
-            self._aws_session,
+            AwsDevice._copy_aws_session(self._aws_session, max_connections=max_connections),
             self._arn,
             task_specifications,
             s3_destination_folder,
             shots if shots is not None else self._default_shots,
             max_parallel=max_parallel,
+            max_workers=max_connections,
             poll_interval_seconds=poll_interval_seconds,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
@@ -305,9 +310,16 @@ class AwsDevice(Device):
         return AwsDevice._copy_aws_session(aws_session, qpu_regions)
 
     @staticmethod
-    def _copy_aws_session(aws_session: Optional[AwsSession], regions: List[str]) -> AwsSession:
+    def _copy_aws_session(
+        aws_session: Optional[AwsSession],
+        regions: List[str] = None,
+        max_connections: Optional[int] = None,
+    ) -> AwsSession:
+        config = Config(max_pool_connections=max_connections) if max_connections else None
         if aws_session:
-            if aws_session.boto_session.region_name in regions:
+            session_region = aws_session.boto_session.region_name
+            new_regions = regions or [session_region]
+            if session_region in new_regions and not config:
                 return aws_session
             else:
                 creds = aws_session.boto_session.get_credentials()
@@ -315,12 +327,12 @@ class AwsDevice(Device):
                     aws_access_key_id=creds.access_key,
                     aws_secret_access_key=creds.secret_key,
                     aws_session_token=creds.token,
-                    region_name=regions[0],
+                    region_name=session_region if session_region in new_regions else new_regions[0],
                 )
-                return AwsSession(boto_session=boto_session)
+                return AwsSession(boto_session=boto_session, config=config)
         else:
             boto_session = boto3.Session(region_name=regions[0])
-            return AwsSession(boto_session=boto_session)
+            return AwsSession(boto_session=boto_session, config=config)
 
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
