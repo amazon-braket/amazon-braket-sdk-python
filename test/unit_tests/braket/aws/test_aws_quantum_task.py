@@ -478,7 +478,43 @@ def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_sessio
         S3_TARGET,
         shots,
         device_parameters_class(
-            paradigmParameters=GateModelParameters(qubitCount=circuit.qubit_count)
+            paradigmParameters=GateModelParameters(
+                qubitCount=circuit.qubit_count, disableQubitRewiring=False
+            )
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "device_arn,device_parameters_class",
+    [
+        ("device/qpu/rigetti", RigettiDeviceParameters),
+    ],
+)
+def test_from_circuit_with_disabled_rewiring(
+    device_arn, device_parameters_class, aws_session, circuit
+):
+    mocked_task_arn = "task-arn-1"
+    aws_session.create_quantum_task.return_value = mocked_task_arn
+    shots = 53
+
+    task = AwsQuantumTask.create(
+        aws_session, device_arn, circuit, S3_TARGET, shots, disable_qubit_rewiring=True
+    )
+    assert task == AwsQuantumTask(
+        mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
+    )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        device_arn,
+        circuit,
+        S3_TARGET,
+        shots,
+        device_parameters_class(
+            paradigmParameters=GateModelParameters(
+                qubitCount=circuit.qubit_count, disableQubitRewiring=True
+            )
         ),
     )
 

@@ -58,6 +58,7 @@ class AwsQuantumTask(QuantumTask):
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
+        disable_qubit_rewiring: bool = False,
         tags: Dict[str, str] = None,
         *args,
         **kwargs,
@@ -86,6 +87,12 @@ class AwsQuantumTask(QuantumTask):
             device_parameters (Dict[str, Any]): Additional parameters to send to the device.
                 For example, for D-Wave:
                 `{"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}`
+
+            disable_qubit_rewiring (bool): Whether to run the circuit with the exact qubits chosen,
+                without any rewiring downstream, if this is supported by the device.
+                Only applies to digital, gate-based circuits (as opposed to annealing problems).
+                If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
+                Default: False
 
             tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
                 An example would be:
@@ -120,8 +127,9 @@ class AwsQuantumTask(QuantumTask):
             task_specification,
             aws_session,
             create_task_kwargs,
-            device_parameters or {},
             device_arn,
+            device_parameters or {},
+            disable_qubit_rewiring,
             *args,
             **kwargs,
         )
@@ -429,8 +437,9 @@ def _create_internal(
     task_specification: Union[Circuit, Problem],
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Union[dict, BraketSchemaBase],
     device_arn: str,
+    device_parameters: Union[dict, BraketSchemaBase],
+    disable_qubit_rewiring,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -442,8 +451,9 @@ def _(
     circuit: Circuit,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Union[dict, BraketSchemaBase],
     device_arn: str,
+    device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for circuits
+    disable_qubit_rewiring,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -451,7 +461,9 @@ def _(
 
     # TODO: Update this to use `deviceCapabilities` from Amazon Braket's GetDevice operation
     # in order to decide what parameters to build.
-    paradigm_parameters = GateModelParameters(qubitCount=circuit.qubit_count)
+    paradigm_parameters = GateModelParameters(
+        qubitCount=circuit.qubit_count, disableQubitRewiring=disable_qubit_rewiring
+    )
     if "ionq" in device_arn:
         device_parameters = IonqDeviceParameters(paradigmParameters=paradigm_parameters)
     elif "rigetti" in device_arn:
@@ -473,8 +485,9 @@ def _(
     problem: Problem,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Union[dict, DwaveDeviceParameters],
     device_arn: str,
+    device_parameters: Union[dict, DwaveDeviceParameters],
+    disable_qubit_rewiring,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:

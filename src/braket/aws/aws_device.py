@@ -78,6 +78,7 @@ class AwsDevice(Device):
         self._aws_session = AwsDevice._aws_session_for_device(arn, aws_session)
         self._properties = None
         self._provider_name = None
+        self._topology_graph = None
         self._type = None
         self.refresh_metadata()
 
@@ -123,12 +124,17 @@ class AwsDevice(Device):
             >>> device.run(task_specification=circuit,
             >>>     s3_destination_folder=("bucket-foo", "key-bar"))
 
+            >>> circuit = Circuit().h(0).cnot(0, 1)
+            >>> device = AwsDevice("arn3")
+            >>> device.run(task_specification=circuit,
+            >>>     s3_destination_folder=("bucket-foo", "key-bar"), disable_qubit_rewiring=True)
+
             >>> problem = Problem(
             >>>     ProblemType.ISING,
             >>>     linear={1: 3.14},
             >>>     quadratic={(1, 2): 10.08},
             >>> )
-            >>> device = AwsDevice("arn3")
+            >>> device = AwsDevice("arn4")
             >>> device.run(problem, ("bucket-foo", "key-bar"),
             >>>     device_parameters={
             >>>         "providerLevelParameters": {"postprocessingType": "SAMPLING"}}
