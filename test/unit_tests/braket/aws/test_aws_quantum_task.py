@@ -235,6 +235,7 @@ def test_is_polling_time(window, cur_time, expected_val, quantum_task):
 
 
 def test_result_not_polling(quantum_task):
+    quantum_task._metadata = {"a": 0}
     quantum_task._poll_outside_execution_window = False
     quantum_task._poll_timeout_seconds = 0.01
     window = {
@@ -645,12 +646,11 @@ def _assert_create_quantum_task_called_with(
 
 
 def _mock_metadata(aws_session, state):
-    return_value = {
+    aws_session.get_quantum_task.return_value = {
         "status": state,
         "outputS3Bucket": S3_TARGET.bucket,
         "outputS3Directory": S3_TARGET.key,
     }
-    aws_session.get_quantum_task.return_value = return_value
 
 
 def _mock_s3(aws_session, result):

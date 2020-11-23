@@ -257,8 +257,11 @@ class AwsQuantumTask(QuantumTask):
         return status
 
     def _update_status_if_nonterminal(self):
+        # If metadata has not been populated, the first call to _status will fetch it,
+        # so the second _status call will no longer need to
+        metadata_absent = self._metadata is None
         cached = self._status(True)
-        return cached if cached in self.TERMINAL_STATES else self._status(False)
+        return cached if cached in self.TERMINAL_STATES else self._status(metadata_absent)
 
     def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
@@ -275,7 +278,7 @@ class AwsQuantumTask(QuantumTask):
             if the task completed successfully; returns None if the task did not complete
             successfully or the future timed out.
         """
-        if self._result or self._status in self.NO_RESULT_TERMINAL_STATES:
+        if self._result or self._status(True) in self.NO_RESULT_TERMINAL_STATES:
             return self._result
         try:
             async_result = self.async_result()
