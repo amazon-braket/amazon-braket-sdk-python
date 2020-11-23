@@ -258,6 +258,13 @@ def test_metadata(quantum_task):
     assert quantum_task.metadata(use_cached_value=True) == metadata_1
 
 
+def test_metadata_call_if_none(quantum_task):
+    metadata_1 = {"status": "RUNNING"}
+    quantum_task._aws_session.get_quantum_task.return_value = metadata_1
+    assert quantum_task.metadata(use_cached_value=True) == metadata_1
+    quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
+
+
 def test_state(quantum_task):
     state_1 = "RUNNING"
     _mock_metadata(quantum_task._aws_session, state_1)
@@ -418,6 +425,12 @@ def test_timeout_completed(aws_session):
     assert quantum_task.result() is None
     _mock_metadata(aws_session, "COMPLETED")
     assert quantum_task.state() == "COMPLETED"
+    assert quantum_task.result() == GateModelQuantumTaskResult.from_string(
+        MockS3.MOCK_S3_RESULT_GATE_MODEL
+    )
+    # Cached status is still COMPLETED, so result should be fetched
+    _mock_metadata(aws_session, "RUNNING")
+    quantum_task._result = None
     assert quantum_task.result() == GateModelQuantumTaskResult.from_string(
         MockS3.MOCK_S3_RESULT_GATE_MODEL
     )
