@@ -235,6 +235,7 @@ def test_is_polling_time(window, cur_time, expected_val, quantum_task):
 
 
 def test_result_not_polling(quantum_task):
+    quantum_task._metadata = {"a": 0}
     quantum_task._poll_outside_execution_window = False
     quantum_task._poll_timeout_seconds = 0.01
     window = {
@@ -256,6 +257,13 @@ def test_metadata(quantum_task):
     metadata_2 = {"status": "COMPLETED"}
     quantum_task._aws_session.get_quantum_task.return_value = metadata_2
     assert quantum_task.metadata(use_cached_value=True) == metadata_1
+
+
+def test_metadata_call_if_none(quantum_task):
+    metadata_1 = {"status": "RUNNING"}
+    quantum_task._aws_session.get_quantum_task.return_value = metadata_1
+    assert quantum_task.metadata(use_cached_value=True) == metadata_1
+    quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
 
 
 def test_state(quantum_task):
@@ -418,6 +426,12 @@ def test_timeout_completed(aws_session):
     assert quantum_task.result() is None
     _mock_metadata(aws_session, "COMPLETED")
     assert quantum_task.state() == "COMPLETED"
+    assert quantum_task.result() == GateModelQuantumTaskResult.from_string(
+        MockS3.MOCK_S3_RESULT_GATE_MODEL
+    )
+    # Cached status is still COMPLETED, so result should be fetched
+    _mock_metadata(aws_session, "RUNNING")
+    quantum_task._result = None
     assert quantum_task.result() == GateModelQuantumTaskResult.from_string(
         MockS3.MOCK_S3_RESULT_GATE_MODEL
     )
@@ -632,12 +646,11 @@ def _assert_create_quantum_task_called_with(
 
 
 def _mock_metadata(aws_session, state):
-    return_value = {
+    aws_session.get_quantum_task.return_value = {
         "status": state,
         "outputS3Bucket": S3_TARGET.bucket,
         "outputS3Directory": S3_TARGET.key,
     }
-    aws_session.get_quantum_task.return_value = return_value
 
 
 def _mock_s3(aws_session, result):
