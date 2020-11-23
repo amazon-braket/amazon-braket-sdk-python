@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.3.0 (2020-11-23)
+
+### Features
+
+ * Enable explicit qubit allocation
+ * Add support for batch execution
+
+### Bug Fixes and Other Changes
+
+ * Correctly cache status
+
 ## v1.2.0 (2020-11-02)
 
 ### Features
