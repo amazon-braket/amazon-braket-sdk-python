@@ -173,7 +173,7 @@ class AwsQuantumTaskBatch:
             time.sleep(poll_interval_seconds)
         return task
 
-    def results(self, fail_unsuccessful=False, retry=False):
+    def results(self, fail_unsuccessful=False, use_cached_value=True):
         """Retrieves the result of every task in the batch.
 
         Polling for results happens in parallel; this method returns when all tasks
@@ -182,14 +182,14 @@ class AwsQuantumTaskBatch:
         Args:
             fail_unsuccessful (bool): If set to True, this method will fail
                 if any task in the batch is in the FAILED or CANCELLED state.
-            retry (bool): Whether to refetch the results from S3,
-                even when results have already been cached. Default: False
+            use_cached_value (bool): If False, will refetch the results from S3,
+                even when results have already been cached. Default: True
 
         Returns:
             List[AwsQuantumTask]: The results of all of the tasks in the batch.
                 FAILED or CANCELLED tasks will have a result of None
         """
-        if self._results and not retry:
+        if self._results and use_cached_value:
             return list(self._results)
         with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
             result_futures = [
