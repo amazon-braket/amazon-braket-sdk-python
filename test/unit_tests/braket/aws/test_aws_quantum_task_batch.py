@@ -73,7 +73,7 @@ def test_unsuccessful(mock_create):
     assert batch.results(fail_unsuccessful=True) == [None]  # Result is cached
     batch._unsuccessful = set()
     with pytest.raises(RuntimeError):
-        batch.results(fail_unsuccessful=True, retry=True)
+        batch.results(fail_unsuccessful=True, use_cached_value=False)
     assert batch.unsuccessful == {task_id}
 
 
