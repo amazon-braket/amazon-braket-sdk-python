@@ -96,6 +96,8 @@ class AwsQuantumTaskBatch:
         self._results = None
         self._unsuccessful = set()
 
+        self._max_workers = max_workers
+
     @staticmethod
     def _execute(
         aws_session,
@@ -189,9 +191,7 @@ class AwsQuantumTaskBatch:
         """
         if self._results and not retry:
             return list(self._results)
-        with ThreadPoolExecutor(
-            max_workers=AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT
-        ) as executor:
+        with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
             result_futures = [
                 executor.submit(AwsQuantumTaskBatch._get_task_result, task, self._unsuccessful)
                 for task in self._tasks
