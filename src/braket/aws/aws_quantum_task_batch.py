@@ -204,12 +204,11 @@ class AwsQuantumTaskBatch:
             List[AwsQuantumTask]: The results of all of the tasks in the batch.
                 FAILED or CANCELLED tasks will have a result of None
         """
-        if self._results and use_cached_value:
-            return list(self._results)
-        self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
-        self._unsuccessful = {
-            task.id for task, result in zip(self._tasks, self._results) if not result
-        }
+        if not self._results or not use_cached_value:
+            self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
+            self._unsuccessful = {
+                task.id for task, result in zip(self._tasks, self._results) if not result
+            }
 
         retries = 0
         while self._unsuccessful and retries < max_retries:
