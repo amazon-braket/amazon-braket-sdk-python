@@ -485,7 +485,7 @@ def test_basis_rotation_instructions_tensor_product():
     assert circ.basis_rotation_instructions == expected
 
 
-def test_basis_rotation_instructions_tensor_product_commuting():
+def test_basis_rotation_instructions_tensor_product_shared_factors():
     circ = (
         Circuit()
         .h(0)
@@ -501,6 +501,34 @@ def test_basis_rotation_instructions_tensor_product_commuting():
         Instruction(Gate.Z(), 2),
         Instruction(Gate.S(), 2),
         Instruction(Gate.H(), 2),
+    ]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_identity():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .cnot(2, 3)
+        .cnot(3, 4)
+        .expectation(observable=Observable.X(), target=[0])
+        .expectation(observable=Observable.I(), target=[2])
+        .expectation(observable=Observable.I() @ Observable.Y(), target=[1, 3])
+        .expectation(observable=Observable.I(), target=[0])
+        .expectation(observable=Observable.X() @ Observable.I(), target=[1, 3])
+        .expectation(observable=Observable.Y(), target=[2])
+    )
+    expected = [
+        Instruction(Gate.H(), 0),
+        Instruction(Gate.H(), 1),
+        Instruction(Gate.Z(), 2),
+        Instruction(Gate.S(), 2),
+        Instruction(Gate.H(), 2),
+        Instruction(Gate.Z(), 3),
+        Instruction(Gate.S(), 3),
+        Instruction(Gate.H(), 3),
     ]
     assert circ.basis_rotation_instructions == expected
 

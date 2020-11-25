@@ -256,9 +256,9 @@ class Circuit:
             observable = result_type.observable
         else:
             return
+
         targets = result_type.target or list(self._qubit_observable_set)
         all_qubits_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
-
         for i in range(len(targets)):
             target = targets[i]
             tensor_product_dict = (
@@ -268,11 +268,10 @@ class Circuit:
             )
             new_observable = tensor_product_dict[i][0] if tensor_product_dict else observable
             current_observable = all_qubits_observable or self._qubit_observable_mapping.get(target)
-            if current_observable and current_observable != new_observable:
-                raise ValueError(
-                    f"Existing result type for observable {current_observable} for target {target}"
-                    f" conflicts with observable {new_observable} for new result type"
-                )
+
+            add_observable = Circuit._validate_observable_to_add_for_qubit(
+                current_observable, new_observable, target
+            )
 
             if result_type.target:
                 if new_observable.qubit_count > 1:
@@ -295,7 +294,8 @@ class Circuit:
                     self._qubit_target_mapping[target] = new_targets
                 else:
                     self._qubit_target_mapping[target] = tuple([target])
-                self._qubit_observable_mapping[target] = new_observable
+                if add_observable:
+                    self._qubit_observable_mapping[target] = new_observable
 
         if not result_type.target:
             if all_qubits_observable and all_qubits_observable != observable:
@@ -304,6 +304,25 @@ class Circuit:
                     f" conflicts with observable {observable} for new result type"
                 )
             self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable
+
+    @staticmethod
+    def _validate_observable_to_add_for_qubit(current_observable, new_observable, target):
+        identity = Observable.I()
+        add_observable = False
+        if not current_observable or (
+            current_observable == identity and new_observable != identity
+        ):
+            add_observable = True
+        elif (
+            current_observable != identity
+            and new_observable != identity
+            and current_observable != new_observable
+        ):
+            raise ValueError(
+                f"Observable {new_observable} specified for target {target} conflicts with"
+                + f" existing observable {current_observable} on this target."
+            )
+        return add_observable
 
     @staticmethod
     def _tensor_product_index_dict(observable: TensorProduct) -> Dict[int, Observable]:
