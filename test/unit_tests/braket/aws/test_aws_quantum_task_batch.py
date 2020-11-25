@@ -77,5 +77,34 @@ def test_unsuccessful(mock_create):
     assert batch.unsuccessful == {task_id}
 
 
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_retry(mock_create):
+    bad_task_mock = Mock()
+    type(bad_task_mock).id = PropertyMock(side_effect=uuid.uuid4)
+    bad_task_mock.state.return_value = random.choice(["CANCELLED", "FAILED"])
+    bad_task_mock.result.return_value = None
+
+    good_task_mock = Mock()
+    # task id already mocked when setting up bad_task_mock
+    good_task_mock.state.return_value = "COMPLETED"
+    result = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
+    good_task_mock.result.return_value = result
+
+    mock_create.side_effect = [bad_task_mock, good_task_mock, bad_task_mock, good_task_mock]
+
+    batch = AwsQuantumTaskBatch(
+        Mock(), "foo", [Circuit().h(0).cnot(0, 1), Circuit().h(1).cnot(0, 1)], S3_TARGET, 1000
+    )
+    assert not batch.unfinished
+    assert batch.results(max_retries=0) == [None, result]
+
+    # Retrying should get rid of the failures
+    assert batch.results(fail_unsuccessful=True, max_retries=3, use_cached_value=False) == [
+        result,
+        result,
+    ]
+    assert batch.unsuccessful == set()
+
+
 def _circuits(batch_size):
     return [Circuit().h(0).cnot(0, 1) for _ in range(batch_size)]
