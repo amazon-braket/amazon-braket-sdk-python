@@ -274,28 +274,26 @@ class Circuit:
             )
 
             if result_type.target:
-                if new_observable.qubit_count > 1:
-                    new_targets = (
-                        tuple(
-                            result_type.target[
-                                tensor_product_dict[i][1][0] : tensor_product_dict[i][1][1]
-                            ]
-                        )
-                        if tensor_product_dict
-                        else tuple(result_type.target)
+                new_targets = (
+                    tuple(
+                        result_type.target[
+                            tensor_product_dict[i][1][0] : tensor_product_dict[i][1][1]
+                        ]
                     )
+                    if tensor_product_dict
+                    else tuple(result_type.target)
+                )
+                if add_observable:
+                    self._qubit_target_mapping[target] = new_targets
+                    self._qubit_observable_mapping[target] = new_observable
+                elif new_observable.qubit_count > 1 and new_observable != Observable.I():
                     current_target = self._qubit_target_mapping.get(target)
                     if current_target and current_target != new_targets:
                         raise ValueError(
-                            f"Target order {current_target} of existing result type with observable"
-                            f" {current_observable} conflicts with order {targets} of new"
-                            " result type"
+                            f"Target order {current_target} of existing result type with"
+                            f" observable {current_observable} conflicts with order {targets}"
+                            " of new result type"
                         )
-                    self._qubit_target_mapping[target] = new_targets
-                else:
-                    self._qubit_target_mapping[target] = tuple([target])
-                if add_observable:
-                    self._qubit_observable_mapping[target] = new_observable
 
         if not result_type.target:
             if all_qubits_observable and all_qubits_observable != observable:

@@ -651,10 +651,12 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermit
         .h(0)
         .cnot(0, 1)
         .cnot(1, 2)
+        .expectation(observable=Observable.I(), target=[1])
         .sample(
             observable=Observable.Hermitian(matrix=np.eye(4)) @ Observable.H(), target=[0, 1, 2]
         )
         .variance(observable=Observable.H(), target=[2])
+        .expectation(observable=Observable.I(), target=[0])
     )
     expected = [
         Instruction(Gate.Unitary(matrix=np.eye(4)), target=[0, 1]),
