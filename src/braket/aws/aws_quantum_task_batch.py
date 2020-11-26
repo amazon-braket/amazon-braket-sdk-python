@@ -202,7 +202,7 @@ class AwsQuantumTaskBatch:
 
         Returns:
             List[AwsQuantumTask]: The results of all of the tasks in the batch.
-                FAILED or CANCELLED tasks will have a result of None
+                FAILED, CANCELLED, or timed out tasks will have a result of None
         """
         if not self._results or not use_cached_value:
             self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
@@ -236,7 +236,6 @@ class AwsQuantumTaskBatch:
 
         Returns:
             bool: Whether or not all retried tasks completed successfully.
-
         """
         if not self._results:
             raise RuntimeError("results() should be called before attempting to retry")
