@@ -71,7 +71,7 @@ from braket.circuits import Circuit
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-s3_folder = (f"amazon-braket-output-{aws_account_id}", "folder-name")
+s3_folder = (f"amazon-braket-{aws_account_id}", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, s3_folder, shots=100)
@@ -91,11 +91,11 @@ print(batch.results()[0].measurement_counts)  # The result of the first task in 
 ```
 
 ### Available Simulators
-Amazon Braket provides access to two simulators: a fully managed statevector simulator, SV1, and a local simulator that is part of the Amazon Braket SDK.
+Two types of circuit simulators are available: fully managed simulators accessed through the Amazon Braket service, and a local simulator bundled with the Amazon Braket SDK.
 
-- `arn:aws:braket:::device/quantum-simulator/amazon/sv1` - SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
+- The fully managed simulators offer high performance circuit simulations, and can handle larger circuits than can be run on user hardware. For example, the SV1 state vector simulator used in the above examples will take approximately 1-2 hours to complete to run a 34-qubit, dense, and square (circuit depth = 34) circuit, depending on the type of gates used and other factors. For a list of available simulators and their features, consult the Amazon Braket [developer guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
-- `LocalSimulator()` - The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. The local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
+- The local simulator included in the Amazon Braket SDK is a circuit simulator implementation that can run circuits locally on user hardware. It is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
 
 ### Debugging logs
 
@@ -114,7 +114,7 @@ from braket.aws import AwsDevice
 aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
 device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
-s3_folder = (f"amazon-braket-output-{aws_account_id}", "RIGETTI")
+s3_folder = (f"amazon-braket-{aws_account_id}", "RIGETTI")
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, s3_folder) 
@@ -128,12 +128,7 @@ task = device.run(bell, s3_folder, poll_timeout_seconds=86400)  # 1 day
 print(task.result().measurement_counts)
 ```
 
-Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
-- **IonQ** "arn:aws:braket:::device/qpu/ionq/ionQdevice"
-- **Rigetti** "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
-- **D-Wave** (See the next section in this document for more information about using D-Wave.)
-    - **D-Wave 2000Q_6** "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
-    - **D-Wave Advantage_system1** "arn:aws:braket:::device/qpu/d-wave/Advantage_system1"
+Specify which quantum hardware device to use by specifying its ARN as the value of the `device_arn` argument. A list of all available quantum devices and their features can be found in the Amazon Braket [developer guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
 **Important** Tasks may not run immediately on the QPU. The QPUs only execute tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
 
