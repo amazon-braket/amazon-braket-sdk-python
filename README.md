@@ -91,11 +91,11 @@ print(batch.results()[0].measurement_counts)  # The result of the first task in 
 ```
 
 ### Available Simulators
-Two types of circuit simulators are available: fully managed simulators accessed through the Amazon Braket service, and a local simulator bundled with the Amazon Braket SDK.
+Amazon Braket provides access to two types of simulators: the fully managed simulator, available through the Amazon Braket service, and the local simulator that is part of the Amazon Braket SDK.
 
-- The fully managed simulators offer high performance circuit simulations, and can handle larger circuits than can be run on user hardware. For example, the SV1 state vector simulator used in the above examples will take approximately 1-2 hours to complete to run a 34-qubit, dense, and square (circuit depth = 34) circuit, depending on the type of gates used and other factors. For a list of available simulators and their features, consult the Amazon Braket [developer guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
+- Fully managed simulators offer high-performance circuit simulations. These simulators can handle circuits larger than circuits that run on quantum hardware. For example, the SV1 state vector simulator shown in the previous examples requires approximately 1 or 2 hours to complete a 34-qubit, dense, and square circuit (circuit depth = 34), depending on the type of gates used and other factors. For a list of available simulators and their features, consult the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
-- The local simulator included in the Amazon Braket SDK is a circuit simulator implementation that can run circuits locally on user hardware. It is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py`.
+- The Amazon Braket Python SDK includes an implementation of a quantum simulator that can run circuits on your local, classic hardware. The local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repository `../examples/local_bell.py`.
 
 ### Debugging logs
 
@@ -128,7 +128,7 @@ task = device.run(bell, s3_folder, poll_timeout_seconds=86400)  # 1 day
 print(task.result().measurement_counts)
 ```
 
-Specify which quantum hardware device to use by specifying its ARN as the value of the `device_arn` argument. A list of all available quantum devices and their features can be found in the Amazon Braket [developer guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
+To select a quantum hardware device, specify its ARN as the value of the `device_arn` argument. A list of available quantum devices and their features can be found in the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
 **Important** Tasks may not run immediately on the QPU. The QPUs only execute tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
 
