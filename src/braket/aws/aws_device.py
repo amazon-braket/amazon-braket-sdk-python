@@ -58,6 +58,8 @@ class AwsDevice(Device):
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
 
+    DEFAULT_MAX_PARALLEL = 10
+
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
         Args:
@@ -160,7 +162,7 @@ class AwsDevice(Device):
         task_specifications: List[Union[Circuit, Problem]],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: Optional[int] = None,
-        max_parallel: int = AwsQuantumTaskBatch.MAX_PARALLEL_DEFAULT,
+        max_parallel: Optional[int] = None,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
@@ -201,7 +203,7 @@ class AwsDevice(Device):
             task_specifications,
             s3_destination_folder,
             shots if shots is not None else self._default_shots,
-            max_parallel=max_parallel,
+            max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
             max_workers=max_connections,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
@@ -295,6 +297,10 @@ class AwsDevice(Device):
         return (
             AwsDevice.DEFAULT_SHOTS_QPU if "qpu" in self.arn else AwsDevice.DEFAULT_SHOTS_SIMULATOR
         )
+
+    @property
+    def _default_max_parallel(self):
+        return AwsDevice.DEFAULT_MAX_PARALLEL
 
     @staticmethod
     def _aws_session_for_device(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
