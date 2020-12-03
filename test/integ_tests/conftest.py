@@ -51,7 +51,7 @@ def s3_bucket(s3_resource, s3_client, account_id, boto_session):
     """Create / get S3 bucket for tests"""
 
     region_name = boto_session.region_name
-    bucket_name = f"amazon-braket-ocean-plugin-integ-tests-{account_id}"
+    bucket_name = f"amazon-braket-sdk-integ-tests-{account_id}"
     bucket = s3_resource.Bucket(bucket_name)
 
     try:
