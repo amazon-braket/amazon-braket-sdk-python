@@ -33,7 +33,9 @@ def test_creation(mock_create):
     mock_create.return_value = task_mock
 
     batch_size = 10
-    batch = AwsQuantumTaskBatch(Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000)
+    batch = AwsQuantumTaskBatch(
+        Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=10
+    )
     assert batch.size == batch_size
     assert batch.tasks == [task_mock for _ in range(batch_size)]
     assert len(batch.unfinished) == batch_size
@@ -50,7 +52,9 @@ def test_successful(mock_create):
     mock_create.return_value = task_mock
 
     batch_size = 15
-    batch = AwsQuantumTaskBatch(Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000)
+    batch = AwsQuantumTaskBatch(
+        Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=10
+    )
     assert batch.size == batch_size
     assert not batch.unfinished
     assert not batch.unsuccessful
@@ -66,7 +70,9 @@ def test_unsuccessful(mock_create):
     task_mock.result.return_value = None
     mock_create.return_value = task_mock
 
-    batch = AwsQuantumTaskBatch(Mock(), "foo", [Circuit().h(0).cnot(0, 1)], S3_TARGET, 1000)
+    batch = AwsQuantumTaskBatch(
+        Mock(), "foo", [Circuit().h(0).cnot(0, 1)], S3_TARGET, 1000, max_parallel=10
+    )
     assert not batch.unfinished
     assert batch.unsuccessful == {task_id}
     assert batch.results() == [None]
@@ -94,7 +100,12 @@ def test_retry(mock_create):
     mock_create.side_effect = [bad_task_mock, good_task_mock, bad_task_mock, good_task_mock]
 
     batch = AwsQuantumTaskBatch(
-        Mock(), "foo", [Circuit().h(0).cnot(0, 1), Circuit().h(1).cnot(0, 1)], S3_TARGET, 1000
+        Mock(),
+        "foo",
+        [Circuit().h(0).cnot(0, 1), Circuit().h(1).cnot(0, 1)],
+        S3_TARGET,
+        1000,
+        max_parallel=10,
     )
     assert not batch.unfinished
     assert batch.results(max_retries=0) == [None, result]
