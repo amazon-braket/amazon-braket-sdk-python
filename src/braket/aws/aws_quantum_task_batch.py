@@ -35,7 +35,6 @@ class AwsQuantumTaskBatch:
     since results will not be available until the window opens.
     """
 
-    MAX_PARALLEL_DEFAULT = 10
     MAX_CONNECTIONS_DEFAULT = 100
     MAX_RETRIES = 3
 
@@ -46,7 +45,7 @@ class AwsQuantumTaskBatch:
         task_specifications: List[Union[Circuit, Problem]],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
-        max_parallel: int = MAX_PARALLEL_DEFAULT,
+        max_parallel: int,
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
@@ -69,7 +68,7 @@ class AwsQuantumTaskBatch:
                 will compute the exact results based on the task specification.
             max_parallel (int): The maximum number of tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
-                concurrent tasks on the device. Default: 10
+                concurrent tasks on the device.
             max_workers (int): The maximum number of thread pool workers. Default: 100
             poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
                 in seconds. Default: 5 days.
