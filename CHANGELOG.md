@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.0.post0 (2020-12-03)
+
+### Documentation Changes
+
+ * Point README to developer guide
+
 ## v1.4.0 (2020-11-26)
 
 ### Features
