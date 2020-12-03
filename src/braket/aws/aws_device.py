@@ -177,7 +177,7 @@ class AwsDevice(Device):
             s3_destination_folder: The S3 location to save the tasks' results
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            max_parallel (int): The maximum number of tasks to run on AWS in parallel.
+            max_parallel (int, optional): The maximum number of tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent tasks on the device. Default: 10
             max_connections (int): The maximum number of connections in the Boto3 connection pool.
