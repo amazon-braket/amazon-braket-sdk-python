@@ -159,19 +159,29 @@ To view the generated documentation, open the following file in a browser:
 This repository has both unit and integration tests.
 
 To run the tests, make sure to install test dependencies first:
+
 ```bash
 pip install -e "amazon-braket-sdk-python[test]"
 ```
 
 ### Unit Tests
+
+To run the unit tests:
+
 ```bash
 tox -e unit-tests
 ```
 
-You can also pass in various pytest arguments `tox -e unit-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+You can also pass in various pytest arguments to run selected tests:
 
+```bash
+tox -e unit-tests -- your-arguments
+```
 
-To run linters and doc generators and unit tests
+For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+
+To run linters and doc generators and unit tests:
+
 ```bash
 tox
 ```
@@ -186,12 +196,17 @@ After you create a profile, use the following command to set the `AWS_PROFILE` s
 export AWS_PROFILE=YOUR_PROFILE_NAME
 ```
 
-Run the tests
+Run the tests:
+
 ```bash
 tox -e integ-tests
 ```
 
-You can also pass in various pytest arguments `tox -e integ-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+As with unit tests, you can also pass in various pytest arguments:
+
+```bash
+tox -e integ-tests -- your-arguments
+```
 
 ## License
 This project is licensed under the Apache-2.0 License.
