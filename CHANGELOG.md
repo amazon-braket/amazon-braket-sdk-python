@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.5.0 (2020-12-04)
+
+### Features
+
+ * Always accept identity observable factors
+
+### Documentation Changes
+
+ * backticks for batching tasks
+ * add punctuation to aws_session.py
+ * fix backticks, missing periods in quantum task docs
+ * fix backticks, grammar for aws_device.py
+
 ## v1.4.1 (2020-12-04)
 
 ### Bug Fixes and Other Changes
