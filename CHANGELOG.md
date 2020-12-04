@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.4.1 (2020-12-04)
+
+### Bug Fixes and Other Changes
+
+ * Correct integ test bucket
+
 ## v1.4.0.post0 (2020-12-03)
 
 ### Documentation Changes

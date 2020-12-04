@@ -70,7 +70,7 @@ class AwsQuantumTaskBatch:
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent tasks on the device.
             max_workers (int): The maximum number of thread pool workers. Default: 100
-            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+            poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
@@ -190,18 +190,18 @@ class AwsQuantumTaskBatch:
         have reached a terminal state. The result of this method is cached.
 
         Args:
-            fail_unsuccessful (bool): If set to True, this method will fail
+            fail_unsuccessful (bool): If set to `True`, this method will fail
                 if any task in the batch fails to return a result even after
                 `max_retries` retries.
             max_retries (int): Maximum number of times to retry any failed tasks,
-                i.e. any tasks in the FAILED or CANCELLED state or that didn't
-                complete within the timeout. Default: 3
-            use_cached_value (bool): If False, will refetch the results from S3,
-                even when results have already been cached. Default: True
+                i.e. any tasks in the `FAILED` or `CANCELLED` state or that didn't
+                complete within the timeout. Default: 3.
+            use_cached_value (bool): If `False`, will refetch the results from S3,
+                even when results have already been cached. Default: `True`.
 
         Returns:
             List[AwsQuantumTask]: The results of all of the tasks in the batch.
-                FAILED, CANCELLED, or timed out tasks will have a result of None
+                `FAILED`, `CANCELLED`, or timed out tasks will have a result of None
         """
         if not self._results or not use_cached_value:
             self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
@@ -229,7 +229,7 @@ class AwsQuantumTaskBatch:
     def retry_unsuccessful_tasks(self):
         """Retries any tasks in the batch without valid results.
 
-        This method should only be called after results() has been called at least once.
+        This method should only be called after `results()` has been called at least once.
         The method will generate new tasks for any failed tasks, so `self.task` and
         `self.results()` may return different values after a call to this method.
 

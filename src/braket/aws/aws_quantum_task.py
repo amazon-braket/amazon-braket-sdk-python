@@ -92,7 +92,7 @@ class AwsQuantumTask(QuantumTask):
                 without any rewiring downstream, if this is supported by the device.
                 Only applies to digital, gate-based circuits (as opposed to annealing problems).
                 If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
-                Default: False
+                Default: ``False``.
 
             tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
                 An example would be:
@@ -149,11 +149,11 @@ class AwsQuantumTask(QuantumTask):
             aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the task.
-            poll_timeout_seconds (float): The polling timeout for result(). Default: 5 days.
-            poll_interval_seconds (float): The polling interval for result(). Default: 1 second.
-            poll_outside_execution_window (bool): Whether or not to poll for result() when the
+            poll_timeout_seconds (float): The polling timeout for `result()`. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for `result()`. Default: 1 second.
+            poll_outside_execution_window (bool): Whether or not to poll for `result()` when the
                 current time is outside of the execution window for the associated device,
-                default is False. Tasks are expected to only run during the execution window.
+                default is `False`. Tasks are expected to only run during the execution window.
             logger (Logger): Logger object with which to write logs, such as task statuses
                 while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
 
@@ -189,7 +189,7 @@ class AwsQuantumTask(QuantumTask):
         Get an AwsSession for the Task ARN. The AWS session should be in the region of the task.
 
         Returns:
-            AwsSession: `AwsSession` object with default `boto_session` in task's region
+            AwsSession: `AwsSession` object with default `boto_session` in task's region.
         """
         task_region = task_arn.split(":")[3]
         boto_session = boto3.Session(region_name=task_region)
@@ -270,12 +270,12 @@ class AwsQuantumTask(QuantumTask):
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
         This method is a blocking thread call and synchronously returns a result.
-        Call async_result() if you require an asynchronous invocation.
+        Call `async_result()` if you require an asynchronous invocation.
         Consecutive calls to this method return a cached result from the preceding request.
 
         Returns:
             Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: The result of the task,
-            if the task completed successfully; returns None if the task did not complete
+            if the task completed successfully; returns `None` if the task did not complete
             successfully or the future timed out.
         """
         if self._result or self._status(True) in self.NO_RESULT_TERMINAL_STATES:
@@ -321,7 +321,7 @@ class AwsQuantumTask(QuantumTask):
         that contains it. Note that this does not block on the coroutine to finish.
 
         Returns:
-            asyncio.Task: An asyncio Task that contains the _wait_for_completion() coroutine.
+            asyncio.Task: An asyncio Task that contains the `_wait_for_completion()` coroutine.
         """
         return asyncio.create_task(self._wait_for_completion())
 
@@ -386,7 +386,7 @@ class AwsQuantumTask(QuantumTask):
 
     def _is_polling_time(self) -> bool:
         """
-        Return if it's time to poll for result()
+        Return if it's time to poll for `result()`.
         """
         if self._poll_outside_execution_window:
             return True
