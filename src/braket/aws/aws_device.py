@@ -64,7 +64,7 @@ class AwsDevice(Device):
         """
         Args:
             arn (str): The ARN of the device
-            aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
+            aws_session (AwsSession, optional): An AWS session object. Default is `None`.
 
         Note:
             Some devices (QPUs) are physically located in specific AWS Regions. In some cases,
@@ -101,12 +101,12 @@ class AwsDevice(Device):
         Args:
             task_specification (Union[Circuit, Problem]): Specification of task
                 (circuit or annealing problem) to run on device.
-            s3_destination_folder: The S3 location to save the task's results
+            s3_destination_folder: The S3 location to save the task's results to.
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+            poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
-            poll_interval_seconds (float): The polling interval for AwsQuantumTask.result(),
+            poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
@@ -174,7 +174,7 @@ class AwsDevice(Device):
         Args:
             task_specifications (List[Union[Circuit, Problem]]): List of  circuits
                 or annealing problems to run on device.
-            s3_destination_folder: The S3 location to save the tasks' results
+            s3_destination_folder: The S3 location to save the tasks' results to.
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             max_parallel (int, optional): The maximum number of tasks to run on AWS in parallel.
@@ -182,7 +182,7 @@ class AwsDevice(Device):
                 concurrent tasks on the device. Default: 10
             max_connections (int): The maximum number of connections in the Boto3 connection pool.
                 Also the maximum number of thread pool workers for the batch. Default: 100
-            poll_timeout_seconds (float): The polling timeout for AwsQuantumTask.result(),
+            poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
@@ -251,8 +251,8 @@ class AwsDevice(Device):
 
     @property
     def topology_graph(self) -> Graph:
-        """Graph: topology of device as a networkx Graph object.
-        Returns None if the topology is not available for the device.
+        """Graph: topology of device as a networkx `Graph` object.
+        Returns `None` if the topology is not available for the device.
 
         Examples:
             >>> import networkx as nx
@@ -268,10 +268,10 @@ class AwsDevice(Device):
 
     def _construct_topology_graph(self) -> Graph:
         """
-        Construct topology graph. If no such metadata is available, return None.
+        Construct topology graph. If no such metadata is available, return `None`.
 
         Returns:
-            Graph: topology of QPU as a networkx Graph object
+            Graph: topology of QPU as a networkx `Graph` object.
         """
         if hasattr(self.properties, "paradigm") and isinstance(
             self.properties.paradigm, GateModelQpuParadigmProperties
@@ -383,7 +383,8 @@ class AwsDevice(Device):
             provider_names (List[str], optional): provider name list, default is `None`
             order_by (str, optional): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
-            aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
+            aws_session (AwsSession, optional) aws_session: An AWS session object.
+                Default is `None`.
 
         Returns:
             List[AwsDevice]: list of AWS devices
