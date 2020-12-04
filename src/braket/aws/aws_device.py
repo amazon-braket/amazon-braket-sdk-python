@@ -383,7 +383,8 @@ class AwsDevice(Device):
             provider_names (List[str], optional): provider name list, default is `None`
             order_by (str, optional): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
-            aws_session (AwsSession, optional) aws_session: An AWS session object. Default is `None`.
+            aws_session (AwsSession, optional) aws_session: An AWS session object.
+                Default is `None`.
 
         Returns:
             List[AwsDevice]: list of AWS devices
