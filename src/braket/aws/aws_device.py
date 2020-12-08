@@ -57,8 +57,9 @@ class AwsDevice(Device):
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
-
     DEFAULT_MAX_PARALLEL = 10
+
+    _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
@@ -304,7 +305,7 @@ class AwsDevice(Device):
 
     @staticmethod
     def _aws_session_for_device(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
-        """AwsSession: Returns an AwsSession for the device ARN. """
+        """AwsSession: Returns an AwsSession for the device ARN."""
         if "qpu" in device_arn:
             return AwsDevice._aws_session_for_qpu(device_arn, aws_session)
         else:
@@ -345,7 +346,7 @@ class AwsDevice(Device):
                 )
                 return AwsSession(boto_session=boto_session, config=config)
         else:
-            boto_session = boto3.Session(region_name=regions[0])
+            boto_session = boto3.Session(region_name=regions[0]) if regions else None
             return AwsSession(boto_session=boto_session, config=config)
 
     def __repr__(self):
@@ -389,24 +390,41 @@ class AwsDevice(Device):
         Returns:
             List[AwsDevice]: list of AWS devices
         """
-        order_by_list = ["arn", "name", "type", "provider_name", "status"]
-        if order_by not in order_by_list:
-            raise ValueError(f"order_by '{order_by}' must be in {order_by_list}")
-        device_regions_set = AwsDevice._get_devices_regions_set(arns, provider_names, types)
-        results = []
+        if order_by not in AwsDevice._GET_DEVICES_ORDER_BY_KEYS:
+            raise ValueError(
+                f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
+            )
+        aws_session = aws_session if aws_session else AwsSession()
+        types = set(types) if types else {AwsDeviceType.QPU, AwsDeviceType.SIMULATOR}
+        device_map = {}
+        device_regions_set = AwsDevice._get_devices_regions_set(arns, provider_names)
         for region in device_regions_set:
-            aws_session = AwsDevice._copy_aws_session(aws_session, [region])
-            results.extend(
-                aws_session.search_devices(
+            session_for_region = AwsDevice._copy_aws_session(aws_session, [region])
+            # Require simulators to be instantiated
+            # in the same region as the AWS session
+            region_device_types = sorted(
+                types
+                if region == aws_session.boto_session.region_name
+                else types - {AwsDeviceType.SIMULATOR}
+            )
+            region_device_arns = [
+                result["deviceArn"]
+                for result in session_for_region.search_devices(
                     arns=arns,
                     names=names,
-                    types=types,
+                    types=region_device_types,
                     statuses=statuses,
                     provider_names=provider_names,
                 )
+            ]
+            device_map.update(
+                {
+                    arn: AwsDevice(arn, session_for_region)
+                    for arn in region_device_arns
+                    if arn not in device_map
+                }
             )
-        arns = set([result["deviceArn"] for result in results])
-        devices = [AwsDevice(arn, aws_session) for arn in arns]
+        devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
 
@@ -414,7 +432,6 @@ class AwsDevice(Device):
     def _get_devices_regions_set(
         arns: Optional[List[str]],
         provider_names: Optional[List[str]],
-        types: Optional[List[AwsDeviceType]],
     ) -> Set[str]:
         """Get the set of regions to call `SearchDevices` API given filters"""
         device_regions_set = set(
@@ -431,8 +448,4 @@ class AwsDevice(Device):
         if arns:
             arns_region_set = set([AwsDevice.DEVICE_REGIONS[arn.split("/")[-2]][0] for arn in arns])
             device_regions_set = device_regions_set.intersection(arns_region_set)
-        if types and types == [AwsDeviceType.SIMULATOR]:
-            device_regions_set = device_regions_set.intersection(
-                [AwsDevice.DEVICE_REGIONS["amazon"][0]]
-            )
         return device_regions_set
