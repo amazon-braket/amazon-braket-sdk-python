@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+from functools import lru_cache
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
@@ -109,17 +109,25 @@ class AwsSession(object):
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
 
-    def get_device(self, arn: str) -> Dict[str, Any]:
+    def get_device(self, arn: str, use_cached_value: bool = False) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `get_device` API to
+        Calls the Amazon Braket `GetDevice` API to
         retrieve device metadata.
 
         Args:
             arn (str): The ARN of the device.
+            use_cached_value (bool): Whether to use a cached `GetDevice` result, if it exists.
+                If ``False``, cached results will be cleared for all ARNs. Default: ``False``.
 
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetDevice` operation.
         """
+        if not use_cached_value:
+            self._cached_get_device.cache_clear()
+        return self._cached_get_device(arn)
+
+    @lru_cache(maxsize=None)
+    def _cached_get_device(self, arn):
         return self.braket_client.get_device(deviceArn=arn)
 
     def search_devices(

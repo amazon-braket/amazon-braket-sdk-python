@@ -129,7 +129,7 @@ def test_get_device_execution_windows_device_arn_exists(quantum_task):
     }
     assert quantum_task._get_device_execution_windows() == [DeviceExecutionWindow.parse_obj(window)]
     assert not quantum_task._aws_session.get_quantum_task.called
-    quantum_task._aws_session.get_device.assert_called_with(mock_arn)
+    quantum_task._aws_session.get_device.assert_called_with(mock_arn, True)
 
 
 def test_get_device_execution_windows_not_exists(quantum_task):
@@ -146,7 +146,7 @@ def test_get_device_execution_windows_not_exists(quantum_task):
     }
     assert quantum_task._get_device_execution_windows() == [DeviceExecutionWindow.parse_obj(window)]
     quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
-    quantum_task._aws_session.get_device.assert_called_with(mock_arn)
+    quantum_task._aws_session.get_device.assert_called_with(mock_arn, True)
 
 
 @pytest.mark.parametrize(

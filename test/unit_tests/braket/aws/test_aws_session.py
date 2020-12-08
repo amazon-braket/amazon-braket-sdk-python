@@ -107,6 +107,9 @@ def test_get_device(boto_session):
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
     metadata = aws_session.get_device("arn1")
     assert return_val == metadata
+    braket_client.get_device.return_value = None
+    assert return_val == aws_session.get_device("arn1", True)
+    assert aws_session.get_device("arn1") is None
 
 
 def test_cancel_quantum_task(aws_session):
