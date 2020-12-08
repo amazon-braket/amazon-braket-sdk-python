@@ -419,7 +419,9 @@ class AwsQuantumTask(QuantumTask):
             if not device_arn:
                 device_arn = self.metadata(use_cached_value=False).get("deviceArn")
             device_capabilities = json.loads(
-                self._aws_session.get_device(device_arn, True)["deviceCapabilities"]
+                self._aws_session.get_device(device_arn, use_cached_value=True)[
+                    "deviceCapabilities"
+                ]
             )
             self._device_execution_windows = [
                 DeviceExecutionWindow.parse_obj(window)
