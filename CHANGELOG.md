@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.1 (2020-12-10)
+
+### Bug Fixes and Other Changes
+
+ * Use current region for simulators in get_devices
+
 ## v1.5.0 (2020-12-04)
 
 ### Features
