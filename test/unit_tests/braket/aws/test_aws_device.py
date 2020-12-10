@@ -18,7 +18,7 @@ from common_test_utils import (
     DWAVE_ARN,
     IONQ_ARN,
     RIGETTI_ARN,
-    SIMULATOR_ARN,
+    SV1_ARN,
     run_and_assert,
     run_batch_and_assert,
 )
@@ -573,13 +573,13 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
 
 
 @patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
-def test_get_devices(mock_copy_aws_session):
-    aws_session = Mock()
-    mock_copy_aws_session.return_value = aws_session
-    aws_session.search_devices.side_effect = [
+def test_get_devices(mock_copy_aws_session, aws_session):
+    session_for_region = Mock()
+    mock_copy_aws_session.return_value = session_for_region
+    session_for_region.search_devices.side_effect = [
         [
             {
-                "deviceArn": SIMULATOR_ARN,
+                "deviceArn": SV1_ARN,
                 "deviceName": "SV1",
                 "deviceType": "SIMULATOR",
                 "deviceStatus": "ONLINE",
@@ -595,7 +595,7 @@ def test_get_devices(mock_copy_aws_session):
                 "providerName": "Rigetti",
             },
             {
-                "deviceArn": SIMULATOR_ARN,
+                "deviceArn": SV1_ARN,
                 "deviceName": "SV1",
                 "deviceType": "SIMULATOR",
                 "deviceStatus": "ONLINE",
@@ -603,14 +603,58 @@ def test_get_devices(mock_copy_aws_session):
             },
         ],
     ]
-    aws_session.get_device.side_effect = [MOCK_GATE_MODEL_SIMULATOR, MOCK_GATE_MODEL_QPU_1]
+    session_for_region.get_device.side_effect = [MOCK_GATE_MODEL_SIMULATOR, MOCK_GATE_MODEL_QPU_1]
     results = AwsDevice.get_devices(
-        arns=[SIMULATOR_ARN, RIGETTI_ARN],
+        arns=[SV1_ARN, RIGETTI_ARN],
         types=["SIMULATOR", "QPU"],
         provider_names=["Amazon Braket", "Rigetti"],
         statuses=["ONLINE"],
+        aws_session=aws_session,
     )
     assert [result.name for result in results] == ["Aspen-8", "SV1"]
+
+
+@pytest.mark.parametrize(
+    "region,types", [("us-west-1", ["QPU", "SIMULATOR"]), ("us-west-2", ["QPU"])]
+)
+@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
+def test_get_devices_session_regions(mock_copy_aws_session, region, types):
+    _boto_session = Mock()
+    _boto_session.region_name = region
+    _aws_session = Mock()
+    _aws_session.boto_session = _boto_session
+
+    session_for_region = Mock()
+    mock_copy_aws_session.return_value = session_for_region
+    session_for_region.search_devices.return_value = [
+        {
+            "deviceArn": SV1_ARN,
+            "deviceName": "SV1",
+            "deviceType": "SIMULATOR",
+            "deviceStatus": "ONLINE",
+            "providerName": "Amazon Braket",
+        }
+    ]
+
+    session_for_region.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    arns = [RIGETTI_ARN]
+    provider_names = ["Rigetti"]
+    statuses = ["ONLINE"]
+
+    AwsDevice.get_devices(
+        arns=arns,
+        types=["SIMULATOR", "QPU"],
+        provider_names=provider_names,
+        statuses=["ONLINE"],
+        aws_session=_aws_session,
+    )
+    session_for_region.search_devices.assert_called_with(
+        arns=arns,
+        names=None,
+        types=types,
+        statuses=statuses,
+        provider_names=provider_names,
+    )
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -622,18 +666,16 @@ def test_get_devices_invalid_order_by():
     "input,output",
     [
         (
-            {"arns": None, "types": None, "provider_names": None},
+            {"arns": None, "provider_names": None},
             {"us-west-2", "us-west-1", "us-east-1"},
         ),
-        ({"arns": None, "types": ["SIMULATOR"], "provider_names": None}, {"us-west-2"}),
         (
-            {"arns": [RIGETTI_ARN, DWAVE_ARN], "types": ["QPU"], "provider_names": None},
+            {"arns": [RIGETTI_ARN, DWAVE_ARN], "provider_names": None},
             {"us-west-2", "us-west-1"},
         ),
         (
             {
                 "arns": [RIGETTI_ARN, DWAVE_ARN, IONQ_ARN],
-                "types": ["QPU"],
                 "provider_names": ["Rigetti", "Amazon Braket", "IONQ", "FOO"],
             },
             {"us-west-2", "us-west-1", "us-east-1"},
