@@ -413,7 +413,7 @@ class AwsQuantumTask(QuantumTask):
         return False
 
     def _get_device_execution_windows(self) -> List[DeviceExecutionWindow]:
-        """Returns the device execution windows"""
+        """Returns the device's execution windows"""
         if not self._device_execution_windows:
             device_arn = self.metadata(use_cached_value=True).get("deviceArn")
             if not device_arn:
