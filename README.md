@@ -91,7 +91,7 @@ print(batch.results()[0].measurement_counts)  # The result of the first task in 
 ```
 
 ### Available Simulators
-Amazon Braket provides access to two types of simulators: the fully managed simulator, available through the Amazon Braket service, and the local simulator that is part of the Amazon Braket SDK.
+Amazon Braket provides access to two types of simulators: fully managed simulators, available through the Amazon Braket service, and the local simulator that is part of the Amazon Braket SDK.
 
 - Fully managed simulators offer high-performance circuit simulations. These simulators can handle circuits larger than circuits that run on quantum hardware. For example, the SV1 state vector simulator shown in the previous examples requires approximately 1 or 2 hours to complete a 34-qubit, dense, and square circuit (circuit depth = 34), depending on the type of gates used and other factors. For a list of available simulators and their features, consult the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 

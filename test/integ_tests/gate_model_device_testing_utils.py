@@ -39,15 +39,20 @@ def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
     assert result.measurement_counts.most_common(1)[0][0] == "001"
 
 
-def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+def no_result_types_testing(
+    circuit: Circuit, device: Device, run_kwargs: Dict[str, Any], expected: Dict[str, float]
+):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
-    bell = Circuit().h(0).cnot(0, 1)
-    result = device.run(bell, **run_kwargs).result()
-
-    assert np.allclose(result.measurement_probabilities["00"], 0.5, **tol)
-    assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
+    result = device.run(circuit, **run_kwargs).result()
+    probabilities = result.measurement_probabilities
+    for bitstring in probabilities:
+        assert np.allclose(probabilities[bitstring], expected[bitstring], **tol)
     assert len(result.measurements) == shots
+
+
+def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+    no_result_types_testing(Circuit().h(0).cnot(0, 1), device, run_kwargs, {"00": 0.5, "11": 0.5})
 
 
 def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict[str, Any]):

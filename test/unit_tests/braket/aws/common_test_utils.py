@@ -19,7 +19,7 @@ from braket.aws import AwsQuantumTaskBatch
 DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
 RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
-SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
 
 class MockS3:
