@@ -402,10 +402,10 @@ class AwsDevice(Device):
         device_regions_set = AwsDevice._get_devices_regions_set(arns, provider_names)
         for region in device_regions_set:
             session_region = aws_session.boto_session.region_name
-            # If the region is not the same as the current region's
-            # and only simulators are requested, then search_devices
-            # will not be called at all because simulators are only
-            # retrieved for the current region
+            # If the region is not the same as the current session's region
+            # and only simulators are requested, then search_devices will not
+            # be called at all because simulators are only retrieved for the
+            # current region
             if region == session_region or types != {AwsDeviceType.SIMULATOR}:
                 session_for_region = AwsDevice._copy_aws_session(aws_session, [region])
                 # Simulators are only instantiated in the same region as the AWS session
