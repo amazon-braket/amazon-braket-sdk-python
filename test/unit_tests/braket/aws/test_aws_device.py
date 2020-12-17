@@ -625,7 +625,6 @@ def test_get_devices_session_regions(mock_copy_aws_session, region, types):
     _aws_session.boto_session = _boto_session
 
     session_for_region = Mock()
-    mock_copy_aws_session.return_value = session_for_region
     session_for_region.search_devices.return_value = [
         {
             "deviceArn": SV1_ARN,
@@ -635,8 +634,9 @@ def test_get_devices_session_regions(mock_copy_aws_session, region, types):
             "providerName": "Amazon Braket",
         }
     ]
-
     session_for_region.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    mock_copy_aws_session.return_value = session_for_region
+
     arns = [RIGETTI_ARN]
     provider_names = ["Rigetti"]
     statuses = ["ONLINE"]
@@ -645,7 +645,7 @@ def test_get_devices_session_regions(mock_copy_aws_session, region, types):
         arns=arns,
         types=["SIMULATOR", "QPU"],
         provider_names=provider_names,
-        statuses=["ONLINE"],
+        statuses=statuses,
         aws_session=_aws_session,
     )
     session_for_region.search_devices.assert_called_with(
@@ -654,6 +654,25 @@ def test_get_devices_session_regions(mock_copy_aws_session, region, types):
         types=types,
         statuses=statuses,
         provider_names=provider_names,
+    )
+
+
+def test_get_devices_simulator_different_region():
+    _boto_session = Mock()
+    _boto_session.region_name = "us-west-2"
+    _aws_session = Mock()
+    _aws_session.boto_session = _boto_session
+
+    assert (
+        AwsDevice.get_devices(
+            arns=None,
+            types=["SIMULATOR"],
+            # Force get_devices to only look in us-west-1
+            provider_names=["Rigetti"],
+            statuses=None,
+            aws_session=_aws_session,
+        )
+        == []
     )
 
 
