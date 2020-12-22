@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.2 (2020-12-22)
+
+### Bug Fixes and Other Changes
+
+ * Get regions for QPUs instead of providers
+ * Do not search for simulators in wrong region
+
 ## v1.5.1 (2020-12-10)
 
 ### Bug Fixes and Other Changes
