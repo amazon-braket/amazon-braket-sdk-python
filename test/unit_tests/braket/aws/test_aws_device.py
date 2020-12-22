@@ -156,7 +156,7 @@ MOCK_DWAVE_QPU_CAPABILITIES = DwaveDeviceCapabilities.parse_obj(
 )
 
 MOCK_DWAVE_QPU = {
-    "deviceName": "name3",
+    "deviceName": "DW_2000Q_6",
     "deviceType": "QPU",
     "providerName": "provider1",
     "deviceStatus": "ONLINE",
@@ -199,8 +199,6 @@ MOCK_GATE_MODEL_SIMULATOR = {
     "deviceCapabilities": MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json(),
 }
 
-RIGETTI_REGION_KEY = "rigetti"
-
 
 @pytest.fixture
 def arn():
@@ -220,14 +218,14 @@ def circuit():
 @pytest.fixture
 def boto_session():
     _boto_session = Mock()
-    _boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
+    _boto_session.region_name = AwsDevice.QPU_REGIONS[RIGETTI_ARN]
     return _boto_session
 
 
 @pytest.fixture
 def aws_session():
     _boto_session = Mock()
-    _boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
+    _boto_session.region_name = AwsDevice.QPU_REGIONS[RIGETTI_ARN]
 
     creds = Mock()
     creds.access_key = "access key"
@@ -299,7 +297,7 @@ def test_repr(arn):
 
 def test_device_aws_session_in_qpu_region(aws_session):
     arn = RIGETTI_ARN
-    aws_session.boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
+    aws_session.boto_session.region_name = AwsDevice.QPU_REGIONS[RIGETTI_ARN]
     aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     AwsDevice(arn, aws_session)
 
@@ -312,7 +310,7 @@ def test_aws_session_in_another_qpu_region(
     boto_session_init, aws_session_init, boto_session, aws_session
 ):
     arn = RIGETTI_ARN
-    region = AwsDevice.DEVICE_REGIONS.get(RIGETTI_REGION_KEY)[0]
+    region = AwsDevice.QPU_REGIONS.get(RIGETTI_ARN)
 
     boto_session_init.return_value = boto_session
     aws_session_init.return_value = aws_session
@@ -348,7 +346,7 @@ def test_device_no_aws_session_supplied(
     boto_session_init, aws_session_init, boto_session, aws_session
 ):
     arn = RIGETTI_ARN
-    region = AwsDevice.DEVICE_REGIONS.get(RIGETTI_REGION_KEY)[0]
+    region = AwsDevice.QPU_REGIONS.get(RIGETTI_ARN)
 
     boto_session_init.return_value = boto_session
     aws_session_init.return_value = aws_session
@@ -575,7 +573,6 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
 @patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
 def test_get_devices(mock_copy_aws_session, aws_session):
     session_for_region = Mock()
-    mock_copy_aws_session.return_value = session_for_region
     session_for_region.search_devices.side_effect = [
         [
             {
@@ -588,11 +585,11 @@ def test_get_devices(mock_copy_aws_session, aws_session):
         ],
         [
             {
-                "deviceArn": RIGETTI_ARN,
-                "deviceName": "Aspen-8",
+                "deviceArn": DWAVE_ARN,
+                "deviceName": "DW_2000Q_6",
                 "deviceType": "QPU",
                 "deviceStatus": "ONLINE",
-                "providerName": "Rigetti",
+                "providerName": "D-Wave",
             },
             {
                 "deviceArn": SV1_ARN,
@@ -603,15 +600,16 @@ def test_get_devices(mock_copy_aws_session, aws_session):
             },
         ],
     ]
-    session_for_region.get_device.side_effect = [MOCK_GATE_MODEL_SIMULATOR, MOCK_GATE_MODEL_QPU_1]
+    session_for_region.get_device.side_effect = [MOCK_GATE_MODEL_SIMULATOR, MOCK_DWAVE_QPU]
+    mock_copy_aws_session.return_value = session_for_region
     results = AwsDevice.get_devices(
-        arns=[SV1_ARN, RIGETTI_ARN],
+        arns=[SV1_ARN, DWAVE_ARN],
         types=["SIMULATOR", "QPU"],
-        provider_names=["Amazon Braket", "Rigetti"],
+        provider_names=["Amazon Braket", "D-Wave"],
         statuses=["ONLINE"],
         aws_session=aws_session,
     )
-    assert [result.name for result in results] == ["Aspen-8", "SV1"]
+    assert [result.name for result in results] == ["DW_2000Q_6", "SV1"]
 
 
 @pytest.mark.parametrize(
@@ -643,7 +641,7 @@ def test_get_devices_session_regions(mock_copy_aws_session, region, types):
 
     AwsDevice.get_devices(
         arns=arns,
-        types=["SIMULATOR", "QPU"],
+        types=None,
         provider_names=provider_names,
         statuses=statuses,
         aws_session=_aws_session,
@@ -665,10 +663,9 @@ def test_get_devices_simulator_different_region():
 
     assert (
         AwsDevice.get_devices(
-            arns=None,
+            arns=[RIGETTI_ARN],
             types=["SIMULATOR"],
-            # Force get_devices to only look in us-west-1
-            provider_names=["Rigetti"],
+            provider_names=None,
             statuses=None,
             aws_session=_aws_session,
         )
@@ -685,21 +682,38 @@ def test_get_devices_invalid_order_by():
     "input,output",
     [
         (
-            {"arns": None, "provider_names": None},
+            {"types": None, "arns": None},
             {"us-west-2", "us-west-1", "us-east-1"},
         ),
         (
-            {"arns": [RIGETTI_ARN, DWAVE_ARN], "provider_names": None},
-            {"us-west-2", "us-west-1"},
+            {"types": {AwsDeviceType.QPU}, "arns": None},
+            {"us-west-2", "us-west-1", "us-east-1"},
         ),
         (
-            {
-                "arns": [RIGETTI_ARN, DWAVE_ARN, IONQ_ARN],
-                "provider_names": ["Rigetti", "Amazon Braket", "IONQ", "FOO"],
-            },
-            {"us-west-2", "us-west-1", "us-east-1"},
+            {"types": {AwsDeviceType.SIMULATOR}, "arns": None},
+            {"us-west-2"},
+        ),
+        (
+            {"types": {AwsDeviceType.QPU, AwsDeviceType.SIMULATOR}, "arns": None},
+            {"us-east-1", "us-west-1", "us-west-2"},
+        ),
+        (
+            {"types": None, "arns": [RIGETTI_ARN, IONQ_ARN]},
+            {"us-east-1", "us-west-1"},
+        ),
+        (
+            {"types": None, "arns": [RIGETTI_ARN, SV1_ARN]},
+            {"us-west-1", "us-west-2"},
+        ),
+        (
+            {"types": {AwsDeviceType.SIMULATOR}, "arns": [RIGETTI_ARN, IONQ_ARN]},
+            set(),
+        ),
+        (
+            {"types": None, "arns": ["blah"]},
+            {"us-east-1", "us-west-1", "us-west-2"},
         ),
     ],
 )
 def test_get_devices_regions_set(input, output):
-    assert AwsDevice._get_devices_regions_set(**input) == output
+    assert AwsDevice._get_devices_regions_set(current_region="us-west-2", **input) == output
