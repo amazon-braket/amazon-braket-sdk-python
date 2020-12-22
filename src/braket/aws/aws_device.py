@@ -440,9 +440,9 @@ class AwsDevice(Device):
         types: Optional[Set[AwsDeviceType]], arns: Optional[List[str]], current_region: str
     ) -> FrozenSet[str]:
         """Get the set of regions to call `SearchDevices` API given filters"""
-        device_regions_set = set(AwsDevice.REGIONS)
-        if types == {AwsDeviceType.SIMULATOR}:
-            device_regions_set &= {current_region}
+        device_regions_set = (
+            {current_region} if types == {AwsDeviceType.SIMULATOR} else set(AwsDevice.REGIONS)
+        )
         if arns:
             arns_region_set = set()
             for arn in arns:
