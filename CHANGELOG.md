@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.5.3 (2020-12-31)
+
+### Bug Fixes and Other Changes
+
+ * Update range of random qubit in test_qft_iqft_h
+
+## v1.5.2.post0 (2020-12-30)
+
+### Testing and Release Infrastructure
+
+ * Add build badge
+ * Use GitHub Actions for CI
+
 ## v1.5.2 (2020-12-22)
 
 ### Bug Fixes and Other Changes
