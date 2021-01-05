@@ -125,6 +125,9 @@ class ResultType:
     def __repr__(self) -> str:
         return f"{self.name}()"
 
+    def __hash__(self) -> int:
+        return hash(repr(self))
+
 
 class ObservableResultType(ResultType):
     """
@@ -197,3 +200,6 @@ class ObservableResultType(ResultType):
 
     def __copy__(self) -> ObservableResultType:
         return type(self)(observable=self.observable, target=self.target)
+
+    def __hash__(self) -> int:
+        return super().__hash__()
