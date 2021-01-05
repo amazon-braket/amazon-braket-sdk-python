@@ -381,22 +381,27 @@ def test_hash_result_types():
     expectation_3 = jaqcd.Expectation(observable=["x"], targets=[2, 1])
     expectation_4 = jaqcd.Expectation(
         observable=[[[[0, 0], [1, 0]], [[1, 0], [0, 0]]], [[[1, 0], [1, 0]], [[1, 0], [-1, 0]]]],
-        targets=[1, 2]
+        targets=[1, 2],
     )
     expectation_5 = jaqcd.Expectation(
         observable=[[[[0, 0], [1, 0]], [[1, 0], [0, 0]]], [[[1, 0], [1, 0]], [[1, 0], [-1, 0]]]],
-        targets=[1, 2]
+        targets=[1, 2],
     )
     expectation_6 = jaqcd.Expectation(observable=["y", "z"], targets=[1, 2])
     expectation_7 = jaqcd.Expectation(observable=["y", "z"], targets=[1, 2])
     sample_1 = jaqcd.Sample(targets=[1, 2], observable=["x"])
-    assert GateModelQuantumTaskResult._result_type_hash(expectation_1) == \
-           GateModelQuantumTaskResult._result_type_hash(expectation_2)
-    assert GateModelQuantumTaskResult._result_type_hash(expectation_2) != \
-           GateModelQuantumTaskResult._result_type_hash(expectation_3)
-    assert GateModelQuantumTaskResult._result_type_hash(expectation_1) != \
-           GateModelQuantumTaskResult._result_type_hash(sample_1)
-    assert GateModelQuantumTaskResult._result_type_hash(expectation_4) == \
-           GateModelQuantumTaskResult._result_type_hash(expectation_5)
-    assert GateModelQuantumTaskResult._result_type_hash(expectation_6) == \
-           GateModelQuantumTaskResult._result_type_hash(expectation_7)
+    assert GateModelQuantumTaskResult._result_type_hash(
+        expectation_1
+    ) == GateModelQuantumTaskResult._result_type_hash(expectation_2)
+    assert GateModelQuantumTaskResult._result_type_hash(
+        expectation_2
+    ) != GateModelQuantumTaskResult._result_type_hash(expectation_3)
+    assert GateModelQuantumTaskResult._result_type_hash(
+        expectation_1
+    ) != GateModelQuantumTaskResult._result_type_hash(sample_1)
+    assert GateModelQuantumTaskResult._result_type_hash(
+        expectation_4
+    ) == GateModelQuantumTaskResult._result_type_hash(expectation_5)
+    assert GateModelQuantumTaskResult._result_type_hash(
+        expectation_6
+    ) == GateModelQuantumTaskResult._result_type_hash(expectation_7)
