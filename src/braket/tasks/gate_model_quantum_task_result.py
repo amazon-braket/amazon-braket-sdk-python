@@ -100,7 +100,8 @@ class GateModelQuantumTaskResult:
         if self._result_types_indices is None:
             if self.result_types is not None:
                 self._result_types_indices = dict(
-                    (result_type_hash(rt.type), i) for i, rt in enumerate(self.result_types)
+                    (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
+                    for i, rt in enumerate(self.result_types)
                 )
             else:
                 self._result_types_indices = {}
@@ -122,7 +123,8 @@ class GateModelQuantumTaskResult:
         """
         rt_ir = result_type.to_ir()
         try:
-            result_type_index = self._result_types_indices[result_type_hash(rt_ir)]
+            rt_hash = GateModelQuantumTaskResult._result_type_hash(rt_ir)
+            result_type_index = self._result_types_indices[rt_hash]
             return self.values[result_type_index]
         except KeyError:
             raise ValueError(
@@ -358,7 +360,7 @@ class GateModelQuantumTaskResult:
                     observable,
                     targets,
                 )
-                casted_result_type = Sample(targets=targets, observable=observable.to_ir())
+                casted_result_type = Sample(targets=targets, observable=ir_observable)
             elif rt_type == "variance":
                 value = GateModelQuantumTaskResult._calculate_for_targets(
                     GateModelQuantumTaskResult._variance_from_measurements,
@@ -367,7 +369,7 @@ class GateModelQuantumTaskResult:
                     observable,
                     targets,
                 )
-                casted_result_type = Variance(targets=targets, observable=observable.to_ir())
+                casted_result_type = Variance(targets=targets, observable=ir_observable)
             elif rt_type == "expectation":
                 value = GateModelQuantumTaskResult._calculate_for_targets(
                     GateModelQuantumTaskResult._expectation_from_measurements,
@@ -376,7 +378,7 @@ class GateModelQuantumTaskResult:
                     observable,
                     targets,
                 )
-                casted_result_type = Expectation(targets=targets, observable=observable.to_ir())
+                casted_result_type = Expectation(targets=targets, observable=ir_observable)
             else:
                 raise ValueError(f"Unknown result type {rt_type}")
             result_types.append(ResultTypeValue.construct(type=casted_result_type, value=value))
@@ -473,3 +475,7 @@ class GateModelQuantumTaskResult:
         # Extract only the columns of the basis samples required based on ``targets``.
         indices = GateModelQuantumTaskResult._measurements_base_10(measurements)
         return observable.eigenvalues[indices].real
+
+    @staticmethod
+    def _result_type_hash(rt_type):
+        return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
