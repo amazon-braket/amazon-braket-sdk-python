@@ -65,6 +65,11 @@ class StateVector(ResultType):
     def __copy__(self) -> StateVector:
         return type(self)()
 
+    # must redefine __hash__ since __eq__ is overwritten
+    # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+    def __hash__(self) -> int:
+        return super().__hash__()
+
 
 ResultType.register_result_type(StateVector)
 
@@ -134,6 +139,9 @@ class Amplitude(ResultType):
 
     def __copy__(self):
         return type(self)(state=self.state)
+
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 
 ResultType.register_result_type(Amplitude)
@@ -206,6 +214,9 @@ class Probability(ResultType):
 
     def __copy__(self) -> Probability:
         return type(self)(target=self.target)
+
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 
 ResultType.register_result_type(Probability)

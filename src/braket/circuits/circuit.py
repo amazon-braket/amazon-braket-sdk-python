@@ -108,7 +108,7 @@ class Circuit:
 
         """
         self._moments: Moments = Moments()
-        self._result_types: List[ResultType] = []
+        self._result_types: Dict[ResultType] = {}
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
         self._qubit_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
@@ -129,7 +129,7 @@ class Circuit:
     @property
     def result_types(self) -> List[ResultType]:
         """List[ResultType]: Get a list of requested result types in the circuit."""
-        return self._result_types
+        return list(self._result_types.keys())
 
     @property
     def basis_rotation_instructions(self) -> List[Instruction]:
@@ -197,7 +197,7 @@ class Circuit:
 
 
         Note: target and target_mapping will only be applied to those requested result types with
-        the attribute `target`. The result_type will be appended to the end of the list of
+        the attribute `target`. The result_type will be appended to the end of the dict keys of
         `circuit.result_types` only if it does not already exist in `circuit.result_types`
 
         Returns:
@@ -246,7 +246,8 @@ class Circuit:
         if result_type_to_add not in self._result_types:
             self._add_to_qubit_observable_mapping(result_type_to_add)
             self._add_to_qubit_observable_set(result_type_to_add)
-            self._result_types.append(result_type_to_add)
+            # using dict as an ordered set, value is arbitrary
+            self._result_types[result_type_to_add] = None
         return self
 
     def _add_to_qubit_observable_mapping(self, result_type: ResultType) -> None:
@@ -614,7 +615,7 @@ class Circuit:
         if isinstance(other, Circuit):
             return (
                 list(self.instructions) == list(other.instructions)
-                and self.result_types == self.result_types
+                and self.result_types == other.result_types
             )
         return NotImplemented
 
