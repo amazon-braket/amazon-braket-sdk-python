@@ -182,7 +182,8 @@ class Probability(ResultType):
 
     def to_ir(self) -> ir.Probability:
         if self.target:
-            return ir.Probability.construct(targets=list(self.target))
+            # convert qubits to int as required by the ir type
+            return ir.Probability.construct(targets=[int(qubit) for qubit in self.target])
         else:
             return ir.Probability.construct()
 
@@ -262,7 +263,7 @@ class Expectation(ObservableResultType):
     def to_ir(self) -> ir.Expectation:
         if self.target:
             return ir.Expectation.construct(
-                observable=self.observable.to_ir(), targets=list(self.target)
+                observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
         else:
             return ir.Expectation.construct(observable=self.observable.to_ir())
@@ -329,7 +330,7 @@ class Sample(ObservableResultType):
     def to_ir(self) -> ir.Sample:
         if self.target:
             return ir.Sample.construct(
-                observable=self.observable.to_ir(), targets=list(self.target)
+                observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
         else:
             return ir.Sample.construct(observable=self.observable.to_ir())
@@ -397,7 +398,7 @@ class Variance(ObservableResultType):
     def to_ir(self) -> ir.Variance:
         if self.target:
             return ir.Variance.construct(
-                observable=self.observable.to_ir(), targets=list(self.target)
+                observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
         else:
             return ir.Variance.construct(observable=self.observable.to_ir())
