@@ -21,6 +21,7 @@ import numpy as np
 
 from braket.circuits import Observable, ResultType, StandardObservable
 from braket.circuits.observables import observable_from_ir
+from braket.ir.jaqcd import Expectation, Probability, Sample, Variance
 from braket.task_result import (
     AdditionalMetadata,
     GateModelTaskResult,
@@ -29,6 +30,10 @@ from braket.task_result import (
 )
 
 T = TypeVar("T")
+
+
+def result_type_hash(rt_type):
+    return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
 
 
 @dataclass
@@ -79,8 +84,8 @@ class GateModelQuantumTaskResult:
 
     task_metadata: TaskMetadata
     additional_metadata: AdditionalMetadata
-    result_types: List[Dict[str, str]]
-    values: List[Any]
+    result_types: List[ResultTypeValue] = None
+    values: List[Any] = None
     measurements: np.ndarray = None
     measured_qubits: List[int] = None
     measurement_counts: Counter = None
@@ -88,6 +93,18 @@ class GateModelQuantumTaskResult:
     measurements_copied_from_device: bool = None
     measurement_counts_copied_from_device: bool = None
     measurement_probabilities_copied_from_device: bool = None
+
+    _result_types_indices: Dict[str, int] = None
+
+    def __post_init__(self):
+        if self._result_types_indices is None:
+            if self.result_types is not None:
+                self._result_types_indices = dict(
+                    (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
+                    for i, rt in enumerate(self.result_types)
+                )
+            else:
+                self._result_types_indices = {}
 
     def get_value_by_result_type(self, result_type: ResultType) -> Any:
         """
@@ -105,13 +122,15 @@ class GateModelQuantumTaskResult:
                 Result types must be added to the circuit before the circuit is run on a device.
         """
         rt_ir = result_type.to_ir()
-        for rt in self.result_types:
-            if rt_ir == rt.type:
-                return rt.value
-        raise ValueError(
-            "Result type not found in result. "
-            + "Result types must be added to circuit before circuit is run on device."
-        )
+        try:
+            rt_hash = GateModelQuantumTaskResult._result_type_hash(rt_ir)
+            result_type_index = self._result_types_indices[rt_hash]
+            return self.values[result_type_index]
+        except KeyError:
+            raise ValueError(
+                "Result type not found in result. "
+                + "Result types must be added to circuit before circuit is run on device."
+            )
 
     def __eq__(self, other) -> bool:
         if isinstance(other, GateModelQuantumTaskResult):
@@ -318,7 +337,7 @@ class GateModelQuantumTaskResult:
     @staticmethod
     def _calculate_result_types(
         ir_string: str, measurements: np.ndarray, measured_qubits: List[int]
-    ) -> List[Dict[str, Any]]:
+    ) -> List[ResultTypeValue]:
         ir = json.loads(ir_string)
         result_types = []
         if not ir.get("results"):
@@ -332,6 +351,7 @@ class GateModelQuantumTaskResult:
                 value = GateModelQuantumTaskResult._probability_from_measurements(
                     measurements, measured_qubits, targets
                 )
+                casted_result_type = Probability(targets=targets)
             elif rt_type == "sample":
                 value = GateModelQuantumTaskResult._calculate_for_targets(
                     GateModelQuantumTaskResult._samples_from_measurements,
@@ -340,6 +360,7 @@ class GateModelQuantumTaskResult:
                     observable,
                     targets,
                 )
+                casted_result_type = Sample(targets=targets, observable=ir_observable)
             elif rt_type == "variance":
                 value = GateModelQuantumTaskResult._calculate_for_targets(
                     GateModelQuantumTaskResult._variance_from_measurements,
@@ -348,6 +369,7 @@ class GateModelQuantumTaskResult:
                     observable,
                     targets,
                 )
+                casted_result_type = Variance(targets=targets, observable=ir_observable)
             elif rt_type == "expectation":
                 value = GateModelQuantumTaskResult._calculate_for_targets(
                     GateModelQuantumTaskResult._expectation_from_measurements,
@@ -356,9 +378,10 @@ class GateModelQuantumTaskResult:
                     observable,
                     targets,
                 )
+                casted_result_type = Expectation(targets=targets, observable=ir_observable)
             else:
                 raise ValueError(f"Unknown result type {rt_type}")
-            result_types.append(ResultTypeValue.construct(type=result_type, value=value))
+            result_types.append(ResultTypeValue.construct(type=casted_result_type, value=value))
         return result_types
 
     @staticmethod
@@ -452,3 +475,7 @@ class GateModelQuantumTaskResult:
         # Extract only the columns of the basis samples required based on ``targets``.
         indices = GateModelQuantumTaskResult._measurements_base_10(measurements)
         return observable.eigenvalues[indices].real
+
+    @staticmethod
+    def _result_type_hash(rt_type):
+        return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))

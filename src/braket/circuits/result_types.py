@@ -65,6 +65,11 @@ class StateVector(ResultType):
     def __copy__(self) -> StateVector:
         return type(self)()
 
+    # must redefine __hash__ since __eq__ is overwritten
+    # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+    def __hash__(self) -> int:
+        return super().__hash__()
+
 
 ResultType.register_result_type(StateVector)
 
@@ -135,6 +140,9 @@ class Amplitude(ResultType):
     def __copy__(self):
         return type(self)(state=self.state)
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
 
 ResultType.register_result_type(Amplitude)
 
@@ -174,7 +182,8 @@ class Probability(ResultType):
 
     def to_ir(self) -> ir.Probability:
         if self.target:
-            return ir.Probability.construct(targets=list(self.target))
+            # convert qubits to int as required by the ir type
+            return ir.Probability.construct(targets=[int(qubit) for qubit in self.target])
         else:
             return ir.Probability.construct()
 
@@ -206,6 +215,9 @@ class Probability(ResultType):
 
     def __copy__(self) -> Probability:
         return type(self)(target=self.target)
+
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 
 ResultType.register_result_type(Probability)
@@ -251,7 +263,7 @@ class Expectation(ObservableResultType):
     def to_ir(self) -> ir.Expectation:
         if self.target:
             return ir.Expectation.construct(
-                observable=self.observable.to_ir(), targets=list(self.target)
+                observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
         else:
             return ir.Expectation.construct(observable=self.observable.to_ir())
@@ -318,7 +330,7 @@ class Sample(ObservableResultType):
     def to_ir(self) -> ir.Sample:
         if self.target:
             return ir.Sample.construct(
-                observable=self.observable.to_ir(), targets=list(self.target)
+                observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
         else:
             return ir.Sample.construct(observable=self.observable.to_ir())
@@ -386,7 +398,7 @@ class Variance(ObservableResultType):
     def to_ir(self) -> ir.Variance:
         if self.target:
             return ir.Variance.construct(
-                observable=self.observable.to_ir(), targets=list(self.target)
+                observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
         else:
             return ir.Variance.construct(observable=self.observable.to_ir())
