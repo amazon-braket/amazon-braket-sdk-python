@@ -125,6 +125,26 @@ class ResultType:
     def __repr__(self) -> str:
         return f"{self.name}()"
 
+    @classmethod
+    def StateVector(cls):
+        raise NotImplementedError("Result type not registered")
+
+    @classmethod
+    def Amplitude(cls, state: List[str]):
+        raise NotImplementedError("Result type not registered")
+
+    @classmethod
+    def Probability(cls, target: QubitSetInput = None):
+        raise NotImplementedError("Result type not registered")
+
+    @classmethod
+    def Expectation(cls, observable: Observable, target: QubitSetInput = None):
+        raise NotImplementedError("Result type not registered")
+
+    @classmethod
+    def Sample(cls, observable: Observable, target: QubitSetInput = None):
+        raise NotImplementedError("Result type not registered")
+
 
 class ObservableResultType(ResultType):
     """
