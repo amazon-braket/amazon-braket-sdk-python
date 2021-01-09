@@ -14,12 +14,10 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import time
-from datetime import datetime
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Union
 
 import boto3
 
@@ -27,7 +25,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from braket.device_schema import DeviceExecutionWindow, ExecutionDay, GateModelParameters
+from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import DwaveDeviceParameters
 from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
@@ -140,7 +138,6 @@ class AwsQuantumTask(QuantumTask):
         aws_session: AwsSession = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
-        poll_outside_execution_window: bool = False,
         logger: Logger = getLogger(__name__),
     ):
         """
@@ -151,9 +148,6 @@ class AwsQuantumTask(QuantumTask):
                 region of the task.
             poll_timeout_seconds (float): The polling timeout for `result()`. Default: 5 days.
             poll_interval_seconds (float): The polling interval for `result()`. Default: 1 second.
-            poll_outside_execution_window (bool): Whether or not to poll for `result()` when the
-                current time is outside of the execution window for the associated device,
-                default is `False`. Tasks are expected to only run during the execution window.
             logger (Logger): Logger object with which to write logs, such as task statuses
                 while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
 
@@ -175,12 +169,10 @@ class AwsQuantumTask(QuantumTask):
         )
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
-        self._poll_outside_execution_window = poll_outside_execution_window
 
         self._logger = logger
 
         self._metadata: Dict[str, Any] = {}
-        self._device_execution_windows = None
         self._result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult] = None
 
     @staticmethod
@@ -340,23 +332,11 @@ class AwsQuantumTask(QuantumTask):
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
-                If `poll_outside_execution_window` is set to `False`, it will
-                not poll the API for the current task status when the current time
-                is outside of the associated device's execution window.
         """
         self._logger.debug(f"Task {self._arn}: start polling for completion")
         start_time = time.time()
 
         while (time.time() - start_time) < self._poll_timeout_seconds:
-            is_polling_time = self._is_polling_time()
-            if not is_polling_time:
-                self._logger.debug(
-                    f"Task {self._arn}: Current time {datetime.now()} is outside of"
-                    f" associated device's execution windows "
-                    f"{self._get_device_execution_windows()}. Skipping polling for "
-                    f" now."
-                )
-                continue
             # Used cached metadata if cached status is terminal
             task_status = self._update_status_if_nonterminal()
             current_metadata = self.metadata(True)
@@ -383,49 +363,6 @@ class AwsQuantumTask(QuantumTask):
         )
         self._result = None
         return None
-
-    def _is_polling_time(self) -> bool:
-        """
-        Return if it's time to poll for `result()`.
-        """
-        if self._poll_outside_execution_window:
-            return True
-        device_execution_windows = self._get_device_execution_windows()
-        cur_time = datetime.utcnow()
-        for window in device_execution_windows:
-            day_no = cur_time.weekday()
-            day_of_week = cur_time.strftime("%A")
-            if window.executionDay != ExecutionDay.EVERYDAY:
-                if window.executionDay == ExecutionDay.WEEKDAYS and day_no >= 5:
-                    continue
-                if window.executionDay == ExecutionDay.WEEKENDS and day_no < 5:
-                    continue
-                if (
-                    window.executionDay not in [ExecutionDay.WEEKENDS, ExecutionDay.WEEKDAYS]
-                    and window.executionDay != day_of_week
-                ):
-                    continue
-            if (
-                cur_time.time() >= window.windowStartHour
-                and cur_time.time() <= window.windowEndHour
-            ):
-                return True
-        return False
-
-    def _get_device_execution_windows(self) -> List[DeviceExecutionWindow]:
-        """Returns the device execution windows"""
-        if not self._device_execution_windows:
-            device_arn = self.metadata(use_cached_value=True).get("deviceArn")
-            if not device_arn:
-                device_arn = self.metadata(use_cached_value=False).get("deviceArn")
-            device_capabilities = json.loads(
-                self._aws_session.get_device(device_arn)["deviceCapabilities"]
-            )
-            self._device_execution_windows = [
-                DeviceExecutionWindow.parse_obj(window)
-                for window in device_capabilities["service"]["executionWindows"]
-            ]
-        return self._device_execution_windows
 
     def __repr__(self) -> str:
         return f"AwsQuantumTask('id':{self.id})"
