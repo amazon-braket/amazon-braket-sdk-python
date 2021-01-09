@@ -3,6 +3,7 @@
 [![Latest Version](https://img.shields.io/pypi/v/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Build Status](https://img.shields.io/github/workflow/status/aws/amazon-braket-sdk-python/Python%20package/main?logo=github)](https://github.com/aws/amazon-braket-sdk-python/actions?query=workflow%3A%22Python+package%22)
+[![codecov](https://codecov.io/gh/aws/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/aws/amazon-braket-sdk-python)
 [![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-sdk-python.svg?logo=read-the-docs)](https://amazon-braket-sdk-python.readthedocs.io/en/latest/?badge=latest)
 [![Code Style: Black](https://img.shields.io/badge/code_style-black-000000.svg)](https://github.com/psf/black)
 
