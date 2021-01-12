@@ -26,7 +26,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        pip install --upgrade pip pytest
+        pip install --upgrade pip
         pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python@main
         pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python@main
         pip install -e .[test]
@@ -37,4 +37,6 @@ jobs:
         flake8
     - name: Run unit tests
       run: |
-        pytest test/unit_tests
+        tox -e unit-tests
+    - name: Upload coverage report to Codecov
+      uses: codecov/codecov-action@v1
