@@ -12,10 +12,8 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
-import json
 import threading
 import time
-from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -25,7 +23,7 @@ from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
-from braket.device_schema import DeviceExecutionWindow, GateModelParameters
+from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import DwaveDeviceParameters
 from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
@@ -44,23 +42,17 @@ def aws_session():
 
 @pytest.fixture
 def quantum_task(aws_session):
-    return AwsQuantumTask(
-        "foo:bar:arn", aws_session, poll_timeout_seconds=2, poll_outside_execution_window=True
-    )
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
 
 @pytest.fixture
 def circuit_task(aws_session):
-    return AwsQuantumTask(
-        "foo:bar:arn", aws_session, poll_timeout_seconds=2, poll_outside_execution_window=True
-    )
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
 
 @pytest.fixture
 def annealing_task(aws_session):
-    return AwsQuantumTask(
-        "foo:bar:arn", aws_session, poll_timeout_seconds=2, poll_outside_execution_window=True
-    )
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
 
 @pytest.fixture
@@ -107,145 +99,6 @@ def test_id_getter(arn, aws_session):
 @pytest.mark.xfail(raises=AttributeError)
 def test_no_id_setter(quantum_task):
     quantum_task.id = 123
-
-
-def test_get_device_execution_windows_exists(quantum_task):
-    mock_windows = ["mock"]
-    quantum_task._device_execution_windows = mock_windows
-    assert quantum_task._get_device_execution_windows() == mock_windows
-    assert not quantum_task._aws_session.get_quantum_task.called
-
-
-def test_get_device_execution_windows_device_arn_exists(quantum_task):
-    mock_arn = "mock"
-    window = {
-        "executionDay": "Everyday",
-        "windowStartHour": "00:00:00",
-        "windowEndHour": "23:00:00",
-    }
-    quantum_task._metadata = {"deviceArn": mock_arn}
-    quantum_task._aws_session.get_device.return_value = {
-        "deviceCapabilities": json.dumps({"service": {"executionWindows": [window]}})
-    }
-    assert quantum_task._get_device_execution_windows() == [DeviceExecutionWindow.parse_obj(window)]
-    assert not quantum_task._aws_session.get_quantum_task.called
-    quantum_task._aws_session.get_device.assert_called_with(mock_arn)
-
-
-def test_get_device_execution_windows_not_exists(quantum_task):
-    mock_arn = "mock"
-    window = {
-        "executionDay": "Everyday",
-        "windowStartHour": "00:00:00",
-        "windowEndHour": "23:00:00",
-    }
-    quantum_task._metadata = {}
-    quantum_task._aws_session.get_quantum_task.return_value = {"deviceArn": mock_arn}
-    quantum_task._aws_session.get_device.return_value = {
-        "deviceCapabilities": json.dumps({"service": {"executionWindows": [window]}})
-    }
-    assert quantum_task._get_device_execution_windows() == [DeviceExecutionWindow.parse_obj(window)]
-    quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
-    quantum_task._aws_session.get_device.assert_called_with(mock_arn)
-
-
-@pytest.mark.parametrize(
-    "window,cur_time,expected_val",
-    [
-        (
-            {
-                "executionDay": "Everyday",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/08/2020 00:00:32",
-            True,
-        ),
-        (
-            {
-                "executionDay": "Everyday",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/08/2020 00:02:00",
-            False,
-        ),
-        (
-            {
-                "executionDay": "Weekdays",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/27/2020 00:00:32",
-            True,
-        ),
-        (
-            {
-                "executionDay": "Weekdays",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/25/2020 00:00:32",
-            False,
-        ),
-        (
-            {
-                "executionDay": "Weekend",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/27/2020 00:00:32",
-            False,
-        ),
-        (
-            {
-                "executionDay": "Weekend",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/25/2020 00:00:32",
-            True,
-        ),
-        (
-            {
-                "executionDay": "Tuesday",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/27/2020 00:00:32",
-            True,
-        ),
-        (
-            {
-                "executionDay": "Monday",
-                "windowStartHour": "00:00:00",
-                "windowEndHour": "00:01:00",
-            },
-            "10/27/2020 00:00:32",
-            False,
-        ),
-    ],
-)
-def test_is_polling_time(window, cur_time, expected_val, quantum_task):
-    quantum_task._poll_outside_execution_window = False
-    quantum_task._device_execution_windows = [DeviceExecutionWindow.parse_obj(window)]
-    with patch("braket.aws.aws_quantum_task.datetime") as mock_datetime:
-        mock_datetime.utcnow.return_value = datetime.strptime(cur_time, "%m/%d/%Y %H:%M:%S")
-        assert quantum_task._is_polling_time() == expected_val
-
-
-def test_result_not_polling(quantum_task):
-    quantum_task._metadata = {"a": 0}
-    quantum_task._poll_outside_execution_window = False
-    quantum_task._poll_timeout_seconds = 0.01
-    window = {
-        "executionDay": "Everyday",
-        "windowStartHour": "00:00:00",
-        "windowEndHour": "00:00:00",
-    }
-    quantum_task._device_execution_windows = [DeviceExecutionWindow.parse_obj(window)]
-    quantum_task.result()
-    assert not quantum_task._aws_session.get_quantum_task.called
 
 
 def test_metadata(quantum_task):
@@ -421,7 +274,6 @@ def test_timeout_completed(aws_session):
         aws_session,
         poll_timeout_seconds=0.5,
         poll_interval_seconds=1,
-        poll_outside_execution_window=True,
     )
     assert quantum_task.result() is None
     _mock_metadata(aws_session, "COMPLETED")
@@ -447,7 +299,6 @@ def test_timeout_no_result_terminal_state(aws_session):
         aws_session,
         poll_timeout_seconds=0.5,
         poll_interval_seconds=1,
-        poll_outside_execution_window=True,
     )
     assert quantum_task.result() is None
 
@@ -559,7 +410,6 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
         S3_TARGET,
         1000,
         device_parameters=device_parameters,
-        poll_outside_execution_window=True,
     )
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, AnnealingQuantumTaskResult.from_string
