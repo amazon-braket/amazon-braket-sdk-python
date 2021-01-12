@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.5.4 (2021-01-12)
+
+### Bug Fixes and Other Changes
+
+ * remove window check for polling-- revert to polling at all times
+ * update result_types to use hashing
+
+### Testing and Release Infrastructure
+
+ * Enable Codecov
+
 ## v1.5.3 (2020-12-31)
 
 ### Bug Fixes and Other Changes
