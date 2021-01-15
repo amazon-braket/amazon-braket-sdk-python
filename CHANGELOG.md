@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.5 (2021-01-15)
+
+### Bug Fixes and Other Changes
+
+ * get correct event loop for task results after running a batch over multiple threads
+
 ## v1.5.4 (2021-01-12)
 
 ### Bug Fixes and Other Changes
