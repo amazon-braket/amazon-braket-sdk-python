@@ -40,7 +40,7 @@ class AngledGate(Gate):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         if angle is None:
             raise ValueError("angle must not be None")
-        self._angle = angle
+        self._angle = float(angle)  # explicit casting in case angle is e.g. np.float32
 
     @property
     def angle(self) -> float:
