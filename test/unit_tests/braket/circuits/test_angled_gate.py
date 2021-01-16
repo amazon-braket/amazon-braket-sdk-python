@@ -11,7 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import numpy as np
 import pytest
+from pydantic import BaseModel
 
 from braket.circuits import AngledGate, Gate
 
@@ -44,3 +46,11 @@ def test_getters():
 @pytest.mark.xfail(raises=AttributeError)
 def test_angle_setter(angled_gate):
     angled_gate.angle = 0.14
+
+
+def test_np_float_angle_json():
+    angled_gate = AngledGate(angle=np.float32(0.15), qubit_count=1, ascii_symbols=["foo"])
+    assert (
+        BaseModel.construct(target=[0], angle=angled_gate.angle).json()
+        == '{"target": [0], "angle": 0.15000000596046448}'
+    )
