@@ -55,4 +55,4 @@ def test_np_float_angle_json():
     angled_gate_json = BaseModel.construct(target=[0], angle=angled_gate.angle).json()
     match = re.match(r'\{"target": \[0], "angle": (\d*\.?\d*)}', angled_gate_json)
     angle_value = float(match.group(1))
-    assert np.isclose(angle_value, 0.15)
+    assert np.isclose(angle_value, angled_gate.angle)
