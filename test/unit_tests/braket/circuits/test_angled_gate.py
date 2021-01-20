@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import re
+
 import numpy as np
 import pytest
 from pydantic import BaseModel
@@ -50,7 +52,7 @@ def test_angle_setter(angled_gate):
 
 def test_np_float_angle_json():
     angled_gate = AngledGate(angle=np.float32(0.15), qubit_count=1, ascii_symbols=["foo"])
-    assert (
-        BaseModel.construct(target=[0], angle=angled_gate.angle).json()
-        == '{"target": [0], "angle": 0.15000000596046448}'
-    )
+    angled_gate_json = BaseModel.construct(target=[0], angle=angled_gate.angle).json()
+    match = re.match(r'\{"target": \[0], "angle": (\d*\.?\d*)}', angled_gate_json)
+    angle_value = float(match.group(1))
+    assert np.isclose(angle_value, 0.15)
