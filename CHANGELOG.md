@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.6 (2021-01-21)
+
+### Bug Fixes and Other Changes
+
+ * ensure AngledGate casts its angle argument to float so it can be…
+
 ## v1.5.5 (2021-01-15)
 
 ### Bug Fixes and Other Changes
