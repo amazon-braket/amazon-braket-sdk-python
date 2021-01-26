@@ -48,6 +48,20 @@ class Observable(QuantumOperator):
         """np.ndarray: Returns the eigenvalues of this observable."""
         raise NotImplementedError
 
+    def eigenvalue(self, index: int) -> float:
+        """Returns the the eigenvalue of this observable at the given index.
+
+        The eigenvalues are ordered by their corresponding computational basis state
+        after diagonalization.
+
+        Args:
+            index: The index of the desired eigenvalue
+
+        Returns:
+            float: The `index`th eigenvalue of the observable.
+        """
+        raise NotImplementedError
+
     @classmethod
     def register_observable(cls, observable: Observable) -> None:
         """Register an observable implementation by adding it into the `Observable` class.
@@ -83,7 +97,11 @@ class StandardObservable(Observable):
 
     def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        self._eigenvalues = tuple(get_pauli_eigenvalues(qubit_count))  # immutable
 
     @property
     def eigenvalues(self) -> np.ndarray:
-        return get_pauli_eigenvalues(self.qubit_count)
+        return np.array(self._eigenvalues)
+
+    def eigenvalue(self, index: int) -> float:
+        return self._eigenvalues[index]

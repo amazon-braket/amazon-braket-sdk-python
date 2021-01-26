@@ -474,7 +474,7 @@ class GateModelQuantumTaskResult:
         # Replace the basis state in the computational basis with the correct eigenvalue.
         # Extract only the columns of the basis samples required based on ``targets``.
         indices = GateModelQuantumTaskResult._measurements_base_10(measurements)
-        return observable.eigenvalues[indices].real
+        return np.array([observable.eigenvalue(index).real for index in indices])
 
     @staticmethod
     def _result_type_hash(rt_type):

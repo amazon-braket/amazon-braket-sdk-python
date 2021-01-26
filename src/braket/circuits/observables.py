@@ -77,6 +77,9 @@ class I(Observable):  # noqa: E742, E261
     def eigenvalues(self) -> np.ndarray:
         return np.array([1, 1])
 
+    def eigenvalue(self, index: int) -> float:
+        return 1
+
 
 Observable.register_observable(I)
 
@@ -178,11 +181,15 @@ class TensorProduct(Observable):
         result of the tensor product of `ob1`, `ob2`, `ob3`, or `np.kron(np.kron(ob1.to_matrix(),
         ob2.to_matrix()), ob3.to_matrix())`.
         """
-        self._observables = tuple(observables)
+        self._factors = tuple(observables)
         qubit_count = sum([obs.qubit_count for obs in observables])
         display_name = "@".join([obs.ascii_symbols[0] for obs in observables])
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
-        self._eigenvalues = TensorProduct._compute_eigenvalues(self._observables, qubit_count)
+        self._factor_dimensions = tuple(
+            len(factor.to_matrix()) for factor in reversed(self._factors)
+        )
+        self._eigenvalue_indices = {}
+        self._all_eigenvalues = None
 
     def to_ir(self) -> List[str]:
         ir = []
@@ -193,7 +200,7 @@ class TensorProduct(Observable):
     @property
     def factors(self) -> Tuple[Observable]:
         """ Tuple[Observable]: The observables that comprise this tensor product."""
-        return self._observables
+        return self._factors
 
     def to_matrix(self) -> np.ndarray:
         return functools.reduce(np.kron, [obs.to_matrix() for obs in self.factors])
@@ -207,7 +214,29 @@ class TensorProduct(Observable):
 
     @property
     def eigenvalues(self):
-        return self._eigenvalues
+        if self._all_eigenvalues is None:
+            self._all_eigenvalues = TensorProduct._compute_eigenvalues(
+                self._factors, self.qubit_count
+            )
+        return self._all_eigenvalues
+
+    def eigenvalue(self, index: int) -> float:
+        if index in self._eigenvalue_indices:
+            return self._eigenvalue_indices[index]
+        dimension = 2 ** self.qubit_count
+        if index >= dimension:
+            raise ValueError(
+                f"Index {index} requested but observable has at most {dimension} eigenvalues"
+            )
+        # Calculating the eigenvalue amounts to converting the index to a new heterogeneous base
+        # and multiplying the eigenvalues of each factor at the corresponding digit
+        product = 1
+        quotient = index
+        for i in range(len(self._factors)):
+            quotient, remainder = divmod(quotient, self._factor_dimensions[i])
+            product *= self._factors[-i - 1].eigenvalue(remainder)
+        self._eigenvalue_indices[index] = product
+        return self._eigenvalue_indices[index]
 
     def __matmul__(self, other):
         if isinstance(other, TensorProduct):
@@ -278,10 +307,15 @@ class Hermitian(Observable):
         """
         verify_quantum_operator_matrix_dimensions(matrix)
         self._matrix = np.array(matrix, dtype=complex)
-        qubit_count = int(np.log2(self._matrix.shape[0]))
-
         if not is_hermitian(self._matrix):
             raise ValueError(f"{self._matrix} is not hermitian")
+
+        qubit_count = int(np.log2(self._matrix.shape[0]))
+        eigendecomposition = Hermitian._get_eigendecomposition(self._matrix)
+        self._eigenvalues = eigendecomposition["eigenvalues"]
+        self._diagonalizing_gates = (
+            Gate.Unitary(matrix=eigendecomposition["eigenvectors"].conj().T),
+        )
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
@@ -298,13 +332,14 @@ class Hermitian(Observable):
 
     @property
     def basis_rotation_gates(self) -> Tuple[Gate]:
-        return tuple([Gate.Unitary(matrix=self._get_eigendecomposition()["eigenvectors_conj_t"])])
+        return self._diagonalizing_gates
 
     @property
     def eigenvalues(self):
-        return self._get_eigendecomposition()["eigenvalues"]
+        return self._eigenvalues
 
-    def _get_eigendecomposition(self) -> Dict[str, np.ndarray]:
+    @staticmethod
+    def _get_eigendecomposition(matrix) -> Dict[str, np.ndarray]:
         """
         Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
         The eigendecomposition is cached so that if another Hermitian observable
@@ -318,15 +353,13 @@ class Hermitian(Observable):
             corresponding eigenvectors in the "eigenvectors" matrix. These cached values
             are immutable.
         """
-        mat_key = tuple(self._matrix.flatten().tolist())
+        mat_key = tuple(matrix.flatten().tolist())
         if mat_key not in Hermitian._eigenpairs:
-            eigenvalues, eigenvectors = np.linalg.eigh(self._matrix)
+            eigenvalues, eigenvectors = np.linalg.eigh(matrix)
             eigenvalues.setflags(write=False)
-            eigenvectors_conj_t = eigenvectors.conj().T
-            eigenvectors_conj_t.setflags(write=False)
             Hermitian._eigenpairs[mat_key] = {
-                "eigenvectors_conj_t": eigenvectors_conj_t,
-                "eigenvalues": eigenvalues,
+                "eigenvalues": eigenvalues.real,  # guaranteed to be real
+                "eigenvectors": eigenvectors,
             }
         return Hermitian._eigenpairs[mat_key]
 

@@ -95,6 +95,11 @@ def test_eigenvalues_not_implemented_by_default(observable):
     observable.eigenvalues
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_eigenvalue_not_implemented_by_default(observable):
+    observable.eigenvalue(0)
+
+
 def test_str(observable):
     expected = "{}('qubit_count': {})".format(observable.name, observable.qubit_count)
     assert str(observable) == expected

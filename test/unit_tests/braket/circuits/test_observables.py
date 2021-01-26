@@ -79,6 +79,10 @@ def test_basis_rotation_gates(
 )
 def test_eigenvalues(testobject, gateobject, expected_ir, basis_rotation_gates, eigenvalues):
     assert np.allclose(testobject.eigenvalues, eigenvalues)
+    assert np.allclose(
+        np.array([testobject.eigenvalue(i) for i in range(2 ** testobject.qubit_count)]),
+        eigenvalues,
+    )
 
 
 @pytest.mark.parametrize(
@@ -209,6 +213,12 @@ def test_tensor_product_matmul_observable():
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_tensor_product_eigenvalue():
+    obs = Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
+    obs.eigenvalue(8)
+
+
+@pytest.mark.xfail(raises=ValueError)
 def test_tensor_product_value_error():
     Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()]) @ "a"
 
@@ -237,6 +247,17 @@ def test_tensor_product_rmatmul_value_error():
 )
 def test_tensor_product_eigenvalues(observable, eigenvalues):
     assert np.allclose(observable.eigenvalues, eigenvalues)
+    assert np.allclose(
+        np.array([observable.eigenvalue(i) for i in range(2 ** observable.qubit_count)]),
+        eigenvalues,
+    )
+    # Test caching
+    observable._factors = ()
+    assert np.allclose(observable.eigenvalues, eigenvalues)
+    assert np.allclose(
+        np.array([observable.eigenvalue(i) for i in range(2 ** observable.qubit_count)]),
+        eigenvalues,
+    )
 
 
 @pytest.mark.parametrize(
