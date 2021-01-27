@@ -20,7 +20,7 @@ from typing import Any, Callable, Counter, Dict, List, Optional, TypeVar, Union
 import numpy as np
 
 from braket.circuits import Observable, ResultType, StandardObservable
-from braket.circuits.observables import observable_from_ir
+from braket.circuits.observables import TensorProduct, observable_from_ir
 from braket.ir.jaqcd import Expectation, Probability, Sample, Variance
 from braket.task_result import (
     AdditionalMetadata,
@@ -474,7 +474,9 @@ class GateModelQuantumTaskResult:
         # Replace the basis state in the computational basis with the correct eigenvalue.
         # Extract only the columns of the basis samples required based on ``targets``.
         indices = GateModelQuantumTaskResult._measurements_base_10(measurements)
-        return np.array([observable.eigenvalue(index).real for index in indices])
+        if isinstance(observable, TensorProduct):
+            return np.array([observable.eigenvalue(index).real for index in indices])
+        return observable.eigenvalues[indices].real
 
     @staticmethod
     def _result_type_hash(rt_type):
