@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.7 (2021-01-27)
+
+### Bug Fixes and Other Changes
+
+ * More scalable eigenvalue calculation
+
 ## v1.5.6 (2021-01-21)
 
 ### Bug Fixes and Other Changes
