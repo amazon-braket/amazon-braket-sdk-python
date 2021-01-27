@@ -35,9 +35,9 @@ class H(StandardObservable):
     def __init__(self):
         """
         Examples:
-            >>> Observable.I()
+            >>> Observable.H()
         """
-        super().__init__(qubit_count=1, ascii_symbols=["H"])
+        super().__init__(ascii_symbols=["H"])
 
     def to_ir(self) -> List[str]:
         return ["h"]
@@ -46,7 +46,7 @@ class H(StandardObservable):
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         return tuple([Gate.Ry(-math.pi / 4)])
 
 
@@ -70,7 +70,7 @@ class I(Observable):  # noqa: E742, E261
         return np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         return ()
 
     @property
@@ -92,7 +92,7 @@ class X(StandardObservable):
         Examples:
             >>> Observable.X()
         """
-        super().__init__(qubit_count=1, ascii_symbols=["X"])
+        super().__init__(ascii_symbols=["X"])
 
     def to_ir(self) -> List[str]:
         return ["x"]
@@ -101,7 +101,7 @@ class X(StandardObservable):
         return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         return tuple([Gate.H()])
 
 
@@ -116,7 +116,7 @@ class Y(StandardObservable):
         Examples:
             >>> Observable.Y()
         """
-        super().__init__(qubit_count=1, ascii_symbols=["Y"])
+        super().__init__(ascii_symbols=["Y"])
 
     def to_ir(self) -> List[str]:
         return ["y"]
@@ -125,7 +125,7 @@ class Y(StandardObservable):
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         return tuple([Gate.Z(), Gate.S(), Gate.H()])
 
 
@@ -140,7 +140,7 @@ class Z(StandardObservable):
         Examples:
             >>> Observable.Z()
         """
-        super().__init__(qubit_count=1, ascii_symbols=["Z"])
+        super().__init__(ascii_symbols=["Z"])
 
     def to_ir(self) -> List[str]:
         return ["z"]
@@ -149,7 +149,7 @@ class Z(StandardObservable):
         return np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         return ()
 
 
@@ -198,7 +198,7 @@ class TensorProduct(Observable):
         return ir
 
     @property
-    def factors(self) -> Tuple[Observable]:
+    def factors(self) -> Tuple[Observable, ...]:
         """ Tuple[Observable]: The observables that comprise this tensor product."""
         return self._factors
 
@@ -206,7 +206,7 @@ class TensorProduct(Observable):
         return functools.reduce(np.kron, [obs.to_matrix() for obs in self.factors])
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         gates = []
         for obs in self.factors:
             gates.extend(obs.basis_rotation_gates)
@@ -331,7 +331,7 @@ class Hermitian(Observable):
         return self.matrix_equivalence(other)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         return self._diagonalizing_gates
 
     @property

@@ -24,7 +24,7 @@ def observable():
 
 @pytest.fixture
 def standard_observable():
-    return StandardObservable(qubit_count=1, ascii_symbols=["foo"])
+    return StandardObservable(ascii_symbols=["foo"])
 
 
 def test_is_operator(observable):

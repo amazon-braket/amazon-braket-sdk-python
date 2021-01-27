@@ -19,7 +19,6 @@ import numpy as np
 
 from braket.circuits.gate import Gate
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 
 
 class Observable(QuantumOperator):
@@ -39,7 +38,7 @@ class Observable(QuantumOperator):
         raise NotImplementedError
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate]:
+    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         """Tuple[Gate]: Returns the basis rotation gates for this observable."""
         raise NotImplementedError
 
@@ -91,13 +90,13 @@ class Observable(QuantumOperator):
 
 class StandardObservable(Observable):
     """
-    Class `StandardObservable` to represent a standard quantum observable with
-    eigenvalues of +/-1, each with a multiplicity of 1.
+    Class `StandardObservable` to represent a Pauli-like quantum observable with
+    eigenvalues of (+1, -1), each with a multiplicity of 1.
     """
 
-    def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
-        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
-        self._eigenvalues = tuple(get_pauli_eigenvalues(qubit_count))  # immutable
+    def __init__(self, ascii_symbols: Sequence[str]):
+        super().__init__(qubit_count=1, ascii_symbols=ascii_symbols)
+        self._eigenvalues = (1.0, -1.0)
 
     @property
     def eigenvalues(self) -> np.ndarray:
