@@ -78,7 +78,7 @@ class I(Observable):  # noqa: E742, E261
         return np.array([1, 1])
 
     def eigenvalue(self, index: int) -> float:
-        return 1
+        return 1.
 
 
 Observable.register_observable(I)
