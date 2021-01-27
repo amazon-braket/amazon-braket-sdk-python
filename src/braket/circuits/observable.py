@@ -96,7 +96,7 @@ class StandardObservable(Observable):
 
     def __init__(self, ascii_symbols: Sequence[str]):
         super().__init__(qubit_count=1, ascii_symbols=ascii_symbols)
-        self._eigenvalues = (1.0, -1.0)
+        self._eigenvalues = (1.0, -1.0)  # immutable
 
     @property
     def eigenvalues(self) -> np.ndarray:
