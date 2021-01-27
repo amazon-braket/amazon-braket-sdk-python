@@ -80,7 +80,7 @@ class QuantumOperator(Operator):
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
-    def to_matrix(self, *args, **kwargs) -> Any:
+    def to_matrix(self, *args, **kwargs) -> np.ndarray:
         """Returns a matrix representation of the quantum operator
 
         Returns:

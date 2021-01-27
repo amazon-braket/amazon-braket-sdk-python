@@ -188,9 +188,11 @@ test_ir_results = [
         ],
     ),
     (jaqcd.Expectation(targets=[1], observable=["z"]), 0.2),
+    (jaqcd.Expectation(targets=[1], observable=[[[[-1, 0], [0, 0]], [[0, 0], [1, 0]]]]), -0.2),
     (jaqcd.Expectation(targets=[1, 2], observable=["z", "y"]), 0.6),
     (jaqcd.Expectation(observable=["z"]), [0.4, 0.2, -0.2, -0.4]),
     (jaqcd.Variance(targets=[1], observable=["z"]), 0.96),
+    (jaqcd.Variance(targets=[1], observable=[[[[-1, 0], [0, 0]], [[0, 0], [1, 0]]]]), 0.96),
     (jaqcd.Variance(targets=[1, 2], observable=["z", "y"]), 0.64),
     (jaqcd.Variance(observable=["z"]), [0.84, 0.96, 0.96, 0.84]),
 ]
