@@ -239,6 +239,14 @@ def test_tensor_product_rmatmul_value_error():
         (Observable.X() @ Observable.Y(), np.array([1, -1, -1, 1])),
         (Observable.X() @ Observable.Y() @ Observable.Z(), np.array([1, -1, -1, 1, -1, 1, 1, -1])),
         (Observable.X() @ Observable.Y() @ Observable.I(), np.array([1, 1, -1, -1, -1, -1, 1, 1])),
+        (
+            Observable.X()
+            @ Observable.Hermitian(
+                np.array([[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+            )
+            @ Observable.Y(),
+            np.array([-1, 1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1, -1, 1, -1, 1]),
+        ),
     ],
 )
 def test_tensor_product_eigenvalues(observable, eigenvalues):
