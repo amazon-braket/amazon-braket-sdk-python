@@ -91,7 +91,7 @@ class Observable(QuantumOperator):
 class StandardObservable(Observable):
     """
     Class `StandardObservable` to represent a Pauli-like quantum observable with
-    eigenvalues of (+1, -1), each with a multiplicity of 1.
+    eigenvalues of (+1, -1).
     """
 
     def __init__(self, ascii_symbols: Sequence[str]):
