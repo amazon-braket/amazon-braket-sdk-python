@@ -314,7 +314,7 @@ class Hermitian(Observable):
         eigendecomposition = Hermitian._get_eigendecomposition(self._matrix)
         self._eigenvalues = eigendecomposition["eigenvalues"]
         self._diagonalizing_gates = (
-            Gate.Unitary(matrix=eigendecomposition["eigenvectors_conj_t"]),
+            Gate.Unitary(matrix=eigendecomposition["eigenvectors"].conj().T),
         )
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
@@ -360,10 +360,8 @@ class Hermitian(Observable):
         if mat_key not in Hermitian._eigenpairs:
             eigenvalues, eigenvectors = np.linalg.eigh(matrix)
             eigenvalues.setflags(write=False)
-            eigenvectors_conj_t = eigenvectors.conj().T
-            eigenvectors_conj_t.setflags(write=False)
             Hermitian._eigenpairs[mat_key] = {
-                "eigenvectors_conj_t": eigenvectors_conj_t,
+                "eigenvectors": eigenvectors,
                 "eigenvalues": eigenvalues,
             }
         return Hermitian._eigenpairs[mat_key]
