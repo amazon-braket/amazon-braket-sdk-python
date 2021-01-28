@@ -656,6 +656,7 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermit
             observable=Observable.Hermitian(matrix=np.eye(4)) @ Observable.H(), target=[0, 1, 2]
         )
         .variance(observable=Observable.H(), target=[2])
+        .variance(observable=Observable.Hermitian(matrix=np.eye(4)), target=[0, 1])
         .expectation(observable=Observable.I(), target=[0])
     )
     expected = [
