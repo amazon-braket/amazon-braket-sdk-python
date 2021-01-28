@@ -420,3 +420,41 @@ def test_hash_result_types(observable_1, observable_2):
     assert GateModelQuantumTaskResult._result_type_hash(
         observable_1
     ) == GateModelQuantumTaskResult._result_type_hash(observable_2)
+
+
+@pytest.mark.parametrize(
+    "result_type, rt_hash",
+    [
+        (
+            jaqcd.Probability(targets=[0, 1]),
+            "{'targets': [0, 1], 'type': <Type.probability: 'probability'>}",
+        ),
+        (
+            jaqcd.Sample(observable=["y", "z"], targets=[2, 1]),
+            "{'observable': ['y', 'z'], 'targets': [2, 1], 'type': <Type.sample: 'sample'>}",
+        ),
+        (
+            jaqcd.Expectation(
+                observable=[
+                    [[[0, 0], [0.512345, 0]], [[0.543215, 0], [0, 0]]],
+                    [[[1, 0], [1, 0]], [[1, 0], [-1, 0]]],
+                ],
+                targets=[1, 2],
+            ),
+            "{'observable': [[[[0.0, 0.0], [0.512345, 0.0]], [[0.543215, 0.0],"
+            " [0.0, 0.0]]], [[[1.0, 0.0], [1.0, 0.0]],"
+            " [[1.0, 0.0], [-1.0, 0.0]]]], 'targets': [1, 2], "
+            "'type': <Type.expectation: 'expectation'>}",
+        ),
+        (
+            jaqcd.StateVector(),
+            "{'type': <Type.statevector: 'statevector'>}",
+        ),
+        (
+            jaqcd.Variance(observable=["y", "z"], targets=[2, 1]),
+            "{'observable': ['y', 'z'], 'targets': [2, 1], 'type': <Type.variance: 'variance'>}",
+        ),
+    ],
+)
+def test_result_type_hash(result_type, rt_hash):
+    assert GateModelQuantumTaskResult._result_type_hash(result_type) == rt_hash
