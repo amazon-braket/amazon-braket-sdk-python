@@ -32,10 +32,6 @@ from braket.task_result import (
 T = TypeVar("T")
 
 
-def result_type_hash(rt_type):
-    return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
-
-
 @dataclass
 class GateModelQuantumTaskResult:
     """
