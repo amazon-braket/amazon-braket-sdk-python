@@ -413,9 +413,8 @@ class GateModelQuantumTaskResult:
     @staticmethod
     def _measurements_base_10(measurements: np.ndarray) -> np.ndarray:
         # convert samples from a list of 0, 1 integers, to base 10 representation
-        shots, num_measured_qubits = measurements.shape
-        unraveled_indices = [2] * num_measured_qubits
-        return np.ravel_multi_index(measurements.T, unraveled_indices)
+        two_powers = 2 ** np.arange(measurements.shape[-1])[::-1]  # 2^(n-1), ..., 2, 1
+        return measurements @ two_powers
 
     @staticmethod
     def _probability_from_measurements(
