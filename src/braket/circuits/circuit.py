@@ -287,7 +287,7 @@ class Circuit:
                 if add_observable:
                     self._qubit_target_mapping[target] = new_targets
                     self._qubit_observable_mapping[target] = new_observable
-                elif new_observable.qubit_count > 1 and new_observable != Observable.I():
+                elif new_observable.qubit_count > 1:
                     current_target = self._qubit_target_mapping.get(target)
                     if current_target and current_target != new_targets:
                         raise ValueError(

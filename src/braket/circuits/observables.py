@@ -67,7 +67,7 @@ class I(Observable):  # noqa: E742, E261
         return ["i"]
 
     def to_matrix(self) -> np.ndarray:
-        return np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        return np.eye(2, dtype=complex)
 
     @property
     def basis_rotation_gates(self) -> Tuple[Gate, ...]:
@@ -75,7 +75,7 @@ class I(Observable):  # noqa: E742, E261
 
     @property
     def eigenvalues(self) -> np.ndarray:
-        return np.array([1, 1])
+        return np.ones(2)
 
     def eigenvalue(self, index: int) -> float:
         return 1.0
