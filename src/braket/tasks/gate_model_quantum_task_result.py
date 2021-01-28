@@ -32,10 +32,6 @@ from braket.task_result import (
 T = TypeVar("T")
 
 
-def result_type_hash(rt_type):
-    return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
-
-
 @dataclass
 class GateModelQuantumTaskResult:
     """
@@ -97,14 +93,13 @@ class GateModelQuantumTaskResult:
     _result_types_indices: Dict[str, int] = None
 
     def __post_init__(self):
-        if self._result_types_indices is None:
-            if self.result_types is not None:
-                self._result_types_indices = dict(
-                    (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
-                    for i, rt in enumerate(self.result_types)
-                )
-            else:
-                self._result_types_indices = {}
+        if self.result_types is not None:
+            self._result_types_indices = dict(
+                (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
+                for i, rt in enumerate(self.result_types)
+            )
+        else:
+            self._result_types_indices = {}
 
     def get_value_by_result_type(self, result_type: ResultType) -> Any:
         """
@@ -413,9 +408,8 @@ class GateModelQuantumTaskResult:
     @staticmethod
     def _measurements_base_10(measurements: np.ndarray) -> np.ndarray:
         # convert samples from a list of 0, 1 integers, to base 10 representation
-        shots, num_measured_qubits = measurements.shape
-        unraveled_indices = [2] * num_measured_qubits
-        return np.ravel_multi_index(measurements.T, unraveled_indices)
+        two_powers = 2 ** np.arange(measurements.shape[-1])[::-1]  # 2^(n-1), ..., 2, 1
+        return measurements @ two_powers
 
     @staticmethod
     def _probability_from_measurements(
