@@ -93,14 +93,13 @@ class GateModelQuantumTaskResult:
     _result_types_indices: Dict[str, int] = None
 
     def __post_init__(self):
-        if self._result_types_indices is None:
-            if self.result_types is not None:
-                self._result_types_indices = dict(
-                    (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
-                    for i, rt in enumerate(self.result_types)
-                )
-            else:
-                self._result_types_indices = {}
+        if self.result_types is not None:
+            self._result_types_indices = dict(
+                (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
+                for i, rt in enumerate(self.result_types)
+            )
+        else:
+            self._result_types_indices = {}
 
     def get_value_by_result_type(self, result_type: ResultType) -> Any:
         """
