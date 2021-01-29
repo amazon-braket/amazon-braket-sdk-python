@@ -23,6 +23,12 @@ SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
 
 class MockS3:
+    MOCK_TASK_METADATA = {
+        "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+        "id": "task_arn",
+        "shots": 100,
+        "deviceId": "default",
+    }
 
     MOCK_S3_RESULT_GATE_MODEL = json.dumps(
         {
@@ -32,12 +38,7 @@ class MockS3:
             },
             "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
             "measuredQubits": [0, 1],
-            "taskMetadata": {
-                "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
-                "id": "task_arn",
-                "shots": 100,
-                "deviceId": "default",
-            },
+            "taskMetadata": MOCK_TASK_METADATA,
             "additionalMetadata": {
                 "action": {
                     "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
@@ -70,12 +71,7 @@ class MockS3:
                     },
                 },
             ],
-            "taskMetadata": {
-                "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
-                "id": "task_arn",
-                "shots": 100,
-                "deviceId": "default",
-            },
+            "taskMetadata": MOCK_TASK_METADATA,
             "additionalMetadata": {
                 "action": {
                     "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},

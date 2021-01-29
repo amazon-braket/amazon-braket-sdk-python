@@ -117,6 +117,16 @@ def test_retry(mock_create):
     ]
     assert batch.unsuccessful == set()
 
+    # Don't retry if there's nothing to retry
+    mock_create.side_effect = [bad_task_mock]
+    assert batch.retry_unsuccessful_tasks()
+    assert batch.unsuccessful == set()
+
+    # Error if called before there are any results
+    batch._results = None
+    with pytest.raises(RuntimeError):
+        batch.retry_unsuccessful_tasks()
+
 
 def _circuits(batch_size):
     return [Circuit().h(0).cnot(0, 1) for _ in range(batch_size)]

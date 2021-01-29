@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
+import json
 import threading
 import time
 from unittest.mock import MagicMock, Mock, patch
@@ -197,6 +198,13 @@ def test_result_annealing(annealing_task):
     )
 
 
+@pytest.mark.xfail(raises=TypeError)
+def test_result_invalid_type(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    _mock_s3(circuit_task._aws_session, json.dumps(MockS3.MOCK_TASK_METADATA))
+    circuit_task.result()
+
+
 def test_result_circuit_cached(circuit_task):
     _mock_metadata(circuit_task._aws_session, "COMPLETED")
     expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
@@ -226,7 +234,14 @@ def test_result_cached_future(circuit_task, result_string):
     assert circuit_task.result() == expected
 
 
-def test_async_result(circuit_task):
+@pytest.mark.parametrize(
+    "status, result",
+    [
+        ("COMPLETED", GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)),
+        ("FAILED", None),
+    ],
+)
+def test_async_result(circuit_task, status, result):
     def set_result_from_callback(future):
         # Set the result_from_callback variable in the enclosing functions scope
         nonlocal result_from_callback
@@ -244,17 +259,16 @@ def test_async_result(circuit_task):
     future.add_done_callback(set_result_from_callback)
 
     # via asyncio waiting for result
-    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    _mock_metadata(circuit_task._aws_session, status)
     event_loop = asyncio.get_event_loop()
     result_from_waiting = event_loop.run_until_complete(future)
 
     # via future.result(). Note that this would fail if the future is not complete.
     result_from_future = future.result()
 
-    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
-    assert result_from_callback == expected
-    assert result_from_waiting == expected
-    assert result_from_future == expected
+    assert result_from_callback == result
+    assert result_from_waiting == result
+    assert result_from_future == result
 
 
 def test_failed_task(quantum_task):
