@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.5.8 (2021-01-29)
+
+### Bug Fixes and Other Changes
+
+ * Remove redundant statement, boost coverage
+ * convert measurements to indices without allocating a high-dimens…
+
+### Testing and Release Infrastructure
+
+ * Raise coverage to 100%
+
 ## v1.5.7 (2021-01-27)
 
 ### Bug Fixes and Other Changes
