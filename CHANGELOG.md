@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.9 (2021-02-06)
+
+### Bug Fixes and Other Changes
+
+ * Search for unknown QPUs
+
 ## v1.5.8 (2021-01-29)
 
 ### Bug Fixes and Other Changes
