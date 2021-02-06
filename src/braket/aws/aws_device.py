@@ -332,9 +332,11 @@ class AwsDevice(Device):
                 aws_session, AwsDevice.QPU_REGIONS.get(device_arn), None
             )
         # If the QPU is unknown, search until it is found.
-        devices = AwsDevice.get_devices(arns=[device_arn], aws_session=aws_session)
-        if devices:
-            return devices[0]._aws_session  # There will only be one if it is found
+        device_sessions = AwsDevice._get_arn_sessions(
+            [device_arn], None, {AwsDeviceType.QPU}, None, None, aws_session
+        )
+        if device_sessions:
+            return device_sessions[device_arn]  # There will only be one if it is found
         raise ValueError(f"QPU {device_arn} not found")
 
     @staticmethod
@@ -405,15 +407,25 @@ class AwsDevice(Device):
         Returns:
             List[AwsDevice]: list of AWS devices
         """
+
         if order_by not in AwsDevice._GET_DEVICES_ORDER_BY_KEYS:
             raise ValueError(
                 f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
             )
-        aws_session = aws_session if aws_session else AwsSession()
         types = (
             frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})
         )
-        device_map = {}
+        arn_sessions = AwsDevice._get_arn_sessions(
+            arns, names, types, statuses, provider_names, aws_session
+        )
+        devices = [AwsDevice(arn, arn_sessions[arn]) for arn in arn_sessions]
+        devices.sort(key=lambda x: getattr(x, order_by))
+        return devices
+
+    @staticmethod
+    def _get_arn_sessions(arns, names, types, statuses, provider_names, aws_session):
+        aws_session = aws_session if aws_session else AwsSession()
+        sessions_for_arns = {}
         session_region = aws_session.boto_session.region_name
         device_regions_set = AwsDevice._get_devices_regions_set(types, arns, session_region)
         for region in device_regions_set:
@@ -432,16 +444,14 @@ class AwsDevice(Device):
                     provider_names=provider_names,
                 )
             ]
-            device_map.update(
+            sessions_for_arns.update(
                 {
-                    arn: AwsDevice(arn, session_for_region)
+                    arn: session_for_region
                     for arn in region_device_arns
-                    if arn not in device_map
+                    if arn not in sessions_for_arns
                 }
             )
-        devices = list(device_map.values())
-        devices.sort(key=lambda x: getattr(x, order_by))
-        return devices
+        return sessions_for_arns
 
     @staticmethod
     def _get_devices_regions_set(
