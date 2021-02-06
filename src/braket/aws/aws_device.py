@@ -336,7 +336,7 @@ class AwsDevice(Device):
             [device_arn], None, {AwsDeviceType.QPU}, None, None, aws_session
         )
         if device_sessions:
-            return device_sessions[device_arn]  # There will only be one if it is found
+            return device_sessions[device_arn]
         raise ValueError(f"QPU {device_arn} not found")
 
     @staticmethod
