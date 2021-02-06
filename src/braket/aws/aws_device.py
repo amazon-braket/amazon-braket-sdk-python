@@ -327,7 +327,15 @@ class AwsDevice(Device):
         See `braket.aws.aws_qpu.AwsDevice.DEVICE_REGIONS` for the
         AWS Regions the devices are located in.
         """
-        return AwsDevice._copy_aws_session(aws_session, AwsDevice.QPU_REGIONS.get(device_arn), None)
+        if device_arn in AwsDevice.QPU_REGIONS:
+            return AwsDevice._copy_aws_session(
+                aws_session, AwsDevice.QPU_REGIONS.get(device_arn), None
+            )
+        # If the QPU is unknown, search until it is found.
+        devices = AwsDevice.get_devices(arns=[device_arn], aws_session=aws_session)
+        if devices:
+            return devices[0]._aws_session  # There will only be one if it is found
+        raise ValueError(f"QPU {device_arn} not found")
 
     @staticmethod
     def _copy_aws_session(

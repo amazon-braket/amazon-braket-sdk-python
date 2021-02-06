@@ -358,6 +358,24 @@ def test_device_no_aws_session_supplied(
     aws_session.get_device.assert_called_with(arn)
 
 
+@patch("braket.aws.aws_device.AwsDevice.get_devices")
+def test_device_qpu_unknown(mock_get_devices):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_qpu = Mock()
+    mock_qpu._aws_session = mock_session
+    mock_get_devices.return_value = [mock_qpu]
+    device = AwsDevice("arn:aws:braket:::device/qpu/a/b")
+    _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_1, MOCK_GATE_MODEL_QPU_1)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@patch("braket.aws.aws_device.AwsDevice.get_devices")
+def test_device_not_found(mock_get_devices):
+    mock_get_devices.return_value = []
+    AwsDevice("arn:aws:braket:::device/qpu/a/b")
+
+
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_no_extra(aws_quantum_task_mock, device, circuit, s3_destination_folder):
     _run_and_assert(
