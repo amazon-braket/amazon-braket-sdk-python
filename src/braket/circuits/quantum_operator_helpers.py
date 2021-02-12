@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from functools import lru_cache
+from typing import Iterable
 
 import numpy as np
 
@@ -44,7 +45,7 @@ def is_hermitian(matrix: np.array) -> bool:
     Args:
         matrix (np.ndarray): matrix to verify
 
-    Return:
+    Returns:
         bool: If matrix is Hermitian
     """
     return np.allclose(matrix, matrix.conj().T)
@@ -57,7 +58,7 @@ def is_square_matrix(matrix: np.array) -> bool:
     Args:
         matrix (np.ndarray): matrix to verify
 
-    Return:
+    Returns:
         bool: If matrix is square
     """
     return len(matrix.shape) == 2 and matrix.shape[0] == matrix.shape[1]
@@ -70,10 +71,27 @@ def is_unitary(matrix: np.array) -> bool:
     Args:
         matrix (np.ndarray): matrix to verify
 
-    Return:
+    Returns:
         bool: If matrix is unitary
     """
     return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
+
+
+def is_cptp(matrices: Iterable[np.array]) -> bool:
+    """
+    Whether a transformation defined by these matrics as Kraus operators is a
+    completely positive trace preserving (CPTP) map. This is the requirement for
+    a transformation to be a quantum channel.
+    Reference: Section 8.2.3 in Nielsen & Chuang (2010) 10th edition.
+
+    Args:
+        matrices (Iterable[np.array]): List of matrices representing Kraus operators.
+
+    Returns:
+        bool: If the matrices define a CPTP map.
+    """
+    E = sum([np.dot(matrix.T.conjugate(), matrix) for matrix in matrices])
+    return np.allclose(E, np.eye(*E.shape))
 
 
 @lru_cache()

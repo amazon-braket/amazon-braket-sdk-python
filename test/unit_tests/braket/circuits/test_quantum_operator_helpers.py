@@ -5,6 +5,7 @@ import pytest
 
 from braket.circuits.quantum_operator_helpers import (
     get_pauli_eigenvalues,
+    is_cptp,
     is_hermitian,
     is_square_matrix,
     is_unitary,
@@ -12,6 +13,11 @@ from braket.circuits.quantum_operator_helpers import (
 )
 
 valid_unitary_hermitian_matrix = np.array([[0, 1], [1, 0]])
+
+valid_CPTP_matrices = [
+    np.array([[0, 1], [1, 0]]) / np.sqrt(2),
+    np.array([[0, 1], [1, 0]]) / np.sqrt(2),
+]
 
 invalid_dimension_matrices = [
     (np.array([[1]])),
@@ -25,6 +31,8 @@ invalid_dimension_matrices = [
 invalid_unitary_matrices_false = [(np.array([[0, 1], [1, 1]])), (np.array([[1, 2], [3, 4]]))]
 
 invalid_hermitian_matrices_false = [(np.array([[1, 0], [0, 1j]])), (np.array([[1, 2], [3, 4]]))]
+
+invalid_CPTP_matrices_false = [np.array([[1, 0], [0, 1]]), np.array([[0, 1], [1, 0]])]
 
 invalid_matrix_type_error = np.array([[0, 1], ["a", 0]])
 
@@ -41,6 +49,10 @@ def test_is_unitary_true():
 
 def test_is_hermitian_true():
     assert is_hermitian(valid_unitary_hermitian_matrix)
+
+
+def test_is_cptp_true():
+    assert is_cptp(valid_CPTP_matrices)
 
 
 def test_is_square_matrix():
@@ -63,6 +75,10 @@ def test_is_hermitian_false(matrix):
     assert not is_hermitian(matrix)
 
 
+def test_is_cptp_false():
+    assert not is_cptp(invalid_CPTP_matrices_false)
+
+
 @pytest.mark.xfail(raises=Exception)
 def test_is_hermitian_exception():
     is_hermitian(invalid_matrix_type_error)
@@ -71,6 +87,11 @@ def test_is_hermitian_exception():
 @pytest.mark.xfail(raises=Exception)
 def test_is_unitary_exception():
     is_unitary(invalid_matrix_type_error)
+
+
+@pytest.mark.xfail(raises=Exception)
+def test_is_cptp_exception():
+    is_cptp([invalid_matrix_type_error])
 
 
 def test_get_pauli_eigenvalues_correct_eigenvalues_one_qubit():

@@ -1,0 +1,273 @@
+import numpy as np
+import pytest
+
+import braket.ir.jaqcd as ir
+from braket.circuits import Circuit, Instruction, Noise, QubitSet
+from braket.ir.jaqcd.shared_models import (
+    DoubleControl,
+    DoubleTarget,
+    MultiTarget,
+    SingleControl,
+    SingleProbability,
+    SingleTarget,
+    TwoDimensionalMatrixList,
+)
+
+testdata = [
+    (Noise.BitFlip, "bit_flip", ir.BitFlip, [SingleTarget, SingleProbability], {}),
+    (Noise.PhaseFlip, "phase_flip", ir.PhaseFlip, [SingleTarget, SingleProbability], {}),
+    (Noise.Depolarizing, "depolarizing", ir.Depolarizing, [SingleTarget, SingleProbability], {}),
+    (
+        Noise.AmplitudeDamping,
+        "amplitude_damping",
+        ir.AmplitudeDamping,
+        [SingleTarget, SingleProbability],
+        {},
+    ),
+    (
+        Noise.PhaseDamping,
+        "phase_damping",
+        ir.PhaseDamping,
+        [SingleTarget, SingleProbability],
+        {},
+    ),
+    (
+        Noise.Kraus,
+        "kraus",
+        ir.Kraus,
+        [TwoDimensionalMatrixList, MultiTarget],
+        {"input_type": complex},
+    ),
+    (
+        Noise.Kraus,
+        "kraus",
+        ir.Kraus,
+        [TwoDimensionalMatrixList, MultiTarget],
+        {"input_type": float},
+    ),
+    (
+        Noise.Kraus,
+        "kraus",
+        ir.Kraus,
+        [TwoDimensionalMatrixList, MultiTarget],
+        {"input_type": int},
+    ),
+]
+
+
+invalid_kraus_matrices = [
+    ([np.array([[1]])]),
+    ([np.array([1])]),
+    ([np.array([0, 1, 2])]),
+    ([np.array([[0, 1], [1, 2], [3, 4]])]),
+    ([np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])]),
+    ([np.array([[0, 1], [1, 1]])]),
+    ([np.array([[1, 0], [0, 1]]), np.array([[0, 1], [1, 0]])]),
+    ([np.array([[1, 0], [0, 1]]) * np.sqrt(0.5), np.eye(4) * np.sqrt(0.5)]),
+]
+
+
+def single_target_valid_input(**kwargs):
+    return {"target": 2}
+
+
+def double_target_valid_ir_input(**kwargs):
+    return {"targets": [2, 3]}
+
+
+def double_target_valid_input(**kwargs):
+    return {"target1": 2, "target2": 3}
+
+
+def probability_valid_input(**kwargs):
+    return {"probability": 0.1234}
+
+
+def single_control_valid_input(**kwargs):
+    return {"control": 0}
+
+
+def double_control_valid_ir_input(**kwargs):
+    return {"controls": [0, 1]}
+
+
+def double_control_valid_input(**kwargs):
+    return {"control1": 0, "control2": 1}
+
+
+def multi_target_valid_input(**kwargs):
+    return {"targets": [5]}
+
+
+def two_dimensional_matrix_list_valid_ir_input(**kwargs):
+    return {"matrices": [[[[0, 0], [1, 0]], [[1, 0], [0, 0]]]]}
+
+
+def two_dimensional_matrix_list_valid_input(**kwargs):
+    input_type = kwargs.get("input_type")
+    return {
+        "matrices": [np.array([[input_type(0), input_type(1)], [input_type(1), input_type(0)]])]
+    }
+
+
+valid_ir_switcher = {
+    "SingleTarget": single_target_valid_input,
+    "DoubleTarget": double_target_valid_ir_input,
+    "SingleProbability": probability_valid_input,
+    "SingleControl": single_control_valid_input,
+    "DoubleControl": double_control_valid_ir_input,
+    "MultiTarget": multi_target_valid_input,
+    "TwoDimensionalMatrixList": two_dimensional_matrix_list_valid_ir_input,
+}
+
+
+valid_subroutine_switcher = dict(
+    valid_ir_switcher,
+    **{
+        "TwoDimensionalMatrixList": two_dimensional_matrix_list_valid_input,
+        "DoubleTarget": double_target_valid_input,
+        "DoubleControl": double_control_valid_input,
+    }
+)
+
+
+def create_valid_ir_input(irsubclasses):
+    input = {}
+    for subclass in irsubclasses:
+        input.update(valid_ir_switcher.get(subclass.__name__, lambda: "Invalid subclass")())
+    return input
+
+
+def create_valid_subroutine_input(irsubclasses, **kwargs):
+    input = {}
+    for subclass in irsubclasses:
+        input.update(
+            valid_subroutine_switcher.get(subclass.__name__, lambda: "Invalid subclass")(**kwargs)
+        )
+    return input
+
+
+def create_valid_target_input(irsubclasses):
+    input = {}
+    qubit_set = []
+    # based on the concept that control goes first in target input
+    for subclass in irsubclasses:
+        if subclass == SingleTarget:
+            qubit_set.extend(list(single_target_valid_input().values()))
+        elif subclass == DoubleTarget:
+            qubit_set.extend(list(double_target_valid_ir_input().values()))
+        elif subclass == MultiTarget:
+            qubit_set.extend(list(multi_target_valid_input().values()))
+        elif subclass == SingleControl:
+            qubit_set = list(single_control_valid_input().values()) + qubit_set
+        elif subclass == DoubleControl:
+            qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
+        elif subclass == SingleProbability or subclass == TwoDimensionalMatrixList:
+            pass
+        else:
+            raise ValueError("Invalid subclass")
+    input["target"] = QubitSet(qubit_set)
+    return input
+
+
+def create_valid_noise_class_input(irsubclasses, **kwargs):
+    input = {}
+    if SingleProbability in irsubclasses:
+        input.update(probability_valid_input())
+    if TwoDimensionalMatrixList in irsubclasses:
+        input.update(two_dimensional_matrix_list_valid_input(**kwargs))
+    return input
+
+
+def create_valid_instruction_input(testclass, irsubclasses, **kwargs):
+    input = create_valid_target_input(irsubclasses)
+    input["operator"] = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
+    return input
+
+
+def calculate_qubit_count(irsubclasses):
+    qubit_count = 0
+    for subclass in irsubclasses:
+        if subclass == SingleTarget:
+            qubit_count += 1
+        elif subclass == DoubleTarget:
+            qubit_count += 2
+        elif subclass == SingleControl:
+            qubit_count += 1
+        elif subclass == DoubleControl:
+            qubit_count += 2
+        elif subclass == MultiTarget:
+            qubit_count += 3
+        elif subclass == SingleProbability or subclass == TwoDimensionalMatrixList:
+            pass
+        else:
+            raise ValueError("Invalid subclass")
+    return qubit_count
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_ir_noise_level(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    expected = irclass(**create_valid_ir_input(irsubclasses))
+    actual = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs)).to_ir(
+        **create_valid_target_input(irsubclasses)
+    )
+    assert actual == expected
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_ir_instruction_level(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    expected = irclass(**create_valid_ir_input(irsubclasses))
+    instruction = Instruction(**create_valid_instruction_input(testclass, irsubclasses, **kwargs))
+    actual = instruction.to_ir()
+    assert actual == expected
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_noise_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    qubit_count = calculate_qubit_count(irsubclasses)
+    subroutine = getattr(Circuit(), subroutine_name)
+    assert subroutine(**create_valid_subroutine_input(irsubclasses, **kwargs)) == Circuit(
+        Instruction(**create_valid_instruction_input(testclass, irsubclasses, **kwargs))
+    )
+    if qubit_count == 1:
+        multi_targets = [0, 1, 2]
+        instruction_list = []
+        for target in multi_targets:
+            instruction_list.append(
+                Instruction(
+                    operator=testclass(**create_valid_noise_class_input(irsubclasses, **kwargs)),
+                    target=target,
+                )
+            )
+        subroutine = getattr(Circuit(), subroutine_name)
+        subroutine_input = {"target": multi_targets}
+        if SingleProbability in irsubclasses:
+            subroutine_input.update(probability_valid_input())
+
+        circuit1 = subroutine(**subroutine_input)
+        circuit2 = Circuit(instruction_list)
+        assert circuit1 == circuit2
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_noise_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    noise1 = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
+    noise2 = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
+    assert all(isinstance(matrix, np.ndarray) for matrix in noise1.to_matrix())
+    assert all(np.allclose(m1, m2) for m1, m2 in zip(noise1.to_matrix(), noise2.to_matrix()))
+
+
+# Additional Unitary noise tests
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("matrices", invalid_kraus_matrices)
+def test_kraus_invalid_matrix(matrices):
+    Noise.Kraus(matrices=matrices)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_kraus_matrix_target_size_mismatch():
+    Circuit().kraus(
+        matrices=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
+    )

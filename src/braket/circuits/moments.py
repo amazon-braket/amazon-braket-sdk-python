@@ -20,10 +20,12 @@ from typing import (
     Mapping,
     NamedTuple,
     OrderedDict,
+    Union,
     ValuesView,
 )
 
 from braket.circuits.instruction import Instruction
+from braket.circuits.noise import Noise
 from braket.circuits.qubit import Qubit
 from braket.circuits.qubit_set import QubitSet
 
@@ -35,12 +37,20 @@ class MomentsKey(NamedTuple):
     qubits: QubitSet
 
 
-class Moments(Mapping[MomentsKey, Instruction]):
+class NoiseMomentsKey(NamedTuple):
+    """Key of the Moments mapping for Noise."""
+
+    time: int
+    qubits: QubitSet
+    noise_index: int
+
+
+class Moments(Mapping[Union[MomentsKey, NoiseMomentsKey], Instruction]):
     """
-    An ordered mapping of `MomentsKey` to `Instruction`. The core data structure that
-    contains instructions, ordering they are inserted in, and time slices when they
-    occur. `Moments` implements `Mapping` and functions the same as a read-only
-    dictionary. It is mutable only through the `add()` method.
+    An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
+    core data structure that contains instructions, ordering they are inserted in, and
+    time slices when they occur. `Moments` implements `Mapping` and functions the same as
+    a read-only dictionary. It is mutable only through the `add()` method.
 
     This data structure is useful to determine a dependency of instructions, such as
     printing or optimizing circuit structure, before sending it to a quantum
@@ -75,8 +85,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
     """
 
     def __init__(self, instructions: Iterable[Instruction] = []):
-        self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
+        self._moments: OrderedDict[Union[MomentsKey, NoiseMomentsKey], Instruction] = OrderedDict()
         self._max_times: Dict[Qubit, int] = {}
+        self._max_noise_index: Dict[int, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
 
@@ -131,26 +142,42 @@ class Moments(Mapping[MomentsKey, Instruction]):
         Add instructions to self.
 
         Args:
-            instructions (Iterable[Instruction]): Instructions to add to self. The instruction
-            is added to the max time slice in which the instruction fits.
+            instructions (Iterable[Instruction]): Instructions to add to self. The instruction is
+                added to the max time slice in which the instruction fits.
         """
         for instruction in instructions:
             self._add(instruction)
 
     def _add(self, instruction: Instruction) -> None:
+        if isinstance(instruction.operator, Noise):
+            self._add_noise(instruction)
+        else:
+            qubit_range = instruction.target
+            time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
+
+            # Mark all qubits in qubit_range with max_time
+            for qubit in qubit_range:
+                self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
+
+            self._moments[MomentsKey(time, instruction.target)] = instruction
+            self._qubits.update(instruction.target)
+            self._depth = max(self._depth, time + 1)
+
+    def _add_noise(self, instruction: Instruction, time: int = None) -> None:
         qubit_range = instruction.target
-        time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
-
-        # Mark all qubits in qubit_range with max_time
-        for qubit in qubit_range:
-            self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
-
-        self._moments[MomentsKey(time, instruction.target)] = instruction
+        if time is None:
+            time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
+        noise_key = NoiseMomentsKey(
+            time, instruction.target, self._max_noise_index_for_time(time) + 1
+        )
+        self._moments[noise_key] = instruction
         self._qubits.update(instruction.target)
-        self._depth = max(self._depth, time + 1)
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)
+
+    def _max_noise_index_for_time(self, time: int) -> int:
+        return self._max_noise_index.get(time, -1)
 
     #
     # Implement abstract methods, default to calling selfs underlying dictionary
