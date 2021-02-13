@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from typing import Callable, Dict, Iterable, List, Tuple, TypeVar, Union
+import re
 
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.instruction import Instruction
@@ -23,7 +24,7 @@ from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
-from braket.ir.jaqcd import Program
+from braket.ir.jaqcd import Program, GlobalOptions
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -46,6 +47,7 @@ class Circuit:
     """
 
     _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
+    _GATE_TIME_SUPPORTED_BACKENDS = ["rigetti"]
 
     @classmethod
     def register_subroutine(cls, func: SubroutineCallable) -> None:
@@ -112,6 +114,9 @@ class Circuit:
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
         self._qubit_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
+        self._global_options = {}
+        self._global_options['gate_time'] = {}
+        self._backend_arn: str = None
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -175,6 +180,50 @@ class Circuit:
     def qubits(self) -> QubitSet:
         """QubitSet: Get a copy of the qubits for this circuit."""
         return QubitSet(self._moments.qubits.union(self._qubit_observable_set))
+
+    @property
+    def backend_arn(self) -> str:
+        """Backend_arn: Get the binded backend for this circuit."""
+        return self._backend_arn
+
+    @backend_arn.setter
+    def backend_arn(self, backend_arn:str) -> str:
+        """Setter of backend_arn"""
+        self._backend_arn = backend_arn
+        return
+
+    @property
+    def global_options(self) -> str:
+        """Return the global option of the circuit."""
+        return self._global_options 
+
+    def bind_backend(self, backend_arn:str) -> Circuit:
+        """Return a copy of self which has backend binded."""
+        ret_circ = self.copy()
+        ret_circ.backend_arn = backend_arn
+        return ret_circ
+
+    def set_gate_time(self, gateType:str, gateTime:str) -> None:
+        """Set the global option gate_time"""
+        if not self.backend_arn:
+            print("Cannot set gate time. Circuit is not bind to any backends yet.")
+        
+        match_flag = False
+        for backend in self._GATE_TIME_SUPPORTED_BACKENDS:
+            if backend in self.backend_arn:
+                match = re.compile("^([0-9]+)(ns)$").search(gateTime)
+                if match:
+                    # gate_time_pair = (int(match.group(1)), match.group(2))
+                    self._global_options['gate_time'][gateType] = gateTime
+                    match_flag = True
+                break
+
+        if not match_flag:
+
+            print("Circuit backend does not support gate time option.")
+            raise ValueError
+
+        return
 
     def add_result_type(
         self,
@@ -548,6 +597,7 @@ class Circuit:
         Returns:
             (Program): An AWS quantum circuit description program in JSON format.
         """
+        ir_gate_time = self.global_options['gate_time']
         ir_instructions = [instr.to_ir() for instr in self.instructions]
         ir_results = [result_type.to_ir() for result_type in self.result_types]
         ir_basis_rotation_instructions = [
@@ -556,13 +606,15 @@ class Circuit:
         return Program.construct(
             instructions=ir_instructions,
             results=ir_results,
+            globalOptions=GlobalOptions.construct(gate_time=ir_gate_time),
             basis_rotation_instructions=ir_basis_rotation_instructions,
         )
 
     def _copy(self) -> Circuit:
-        copy = Circuit().add(self.instructions)
-        copy.add(self.result_types)
-        return copy
+        circuit_copy = Circuit().add(self.instructions)
+        circuit_copy.add(self.result_types)
+        circuit_copy._global_options = self._global_options
+        return circuit_copy
 
     def copy(self) -> Circuit:
         """
@@ -582,13 +634,16 @@ class Circuit:
         return new
 
     def __repr__(self) -> str:
-        if not self.result_types:
-            return f"Circuit('instructions': {list(self.instructions)})"
-        else:
-            return (
-                f"Circuit('instructions': {list(self.instructions)}"
-                + f"result_types': {self.result_types})"
-            )
+
+        result_str = (f"result_types': {self.result_types})"
+                           if self.result_types else "")
+        
+        global_options_str = (f"global_options: {self.global_options}"
+                              if self.global_options else"")
+        
+        instructions_str = f"Circuit('instructions': {list(self.instructions)})"
+
+        return "".join([global_options_str, instructions_str, result_str])
 
     def __str__(self):
         return self.diagram(AsciiCircuitDiagram)

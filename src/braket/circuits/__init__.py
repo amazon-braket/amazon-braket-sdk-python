@@ -14,6 +14,9 @@
 # Execute initialization code in circuit module
 import braket.circuits.circuit as circuit  # noqa: F401
 
+import braket.circuits.classical_operations as classical_operations
+from braket.circuits.classical_operation import ClassicalOperation
+
 # Execute initialization code in gates module
 import braket.circuits.gates as gates  # noqa: F401
 import braket.circuits.observables as observables  # noqa: F401

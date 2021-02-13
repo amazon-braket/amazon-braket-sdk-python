@@ -104,6 +104,11 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """
         return self._qubits
 
+    @qubits.setter
+    def qubits(self, qubits) -> None:
+
+        self._qubits = qubits
+
     def time_slices(self) -> Dict[int, List[Instruction]]:
         """
         Get instructions keyed by time.
@@ -138,7 +143,10 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._add(instruction)
 
     def _add(self, instruction: Instruction) -> None:
+        
         qubit_range = instruction.target
+        if len(qubit_range) == 0:
+            qubit_range = range(100)    
         time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
 
         # Mark all qubits in qubit_range with max_time
