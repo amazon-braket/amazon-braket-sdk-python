@@ -70,8 +70,44 @@ class StateVector(ResultType):
     def __hash__(self) -> int:
         return super().__hash__()
 
-
 ResultType.register_result_type(StateVector)
+
+
+class DensityMatrix(ResultType):
+    """
+    The full density matrix as a requested result type.
+    This is available on simulators only when `shots=0`.
+    """
+
+    def __init__(self):
+        super().__init__(ascii_symbols=["DensityMatrix"])
+
+    def to_ir(self) -> ir.DensityMatrix:
+        return ir.DensityMatrix.construct()
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def density_matrix() -> ResultType:
+        """Registers this function into the circuit class.
+
+        Returns:
+            ResultType: density matrix as a requested result type
+
+        Examples:
+            >>> circ = Circuit().density_matrix()
+        """
+        return ResultType.DensityMatrix()
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DensityMatrix):
+            return True
+        return False
+
+    def __copy__(self) -> DensityMatrix:
+        return type(self)()
+
+
+ResultType.register_result_type(DensityMatrix)
 
 
 class Amplitude(ResultType):
@@ -142,7 +178,6 @@ class Amplitude(ResultType):
 
     def __hash__(self) -> int:
         return super().__hash__()
-
 
 ResultType.register_result_type(Amplitude)
 
@@ -218,7 +253,6 @@ class Probability(ResultType):
 
     def __hash__(self) -> int:
         return super().__hash__()
-
 
 ResultType.register_result_type(Probability)
 
