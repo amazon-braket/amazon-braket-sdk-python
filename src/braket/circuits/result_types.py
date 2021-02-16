@@ -106,6 +106,11 @@ class DensityMatrix(ResultType):
     def __copy__(self) -> DensityMatrix:
         return type(self)()
 
+    # must redefine __hash__ since __eq__ is overwritten
+    # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+    def __hash__(self) -> int:
+        return super().__hash__()
+
 
 ResultType.register_result_type(DensityMatrix)
 
