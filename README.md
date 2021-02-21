@@ -70,8 +70,6 @@ import boto3
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
 s3_folder = (f"amazon-braket-Your-Bucket-Name", "folder-name") # Use the S3 bucket you created during onboarding
 
@@ -112,8 +110,6 @@ The following example executes the same Bell Pair example described to validate 
 import boto3
 from braket.circuits import Circuit
 from braket.aws import AwsDevice
-
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
 
 device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
 s3_folder = (f"amazon-braket-Your-Bucket-Name", "RIGETTI") # Use the S3 bucket you created during onboarding
