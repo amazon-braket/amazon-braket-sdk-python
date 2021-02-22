@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.9.post0 (2021-02-22)
+
+### Documentation Changes
+
+ * remove unneeded calls to sts from the README
+ * adjust s3_folder naming in README to clarify which bucket to use
+
 ## v1.5.9 (2021-02-06)
 
 ### Bug Fixes and Other Changes
