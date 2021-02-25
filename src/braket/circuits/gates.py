@@ -1310,6 +1310,11 @@ class Unitary(Gate):
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
 
+    def __eq__(self, other):
+        if isinstance(other, Unitary):
+            return self.matrix_equivalence(other)
+        return NotImplemented
+
     @staticmethod
     def _transform_matrix_to_ir(matrix: np.ndarray):
         return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]

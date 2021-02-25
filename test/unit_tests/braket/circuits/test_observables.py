@@ -130,7 +130,7 @@ def test_hermitian_eigenvalues(matrix, eigenvalues):
     "matrix,basis_rotation_matrix",
     [
         (
-            np.array([[1.0, 0.0], [0.0, 1.0]]),
+            np.array([[0.0, 1.0], [1.0, 0.0]]),
             np.array([[-0.70710678, 0.70710678], [0.70710678, 0.70710678]]).conj().T,
         ),
         (
@@ -156,7 +156,7 @@ def test_hermitian_basis_rotation_gates(matrix, basis_rotation_matrix):
     expected_unitary = Gate.Unitary(matrix=basis_rotation_matrix)
     actual_rotation_gates = Observable.Hermitian(matrix=matrix).basis_rotation_gates
     assert actual_rotation_gates == tuple([expected_unitary])
-    assert expected_unitary.matrix_equivalence(actual_rotation_gates)
+    assert expected_unitary.matrix_equivalence(actual_rotation_gates[0])
 
 
 @pytest.mark.xfail(raises=ValueError)
