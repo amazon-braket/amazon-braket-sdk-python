@@ -607,7 +607,7 @@ def test_basis_rotation_instructions_multiple_result_types_different_hermitian_t
     expected = [
         Instruction(
             Gate.Unitary(
-                matrix=1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
+                matrix=1.0 / np.sqrt(2.0) * np.array([[-1.0, 1.0], [1.0, 1.0]], dtype=complex)
             ),
             target=[0],
         ),
@@ -637,7 +637,7 @@ def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermit
         Instruction(Gate.Ry(-np.pi / 4), 1),
         Instruction(
             Gate.Unitary(
-                matrix=1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
+                matrix=1.0 / np.sqrt(2.0) * np.array([[-1.0, 1.0], [1.0, 1.0]], dtype=complex)
             ),
             target=[2],
         ),
