@@ -51,7 +51,7 @@ def test_angle_setter(angled_gate):
 
 
 def test_equality(angled_gate):
-    gate = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["foo"])
+    gate = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["bar"])
     other_gate = AngledGate(angle=0.3, qubit_count=1, ascii_symbols=["foo"])
     non_gate = "non gate"
 

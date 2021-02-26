@@ -62,7 +62,7 @@ def test_str_angle():
 
 def test_equality():
     gate_1 = Gate(qubit_count=1, ascii_symbols=["foo"])
-    gate_2 = Gate(qubit_count=1, ascii_symbols=["foo"])
+    gate_2 = Gate(qubit_count=1, ascii_symbols=["bar"])
     other_gate = Gate.Rx(angle=0.34)
     non_gate = "non gate"
 
