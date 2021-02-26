@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Optional, Type, TypeVar, Union
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.gate import Gate
