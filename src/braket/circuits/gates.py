@@ -82,7 +82,7 @@ class I(Gate):  # noqa: E742, E261
         return ir.I.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
-        return np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        return np.eye(2, dtype=complex)
 
     @staticmethod
     @circuit.subroutine(register=True)
