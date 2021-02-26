@@ -14,10 +14,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import FrozenSet, List, Optional, Set, Union
+from typing import List, Optional, Union
 
 import boto3
-from boltons.dictutils import FrozenDict
 from botocore.config import Config
 from networkx import Graph, complete_graph, from_edgelist
 
@@ -46,21 +45,7 @@ class AwsDevice(Device):
     device.
     """
 
-    SIMULATOR_ARNS = frozenset(
-        {
-            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            "arn:aws:braket:::device/quantum-simulator/amazon/tn1",
-        }
-    )
-    QPU_REGIONS = FrozenDict(
-        {
-            "arn:aws:braket:::device/qpu/rigetti/Aspen-8": "us-west-1",
-            "arn:aws:braket:::device/qpu/ionq/ionQdevice": "us-east-1",
-            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6": "us-west-2",
-            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1": "us-west-2",
-        }
-    )
-    REGIONS = frozenset(QPU_REGIONS.values())
+    REGIONS = ("us-east-1", "us-west-1", "us-west-2")
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
@@ -85,12 +70,11 @@ class AwsDevice(Device):
         """
         super().__init__(name=None, status=None)
         self._arn = arn
-        self._aws_session = AwsDevice._aws_session_for_device(arn, aws_session)
         self._properties = None
         self._provider_name = None
         self._topology_graph = None
         self._type = None
-        self.refresh_metadata()
+        self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
 
     def run(
         self,
@@ -223,7 +207,28 @@ class AwsDevice(Device):
         """
         Refresh the `AwsDevice` object with the most recent Device metadata.
         """
-        metadata = self._aws_session.get_device(self._arn)
+        self._populate_properties(self._aws_session)
+
+    def _get_session_and_initialize(self, session):
+        current_region = session.boto_session.region_name
+        try:
+            self._populate_properties(session)
+            return session
+        except Exception:
+            if "qpu" not in self._arn:
+                raise ValueError(f"Simulator {self._arn} not found in {current_region}")
+        # Search remaining regions for QPU
+        for region in frozenset(AwsDevice.REGIONS) - {current_region}:
+            region_session = AwsDevice._copy_aws_session(session, region)
+            try:
+                self._populate_properties(region_session)
+                return region_session
+            except Exception:
+                pass
+        raise ValueError(f"QPU {self._arn} not found")
+
+    def _populate_properties(self, session):
+        metadata = session.get_device(self._arn)
         self._name = metadata.get("deviceName")
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
@@ -311,58 +316,22 @@ class AwsDevice(Device):
         return AwsDevice.DEFAULT_MAX_PARALLEL
 
     @staticmethod
-    def _aws_session_for_device(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
-        """AwsSession: Returns an AwsSession for the device ARN."""
-        if "qpu" in device_arn:
-            return AwsDevice._aws_session_for_qpu(device_arn, aws_session)
-        else:
-            return aws_session or AwsSession()
-
-    @staticmethod
-    def _aws_session_for_qpu(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
-        """
-        Get an AwsSession for the device ARN. QPUs are physically located in specific AWS Regions.
-        The AWS sessions should connect to the Region that the QPU is located in.
-
-        See `braket.aws.aws_qpu.AwsDevice.DEVICE_REGIONS` for the
-        AWS Regions the devices are located in.
-        """
-        if device_arn in AwsDevice.QPU_REGIONS:
-            return AwsDevice._copy_aws_session(
-                aws_session, AwsDevice.QPU_REGIONS.get(device_arn), None
-            )
-        # If the QPU is unknown, search until it is found.
-        device_sessions = AwsDevice._get_arn_sessions(
-            [device_arn], None, {AwsDeviceType.QPU}, None, None, aws_session
-        )
-        if device_sessions:
-            return device_sessions[device_arn]
-        raise ValueError(f"QPU {device_arn} not found")
-
-    @staticmethod
     def _copy_aws_session(
-        aws_session: Optional[AwsSession],
+        aws_session: AwsSession,
         region: Optional[str] = None,
         max_connections: Optional[int] = None,
     ) -> AwsSession:
         config = Config(max_pool_connections=max_connections) if max_connections else None
-        if aws_session:
-            session_region = aws_session.boto_session.region_name
-            new_region = region or session_region
-            if session_region == new_region and not config:
-                return aws_session
-            else:
-                creds = aws_session.boto_session.get_credentials()
-                boto_session = boto3.Session(
-                    aws_access_key_id=creds.access_key,
-                    aws_secret_access_key=creds.secret_key,
-                    aws_session_token=creds.token,
-                    region_name=new_region,
-                )
-                return AwsSession(boto_session=boto_session, config=config)
-        else:
-            boto_session = boto3.Session(region_name=region) if region else None
-            return AwsSession(boto_session=boto_session, config=config)
+        session_region = aws_session.boto_session.region_name
+        new_region = region or session_region
+        creds = aws_session.boto_session.get_credentials()
+        boto_session = boto3.Session(
+            aws_access_key_id=creds.access_key,
+            aws_secret_access_key=creds.secret_key,
+            aws_session_token=creds.token,
+            region_name=new_region,
+        )
+        return AwsSession(boto_session=boto_session, config=config)
 
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
@@ -415,21 +384,18 @@ class AwsDevice(Device):
         types = (
             frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})
         )
-        arn_sessions = AwsDevice._get_arn_sessions(
-            arns, names, types, statuses, provider_names, aws_session
-        )
-        devices = [AwsDevice(arn, arn_sessions[arn]) for arn in arn_sessions]
-        devices.sort(key=lambda x: getattr(x, order_by))
-        return devices
-
-    @staticmethod
-    def _get_arn_sessions(arns, names, types, statuses, provider_names, aws_session):
         aws_session = aws_session if aws_session else AwsSession()
-        sessions_for_arns = {}
+        device_map = {}
         session_region = aws_session.boto_session.region_name
-        device_regions_set = AwsDevice._get_devices_regions_set(types, arns, session_region)
-        for region in device_regions_set:
-            session_for_region = AwsDevice._copy_aws_session(aws_session, region)
+        search_regions = (
+            (session_region,) if types == {AwsDeviceType.SIMULATOR} else AwsDevice.REGIONS
+        )
+        for region in search_regions:
+            session_for_region = (
+                aws_session
+                if region == session_region
+                else AwsDevice._copy_aws_session(aws_session, region)
+            )
             # Simulators are only instantiated in the same region as the AWS session
             types_for_region = sorted(
                 types if region == session_region else types - {AwsDeviceType.SIMULATOR}
@@ -444,31 +410,13 @@ class AwsDevice(Device):
                     provider_names=provider_names,
                 )
             ]
-            sessions_for_arns.update(
+            device_map.update(
                 {
-                    arn: session_for_region
+                    arn: AwsDevice(arn, session_for_region)
                     for arn in region_device_arns
-                    if arn not in sessions_for_arns
+                    if arn not in device_map
                 }
             )
-        return sessions_for_arns
-
-    @staticmethod
-    def _get_devices_regions_set(
-        types: Optional[Set[AwsDeviceType]], arns: Optional[List[str]], current_region: str
-    ) -> FrozenSet[str]:
-        """Get the set of regions to call `SearchDevices` API given filters"""
-        device_regions_set = (
-            {current_region} if types == {AwsDeviceType.SIMULATOR} else set(AwsDevice.REGIONS)
-        )
-        if arns:
-            arns_region_set = set()
-            for arn in arns:
-                if arn in AwsDevice.QPU_REGIONS:
-                    arns_region_set.add(AwsDevice.QPU_REGIONS[arn])
-                elif arn in AwsDevice.SIMULATOR_ARNS:
-                    arns_region_set.add(current_region)
-                else:
-                    arns_region_set.update(AwsDevice.REGIONS)
-            device_regions_set &= arns_region_set
-        return frozenset(device_regions_set)
+        devices = list(device_map.values())
+        devices.sort(key=lambda x: getattr(x, order_by))
+        return devices
