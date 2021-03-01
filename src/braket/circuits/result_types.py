@@ -70,6 +70,7 @@ class StateVector(ResultType):
     def __hash__(self) -> int:
         return super().__hash__()
 
+
 ResultType.register_result_type(StateVector)
 
 
@@ -184,6 +185,7 @@ class Amplitude(ResultType):
     def __hash__(self) -> int:
         return super().__hash__()
 
+
 ResultType.register_result_type(Amplitude)
 
 
@@ -258,6 +260,7 @@ class Probability(ResultType):
 
     def __hash__(self) -> int:
         return super().__hash__()
+
 
 ResultType.register_result_type(Probability)
 
