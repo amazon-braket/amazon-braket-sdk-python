@@ -26,7 +26,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
-            or has a dimension length which is not a positive power of 2
+            or has a dimension length that is not a positive power of 2
     """
     if not is_square_matrix(matrix):
         raise ValueError(f"{matrix} is not a two-dimensional square matrix")
@@ -41,7 +41,7 @@ def is_hermitian(matrix: np.array) -> bool:
     r"""
     Whether matrix is Hermitian
 
-    A matrix :math:`U` is Hermitian if
+    A square matrix :math:`U` is Hermitian if
 
     .. math:: U = U^\dagger
 
@@ -73,7 +73,7 @@ def is_unitary(matrix: np.array) -> bool:
     r"""
     Whether matrix is unitary
 
-    A matrix :math:`U` is unitary if
+    A square matrix :math:`U` is unitary if
 
     .. math:: UU^\dagger = I
 
