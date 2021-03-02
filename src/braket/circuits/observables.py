@@ -299,8 +299,8 @@ class Hermitian(Observable):
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,
-                or has a dimension length that is not a positive exponent of 2,
-                or is non-hermitian.
+                or has a dimension length that is not a positive power of 2,
+                or is non-Hermitian.
 
         Examples:
             >>> Observable.Hermitian(matrix=np.array([[0, 1],[1, 0]]))

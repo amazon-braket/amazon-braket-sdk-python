@@ -1287,7 +1287,7 @@ class Unitary(Gate):
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
-            or has a dimension length which is not a positive exponent of 2,
+            or has a dimension length which is not a positive power of 2,
             or is non-unitary.
     """
 
