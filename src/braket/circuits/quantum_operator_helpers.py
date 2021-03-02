@@ -18,7 +18,7 @@ import numpy as np
 
 def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
     """
-    Verifies matrix is square and matrix dimensions are positive exponents of 2,
+    Verifies matrix is square and matrix dimensions are positive powers of 2,
     raising `ValueError` otherwise.
 
     Args:
@@ -26,7 +26,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
-            or has a dimension length which is not a positive exponent of 2
+            or has a dimension length that is not a positive power of 2
     """
     if not is_square_matrix(matrix):
         raise ValueError(f"{matrix} is not a two-dimensional square matrix")
@@ -34,12 +34,18 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
     matrix = np.array(matrix, dtype=complex)
     qubit_count = int(np.log2(matrix.shape[0]))
     if 2 ** qubit_count != matrix.shape[0] or qubit_count < 1:
-        raise ValueError(f"`matrix` dimension {matrix.shape[0]} is not a positive exponent of 2")
+        raise ValueError(f"`matrix` dimension {matrix.shape[0]} is not a positive power of 2")
 
 
 def is_hermitian(matrix: np.array) -> bool:
-    """
+    r"""
     Whether matrix is Hermitian
+
+    A square matrix :math:`U` is Hermitian if
+
+    .. math:: U = U^\dagger
+
+    where :math:`U^\dagger` is the conjugate transpose of :math:`U`.
 
     Args:
         matrix (np.ndarray): matrix to verify
@@ -52,7 +58,7 @@ def is_hermitian(matrix: np.array) -> bool:
 
 def is_square_matrix(matrix: np.array) -> bool:
     """
-    Whether matrix is square, meaning matrix has two dimensions are both are equivalent
+    Whether matrix is square, meaning it has exactly two dimensions and the dimensions are equal
 
     Args:
         matrix (np.ndarray): matrix to verify
@@ -64,8 +70,15 @@ def is_square_matrix(matrix: np.array) -> bool:
 
 
 def is_unitary(matrix: np.array) -> bool:
-    """
+    r"""
     Whether matrix is unitary
+
+    A square matrix :math:`U` is unitary if
+
+    .. math:: UU^\dagger = I
+
+    where :math:`U^\dagger` is the conjugate transpose of :math:`U`
+    and :math:`I` is the identity matrix.
 
     Args:
         matrix (np.ndarray): matrix to verify

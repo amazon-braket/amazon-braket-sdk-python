@@ -1287,8 +1287,8 @@ class Unitary(Gate):
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
-            or has a dimension length which is not a positive exponent of 2,
-            or is non-unitary.
+            or has a dimension length that is not a positive power of 2,
+            or is not unitary.
     """
 
     def __init__(self, matrix: np.ndarray, display_name: str = "U"):
@@ -1336,8 +1336,8 @@ class Unitary(Gate):
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,
-                or has a dimension length which is not compatible with the `targets`,
-                or is non-unitary,
+                or has a dimension length that is not compatible with the `targets`,
+                or is not unitary,
 
         Examples:
             >>> circ = Circuit().unitary(matrix=np.array([[0, 1],[1, 0]]), targets=[0])
