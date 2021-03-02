@@ -45,8 +45,7 @@ def test_matrix_equivalence():
 
 def test_matrix_equivalence_non_gate():
     gate1 = Gate.H()
-    x = 1
-    assert gate1.matrix_equivalence(x) == NotImplemented
+    assert not gate1.matrix_equivalence(1)
 
 
 def test_str(gate):
