@@ -37,6 +37,9 @@ jobs:
         flake8
     - name: Run unit tests
       run: |
-        tox -e unit-tests
+        coverage run -m pytest
+        coverage combine
+        coverage report
+        coverage xml
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@v1
