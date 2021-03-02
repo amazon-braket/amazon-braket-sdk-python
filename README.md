@@ -29,6 +29,8 @@ To learn more about IAM user, roles, and policies, see [Adding and Removing IAM 
 
 Follow the installation [instructions](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html) for Boto3 and setting up AWS credentials.
 
+**Note:** Make sure that your AWS region is set to one supported by Amazon Braket. You can check this in your AWS configuration file, which is located by default at `~/.aws/config`.
+
 ### Configure your AWS account with the resources necessary for Amazon Braket
 If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://console.aws.amazon.com/braket/home ).
 
