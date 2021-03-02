@@ -38,14 +38,12 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
 
 
 def is_hermitian(matrix: np.array) -> bool:
-    """
+    r"""
     Whether matrix is Hermitian
 
     A matrix :math:`U` is Hermitian if
 
-    .. math::
-
-      U = U^\dagger
+    .. math:: U = U^\dagger
 
     where :math:`U^\dagger` is the conjugate transpose of :math:`U`.
 
@@ -72,14 +70,12 @@ def is_square_matrix(matrix: np.array) -> bool:
 
 
 def is_unitary(matrix: np.array) -> bool:
-    """
+    r"""
     Whether matrix is unitary
 
     A matrix :math:`U` is unitary if
 
-    .. math::
-
-      UU^\dagger = I
+    .. math:: UU^\dagger = I
 
     where :math:`U^\dagger` is the conjugate transpose of :math:`U`
     and :math:`I` is the identity matrix.
