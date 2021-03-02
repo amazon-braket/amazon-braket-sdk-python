@@ -465,8 +465,9 @@ def noisy_circuit_2qubit_noise_full_probability(device: Device, run_kwargs: Dict
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     K0 = np.eye(4) * np.sqrt(0.9)
-    K1 = np.kron(np.array([[0.0, 1.0], [1.0, 0.0]]),
-    np.array([[0.0, 1.0], [1.0, 0.0]])) * np.sqrt(0.1)
+    K1 = np.kron(np.array([[0.0, 1.0], [1.0, 0.0]]), np.array([[0.0, 1.0], [1.0, 0.0]])) * np.sqrt(
+        0.1
+    )
     circuit = Circuit().x(0).x(1).kraus((0, 1), [K0, K1]).probability()
     result = device.run(circuit, **run_kwargs).result()
     assert len(result.result_types) == 1
