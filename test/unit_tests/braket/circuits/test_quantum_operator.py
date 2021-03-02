@@ -104,8 +104,7 @@ def test_matrix_equivalence():
 
 def test_matrix_equivalence_non_quantum_operator():
     quantum_operator1 = QuantumOperator(qubit_count=1, ascii_symbols=["foo"])
-    x = 1
-    assert quantum_operator1.matrix_equivalence(x) == NotImplemented
+    assert not quantum_operator1.matrix_equivalence(1)
 
 
 def test_str(quantum_operator):
