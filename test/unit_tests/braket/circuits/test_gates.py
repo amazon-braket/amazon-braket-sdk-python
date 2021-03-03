@@ -299,6 +299,18 @@ def test_gate_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwarg
 # Additional Unitary gate tests
 
 
+def test_equality():
+    u1 = Gate.Unitary(np.array([[0 + 0j, 1 + 0j], [1 + 0j, 0 + 0j]]))
+    u2 = Gate.Unitary(np.array([[0, 1], [1, 0]], dtype=np.float32), display_name=["u2"])
+    other_gate = Gate.Unitary(np.array([[1, 0], [0, 1]]))
+    non_gate = "non gate"
+
+    assert u1 == u2
+    assert u1 is not u2
+    assert u1 != other_gate
+    assert u1 != non_gate
+
+
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):

@@ -16,10 +16,13 @@ from unittest.mock import Mock
 
 from braket.aws import AwsQuantumTaskBatch
 
-DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
-RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
+DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/Advantage_system1"
+RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-9"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
+
+RIGETTI_REGION = "us-west-1"
 
 
 class MockS3:

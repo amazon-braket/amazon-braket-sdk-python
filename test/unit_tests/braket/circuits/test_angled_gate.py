@@ -50,6 +50,17 @@ def test_angle_setter(angled_gate):
     angled_gate.angle = 0.14
 
 
+def test_equality(angled_gate):
+    gate = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["bar"])
+    other_gate = AngledGate(angle=0.3, qubit_count=1, ascii_symbols=["foo"])
+    non_gate = "non gate"
+
+    assert angled_gate == gate
+    assert angled_gate is not gate
+    assert angled_gate != other_gate
+    assert angled_gate != non_gate
+
+
 def test_np_float_angle_json():
     angled_gate = AngledGate(angle=np.float32(0.15), qubit_count=1, ascii_symbols=["foo"])
     angled_gate_json = BaseModel.construct(target=[0], angle=angled_gate.angle).json()

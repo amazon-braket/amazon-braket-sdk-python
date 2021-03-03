@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import math
 from typing import Sequence
 
 from braket.circuits.gate import Gate
@@ -51,6 +52,11 @@ class AngledGate(Gate):
             angle (float): The angle of the gate in radians
         """
         return self._angle
+
+    def __eq__(self, other):
+        if isinstance(other, AngledGate):
+            return self.name == other.name and math.isclose(self.angle, other.angle)
+        return NotImplemented
 
     def __repr__(self):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"

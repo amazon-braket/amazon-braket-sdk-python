@@ -88,7 +88,7 @@ class QuantumOperator(Operator):
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
-    def matrix_equivalence(self, other: QuantumOperator):
+    def matrix_equivalence(self, other: QuantumOperator) -> bool:
         """
         Whether the matrix form of two quantum operators are equivalent
 
@@ -100,7 +100,7 @@ class QuantumOperator(Operator):
             are equivalent
         """
         if not isinstance(other, QuantumOperator):
-            return NotImplemented
+            return False
         try:
             return np.allclose(self.to_matrix(), other.to_matrix())
         except ValueError:

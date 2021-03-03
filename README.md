@@ -29,6 +29,8 @@ To learn more about IAM user, roles, and policies, see [Adding and Removing IAM 
 
 Follow the installation [instructions](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html) for Boto3 and setting up AWS credentials.
 
+**Note:** Make sure that your AWS region is set to one supported by Amazon Braket. You can check this in your AWS configuration file, which is located by default at `~/.aws/config`.
+
 ### Configure your AWS account with the resources necessary for Amazon Braket
 If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://console.aws.amazon.com/braket/home ).
 
@@ -70,10 +72,8 @@ import boto3
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-s3_folder = (f"amazon-braket-{aws_account_id}", "folder-name")
+s3_folder = (f"amazon-braket-Your-Bucket-Name", "folder-name") # Use the S3 bucket you created during onboarding
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, s3_folder, shots=100)
@@ -113,10 +113,8 @@ import boto3
 from braket.circuits import Circuit
 from braket.aws import AwsDevice
 
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-
 device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
-s3_folder = (f"amazon-braket-{aws_account_id}", "RIGETTI")
+s3_folder = (f"amazon-braket-Your-Bucket-Name", "RIGETTI") # Use the S3 bucket you created during onboarding
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, s3_folder) 

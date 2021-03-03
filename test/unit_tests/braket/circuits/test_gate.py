@@ -45,8 +45,7 @@ def test_matrix_equivalence():
 
 def test_matrix_equivalence_non_gate():
     gate1 = Gate.H()
-    x = 1
-    assert gate1.matrix_equivalence(x) == NotImplemented
+    assert not gate1.matrix_equivalence(1)
 
 
 def test_str(gate):
@@ -62,7 +61,7 @@ def test_str_angle():
 
 def test_equality():
     gate_1 = Gate(qubit_count=1, ascii_symbols=["foo"])
-    gate_2 = Gate(qubit_count=1, ascii_symbols=["foo"])
+    gate_2 = Gate(qubit_count=1, ascii_symbols=["bar"])
     other_gate = Gate.Rx(angle=0.34)
     non_gate = "non gate"
 
