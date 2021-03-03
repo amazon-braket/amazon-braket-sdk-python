@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.5.10 (2021-03-03)
+
+### Bug Fixes and Other Changes
+
+ * Don't return NotImplemented for boolean
+ * Use np.eye for identity
+ * AngledGate equality checks angles
+ * Unitary equality checks matrix
+ * Remove hardcoded device ARNs
+
+### Documentation Changes
+
+ * Wording changes
+ * Add note about AWS region in README
+
+### Testing and Release Infrastructure
+
+ * Use main instead of PyPi for build dependencies
+ * very minor test changes
+
 ## v1.5.9.post0 (2021-02-22)
 
 ### Documentation Changes
