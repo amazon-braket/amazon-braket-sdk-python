@@ -12,7 +12,7 @@ includes SDK source, installation instructions, and other information.
 The Amazon Braket Python SDK APIs:
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
     
     _apidoc/modules
 
