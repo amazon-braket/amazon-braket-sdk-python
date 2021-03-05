@@ -28,5 +28,5 @@ The Amazon Braket Python SDK APIs:
 .. toctree::
     :maxdepth: 2
     
-    _apidoc/index
+    _apidoc/modules
 
