@@ -1,9 +1,12 @@
 #################################################
-Getting Started with the Amazon Braket Pyhton SDK
+Getting Started with the Amazon Braket Python SDK
 #################################################
 
-It is easy to get started with Amazon Braket. 
+It is easy to get started with Amazon Braket Python SDK. 
 
+.. contents::
+   :depth: 2
+   
 ************************************************
 Getting started using an Amazon Braket notebook
 ************************************************

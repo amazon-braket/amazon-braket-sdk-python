@@ -18,6 +18,7 @@ Getting Started
 
     getting-started
    
+
 ***************
 Python SDK APIs
 ***************
@@ -27,5 +28,5 @@ The Amazon Braket Python SDK APIs:
 .. toctree::
     :maxdepth: 2
     
-    _apidoc/modules
+    api/index
 
