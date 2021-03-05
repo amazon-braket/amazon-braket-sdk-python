@@ -17,6 +17,18 @@ Getting Started
     :maxdepth: 2
 
     getting-started
+
+
+********
+Examples
+********
+
+Explore Amazon Braket examples.
+
+.. toctree::
+    :maxdepth: 2
+
+    examples.rst
    
 
 ***************
