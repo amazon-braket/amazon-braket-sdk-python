@@ -28,7 +28,7 @@ Explore Amazon Braket examples.
 .. toctree::
     :maxdepth: 2
 
-    examples-adv-circuits-algorithms.rst
+    examples.rst
    
 
 ***************
