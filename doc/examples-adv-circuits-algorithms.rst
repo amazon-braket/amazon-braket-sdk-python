@@ -3,6 +3,9 @@ Advanced circuits and algorithms
 ################################
 
 Learn more about working with advanced circuits and algoritms.
+
+.. toctree::
+    :maxdepth: 2
   
 **************************
 Grover's search algorithm
