@@ -15,4 +15,4 @@ Advanced Circuits and Algorithms
 .. toctree::
     :maxdepth: 2
     
-    examples-grover.rst
+    examples-adv-circuits-algorithms.rst
