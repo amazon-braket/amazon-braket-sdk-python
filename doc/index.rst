@@ -26,7 +26,7 @@ Examples
 Explore Amazon Braket examples.
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 3
 
     examples.rst
    
