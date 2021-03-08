@@ -5,7 +5,7 @@ Advanced Circuits and Algorithms
 Learn more about working with advanced circuits and algoritms.
 
 .. contents::
-   :depth: 3
+   :depth: 2
    
 **************************
 Grover's Search Allgorithm
