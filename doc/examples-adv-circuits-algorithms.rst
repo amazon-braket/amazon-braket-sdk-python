@@ -11,7 +11,7 @@ Learn more about working with advanced circuits and algoritms.
 Grover's search algorithm
 **************************
 
-https://github.com/aws/amazon-braket-examples/tree/main/advanced_circuits_algorithms/Grover
+https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/Grover/Grover.ipynb
 
 This tutorial provides a step-by-step walkthrough of Grover's quantum algorithm. 
 You learn how to build the corresponding quantum circuit with simple modular building 
@@ -48,7 +48,7 @@ for estimating the eigenvalues of a unitary operator.
 Quantum phase estimation
 ************************
 
-https://github.com/aws/amazon-braket-examples/tree/main/advanced_circuits_algorithms/QPE
+https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/QPE/QPE.ipynb
 
 This tutorial provides a detailed implementation of the Quantum Phase Estimation (QPE) 
 algorithm using the Amazon Braket SDK. The QPE algorithm is designed to estimate the 
