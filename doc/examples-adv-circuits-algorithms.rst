@@ -1,5 +1,5 @@
 ################################
-Advanced Circuits and Algorithms
+Advanced circuits and algorithms
 ################################
 
 Learn more about working with advanced circuits and algoritms.
@@ -8,7 +8,7 @@ Learn more about working with advanced circuits and algoritms.
    :depth: 2
    
 **************************
-Grover's Search Allgorithm
+Grover's search algorithm
 **************************
 
 https://github.com/aws/amazon-braket-examples/tree/main/advanced_circuits_algorithms/Grover
@@ -20,7 +20,7 @@ gates that are not part of the basic gate set provided by the SDK. A custom gate
 as a core quantum gate by registering it as a subroutine.
 
 *******************************
-Quantum Amplitude Amplification
+Quantum amplitude amplification
 *******************************
 
 https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/QAA/QAA_tutorial.ipynb
@@ -34,7 +34,7 @@ quadratic speedup over several classical algorithms
 
 
 *************************
-Quantum Fourier Transform
+Quantum fourier transform
 *************************
 
 https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/QFT/QFT.ipynb
@@ -45,7 +45,7 @@ most famously Shor's algorithm for factoring and the quantum phase estimation (Q
 for estimating the eigenvalues of a unitary operator. 
 
 ************************
-Quantum Phase Estimation
+Quantum phase estimation
 ************************
 
 https://github.com/aws/amazon-braket-examples/tree/main/advanced_circuits_algorithms/QPE
