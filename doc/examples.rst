@@ -7,12 +7,5 @@ https://github.com/aws/amazon-braket-examples.
 
 .. contents::
    :depth: 2
-   
-********************************
-Advanced Circuits and Algorithms
-********************************
-
-.. toctree::
-    :maxdepth: 2
-    
-    examples-adv-circuits-algorithms.rst
+  
+   examples-adv-circuits-algorithms.rst
