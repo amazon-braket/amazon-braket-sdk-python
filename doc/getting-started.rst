@@ -2,11 +2,16 @@
 Getting Started with the Amazon Braket Python SDK
 #################################################
 
-It is easy to get started with Amazon Braket Python SDK. 
+It is easy to get started with Amazon Braket Python SDK. You can get
+started using an Amazon Braket notebook instance or using
+your own environment.
 
-.. contents::
-   :depth: 2
-   
+For more informnation about Amazon Braket, see the full set of documentation
+at https://docs.aws.amazon.com/braket/index.html.
+
+.. toctree::
+    :maxdepth: 2
+
 ************************************************
 Getting started using an Amazon Braket notebook
 ************************************************
