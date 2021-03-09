@@ -15,7 +15,7 @@ https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algori
 
 This tutorial provides a step-by-step walkthrough of Grover's quantum algorithm. 
 You learn how to build the corresponding quantum circuit with simple modular building 
-blocks using the Amazon Braket You will learn how to build custom 
+blocks using the Amazon Braket SDK. You will learn how to build custom 
 gates that are not part of the basic gate set provided by the SDK. A custom gate can used 
 as a core quantum gate by registering it as a subroutine.
 
@@ -30,7 +30,7 @@ algorithm using the Amazon Braket SDK. QAA is a routine in quantum computing whi
 Grover's famous search algorithm, with applications across many quantum algorithms. QAA uses an iterative 
 approach to systematically increase the probability of finding one or multiple 
 target states in a given search space. In a quantum computer, QAA can be used to obtain a 
-quadratic speedup over several classical algorithms
+quadratic speedup over several classical algorithms.
 
 
 *************************

@@ -24,3 +24,12 @@ https://github.com/aws/amazon-braket-examples/blob/main/hybrid_quantum_algorithm
 
 This tutorial shows how to solve for the ground state of the Transverse Ising Model
 using the variational quantum eigenvalue solver (VQE). 
+
+**************************
+VQE Chemestry
+**************************
+
+https://github.com/aws/amazon-braket-examples/blob/main/hybrid_quantum_algorithms/VQE_Chemistry/VQE_chemistry_braket.ipynb
+
+This tutorial shows how to implement the Variational Quantum Eigensolver (VQE) algorithm in 
+Amazon Braket SDK to compute the potential energy surface (PES) for the Hydrogen molecule. 

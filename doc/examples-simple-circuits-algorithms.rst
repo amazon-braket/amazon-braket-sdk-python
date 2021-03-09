@@ -48,7 +48,7 @@ https://github.com/aws/amazon-braket-examples/blob/main/getting_started/3_Deep_d
 
 This tutorial discusses in detail the anatomy of quantum circuits in the Amazon 
 Braket SDK. You will learn how to build (parameterized) circuits and display them 
-graphically, and how to append circuits to each other. Nex, learn
+graphically, and how to append circuits to each other. Next, learn
 more about circuit depth and circuit size. Finally you will learn how to execute 
 the circuit on a device of our choice (defining a quantum task) and how to track, log, 
 recover, or cancel a quantum task efficiently.
