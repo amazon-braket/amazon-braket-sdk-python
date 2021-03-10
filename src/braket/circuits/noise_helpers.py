@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def add_noise_to_moments(
-    circuit: Circuit, noise: Noise, target_qubits: QubitSet, target_times: Iterable[int]
+    circuit: Circuit, noise: Noise, target_qubits: QubitSet, target_moments: Iterable[int]
 ) -> Circuit:
     """Insert noise to the given time and qubits.
 
@@ -26,7 +26,7 @@ def add_noise_to_moments(
         circuit (Circuit): A ciruit where `noise` is added to.
         noise (Noise): A Noise class object to be added to the circuit.
         target_qubits (QubitSet): Index or indices of qubits. `noise` is added to.
-        target_times (List[int]): List of time which `noise` is added to.
+        target_moments (List[int]): List of moments which `noise` is added in.
 
     Returns:
         Circuit: modified circuit.
@@ -55,7 +55,7 @@ def add_noise_to_moments(
         # add existing instructions
         new_moments.add(time_slices[time])
         # add noise
-        if target_times is None or time in target_times:
+        if target_moments is None or time in target_moments:
             for instruction in noise_instructions:
                 new_moments._add_noise(instruction, time)
 
@@ -68,7 +68,7 @@ def add_noise_to_gates(
     noise: Noise,
     target_gates: Iterable[Type[Gate]],
     target_qubits: QubitSet,
-    target_times: Iterable[int],
+    target_moments: Iterable[int],
 ) -> Circuit:
     """Insert noise after the given gates at the given time, qubits.
 
@@ -82,7 +82,7 @@ def add_noise_to_gates(
         noise (Noise): A `Noise` class object to be added to the circuit.
         target_gates (Iterable[Type[Gate]]): List of Gate classes which `noise` is added to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is added to.
-        target_times (Iterable[int]): List of time which `noise` is added to.
+        target_moments (Iterable[int]): List of time which `noise` is added to.
 
     Returns:
         Circuit: modified circuit.
@@ -101,7 +101,7 @@ def add_noise_to_gates(
         # to a separate function or class.)
         gate_rule = instruction.operator.name in [g.__name__ for g in target_gates]
         qubit_rule = target_qubits is None or instruction.target.issubset(target_qubits)
-        time_rule = target_times is None or moment_key.time in target_times
+        time_rule = target_moments is None or moment_key.time in target_moments
         if gate_rule and qubit_rule and time_rule:
             if noise.qubit_count == 1:
                 for qubit in instruction.target:

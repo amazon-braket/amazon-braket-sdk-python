@@ -4,12 +4,14 @@ import pytest
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Instruction, Noise, QubitSet
 from braket.ir.jaqcd.shared_models import (
+    DampingProbability,
     DoubleControl,
     DoubleTarget,
     MultiTarget,
     SingleControl,
     SingleProbability,
     SingleTarget,
+    TripleProbability,
     TwoDimensionalMatrixList,
 )
 
@@ -21,14 +23,42 @@ testdata = [
         Noise.AmplitudeDamping,
         "amplitude_damping",
         ir.AmplitudeDamping,
-        [SingleTarget, SingleProbability],
+        [SingleTarget, DampingProbability],
+        {},
+    ),
+    (
+        Noise.GeneralizedAmplitudeDamping,
+        "generalized_amplitude_damping",
+        ir.GeneralizedAmplitudeDamping,
+        [SingleTarget, SingleProbability, DampingProbability],
         {},
     ),
     (
         Noise.PhaseDamping,
         "phase_damping",
         ir.PhaseDamping,
-        [SingleTarget, SingleProbability],
+        [SingleTarget, DampingProbability],
+        {},
+    ),
+    (
+        Noise.TwoQubitDepolarizing,
+        "two_qubit_depolarizing",
+        ir.TwoQubitDepolarizing,
+        [DoubleTarget, SingleProbability],
+        {},
+    ),
+    (
+        Noise.TwoQubitDephasing,
+        "two_qubit_dephasing",
+        ir.TwoQubitDephasing,
+        [DoubleTarget, SingleProbability],
+        {},
+    ),
+    (
+        Noise.GeneralPauli,
+        "general_pauli",
+        ir.GeneralPauli,
+        [SingleTarget, TripleProbability],
         {},
     ),
     (
@@ -79,8 +109,16 @@ def double_target_valid_input(**kwargs):
     return {"target1": 2, "target2": 3}
 
 
-def probability_valid_input(**kwargs):
+def single_probability_valid_input(**kwargs):
     return {"probability": 0.1234}
+
+
+def damping_probability_valid_input(**kwargs):
+    return {"gamma": 0.1234}
+
+
+def triple_probability_valid_input(**kwargs):
+    return {"probX": 0.1234, "probY": 0.1324, "probZ": 0.1423}
 
 
 def single_control_valid_input(**kwargs):
@@ -113,7 +151,9 @@ def two_dimensional_matrix_list_valid_input(**kwargs):
 valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
-    "SingleProbability": probability_valid_input,
+    "SingleProbability": single_probability_valid_input,
+    "DampingProbability": damping_probability_valid_input,
+    "TripleProbability": triple_probability_valid_input,
     "SingleControl": single_control_valid_input,
     "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
@@ -164,6 +204,10 @@ def create_valid_target_input(irsubclasses):
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
         elif subclass == SingleProbability or subclass == TwoDimensionalMatrixList:
             pass
+        elif subclass == DampingProbability or subclass == TwoDimensionalMatrixList:
+            pass
+        elif subclass == TripleProbability or subclass == TwoDimensionalMatrixList:
+            pass
         else:
             raise ValueError("Invalid subclass")
     input["target"] = QubitSet(qubit_set)
@@ -173,7 +217,11 @@ def create_valid_target_input(irsubclasses):
 def create_valid_noise_class_input(irsubclasses, **kwargs):
     input = {}
     if SingleProbability in irsubclasses:
-        input.update(probability_valid_input())
+        input.update(single_probability_valid_input())
+    if DampingProbability in irsubclasses:
+        input.update(damping_probability_valid_input())
+    if TripleProbability in irsubclasses:
+        input.update(triple_probability_valid_input())
     if TwoDimensionalMatrixList in irsubclasses:
         input.update(two_dimensional_matrix_list_valid_input(**kwargs))
     return input
@@ -199,6 +247,10 @@ def calculate_qubit_count(irsubclasses):
         elif subclass == MultiTarget:
             qubit_count += 3
         elif subclass == SingleProbability or subclass == TwoDimensionalMatrixList:
+            pass
+        elif subclass == DampingProbability or subclass == TwoDimensionalMatrixList:
+            pass
+        elif subclass == TripleProbability or subclass == TwoDimensionalMatrixList:
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -242,7 +294,11 @@ def test_noise_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwa
         subroutine = getattr(Circuit(), subroutine_name)
         subroutine_input = {"target": multi_targets}
         if SingleProbability in irsubclasses:
-            subroutine_input.update(probability_valid_input())
+            subroutine_input.update(single_probability_valid_input())
+        if DampingProbability in irsubclasses:
+            subroutine_input.update(damping_probability_valid_input())
+        if TripleProbability in irsubclasses:
+            subroutine_input.update(triple_probability_valid_input())
 
         circuit1 = subroutine(**subroutine_input)
         circuit2 = Circuit(instruction_list)

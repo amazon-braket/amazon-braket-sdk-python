@@ -5,11 +5,18 @@ import numpy as np
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.instruction import Instruction
-from braket.circuits.noise import Noise, ProbabilisticNoise
+from braket.circuits.noise import (
+    DampingNoise,
+    GeneralizedAmplitudeDampingNoise,
+    GeneralPauliNoise,
+    Noise,
+    SingleProbabilisticNoise,
+)
 from braket.circuits.quantum_operator_helpers import (
     is_cptp,
     verify_quantum_operator_matrix_dimensions,
 )
+from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 """
@@ -22,7 +29,7 @@ To add a new Noise implementation:
 """
 
 
-class BitFlip(ProbabilisticNoise):
+class BitFlip(SingleProbabilisticNoise):
     """Bit flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
@@ -45,14 +52,14 @@ class BitFlip(ProbabilisticNoise):
 
         p = \\text{probability}
 
-    This noise channel is shown as `NBF` in circuit diagrams.
+    This noise channel is shown as `BF` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["NBF({:.2g})".format(probability)],
+            ascii_symbols=["BF({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
@@ -87,7 +94,7 @@ class BitFlip(ProbabilisticNoise):
 Noise.register_noise(BitFlip)
 
 
-class PhaseFlip(ProbabilisticNoise):
+class PhaseFlip(SingleProbabilisticNoise):
     """Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
@@ -110,14 +117,14 @@ class PhaseFlip(ProbabilisticNoise):
 
         p = \\text{probability}
 
-    This noise channel is shown as `NPF` in circuit diagrams.
+    This noise channel is shown as `PF` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["NPF({:.2g})".format(probability)],
+            ascii_symbols=["PF({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
@@ -152,14 +159,104 @@ class PhaseFlip(ProbabilisticNoise):
 Noise.register_noise(PhaseFlip)
 
 
-class Depolarizing(ProbabilisticNoise):
+class GeneralPauli(GeneralPauliNoise):
+    """General noise channel which transforms a density matrix :math:`\\rho` according to:
+
+    .. math::
+        \\rho \\Rightarrow (1-probX-probY-probZ) \\rho
+            + probX X \\rho X^{\\dagger}
+            + probY Y \\rho Y^{\\dagger}
+            + probZ Z \\rho Z^{\\dagger}
+    where
+
+    .. math::
+        I = \\left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & 1
+                \\end{matrix}
+            \\right)
+
+        X = \\left(
+                \\begin{matrix}
+                    0 & 1 \\\\
+                    1 & 0
+                \\end{matrix}
+            \\right)
+
+        Y = \\left(
+                \\begin{matrix}
+                    0 & -i \\\\
+                    i &  0
+                \\end{matrix}
+            \\right)
+
+        Z = \\left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & -1
+                \\end{matrix}
+            \\right)
+
+    This noise channel is shown as `GP` in circuit diagrams.
+    """
+
+    def __init__(self, probX: float, probY: float, probZ: float):
+        super().__init__(
+            probX=probX,
+            probY=probY,
+            probZ=probZ,
+            qubit_count=1,
+            ascii_symbols=["GP({:.2g},{:.2g},{:.2g})".format(probX, probY, probZ)],
+        )
+
+    def to_ir(self, target: QubitSet):
+        return ir.GeneralPauli.construct(
+            target=target[0], probX=self.probX, probY=self.probY, probZ=self.probZ
+        )
+
+    def to_matrix(self) -> Iterable[np.ndarray]:
+        K0 = np.sqrt(1 - self.probX - self.probY - self.probZ) * np.eye(2, dtype=complex)
+        K1 = np.sqrt(self.probX) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
+        K2 = np.sqrt(self.probY) * 1j * np.array([[0.0, -1.0], [1.0, 0.0]], dtype=complex)
+        K3 = np.sqrt(self.probZ) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
+        return [K0, K1, K2, K3]
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def general_pauli(
+        target: QubitSetInput, probX: float, probY: float, probZ: float
+    ) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            probability List[float]: Probabilities for the Pauli X, Y and Z noise
+            happening in the Kraus channel.
+
+        Returns:
+            Iterable[Instruction]: `Iterable` of GeneralPauli instructions.
+
+        Examples:
+            >>> circ = Circuit().general_pauli(0,probX=0.1,probY=0.2,probZ=0.3)
+        """
+        return [
+            Instruction(Noise.GeneralPauli(probX=probX, probY=probY, probZ=probZ), target=qubit)
+            for qubit in QubitSet(target)
+        ]
+
+
+Noise.register_noise(GeneralPauli)
+
+
+class Depolarizing(SingleProbabilisticNoise):
     """Depolarizing noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
         \\rho \\Rightarrow (1-p) \\rho
-            + p X \\rho X^{\\dagger}
-            + p Y \\rho Y^{\\dagger}
-            + p Z \\rho Z^{\\dagger}
+            + p/3 X \\rho X^{\\dagger}
+            + p/3 Y \\rho Y^{\\dagger}
+            + p/3 Z \\rho Z^{\\dagger}
     where
 
     .. math::
@@ -193,14 +290,14 @@ class Depolarizing(ProbabilisticNoise):
 
         p = \\text{probability}
 
-    This noise channel is shown as `ND` in circuit diagrams.
+    This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["ND({:.2g})".format(probability)],
+            ascii_symbols=["DEPO({:.2g})".format(probability)],
         )
 
     def to_ir(self, target: QubitSet):
@@ -237,7 +334,184 @@ class Depolarizing(ProbabilisticNoise):
 Noise.register_noise(Depolarizing)
 
 
-class AmplitudeDamping(ProbabilisticNoise):
+class TwoQubitDepolarizing(SingleProbabilisticNoise):
+    """Two-Qubit Depolarizing noise channel which transforms a
+        density matrix :math:`\\rho` according to:
+
+    .. math::
+        \\rho \\Rightarrow (1-p) \\rho + p/15 (
+          IX \\rho IX^{\\dagger} + IY \\rho IY^{\\dagger} + IZ \\rho IZ^{\\dagger}
+        + XI \\rho XI^{\\dagger} + XX \\rho XX^{\\dagger} + XY \\rho XY^{\\dagger}
+        + XZ \\rho XZ^{\\dagger} + YI \\rho YI^{\\dagger} + YX \\rho YX^{\\dagger}
+        + YY \\rho YY^{\\dagger} + YZ \\rho YZ^{\\dagger} + ZI \\rho ZI^{\\dagger}
+        + ZX \\rho ZX^{\\dagger} + ZY \\rho ZY^{\\dagger} + ZZ \\rho ZZ^{\\dagger})
+    where
+
+    .. math::
+        I = \\left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & 1
+                \\end{matrix}
+            \\right)
+
+        X = \\left(
+                \\begin{matrix}
+                    0 & 1 \\\\
+                    1 & 0
+                \\end{matrix}
+            \\right)
+
+        Y = \\left(
+                \\begin{matrix}
+                    0 & -i \\\\
+                    i &  0
+                \\end{matrix}
+            \\right)
+
+        Z = \\left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & -1
+                \\end{matrix}
+            \\right)
+
+        p = \\text{probability}
+
+    This noise channel is shown as `DEPO` in circuit diagrams.
+    """
+
+    def __init__(self, probability: float):
+        super().__init__(
+            probability=probability,
+            qubit_count=2,
+            ascii_symbols=["DEPO({:.2g})".format(probability)] * 2,
+        )
+
+    def to_ir(self, target: QubitSet):
+        return ir.TwoQubitDepolarizing.construct(
+            targets=[target[0], target[1]], probability=self.probability
+        )
+
+    def to_matrix(self) -> Iterable[np.ndarray]:
+
+        SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        SX = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
+        SY = np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
+        SZ = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
+
+        K_list_single = [SI, SX, SY, SZ]
+        K_list = [np.kron(i, j) for i in K_list_single for j in K_list_single]
+
+        K_list[0] *= np.sqrt(1 - self._probability)
+
+        K_list[1:] = [np.sqrt(self._probability / 15) * i for i in K_list[1:]]
+
+        return K_list
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def two_qubit_depolarizing(
+    target1: QubitInput, target2: QubitInput, probability: float) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit, int, or iterable of Qubit / int): Target qubits
+            probability (float): Probability of two-qubit depolarizing.
+
+        Returns:
+            Iterable[Instruction]: `Iterable` of Depolarizing instructions.
+
+        Examples:
+            >>> circ = Circuit().two_qubit_depolarizing(0, 1, probability=0.1)
+        """
+        return [
+            Instruction(Noise.TwoQubitDepolarizing(probability=probability),
+            target=[target1, target2])
+        ]
+
+
+Noise.register_noise(TwoQubitDepolarizing)
+
+
+class TwoQubitDephasing(SingleProbabilisticNoise):
+    """Two-Qubit Dephasing noise channel which transforms a
+        density matrix :math:`\\rho` according to:
+
+    .. math::
+        \\rho \\Rightarrow (1-p) \\rho + p/3 (
+          IZ \\rho IZ^{\\dagger} + ZI \\rho ZI^{\\dagger} + ZZ \\rho ZZ^{\\dagger})
+    where
+
+    .. math::
+        I = \\left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & 1
+                \\end{matrix}
+            \\right)
+
+        Z = \\left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & -1
+                \\end{matrix}
+            \\right)
+
+        p = \\text{probability}
+
+    This noise channel is shown as `DEPH` in circuit diagrams.
+    """
+
+    def __init__(self, probability: float):
+        super().__init__(
+            probability=probability,
+            qubit_count=2,
+            ascii_symbols=["DEPH({:.2g})".format(probability)] * 2,
+        )
+
+    def to_ir(self, target: QubitSet):
+        return ir.TwoQubitDephasing.construct(
+            targets=[target[0], target[1]], probability=self.probability
+        )
+
+    def to_matrix(self) -> Iterable[np.ndarray]:
+
+        SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        SZ = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
+        K0 = np.sqrt(1 - self._probability) * np.kron(SI, SI)
+        K1 = np.sqrt(self._probability / 3) * np.kron(SI, SZ)
+        K2 = np.sqrt(self._probability / 3) * np.kron(SZ, SI)
+        K3 = np.sqrt(self._probability / 3) * np.kron(SZ, SZ)
+
+        return [K0, K1, K2, K3]
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def two_qubit_dephasing(
+    target1: QubitInput, target2: QubitInput, probability: float) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit, int, or iterable of Qubit / int): Target qubits
+            probability (float): Probability of two-qubit dephasing.
+
+        Returns:
+            Iterable[Instruction]: `Iterable` of Dephasing instructions.
+
+        Examples:
+            >>> circ = Circuit().two_qubit_dephasing(0, 1, probability=0.1)
+        """
+        return [
+            Instruction(Noise.TwoQubitDephasing(probability=probability),
+            target=[target1, target2])
+        ]
+
+
+Noise.register_noise(TwoQubitDephasing)
+
+
+class AmplitudeDamping(DampingNoise):
     """AmplitudeDamping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
@@ -247,54 +521,52 @@ class AmplitudeDamping(ProbabilisticNoise):
         E_0 = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
-                    0 & \\sqrt{1-p}
+                    0 & \\sqrt{1-\\gamma}
                 \\end{matrix}
               \\right)
 
         E_1 = \\left(
                 \\begin{matrix}
-                    0 & \\sqrt{p} \\\\
+                    0 & \\sqrt{\\gamma} \\\\
                     0 & 0
                 \\end{matrix}
               \\right)
 
-        p = \\text{probability}
-
-    This noise channel is shown as `NAD` in circuit diagrams.
+    This noise channel is shown as `AD` in circuit diagrams.
     """
 
-    def __init__(self, probability: float):
+    def __init__(self, gamma: float):
         super().__init__(
-            probability=probability,
+            gamma=gamma,
             qubit_count=1,
-            ascii_symbols=["NAD({:.2g})".format(probability)],
+            ascii_symbols=["AD({:.2g})".format(gamma)],
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.AmplitudeDamping.construct(target=target[0], probability=self.probability)
+        return ir.AmplitudeDamping.construct(target=target[0], gamma=self.gamma)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.probability)]], dtype=complex)
-        K1 = np.array([[0.0, np.sqrt(self.probability)], [0.0, 0.0]], dtype=complex)
+        K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
+        K1 = np.array([[0.0, np.sqrt(self.gamma)], [0.0, 0.0]], dtype=complex)
         return [K0, K1]
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def amplitude_damping(target: QubitSetInput, probability: float) -> Iterable[Instruction]:
+    def amplitude_damping(target: QubitSetInput, gamma: float) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
-            probability (float): Probability of amplitude damping.
+            target (Qubit, int, or iterable of Qubit / int): Target qubit(s).
+            gamma (float): decaying rate of the amplitude damping channel.
 
         Returns:
             Iterable[Instruction]: `Iterable` of AmplitudeDamping instructions.
 
         Examples:
-            >>> circ = Circuit().amplitude_damping(0, probability=0.1)
+            >>> circ = Circuit().amplitude_damping(0, gamma=0.1)
         """
         return [
-            Instruction(Noise.AmplitudeDamping(probability=probability), target=qubit)
+            Instruction(Noise.AmplitudeDamping(gamma=gamma), target=qubit)
             for qubit in QubitSet(target)
         ]
 
@@ -302,7 +574,94 @@ class AmplitudeDamping(ProbabilisticNoise):
 Noise.register_noise(AmplitudeDamping)
 
 
-class PhaseDamping(ProbabilisticNoise):
+class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
+    """Generalized AmplitudeDamping noise channel which transforms a
+        density matrix :math:`\\rho` according to:
+
+    .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
+                + E_2 \\rho E_2^{\\dagger} + E_3 \\rho E_3^{\\dagger}
+    where
+
+    .. math::
+        E_0 = \\sqrt(probability)\\left(
+                \\begin{matrix}
+                    1 & 0 \\\\
+                    0 & \\sqrt{1-\\gamma}
+                \\end{matrix}
+              \\right)
+
+        E_1 = \\sqrt(probability)\\left(
+                \\begin{matrix}
+                    0 & \\sqrt{\\gamma} \\\\
+                    0 & 0
+                \\end{matrix}
+              \\right)
+        E_2 = \\sqrt(1-probability)\\left(
+                \\begin{matrix}
+                    \\sqrt{1-\\gamma} & 0 \\\\
+                    0 & 1
+                \\end{matrix}
+              \\right)
+        E_3 = \\sqrt(1-probability)\\left(
+                \\begin{matrix}
+                    0 & 0 \\\\
+                    \\sqrt{\\gamma} & 0
+                \\end{matrix}
+              \\right)
+
+    This noise channel is shown as `GAD` in circuit diagrams.
+    """
+
+    def __init__(self, probability: float, gamma: float):
+        super().__init__(
+            gamma=gamma,
+            probability=probability,
+            qubit_count=1,
+            ascii_symbols=["GAD(probability={:.2g},gamma={:.2g})".format(probability, gamma)],
+        )
+
+    def to_ir(self, target: QubitSet):
+        return ir.GeneralizedAmplitudeDamping.construct(
+            target=target[0], probability=self.probability, gamma=self.gamma
+        )
+
+    def to_matrix(self) -> Iterable[np.ndarray]:
+        K0 = np.sqrt(self.probability) * np.array([[1.0, 0.0],
+            [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
+        K1 = np.sqrt(self.probability)*np.array([[0.0,np.sqrt(self.gamma)],[0.0, 0.0]],dtype=complex)
+        K2 = np.sqrt(1 - self.probability) * np.array([[np.sqrt(1 - self.gamma), 0.0], [0.0, 1.0]])
+        K3 = np.sqrt(1 - self.probability) * np.array([[0.0, 0.0], [np.sqrt(self.gamma), 0.0]])
+        return [K0, K1, K2, K3]
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def generalized_amplitude_damping(
+        target: QubitSetInput, probability: float, gamma: float
+    ) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit, int, or iterable of Qubit / int): Target qubit(s).
+            p(float): Probability of the system being excited by the environment.
+            gamma (float): The damping rate of the amplitude damping channel.
+
+        Returns:
+            Iterable[Instruction]: `Iterable` of GeneralizedAmplitudeDamping instructions.
+
+        Examples:
+            >>> circ = Circuit().generalized_amplitude_damping(0, probability = 0.9, gamma=0.1)
+        """
+        return [
+            Instruction(Noise.GeneralizedAmplitudeDamping(probability=probability, gamma=gamma),
+                        target=qubit)
+            for qubit in QubitSet(target)
+        ]
+
+
+Noise.register_noise(GeneralizedAmplitudeDamping)
+
+
+class PhaseDamping(DampingNoise):
     """Phase damping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
@@ -312,54 +671,54 @@ class PhaseDamping(ProbabilisticNoise):
         E_0 = \\left(
                 \\begin{matrix}
                     1 & 0 \\\\
-                    0 & \\sqrt{1-p}
+                    0 & \\sqrt{1-gamma}
                 \\end{matrix}
               \\right)
 
         E_1 = \\left(
                 \\begin{matrix}
                     0 & 0 \\\\
-                    0 & \\sqrt{p}
+                    0 & \\sqrt{gamma}
                 \\end{matrix}
               \\right)
 
         p = \\text{probability}
 
-    This noise channel is shown as `NPD` in circuit diagrams.
+    This noise channel is shown as `PD` in circuit diagrams.
     """
 
-    def __init__(self, probability: float):
+    def __init__(self, gamma: float):
         super().__init__(
-            probability=probability,
+            gamma=gamma,
             qubit_count=1,
-            ascii_symbols=["NPD({:.2g})".format(probability)],
+            ascii_symbols=["PD({:.2g})".format(gamma)],
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.PhaseDamping.construct(target=target[0], probability=self.probability)
+        return ir.PhaseDamping.construct(target=target[0], gamma=self.gamma)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.probability)]], dtype=complex)
-        K1 = np.array([[0.0, 0.0], [0.0, np.sqrt(self.probability)]], dtype=complex)
+        K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
+        K1 = np.array([[0.0, 0.0], [0.0, np.sqrt(self.gamma)]], dtype=complex)
         return [K0, K1]
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def phase_damping(target: QubitSetInput, probability: float) -> Iterable[Instruction]:
+    def phase_damping(target: QubitSetInput, gamma: float) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
-            probability (float): Probability of phase damping.
+            gamma (float): Probability of phase damping.
 
         Returns:
             Iterable[Instruction]: `Iterable` of PhaseDamping instructions.
 
         Examples:
-            >>> circ = Circuit().phase_damping(0, probability=0.1)
+            >>> circ = Circuit().phase_damping(0, gamma=0.1)
         """
         return [
-            Instruction(Noise.PhaseDamping(probability=probability), target=qubit)
+            Instruction(Noise.PhaseDamping(gamma=gamma), target=qubit)
             for qubit in QubitSet(target)
         ]
 
@@ -375,7 +734,7 @@ class Kraus(Noise):
         matrices (Iterable[np.array]): A list of matrices that define a noise
             channel. These matrices need to satisify the requirement of CPTP map.
         display_name (str): Name to be used for an instance of this general noise
-            channel for circuit diagrams. Defaults to `NK`.
+            channel for circuit diagrams. Defaults to `KR`.
 
     Raises:
         ValueError: If any matrix in `matrices` is not a two-dimensional square
@@ -384,7 +743,7 @@ class Kraus(Noise):
             or the `matrices` do not satisify CPTP condition.
     """
 
-    def __init__(self, matrices: Iterable[np.ndarray], display_name: str = "NK"):
+    def __init__(self, matrices: Iterable[np.ndarray], display_name: str = "KR"):
         for matrix in matrices:
             verify_quantum_operator_matrix_dimensions(matrix)
             if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
@@ -421,7 +780,7 @@ class Kraus(Noise):
     @staticmethod
     @circuit.subroutine(register=True)
     def kraus(
-        targets: QubitSetInput, matrices: Iterable[np.array], display_name: str = "NK"
+        targets: QubitSetInput, matrices: Iterable[np.array], display_name: str = "KR"
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 

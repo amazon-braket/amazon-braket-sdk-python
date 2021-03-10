@@ -493,14 +493,14 @@ class Circuit:
         noise: Noise,
         target_gates: Optional[Union[Type[Gate], Iterable[Type[Gate]]]] = None,
         target_qubits: Optional[QubitSetInput] = None,
-        target_times: Optional[Union[int, Iterable[int]]] = None,
+        target_moments: Optional[Union[int, Iterable[int]]] = None,
     ) -> Circuit:
         """Add `noise` to the circuit according to `target_gates`, `target_qubits` and
-        `target_times`.
+        `target_moments`.
 
         For any parameter that is None, that specification is ignored (e.g. if `target_gates`
-        and `target_qubits` are None then the noise is added to all qubits at `target_times`).
-        If `target_gates`, `target_qubits`, and `target_times` are all None, then `noise` is
+        and `target_qubits` are None then the noise is added to all qubits at `target_moments`).
+        If `target_gates`, `target_qubits`, and `target_moments` are all None, then `noise` is
         added to every qubit at every moment.
 
         When `noise.qubit_count` == 1, ie. `noise` is single-qubit, `noise` is added to all
@@ -520,7 +520,7 @@ class Circuit:
                 List of Gate classes which `noise` is added to. Default=None.
             target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
                 Default=None.
-            target_times (Union[int, Iterable[int], optional]): Index of indices of time which
+            target_moments (Union[int, Iterable[int], optional]): Index of indices of time which
                 `noise` is added to. Default=None.
 
         Returns:
@@ -528,7 +528,7 @@ class Circuit:
 
         Raises:
             TypeError: If `noise` is not Noise type, `target_gates` is not a Gate class,
-                Iterable[Gate] or None, `target_times` is not int or Iterable[int] or None.
+                Iterable[Gate] or None, `target_moments` is not int or Iterable[int] or None.
             ValueError:
                 If `noise.qubit_count` is not equal to `len(gate.target)` for gates in
                 `target_gates`. If `noise.qubit_count` is not equal to `len(target_qubits)`
@@ -558,7 +558,7 @@ class Circuit:
             q1 : -Y-ND(0.1)-X-ND(0.1)-X-ND(0.1)-
             T  : |    0    |    1    |    2    |
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.add_noise(noise, target_times=[0,2]))
+            >>> print(circ.add_noise(noise, target_moments=[0,2]))
             T  : |    0    |1|    2    |
             q0 : -X-ND(0.1)-Z-C-ND(0.1)-
                               |
@@ -568,7 +568,7 @@ class Circuit:
             >>> print(circ.add_noise(noise,
             ...                      target_gates = ['X','Y'],
             ...                      target_qubits = [0,1],
-            ...                      target_times=1)
+            ...                      target_moments=1)
             ... )
             T  : |0|    1    |2|
             q0 : -X-Z---------C-
@@ -580,8 +580,8 @@ class Circuit:
 
         if isinstance(target_gates, type) and issubclass(target_gates, Gate):
             target_gates = [target_gates]
-        if isinstance(target_times, int):
-            target_times = [target_times]
+        if isinstance(target_moments, int):
+            target_moments = [target_moments]
         if target_qubits is not None:
             target_qubits = QubitSet(target_qubits)
 
@@ -593,16 +593,16 @@ class Circuit:
                 and all(isinstance(g, type) and issubclass(g, Gate) for g in target_gates)
             ):
                 raise TypeError("all elements in target_gates must be a Gate class")
-        if target_times is not None:
+        if target_moments is not None:
             if not (
-                isinstance(target_times, Iterable) and all(isinstance(t, int) for t in target_times)
+                isinstance(target_moments, Iterable) and all(isinstance(t, int) for t in target_moments)
             ):
-                raise TypeError("all elements in target_times must be int")
+                raise TypeError("all elements in target_moments must be int")
 
         if target_gates is None:
-            return add_noise_to_moments(self, noise, target_qubits, target_times)
+            return add_noise_to_moments(self, noise, target_qubits, target_moments)
         else:
-            return add_noise_to_gates(self, noise, target_gates, target_qubits, target_times)
+            return add_noise_to_gates(self, noise, target_gates, target_qubits, target_moments)
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """

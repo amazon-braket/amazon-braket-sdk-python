@@ -88,18 +88,17 @@ class Noise(QuantumOperator):
         setattr(cls, noise.__name__, noise)
 
 
-class ProbabilisticNoise(Noise):
+class SingleProbabilisticNoise(Noise):
     """
-    Class `ProbabilisticNoise` represents a noise channel on N qubits parameterized by
-    a probability.
+    Class `SingleProbabilisticNoise` represents a noise channel on N qubits parameterized by
+    a single probability.
     """
 
     def __init__(self, probability: float, qubit_count: int, ascii_symbols: Sequence[str]):
         """
         Args:
-            probability (float): The probability of noise, a parameter that generates Kraus
-                matrices.
-            qubit_count (int): The number of qubits that this noise interacts with.
+            probability (float): The probability that the noise occurs.
+            qubit_count (int): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -119,8 +118,7 @@ class ProbabilisticNoise(Noise):
 
     @property
     def probability(self) -> float:
-        """Returns the probability parameter for the noise.
-
+        """
         Returns:
             probability (float): The probability that parameterizes the Kraus matrices.
         """
@@ -128,3 +126,161 @@ class ProbabilisticNoise(Noise):
 
     def __repr__(self):
         return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
+
+
+class GeneralPauliNoise(Noise):
+    """
+    Class `GeneralPauliNoise` represents the general Pauli noise channel on N qubits
+    parameterized by three probabilities.
+    """
+
+    def __init__(self, probX: float, probY: float, probZ: float, qubit_count: int,
+        ascii_symbols: Sequence[str]):
+        """
+        Args:
+            probX [float], probY [float], probZ [float]: The coefficients of the Kraus operators
+            in the channel.
+            qubit_count (int): The number of qubits to apply noise.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
+                printing a diagram of a circuit. The length must be the same as `qubit_count`, and
+                index ordering is expected to correlate with the target ordering on the instruction.
+
+        Raises:
+            ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`, `probX` or `probY` or `probZ`
+                is not `float`, `probX` or `probY` or `probZ` > 1.0, or
+                `probX` or `probY` or `probZ` < 0.0
+        """
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+        if not isinstance(probX, float):
+            raise ValueError("probX must be float type")
+        if not (probX <= 1.0 and probX >= 0.0):
+            raise ValueError("probX must be a real number in the interval [0,1]")
+        if not isinstance(probY, float):
+            raise ValueError("probY must be float type")
+        if not (probY <= 1.0 and probY >= 0.0):
+            raise ValueError("probY must be a real number in the interval [0,1]")
+        if not isinstance(probZ, float):
+            raise ValueError("probZ must be float type")
+        if not (probZ <= 1.0 and probZ >= 0.0):
+            raise ValueError("probZ must be a real number in the interval [0,1]")
+
+        self._probX = probX
+        self._probY = probY
+        self._probZ = probZ
+
+    @property
+    def probX(self) -> float:
+        """
+        Returns:
+            probX (float): The probability that parameterizes the Kraus matrices.
+        """
+        return self._probX
+
+    @property
+    def probY(self) -> float:
+        """
+        Returns:
+            probY (float): The probability that parameterizes the Kraus matrices.
+        """
+        return self._probY
+
+    @property
+    def probZ(self) -> float:
+        """
+        Returns:
+            probZ (float): The probability that parameterizes the Kraus matrices.
+        """
+        return self._probZ
+
+    def __repr__(self):
+        return f"{self.name}('probX': {self.probX}, 'probY': {self.probY}, \
+'probZ': {self.probZ}, 'qubit_count': {self.qubit_count})"
+
+
+class DampingNoise(Noise):
+    """
+    Class `DampingNoise` represents a damping noise channel
+    on N qubits parameterized by gamma.
+    """
+
+    def __init__(self, gamma: float, qubit_count: int, ascii_symbols: Sequence[str]):
+        """
+        Args:
+            gamma (float): Probability of damping.
+            qubit_count (int): The number of qubits to apply noise.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
+                printing a diagram of a circuit. The length must be the same as `qubit_count`, and
+                index ordering is expected to correlate with the target ordering on the instruction.
+
+            Raises:
+                ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`, `gamma` is not `float`,
+                `gamma` > 1.0, or `gamma` < 0.0.
+        """
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+        if not isinstance(gamma, float):
+            raise ValueError("gamma must be float type")
+        if not (gamma <= 1.0 and gamma >= 0.0):
+            raise ValueError("gamma must be a real number in the interval [0,1]")
+        self._gamma = gamma
+
+    @property
+    def gamma(self) -> float:
+        """
+        Returns:
+            gamma (float): Probability of damping.
+        """
+        return self._gamma
+
+    def __repr__(self):
+        return (
+            f"{self.name}('gamma': {self.gamma}, 'qubit_count': {self.qubit_count})"
+        )
+
+
+class GeneralizedAmplitudeDampingNoise(DampingNoise):
+    """
+    Class `GeneralizedAmplitudeDampingNoise` represents the generalized amplitude damping
+    noise channel on N qubits parameterized by gamma and probability.
+    """
+
+    def __init__(self, probability: float, gamma: float, qubit_count: int,
+        ascii_symbols: Sequence[str]):
+        """
+        Args:
+            probability (float): Probability of the system being excited by the environment.
+            gamma (float): Probability of damping.
+            qubit_count (int): The number of qubits to apply noise.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
+                printing a diagram of a circuit. The length must be the same as `qubit_count`, and
+                index ordering is expected to correlate with the target ordering on the instruction.
+
+            Raises:
+                ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`, `probability` or `gamma` is not `float`,
+                `probability` > 1.0, or `probability` < 0.0, `gamma` > 1.0, or `gamma` < 0.0.
+        """
+        super().__init__(gamma=gamma, qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+        if not isinstance(probability, float):
+            raise ValueError("probability must be float type")
+        if not (probability <= 1.0 and probability >= 0.0):
+            raise ValueError("probability must be a real number in the interval [0,1]")
+        self._probability = probability
+
+    @property
+    def probability(self) -> float:
+        """
+        Returns:
+            probability (float): Probability of the system being excited by the environment.
+        """
+        return self._probability
+
+    def __repr__(self):
+        return (
+            f"{self.name}('probability': {self.probability}, 'gamma': {self.gamma}, \
+'qubit_count': {self.qubit_count})"
+        )

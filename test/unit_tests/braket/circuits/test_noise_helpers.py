@@ -11,7 +11,7 @@ from braket.circuits.qubit_set import QubitSet
 
 invalid_data_noise_type = [Gate.X(), Gate.X, None, 1.5]
 invalid_data_target_gates_type = [([-1, "foo"]), ([1.5, None, -1]), "X", ([Gate.X, "CNot"])]
-invalid_data_target_times_type = [1.5, "foo", ["foo", 1]]
+invalid_data_target_moments_type = [1.5, "foo", ["foo", 1]]
 
 
 @pytest.fixture
@@ -55,9 +55,9 @@ def test_add_noise_invalid_target_gates_type(circuit_2qubit, noise_1qubit, targe
 
 
 @pytest.mark.xfail(raises=TypeError)
-@pytest.mark.parametrize("target_times", invalid_data_target_times_type)
-def test_add_noise_invalid_target_times_type(circuit_2qubit, noise_1qubit, target_times):
-    circuit_2qubit.add_noise(noise_1qubit, target_times=target_times)
+@pytest.mark.parametrize("target_moments", invalid_data_target_moments_type)
+def test_add_noise_invalid_target_moments_type(circuit_2qubit, noise_1qubit, target_moments):
+    circuit_2qubit.add_noise(noise_1qubit, target_moments=target_moments)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -77,7 +77,7 @@ def test_circuit_add_with_noise(circuit_2qubit, noise_1qubit):
         noise_1qubit,
         target_gates=Gate.X,
         target_qubits=None,
-        target_times=None,
+        target_moments=None,
     )
 
     expected = (
@@ -101,7 +101,7 @@ def test_add_noise_to_gates_1QubitNoise_1(circuit_2qubit, noise_1qubit):
         noise_1qubit,
         target_gates=[Gate.X],
         target_qubits=None,
-        target_times=None,
+        target_moments=None,
     )
 
     expected = (
@@ -125,7 +125,7 @@ def test_add_noise_to_gates_1QubitNoise_2(circuit_2qubit, noise_1qubit):
         noise_1qubit,
         target_gates=[Gate.X],
         target_qubits=QubitSet(0),
-        target_times=[1],
+        target_moments=[1],
     )
 
     expected = (
@@ -147,7 +147,7 @@ def test_add_noise_to_gates_2QubitNoise_1(circuit_3qubit, noise_2qubit):
         noise_2qubit,
         target_gates=[Gate.CNot],
         target_qubits=None,
-        target_times=None,
+        target_moments=None,
     )
 
     expected = (
@@ -172,7 +172,7 @@ def test_add_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit):
         noise_2qubit,
         target_gates=[Gate.CZ],
         target_qubits=QubitSet([1, 2]),
-        target_times=[1, 2],
+        target_moments=[1, 2],
     )
 
     expected = (
@@ -195,7 +195,7 @@ def test_add_noise_to_moments_1QubitNoise_1(circuit_2qubit, noise_1qubit):
         circuit_2qubit,
         noise_1qubit,
         target_qubits=None,
-        target_times=None,
+        target_moments=None,
     )
 
     expected = (
@@ -221,7 +221,7 @@ def test_add_noise_to_moments_1QubitNoise_2(circuit_2qubit, noise_1qubit):
         circuit_2qubit,
         noise_1qubit,
         target_qubits=QubitSet(1),
-        target_times=[0, 2],
+        target_moments=[0, 2],
     )
 
     expected = (
@@ -243,7 +243,7 @@ def test_add_noise_to_moments_1QubitNoise_not_dense(circuit_2qubit_not_dense, no
         circuit_2qubit_not_dense,
         noise_1qubit,
         target_qubits=None,
-        target_times=None,
+        target_moments=None,
     )
 
     expected_moments = Moments()
@@ -266,7 +266,7 @@ def test_add_noise_to_moments_2QubitNoise(circuit_3qubit, noise_2qubit):
         circuit_3qubit,
         noise_2qubit,
         target_qubits=QubitSet([2, 1]),
-        target_times=[4],
+        target_moments=[4],
     )
 
     expected = (
@@ -292,7 +292,7 @@ def test_add_noise_with_target_gates(circuit_2qubit, noise_1qubit):
         noise_1qubit,
         target_gates=Gate.X,
         target_qubits=None,
-        target_times=None,
+        target_moments=None,
     )
 
     circ2 = add_noise_to_gates(
@@ -300,7 +300,7 @@ def test_add_noise_with_target_gates(circuit_2qubit, noise_1qubit):
         noise_1qubit,
         target_gates=[Gate.X],
         target_qubits=None,
-        target_times=None,
+        target_moments=None,
     )
 
     assert circ1 == circ2
@@ -314,14 +314,14 @@ def test_add_noise_no_target_gates(circuit_2qubit, noise_1qubit):
         noise_1qubit,
         target_gates=None,
         target_qubits=0,
-        target_times=1,
+        target_moments=1,
     )
 
     circ2 = add_noise_to_moments(
         circ2,
         noise_1qubit,
         target_qubits=[0],
-        target_times=[1],
+        target_moments=[1],
     )
 
     assert circ1 == circ2
