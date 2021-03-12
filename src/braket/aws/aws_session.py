@@ -18,7 +18,7 @@ import backoff
 import boto3
 from botocore.exceptions import ClientError
 
-import braket._schemas as braket_schemas  # pragma: no cover
+import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
 
 
