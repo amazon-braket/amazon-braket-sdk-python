@@ -8,18 +8,14 @@ Learn more about quantum annealing with D-Wave.
     :maxdepth: 2
 
 **************************
-Anatomy of annealing with ocean
+`Anatomy of annealing with ocean <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_Anatomy.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_Anatomy.ipynb
 
 Learn more about the anatomy of quantum annealing with D-Wave on Amazon Braket. 
 
 **************************
-Running large problems with QBSolv
+` Running large problems with QBSolv <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Running_large_problems_using_QBSolv.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Running_large_problems_using_QBSolv.ipynb
 
 This tutorial demonstrates how to solve problems with sizes larger than a 
 D-Wave device can support, by using a hybrid solver called QBSolv. 
@@ -28,10 +24,8 @@ QPU and a classical Tabu solver, or by the classical solver alone. The results
 of the sub-problems then construct the solution to the problem.
 
 **************************
-Maximum Cut
+`Maximum Cut <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_MaximumCut.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_MaximumCut.ipynb
 
 This tutorial solves a small instance of the famous maximum cut (MaxCut) problem using 
 a D-Wave device on Amazon Braket. The MaxCut problem is one of the most famous NP-hard 
@@ -39,10 +33,8 @@ problems in combinatorial optimization. Applications can be found in clustering 
 for marketing purposes, or for portfolio optimization problems in finance.
 
 **************************
-Minimum Vertex
+`Minimum Vertex <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_MinimumVertexCoverProblem.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_MinimumVertexCoverProblem.ipynb
 
 This tutorial solves a small instance of the minimum vertex problem 
 using BraketSampler and the BraketDWaveSampler. BraketDWaveSampler uses D-Wave parameter names 
@@ -50,19 +42,15 @@ using BraketSampler and the BraketDWaveSampler. BraketDWaveSampler uses D-Wave p
 with the rest of the Amazon Braket experience.
 
 **************************
-Graph partitioning
+`Graph partitioning <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_GraphPartitioning.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_GraphPartitioning.ipynb
 
 This tutorial solves a small instance of a graph partitioning 
 problem using a D-Wave device on Amazon Braket. 
 
 **************************
-Factoring
+`Factoring <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_Factoring/Dwave_factoring.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_Factoring/Dwave_factoring.ipynb
 
 This tutorial shows how to solve a constraint satisfaction 
 problem (CSP) problem, with the example of factoring, using a D-Wave device on 
@@ -71,10 +59,8 @@ logic operations, and it is converted to a binary quadratic model that can be
 solved by a D-Wave device.
 
 **************************
-Structural Imbalance
+`Structural Imbalance <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_StructuralImbalance/Dwave_StructuralImbalance.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_StructuralImbalance/Dwave_StructuralImbalance.ipynb
 
 This tutorial solves a structural imbalance problem using a D-Wave device 
 on Amazon Braket. Social networks map relationships between people or organizations 
@@ -82,10 +68,8 @@ onto graphs. Given a social network as a graph, D-Wave devices can partition the
 into two colored sets, and show the frustrated edges.
 
 **************************
-Traveling Salesman Problem
+`Traveling Salesman Problem <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_TravelingSalesmanProblem/Dwave_TravelingSalesmanProblem.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Dwave_TravelingSalesmanProblem/Dwave_TravelingSalesmanProblem.ipynb
 
 This tutorial solves small instances of the famous traveling salesman problem 
 (TSP) using D-Wave devices on Amazon Braket. 

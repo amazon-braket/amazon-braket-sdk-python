@@ -8,19 +8,15 @@ Learn more about how to combine PennyLane with Amazon Braket.
     :maxdepth: 2
 
 **************************
-Combining PennyLane with Amazon Braket
+`Combining PennyLane with Amazon Braket <https://github.com/aws/amazon-braket-examples/blob/main/pennylane/0_Getting_started.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/pennylane/0_Getting_started.ipynb
 
 This tutorial shows you how to construct circuits and evaluate their gradients in 
 PennyLane with execution performed using Amazon Braket.
 
 **************************
-Computing gradients in parallel with PennyLane-Braket
+`Computing gradients in parallel with PennyLane-Braket <https://github.com/aws/amazon-braket-examples/blob/main/pennylane/1_Parallelized_optimization_of_quantum_circuits.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/pennylane/1_Parallelized_optimization_of_quantum_circuits.ipynb
 
 Learn how to speed up training of quantum circuits by using parallel execution on 
 Amazon Braket. Quantum circuit training involving gradients 
@@ -30,10 +26,8 @@ local simulator for both executions and gradient calculations. This illustrates 
 parallel capabilities can be combined between PennyLane and SV1.
 
 **************************
-Graph optimization with QAOA
+`Graph optimization with QAOA <https://github.com/aws/amazon-braket-examples/blob/main/pennylane/2_Graph_optimization_with_QAOA.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/pennylane/2_Graph_optimization_with_QAOA.ipynb
 
 In this tutorial, you learn how quantum circuit training can be applied to a problem 
 of practical relevance in graph optimization. It easy it is to train a QAOA circuit in 
@@ -43,10 +37,8 @@ the Amazon Braket SV1 simulator to speed up gradient calculations and hence trai
 using around 1-2 minutes per iteration.
 
 **************************
-Quantum chemistry with VQE
+`Quantum chemistry with VQE <https://github.com/aws/amazon-braket-examples/blob/main/pennylane/3_Quantum_chemistry_with_VQE.ipynb>`_
 **************************
-
-https://github.com/aws/amazon-braket-examples/blob/main/pennylane/3_Quantum_chemistry_with_VQE.ipynb
 
 In this tutorial, you will learn how PennyLane and Amazon Braket can be combined to solve an 
 important problem in quantum chemistry. The ground state energy of molecular hydrogen is calculated 
