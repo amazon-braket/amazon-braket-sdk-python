@@ -11,11 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import os.path
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
 import boto3
 from botocore.exceptions import ClientError
+
+import braket._schemas as braket_schemas  # pragma: no cover
+import braket._sdk as braket_sdk
 
 
 class AwsSession(object):
@@ -38,6 +42,23 @@ class AwsSession(object):
             self.braket_client = braket_client
         else:
             self.braket_client = self.boto_session.client("braket", config=self._config)
+        self._update_user_agent()
+
+    def _update_user_agent(self):
+        def _notebook_instance_version():
+            # TODO: Replace with lifecycle configuration version once we have a way to access those
+            nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
+            return "0" if os.path.exists(nbi_metadata_path) else "None"
+
+        additional_user_agent_fields = (
+            f"BraketSdk/{braket_sdk.__version__} "
+            f"BraketSchemas/{braket_schemas.__version__} "
+            f"NotebookInstance/{_notebook_instance_version()}"
+        )
+
+        self.braket_client._client_config.user_agent = (
+            f"{self.braket_client._client_config.user_agent} {additional_user_agent_fields}"
+        )
 
     #
     # Quantum Tasks
