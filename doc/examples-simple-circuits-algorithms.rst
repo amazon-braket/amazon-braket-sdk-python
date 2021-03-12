@@ -19,7 +19,7 @@ A hello-world tutorial that shows you how to build a simple circuit and run it o
 Running quantum circuits on simulators
 ***************
 
-https://github.com/aws/amazon-braket-examples/tree/main/getting_started/0_Getting_started.ipynb
+https://github.com/aws/amazon-braket-examples/tree/main/getting_started/1_Getting_started.ipynb
 
 This tutorial prepares a paradigmatic example for a multi-qubit entangled state, 
 the so-called GHZ state (named after the three physicists Greenberger, Horne, and Zeilinger). 
@@ -41,10 +41,10 @@ we run the circuit on the superconducting machine from Rigetti, and on the ion-t
 machine provided by IonQ. 
 
 ***************
-Deep Dive into the anatomy of quantum circuits
+`Deep Dive into the anatomy of quantum circuits <https://github.com/aws/amazon-braket-examples/blob/main/getting_started/3_Deep_dive_into_the_anatomy_of_quantum_circuits.ipynb>`_
 ***************
 
-https://github.com/aws/amazon-braket-examples/blob/main/getting_started/3_Deep_dive_into_the_anatomy_of_quantum_circuits.ipynb
+
 
 This tutorial discusses in detail the anatomy of quantum circuits in the Amazon 
 Braket SDK. You will learn how to build (parameterized) circuits and display them 
