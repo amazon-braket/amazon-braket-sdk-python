@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.10.post0 (2021-03-11)
+
+### Testing and Release Infrastructure
+
+ * Add Python 3.9
+
 ## v1.5.10 (2021-03-03)
 
 ### Bug Fixes and Other Changes
