@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.10.post1 (2021-03-16)
+
+### Documentation Changes
+
+ * Remove STS calls from examples
+
 ## v1.5.10.post0 (2021-03-11)
 
 ### Testing and Release Infrastructure
