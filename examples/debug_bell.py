@@ -14,8 +14,6 @@
 import logging
 import sys
 
-import boto3
-
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
@@ -23,10 +21,10 @@ logger = logging.getLogger("newLogger")  # create new logger
 logger.addHandler(logging.StreamHandler(stream=sys.stdout))  # configure to print to sys.stdout
 logger.setLevel(logging.DEBUG)  # print to sys.stdout all log messages with level DEBUG or above
 
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-s3_folder = (f"amazon-braket-{aws_account_id}", "folder-name")
+
+# Use the S3 bucket you created during onboarding
+s3_folder = ("amazon-braket-Your-Bucket-Name", "folder-name")
 
 bell = Circuit().h(0).cnot(0, 1)
 # pass in logger to device.run, enabling debugging logs to print to console
