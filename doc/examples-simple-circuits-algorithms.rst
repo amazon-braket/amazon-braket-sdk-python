@@ -25,7 +25,7 @@ protocols it is used as a resource for quantum error correction, quantum communi
 and quantum metrology.
 
 ***************
-`Running quantum circuits on QPU devices <https://github.com/aws/amazon-braket-examples/tree/main/getting_started/1_Running_quantum_circuits_on_simulators.ipynb >`_
+`Running quantum circuits on QPU devices <https://github.com/aws/amazon-braket-examples/tree/main/getting_started/1_Running_quantum_circuits_on_simulators.ipynb>`_
 ***************
 
 This tutorial prepares a maximally-entangled Bell state between two qubits, 
