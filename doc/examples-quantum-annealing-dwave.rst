@@ -14,7 +14,7 @@ Learn more about quantum annealing with D-Wave.
 Learn more about the anatomy of quantum annealing with D-Wave on Amazon Braket. 
 
 **************************
-` Running large problems with QBSolv <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Running_large_problems_using_QBSolv.ipynb>`_
+`Running large problems with QBSolv <https://github.com/aws/amazon-braket-examples/blob/main/quantum_annealing/Running_large_problems_using_QBSolv.ipynb>`_
 **************************
 
 This tutorial demonstrates how to solve problems with sizes larger than a 
