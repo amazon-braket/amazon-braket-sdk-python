@@ -65,6 +65,8 @@ def test_config(boto_session):
     [
         (True, None),
         (False, None),
+        (True, ""),
+        (False, ""),
         (True, "Boto3/1.17.18 Python/3.7.10"),
         (False, "Boto3/1.17.18 Python/3.7.10 exec-env/AWS_Lambda_python3.7"),
     ],

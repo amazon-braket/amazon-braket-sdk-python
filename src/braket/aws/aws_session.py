@@ -45,6 +45,13 @@ class AwsSession(object):
         self._update_user_agent()
 
     def _update_user_agent(self):
+        """
+        Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
+        braket-schemas and the notebook instance version. The header is a string of space delimited
+        values (For example: "Boto3/1.14.43 Python/3.7.9 Botocore/1.17.44"). See:
+        https://botocore.amazonaws.com/v1/documentation/api/latest/reference/config.html#botocore.config.Config
+        """
+
         def _notebook_instance_version():
             # TODO: Replace with lifecycle configuration version once we have a way to access those
             nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
