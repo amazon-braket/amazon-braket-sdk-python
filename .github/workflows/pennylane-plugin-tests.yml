@@ -33,4 +33,5 @@ jobs:
         pip install -e .[test]
     - name: Run unit tests
       run: |
+        cd ../amazon-braket-pennylane-plugin-python
         pytest
