@@ -1,4 +1,4 @@
-name: PennyLane plugin tests
+name: Dependent tests
 
 on:
   push:
@@ -14,6 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.7, 3.8, 3.9]
+        dependent: [amazon-braket-pennylane-plugin-python]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,10 +29,10 @@ jobs:
         pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python@main
         pip install -e .
         cd ..
-        git clone https://github.com/aws/amazon-braket-pennylane-plugin-python.git
-        cd amazon-braket-pennylane-plugin-python
+        git clone https://github.com/aws/${{ matrix.dependent }}.git
+        cd ${{ matrix.dependent }}
         pip install -e .[test]
     - name: Run unit tests
       run: |
-        cd ../amazon-braket-pennylane-plugin-python
+        cd ../${{ matrix.dependent }}
         pytest
