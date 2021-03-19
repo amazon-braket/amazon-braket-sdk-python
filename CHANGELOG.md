@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.10.post2 (2021-03-19)
+
+### Testing and Release Infrastructure
+
+ * Run unit tests for dependent packages
+
 ## v1.5.10.post1 (2021-03-16)
 
 ### Documentation Changes
