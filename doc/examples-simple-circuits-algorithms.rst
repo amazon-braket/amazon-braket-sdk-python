@@ -8,13 +8,13 @@ Learn more about working with advanced circuits and algoritms.
     :maxdepth: 2
   
 ***************
-`Getting started <https://github.com/aws/amazon-braket-examples/blob/main/getting_started/0_Getting_started.ipynb>`_
+`Getting started <https://github.com/aws/amazon-braket-examples/blob/main/examples/getting_started/0_Getting_started.ipynb>`_
 ***************
 
 A hello-world tutorial that shows you how to build a simple circuit and run it on a local simulator.
 
 ***************
-`Running quantum circuits on simulators <https://github.com/aws/amazon-braket-examples/tree/main/getting_started/1_Getting_started.ipynb>`_
+`Running quantum circuits on simulators <https://github.com/aws/amazon-braket-examples/tree/main/examples/getting_started/1_Running_quantum_circuits_on_simulators.ipynb>`_
 ***************
 
 This tutorial prepares a paradigmatic example for a multi-qubit entangled state, 
@@ -25,7 +25,7 @@ protocols it is used as a resource for quantum error correction, quantum communi
 and quantum metrology.
 
 ***************
-`Running quantum circuits on QPU devices <https://github.com/aws/amazon-braket-examples/tree/main/getting_started/1_Running_quantum_circuits_on_simulators.ipynb >`_
+`Running quantum circuits on QPU devices <https://github.com/aws/amazon-braket-examples/tree/main/examples/getting_started/2_Running_quantum_circuits_on_QPU_devices.ipynb>`_
 ***************
 
 This tutorial prepares a maximally-entangled Bell state between two qubits, 
@@ -35,7 +35,7 @@ we run the circuit on the superconducting machine from Rigetti, and on the ion-t
 machine provided by IonQ. 
 
 ***************
-`Deep Dive into the anatomy of quantum circuits <https://github.com/aws/amazon-braket-examples/blob/main/getting_started/3_Deep_dive_into_the_anatomy_of_quantum_circuits.ipynb>`_
+`Deep Dive into the anatomy of quantum circuits <https://github.com/aws/amazon-braket-examples/blob/main/examples/getting_started/3_Deep_dive_into_the_anatomy_of_quantum_circuits.ipynb>`_
 ***************
 
 This tutorial discusses in detail the anatomy of quantum circuits in the Amazon 
@@ -46,7 +46,7 @@ the circuit on a device of our choice (defining a quantum task) and how to track
 recover, or cancel a quantum task efficiently.
 
 ***************
-`Superdense coding <https://github.com/aws/amazon-braket-examples/tree/main/getting_started/4_Superdense_coding.ipynb>`_
+`Superdense coding <https://github.com/aws/amazon-braket-examples/tree/main/examples/getting_started/4_Superdense_coding.ipynb>`_
 ***************
 
 This tutorial constructs an implementation of the superdense coding protocol using  
