@@ -8,7 +8,7 @@ Learn more about working with advanced circuits and algoritms.
     :maxdepth: 2
   
 **************************
-`Grover's search algorithm <https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/Grover/Grover.ipynb>`_
+`Grover's search algorithm <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/Grover/Grover.ipynb>`_
 **************************
 
 This tutorial provides a step-by-step walkthrough of Grover's quantum algorithm. 
@@ -18,7 +18,7 @@ gates that are not part of the basic gate set provided by the SDK. A custom gate
 as a core quantum gate by registering it as a subroutine.
 
 *******************************
-`Quantum amplitude amplification <https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/QAA/QAA_tutorial.ipynb>`_
+`Quantum amplitude amplification <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QAA/QAA_tutorial.ipynb>`_
 *******************************
 
 This tutorial provides a detailed discussion and implementation of the Quantum Amplitude Amplification (QAA) 
@@ -30,7 +30,7 @@ quadratic speedup over several classical algorithms.
 
 
 *************************
-`Quantum fourier transform <https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/QFT/QFT.ipynb>`_
+`Quantum fourier transform <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QFT/QFT.ipynb>`_
 *************************
 
 This tutorial provides a detailed implementation of the Quantum Fourier Transform (QFT) and 
@@ -39,7 +39,7 @@ most famously Shor's algorithm for factoring and the quantum phase estimation (Q
 for estimating the eigenvalues of a unitary operator. 
 
 ************************
-`Quantum phase estimation <https://github.com/aws/amazon-braket-examples/blob/main/advanced_circuits_algorithms/QPE/QPE.ipynb>`_
+`Quantum phase estimation <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QPE/QPE.ipynb>`_
 ************************
 
 This tutorial provides a detailed implementation of the Quantum Phase Estimation (QPE) 
