@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.11 (2021-03-22)
+
+### Bug Fixes and Other Changes
+
+ * Fix broken repository links
+
 ## v1.5.10.post2 (2021-03-19)
 
 ### Testing and Release Infrastructure
