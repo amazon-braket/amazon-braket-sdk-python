@@ -1,14 +1,44 @@
+########################
 Amazon Braket Python SDK
-=======================================
+########################
 
-Amazon Braket Python SDK is an open source library for interacting with quantum devices on Amazon Braket.
+The Amazon Braket Python SDK is an open source library to design and build quantum circuits, 
+submit them to Amazon Braket devices as quantum tasks, and monitor their execution.
 
-This documentation provides information about the Amazon Braket Python SDK library. For information about how to configure your environment to use the amazon-braket-sdk, please see the README in the GitHub repo for this project at https://github.com/aws/amazon-braket-sdk-python.
+This documentation provides information about the Amazon Braket Python SDK library. The project
+homepage is in Github https://github.com/aws/amazon-braket-sdk-python. The project
+includes SDK source, installation instructions, and other information.
 
-Indices and tables
-__________________
+***************
+Getting Started
+***************
 
-* :doc:`_apidoc/modules`
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+    :maxdepth: 2
+
+    getting-started
+
+
+********
+Examples
+********
+
+Explore Amazon Braket examples.
+
+.. toctree::
+    :maxdepth: 3
+
+    examples.rst
+   
+
+***************
+Python SDK APIs
+***************
+
+The Amazon Braket Python SDK APIs:
+
+.. toctree::
+    :maxdepth: 2
+    
+    _apidoc/modules
+
