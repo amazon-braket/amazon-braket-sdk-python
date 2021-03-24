@@ -20,7 +20,7 @@ from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
-from braket.circuits.noise_helpers import add_noise_to_gates, add_noise_to_moments
+from braket.circuits.noise_helpers import apply_noise_to_gates, apply_noise_to_moments
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.qubit import QubitInput
@@ -127,6 +127,7 @@ class Circuit:
     @property
     def instructions(self) -> Iterable[Instruction]:
         """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
+
         return self._moments.values()
 
     @property
@@ -488,127 +489,291 @@ class Circuit:
 
         return self
 
-    def add_noise(
+    def apply_gate_noise(
         self,
         noise: Noise,
         target_gates: Optional[Union[Type[Gate], Iterable[Type[Gate]]]] = None,
         target_qubits: Optional[QubitSetInput] = None,
-        target_moments: Optional[Union[int, Iterable[int]]] = None,
     ) -> Circuit:
-        """Add `noise` to the circuit according to `target_gates`, `target_qubits` and
-        `target_moments`.
+        """Apply `noise` to the circuit according to `target_gates` and `target_qubits`.
 
         For any parameter that is None, that specification is ignored (e.g. if `target_gates`
-        and `target_qubits` are None then the noise is added to all qubits at `target_moments`).
-        If `target_gates`, `target_qubits`, and `target_moments` are all None, then `noise` is
-        added to every qubit at every moment.
+        is None then the noise is applied after every gate in `target_qubits`).
+        If `target_gates` and `target_qubits` are both None, then `noise` is
+        applied to every qubit after every gate.
 
         When `noise.qubit_count` == 1, ie. `noise` is single-qubit, `noise` is added to all
         qubits in `target_gates` (or to all qubits in `target_qubits` if `target_gates` is None).
 
-        When `noise.qubit_count` > 1 and `target_gates` is not None, `noise.qubit_count`
-        must be the same as `qubit_count` of gates specified by `target_gates`.
+        When `noise.qubit_count` > 1 and `target_gates` is not None, the number of qubits of
+        any gate in `target_gates` must be the same as `noise.qubit_count`.
 
-        When `noise.qubit_count` > 1 and `target_gates` is None, `noise.qubit_count` must
-        be the same as the length of  `target_qubits`.
+        When `noise.qubit_count` > 1 and `target_gates` is None, noise is only applied to
+        gates with the same qubit_count in target_qubits.
 
         Args:
-            noise (Noise): Noise to be added to the circuit. When `noise.qubit_count` > 1,
-                `noise.qubit_count` must be the same as `qubit_count` of gates specified by
-                `target_gates`.
+            noise (Noise): Noise to be applied to the circuit.
             target_gates (Union[Type[Gate], Iterable[Type[Gate]], optional]): Gate class or
-                List of Gate classes which `noise` is added to. Default=None.
+                List of Gate classes which `noise` is applied to. Default=None.
             target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
                 Default=None.
-            target_moments (Union[int, Iterable[int], optional]): Index of indices of time which
-                `noise` is added to. Default=None.
 
         Returns:
             Circuit: self
 
         Raises:
-            TypeError: If `noise` is not Noise type, `target_gates` is not a Gate class,
-                Iterable[Gate] or None, `target_moments` is not int or Iterable[int] or None.
+            TypeError:
+                If `noise` is not Noise type.
+                If `target_gates` is not a Gate type, Iterable[Gate] or None.
+                If `target_qubits` has non-integers or negative integers.
+            IndexError:
+                If applying noise to an empty circuit.
+                If `target_qubits` is out of range of circuit.qubits.
             ValueError:
-                If `noise.qubit_count` is not equal to `len(gate.target)` for gates in
-                `target_gates`. If `noise.qubit_count` is not equal to `len(target_qubits)`
-                when `target_gates` is None.
+                If `noise` is multi-qubit noise and `target_gates` contain gates
+                with the number of qubits not the same as `noise.qubit_count`.
+            Warning:
+                If `noise` is multi-qubit noise while there is no gate with the same
+                number of qubits in `target_qubits` or in the whole circuit when
+                `target_qubits` is not given.
+                If no `target_gates` exist in `target_qubits` or in the whole circuit
+                when `target_qubits` is not given.
 
         Examples:
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ)
             T  : |0|1|2|
+
             q0 : -X-Z-C-
                       |
             q1 : -Y-X-X-
+
             T  : |0|1|2|
+
             >>> noise = Noise.Depolarizing(probability=0.1)
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.add_noise(noise, target_gates = 'X'))
-            T  : |    0    |    1    |2|
-            q0 : -X-ND(0.1)-Z---------C-
-                                      |
-            q1 : -Y---------X-ND(0.1)-X-
-            T  : |    0    |    1    |2|
+            >>> print(circ.apply_gate_noise(noise, target_gates = Gate.X))
+            T  : |     0     |     1     |2|
+
+            q0 : -X-DEPO(0.1)-Z-----------C-
+                                          |
+            q1 : -Y-----------X-DEPO(0.1)-X-
+
+            T  : |     0     |     1     |2|
+
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.add_noise(noise, target_qubits = 1))
-            T  : |    0    |    1    |    2    |
-            q0 : -X---------Z---------C---------
-                                      |
-            q1 : -Y-ND(0.1)-X-ND(0.1)-X-ND(0.1)-
-            T  : |    0    |    1    |    2    |
+            >>> print(circ.apply_gate_noise(noise, target_qubits = 1))
+            T  : |     0     |     1     |     2     |
+
+            q0 : -X-----------Z-----------C-----------
+                                          |
+            q1 : -Y-DEPO(0.1)-X-DEPO(0.1)-X-DEPO(0.1)-
+
+            T  : |     0     |     1     |     2     |
+
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.add_noise(noise, target_moments=[0,2]))
-            T  : |    0    |1|    2    |
-            q0 : -X-ND(0.1)-Z-C-ND(0.1)-
-                              |
-            q1 : -Y-ND(0.1)-X-X-ND(0.1)-
-            T  : |    0    |1|    2    |
-            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
-            >>> print(circ.add_noise(noise,
-            ...                      target_gates = ['X','Y'],
-            ...                      target_qubits = [0,1],
-            ...                      target_moments=1)
+            >>> print(circ.apply_gate_noise(noise,
+            ...                             target_gates = [Gate.X,Gate.Y],
+            ...                             target_qubits = [0,1])
             ... )
-            T  : |0|    1    |2|
-            q0 : -X-Z---------C-
-                              |
-            q1 : -Y-X-ND(0.1)-X-
-            T  : |0|    1    |2|
+            T  : |     0     |     1     |2|
+
+            q0 : -X-DEPO(0.1)-Z-----------C-
+                                          |
+            q1 : -Y-DEPO(0.1)-X-DEPO(0.1)-X-
+
+            T  : |     0     |     1     |2|
 
         """
+        if len(self.qubits) == 0:
+            raise IndexError("Gate noise cannot be applied to an empty circuit.")
 
-        if isinstance(target_gates, type) and issubclass(target_gates, Gate):
-            target_gates = [target_gates]
-        if isinstance(target_moments, int):
-            target_moments = [target_moments]
-        if target_qubits is not None:
-            target_qubits = QubitSet(target_qubits)
-
-        if not isinstance(noise, Noise):
-            raise TypeError("noise must be an instance of the Noise class")
         if target_gates is not None:
+            if isinstance(target_gates, type) and issubclass(target_gates, Gate):
+                target_gates = [target_gates]
+                # remove duplicate items
+                target_gates = list(dict.fromkeys(target_gates))
             if not (
                 isinstance(target_gates, Iterable)
                 and all(isinstance(g, type) and issubclass(g, Gate) for g in target_gates)
             ):
-                raise TypeError("all elements in target_gates must be a Gate class")
-        if target_moments is not None:
-            if not (
-                isinstance(target_moments, Iterable) and all(isinstance(t, int) for t in target_moments)
-            ):
-                raise TypeError("all elements in target_moments must be int")
+                raise TypeError(
+                    "All elements in target_gates must be an instance of the Gate class"
+                )
 
-        if target_gates is None:
-            return add_noise_to_moments(self, noise, target_qubits, target_moments)
+        if target_qubits is None:
+            target_qubits = self.qubits
         else:
-            return add_noise_to_gates(self, noise, target_gates, target_qubits, target_moments)
+            if not isinstance(target_qubits, list):
+                target_qubits = [target_qubits]
+            if not all(isinstance(q, int) for q in target_qubits):
+                raise TypeError("target_qubits must be integer(s)")
+            if not all(q >= 0 for q in target_qubits):
+                raise ValueError("target_qubits must contain only non-negative integers.")
+
+            target_qubits = QubitSet(target_qubits)
+            if not all(qubit in self.qubits for qubit in target_qubits):
+                raise IndexError("target_qubits must be within the range of the current circuit.")
+
+        if not isinstance(noise, Noise):
+            raise TypeError("Noise must be an instance of the Noise class")
+
+        if noise.qubit_count > 1:
+            if target_gates is not None:
+                for g in target_gates:
+                    if g().qubit_count != noise.qubit_count:
+                        raise ValueError(
+                            "The target_targets must be gates that have the same number of \
+    qubits as defined by the multi-qubit noise channel."
+                        )
+
+        return apply_noise_to_gates(self, noise, target_gates, target_qubits)
+
+    def apply_initialization_noise(
+        self,
+        noise: Noise,
+        target_qubits: Optional[QubitSetInput] = None,
+    ) -> Circuit:
+        """Apply `noise` at the beginning of the circuit for every qubit (default) or target_qubits`.
+
+        Only when `target_qubits` is given can the noise be applied to an empty circuit.
+
+        When `noise.qubit_count` > 1, the number of qubits in target_qubits must be equal
+        to `noise.qubit_count`.
+
+        Args:
+            noise (Noise): Noise to be applied to the circuit.
+            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
+                Default=None.
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            TypeError:
+                If `noise` is not Noise type.
+                If `target_qubits` has non-integers or negative integers.
+            IndexError:
+                If applying noise to an empty circuit when `target_qubits` is not given.
+            ValueError:
+                If `noise.qubit_count` > 1 and the number of qubits in target_qubits is
+                not the same as `noise.qubit_count`.
+
+        Examples:
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ)
+
+            >>> noise = Noise.Depolarizing(probability=0.1)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.apply_initialization_noise(noise))
+
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.apply_initialization_noise(noise, target_qubits = 1))
+
+            >>> circ = Circuit()
+            >>> print(circ.apply_initialization_noise(noise, target_qubits = [0, 1]))
+
+        """
+        if (len(self.qubits) == 0) and (target_qubits is None):
+            raise IndexError(
+                "target_qubits must be provided in order to apply the initialization noise \
+to an empty circuit."
+            )
+
+        if target_qubits is None:
+            target_qubits = self.qubits
+        else:
+            if not all(isinstance(q, int) for q in target_qubits):
+                raise TypeError("target_qubits must be integer(s)")
+            if not all(q >= 0 for q in target_qubits):
+                raise ValueError("target_qubits must contain only non-negative integers.")
+
+        if not isinstance(noise, Noise):
+            raise TypeError("Noise must be an instance of the Noise class")
+
+        if noise.qubit_count > 1 and noise.qubit_count != len(target_qubits):
+            raise ValueError(
+                "target_qubits needs to be provided for this multi-qubit noise channel, and \
+the number of qubits in target_qubits must be the same as defined by the multi-qubit noise channel."
+            )
+        return apply_noise_to_moments(self, noise, target_qubits, "initialization")
+
+    def apply_readout_noise(
+        self,
+        noise: Noise,
+        target_qubits: Optional[QubitSetInput] = None,
+    ) -> Circuit:
+        """Apply `noise` right before measurement in every qubit (default) or target_qubits`.
+
+        Only when `target_qubits` is given can the noise be applied to an empty circuit.
+
+        When `noise.qubit_count` > 1, the number of qubits in target_qubits must be equal
+        to `noise.qubit_count`.
+
+        Args:
+            noise (Noise): Noise to be applied to the circuit.
+            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
+                Default=None.
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            TypeError:
+                If `noise` is not Noise type.
+                If `target_qubits` has non-integers.
+            IndexError:
+                If applying noise to an empty circuit.
+            ValueError:
+                If `target_qubits` has negative integers.
+                If `noise.qubit_count` > 1 and the number of qubits in target_qubits is
+                not the same as `noise.qubit_count`.
+
+        Examples:
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ)
+
+            >>> noise = Noise.Depolarizing(probability=0.1)
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.apply_initialization_noise(noise))
+
+            >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
+            >>> print(circ.apply_initialization_noise(noise, target_qubits = 1))
+
+            >>> circ = Circuit()
+            >>> print(circ.apply_initialization_noise(noise, target_qubits = [0, 1]))
+
+        """
+        if (len(self.qubits) == 0) and (target_qubits is None):
+            raise IndexError(
+                "target_qubits must be provided in order to apply the readout noise \
+to an empty circuit."
+            )
+
+        if target_qubits is None:
+            target_qubits = self.qubits
+        else:
+            if not all(isinstance(q, int) for q in target_qubits):
+                raise TypeError("target_qubits must be integer(s)")
+            if not all(q >= 0 for q in target_qubits):
+                raise ValueError("target_qubits must contain only non-negative integers.")
+
+        if not isinstance(noise, Noise):
+            raise TypeError("Noise must be an instance of the Noise class")
+
+        if noise.qubit_count > 1 and noise.qubit_count != len(target_qubits):
+            raise ValueError(
+                "target_qubits needs to be provided for this multi-qubit noise channel, and \
+the number of qubits in target_qubits must be the same as defined by the multi-qubit noise channel."
+            )
+
+        return apply_noise_to_moments(self, noise, target_qubits, "readout")
 
     def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
         """
         Generic add method for adding item(s) to self. Any arguments that
         `add_circuit()` and / or `add_instruction()` and / or `add_result_type`
-        and / or `add_noise` supports are supported by this method. If adding a
+        supports are supported by this method. If adding a
         subroutine, check with that subroutines documentation to determine what
         input it allows.
 
@@ -629,8 +794,6 @@ class Circuit:
             `add_instruction()`
 
             `add_result_type()`
-
-            `add_noise()`
 
         Examples:
             >>> circ = Circuit().add([Instruction(Gate.H(), 4), Instruction(Gate.CNot(), [4, 5])])
@@ -653,9 +816,7 @@ class Circuit:
                 yield addable
 
         for item in _flatten(addable):
-            if isinstance(item, Noise):
-                self.add_noise(item, *args, **kwargs)
-            elif isinstance(item, Instruction):
+            if isinstance(item, Instruction):
                 self.add_instruction(item, *args, **kwargs)
             elif isinstance(item, ResultType):
                 self.add_result_type(item, *args, **kwargs)

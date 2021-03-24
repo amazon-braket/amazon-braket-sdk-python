@@ -134,8 +134,14 @@ class GeneralPauliNoise(Noise):
     parameterized by three probabilities.
     """
 
-    def __init__(self, probX: float, probY: float, probZ: float, qubit_count: int,
-        ascii_symbols: Sequence[str]):
+    def __init__(
+        self,
+        probX: float,
+        probY: float,
+        probZ: float,
+        qubit_count: int,
+        ascii_symbols: Sequence[str],
+    ):
         """
         Args:
             probX [float], probY [float], probZ [float]: The coefficients of the Kraus operators
@@ -236,9 +242,7 @@ class DampingNoise(Noise):
         return self._gamma
 
     def __repr__(self):
-        return (
-            f"{self.name}('gamma': {self.gamma}, 'qubit_count': {self.qubit_count})"
-        )
+        return f"{self.name}('gamma': {self.gamma}, 'qubit_count': {self.qubit_count})"
 
 
 class GeneralizedAmplitudeDampingNoise(DampingNoise):
@@ -247,8 +251,9 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
     noise channel on N qubits parameterized by gamma and probability.
     """
 
-    def __init__(self, probability: float, gamma: float, qubit_count: int,
-        ascii_symbols: Sequence[str]):
+    def __init__(
+        self, probability: float, gamma: float, qubit_count: int, ascii_symbols: Sequence[str]
+    ):
         """
         Args:
             probability (float): Probability of the system being excited by the environment.
@@ -280,7 +285,5 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         return self._probability
 
     def __repr__(self):
-        return (
-            f"{self.name}('probability': {self.probability}, 'gamma': {self.gamma}, \
+        return f"{self.name}('probability': {self.probability}, 'gamma': {self.gamma}, \
 'qubit_count': {self.qubit_count})"
-        )

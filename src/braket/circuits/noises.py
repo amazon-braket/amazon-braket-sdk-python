@@ -412,7 +412,8 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise):
     @staticmethod
     @circuit.subroutine(register=True)
     def two_qubit_depolarizing(
-    target1: QubitInput, target2: QubitInput, probability: float) -> Iterable[Instruction]:
+        target1: QubitInput, target2: QubitInput, probability: float
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -426,8 +427,9 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise):
             >>> circ = Circuit().two_qubit_depolarizing(0, 1, probability=0.1)
         """
         return [
-            Instruction(Noise.TwoQubitDepolarizing(probability=probability),
-            target=[target1, target2])
+            Instruction(
+                Noise.TwoQubitDepolarizing(probability=probability), target=[target1, target2]
+            )
         ]
 
 
@@ -489,7 +491,8 @@ class TwoQubitDephasing(SingleProbabilisticNoise):
     @staticmethod
     @circuit.subroutine(register=True)
     def two_qubit_dephasing(
-    target1: QubitInput, target2: QubitInput, probability: float) -> Iterable[Instruction]:
+        target1: QubitInput, target2: QubitInput, probability: float
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -503,8 +506,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise):
             >>> circ = Circuit().two_qubit_dephasing(0, 1, probability=0.1)
         """
         return [
-            Instruction(Noise.TwoQubitDephasing(probability=probability),
-            target=[target1, target2])
+            Instruction(Noise.TwoQubitDephasing(probability=probability), target=[target1, target2])
         ]
 
 
@@ -626,9 +628,12 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         )
 
     def to_matrix(self) -> Iterable[np.ndarray]:
-        K0 = np.sqrt(self.probability) * np.array([[1.0, 0.0],
-            [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
-        K1 = np.sqrt(self.probability)*np.array([[0.0,np.sqrt(self.gamma)],[0.0, 0.0]],dtype=complex)
+        K0 = np.sqrt(self.probability) * np.array(
+            [[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex
+        )
+        K1 = np.sqrt(self.probability) * np.array(
+            [[0.0, np.sqrt(self.gamma)], [0.0, 0.0]], dtype=complex
+        )
         K2 = np.sqrt(1 - self.probability) * np.array([[np.sqrt(1 - self.gamma), 0.0], [0.0, 1.0]])
         K3 = np.sqrt(1 - self.probability) * np.array([[0.0, 0.0], [np.sqrt(self.gamma), 0.0]])
         return [K0, K1, K2, K3]
@@ -652,8 +657,10 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             >>> circ = Circuit().generalized_amplitude_damping(0, probability = 0.9, gamma=0.1)
         """
         return [
-            Instruction(Noise.GeneralizedAmplitudeDamping(probability=probability, gamma=gamma),
-                        target=qubit)
+            Instruction(
+                Noise.GeneralizedAmplitudeDamping(probability=probability, gamma=gamma),
+                target=qubit,
+            )
             for qubit in QubitSet(target)
         ]
 
@@ -718,8 +725,7 @@ class PhaseDamping(DampingNoise):
             >>> circ = Circuit().phase_damping(0, gamma=0.1)
         """
         return [
-            Instruction(Noise.PhaseDamping(gamma=gamma), target=qubit)
-            for qubit in QubitSet(target)
+            Instruction(Noise.PhaseDamping(gamma=gamma), target=qubit) for qubit in QubitSet(target)
         ]
 
 
