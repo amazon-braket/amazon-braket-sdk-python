@@ -272,7 +272,7 @@ class AwsQuantumTask(QuantumTask):
         """
         if self._result or self._status(True) in self.NO_RESULT_TERMINAL_STATES:
             return self._result
-        if self._status(True) in self.RESULTS_READY_STATES:
+        if self._metadata and self._status(True) in self.RESULTS_READY_STATES:
             return self._download_result()
         try:
             async_result = self.async_result()
