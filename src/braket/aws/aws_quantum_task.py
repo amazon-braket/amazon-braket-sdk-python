@@ -251,7 +251,7 @@ class AwsQuantumTask(QuantumTask):
     def _update_status_if_nonterminal(self):
         # If metadata has not been populated, the first call to _status will fetch it,
         # so the second _status call will no longer need to
-        metadata_absent = self._metadata is None
+        metadata_absent = not self._metadata
         cached = self._status(True)
         return cached if cached in self.TERMINAL_STATES else self._status(metadata_absent)
 
@@ -270,7 +270,9 @@ class AwsQuantumTask(QuantumTask):
             if the task completed successfully; returns `None` if the task did not complete
             successfully or the future timed out.
         """
-        if self._result or self._status(True) in self.NO_RESULT_TERMINAL_STATES:
+        if self._result or (
+            self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
+        ):
             return self._result
         if self._metadata and self._status(True) in self.RESULTS_READY_STATES:
             return self._download_result()
