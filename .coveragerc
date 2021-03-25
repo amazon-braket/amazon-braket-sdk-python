@@ -17,6 +17,7 @@ source =
 
 [report]
 show_missing = True
+ignore_errors = True
 
 [html]
 directory = build/coverage
