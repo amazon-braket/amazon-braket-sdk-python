@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.12 (2021-03-25)
+
+### Bug Fixes and Other Changes
+
+ * Update user_agent for AwsSession
+
 ## v1.5.11 (2021-03-22)
 
 ### Bug Fixes and Other Changes
