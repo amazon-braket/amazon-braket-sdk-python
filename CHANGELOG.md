@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.5.11 (2021-03-22)
+
+### Bug Fixes and Other Changes
+
+ * Fix broken repository links
+
+## v1.5.10.post2 (2021-03-19)
+
+### Testing and Release Infrastructure
+
+ * Run unit tests for dependent packages
+
+## v1.5.10.post1 (2021-03-16)
+
+### Documentation Changes
+
+ * Remove STS calls from examples
+
 ## v1.5.10.post0 (2021-03-11)
 
 ### Testing and Release Infrastructure
