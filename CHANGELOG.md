@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.13 (2021-03-26)
+
+### Bug Fixes and Other Changes
+
+ * check for task completion before entering async event loop
+ * remove unneeded get_quantum_task calls
+
 ## v1.5.12 (2021-03-25)
 
 ### Bug Fixes and Other Changes
