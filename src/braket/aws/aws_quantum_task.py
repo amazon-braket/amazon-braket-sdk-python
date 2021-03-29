@@ -456,7 +456,7 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    device_params = _create_device_params(device_parameters, device_arn)
+    device_params = _create_annealing_device_params(device_parameters, device_arn)
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
@@ -468,7 +468,7 @@ def _(
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
 
-def _create_device_params(device_params, device_arn):
+def _create_annealing_device_params(device_params, device_arn):
     if type(device_params) is not dict:
         device_params = device_params.dict()
 
@@ -479,15 +479,12 @@ def _create_device_params(device_params, device_arn):
     if "braketSchemaHeader" in device_level_parameters:
         del device_level_parameters["braketSchemaHeader"]
 
-    if device_arn == "arn:aws:braket:::device/qpu/d-wave/Advantage_system1":
+    if "Advantage" in device_arn:
         device_level_parameters = DwaveAdvantageDeviceLevelParameters.parse_obj(
             device_level_parameters
         )
         return DwaveAdvantageDeviceParameters(deviceLevelParameters=device_level_parameters)
-    elif (
-        device_arn == "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
-        or device_arn == "arn:aws:braket:::device/qpu/d-wave/berdy_test"
-    ):
+    elif "2000Q" in device_arn:
         device_level_parameters = Dwave2000QDeviceLevelParameters.parse_obj(device_level_parameters)
         return Dwave2000QDeviceParameters(deviceLevelParameters=device_level_parameters)
     else:

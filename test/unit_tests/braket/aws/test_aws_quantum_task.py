@@ -22,7 +22,7 @@ from common_test_utils import MockS3
 
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
-from braket.aws.aws_quantum_task import _create_device_params
+from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import GateModelParameters
@@ -467,7 +467,7 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
         problem,
         S3_TARGET,
         1000,
-        _create_device_params(device_parameters, device_arn=arn),
+        _create_annealing_device_params(device_parameters, device_arn=arn),
     )
 
 
