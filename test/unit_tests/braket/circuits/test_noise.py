@@ -12,11 +12,7 @@ from braket.circuits.noise import (
 invalid_data_qubit_count = [(0, ["foo"])]
 invalid_data_ascii_symbols = [(1, None)]
 invalid_data_ascii_symbols_length = [(2, ["foo", "boo", "braket"])]
-invalid_data_prob_single = ["a", float("nan"), float("inf"), float("-inf"), 1 + 1j, 1.5, -2.6]
-invalid_data_prob_double = [(invalid_data_prob_single, invalid_data_prob_single)]
-invalid_data_prob_triple = [
-    (invalid_data_prob_single, invalid_data_prob_single, invalid_data_prob_single)
-]
+invalid_data_prob = ["a", float("nan"), float("inf"), float("-inf"), 1 + 1j, 1.5, -2.6]
 
 
 @pytest.fixture
@@ -65,7 +61,7 @@ def test_invalid_data_ascii_symbols_length(qubit_count, ascii_symbols):
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("probability", invalid_data_prob_single)
+@pytest.mark.parametrize("probability", invalid_data_prob)
 def test_invalid_data_single_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
@@ -73,15 +69,37 @@ def test_invalid_data_single_prob(probability):
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("probX, probY, probZ", invalid_data_prob_triple)
-def test_invalid_data_general_pauli_prob(probX, probY, probZ):
+@pytest.mark.parametrize("probX", invalid_data_prob)
+def test_invalid_data_general_pauli_probX(probX):
     qubit_count = 1
     ascii_symbols = ["foo"]
+    probY = 0.1
+    probZ = 0.1
     GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("gamma", invalid_data_prob_single)
+@pytest.mark.parametrize("probY", invalid_data_prob)
+def test_invalid_data_general_pauli_probY(probY):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    probX = 0.1
+    probZ = 0.1
+    GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("probZ", invalid_data_prob)
+def test_invalid_data_general_pauli_probZ(probZ):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    probX = 0.1
+    probY = 0.1
+    GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("gamma", invalid_data_prob)
 def test_invalid_data_damping_prob(gamma):
     qubit_count = 1
     ascii_symbols = ["foo"]
@@ -89,10 +107,20 @@ def test_invalid_data_damping_prob(gamma):
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("probability, gamma", invalid_data_prob_double)
-def test_invalid_data_generalized_amplitude_damping_prob(probability, gamma):
+@pytest.mark.parametrize("probability", invalid_data_prob)
+def test_invalid_data_generalized_amplitude_damping_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
+    gamma = 0.1
+    GeneralizedAmplitudeDampingNoise(probability, gamma, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("gamma", invalid_data_prob)
+def test_invalid_data_generalized_amplitude_damping_gamma(gamma):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    probability = 0.1
     GeneralizedAmplitudeDampingNoise(probability, gamma, qubit_count, ascii_symbols)
 
 
