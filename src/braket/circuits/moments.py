@@ -221,8 +221,34 @@ class Moments(Mapping[MomentsKey, Instruction]):
         key_readout_noise = []
         moment_copy = OrderedDict()
         sorted_moment = OrderedDict()
-        noise_index = 0
+
+        self._sort_moments_helper(
+            moment_copy, key_noise, key_readout_noise, key_initialization_noise
+        )
+
+        for key in key_initialization_noise:
+            sorted_moment[key] = moment_copy[key]
+        for key in key_noise:
+            sorted_moment[key] = moment_copy[key]
+        # find the max time in the circuit and make it the time for readout noise
+        max_time = self._depth - 1
+        for key in key_readout_noise:
+            sorted_moment[
+                MomentsKey(max_time, key.qubits, "readout_noise", key.noise_index)
+            ] = moment_copy[key]
+
+        self._moments = sorted_moment
+
+    def _sort_moments_helper(
+        self,
+        moment_copy: OrderedDict,
+        key_noise: List,
+        key_readout_noise: List,
+        key_initialization_noise: List,
+    ) -> None:
+        "helper function to seperate the instructions based on its type"
         key_temp = []
+        noise_index = 0
         for key, instruction in self._moments.items():
             moment_copy[key] = instruction
 
@@ -245,25 +271,12 @@ class Moments(Mapping[MomentsKey, Instruction]):
                     for time, qubits, noise in key_temp:
                         key_noise.append(MomentsKey(time, qubits, "gate_noise", noise))
 
+            elif key.moment_type == "noise":
+                key_noise.append(key)
             elif key.moment_type == "readout_noise":
                 key_readout_noise.append(key)
             elif key.moment_type == "initialization_noise":
                 key_initialization_noise.append(key)
-            elif key.moment_type == "noise":
-                key_noise.append(key)
-
-        for key in key_initialization_noise:
-            sorted_moment[key] = moment_copy[key]
-        for key in key_noise:
-            sorted_moment[key] = moment_copy[key]
-        # find the max time in the circuit and make it the time for readout noise
-        max_time = self._depth - 1
-        for key in key_readout_noise:
-            sorted_moment[
-                MomentsKey(max_time, key.qubits, "readout_noise", key.noise_index)
-            ] = moment_copy[key]
-
-        self._moments = sorted_moment
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)

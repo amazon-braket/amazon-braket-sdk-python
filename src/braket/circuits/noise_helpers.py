@@ -13,6 +13,28 @@ if TYPE_CHECKING:  # pragma: no cover
     from braket.circuits.circuit import Circuit
 
 
+def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
+
+    if target_gates is not None:
+        if isinstance(target_gates, type) and issubclass(target_gates, Gate):
+            target_gates = [target_gates]
+            # remove duplicate items
+            target_gates = list(dict.fromkeys(target_gates))
+        if not (
+            isinstance(target_gates, Iterable)
+            and all(isinstance(g, type) and issubclass(g, Gate) for g in target_gates)
+        ):
+            raise TypeError("All elements in target_gates must be an instance of the Gate class")
+
+    if noise.qubit_count > 1 and target_gates is not None:
+        for g in target_gates:
+            if g().qubit_count != noise.qubit_count:
+                raise ValueError(
+                    "The target_targets must be gates that have the same number of \
+qubits as defined by the multi-qubit noise channel."
+                )
+
+
 def apply_noise_to_moments(
     circuit: Circuit, noise: Noise, target_qubits: QubitSet, position: str
 ) -> Circuit:
