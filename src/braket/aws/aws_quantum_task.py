@@ -26,15 +26,7 @@ from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.device_schema import GateModelParameters
-from braket.device_schema.dwave import (
-    Dwave2000QDeviceParameters,
-    DwaveAdvantageDeviceParameters,
-    DwaveDeviceParameters,
-)
-from braket.device_schema.dwave.dwave_device_level_parameters_v1 import (
-    Dwave2000QDeviceLevelParameters,
-    DwaveAdvantageDeviceLevelParameters,
-)
+from braket.device_schema.dwave import DwaveDeviceParameters
 from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
@@ -443,54 +435,20 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
     device_arn: str,
-    device_parameters: Union[
-        # TODO: add tests for initializing w device-specific parameters
-        dict,
-        DwaveDeviceParameters,
-        DwaveAdvantageDeviceParameters,
-        Dwave2000QDeviceParameters,
-    ],
+    device_parameters: Union[dict, DwaveDeviceParameters],
     disable_qubit_rewiring,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    device_params = _create_device_params(device_parameters, device_arn)
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
-            "deviceParameters": device_params.json(),
+            "deviceParameters": DwaveDeviceParameters.parse_obj(device_parameters).json(),
         }
     )
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
-
-
-def _create_device_params(device_params, device_arn):
-    if type(device_params) is not dict:
-        device_params = device_params.dict()
-
-    device_level_parameters = device_params.get("deviceLevelParameters", None) or device_params.get(
-        "providerLevelParameters", None
-    )
-
-    if "braketSchemaHeader" in device_level_parameters:
-        del device_level_parameters["braketSchemaHeader"]
-
-    if device_arn == "arn:aws:braket:::device/qpu/d-wave/Advantage_system1":
-        device_level_parameters = DwaveAdvantageDeviceLevelParameters.parse_obj(
-            device_level_parameters
-        )
-        return DwaveAdvantageDeviceParameters(deviceLevelParameters=device_level_parameters)
-    elif device_arn == "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6":
-        device_level_parameters = Dwave2000QDeviceLevelParameters.parse_obj(device_level_parameters)
-        return Dwave2000QDeviceParameters(deviceLevelParameters=device_level_parameters)
-    else:
-        raise Exception(
-            f"Amazon Braket could not find a device with ARN: {device_arn}. "
-            "To continue, make sure that the value of the device_arn parameter "
-            "corresponds to a valid QPU."
-        )
 
 
 def _create_common_params(
