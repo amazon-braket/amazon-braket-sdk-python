@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
-from queue import Queue
 from typing import List, Set, Union
 
 from braket.annealing import Problem
@@ -122,16 +121,13 @@ class AwsQuantumTaskBatch:
         *args,
         **kwargs,
     ):
-        # This list tracks the number of remaining and currently executing tasks
-        # It also serves as a lock, because appending and popping are atomic
+        max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in task_specifications]
-        executing = Queue(maxsize=max_parallel)
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
             task_futures = [
                 executor.submit(
                     AwsQuantumTaskBatch._create_task,
                     remaining,
-                    executing,
                     aws_session,
                     device_arn,
                     task,
@@ -150,7 +146,6 @@ class AwsQuantumTaskBatch:
     @staticmethod
     def _create_task(
         remaining,
-        executing,
         aws_session,
         device_arn,
         task_specification,
@@ -160,9 +155,6 @@ class AwsQuantumTaskBatch:
         *args,
         **kwargs,
     ):
-        executing.put(0)
-        remaining.pop()
-
         task = AwsQuantumTask.create(
             aws_session,
             device_arn,
@@ -174,11 +166,12 @@ class AwsQuantumTaskBatch:
             **kwargs,
         )
 
+        remaining.pop()
+
         # If the task hits a terminal state before all tasks have been created,
         # it can be returned immediately
         while remaining:
             if task.state() in AwsQuantumTask.TERMINAL_STATES:
-                executing.get()
                 break
             time.sleep(poll_interval_seconds)
         return task
