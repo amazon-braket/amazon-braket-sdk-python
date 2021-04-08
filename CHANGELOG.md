@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.5.14 (2021-04-07)
+
+### Bug Fixes and Other Changes
+
+ * roll back dwave change
+ * Dwave roll back
+ * use device data to create device level parameter data when creating a quantum annealing task
+
+## v1.5.13 (2021-03-26)
+
+### Bug Fixes and Other Changes
+
+ * check for task completion before entering async event loop
+ * remove unneeded get_quantum_task calls
+
+## v1.5.12 (2021-03-25)
+
+### Bug Fixes and Other Changes
+
+ * Update user_agent for AwsSession
+
 ## v1.5.11 (2021-03-22)
 
 ### Bug Fixes and Other Changes

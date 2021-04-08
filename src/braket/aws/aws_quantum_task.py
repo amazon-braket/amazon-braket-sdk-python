@@ -251,7 +251,7 @@ class AwsQuantumTask(QuantumTask):
     def _update_status_if_nonterminal(self):
         # If metadata has not been populated, the first call to _status will fetch it,
         # so the second _status call will no longer need to
-        metadata_absent = self._metadata is None
+        metadata_absent = not self._metadata
         cached = self._status(True)
         return cached if cached in self.TERMINAL_STATES else self._status(metadata_absent)
 
@@ -270,8 +270,12 @@ class AwsQuantumTask(QuantumTask):
             if the task completed successfully; returns `None` if the task did not complete
             successfully or the future timed out.
         """
-        if self._result or self._status(True) in self.NO_RESULT_TERMINAL_STATES:
+        if self._result or (
+            self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
+        ):
             return self._result
+        if self._metadata and self._status(True) in self.RESULTS_READY_STATES:
+            return self._download_result()
         try:
             async_result = self.async_result()
             return async_result.get_loop().run_until_complete(async_result)
@@ -287,9 +291,7 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(e)
             self._logger.info("No event loop found; creating new event loop")
             asyncio.set_event_loop(asyncio.new_event_loop())
-        if not hasattr(self, "_future"):
-            self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
-        elif (
+        if not hasattr(self, "_future") or (
             self._future.done()
             and not self._future.cancelled()
             and self._result is None
@@ -339,15 +341,9 @@ class AwsQuantumTask(QuantumTask):
         while (time.time() - start_time) < self._poll_timeout_seconds:
             # Used cached metadata if cached status is terminal
             task_status = self._update_status_if_nonterminal()
-            current_metadata = self.metadata(True)
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
-                result_string = self._aws_session.retrieve_s3_object_body(
-                    current_metadata["outputS3Bucket"],
-                    current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
-                )
-                self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
-                return self._result
+                return self._download_result()
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
                 self._result = None
                 return None
@@ -363,6 +359,15 @@ class AwsQuantumTask(QuantumTask):
         )
         self._result = None
         return None
+
+    def _download_result(self):
+        current_metadata = self.metadata(True)
+        result_string = self._aws_session.retrieve_s3_object_body(
+            current_metadata["outputS3Bucket"],
+            current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
+        )
+        self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
+        return self._result
 
     def __repr__(self) -> str:
         return f"AwsQuantumTask('id':{self.id})"
