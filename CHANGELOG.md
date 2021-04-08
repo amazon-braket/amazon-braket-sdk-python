@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.15 (2021-04-08)
+
+### Bug Fixes and Other Changes
+
+ * stop manually managing waiting treads in quantum task batch requests
+
 ## v1.5.14 (2021-04-07)
 
 ### Bug Fixes and Other Changes
