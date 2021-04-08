@@ -495,7 +495,7 @@ class Circuit:
 
     def apply_gate_noise(
         self,
-        noise: Noise,
+        noise: Union[Type[Noise], Iterable[Type[Noise]]],
         target_gates: Optional[Union[Type[Gate], Iterable[Type[Gate]]]] = None,
         target_qubits: Optional[QubitSetInput] = None,
     ) -> Circuit:
@@ -516,7 +516,8 @@ class Circuit:
         gates with the same qubit_count in target_qubits.
 
         Args:
-            noise (Noise): Noise to be applied to the circuit.
+            noise (Union[Type[Noise], Iterable[Type[Noise]]]): Noise channel(s) to be applied
+            to the circuit.
             target_gates (Union[Type[Gate], Iterable[Type[Gate]], optional]): Gate class or
                 List of Gate classes which `noise` is applied to. Default=None.
             target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
@@ -606,16 +607,19 @@ class Circuit:
             if not all(qubit in self.qubits for qubit in target_qubits):
                 raise IndexError("target_qubits must be within the range of the current circuit.")
 
-        if not isinstance(noise, Noise):
-            raise TypeError("Noise must be an instance of the Noise class")
-
-        check_noise_target_gates(noise, target_gates)
+        if not isinstance(noise, list):
+            noise = [noise]
+        for noise_channel in noise:
+            if not isinstance(noise_channel, Noise):
+                raise TypeError("Noise must be an instance of the Noise class")
+                # check whether target_gates is valid
+            check_noise_target_gates(noise_channel, target_gates)
 
         return apply_noise_to_gates(self, noise, target_gates, target_qubits)
 
     def apply_initialization_noise(
         self,
-        noise: Noise,
+        noise: Union[Type[Noise], Iterable[Type[Noise]]],
         target_qubits: Optional[QubitSetInput] = None,
     ) -> Circuit:
         """Apply `noise` at the beginning of the circuit for every qubit (default) or target_qubits`.
@@ -626,7 +630,8 @@ class Circuit:
         to `noise.qubit_count`.
 
         Args:
-            noise (Noise): Noise to be applied to the circuit.
+            noise (Union[Type[Noise], Iterable[Type[Noise]]]): Noise channel(s) to be applied
+            to the circuit.
             target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
                 Default=None.
 
@@ -675,19 +680,22 @@ to an empty circuit."
                 raise ValueError("target_qubits must contain only non-negative integers.")
             target_qubits = QubitSet(target_qubits)
 
-        if not isinstance(noise, Noise):
-            raise TypeError("Noise must be an instance of the Noise class")
-
-        if noise.qubit_count > 1 and noise.qubit_count != len(target_qubits):
-            raise ValueError(
-                "target_qubits needs to be provided for this multi-qubit noise channel, and \
+        if not isinstance(noise, list):
+            noise = [noise]
+        for noise_channel in noise:
+            if not isinstance(noise_channel, Noise):
+                raise TypeError("Noise must be an instance of the Noise class")
+            if noise_channel.qubit_count > 1 and noise_channel.qubit_count != len(target_qubits):
+                raise ValueError(
+                    "target_qubits needs to be provided for this multi-qubit noise channel, and \
 the number of qubits in target_qubits must be the same as defined by the multi-qubit noise channel."
-            )
+                )
+
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
     def apply_readout_noise(
         self,
-        noise: Noise,
+        noise: Union[Type[Noise], Iterable[Type[Noise]]],
         target_qubits: Optional[QubitSetInput] = None,
     ) -> Circuit:
         """Apply `noise` right before measurement in every qubit (default) or target_qubits`.
@@ -698,7 +706,8 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         to `noise.qubit_count`.
 
         Args:
-            noise (Noise): Noise to be applied to the circuit.
+            noise (Union[Type[Noise], Iterable[Type[Noise]]]): Noise channel(s) to be applied
+            to the circuit.
             target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
                 Default=None.
 
@@ -748,14 +757,16 @@ to an empty circuit."
                 raise ValueError("target_qubits must contain only non-negative integers.")
             target_qubits = QubitSet(target_qubits)
 
-        if not isinstance(noise, Noise):
-            raise TypeError("Noise must be an instance of the Noise class")
-
-        if noise.qubit_count > 1 and noise.qubit_count != len(target_qubits):
-            raise ValueError(
-                "target_qubits needs to be provided for this multi-qubit noise channel, and \
+        if not isinstance(noise, list):
+            noise = [noise]
+        for noise_channel in noise:
+            if not isinstance(noise_channel, Noise):
+                raise TypeError("Noise must be an instance of the Noise class")
+            if noise_channel.qubit_count > 1 and noise_channel.qubit_count != len(target_qubits):
+                raise ValueError(
+                    "target_qubits needs to be provided for this multi-qubit noise channel, and \
 the number of qubits in target_qubits must be the same as defined by the multi-qubit noise channel."
-            )
+                )
 
         return apply_noise_to_moments(self, noise, target_qubits, "readout")
 

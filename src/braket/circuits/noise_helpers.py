@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Iterable, Type
+from typing import TYPE_CHECKING, Iterable, Type, Union
 
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -13,7 +13,16 @@ if TYPE_CHECKING:  # pragma: no cover
     from braket.circuits.circuit import Circuit
 
 
-def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
+def check_noise_target_gates(noise: Noise, target_gates: Union[Type[Gate], Iterable[Type[Gate]]]):
+    """Helper function to check
+    1. whether all the elements in target_gates are a Gate type;
+    2. if `noise` is multi-qubit noise and `target_gates` contain gates
+    with the number of qubits is the same as `noise.qubit_count`.
+    Args:
+        noise (Noise): A Noise class object to be applied to the circuit.
+        target_gates (Union[Type[Gate], Iterable[Type[Gate]]]): Gate class or
+            List of Gate classes which `noise` is applied to.
+    """
 
     if target_gates is not None:
         if isinstance(target_gates, type) and issubclass(target_gates, Gate):
@@ -36,7 +45,7 @@ qubits as defined by the multi-qubit noise channel."
 
 
 def apply_noise_to_moments(
-    circuit: Circuit, noise: Noise, target_qubits: QubitSet, position: str
+    circuit: Circuit, noise: Iterable[Type[Noise]], target_qubits: QubitSet, position: str
 ) -> Circuit:
     """Apply initialization/readout noise to the circuit.
 
@@ -47,19 +56,26 @@ def apply_noise_to_moments(
 
     Args:
         circuit (Circuit): A ciruit where `noise` is applied to.
-        noise (Noise): A Noise class object to be applied to the circuit.
+        noise (Iterable[Type[Noise]]): Noise channel(s) to be applied
+        to the circuit.
         target_qubits (QubitSet): Index or indices of qubits. `noise` is applied to.
 
     Returns:
         Circuit: modified circuit.
     """
-
-    if noise.qubit_count == 1:
-        noise_instructions = [Instruction(noise, qubit) for qubit in target_qubits]
-    else:
-        noise_instructions = [Instruction(noise, target_qubits)]
+    noise_instructions = []
+    for noise_channel in noise:
+        if noise_channel.qubit_count == 1:
+            new = [Instruction(noise_channel, qubit) for qubit in target_qubits]
+            noise_instructions = noise_instructions + new
+        else:
+            noise_instructions.append(Instruction(noise_channel, target_qubits))
 
     new_moments = Moments()
+
+    if position == "initialization":
+        for noise in noise_instructions:
+            new_moments.add_noise(noise, "initialization_noise")
 
     # add existing instructions
     for moment_key in circuit.moments:
@@ -71,21 +87,18 @@ def apply_noise_to_moments(
         else:
             new_moments.add([instruction], moment_key.noise_index)
 
-    if position == "initialization":
-        for noise in noise_instructions:
-            new_moments.add_noise(noise, "initialization_noise")
-
     if position == "readout":
         for noise in noise_instructions:
             new_moments.add_noise(noise, "readout_noise")
 
     circuit._moments = new_moments
+
     return circuit
 
 
 def apply_noise_to_gates(
     circuit: Circuit,
-    noise: Noise,
+    noise: Iterable[Type[Noise]],
     target_gates: Iterable[Type[Gate]],
     target_qubits: QubitSet,
 ) -> Circuit:
@@ -98,7 +111,8 @@ def apply_noise_to_gates(
 
     Args:
         circuit (Circuit): A ciruit where `noise` is applied to.
-        noise (Noise): A `Noise` channel to be applied to the circuit.
+        noise (Iterable[Type[Noise]]): Noise channel(s) to be applied
+        to the circuit.
         target_gates (Iterable[Type[Gate]]): List of Gate classes which `noise` is applied to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is applied to.
 
@@ -130,24 +144,27 @@ def apply_noise_to_gates(
             if (target_gates is None) or (
                 instruction.operator.name in [g.__name__ for g in target_gates]
             ):
-                if noise.qubit_count == 1:
-                    for qubit in instruction.target:
-                        # apply noise to the qubit if it is in target_qubits
-                        if qubit in target_qubits:
+                for noise_channel in noise:
+                    if noise_channel.qubit_count == 1:
+                        intersection = list(set(instruction.target) & set(target_qubits))
+                        for qubit in intersection:
+                            # apply noise to the qubit if it is in target_qubits
                             noise_index = noise_index + 1
-                            new_noise_instruction.append((Instruction(noise, qubit), noise_index))
+                            new_noise_instruction.append(
+                                (Instruction(noise_channel, qubit), noise_index)
+                            )
                             noise_applied = True
-                else:
-                    # only apply noise to the gates that have the same qubit_count as the noise.
-                    if (
-                        instruction.operator.qubit_count == noise.qubit_count
-                        and instruction.target.issubset(target_qubits)
-                    ):
-                        noise_index = noise_index + 1
-                        new_noise_instruction.append(
-                            (Instruction(noise, instruction.target), noise_index)
-                        )
-                        noise_applied = True
+                    else:
+                        # only apply noise to the gates that have the same qubit_count as the noise.
+                        if (
+                            instruction.operator.qubit_count == noise_channel.qubit_count
+                            and instruction.target.issubset(target_qubits)
+                        ):
+                            noise_index = noise_index + 1
+                            new_noise_instruction.append(
+                                (Instruction(noise_channel, instruction.target), noise_index)
+                            )
+                            noise_applied = True
 
             # add the gate and gate noise instructions to new_moments
             new_moments.add([instruction], noise_index=noise_index)

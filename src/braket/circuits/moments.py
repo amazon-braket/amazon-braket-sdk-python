@@ -188,30 +188,20 @@ class Moments(Mapping[MomentsKey, Instruction]):
         time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
         if input_type == "initialization_noise":
             time = 0
-        # if input_type == 'readout_noise':
-        #     time = time + 1
-        #     for qubit in qubit_range:
-        #         self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
 
-        if MomentsKey(time, qubit_range, input_type, noise_index) in self._moments:
-            self._moments[MomentsKey(time, qubit_range, input_type, noise_index + 1)] = instruction
-        else:
-            self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
+        while MomentsKey(time, qubit_range, input_type, noise_index) in self._moments:
+            noise_index = noise_index + 1
 
+        self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
         self._qubits.update(qubit_range)
 
-        # if the noise is at the beginning of a circuit, make it a seperate moment
-        # if time == 0 and input_type == ('noise' or 'initialization_noise'):
-        #     for qubit in qubit_range:
-        #         self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
-
+        
     def sort_moments(self) -> None:
         """
         Make the disordered moments in order.
 
         1. Make the readout noise in the end
         2. Make the initialization noise at the beginning
-        3. Make the gate noise follow the order of noise_index
         """
         # key for 'noise', 'gate' and 'gate_noise'
         key_noise = []
@@ -222,9 +212,14 @@ class Moments(Mapping[MomentsKey, Instruction]):
         moment_copy = OrderedDict()
         sorted_moment = OrderedDict()
 
-        self._sort_moments_helper(
-            moment_copy, key_noise, key_readout_noise, key_initialization_noise
-        )
+        for key, instruction in self._moments.items():
+            moment_copy[key] = instruction
+            if key.moment_type == "readout_noise":
+                key_readout_noise.append(key)
+            elif key.moment_type == "initialization_noise":
+                key_initialization_noise.append(key)
+            else:
+                key_noise.append(key)
 
         for key in key_initialization_noise:
             sorted_moment[key] = moment_copy[key]
@@ -239,44 +234,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         self._moments = sorted_moment
 
-    def _sort_moments_helper(
-        self,
-        moment_copy: OrderedDict,
-        key_noise: List,
-        key_readout_noise: List,
-        key_initialization_noise: List,
-    ) -> None:
-        "helper function to seperate the instructions based on its type"
-        key_temp = []
-        noise_index = 0
-        for key, instruction in self._moments.items():
-            moment_copy[key] = instruction
-
-            if key.moment_type == "gate":
-                # the number of noise channels associated with the gate
-                noise_index = key.noise_index
-                key_noise.append(key)
-                key_temp.clear()
-            # the gate noise must be right after 'gate'
-            elif key.moment_type == "gate_noise":
-                # put the noise channels for the same gate in key_temp and sort it
-                # based on noise_index
-                if noise_index > 1:
-                    key_temp.append((key.time, key.qubits, key.noise_index))
-                    noise_index = noise_index - 1
-                else:
-                    key_temp.append((key.time, key.qubits, key.noise_index))
-                    noise_index = noise_index - 1
-                    key_temp.sort(key=lambda x: x[2])
-                    for time, qubits, noise in key_temp:
-                        key_noise.append(MomentsKey(time, qubits, "gate_noise", noise))
-
-            elif key.moment_type == "noise":
-                key_noise.append(key)
-            elif key.moment_type == "readout_noise":
-                key_readout_noise.append(key)
-            elif key.moment_type == "initialization_noise":
-                key_initialization_noise.append(key)
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)

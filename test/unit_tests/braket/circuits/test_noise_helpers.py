@@ -11,7 +11,7 @@ from braket.circuits.qubit_set import QubitSet
 
 invalid_data_noise_type = [Gate.X(), Gate.X, None, 1.5]
 invalid_data_target_gates_type = [([-1, "foo"]), ([1.5, None, -1]), "X", ([Gate.X, "CNot"])]
-invalid_data_target_qubits_value = [-1, 0]
+invalid_data_target_qubits_value = [-1]
 invalid_data_target_qubits_type = [1.5, "foo", ["foo", 1]]
 
 
@@ -34,6 +34,11 @@ def circuit_3qubit():
 @pytest.fixture
 def noise_1qubit():
     return Noise.BitFlip(probability=0.1)
+
+
+@pytest.fixture
+def noise_1qubit_2():
+    return Noise.Depolarizing(probability=0.1)
 
 
 @pytest.fixture
@@ -87,26 +92,28 @@ def test_apply_gate_noise_invalid_target_gates_type(circuit_2qubit, noise_1qubit
     circuit_2qubit.apply_gate_noise(noise_1qubit, target_gates=target_gates)
 
 
-# @pytest.mark.xfail(raises=ValueError)
-# @pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
-# def test_apply_gate_noise_invalid_target_qubits_value(circuit_2qubit, noise_1qubit,target_qubits):
-#     circuit_2qubit.apply_gate_noise(noise_1qubit, target_qubits=target_qubits)
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
+def test_apply_gate_noise_invalid_target_qubits_value(circuit_2qubit, noise_1qubit, target_qubits):
+    circuit_2qubit.apply_gate_noise(noise_1qubit, target_qubits=target_qubits)
+
+
 #
 #
-# @pytest.mark.xfail(raises=ValueError)
-# @pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
-# def test_apply_initialization_noise_invalid_target_qubits_value(
-#     circuit_2qubit, noise_1qubit, target_qubits
-# ):
-#     circuit_2qubit.apply_initialization_noise(noise_1qubit, target_qubits=target_qubits)
-#
-#
-# @pytest.mark.xfail(raises=ValueError)
-# @pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
-# def test_apply_readout_noise_invalid_target_qubits_value(
-#     circuit_2qubit, noise_1qubit, target_qubits
-# ):
-#     circuit_2qubit.apply_readout_noise(noise_1qubit, target_qubits=target_qubits)
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
+def test_apply_initialization_noise_invalid_target_qubits_value(
+    circuit_2qubit, noise_1qubit, target_qubits
+):
+    circuit_2qubit.apply_initialization_noise(noise_1qubit, target_qubits=target_qubits)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
+def test_apply_readout_noise_invalid_target_qubits_value(
+    circuit_2qubit, noise_1qubit, target_qubits
+):
+    circuit_2qubit.apply_readout_noise(noise_1qubit, target_qubits=target_qubits)
 
 
 @pytest.mark.xfail(raises=TypeError)
@@ -174,7 +181,7 @@ def test_apply_gate_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
 def test_apply_noise_to_gates_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     circ = apply_noise_to_gates(
         circuit_2qubit,
-        noise_1qubit,
+        [noise_1qubit],
         target_gates=[Gate.X],
         target_qubits=QubitSet([0, 1]),
     )
@@ -197,7 +204,7 @@ def test_apply_noise_to_gates_1QubitNoise_1(circuit_2qubit, noise_1qubit):
 def test_apply_noise_to_gates_1QubitNoise_2(circuit_2qubit, noise_1qubit):
     circ = apply_noise_to_gates(
         circuit_2qubit,
-        noise_1qubit,
+        [noise_1qubit],
         target_gates=[Gate.X],
         target_qubits=QubitSet(0),
     )
@@ -219,7 +226,7 @@ def test_apply_noise_to_gates_1QubitNoise_2(circuit_2qubit, noise_1qubit):
 def test_apply_noise_to_gates_2QubitNoise_1(circuit_3qubit, noise_2qubit):
     circ = apply_noise_to_gates(
         circuit_3qubit,
-        noise_2qubit,
+        [noise_2qubit],
         target_gates=[Gate.CNot],
         target_qubits=QubitSet([0, 1, 2]),
     )
@@ -240,10 +247,10 @@ def test_apply_noise_to_gates_2QubitNoise_1(circuit_3qubit, noise_2qubit):
     assert circ == expected
 
 
-def test_apply_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit):
+def test_apply_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit, noise_1qubit):
     circ = apply_noise_to_gates(
         circuit_3qubit,
-        noise_2qubit,
+        [noise_1qubit, noise_2qubit],
         target_gates=[Gate.CZ],
         target_qubits=QubitSet([1, 2]),
     )
@@ -255,9 +262,13 @@ def test_apply_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit):
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
         .add_instruction(Instruction(Gate.Z(), 2))
         .add_instruction(Instruction(Gate.CZ(), [2, 1]))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(noise_1qubit, 2))
         .add_instruction(Instruction(noise_2qubit, [2, 1]))
         .add_instruction(Instruction(Gate.CNot(), [0, 2]))
         .add_instruction(Instruction(Gate.CZ(), [1, 2]))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(noise_1qubit, 2))
         .add_instruction(Instruction(noise_2qubit, [1, 2]))
     )
 
@@ -287,7 +298,7 @@ def test_apply_initialization_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
 def test_apply_noise_to_moments_initialization_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        noise_1qubit,
+        [noise_1qubit],
         target_qubits=QubitSet([0, 1]),
         position="initialization",
     )
@@ -309,7 +320,7 @@ def test_apply_noise_to_moments_initialization_1QubitNoise_1(circuit_2qubit, noi
 def test_apply_noise_to_moments_initialization_2QubitNoise_1(circuit_2qubit, noise_2qubit):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        noise_2qubit,
+        [noise_2qubit],
         target_qubits=QubitSet([0, 1]),
         position="initialization",
     )
@@ -317,6 +328,33 @@ def test_apply_noise_to_moments_initialization_2QubitNoise_1(circuit_2qubit, noi
     expected = (
         Circuit()
         .add_instruction(Instruction(noise_2qubit, [0, 1]))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+    )
+
+    assert circ == expected
+
+
+def test_apply_noise_to_moments_initialization_2QubitNoise_2(
+    circuit_2qubit, noise_2qubit, noise_1qubit, noise_1qubit_2
+):
+    circ = apply_noise_to_moments(
+        circuit_2qubit,
+        [noise_1qubit, noise_2qubit, noise_1qubit_2],
+        target_qubits=QubitSet([0, 1]),
+        position="initialization",
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(noise_2qubit, [0, 1]))
+        .add_instruction(Instruction(noise_1qubit_2, 0))
+        .add_instruction(Instruction(noise_1qubit_2, 1))
         .add_instruction(Instruction(Gate.X(), 0))
         .add_instruction(Instruction(Gate.Y(), 1))
         .add_instruction(Instruction(Gate.X(), 0))
@@ -347,10 +385,78 @@ def test_apply_readout_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     assert circ == expected
 
 
+def test_noise_not_applied_1QubitNoise_1(circuit_2qubit, noise_2qubit):
+    circ = circuit_2qubit.apply_gate_noise(
+        noise_2qubit,
+        target_qubits=[1],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+    )
+
+    assert circ == expected
+
+
+def test_apply_multipe_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_1qubit_2):
+    circ = circuit_2qubit.apply_gate_noise(noise_1qubit).apply_readout_noise(
+        noise_1qubit_2,
+        target_qubits=[0, 1],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(noise_1qubit_2, 0))
+        .add_instruction(Instruction(noise_1qubit_2, 1))
+    )
+
+    assert circ == expected
+
+
+def test_apply_multipe_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit, noise_1qubit_2):
+    circ = circuit_2qubit.apply_gate_noise(noise_1qubit, target_gates=[Gate.X],).apply_gate_noise(
+        noise_1qubit_2,
+        target_qubits=[0],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit_2, 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit_2, 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(noise_1qubit_2, 0))
+    )
+
+    assert circ == expected
+
+
 def test_apply_noise_to_moments_readout_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        noise_1qubit,
+        [noise_1qubit],
         target_qubits=QubitSet([0, 1]),
         position="readout",
     )
@@ -369,10 +475,34 @@ def test_apply_noise_to_moments_readout_1QubitNoise_1(circuit_2qubit, noise_1qub
     assert circ == expected
 
 
+def test_apply_noise_to_moments_readout_1QubitNoise_3(circuit_2qubit, noise_1qubit, noise_1qubit_2):
+    circ = apply_noise_to_moments(
+        circuit_2qubit,
+        noise = [noise_1qubit, noise_1qubit_2],
+        target_qubits=QubitSet([0, 1]),
+        position="readout",
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(noise_1qubit_2, 0))
+        .add_instruction(Instruction(noise_1qubit_2, 1))
+    )
+
+    assert circ == expected
+
+
 def test_apply_noise_to_moments_readout_2QubitNoise_1(circuit_2qubit, noise_2qubit):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        noise_2qubit,
+        [noise_2qubit],
         target_qubits=QubitSet([0, 1]),
         position="readout",
     )
@@ -393,7 +523,7 @@ def test_apply_noise_to_moments_readout_2QubitNoise_1(circuit_2qubit, noise_2qub
 def test_apply_noise_to_moments_initialization_1QubitNoise_2(circuit_2qubit, noise_1qubit):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        noise_1qubit,
+        [noise_1qubit],
         target_qubits=QubitSet(1),
         position="initialization",
     )
@@ -414,7 +544,7 @@ def test_apply_noise_to_moments_initialization_1QubitNoise_2(circuit_2qubit, noi
 def test_apply_noise_to_moments_readout_1QubitNoise_2(circuit_2qubit, noise_1qubit):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        noise_1qubit,
+        [noise_1qubit],
         target_qubits=QubitSet(1),
         position="readout",
     )
@@ -435,7 +565,7 @@ def test_apply_noise_to_moments_readout_1QubitNoise_2(circuit_2qubit, noise_1qub
 def test_apply_noise_to_gates_1QubitNoise_not_dense(circuit_2qubit_not_dense, noise_1qubit):
     circ = apply_noise_to_gates(
         circuit_2qubit_not_dense,
-        noise_1qubit,
+        [noise_1qubit],
         target_qubits=QubitSet([0, 1]),
         target_gates=None,
     )
