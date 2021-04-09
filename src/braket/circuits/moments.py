@@ -195,7 +195,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
         self._qubits.update(qubit_range)
 
-        
     def sort_moments(self) -> None:
         """
         Make the disordered moments in order.
@@ -233,7 +232,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
             ] = moment_copy[key]
 
         self._moments = sorted_moment
-
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)

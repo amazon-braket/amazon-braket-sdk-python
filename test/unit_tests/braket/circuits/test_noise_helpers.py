@@ -9,7 +9,7 @@ from braket.circuits.noise import Noise
 from braket.circuits.noise_helpers import apply_noise_to_gates, apply_noise_to_moments
 from braket.circuits.qubit_set import QubitSet
 
-invalid_data_noise_type = [Gate.X(), Gate.X, None, 1.5]
+invalid_data_noise_type = [Gate.X(), None, 1.5]
 invalid_data_target_gates_type = [([-1, "foo"]), ([1.5, None, -1]), "X", ([Gate.X, "CNot"])]
 invalid_data_target_qubits_value = [-1]
 invalid_data_target_qubits_type = [1.5, "foo", ["foo", 1]]
@@ -95,11 +95,9 @@ def test_apply_gate_noise_invalid_target_gates_type(circuit_2qubit, noise_1qubit
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
 def test_apply_gate_noise_invalid_target_qubits_value(circuit_2qubit, noise_1qubit, target_qubits):
-    circuit_2qubit.apply_gate_noise(noise_1qubit, target_qubits=target_qubits)
+    circuit_2qubit.apply_gate_noise(noise_1qubit, target_qubits=target_qubits, target_gates=[])
 
 
-#
-#
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("target_qubits", invalid_data_target_qubits_value)
 def test_apply_initialization_noise_invalid_target_qubits_value(
@@ -159,7 +157,7 @@ def test_apply_readout_noise_mismatch_qubit_count_with_target_qubits(noise_2qubi
 def test_apply_gate_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.apply_gate_noise(
         noise_1qubit,
-        target_gates=[Gate.X],
+        target_gates=[Gate.X, Gate.Z],
         target_qubits=[0, 1],
     )
 
@@ -173,6 +171,26 @@ def test_apply_gate_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
         .add_instruction(Instruction(Gate.X(), 1))
         .add_instruction(Instruction(noise_1qubit, 1))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+    )
+
+    assert circ == expected
+
+
+def test_apply_gate_noise_1QubitNoise2_1(circuit_2qubit, noise_2qubit):
+    circ = circuit_2qubit.apply_gate_noise(
+        noise_2qubit,
+        target_gates=[Gate.CNot],
+        target_qubits=[0, 1],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.X(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(noise_2qubit, [0, 1]))
     )
 
     assert circ == expected
@@ -247,10 +265,12 @@ def test_apply_noise_to_gates_2QubitNoise_1(circuit_3qubit, noise_2qubit):
     assert circ == expected
 
 
-def test_apply_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit, noise_1qubit):
+def test_apply_noise_to_gates_2QubitNoise_2(
+    circuit_3qubit, noise_2qubit, noise_1qubit, noise_1qubit_2
+):
     circ = apply_noise_to_gates(
         circuit_3qubit,
-        [noise_1qubit, noise_2qubit],
+        [noise_1qubit, noise_2qubit, noise_1qubit_2],
         target_gates=[Gate.CZ],
         target_qubits=QubitSet([1, 2]),
     )
@@ -265,11 +285,41 @@ def test_apply_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit, noise_
         .add_instruction(Instruction(noise_1qubit, 1))
         .add_instruction(Instruction(noise_1qubit, 2))
         .add_instruction(Instruction(noise_2qubit, [2, 1]))
+        .add_instruction(Instruction(noise_1qubit_2, 1))
+        .add_instruction(Instruction(noise_1qubit_2, 2))
         .add_instruction(Instruction(Gate.CNot(), [0, 2]))
         .add_instruction(Instruction(Gate.CZ(), [1, 2]))
         .add_instruction(Instruction(noise_1qubit, 1))
         .add_instruction(Instruction(noise_1qubit, 2))
         .add_instruction(Instruction(noise_2qubit, [1, 2]))
+        .add_instruction(Instruction(noise_1qubit_2, 1))
+        .add_instruction(Instruction(noise_1qubit_2, 2))
+    )
+
+    assert circ == expected
+
+
+def test_apply_noise_to_gates_2QubitNoise_3(
+    circuit_3qubit, noise_2qubit, noise_1qubit, noise_1qubit_2
+):
+    circ = apply_noise_to_gates(
+        circuit_3qubit,
+        [noise_1qubit, noise_2qubit, noise_1qubit_2],
+        target_gates=[Gate.Z],
+        target_qubits=QubitSet([1, 2]),
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(Gate.Z(), 2))
+        .add_instruction(Instruction(noise_1qubit, 2))
+        .add_instruction(Instruction(noise_1qubit_2, 2))
+        .add_instruction(Instruction(Gate.CZ(), [2, 1]))
+        .add_instruction(Instruction(Gate.CNot(), [0, 2]))
+        .add_instruction(Instruction(Gate.CZ(), [1, 2]))
     )
 
     assert circ == expected
@@ -277,7 +327,7 @@ def test_apply_noise_to_gates_2QubitNoise_2(circuit_3qubit, noise_2qubit, noise_
 
 def test_apply_initialization_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.apply_initialization_noise(
-        noise_1qubit,
+        [noise_1qubit],
         target_qubits=[0, 1],
     )
 
@@ -367,7 +417,7 @@ def test_apply_noise_to_moments_initialization_2QubitNoise_2(
 
 def test_apply_readout_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     circ = circuit_2qubit.apply_readout_noise(
-        noise_1qubit,
+        [noise_1qubit],
         target_qubits=[0, 1],
     )
 
@@ -387,8 +437,9 @@ def test_apply_readout_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
 
 def test_noise_not_applied_1QubitNoise_1(circuit_2qubit, noise_2qubit):
     circ = circuit_2qubit.apply_gate_noise(
-        noise_2qubit,
+        [noise_2qubit],
         target_qubits=[1],
+        target_gates=[],
     )
 
     expected = (
@@ -478,7 +529,7 @@ def test_apply_noise_to_moments_readout_1QubitNoise_1(circuit_2qubit, noise_1qub
 def test_apply_noise_to_moments_readout_1QubitNoise_3(circuit_2qubit, noise_1qubit, noise_1qubit_2):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        noise = [noise_1qubit, noise_1qubit_2],
+        noise=[noise_1qubit, noise_1qubit_2],
         target_qubits=QubitSet([0, 1]),
         position="readout",
     )
