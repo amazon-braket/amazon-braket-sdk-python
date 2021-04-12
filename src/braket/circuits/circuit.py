@@ -24,6 +24,7 @@ from braket.circuits.noise_helpers import (
     apply_noise_to_gates,
     apply_noise_to_moments,
     check_noise_target_gates,
+    check_noise_target_qubits,
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
@@ -593,19 +594,15 @@ class Circuit:
         if len(self.qubits) == 0:
             raise IndexError("Gate noise cannot be applied to an empty circuit.")
 
-        if target_qubits is None:
-            target_qubits = self.qubits
-        else:
-            if not isinstance(target_qubits, list):
-                target_qubits = [target_qubits]
-            if not all(isinstance(q, int) for q in target_qubits):
-                raise TypeError("target_qubits must be integer(s)")
-            if not all(q >= 0 for q in target_qubits):
-                raise ValueError("target_qubits must contain only non-negative integers.")
+        target_qubits = check_noise_target_qubits(self, target_qubits)
+        if not all(qubit in self.qubits for qubit in target_qubits):
+            raise IndexError("target_qubits must be within the range of the current circuit.")
 
-            target_qubits = QubitSet(target_qubits)
-            if not all(qubit in self.qubits for qubit in target_qubits):
-                raise IndexError("target_qubits must be within the range of the current circuit.")
+        if target_gates is not None:
+            if not isinstance(target_gates, list):
+                target_gates = [target_gates]
+            # remove duplicate items
+            target_gates = list(dict.fromkeys(target_gates))
 
         if not isinstance(noise, list):
             noise = [noise]
@@ -613,7 +610,8 @@ class Circuit:
             if not isinstance(noise_channel, Noise):
                 raise TypeError("Noise must be an instance of the Noise class")
                 # check whether target_gates is valid
-            check_noise_target_gates(noise_channel, target_gates)
+            if target_gates is not None:
+                check_noise_target_gates(noise_channel, target_gates)
 
         return apply_noise_to_gates(self, noise, target_gates, target_qubits)
 
@@ -669,16 +667,7 @@ class Circuit:
 to an empty circuit."
             )
 
-        if target_qubits is None:
-            target_qubits = self.qubits
-        else:
-            if not isinstance(target_qubits, list):
-                target_qubits = [target_qubits]
-            if not all(isinstance(q, int) for q in target_qubits):
-                raise TypeError("target_qubits must be integer(s)")
-            if not all(q >= 0 for q in target_qubits):
-                raise ValueError("target_qubits must contain only non-negative integers.")
-            target_qubits = QubitSet(target_qubits)
+        target_qubits = check_noise_target_qubits(self, target_qubits)
 
         if not isinstance(noise, list):
             noise = [noise]

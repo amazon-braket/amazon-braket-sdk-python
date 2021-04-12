@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Iterable, Type, Union
+from typing import TYPE_CHECKING, Iterable, Optional, Type
 
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
-from braket.circuits.qubit_set import QubitSet
+from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 if TYPE_CHECKING:  # pragma: no cover
     from braket.circuits.circuit import Circuit
 
 
-def check_noise_target_gates(noise: Noise, target_gates: Union[Type[Gate], Iterable[Type[Gate]]]):
+def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
     """Helper function to check
     1. whether all the elements in target_gates are a Gate type;
     2. if `noise` is multi-qubit noise and `target_gates` contain gates
@@ -24,24 +24,41 @@ def check_noise_target_gates(noise: Noise, target_gates: Union[Type[Gate], Itera
             List of Gate classes which `noise` is applied to.
     """
 
-    if target_gates is not None:
-        if isinstance(target_gates, type) and issubclass(target_gates, Gate):
-            target_gates = [target_gates]
-            # remove duplicate items
-            target_gates = list(dict.fromkeys(target_gates))
-        if not (
-            isinstance(target_gates, Iterable)
-            and all(isinstance(g, type) and issubclass(g, Gate) for g in target_gates)
-        ):
-            raise TypeError("All elements in target_gates must be an instance of the Gate class")
+    if not all(isinstance(g, type) and issubclass(g, Gate) for g in target_gates):
+        raise TypeError("All elements in target_gates must be an instance of the Gate class")
 
-    if noise.qubit_count > 1 and target_gates is not None:
+    if noise.qubit_count > 1:
         for g in target_gates:
             if g().qubit_count != noise.qubit_count:
                 raise ValueError(
                     "The target_targets must be gates that have the same number of \
 qubits as defined by the multi-qubit noise channel."
                 )
+
+
+def check_noise_target_qubits(
+    circuit: Circuit, target_qubits: Optional[QubitSetInput] = None
+) -> QubitSet:
+    """
+    Helper function to check whether all the target_qubits are positive integers.
+    Args:
+        target_qubits (Optional[QubitSetInput] = None): Index or indices of qubit(s).
+    Returns:
+        target_qubits: QubitSet
+    """
+    if target_qubits is None:
+        target_qubits = circuit.qubits
+    else:
+        if not isinstance(target_qubits, list):
+            target_qubits = [target_qubits]
+        if not all(isinstance(q, int) for q in target_qubits):
+            raise TypeError("target_qubits must be integer(s)")
+        if not all(q >= 0 for q in target_qubits):
+            raise ValueError("target_qubits must contain only non-negative integers.")
+
+        target_qubits = QubitSet(target_qubits)
+
+    return target_qubits
 
 
 def apply_noise_to_moments(
