@@ -14,7 +14,7 @@
 from braket.circuits import Circuit, Noise
 from braket.devices import LocalSimulator
 
-device = LocalSimulator(backend="noise_simulator")
+device = LocalSimulator("Braket-DM")
 
 circuit = Circuit().x(0).x(1).bit_flip(0, probability=0.1)
 print("First example: ")
@@ -24,7 +24,7 @@ print(device.run(circuit, shots=1000).result().measurement_counts)
 
 circuit = Circuit().x(0).x(1)
 noise = Noise.BitFlip(probability=0.1)
-circuit.add_noise(noise)
+circuit.apply_gate_noise(noise)
 print("Second example: ")
 print(circuit)
 print(device.run(circuit, shots=1000).result().measurement_counts)
