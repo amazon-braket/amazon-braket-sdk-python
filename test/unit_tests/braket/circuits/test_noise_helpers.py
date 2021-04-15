@@ -55,13 +55,6 @@ def noise_2qubit():
     return Noise.Kraus(matrices=[E0, E1])
 
 
-@pytest.fixture
-def noise_2qubit_2():
-    E0 = np.sqrt(0.6) * np.eye(4)
-    E1 = np.sqrt(0.2) * np.kron(np.array([[0, 1], [1, 0]]), np.array([[0, 1], [1, 0]]))
-    return Noise.Kraus(matrices=[E0, E1])
-
-
 @pytest.mark.xfail(raises=IndexError)
 def test_apply_gate_noise_to_empty_circuit(noise_1qubit):
     Circuit().apply_gate_noise(noise_1qubit)
@@ -423,17 +416,17 @@ def test_apply_noise_to_moments_initialization_1QubitNoise_1(circuit_2qubit, noi
     assert circ == expected
 
 
-def test_apply_noise_to_moments_initialization_2QubitNoise_1(circuit_2qubit, noise_2qubit_2):
+def test_apply_noise_to_moments_initialization_2QubitNoise_1(circuit_2qubit, noise_2qubit):
     circ = apply_noise_to_moments(
         circuit_2qubit,
-        [noise_2qubit_2],
+        [noise_2qubit],
         target_qubits=QubitSet([0, 1]),
         position="initialization",
     )
 
     expected = (
         Circuit()
-        .add_instruction(Instruction(noise_2qubit_2, [0, 1]))
+        .add_instruction(Instruction(noise_2qubit, [0, 1]))
         .add_instruction(Instruction(Gate.X(), 0))
         .add_instruction(Instruction(Gate.Y(), 1))
         .add_instruction(Instruction(Gate.X(), 0))
