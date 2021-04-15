@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
+import numpy as np
+
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -25,6 +27,8 @@ from braket.circuits.noise_helpers import (
     apply_noise_to_moments,
     check_noise_target_gates,
     check_noise_target_qubits,
+    check_noise_target_unitary,
+    make_it_a_list,
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
@@ -498,29 +502,36 @@ class Circuit:
         self,
         noise: Union[Type[Noise], Iterable[Type[Noise]]],
         target_gates: Optional[Union[Type[Gate], Iterable[Type[Gate]]]] = None,
+        target_unitary: np.ndarray = None,
         target_qubits: Optional[QubitSetInput] = None,
     ) -> Circuit:
-        """Apply `noise` to the circuit according to `target_gates` and `target_qubits`.
+        """Apply `noise` to the circuit according to `target_gates`, `target_unitary` and
+        `target_qubits`.
 
         For any parameter that is None, that specification is ignored (e.g. if `target_gates`
         is None then the noise is applied after every gate in `target_qubits`).
         If `target_gates` and `target_qubits` are both None, then `noise` is
         applied to every qubit after every gate.
 
+        Noise is either applied to `target_gates` or `target_unitary`, so they cannot be
+        provided at the same time.
+
         When `noise.qubit_count` == 1, ie. `noise` is single-qubit, `noise` is added to all
-        qubits in `target_gates` (or to all qubits in `target_qubits` if `target_gates` is None).
+        qubits in `target_gates` or `target_unitary` (or to all qubits in `target_qubits`
+        if `target_gates` is None).
 
         When `noise.qubit_count` > 1 and `target_gates` is not None, the number of qubits of
         any gate in `target_gates` must be the same as `noise.qubit_count`.
 
-        When `noise.qubit_count` > 1 and `target_gates` is None, noise is only applied to
-        gates with the same qubit_count in target_qubits.
+        When `noise.qubit_count` > 1, `target_gates` and `target_unitary` is None, noise is
+        only applied to gates with the same qubit_count in target_qubits.
 
         Args:
             noise (Union[Type[Noise], Iterable[Type[Noise]]]): Noise channel(s) to be applied
             to the circuit.
             target_gates (Union[Type[Gate], Iterable[Type[Gate]], optional]): Gate class or
                 List of Gate classes which `noise` is applied to. Default=None.
+            target_unitary (np.ndarray): matrix of the target unitary gates. Default=None.
             target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
                 Default=None.
 
@@ -531,19 +542,22 @@ class Circuit:
             TypeError:
                 If `noise` is not Noise type.
                 If `target_gates` is not a Gate type, Iterable[Gate] or None.
+                If `target_gates` is not a np.ndarray type or None.
                 If `target_qubits` has non-integers or negative integers.
             IndexError:
                 If applying noise to an empty circuit.
                 If `target_qubits` is out of range of circuit.qubits.
             ValueError:
+                If both `target_gates` and `target_unitary` are provided.
+                If `target_unitary` is not a unitary.
                 If `noise` is multi-qubit noise and `target_gates` contain gates
                 with the number of qubits not the same as `noise.qubit_count`.
             Warning:
                 If `noise` is multi-qubit noise while there is no gate with the same
                 number of qubits in `target_qubits` or in the whole circuit when
                 `target_qubits` is not given.
-                If no `target_gates` exist in `target_qubits` or in the whole circuit
-                when `target_qubits` is not given.
+                If no `target_gates` or  `target_unitary` exist in `target_qubits` or
+                in the whole circuit when they are not given.
 
         Examples:
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
@@ -591,29 +605,41 @@ class Circuit:
             T  : |     0     |     1     |2|
 
         """
+        # check whether gate noise is applied to an empty circuit
         if len(self.qubits) == 0:
             raise IndexError("Gate noise cannot be applied to an empty circuit.")
 
+        # check if target_gates and target_unitary are both given
+        if (target_unitary is not None) and (target_gates is not None):
+            raise ValueError("target_unitary and target_gates cannot be input at the same time.")
+
+        # check target_qubits
         target_qubits = check_noise_target_qubits(self, target_qubits)
         if not all(qubit in self.qubits for qubit in target_qubits):
             raise IndexError("target_qubits must be within the range of the current circuit.")
 
+        # make noise a list
+        noise = make_it_a_list(noise)
+
+        # make target_gates a list
         if target_gates is not None:
-            if not isinstance(target_gates, list):
-                target_gates = [target_gates]
+            target_gates = make_it_a_list(target_gates)
             # remove duplicate items
             target_gates = list(dict.fromkeys(target_gates))
 
-        if not isinstance(noise, list):
-            noise = [noise]
         for noise_channel in noise:
             if not isinstance(noise_channel, Noise):
                 raise TypeError("Noise must be an instance of the Noise class")
                 # check whether target_gates is valid
             if target_gates is not None:
                 check_noise_target_gates(noise_channel, target_gates)
+            if target_unitary is not None:
+                check_noise_target_unitary(noise_channel, target_unitary)
 
-        return apply_noise_to_gates(self, noise, target_gates, target_qubits)
+        if target_unitary is not None:
+            return apply_noise_to_gates(self, noise, target_unitary, target_qubits)
+        else:
+            return apply_noise_to_gates(self, noise, target_gates, target_qubits)
 
     def apply_initialization_noise(
         self,
