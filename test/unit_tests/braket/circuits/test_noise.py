@@ -99,6 +99,16 @@ def test_invalid_data_general_pauli_probZ(probZ):
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_invalid_data_general_pauli_sum():
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    probX = 0.1
+    probY = 0.1
+    probZ = 0.9
+    GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("gamma", invalid_data_prob)
 def test_invalid_data_damping_prob(gamma):
     qubit_count = 1
