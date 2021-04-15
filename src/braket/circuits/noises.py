@@ -1,3 +1,4 @@
+import warnings
 from typing import Iterable
 
 import numpy as np
@@ -619,7 +620,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             gamma=gamma,
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["GAD(probability={:.2g},gamma={:.2g})".format(probability, gamma)],
+            ascii_symbols=["GAD({:.2g},{:.2g})".format(probability, gamma)],
         )
 
     def to_ir(self, target: QubitSet):
@@ -758,7 +759,7 @@ class Kraus(Noise):
         qubit_count = int(np.log2(self._matrices[0].shape[0]))
 
         if not is_cptp(self._matrices):
-            raise ValueError(
+            warnings.warn(
                 "The input matrices do not define a completely-positive trace-preserving map."
             )
 

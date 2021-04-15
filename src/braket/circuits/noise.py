@@ -155,7 +155,7 @@ class GeneralPauliNoise(Noise):
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probX` or `probY` or `probZ`
                 is not `float`, `probX` or `probY` or `probZ` > 1.0, or
-                `probX` or `probY` or `probZ` < 0.0
+                `probX` or `probY` or `probZ` < 0.0, or `probX`+`probY`+`probZ` > 0
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
@@ -171,6 +171,8 @@ class GeneralPauliNoise(Noise):
             raise ValueError("probZ must be float type")
         if not (probZ <= 1.0 and probZ >= 0.0):
             raise ValueError("probZ must be a real number in the interval [0,1]")
+        if probX + probY + probZ > 1:
+            raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
 
         self._probX = probX
         self._probY = probY

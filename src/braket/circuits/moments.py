@@ -225,7 +225,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
         for key in key_noise:
             sorted_moment[key] = moment_copy[key]
         # find the max time in the circuit and make it the time for readout noise
-        max_time = self._depth - 1
+        max_time = max(self._depth - 1, 0)
+
         for key in key_readout_noise:
             sorted_moment[
                 MomentsKey(max_time, key.qubits, "readout_noise", key.noise_index)
