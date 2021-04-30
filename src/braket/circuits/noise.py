@@ -155,7 +155,7 @@ class GeneralPauliNoise(Noise):
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probX` or `probY` or `probZ`
                 is not `float`, `probX` or `probY` or `probZ` > 1.0, or
-                `probX` or `probY` or `probZ` < 0.0, or `probX`+`probY`+`probZ` > 0
+                `probX` or `probY` or `probZ` < 0.0, or `probX`+`probY`+`probZ` > 1
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
