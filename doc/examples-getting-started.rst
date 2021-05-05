@@ -2,7 +2,7 @@
 Getting started
 ##############################
 
-Get started with Amazon Braket with some introductory examples.
+Get started on Amazon Braket with some introductory examples.
 
 .. toctree::
     :maxdepth: 2
