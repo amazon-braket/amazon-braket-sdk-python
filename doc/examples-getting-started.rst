@@ -1,8 +1,8 @@
 ##############################
-Simple circuits and algorithms
+Getting started
 ##############################
 
-Learn more about working with advanced circuits and algoritms.
+Get started with Amazon Braket with some introductory examples.
 
 .. toctree::
     :maxdepth: 2
