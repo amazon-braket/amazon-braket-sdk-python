@@ -32,7 +32,7 @@ class ProblemType(str, Enum):
 
 
 class Problem:
-    """ Represents an annealing problem."""
+    """Represents an annealing problem."""
 
     def __init__(
         self,

@@ -199,7 +199,7 @@ class TensorProduct(Observable):
 
     @property
     def factors(self) -> Tuple[Observable, ...]:
-        """ Tuple[Observable]: The observables that comprise this tensor product."""
+        """Tuple[Observable]: The observables that comprise this tensor product."""
         return self._factors
 
     def to_matrix(self) -> np.ndarray:
