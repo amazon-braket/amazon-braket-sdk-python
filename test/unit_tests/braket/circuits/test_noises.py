@@ -94,6 +94,8 @@ invalid_kraus_matrices = [
     ([np.array([[0, 1], [1, 1]])]),
     ([np.array([[1, 0], [0, 1]]), np.array([[0, 1], [1, 0]])]),
     ([np.array([[1, 0], [0, 1]]) * np.sqrt(0.5), np.eye(4) * np.sqrt(0.5)]),
+    ([np.eye(8)]),
+    ([np.eye(2), np.eye(2), np.eye(2), np.eye(2), np.eye(2)]),
 ]
 
 

@@ -750,12 +750,15 @@ class Kraus(Noise):
     """
 
     def __init__(self, matrices: Iterable[np.ndarray], display_name: str = "KR"):
+
         for matrix in matrices:
             verify_quantum_operator_matrix_dimensions(matrix)
             if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
                 raise ValueError(f"all matrices in {matrices} must have the same shape")
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
         qubit_count = int(np.log2(self._matrices[0].shape[0]))
+        if len(matrices) > 2 ** (2 * qubit_count):
+            raise ValueError("The number of Kraus operators is beyond limit.")
 
         if not is_cptp(self._matrices):
             raise ValueError(
