@@ -83,8 +83,8 @@ class DensityMatrix(ResultType):
     def __init__(self, target: QubitSetInput = None):
         """
         Args:
-            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits to
-            trace over. Default is `None`, which means no qubits is traced over, and the
+            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
+            of the reduced density matrix. Default is `None`, and the
             full density matrix is returned.
 
         Examples:
@@ -114,8 +114,8 @@ class DensityMatrix(ResultType):
     def density_matrix(target: QubitSetInput = None) -> ResultType:
         """Registers this function into the circuit class.
         Args:
-            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits to
-            trace over. Default is `None`, which means no qubits is traced over, and the
+            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
+            of the reduced density matrix. Default is `None`, and the
             full density matrix is returned.
 
         Returns:
