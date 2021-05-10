@@ -90,8 +90,8 @@ class Noise(QuantumOperator):
 
 class SingleProbabilisticNoise(Noise):
     """
-    Class `SingleProbabilisticNoise` represents a noise channel on N qubits parameterized by
-    a single probability.
+    Class `SingleProbabilisticNoise` represents the bit/phase flip noise channel on N qubits
+    parameterized by a single probability.
     """
 
     def __init__(self, probability: float, qubit_count: int, ascii_symbols: Sequence[str]):
@@ -106,21 +106,101 @@ class SingleProbabilisticNoise(Noise):
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
-                `probability` > 1.0, or `probability` < 0.0
+                `probability` > 1/2, or `probability` < 0
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probability, float):
             raise ValueError("probability must be float type")
-        if not (probability <= 1.0 and probability >= 0.0):
-            raise ValueError("probability must be a real number in the interval [0,1]")
+        if not (probability <= 0.5 and probability >= 0.0):
+            raise ValueError("probability must be a real number in the interval [0,1/2]")
         self._probability = probability
 
     @property
     def probability(self) -> float:
         """
         Returns:
-            probability (float): The probability that parameterizes the Kraus matrices.
+            probability (float): The probability that parameterizes the noise channel.
+        """
+        return self._probability
+
+    def __repr__(self):
+        return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
+
+
+class SingleProbabilisticNoise_34(Noise):
+    """
+    Class `SingleProbabilisticNoise` represents the Depolarizing and TwoQubitDephasing noise
+    channels parameterized by a single probability.
+    """
+
+    def __init__(self, probability: float, qubit_count: int, ascii_symbols: Sequence[str]):
+        """
+        Args:
+            probability (float): The probability that the noise occurs.
+            qubit_count (int): The number of qubits to apply noise.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
+                printing a diagram of a circuit. The length must be the same as `qubit_count`, and
+                index ordering is expected to correlate with the target ordering on the instruction.
+
+        Raises:
+            ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
+                `probability` > 3/4, or `probability` < 0
+        """
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+        if not isinstance(probability, float):
+            raise ValueError("probability must be float type")
+        if not (probability <= 0.75 and probability >= 0.0):
+            raise ValueError("probability must be a real number in the interval [0,3/4]")
+        self._probability = probability
+
+    @property
+    def probability(self) -> float:
+        """
+        Returns:
+            probability (float): The probability that parameterizes the noise channel.
+        """
+        return self._probability
+
+    def __repr__(self):
+        return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
+
+
+class SingleProbabilisticNoise_1516(Noise):
+    """
+    Class `SingleProbabilisticNoise` represents the TwoQubitDepolarizing noise channel
+    parameterized by a single probability.
+    """
+
+    def __init__(self, probability: float, qubit_count: int, ascii_symbols: Sequence[str]):
+        """
+        Args:
+            probability (float): The probability that the noise occurs.
+            qubit_count (int): The number of qubits to apply noise.
+            ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
+                printing a diagram of a circuit. The length must be the same as `qubit_count`, and
+                index ordering is expected to correlate with the target ordering on the instruction.
+
+        Raises:
+            ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`, `probability` is not `float`,
+                `probability` > 15/16, or `probability` < 0
+        """
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+        if not isinstance(probability, float):
+            raise ValueError("probability must be float type")
+        if not (probability <= 0.9375 and probability >= 0.0):
+            raise ValueError("probability must be a real number in the interval [0,15/16]")
+        self._probability = probability
+
+    @property
+    def probability(self) -> float:
+        """
+        Returns:
+            probability (float): The probability that parameterizes the noise channel.
         """
         return self._probability
 
@@ -287,5 +367,5 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         return self._probability
 
     def __repr__(self):
-        return f"{self.name}('probability': {self.probability}, 'gamma': {self.gamma}, \
+        return f"{self.name}('gamma': {self.gamma}, 'probability': {self.probability}, \
 'qubit_count': {self.qubit_count})"

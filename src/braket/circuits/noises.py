@@ -11,6 +11,8 @@ from braket.circuits.noise import (
     Noise,
     PauliNoise,
     SingleProbabilisticNoise,
+    SingleProbabilisticNoise_34,
+    SingleProbabilisticNoise_1516,
 )
 from braket.circuits.quantum_operator_helpers import (
     is_cptp,
@@ -160,7 +162,7 @@ Noise.register_noise(PhaseFlip)
 
 
 class PauliChannel(PauliNoise):
-    """General noise channel which transforms a density matrix :math:`\\rho` according to:
+    """Pauli noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
         \\rho \\Rightarrow (1-probX-probY-probZ) \\rho
@@ -198,7 +200,7 @@ class PauliChannel(PauliNoise):
                 \\end{matrix}
             \\right)
 
-    This noise channel is shown as `GP` in circuit diagrams.
+    This noise channel is shown as `PC` in circuit diagrams.
     """
 
     def __init__(self, probX: float, probY: float, probZ: float):
@@ -249,7 +251,7 @@ class PauliChannel(PauliNoise):
 Noise.register_noise(PauliChannel)
 
 
-class Depolarizing(SingleProbabilisticNoise):
+class Depolarizing(SingleProbabilisticNoise_34):
     """Depolarizing noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
@@ -334,7 +336,7 @@ class Depolarizing(SingleProbabilisticNoise):
 Noise.register_noise(Depolarizing)
 
 
-class TwoQubitDepolarizing(SingleProbabilisticNoise):
+class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     """Two-Qubit Depolarizing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
@@ -436,7 +438,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise):
 Noise.register_noise(TwoQubitDepolarizing)
 
 
-class TwoQubitDephasing(SingleProbabilisticNoise):
+class TwoQubitDephasing(SingleProbabilisticNoise_34):
     """Two-Qubit Dephasing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
