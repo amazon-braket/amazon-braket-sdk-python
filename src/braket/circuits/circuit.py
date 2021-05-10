@@ -541,8 +541,8 @@ class Circuit:
         Raises:
             TypeError:
                 If `noise` is not Noise type.
-                If `target_gates` is not a Gate type, Iterable[Gate] or None.
-                If `target_gates` is not a np.ndarray type or None.
+                If `target_gates` is not a Gate type, Iterable[Gate].
+                If `target_unitary` is not a np.ndarray type.
                 If `target_qubits` has non-integers or negative integers.
             IndexError:
                 If applying noise to an empty circuit.
