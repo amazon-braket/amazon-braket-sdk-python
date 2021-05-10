@@ -128,9 +128,9 @@ class SingleProbabilisticNoise(Noise):
         return f"{self.name}('probability': {self.probability}, 'qubit_count': {self.qubit_count})"
 
 
-class GeneralPauliNoise(Noise):
+class PauliNoise(Noise):
     """
-    Class `GeneralPauliNoise` represents the general Pauli noise channel on N qubits
+    Class `PauliNoise` represents the general Pauli noise channel on N qubits
     parameterized by three probabilities.
     """
 

@@ -55,9 +55,9 @@ testdata = [
         {},
     ),
     (
-        Noise.GeneralPauli,
-        "general_pauli",
-        ir.GeneralPauli,
+        Noise.PauliChannel,
+        "pauli_channel",
+        ir.PauliChannel,
         [SingleTarget, TripleProbability],
         {},
     ),

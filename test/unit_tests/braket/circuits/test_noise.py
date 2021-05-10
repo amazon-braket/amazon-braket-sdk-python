@@ -4,7 +4,7 @@ from braket.circuits import Operator
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
-    GeneralPauliNoise,
+    PauliNoise,
     Noise,
     SingleProbabilisticNoise,
 )
@@ -26,8 +26,8 @@ def single_probability_noise():
 
 
 @pytest.fixture
-def general_pauli_noise():
-    return GeneralPauliNoise(probX=0.1, probY=0.2, probZ=0.3, qubit_count=1, ascii_symbols=["foo"])
+def pauli_noise():
+    return PauliNoise(probX=0.1, probY=0.2, probZ=0.3, qubit_count=1, ascii_symbols=["foo"])
 
 
 @pytest.fixture
@@ -70,42 +70,42 @@ def test_invalid_data_single_prob(probability):
 
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probX", invalid_data_prob)
-def test_invalid_data_general_pauli_probX(probX):
+def test_invalid_data_pauli_probX(probX):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probY = 0.1
     probZ = 0.1
-    GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probY", invalid_data_prob)
-def test_invalid_data_general_pauli_probY(probY):
+def test_invalid_data_pauli_probY(probY):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probZ = 0.1
-    GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probZ", invalid_data_prob)
-def test_invalid_data_general_pauli_probZ(probZ):
+def test_invalid_data_pauli_probZ(probZ):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probY = 0.1
-    GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_invalid_data_general_pauli_sum():
+def test_invalid_data_pauli_sum():
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probY = 0.1
     probZ = 0.9
-    GeneralPauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -166,15 +166,15 @@ def test_single_probability_noise_str(single_probability_noise):
     assert str(single_probability_noise) == expected
 
 
-def test_general_pauli_noise_str(general_pauli_noise):
+def test_pauli_noise_str(pauli_noise):
     expected = "{}('probX': {}, 'probY': {}, 'probZ': {}, 'qubit_count': {})".format(
-        general_pauli_noise.name,
-        general_pauli_noise.probX,
-        general_pauli_noise.probY,
-        general_pauli_noise.probZ,
-        general_pauli_noise.qubit_count,
+        pauli_noise.name,
+        pauli_noise.probX,
+        pauli_noise.probY,
+        pauli_noise.probZ,
+        pauli_noise.qubit_count,
     )
-    assert str(general_pauli_noise) == expected
+    assert str(pauli_noise) == expected
 
 
 def test_damping_noise_str(damping_noise):

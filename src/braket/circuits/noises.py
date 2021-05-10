@@ -8,8 +8,8 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
-    GeneralPauliNoise,
     Noise,
+    PauliNoise,
     SingleProbabilisticNoise,
 )
 from braket.circuits.quantum_operator_helpers import (
@@ -159,7 +159,7 @@ class PhaseFlip(SingleProbabilisticNoise):
 Noise.register_noise(PhaseFlip)
 
 
-class GeneralPauli(GeneralPauliNoise):
+class PauliChannel(PauliNoise):
     """General noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
@@ -207,11 +207,11 @@ class GeneralPauli(GeneralPauliNoise):
             probY=probY,
             probZ=probZ,
             qubit_count=1,
-            ascii_symbols=["GP({:.2g},{:.2g},{:.2g})".format(probX, probY, probZ)],
+            ascii_symbols=["PC({:.2g},{:.2g},{:.2g})".format(probX, probY, probZ)],
         )
 
     def to_ir(self, target: QubitSet):
-        return ir.GeneralPauli.construct(
+        return ir.PauliChannel.construct(
             target=target[0], probX=self.probX, probY=self.probY, probZ=self.probZ
         )
 
@@ -224,7 +224,7 @@ class GeneralPauli(GeneralPauliNoise):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def general_pauli(
+    def pauli_channel(
         target: QubitSetInput, probX: float, probY: float, probZ: float
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -235,18 +235,18 @@ class GeneralPauli(GeneralPauliNoise):
             happening in the Kraus channel.
 
         Returns:
-            Iterable[Instruction]: `Iterable` of GeneralPauli instructions.
+            Iterable[Instruction]: `Iterable` of PauliChannel instructions.
 
         Examples:
-            >>> circ = Circuit().general_pauli(0,probX=0.1,probY=0.2,probZ=0.3)
+            >>> circ = Circuit().pauli_channel(0,probX=0.1,probY=0.2,probZ=0.3)
         """
         return [
-            Instruction(Noise.GeneralPauli(probX=probX, probY=probY, probZ=probZ), target=qubit)
+            Instruction(Noise.PauliChannel(probX=probX, probY=probY, probZ=probZ), target=qubit)
             for qubit in QubitSet(target)
         ]
 
 
-Noise.register_noise(GeneralPauli)
+Noise.register_noise(PauliChannel)
 
 
 class Depolarizing(SingleProbabilisticNoise):
