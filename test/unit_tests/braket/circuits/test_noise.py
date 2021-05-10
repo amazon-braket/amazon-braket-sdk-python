@@ -4,8 +4,8 @@ from braket.circuits import Operator
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
-    PauliNoise,
     Noise,
+    PauliNoise,
     SingleProbabilisticNoise,
 )
 
@@ -38,7 +38,7 @@ def damping_noise():
 @pytest.fixture
 def generalized_amplitude_damping_noise():
     return GeneralizedAmplitudeDampingNoise(
-        probability=0.9, gamma=0.2, qubit_count=1, ascii_symbols=["foo"]
+        gamma=0.2, probability=0.9, qubit_count=1, ascii_symbols=["foo"]
     )
 
 
@@ -122,7 +122,7 @@ def test_invalid_data_generalized_amplitude_damping_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
     gamma = 0.1
-    GeneralizedAmplitudeDampingNoise(probability, gamma, qubit_count, ascii_symbols)
+    GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -131,7 +131,7 @@ def test_invalid_data_generalized_amplitude_damping_gamma(gamma):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probability = 0.1
-    GeneralizedAmplitudeDampingNoise(probability, gamma, qubit_count, ascii_symbols)
+    GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
 
 
 def test_ascii_symbols(noise):
@@ -187,7 +187,7 @@ def test_damping_noise_str(damping_noise):
 
 
 def test_generalized_amplitude_damping_noise_str(generalized_amplitude_damping_noise):
-    expected = "{}('probability': {}, 'gamma': {}, 'qubit_count': {})".format(
+    expected = "{}('gamma': {}, 'probability': {}, 'qubit_count': {})".format(
         generalized_amplitude_damping_noise.name,
         generalized_amplitude_damping_noise.probability,
         generalized_amplitude_damping_noise.gamma,

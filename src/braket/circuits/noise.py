@@ -254,12 +254,12 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
     """
 
     def __init__(
-        self, probability: float, gamma: float, qubit_count: int, ascii_symbols: Sequence[str]
+        self, gamma: float, probability: float, qubit_count: int, ascii_symbols: Sequence[str]
     ):
         """
         Args:
-            probability (float): Probability of the system being excited by the environment.
             gamma (float): Probability of damping.
+            probability (float): Probability of the system being excited by the environment.
             qubit_count (int): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and

@@ -614,17 +614,17 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
     This noise channel is shown as `GAD` in circuit diagrams.
     """
 
-    def __init__(self, probability: float, gamma: float):
+    def __init__(self, gamma: float, probability: float):
         super().__init__(
             gamma=gamma,
             probability=probability,
             qubit_count=1,
-            ascii_symbols=["GAD({:.2g},{:.2g})".format(probability, gamma)],
+            ascii_symbols=["GAD({:.2g},{:.2g})".format(gamma, probability)],
         )
 
     def to_ir(self, target: QubitSet):
         return ir.GeneralizedAmplitudeDamping.construct(
-            target=target[0], probability=self.probability, gamma=self.gamma
+            target=target[0], gamma=self.gamma, probability=self.probability
         )
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -641,7 +641,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
     @staticmethod
     @circuit.subroutine(register=True)
     def generalized_amplitude_damping(
-        target: QubitSetInput, probability: float, gamma: float
+        target: QubitSetInput, gamma: float, probability: float
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -658,7 +658,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         """
         return [
             Instruction(
-                Noise.GeneralizedAmplitudeDamping(probability=probability, gamma=gamma),
+                Noise.GeneralizedAmplitudeDamping(gamma=gamma, probability=probability),
                 target=qubit,
             )
             for qubit in QubitSet(target)
