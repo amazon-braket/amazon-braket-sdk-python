@@ -30,7 +30,7 @@ quadratic speedup over several classical algorithms.
 
 
 *************************
-`Quantum fourier transform <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QFT/QFT.ipynb>`_
+`Quantum Fourier transform <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QFT/QFT.ipynb>`_
 *************************
 
 This tutorial provides a detailed implementation of the Quantum Fourier Transform (QFT) and 
