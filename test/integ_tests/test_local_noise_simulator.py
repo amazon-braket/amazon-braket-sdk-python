@@ -32,7 +32,7 @@ from gate_model_device_testing_utils import (
 
 from braket.devices import LocalSimulator
 
-DEVICE = LocalSimulator(backend="noise_simulator")
+DEVICE = LocalSimulator("braket_dm")
 SHOTS = 8000
 
 
