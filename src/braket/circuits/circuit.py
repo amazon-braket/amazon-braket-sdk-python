@@ -28,7 +28,7 @@ from braket.circuits.noise_helpers import (
     check_noise_target_gates,
     check_noise_target_qubits,
     check_noise_target_unitary,
-    make_it_a_list,
+    wrap_with_list,
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
@@ -606,7 +606,7 @@ class Circuit:
 
         """
         # check whether gate noise is applied to an empty circuit
-        if len(self.qubits) == 0:
+        if not self.qubits:
             raise IndexError("Gate noise cannot be applied to an empty circuit.")
 
         # check if target_gates and target_unitary are both given
@@ -619,11 +619,11 @@ class Circuit:
             raise IndexError("target_qubits must be within the range of the current circuit.")
 
         # make noise a list
-        noise = make_it_a_list(noise)
+        noise = wrap_with_list(noise)
 
         # make target_gates a list
         if target_gates is not None:
-            target_gates = make_it_a_list(target_gates)
+            target_gates = wrap_with_list(target_gates)
             # remove duplicate items
             target_gates = list(dict.fromkeys(target_gates))
 
@@ -695,8 +695,8 @@ to an empty circuit."
 
         target_qubits = check_noise_target_qubits(self, target_qubits)
 
-        if not isinstance(noise, list):
-            noise = [noise]
+        # make noise a list
+        noise = wrap_with_list(noise)
         for noise_channel in noise:
             if not isinstance(noise_channel, Noise):
                 raise TypeError("Noise must be an instance of the Noise class")
@@ -772,8 +772,8 @@ to an empty circuit."
                 raise ValueError("target_qubits must contain only non-negative integers.")
             target_qubits = QubitSet(target_qubits)
 
-        if not isinstance(noise, list):
-            noise = [noise]
+        # make noise a list
+        noise = wrap_with_list(noise)
         for noise_channel in noise:
             if not isinstance(noise_channel, Noise):
                 raise TypeError("Noise must be an instance of the Noise class")

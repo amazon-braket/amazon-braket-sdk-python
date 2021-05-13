@@ -1,3 +1,16 @@
+# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from typing import Any, Sequence
 
 from braket.circuits.quantum_operator import QuantumOperator
@@ -111,7 +124,7 @@ class SingleProbabilisticNoise(Noise):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probability, float):
-            raise ValueError("probability must be float type")
+            raise TypeError("probability must be float type")
         if not (probability <= 0.5 and probability >= 0.0):
             raise ValueError("probability must be a real number in the interval [0,1/2]")
         self._probability = probability
@@ -151,7 +164,7 @@ class SingleProbabilisticNoise_34(Noise):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probability, float):
-            raise ValueError("probability must be float type")
+            raise TypeError("probability must be float type")
         if not (probability <= 0.75 and probability >= 0.0):
             raise ValueError("probability must be a real number in the interval [0,3/4]")
         self._probability = probability
@@ -191,7 +204,7 @@ class SingleProbabilisticNoise_1516(Noise):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probability, float):
-            raise ValueError("probability must be float type")
+            raise TypeError("probability must be float type")
         if not (probability <= 0.9375 and probability >= 0.0):
             raise ValueError("probability must be a real number in the interval [0,15/16]")
         self._probability = probability
@@ -240,15 +253,15 @@ class PauliNoise(Noise):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probX, float):
-            raise ValueError("probX must be float type")
+            raise TypeError("probX must be float type")
         if not (probX <= 1.0 and probX >= 0.0):
             raise ValueError("probX must be a real number in the interval [0,1]")
         if not isinstance(probY, float):
-            raise ValueError("probY must be float type")
+            raise TypeError("probY must be float type")
         if not (probY <= 1.0 and probY >= 0.0):
             raise ValueError("probY must be a real number in the interval [0,1]")
         if not isinstance(probZ, float):
-            raise ValueError("probZ must be float type")
+            raise TypeError("probZ must be float type")
         if not (probZ <= 1.0 and probZ >= 0.0):
             raise ValueError("probZ must be a real number in the interval [0,1]")
         if probX + probY + probZ > 1:
@@ -262,7 +275,7 @@ class PauliNoise(Noise):
     def probX(self) -> float:
         """
         Returns:
-            probX (float): The probability that parameterizes the Kraus matrices.
+            probX (float): The probability of a Pauli X error.
         """
         return self._probX
 
@@ -270,7 +283,7 @@ class PauliNoise(Noise):
     def probY(self) -> float:
         """
         Returns:
-            probY (float): The probability that parameterizes the Kraus matrices.
+            probY (float): The probability of a Pauli Y error.
         """
         return self._probY
 
@@ -278,7 +291,7 @@ class PauliNoise(Noise):
     def probZ(self) -> float:
         """
         Returns:
-            probZ (float): The probability that parameterizes the Kraus matrices.
+            probZ (float): The probability of a Pauli Z error.
         """
         return self._probZ
 
@@ -310,7 +323,7 @@ class DampingNoise(Noise):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(gamma, float):
-            raise ValueError("gamma must be float type")
+            raise TypeError("gamma must be float type")
         if not (gamma <= 1.0 and gamma >= 0.0):
             raise ValueError("gamma must be a real number in the interval [0,1]")
         self._gamma = gamma
@@ -353,7 +366,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         super().__init__(gamma=gamma, qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probability, float):
-            raise ValueError("probability must be float type")
+            raise TypeError("probability must be float type")
         if not (probability <= 1.0 and probability >= 0.0):
             raise ValueError("probability must be a real number in the interval [0,1]")
         self._probability = probability

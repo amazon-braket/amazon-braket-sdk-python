@@ -1,3 +1,16 @@
+# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 import pytest
 
 from braket.circuits import Operator
@@ -14,8 +27,10 @@ from braket.circuits.noise import (
 invalid_data_qubit_count = [(0, ["foo"])]
 invalid_data_ascii_symbols = [(1, None)]
 invalid_data_ascii_symbols_length = [(2, ["foo", "boo", "braket"])]
-invalid_data_prob = ["a", float("nan"), float("inf"), float("-inf"), 1 + 1j, 0.95, -2.6]
-invalid_data_prob_damping = ["a", float("nan"), float("inf"), float("-inf"), 1 + 1j, 1.5, -2.6]
+invalid_data_prob = [float("nan"), float("inf"), float("-inf"), 0.95, -2.6]
+invalid_data_prob_2 = ["a", 1.0 + 1j]
+invalid_data_prob_damping = [float("nan"), float("inf"), float("-inf"), 1.5, -2.6]
+invalid_data_prob_damping_2 = ["a", 1.0 + 1j]
 
 
 @pytest.fixture
@@ -97,6 +112,30 @@ def test_invalid_data_single_prob_1516(probability):
     SingleProbabilisticNoise_1516(probability, qubit_count, ascii_symbols)
 
 
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probability", invalid_data_prob_2)
+def test_invalid_data_type_single_prob(probability):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    SingleProbabilisticNoise(probability, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probability", invalid_data_prob_2)
+def test_invalid_data_type_single_prob_34(probability):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    SingleProbabilisticNoise_34(probability, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probability", invalid_data_prob_2)
+def test_invalid_data_type_single_prob_1516(probability):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    SingleProbabilisticNoise_1516(probability, qubit_count, ascii_symbols)
+
+
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probX", invalid_data_prob)
 def test_invalid_data_pauli_probX(probX):
@@ -127,6 +166,36 @@ def test_invalid_data_pauli_probZ(probZ):
     PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probX", invalid_data_prob_2)
+def test_invalid_data_type_pauli_probX(probX):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    probY = 0.1
+    probZ = 0.1
+    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probY", invalid_data_prob_2)
+def test_invalid_data_type_pauli_probY(probY):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    probX = 0.1
+    probZ = 0.1
+    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probZ", invalid_data_prob_2)
+def test_invalid_data_type_pauli_probZ(probZ):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    probX = 0.1
+    probY = 0.1
+    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_invalid_data_pauli_sum():
     qubit_count = 1
@@ -148,6 +217,23 @@ def test_invalid_data_damping_prob(gamma):
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probability", invalid_data_prob_damping)
 def test_invalid_data_generalized_amplitude_damping_prob(probability):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    gamma = 0.1
+    GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("gamma", invalid_data_prob_damping_2)
+def test_invalid_data_type_damping_prob(gamma):
+    qubit_count = 1
+    ascii_symbols = ["foo"]
+    DampingNoise(gamma, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probability", invalid_data_prob_damping_2)
+def test_invalid_data_type_generalized_amplitude_damping_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
     gamma = 0.1

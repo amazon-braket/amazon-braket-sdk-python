@@ -1,3 +1,16 @@
+# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 import numpy as np
 import pytest
 
@@ -672,13 +685,13 @@ def test_apply_noise_to_gates_1QubitNoise_not_dense(circuit_2qubit_not_dense, no
 
     expected_moments = Moments()
     expected_moments._add(Instruction(Gate.X(), 0), noise_index=1)
-    expected_moments._add_noise(Instruction(noise_1qubit, 0), "gate_noise", 1)
+    expected_moments.add_noise(Instruction(noise_1qubit, 0), "gate_noise", 1)
     expected_moments._add(Instruction(Gate.Y(), 1), noise_index=1)
-    expected_moments._add_noise(Instruction(noise_1qubit, 1), "gate_noise", 1)
+    expected_moments.add_noise(Instruction(noise_1qubit, 1), "gate_noise", 1)
     expected_moments._add(Instruction(Gate.X(), 0), noise_index=1)
-    expected_moments._add_noise(Instruction(noise_1qubit, 0), "gate_noise", 1)
+    expected_moments.add_noise(Instruction(noise_1qubit, 0), "gate_noise", 1)
     expected_moments._add(Instruction(Gate.CNot(), [0, 1]), noise_index=2)
-    expected_moments._add_noise(Instruction(noise_1qubit, 0), "gate_noise", 1)
-    expected_moments._add_noise(Instruction(noise_1qubit, 1), "gate_noise", 2)
+    expected_moments.add_noise(Instruction(noise_1qubit, 0), "gate_noise", 1)
+    expected_moments.add_noise(Instruction(noise_1qubit, 1), "gate_noise", 2)
 
     assert circ.moments == expected_moments

@@ -36,8 +36,8 @@ class MomentsKey(NamedTuple):
     Args:
      time: moment
      qubits: qubit set
-     moment_type: can be 'gate', or 'noise', or 'gate_noise' which is associated with gates
-                 or 'readout_noise'.
+     moment_type: can be 'gate', 'noise', or 'gate_noise' which is associated with gates;
+                 and 'readout_noise' or 'initialization_noise'.
      noise_index: the number of noise channels at the same moment. For gates, this is the
                  number of gate_noise channels associated with that gate. For all other noise
                  types, noise_index starts from 0; but for gate noise, it starts from 1.
@@ -172,17 +172,6 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def add_noise(
         self, instruction: Instruction, input_type: str = "noise", noise_index: int = 0
     ) -> None:
-        """
-        Add instructions to self.
-
-        Args:
-            instructions (Iterable[Instruction]): Instructions to add to self. The instruction is
-                added to the max time slice in which the instruction fits.
-        """
-
-        self._add_noise(instruction, input_type, noise_index)
-
-    def _add_noise(self, instruction: Instruction, input_type: str, noise_index: int) -> None:
 
         qubit_range = instruction.target
         time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
