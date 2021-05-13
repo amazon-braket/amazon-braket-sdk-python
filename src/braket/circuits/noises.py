@@ -246,8 +246,8 @@ class PauliChannel(PauliNoise):
 
         Args:
             target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
-            probability List[float]: Probabilities for the Pauli X, Y and Z noise
-            happening in the Kraus channel.
+                probability List[float]: Probabilities for the Pauli X, Y and Z noise
+                happening in the Kraus channel.
 
         Returns:
             Iterable[Instruction]: `Iterable` of PauliChannel instructions.

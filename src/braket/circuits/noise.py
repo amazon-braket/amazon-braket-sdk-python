@@ -238,7 +238,7 @@ class PauliNoise(Noise):
         """
         Args:
             probX [float], probY [float], probZ [float]: The coefficients of the Kraus operators
-            in the channel.
+                in the channel.
             qubit_count (int): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and

@@ -55,10 +55,10 @@ class MomentsKey(NamedTuple):
      time: moment
      qubits: qubit set
      moment_type: can be GATE, NOISE, or GATE_NOISE which is associated with gates;
-                 and READOUT_NOISE or INITIALIZATION_NOISE.
+        and READOUT_NOISE or INITIALIZATION_NOISE.
      noise_index: the number of noise channels at the same moment. For gates, this is the
-                 number of gate_noise channels associated with that gate. For all other noise
-                 types, noise_index starts from 0; but for gate noise, it starts from 1.
+        number of gate_noise channels associated with that gate. For all other noise
+        types, noise_index starts from 0; but for gate noise, it starts from 1.
     """
 
     time: int

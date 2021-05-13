@@ -230,9 +230,9 @@ def apply_noise_to_gates(
     Args:
         circuit (Circuit): A ciruit where `noise` is applied to.
         noise (Iterable[Type[Noise]]): Noise channel(s) to be applied
-        to the circuit.
+            to the circuit.
         target_gates (Union[Iterable[Type[Gate]], np.ndarray]): List of gates, or a unitary matrix
-         which `noise` is applied to.
+            which `noise` is applied to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is applied to.
 
     Returns:

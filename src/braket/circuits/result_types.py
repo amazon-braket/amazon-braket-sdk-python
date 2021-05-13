@@ -84,8 +84,8 @@ class DensityMatrix(ResultType):
         """
         Args:
             target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
-            of the reduced density matrix. Default is `None`, and the
-            full density matrix is returned.
+                of the reduced density matrix. Default is `None`, and the
+                full density matrix is returned.
 
         Examples:
             >>> ResultType.DensityMatrix(target=[0, 1])
@@ -115,8 +115,8 @@ class DensityMatrix(ResultType):
         """Registers this function into the circuit class.
         Args:
             target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
-            of the reduced density matrix. Default is `None`, and the
-            full density matrix is returned.
+                of the reduced density matrix. Default is `None`, and the
+                full density matrix is returned.
 
         Returns:
             ResultType: density matrix as a requested result type
