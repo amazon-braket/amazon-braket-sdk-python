@@ -822,6 +822,11 @@ class Kraus(Noise):
             >>> K1 = np.kron([[1., 0.],[0., 1.]], [[0., 1.],[1., 0.]]) * sqrt(0.1)
             >>> circ = Circuit().kraus(0, matrices=[K0, K1])
         """
+        if 2 ** len(targets) != matrices[0].shape[0]:
+            raise ValueError(
+                "Dimensions of the supplied Kraus matrices are incompatible with the targets"
+            )
+
         return Instruction(
             Noise.Kraus(matrices=matrices, display_name=display_name), target=targets
         )
