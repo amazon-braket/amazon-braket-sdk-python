@@ -772,6 +772,8 @@ class Kraus(Noise):
                 raise ValueError(f"all matrices in {matrices} must have the same shape")
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
         qubit_count = int(np.log2(self._matrices[0].shape[0]))
+        if qubit_count > 2:
+            raise ValueError("Kraus operators with more than two qubits are not supported.")
         if len(matrices) > 2 ** (2 * qubit_count):
             raise ValueError("The number of Kraus operators is beyond limit.")
 

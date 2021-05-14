@@ -37,8 +37,6 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
 
     if 2 ** qubit_count != matrix.shape[0] or qubit_count < 1:
         raise ValueError(f"`matrix` dimension {matrix.shape[0]} is not a positive power of 2")
-    if qubit_count > 2:
-        raise ValueError("Kraus operators with more than two qubits are not supported.")
 
 
 def is_hermitian(matrix: np.array) -> bool:
