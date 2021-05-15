@@ -16,6 +16,7 @@ from typing import Any, Dict
 
 import numpy as np
 
+from braket.aws import AwsDevice
 from braket.circuits import Circuit, Observable, ResultType
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 from braket.devices import Device
@@ -23,10 +24,7 @@ from braket.tasks import GateModelQuantumTaskResult
 
 
 def get_tol(shots: int) -> Dict[str, float]:
-    if shots:
-        return {"atol": 0.1, "rtol": 0.15}
-    else:
-        return {"atol": 0.01, "rtol": 0}
+    return {"atol": 0.1, "rtol": 0.15} if shots else {"atol": 0.01, "rtol": 0}
 
 
 def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
@@ -41,15 +39,35 @@ def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
     assert result.measurement_counts.most_common(1)[0][0] == "001"
 
 
-def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+def no_result_types_testing(
+    circuit: Circuit, device: Device, run_kwargs: Dict[str, Any], expected: Dict[str, float]
+):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
-    bell = Circuit().h(0).cnot(0, 1)
-    result = device.run(bell, **run_kwargs).result()
-
-    assert np.allclose(result.measurement_probabilities["00"], 0.5, **tol)
-    assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
+    result = device.run(circuit, **run_kwargs).result()
+    probabilities = result.measurement_probabilities
+    for bitstring in probabilities:
+        assert np.allclose(probabilities[bitstring], expected[bitstring], **tol)
     assert len(result.measurements) == shots
+
+
+def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
+    no_result_types_testing(Circuit().h(0).cnot(0, 1), device, run_kwargs, {"00": 0.5, "11": 0.5})
+
+
+def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict[str, Any]):
+    shots = run_kwargs["shots"]
+    tol = get_tol(shots)
+    bell = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.X(), target=[2])
+        .variance(observable=Observable.Y(), target=[3])
+    )
+    result = device.run(bell, **run_kwargs).result()
+    assert np.allclose(result.values[0], 0, **tol)
+    assert np.allclose(result.values[1], 1, **tol)
 
 
 def result_types_zero_shots_bell_pair_testing(

@@ -37,27 +37,32 @@ def s3_resource(boto_session):
 
 
 @pytest.fixture(scope="session")
-def s3_bucket(s3_resource, boto_session):
+def s3_client(boto_session):
+    return boto_session.client("s3")
+
+
+@pytest.fixture(scope="session")
+def account_id(boto_session):
+    return boto_session.client("sts").get_caller_identity()["Account"]
+
+
+@pytest.fixture(scope="session")
+def s3_bucket(s3_resource, s3_client, account_id, boto_session):
     """Create / get S3 bucket for tests"""
 
     region_name = boto_session.region_name
-    account_id = boto_session.client("sts").get_caller_identity()["Account"]
     bucket_name = f"amazon-braket-sdk-integ-tests-{account_id}"
     bucket = s3_resource.Bucket(bucket_name)
 
     try:
-        bucket.create(ACL="private", CreateBucketConfiguration={"LocationConstraint": region_name})
+        # Determine if bucket exists
+        s3_client.head_bucket(Bucket=bucket_name)
     except ClientError as e:
-        code = e.response["Error"]["Code"]
-
-        # Bucket exists in profile region
-        if code == "BucketAlreadyOwnedByYou":
-            pass
-        # Bucket exists in another region
-        elif code == "IllegalLocationConstraintException" and bucket.creation_date:
-            pass
-        else:
-            raise e
+        error_code = e.response["Error"]["Code"]
+        if error_code == "404":
+            bucket.create(
+                ACL="private", CreateBucketConfiguration={"LocationConstraint": region_name}
+            )
 
     return bucket_name
 

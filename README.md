@@ -2,8 +2,10 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
+[![Build Status](https://img.shields.io/github/workflow/status/aws/amazon-braket-sdk-python/Python%20package/main?logo=github)](https://github.com/aws/amazon-braket-sdk-python/actions?query=workflow%3A%22Python+package%22)
+[![codecov](https://codecov.io/gh/aws/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/aws/amazon-braket-sdk-python)
+[![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-sdk-python.svg?logo=read-the-docs)](https://amazon-braket-sdk-python.readthedocs.io/en/latest/?badge=latest)
 [![Code Style: Black](https://img.shields.io/badge/code_style-black-000000.svg)](https://github.com/psf/black)
-[![Documentation Status](https://readthedocs.org/projects/amazon-braket-sdk-python/badge/?version=latest)](https://amazon-braket-sdk-python.readthedocs.io/en/latest/?badge=latest)
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
 
@@ -26,6 +28,8 @@ To learn more about IAM user, roles, and policies, see [Adding and Removing IAM 
 ### Boto3 and setting up AWS credentials
 
 Follow the installation [instructions](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html) for Boto3 and setting up AWS credentials.
+
+**Note:** Make sure that your AWS region is set to one supported by Amazon Braket. You can check this in your AWS configuration file, which is located by default at `~/.aws/config`.
 
 ### Configure your AWS account with the resources necessary for Amazon Braket
 If you are new to Amazon Braket, onboard to the service and create the resources necessary to use Amazon Braket using the [AWS console](https://console.aws.amazon.com/braket/home ).
@@ -68,10 +72,8 @@ import boto3
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-s3_folder = (f"amazon-braket-output-{aws_account_id}", "folder-name")
+s3_folder = ("amazon-braket-Your-Bucket-Name", "folder-name") # Use the S3 bucket you created during onboarding
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, s3_folder, shots=100)
@@ -80,12 +82,23 @@ print(task.result().measurement_counts)
 
 The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). The `s3_folder` statement defines the Amazon S3 bucket for the task result and the folder in the bucket to store the task result. This folder is created when you run the task. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job. This example can be found in `../examples/bell.py`.
 
-### Available Simulators
-Amazon Braket provides access to two simulators: a fully managed statevector simulator, SV1, and a local simulator that is part of the Amazon Braket SDK.
+### Running multiple tasks at once
 
-- `arn:aws:braket:::device/quantum-simulator/amazon/sv1` - SV1 is a fully managed, high-performance, state vector simulator. It can simulate circuits of up to 34 qubits and has a maximum runtime of 12h. You should expect a 34-qubit, dense, and square (circuit depth = 34) circuit to take approximately 1-2 hours to complete, depending on the type of gates used and other factors.
+Many quantum algorithms need to run multiple independent circuits, and submitting the circuits in parallel can be faster than submitting them one at a time. In particular, parallel task processing provides a significant speed up when using simulator devices. The following example shows how to run a batch of tasks on SV1:
+
+```python
+circuits = [bell for _ in range(5)]
+batch = device.run_batch(circuits, s3_folder, shots=100)
+print(batch.results()[0].measurement_counts)  # The result of the first task in the batch
+```
+
+### Available Simulators
+Amazon Braket provides access to two types of simulators: fully managed simulators, available through the Amazon Braket service, and the local simulator that is part of the Amazon Braket SDK.
+
+- Fully managed simulators offer high-performance circuit simulations. These simulators can handle circuits larger than circuits that run on quantum hardware. For example, the SV1 state vector simulator shown in the previous examples requires approximately 1 or 2 hours to complete a 34-qubit, dense, and square circuit (circuit depth = 34), depending on the type of gates used and other factors. For a list of available simulators and their features, consult the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
 - `LocalSimulator()` - The Amazon Braket Python SDK comes bundled with an implementation of a quantum simulator that you can run locally. The local simulator is well suited for rapid prototyping on small circuits up to 25 qubits or on small noisy circuits up to 13 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repo `../examples/local_bell.py` and `../examples/local_noise_simulation.py`.
+
 
 ### Debugging logs
 
@@ -101,10 +114,8 @@ import boto3
 from braket.circuits import Circuit
 from braket.aws import AwsDevice
 
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-
 device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
-s3_folder = (f"amazon-braket-output-{aws_account_id}", "RIGETTI")
+s3_folder = ("amazon-braket-Your-Bucket-Name", "RIGETTI") # Use the S3 bucket you created during onboarding
 
 bell = Circuit().h(0).cnot(0, 1)
 task = device.run(bell, s3_folder)
@@ -118,10 +129,7 @@ task = device.run(bell, s3_folder, poll_timeout_seconds=86400)  # 1 day
 print(task.result().measurement_counts)
 ```
 
-Specify which quantum computer hardware to use by changing the value of the `device_arn` to the value for quantum computer to use:
-- **IonQ** "arn:aws:braket:::device/qpu/ionq/ionQdevice"
-- **Rigetti** "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
-- **D-Wave** "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6" (See the next section in this document for more information about using D-Wave.)
+To select a quantum hardware device, specify its ARN as the value of the `device_arn` argument. A list of available quantum devices and their features can be found in the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
 **Important** Tasks may not run immediately on the QPU. The QPUs only execute tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
 
@@ -129,7 +137,7 @@ Specify which quantum computer hardware to use by changing the value of the `dev
 If you want to use [Ocean](https://docs.ocean.dwavesys.com/en/latest/) with the D-Wave QPU, you can install the [amazon-braket-ocean-plugin-python](https://github.com/aws/amazon-braket-ocean-plugin-python). Information about how to install the plugin is provided in the [README](https://github.com/aws/amazon-braket-ocean-plugin-python/blob/master/README.md) for the repo.
 
 ## Sample Notebooks
-Coming soon
+Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/aws/amazon-braket-examples/) repo.
 
 ## Braket Python SDK API Reference Documentation
 
@@ -152,19 +160,29 @@ To view the generated documentation, open the following file in a browser:
 This repository has both unit and integration tests.
 
 To run the tests, make sure to install test dependencies first:
+
 ```bash
 pip install -e "amazon-braket-sdk-python[test]"
 ```
 
 ### Unit Tests
+
+To run the unit tests:
+
 ```bash
 tox -e unit-tests
 ```
 
-You can also pass in various pytest arguments `tox -e integ-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+You can also pass in various pytest arguments to run selected tests:
 
+```bash
+tox -e unit-tests -- your-arguments
+```
 
-To run linters and doc generators and unit tests
+For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+
+To run linters and doc generators and unit tests:
+
 ```bash
 tox
 ```
@@ -179,12 +197,17 @@ After you create a profile, use the following command to set the `AWS_PROFILE` s
 export AWS_PROFILE=YOUR_PROFILE_NAME
 ```
 
-Run the tests
+Run the tests:
+
 ```bash
 tox -e integ-tests
 ```
 
-You can also pass in various pytest arguments `tox -e integ-tests -- your-arguments` to run selected tests. For more information, please see [pytest usage](https://docs.pytest.org/en/stable/usage.html).
+As with unit tests, you can also pass in various pytest arguments:
+
+```bash
+tox -e integ-tests -- your-arguments
+```
 
 ## License
 This project is licensed under the Apache-2.0 License.

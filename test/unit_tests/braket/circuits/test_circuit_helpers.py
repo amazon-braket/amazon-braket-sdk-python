@@ -18,6 +18,16 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_validate_circuit_and_shots_no_instructions():
+    validate_circuit_and_shots(Circuit(), 100)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_circuit_and_shots_0_no_instructions():
+    validate_circuit_and_shots(Circuit(), 0)
+
+
+@pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_0_no_results():
     validate_circuit_and_shots(Circuit().h(0), 0)
 

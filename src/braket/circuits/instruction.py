@@ -39,7 +39,8 @@ class Instruction:
 
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the `Qubit`
-                or `QubitSet` class requirements.
+                or `QubitSet` class requirements. Also, if operator qubit count does not equal
+                the size of the target qubit set.
             TypeError: If a `Qubit` class can't be constructed from `target` due to an incorrect
                 `typing`.
 
@@ -57,6 +58,14 @@ class Instruction:
             raise ValueError("Operator cannot be empty")
         self._operator = operator
         self._target = QubitSet(target)
+        if (
+            hasattr(self._operator, "qubit_count")
+            and len(self._target) != self._operator.qubit_count
+        ):
+            raise ValueError(
+                f"Operator qubit count {self._operator.qubit_count} must be "
+                f"equal to size of target qubit set {self._target}"
+            )
 
     @property
     def operator(self) -> InstructionOperator:

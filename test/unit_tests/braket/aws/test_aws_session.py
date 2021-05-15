@@ -12,11 +12,13 @@
 # language governing permissions and limitations under the License.
 
 import json
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
 
+import braket._schemas as braket_schemas
+import braket._sdk as braket_sdk
 from braket.aws import AwsSession
 
 TEST_S3_OBJ_CONTENTS = {
@@ -39,8 +41,8 @@ def aws_session(boto_session):
 
 
 def test_initializes_boto_client_if_required(boto_session):
-    AwsSession(boto_session=boto_session, braket_client=None)
-    boto_session.client.assert_called_with("braket")
+    AwsSession(boto_session=boto_session)
+    boto_session.client.assert_called_with("braket", config=None)
 
 
 def test_uses_supplied_braket_client():
@@ -48,8 +50,42 @@ def test_uses_supplied_braket_client():
     boto_session.region_name = "foobar"
     braket_client = Mock()
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
-
     assert aws_session.braket_client == braket_client
+
+
+def test_config(boto_session):
+    config = Mock()
+    AwsSession(boto_session=boto_session, config=config)
+    boto_session.client.assert_called_with("braket", config=config)
+
+
+@patch("os.path.exists")
+@pytest.mark.parametrize(
+    "metadata_file_exists, initial_user_agent",
+    [
+        (True, None),
+        (False, None),
+        (True, ""),
+        (False, ""),
+        (True, "Boto3/1.17.18 Python/3.7.10"),
+        (False, "Boto3/1.17.18 Python/3.7.10 exec-env/AWS_Lambda_python3.7"),
+    ],
+)
+def test_populates_user_agent(os_path_exists_mock, metadata_file_exists, initial_user_agent):
+    boto_session = Mock()
+    boto_session.region_name = "foobar"
+    braket_client = Mock()
+    braket_client._client_config.user_agent = initial_user_agent
+    nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
+    os_path_exists_mock.return_value = metadata_file_exists
+    aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
+    expected_user_agent = (
+        f"{initial_user_agent} BraketSdk/{braket_sdk.__version__} "
+        f"BraketSchemas/{braket_schemas.__version__} "
+        f"NotebookInstance/{0 if metadata_file_exists else None}"
+    )
+    os_path_exists_mock.assert_called_with(nbi_metadata_path)
+    assert aws_session.braket_client._client_config.user_agent == expected_user_agent
 
 
 def test_retrieve_s3_object_body_success(boto_session):
@@ -70,6 +106,13 @@ def test_retrieve_s3_object_body_success(boto_session):
     aws_session = AwsSession(boto_session=boto_session)
     return_value = aws_session.retrieve_s3_object_body(bucket_name, filename)
     assert return_value == json.dumps(TEST_S3_OBJ_CONTENTS)
+    boto_session.resource.assert_called_with("s3", config=None)
+
+    config = Mock()
+    AwsSession(boto_session=boto_session, config=config).retrieve_s3_object_body(
+        bucket_name, filename
+    )
+    boto_session.resource.assert_called_with("s3", config=config)
 
 
 @pytest.mark.xfail(raises=ClientError)

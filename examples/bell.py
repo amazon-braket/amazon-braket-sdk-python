@@ -11,15 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import boto3
-
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
-aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
-
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-s3_folder = (f"amazon-braket-output-{aws_account_id}", "folder-name")
+
+# Use the S3 bucket you created during onboarding
+s3_folder = ("amazon-braket-Your-Bucket-Name", "folder-name")
 
 # https://wikipedia.org/wiki/Bell_state
 bell = Circuit().h(0).cnot(0, 1)

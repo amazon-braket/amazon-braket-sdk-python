@@ -14,14 +14,15 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, Optional, Set, Union
+from typing import List, Optional, Union
 
 import boto3
-from boltons.dictutils import FrozenDict
+from botocore.config import Config
 from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
+from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmProperties
@@ -44,25 +45,19 @@ class AwsDevice(Device):
     device.
     """
 
-    DEVICE_REGIONS = FrozenDict(
-        {
-            "rigetti": ["us-west-1"],
-            "ionq": ["us-east-1"],
-            "d-wave": ["us-west-2"],
-            "amazon": ["us-west-2", "us-west-1", "us-east-1"],
-        }
-    )
+    REGIONS = ("us-east-1", "us-west-1", "us-west-2")
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
-    DEFAULT_RESULTS_POLL_TIMEOUT = 432000
-    DEFAULT_RESULTS_POLL_INTERVAL = 1
+    DEFAULT_MAX_PARALLEL = 10
+
+    _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
         Args:
             arn (str): The ARN of the device
-            aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
+            aws_session (AwsSession, optional): An AWS session object. Default is `None`.
 
         Note:
             Some devices (QPUs) are physically located in specific AWS Regions. In some cases,
@@ -75,19 +70,19 @@ class AwsDevice(Device):
         """
         super().__init__(name=None, status=None)
         self._arn = arn
-        self._aws_session = AwsDevice._aws_session_for_device(arn, aws_session)
         self._properties = None
         self._provider_name = None
+        self._topology_graph = None
         self._type = None
-        self.refresh_metadata()
+        self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
 
     def run(
         self,
         task_specification: Union[Circuit, Problem],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: Optional[int] = None,
-        poll_timeout_seconds: Optional[int] = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: Optional[int] = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -96,14 +91,14 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]):  Specification of task
+            task_specification (Union[Circuit, Problem]): Specification of task
                 (circuit or annealing problem) to run on device.
-            s3_destination_folder: The S3 location to save the task's results
+            s3_destination_folder: The S3 location to save the task's results to.
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            poll_timeout_seconds (int): The polling timeout for AwsQuantumTask.result(), in seconds.
-                Default: 5 days.
-            poll_interval_seconds (int): The polling interval for AwsQuantumTask.result(),
+            poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Default: 1 second.
             *aws_quantum_task_args: Variable length positional arguments for
                 `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
@@ -123,12 +118,17 @@ class AwsDevice(Device):
             >>> device.run(task_specification=circuit,
             >>>     s3_destination_folder=("bucket-foo", "key-bar"))
 
+            >>> circuit = Circuit().h(0).cnot(0, 1)
+            >>> device = AwsDevice("arn3")
+            >>> device.run(task_specification=circuit,
+            >>>     s3_destination_folder=("bucket-foo", "key-bar"), disable_qubit_rewiring=True)
+
             >>> problem = Problem(
             >>>     ProblemType.ISING,
             >>>     linear={1: 3.14},
             >>>     quadratic={(1, 2): 10.08},
             >>> )
-            >>> device = AwsDevice("arn3")
+            >>> device = AwsDevice("arn4")
             >>> device.run(problem, ("bucket-foo", "key-bar"),
             >>>     device_parameters={
             >>>         "providerLevelParameters": {"postprocessingType": "SAMPLING"}}
@@ -137,17 +137,66 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        if shots is None:
-            if "qpu" in self.arn:
-                shots = AwsDevice.DEFAULT_SHOTS_QPU
-            else:
-                shots = AwsDevice.DEFAULT_SHOTS_SIMULATOR
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
             task_specification,
             s3_destination_folder,
-            shots,
+            shots if shots is not None else self._default_shots,
+            poll_timeout_seconds=poll_timeout_seconds,
+            poll_interval_seconds=poll_interval_seconds,
+            *aws_quantum_task_args,
+            **aws_quantum_task_kwargs,
+        )
+
+    def run_batch(
+        self,
+        task_specifications: List[Union[Circuit, Problem]],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: Optional[int] = None,
+        max_parallel: Optional[int] = None,
+        max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        *aws_quantum_task_args,
+        **aws_quantum_task_kwargs,
+    ) -> AwsQuantumTaskBatch:
+        """Executes a batch of tasks in parallel
+
+        Args:
+            task_specifications (List[Union[Circuit, Problem]]): List of  circuits
+                or annealing problems to run on device.
+            s3_destination_folder: The S3 location to save the tasks' results to.
+            shots (int, optional): The number of times to run the circuit or annealing problem.
+                Default is 1000 for QPUs and 0 for simulators.
+            max_parallel (int, optional): The maximum number of tasks to run on AWS in parallel.
+                Batch creation will fail if this value is greater than the maximum allowed
+                concurrent tasks on the device. Default: 10
+            max_connections (int): The maximum number of connections in the Boto3 connection pool.
+                Also the maximum number of thread pool workers for the batch. Default: 100
+            poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
+                in seconds. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for results in seconds.
+                Default: 1 second.
+            *aws_quantum_task_args: Variable length positional arguments for
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
+            **aws_quantum_task_kwargs: Variable length keyword arguments for
+                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
+
+        Returns:
+            AwsQuantumTaskBatch: A batch containing all of the tasks run
+
+        See Also:
+            `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
+        """
+        return AwsQuantumTaskBatch(
+            AwsDevice._copy_aws_session(self._aws_session, max_connections=max_connections),
+            self._arn,
+            task_specifications,
+            s3_destination_folder,
+            shots if shots is not None else self._default_shots,
+            max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
+            max_workers=max_connections,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
             *aws_quantum_task_args,
@@ -158,7 +207,28 @@ class AwsDevice(Device):
         """
         Refresh the `AwsDevice` object with the most recent Device metadata.
         """
-        metadata = self._aws_session.get_device(self._arn)
+        self._populate_properties(self._aws_session)
+
+    def _get_session_and_initialize(self, session):
+        current_region = session.boto_session.region_name
+        try:
+            self._populate_properties(session)
+            return session
+        except Exception:
+            if "qpu" not in self._arn:
+                raise ValueError(f"Simulator {self._arn} not found in {current_region}")
+        # Search remaining regions for QPU
+        for region in frozenset(AwsDevice.REGIONS) - {current_region}:
+            region_session = AwsDevice._copy_aws_session(session, region)
+            try:
+                self._populate_properties(region_session)
+                return region_session
+            except Exception:
+                pass
+        raise ValueError(f"QPU {self._arn} not found")
+
+    def _populate_properties(self, session):
+        metadata = session.get_device(self._arn)
         self._name = metadata.get("deviceName")
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
@@ -194,8 +264,8 @@ class AwsDevice(Device):
 
     @property
     def topology_graph(self) -> Graph:
-        """Graph: topology of device as a networkx Graph object.
-        Returns None if the topology is not available for the device.
+        """Graph: topology of device as a networkx `Graph` object.
+        Returns `None` if the topology is not available for the device.
 
         Examples:
             >>> import networkx as nx
@@ -211,10 +281,10 @@ class AwsDevice(Device):
 
     def _construct_topology_graph(self) -> Graph:
         """
-        Construct topology graph. If no such metadata is available, return None.
+        Construct topology graph. If no such metadata is available, return `None`.
 
         Returns:
-            Graph: topology of QPU as a networkx Graph object
+            Graph: topology of QPU as a networkx `Graph` object.
         """
         if hasattr(self.properties, "paradigm") and isinstance(
             self.properties.paradigm, GateModelQpuParadigmProperties
@@ -235,44 +305,33 @@ class AwsDevice(Device):
         else:
             return None
 
-    @staticmethod
-    def _aws_session_for_device(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
-        """AwsSession: Returns an AwsSession for the device ARN. """
-        if "qpu" in device_arn:
-            return AwsDevice._aws_session_for_qpu(device_arn, aws_session)
-        else:
-            return aws_session or AwsSession()
+    @property
+    def _default_shots(self):
+        return (
+            AwsDevice.DEFAULT_SHOTS_QPU if "qpu" in self.arn else AwsDevice.DEFAULT_SHOTS_SIMULATOR
+        )
+
+    @property
+    def _default_max_parallel(self):
+        return AwsDevice.DEFAULT_MAX_PARALLEL
 
     @staticmethod
-    def _aws_session_for_qpu(device_arn: str, aws_session: Optional[AwsSession]) -> AwsSession:
-        """
-        Get an AwsSession for the device ARN. QPUs are physically located in specific AWS Regions.
-        The AWS sessions should connect to the Region that the QPU is located in.
-
-        See `braket.aws.aws_qpu.AwsDevice.DEVICE_REGIONS` for the
-        AWS Regions the devices are located in.
-        """
-        region_key = device_arn.split("/")[-2]
-        qpu_regions = AwsDevice.DEVICE_REGIONS.get(region_key, [])
-        return AwsDevice._copy_aws_session(aws_session, qpu_regions)
-
-    @staticmethod
-    def _copy_aws_session(aws_session: Optional[AwsSession], regions: List[str]) -> AwsSession:
-        if aws_session:
-            if aws_session.boto_session.region_name in regions:
-                return aws_session
-            else:
-                creds = aws_session.boto_session.get_credentials()
-                boto_session = boto3.Session(
-                    aws_access_key_id=creds.access_key,
-                    aws_secret_access_key=creds.secret_key,
-                    aws_session_token=creds.token,
-                    region_name=regions[0],
-                )
-                return AwsSession(boto_session=boto_session)
-        else:
-            boto_session = boto3.Session(region_name=regions[0])
-            return AwsSession(boto_session=boto_session)
+    def _copy_aws_session(
+        aws_session: AwsSession,
+        region: Optional[str] = None,
+        max_connections: Optional[int] = None,
+    ) -> AwsSession:
+        config = Config(max_pool_connections=max_connections) if max_connections else None
+        session_region = aws_session.boto_session.region_name
+        new_region = region or session_region
+        creds = aws_session.boto_session.get_credentials()
+        boto_session = boto3.Session(
+            aws_access_key_id=creds.access_key,
+            aws_secret_access_key=creds.secret_key,
+            aws_session_token=creds.token,
+            region_name=new_region,
+        )
+        return AwsSession(boto_session=boto_session, config=config)
 
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
@@ -305,59 +364,59 @@ class AwsDevice(Device):
             arns (List[str], optional): device ARN list, default is `None`
             names (List[str], optional): device name list, default is `None`
             types (List[AwsDeviceType], optional): device type list, default is `None`
+                QPUs will be searched for all regions and simulators will only be
+                searched for the region of the current session.
             statuses (List[str], optional): device status list, default is `None`
             provider_names (List[str], optional): provider name list, default is `None`
             order_by (str, optional): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
-            aws_session (AwsSession, optional) aws_session: An AWS session object. Default = None.
+            aws_session (AwsSession, optional) aws_session: An AWS session object.
+                Default is `None`.
 
         Returns:
             List[AwsDevice]: list of AWS devices
         """
-        order_by_list = ["arn", "name", "type", "provider_name", "status"]
-        if order_by not in order_by_list:
-            raise ValueError(f"order_by '{order_by}' must be in {order_by_list}")
-        device_regions_set = AwsDevice._get_devices_regions_set(arns, provider_names, types)
-        results = []
-        for region in device_regions_set:
-            aws_session = AwsDevice._copy_aws_session(aws_session, [region])
-            results.extend(
-                aws_session.search_devices(
+
+        if order_by not in AwsDevice._GET_DEVICES_ORDER_BY_KEYS:
+            raise ValueError(
+                f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
+            )
+        types = (
+            frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})
+        )
+        aws_session = aws_session if aws_session else AwsSession()
+        device_map = {}
+        session_region = aws_session.boto_session.region_name
+        search_regions = (
+            (session_region,) if types == {AwsDeviceType.SIMULATOR} else AwsDevice.REGIONS
+        )
+        for region in search_regions:
+            session_for_region = (
+                aws_session
+                if region == session_region
+                else AwsDevice._copy_aws_session(aws_session, region)
+            )
+            # Simulators are only instantiated in the same region as the AWS session
+            types_for_region = sorted(
+                types if region == session_region else types - {AwsDeviceType.SIMULATOR}
+            )
+            region_device_arns = [
+                result["deviceArn"]
+                for result in session_for_region.search_devices(
                     arns=arns,
                     names=names,
-                    types=types,
+                    types=types_for_region,
                     statuses=statuses,
                     provider_names=provider_names,
                 )
+            ]
+            device_map.update(
+                {
+                    arn: AwsDevice(arn, session_for_region)
+                    for arn in region_device_arns
+                    if arn not in device_map
+                }
             )
-        arns = set([result["deviceArn"] for result in results])
-        devices = [AwsDevice(arn, aws_session) for arn in arns]
+        devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
-
-    @staticmethod
-    def _get_devices_regions_set(
-        arns: Optional[List[str]],
-        provider_names: Optional[List[str]],
-        types: Optional[List[AwsDeviceType]],
-    ) -> Set[str]:
-        """Get the set of regions to call `SearchDevices` API given filters"""
-        device_regions_set = set(
-            AwsDevice.DEVICE_REGIONS[key][0] for key in AwsDevice.DEVICE_REGIONS
-        )
-        if provider_names:
-            provider_region_set = set()
-            for provider in provider_names:
-                for key in AwsDevice.DEVICE_REGIONS:
-                    if key in provider.lower():
-                        provider_region_set.add(AwsDevice.DEVICE_REGIONS[key][0])
-                        break
-            device_regions_set = device_regions_set.intersection(provider_region_set)
-        if arns:
-            arns_region_set = set([AwsDevice.DEVICE_REGIONS[arn.split("/")[-2]][0] for arn in arns])
-            device_regions_set = device_regions_set.intersection(arns_region_set)
-        if types and types == [AwsDeviceType.SIMULATOR]:
-            device_regions_set = device_regions_set.intersection(
-                [AwsDevice.DEVICE_REGIONS["amazon"][0]]
-            )
-        return device_regions_set

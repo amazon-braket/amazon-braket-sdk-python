@@ -13,6 +13,7 @@
 
 import pytest
 from gate_model_device_testing_utils import (
+    batch_bell_pair_testing,
     multithreaded_bell_pair_testing,
     no_result_types_bell_pair_testing,
     qubit_ordering_testing,
@@ -21,6 +22,7 @@ from gate_model_device_testing_utils import (
     result_types_bell_pair_marginal_probability_testing,
     result_types_hermitian_testing,
     result_types_nonzero_shots_bell_pair_testing,
+    result_types_observable_not_in_instructions,
     result_types_tensor_hermitian_hermitian_testing,
     result_types_tensor_x_y_testing,
     result_types_tensor_y_hermitian_testing,
@@ -33,18 +35,12 @@ from gate_model_device_testing_utils import (
 from braket.aws import AwsDevice
 
 SHOTS = 8000
-SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+SIMULATOR_ARNS = [SV1_ARN]
+ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0)]
 
 
-@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
-def test_multithreaded_bell_pair(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
-    multithreaded_bell_pair_testing(
-        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
-    )
-
-
-@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_no_result_types_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     no_result_types_bell_pair_testing(
@@ -52,13 +48,13 @@ def test_no_result_types_bell_pair(simulator_arn, aws_session, s3_destination_fo
     )
 
 
-@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     qubit_ordering_testing(device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder})
 
 
-@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_no_shots(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_zero_shots_bell_pair_testing(
@@ -66,7 +62,7 @@ def test_result_types_no_shots(simulator_arn, aws_session, s3_destination_folder
     )
 
 
-@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_nonzero_shots_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_nonzero_shots_bell_pair_testing(
@@ -74,7 +70,7 @@ def test_result_types_nonzero_shots_bell_pair(simulator_arn, aws_session, s3_des
     )
 
 
-@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_bell_pair_full_probability(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_bell_pair_full_probability_testing(
@@ -82,7 +78,7 @@ def test_result_types_bell_pair_full_probability(simulator_arn, aws_session, s3_
     )
 
 
-@pytest.mark.parametrize("simulator_arn", [SIMULATOR_ARN])
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_bell_pair_marginal_probability(
     simulator_arn, aws_session, s3_destination_folder
 ):
@@ -92,7 +88,7 @@ def test_result_types_bell_pair_marginal_probability(
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_x_y_testing(
@@ -100,7 +96,7 @@ def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destinati
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_h_y_testing(
@@ -108,7 +104,7 @@ def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destina
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_hermitian_testing(
@@ -116,7 +112,7 @@ def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destinatio
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_z_testing(
@@ -124,7 +120,7 @@ def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destinati
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_hermitian_hermitian(
     simulator_arn, shots, aws_session, s3_destination_folder
 ):
@@ -134,7 +130,7 @@ def test_result_types_tensor_hermitian_hermitian(
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_y_hermitian_testing(
@@ -142,7 +138,7 @@ def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_d
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS), (SIMULATOR_ARN, 0)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_tensor_z_hermitian_testing(
@@ -150,9 +146,35 @@ def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_d
     )
 
 
-@pytest.mark.parametrize("simulator_arn,shots", [(SIMULATOR_ARN, SHOTS)])
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_all_selected(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_all_selected_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
+    )
+
+
+@pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
+def test_result_types_observable_not_in_instructions(
+    simulator_arn, shots, aws_session, s3_destination_folder
+):
+    device = AwsDevice(simulator_arn, aws_session)
+    result_types_observable_not_in_instructions(
+        device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
+    )
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_multithreaded_bell_pair(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    multithreaded_bell_pair_testing(
+        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
+    )
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_batch_bell_pair(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    batch_bell_pair_testing(
+        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )

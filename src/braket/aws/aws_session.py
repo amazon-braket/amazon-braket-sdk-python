@@ -11,11 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import os.path
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
 import boto3
 from botocore.exceptions import ClientError
+
+import braket._schemas as braket_schemas
+import braket._sdk as braket_sdk
 
 
 class AwsSession(object):
@@ -23,19 +27,45 @@ class AwsSession(object):
 
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
-    def __init__(self, boto_session=None, braket_client=None):
+    def __init__(self, boto_session=None, braket_client=None, config=None):
         """
         Args:
-            boto_session: A boto3 session object
-            braket_client: A boto3 Braket client
+            boto_session: A boto3 session object.
+            braket_client: A boto3 Braket client.
+            config: A botocore Config object.
         """
 
         self.boto_session = boto_session or boto3.Session()
+        self._config = config
 
         if braket_client:
             self.braket_client = braket_client
         else:
-            self.braket_client = self.boto_session.client("braket")
+            self.braket_client = self.boto_session.client("braket", config=self._config)
+        self._update_user_agent()
+
+    def _update_user_agent(self):
+        """
+        Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
+        braket-schemas and the notebook instance version. The header is a string of space delimited
+        values (For example: "Boto3/1.14.43 Python/3.7.9 Botocore/1.17.44"). See:
+        https://botocore.amazonaws.com/v1/documentation/api/latest/reference/config.html#botocore.config.Config
+        """
+
+        def _notebook_instance_version():
+            # TODO: Replace with lifecycle configuration version once we have a way to access those
+            nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
+            return "0" if os.path.exists(nbi_metadata_path) else "None"
+
+        additional_user_agent_fields = (
+            f"BraketSdk/{braket_sdk.__version__} "
+            f"BraketSchemas/{braket_schemas.__version__} "
+            f"NotebookInstance/{_notebook_instance_version()}"
+        )
+
+        self.braket_client._client_config.user_agent = (
+            f"{self.braket_client._client_config.user_agent} {additional_user_agent_fields}"
+        )
 
     #
     # Quantum Tasks
@@ -94,26 +124,26 @@ class AwsSession(object):
 
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
-        Retrieve the S3 object body
+        Retrieve the S3 object body.
 
         Args:
-            s3_bucket (str): The S3 bucket name
-            s3_object_key (str): The S3 object key within the `s3_bucket`
+            s3_bucket (str): The S3 bucket name.
+            s3_object_key (str): The S3 object key within the `s3_bucket`.
 
         Returns:
-            str: The body of the S3 object
+            str: The body of the S3 object.
         """
-        s3 = self.boto_session.resource("s3")
+        s3 = self.boto_session.resource("s3", config=self._config)
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
 
     def get_device(self, arn: str) -> Dict[str, Any]:
         """
         Calls the Amazon Braket `get_device` API to
-        retrieve device metadata
+        retrieve device metadata.
 
         Args:
-            arn (str): The ARN of the device
+            arn (str): The ARN of the device.
 
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetDevice` operation.
@@ -133,11 +163,11 @@ class AwsSession(object):
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
-            arns (List[str], optional): device ARN list, default is `None`
-            names (List[str], optional): device name list, default is `None`
-            types (List[str], optional): device type list, default is `None`
-            statuses (List[str], optional): device status list, default is `None`
-            provider_names (List[str], optional): provider name list, default is `None`
+            arns (List[str], optional): device ARN list, default is `None`.
+            names (List[str], optional): device name list, default is `None`.
+            types (List[str], optional): device type list, default is `None`.
+            statuses (List[str], optional): device status list, default is `None`.
+            provider_names (List[str], optional): provider name list, default is `None`.
 
         Returns:
             List[Dict[str, Any]: The response from the Amazon Braket `SearchDevices` operation.

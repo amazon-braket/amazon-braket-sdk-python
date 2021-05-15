@@ -31,6 +31,11 @@ def test_empty_operator():
     Instruction(None, target=0)
 
 
+@pytest.mark.xfail(raises=ValueError)
+def test_non_matching_qubit_set_and_qubit_count():
+    Instruction(Gate.CNot, target=[0, 0])
+
+
 def test_init_with_qubits():
     target = QubitSet([0, 1])
     instr = Instruction(Gate.CNot(), target)
@@ -50,9 +55,9 @@ def test_init_with_int():
 
 
 def test_init_with_sequence():
-    target = [0, Qubit(1), 2]
+    target = [0, Qubit(1)]
     instr = Instruction(Gate.CNot(), target)
-    assert instr.target == QubitSet([0, 1, 2])
+    assert instr.target == QubitSet([0, 1])
 
 
 def test_getters():

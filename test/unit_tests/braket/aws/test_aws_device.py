@@ -14,9 +14,18 @@
 from unittest.mock import Mock, patch
 
 import pytest
-from common_test_utils import DWAVE_ARN, IONQ_ARN, RIGETTI_ARN, SIMULATOR_ARN, run_and_assert
+from common_test_utils import (
+    DWAVE_ARN,
+    IONQ_ARN,
+    RIGETTI_ARN,
+    RIGETTI_REGION,
+    SV1_ARN,
+    TN1_ARN,
+    run_and_assert,
+    run_batch_and_assert,
+)
 
-from braket.aws import AwsDevice, AwsDeviceType
+from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.circuits import Circuit
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
@@ -55,7 +64,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
 )
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "Aspen-8",
+    "deviceName": "Aspen-9",
     "deviceType": "QPU",
     "providerName": "provider1",
     "deviceStatus": "OFFLINE",
@@ -95,7 +104,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_2 = RigettiDeviceCapabilities.parse_obj(
 )
 
 MOCK_GATE_MODEL_QPU_2 = {
-    "deviceName": "blah",
+    "deviceName": "Blah",
     "deviceType": "QPU",
     "providerName": "blahhhh",
     "deviceStatus": "OFFLINE",
@@ -149,7 +158,7 @@ MOCK_DWAVE_QPU_CAPABILITIES = DwaveDeviceCapabilities.parse_obj(
 )
 
 MOCK_DWAVE_QPU = {
-    "deviceName": "name3",
+    "deviceName": "Advantage_system1.1",
     "deviceType": "QPU",
     "providerName": "provider1",
     "deviceStatus": "ONLINE",
@@ -192,8 +201,6 @@ MOCK_GATE_MODEL_SIMULATOR = {
     "deviceCapabilities": MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json(),
 }
 
-RIGETTI_REGION_KEY = "rigetti"
-
 
 @pytest.fixture
 def arn():
@@ -213,14 +220,21 @@ def circuit():
 @pytest.fixture
 def boto_session():
     _boto_session = Mock()
-    _boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
+    _boto_session.region_name = RIGETTI_REGION
     return _boto_session
 
 
 @pytest.fixture
 def aws_session():
     _boto_session = Mock()
-    _boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
+    _boto_session.region_name = RIGETTI_REGION
+
+    creds = Mock()
+    creds.access_key = "access key"
+    creds.secret_key = "secret key"
+    creds.token = "token"
+    _boto_session.get_credentials.return_value = creds
+
     _aws_session = Mock()
     _aws_session.boto_session = _boto_session
     return _aws_session
@@ -230,6 +244,7 @@ def aws_session():
 def device(aws_session):
     def _device(arn):
         aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+        aws_session.search_devices.return_value = [MOCK_GATE_MODEL_QPU_1]
         return AwsDevice(arn, aws_session)
 
     return _device
@@ -243,11 +258,43 @@ def device(aws_session):
         (MOCK_DWAVE_QPU_CAPABILITIES, MOCK_DWAVE_QPU),
     ],
 )
-def test_device_creation(device_capabilities, get_device_data, arn):
+def test_device_aws_session(device_capabilities, get_device_data, arn):
     mock_session = Mock()
     mock_session.get_device.return_value = get_device_data
     device = AwsDevice(arn, mock_session)
     _assert_device_fields(device, device_capabilities, get_device_data)
+
+
+@patch("braket.aws.aws_device.AwsSession")
+def test_device_simulator_no_aws_session(aws_session_init, aws_session):
+    arn = SV1_ARN
+    aws_session_init.return_value = aws_session
+    aws_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    device = AwsDevice(arn)
+    _assert_device_fields(device, MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES, MOCK_GATE_MODEL_SIMULATOR)
+    aws_session.get_device.assert_called_with(arn)
+
+
+@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
+@patch("braket.aws.aws_device.AwsSession")
+@pytest.mark.parametrize(
+    "get_device_side_effect",
+    [
+        [MOCK_GATE_MODEL_QPU_1],
+        [ValueError(), MOCK_GATE_MODEL_QPU_1],
+    ],
+)
+def test_device_qpu_no_aws_session(
+    aws_session_init, mock_copy_aws_session, get_device_side_effect, aws_session
+):
+    arn = RIGETTI_ARN
+    mock_session = Mock()
+    mock_session.get_device.side_effect = get_device_side_effect
+    aws_session.get_device.side_effect = ValueError()
+    aws_session_init.return_value = aws_session
+    mock_copy_aws_session.return_value = mock_session
+    device = AwsDevice(arn)
+    _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_1, MOCK_GATE_MODEL_QPU_1)
 
 
 def test_device_refresh_metadata(arn):
@@ -283,67 +330,20 @@ def test_repr(arn):
     assert repr(device) == expected
 
 
-def test_device_aws_session_in_qpu_region(aws_session):
-    arn = RIGETTI_ARN
-    aws_session.boto_session.region_name = AwsDevice.DEVICE_REGIONS[RIGETTI_REGION_KEY][0]
-    aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-    AwsDevice(arn, aws_session)
-
-    aws_session.get_device.assert_called_with(arn)
+@pytest.mark.xfail(raises=ValueError)
+def test_device_simulator_not_found():
+    mock_session = Mock()
+    mock_session.get_device.side_effect = ValueError()
+    AwsDevice("arn:aws:braket:::device/simulator/a/b", mock_session)
 
 
-@patch("braket.aws.aws_device.AwsSession")
-@patch("boto3.Session")
-def test_aws_session_in_another_qpu_region(
-    boto_session_init, aws_session_init, boto_session, aws_session
-):
-    arn = RIGETTI_ARN
-    region = AwsDevice.DEVICE_REGIONS.get(RIGETTI_REGION_KEY)[0]
-
-    boto_session_init.return_value = boto_session
-    aws_session_init.return_value = aws_session
-    aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-
-    creds = Mock()
-    creds.access_key = "access key"
-    creds.secret_key = "secret key"
-    creds.token = "token"
-
-    different_region_aws_session = Mock()
-    different_region_aws_session.boto_session.get_credentials.return_value = creds
-    different_region_aws_session.boto_session.profile_name = "profile name"
-    different_region_aws_session.boto_session.region_name = "foobar"
-
-    AwsDevice(arn, different_region_aws_session)
-
-    # assert creds, and region were correctly supplied
-    boto_session_init.assert_called_with(
-        aws_access_key_id=creds.access_key,
-        aws_secret_access_key=creds.secret_key,
-        aws_session_token=creds.token,
-        region_name=region,
-    )
-
-    # assert supplied session, different_region_aws_session, was replaced
-    aws_session.get_device.assert_called_with(arn)
-
-
-@patch("braket.aws.aws_device.AwsSession")
-@patch("boto3.Session")
-def test_device_no_aws_session_supplied(
-    boto_session_init, aws_session_init, boto_session, aws_session
-):
-    arn = RIGETTI_ARN
-    region = AwsDevice.DEVICE_REGIONS.get(RIGETTI_REGION_KEY)[0]
-
-    boto_session_init.return_value = boto_session
-    aws_session_init.return_value = aws_session
-    aws_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-
-    AwsDevice(arn)
-
-    boto_session_init.assert_called_with(region_name=region)
-    aws_session.get_device.assert_called_with(arn)
+@pytest.mark.xfail(raises=ValueError)
+@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
+def test_device_qpu_not_found(mock_copy_aws_session):
+    mock_session = Mock()
+    mock_session.get_device.side_effect = ValueError()
+    mock_copy_aws_session.return_value = mock_session
+    AwsDevice("arn:aws:braket:::device/qpu/a/b", mock_session)
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
@@ -397,8 +397,8 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
         aws_quantum_task_mock,
         device(RIGETTI_ARN),
         AwsDevice.DEFAULT_SHOTS_QPU,
-        AwsDevice.DEFAULT_RESULTS_POLL_TIMEOUT,
-        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuit,
         s3_destination_folder,
         None,
@@ -441,6 +441,53 @@ def test_run_with_positional_args_and_kwargs(
     )
 
 
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_no_extra(
+    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+    )
+
+
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_shots(
+    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+        1000,
+    )
+
+
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_with_max_parallel_and_kwargs(
+    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder,
+        1000,
+        20,
+        50,
+        extra_kwargs={"bar": 1, "baz": 2},
+    )
+
+
 def _run_and_assert(
     aws_quantum_task_mock,
     device_factory,
@@ -456,11 +503,44 @@ def _run_and_assert(
         aws_quantum_task_mock,
         device_factory("foo_bar"),
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
-        AwsDevice.DEFAULT_RESULTS_POLL_TIMEOUT,
-        AwsDevice.DEFAULT_RESULTS_POLL_INTERVAL,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuit,
         s3_destination_folder,
         shots,
+        poll_timeout_seconds,
+        poll_interval_seconds,
+        extra_args,
+        extra_kwargs,
+    )
+
+
+def _run_batch_and_assert(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    device_factory,
+    circuits,
+    s3_destination_folder,
+    shots=None,  # Treated as positional arg
+    max_parallel=None,  # Treated as positional arg
+    max_connections=None,  # Treated as positional arg
+    poll_timeout_seconds=None,  # Treated as a positional arg
+    poll_interval_seconds=None,  # Treated as positional arg
+    extra_args=None,
+    extra_kwargs=None,
+):
+    run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device_factory("foo_bar"),
+        AwsDevice.DEFAULT_SHOTS_SIMULATOR,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        circuits,
+        s3_destination_folder,
+        shots,
+        max_parallel,
+        max_connections,
         poll_timeout_seconds,
         poll_interval_seconds,
         extra_args,
@@ -479,72 +559,106 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
 
 
 @patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
-def test_get_devices(mock_copy_aws_session):
-    aws_session = Mock()
-    mock_copy_aws_session.return_value = aws_session
+def test_get_devices(mock_copy_aws_session, aws_session):
     aws_session.search_devices.side_effect = [
+        # us-west-1
         [
             {
-                "deviceArn": SIMULATOR_ARN,
+                "deviceArn": SV1_ARN,
                 "deviceName": "SV1",
                 "deviceType": "SIMULATOR",
                 "deviceStatus": "ONLINE",
                 "providerName": "Amazon Braket",
             }
         ],
+        ValueError("should not be reachable"),
+    ]
+    aws_session.get_device.side_effect = [
+        MOCK_GATE_MODEL_SIMULATOR,
+        ValueError("should not be reachable"),
+    ]
+    session_for_region = Mock()
+    session_for_region.search_devices.side_effect = [
+        # us-east-1
         [
             {
-                "deviceArn": RIGETTI_ARN,
-                "deviceName": "Aspen-8",
+                "deviceArn": IONQ_ARN,
+                "deviceName": "IonQ Device",
                 "deviceType": "QPU",
                 "deviceStatus": "ONLINE",
-                "providerName": "Rigetti",
+                "providerName": "IonQ",
             },
+        ],
+        # us-west-2
+        [
             {
-                "deviceArn": SIMULATOR_ARN,
+                "deviceArn": DWAVE_ARN,
+                "deviceName": "Advantage_system1.1",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "D-Wave",
+            },
+            # Should not be reached because already instantiated in us-west-1
+            {
+                "deviceArn": SV1_ARN,
                 "deviceName": "SV1",
                 "deviceType": "SIMULATOR",
                 "deviceStatus": "ONLINE",
                 "providerName": "Amazon Braket",
             },
         ],
+        # Only two regions to search outside of current
+        ValueError("should not be reachable"),
     ]
-    aws_session.get_device.side_effect = [MOCK_GATE_MODEL_SIMULATOR, MOCK_GATE_MODEL_QPU_1]
+    session_for_region.get_device.side_effect = [
+        MOCK_DWAVE_QPU,
+        MOCK_GATE_MODEL_QPU_2,
+        ValueError("should not be reachable"),
+    ]
+    mock_copy_aws_session.return_value = session_for_region
+    # Search order: us-east-1, us-west-1, us-west-2
     results = AwsDevice.get_devices(
-        arns=[SIMULATOR_ARN, RIGETTI_ARN],
-        types=["SIMULATOR", "QPU"],
-        provider_names=["Amazon Braket", "Rigetti"],
+        arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN],
+        provider_names=["Amazon Braket", "D-Wave", "IonQ"],
         statuses=["ONLINE"],
+        aws_session=aws_session,
     )
-    assert [result.name for result in results] == ["Aspen-8", "SV1"]
+    assert [result.name for result in results] == ["Advantage_system1.1", "Blah", "SV1"]
+
+
+@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
+def test_get_devices_simulators_only(mock_copy_aws_session, aws_session):
+    aws_session.search_devices.side_effect = [
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            }
+        ],
+        ValueError("should not be reachable"),
+    ]
+    aws_session.get_device.side_effect = [
+        MOCK_GATE_MODEL_SIMULATOR,
+        ValueError("should not be reachable"),
+    ]
+    session_for_region = Mock()
+    session_for_region.search_devices.side_effect = ValueError("should not be reachable")
+    session_for_region.get_device.side_effect = ValueError("should not be reachable")
+    mock_copy_aws_session.return_value = session_for_region
+    results = AwsDevice.get_devices(
+        arns=[SV1_ARN, TN1_ARN],
+        types=["SIMULATOR"],
+        provider_names=["Amazon Braket"],
+        statuses=["ONLINE"],
+        aws_session=aws_session,
+    )
+    # Only one region should be searched
+    assert [result.name for result in results] == ["SV1"]
 
 
 @pytest.mark.xfail(raises=ValueError)
 def test_get_devices_invalid_order_by():
     AwsDevice.get_devices(order_by="foo")
-
-
-@pytest.mark.parametrize(
-    "input,output",
-    [
-        (
-            {"arns": None, "types": None, "provider_names": None},
-            {"us-west-2", "us-west-1", "us-east-1"},
-        ),
-        ({"arns": None, "types": ["SIMULATOR"], "provider_names": None}, {"us-west-2"}),
-        (
-            {"arns": [RIGETTI_ARN, DWAVE_ARN], "types": ["QPU"], "provider_names": None},
-            {"us-west-2", "us-west-1"},
-        ),
-        (
-            {
-                "arns": [RIGETTI_ARN, DWAVE_ARN, IONQ_ARN],
-                "types": ["QPU"],
-                "provider_names": ["Rigetti", "Amazon Braket", "IONQ", "FOO"],
-            },
-            {"us-west-2", "us-west-1", "us-east-1"},
-        ),
-    ],
-)
-def test_get_devices_regions_set(input, output):
-    assert AwsDevice._get_devices_regions_set(**input) == output

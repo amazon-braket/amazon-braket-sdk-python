@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
+import json
 import threading
 import time
 from unittest.mock import MagicMock, Mock, patch
@@ -21,6 +22,7 @@ from common_test_utils import MockS3
 
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
+from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import GateModelParameters
@@ -112,6 +114,13 @@ def test_metadata(quantum_task):
     assert quantum_task.metadata(use_cached_value=True) == metadata_1
 
 
+def test_metadata_call_if_none(quantum_task):
+    metadata_1 = {"status": "RUNNING"}
+    quantum_task._aws_session.get_quantum_task.return_value = metadata_1
+    assert quantum_task.metadata(use_cached_value=True) == metadata_1
+    quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
+
+
 def test_state(quantum_task):
     state_1 = "RUNNING"
     _mock_metadata(quantum_task._aws_session, state_1)
@@ -190,11 +199,33 @@ def test_result_annealing(annealing_task):
     )
 
 
+@pytest.mark.xfail(raises=TypeError)
+def test_result_invalid_type(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    _mock_s3(circuit_task._aws_session, json.dumps(MockS3.MOCK_TASK_METADATA))
+    circuit_task.result()
+
+
+def test_result_circuit_cached(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
+    circuit_task._result = expected
+    assert circuit_task.result() == expected
+    assert not circuit_task._aws_session.retrieve_s3_object_body.called
+
+
+def test_no_result(circuit_task):
+    _mock_metadata(circuit_task._aws_session, "FAILED")
+    circuit_task._result = None
+    assert circuit_task.result() is None
+    assert not circuit_task._aws_session.retrieve_s3_object_body.called
+
+
 @pytest.mark.parametrize(
     "result_string",
     [MockS3.MOCK_S3_RESULT_GATE_MODEL, MockS3.MOCK_S3_RESULT_GATE_MODEL_WITH_RESULT_TYPES],
 )
-def test_result_is_cached(circuit_task, result_string):
+def test_result_cached_future(circuit_task, result_string):
     _mock_metadata(circuit_task._aws_session, "COMPLETED")
     _mock_s3(circuit_task._aws_session, result_string)
     circuit_task.result()
@@ -204,7 +235,14 @@ def test_result_is_cached(circuit_task, result_string):
     assert circuit_task.result() == expected
 
 
-def test_async_result(circuit_task):
+@pytest.mark.parametrize(
+    "status, result",
+    [
+        ("COMPLETED", GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)),
+        ("FAILED", None),
+    ],
+)
+def test_async_result(circuit_task, status, result):
     def set_result_from_callback(future):
         # Set the result_from_callback variable in the enclosing functions scope
         nonlocal result_from_callback
@@ -222,17 +260,16 @@ def test_async_result(circuit_task):
     future.add_done_callback(set_result_from_callback)
 
     # via asyncio waiting for result
-    _mock_metadata(circuit_task._aws_session, "COMPLETED")
+    _mock_metadata(circuit_task._aws_session, status)
     event_loop = asyncio.get_event_loop()
     result_from_waiting = event_loop.run_until_complete(future)
 
     # via future.result(). Note that this would fail if the future is not complete.
     result_from_future = future.result()
 
-    expected = GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)
-    assert result_from_callback == expected
-    assert result_from_waiting == expected
-    assert result_from_future == expected
+    assert result_from_callback == result
+    assert result_from_waiting == result
+    assert result_from_future == result
 
 
 def test_failed_task(quantum_task):
@@ -248,11 +285,20 @@ def test_timeout_completed(aws_session):
 
     # Setup the poll timing such that the timeout will occur after one API poll
     quantum_task = AwsQuantumTask(
-        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1
+        "foo:bar:arn",
+        aws_session,
+        poll_timeout_seconds=0.5,
+        poll_interval_seconds=1,
     )
     assert quantum_task.result() is None
     _mock_metadata(aws_session, "COMPLETED")
     assert quantum_task.state() == "COMPLETED"
+    assert quantum_task.result() == GateModelQuantumTaskResult.from_string(
+        MockS3.MOCK_S3_RESULT_GATE_MODEL
+    )
+    # Cached status is still COMPLETED, so result should be fetched
+    _mock_metadata(aws_session, "RUNNING")
+    quantum_task._result = None
     assert quantum_task.result() == GateModelQuantumTaskResult.from_string(
         MockS3.MOCK_S3_RESULT_GATE_MODEL
     )
@@ -264,7 +310,10 @@ def test_timeout_no_result_terminal_state(aws_session):
 
     # Setup the poll timing such that the timeout will occur after one API poll
     quantum_task = AwsQuantumTask(
-        "foo:bar:arn", aws_session, poll_timeout_seconds=0.5, poll_interval_seconds=1
+        "foo:bar:arn",
+        aws_session,
+        poll_timeout_seconds=0.5,
+        poll_interval_seconds=1,
     )
     assert quantum_task.result() is None
 
@@ -309,7 +358,43 @@ def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_sessio
         S3_TARGET,
         shots,
         device_parameters_class(
-            paradigmParameters=GateModelParameters(qubitCount=circuit.qubit_count)
+            paradigmParameters=GateModelParameters(
+                qubitCount=circuit.qubit_count, disableQubitRewiring=False
+            )
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "device_arn,device_parameters_class",
+    [
+        ("device/qpu/rigetti", RigettiDeviceParameters),
+    ],
+)
+def test_from_circuit_with_disabled_rewiring(
+    device_arn, device_parameters_class, aws_session, circuit
+):
+    mocked_task_arn = "task-arn-1"
+    aws_session.create_quantum_task.return_value = mocked_task_arn
+    shots = 53
+
+    task = AwsQuantumTask.create(
+        aws_session, device_arn, circuit, S3_TARGET, shots, disable_qubit_rewiring=True
+    )
+    assert task == AwsQuantumTask(
+        mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
+    )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        device_arn,
+        circuit,
+        S3_TARGET,
+        shots,
+        device_parameters_class(
+            paradigmParameters=GateModelParameters(
+                qubitCount=circuit.qubit_count, disableQubitRewiring=True
+            )
         ),
     )
 
@@ -322,11 +407,42 @@ def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
 
 
 @pytest.mark.parametrize(
-    "device_parameters",
+    "device_parameters,arn",
     [
-        {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
-        DwaveDeviceParameters.parse_obj(
-            {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+        (
+            {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
+        ),
+        pytest.param(
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+            # this doesn't fail... yet
+            # marks=pytest.mark.xfail(reason='beta not a valid parameter for Advantage device'),
+        ),
+        pytest.param(
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            "arn:aws:braket:::device/qpu/d-wave/fake_arn",
+            marks=pytest.mark.xfail(reason="Bad ARN"),
+        ),
+        (
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
+        ),
+        (
+            DwaveDeviceParameters.parse_obj(
+                {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            DwaveDeviceParameters.parse_obj(
+                {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
     ],
 )
@@ -334,7 +450,12 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
     task = AwsQuantumTask.create(
-        aws_session, arn, problem, S3_TARGET, 1000, device_parameters=device_parameters
+        aws_session,
+        arn,
+        problem,
+        S3_TARGET,
+        1000,
+        device_parameters=device_parameters,
     )
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, AnnealingQuantumTaskResult.from_string
@@ -346,7 +467,38 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
         problem,
         S3_TARGET,
         1000,
-        DwaveDeviceParameters.parse_obj(device_parameters),
+        _create_annealing_device_params(device_parameters, device_arn=arn),
+    )
+
+
+@pytest.mark.parametrize(
+    "device_arn,device_parameters_class",
+    [
+        ("device/qpu/ionq", IonqDeviceParameters),
+        ("device/qpu/rigetti", RigettiDeviceParameters),
+        ("device/quantum-simulator", GateModelSimulatorDeviceParameters),
+    ],
+)
+def test_create_with_tags(device_arn, device_parameters_class, aws_session, circuit):
+    mocked_task_arn = "task-arn-tags"
+    aws_session.create_quantum_task.return_value = mocked_task_arn
+    shots = 53
+    tags = {"state": "washington"}
+
+    task = AwsQuantumTask.create(aws_session, device_arn, circuit, S3_TARGET, shots, tags=tags)
+    assert task == AwsQuantumTask(
+        mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
+    )
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        device_arn,
+        circuit,
+        S3_TARGET,
+        shots,
+        device_parameters_class(
+            paradigmParameters=GateModelParameters(qubitCount=circuit.qubit_count)
+        ),
+        tags,
     )
 
 
@@ -374,27 +526,27 @@ def _init_and_add_to_list(aws_session, arn, task_list):
 
 
 def _assert_create_quantum_task_called_with(
-    aws_session, arn, task_description, s3_results_prefix, shots, device_parameters
+    aws_session, arn, task_description, s3_results_prefix, shots, device_parameters, tags=None
 ):
-    aws_session.create_quantum_task.assert_called_with(
-        **{
-            "deviceArn": arn,
-            "outputS3Bucket": s3_results_prefix[0],
-            "outputS3KeyPrefix": s3_results_prefix[1],
-            "action": task_description.to_ir().json(),
-            "deviceParameters": device_parameters.json(),
-            "shots": shots,
-        }
-    )
+    test_kwargs = {
+        "deviceArn": arn,
+        "outputS3Bucket": s3_results_prefix[0],
+        "outputS3KeyPrefix": s3_results_prefix[1],
+        "action": task_description.to_ir().json(),
+        "deviceParameters": device_parameters.json(),
+        "shots": shots,
+    }
+    if tags is not None:
+        test_kwargs.update({"tags": tags})
+    aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 
 def _mock_metadata(aws_session, state):
-    return_value = {
+    aws_session.get_quantum_task.return_value = {
         "status": state,
         "outputS3Bucket": S3_TARGET.bucket,
         "outputS3Directory": S3_TARGET.key,
     }
-    aws_session.get_quantum_task.return_value = return_value
 
 
 def _mock_s3(aws_session, result):

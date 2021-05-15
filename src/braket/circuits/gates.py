@@ -82,7 +82,7 @@ class I(Gate):  # noqa: E742, E261
         return ir.I.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
-        return np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
+        return np.eye(2, dtype=complex)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -1287,8 +1287,8 @@ class Unitary(Gate):
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
-            or has a dimension length which is not a positive exponent of 2,
-            or is non-unitary.
+            or has a dimension length that is not a positive power of 2,
+            or is not unitary.
     """
 
     def __init__(self, matrix: np.ndarray, display_name: str = "U"):
@@ -1309,6 +1309,11 @@ class Unitary(Gate):
             targets=[qubit for qubit in target],
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
+
+    def __eq__(self, other):
+        if isinstance(other, Unitary):
+            return self.matrix_equivalence(other)
+        return NotImplemented
 
     @staticmethod
     def _transform_matrix_to_ir(matrix: np.ndarray):
@@ -1331,8 +1336,8 @@ class Unitary(Gate):
 
         Raises:
             ValueError: If `matrix` is not a two-dimensional square matrix,
-                or has a dimension length which is not compatible with the `targets`,
-                or is non-unitary,
+                or has a dimension length that is not compatible with the `targets`,
+                or is not unitary,
 
         Examples:
             >>> circ = Circuit().unitary(matrix=np.array([[0, 1],[1, 0]]), targets=[0])

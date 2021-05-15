@@ -24,7 +24,7 @@ def observable():
 
 @pytest.fixture
 def standard_observable():
-    return StandardObservable(qubit_count=1, ascii_symbols=["foo"])
+    return StandardObservable(ascii_symbols=["foo"])
 
 
 def test_is_operator(observable):
@@ -93,6 +93,11 @@ def test_basis_rotation_gates_not_implemented_by_default(observable):
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_eigenvalues_not_implemented_by_default(observable):
     observable.eigenvalues
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_eigenvalue_not_implemented_by_default(observable):
+    observable.eigenvalue(0)
 
 
 def test_str(observable):

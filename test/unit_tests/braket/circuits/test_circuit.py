@@ -194,11 +194,21 @@ def test_add_result_type_observable_no_conflict_state_vector_obs_return_value():
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_add_result_type_same_observable_wrong_target_order():
+def test_add_result_type_same_observable_wrong_target_order_tensor_product():
     Circuit().add_result_type(
         ResultType.Expectation(observable=Observable.Y() @ Observable.X(), target=[0, 1])
     ).add_result_type(
         ResultType.Variance(observable=Observable.Y() @ Observable.X(), target=[1, 0])
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_add_result_type_same_observable_wrong_target_order_hermitian():
+    array = np.eye(4)
+    Circuit().add_result_type(
+        ResultType.Expectation(observable=Observable.Hermitian(matrix=array), target=[0, 1])
+    ).add_result_type(
+        ResultType.Variance(observable=Observable.Hermitian(matrix=array), target=[1, 0])
     )
 
 
@@ -475,6 +485,54 @@ def test_basis_rotation_instructions_tensor_product():
     assert circ.basis_rotation_instructions == expected
 
 
+def test_basis_rotation_instructions_tensor_product_shared_factors():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.X() @ Observable.Y() @ Observable.Y(), target=[0, 1, 2])
+        .expectation(observable=Observable.X() @ Observable.Y(), target=[0, 1])
+    )
+    expected = [
+        Instruction(Gate.H(), 0),
+        Instruction(Gate.Z(), 1),
+        Instruction(Gate.S(), 1),
+        Instruction(Gate.H(), 1),
+        Instruction(Gate.Z(), 2),
+        Instruction(Gate.S(), 2),
+        Instruction(Gate.H(), 2),
+    ]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_identity():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .cnot(2, 3)
+        .cnot(3, 4)
+        .expectation(observable=Observable.X(), target=[0])
+        .expectation(observable=Observable.I(), target=[2])
+        .expectation(observable=Observable.I() @ Observable.Y(), target=[1, 3])
+        .expectation(observable=Observable.I(), target=[0])
+        .expectation(observable=Observable.X() @ Observable.I(), target=[1, 3])
+        .expectation(observable=Observable.Y(), target=[2])
+    )
+    expected = [
+        Instruction(Gate.H(), 0),
+        Instruction(Gate.H(), 1),
+        Instruction(Gate.Z(), 2),
+        Instruction(Gate.S(), 2),
+        Instruction(Gate.H(), 2),
+        Instruction(Gate.Z(), 3),
+        Instruction(Gate.S(), 3),
+        Instruction(Gate.H(), 3),
+    ]
+    assert circ.basis_rotation_instructions == expected
+
+
 def test_basis_rotation_instructions_multiple_result_types_different_targets():
     circ = (
         Circuit()
@@ -547,13 +605,79 @@ def test_basis_rotation_instructions_multiple_result_types_different_hermitian_t
         .expectation(observable=Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[0])
     )
     expected = [
-        Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1]),
         Instruction(
             Gate.Unitary(
-                matrix=1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
+                matrix=1.0 / np.sqrt(2.0) * np.array([[-1.0, 1.0], [1.0, 1.0]], dtype=complex)
             ),
             target=[0],
         ),
+        Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[1]),
+    ]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermitian():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .sample(
+            observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])) @ Observable.H(),
+            target=[0, 1],
+        )
+        .variance(
+            observable=Observable.Hermitian(matrix=np.array([[1, 0], [0, -1]])) @ Observable.H(),
+            target=[0, 1],
+        )
+        .expectation(observable=Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]])), target=[2])
+    )
+    expected = [
+        Instruction(Gate.Unitary(matrix=np.array([[0, 1], [1, 0]])), target=[0]),
+        Instruction(Gate.Ry(-np.pi / 4), 1),
+        Instruction(
+            Gate.Unitary(
+                matrix=1.0 / np.sqrt(2.0) * np.array([[-1.0, 1.0], [1.0, 1.0]], dtype=complex)
+            ),
+            target=[2],
+        ),
+    ]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_tensor_product_hermitian_qubit_count_2():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .expectation(observable=Observable.I(), target=[1])
+        .sample(
+            observable=Observable.Hermitian(matrix=np.eye(4)) @ Observable.H(), target=[0, 1, 2]
+        )
+        .variance(observable=Observable.H(), target=[2])
+        .variance(observable=Observable.Hermitian(matrix=np.eye(4)), target=[0, 1])
+        .expectation(observable=Observable.I(), target=[0])
+    )
+    expected = [
+        Instruction(Gate.Unitary(matrix=np.eye(4)), target=[0, 1]),
+        Instruction(Gate.Ry(-np.pi / 4), 2),
+    ]
+    assert circ.basis_rotation_instructions == expected
+
+
+def test_basis_rotation_instructions_multiple_result_types_tensor_product_probability():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .cnot(1, 2)
+        .probability([0, 1])
+        .sample(observable=Observable.Z() @ Observable.Z() @ Observable.H(), target=[0, 1, 2])
+        .variance(observable=Observable.H(), target=[2])
+    )
+    expected = [
+        Instruction(Gate.Ry(-np.pi / 4), 2),
     ]
     assert circ.basis_rotation_instructions == expected
 
@@ -606,6 +730,64 @@ def test_qubit_count_getter(h):
 @pytest.mark.xfail(raises=AttributeError)
 def test_qubit_count_setter(h):
     h.qubit_count = 1
+
+
+@pytest.mark.parametrize(
+    "circuit,expected_qubit_count",
+    [
+        (Circuit().h(0).h(1).h(2), 3),
+        (
+            Circuit()
+            .h(0)
+            .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
+            .sample(observable=Observable.H() @ Observable.X(), target=[0, 1]),
+            2,
+        ),
+        (
+            Circuit().h(0).probability([1, 2]).state_vector(),
+            1,
+        ),
+        (
+            Circuit()
+            .h(0)
+            .variance(observable=Observable.H(), target=1)
+            .state_vector()
+            .amplitude(["01"]),
+            2,
+        ),
+    ],
+)
+def test_qubit_count(circuit, expected_qubit_count):
+    assert circuit.qubit_count == expected_qubit_count
+
+
+@pytest.mark.parametrize(
+    "circuit,expected_qubits",
+    [
+        (Circuit().h(0).h(1).h(2), QubitSet([0, 1, 2])),
+        (
+            Circuit()
+            .h(0)
+            .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
+            .sample(observable=Observable.H() @ Observable.X(), target=[0, 1]),
+            QubitSet([0, 1]),
+        ),
+        (
+            Circuit().h(0).probability([1, 2]).state_vector(),
+            QubitSet([0]),
+        ),
+        (
+            Circuit()
+            .h(0)
+            .variance(observable=Observable.H(), target=1)
+            .state_vector()
+            .amplitude(["01"]),
+            QubitSet([0, 1]),
+        ),
+    ],
+)
+def test_circuit_qubits(circuit, expected_qubits):
+    assert circuit.qubits == expected_qubits
 
 
 def test_qubits_getter(h):

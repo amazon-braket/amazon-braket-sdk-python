@@ -188,9 +188,11 @@ test_ir_results = [
         ],
     ),
     (jaqcd.Expectation(targets=[1], observable=["z"]), 0.2),
+    (jaqcd.Expectation(targets=[1], observable=[[[[-1, 0], [0, 0]], [[0, 0], [1, 0]]]]), -0.2),
     (jaqcd.Expectation(targets=[1, 2], observable=["z", "y"]), 0.6),
     (jaqcd.Expectation(observable=["z"]), [0.4, 0.2, -0.2, -0.4]),
     (jaqcd.Variance(targets=[1], observable=["z"]), 0.96),
+    (jaqcd.Variance(targets=[1], observable=[[[[-1, 0], [0, 0]], [[0, 0], [1, 0]]]]), 0.96),
     (jaqcd.Variance(targets=[1, 2], observable=["z", "y"]), 0.64),
     (jaqcd.Variance(observable=["z"]), [0.84, 0.96, 0.96, 0.84]),
 ]
@@ -373,3 +375,48 @@ def test_calculate_ir_results_value_error():
     measured_qubits = [0]
     measurements = np.array([[0]])
     GateModelQuantumTaskResult._calculate_result_types(ir_string, measurements, measured_qubits)
+
+
+@pytest.mark.parametrize(
+    "observable_1, observable_2",
+    [
+        (
+            jaqcd.Expectation(targets=[1, 2], observable=["x"]),
+            jaqcd.Expectation(observable=["x"], targets=[1, 2]),
+        ),
+        pytest.param(
+            jaqcd.Expectation(observable=["x"], targets=[1, 2]),
+            jaqcd.Expectation(observable=["x"], targets=[2, 1]),
+            marks=pytest.mark.xfail,
+        ),
+        pytest.param(
+            jaqcd.Expectation(observable=["x"], targets=[1, 2]),
+            jaqcd.Sample(observable=["x"], targets=[2, 1]),
+            marks=pytest.mark.xfail,
+        ),
+        (
+            jaqcd.Expectation(
+                observable=[
+                    [[[0, 0], [0.512345, 0]], [[0.543215, 0], [0, 0]]],
+                    [[[1, 0], [1, 0]], [[1, 0], [-1, 0]]],
+                ],
+                targets=[1, 2],
+            ),
+            jaqcd.Expectation(
+                observable=[
+                    [[[0, 0], [0.512345, 0]], [[0.543215, 0], [0, 0]]],
+                    [[[1, 0], [1, 0]], [[1, 0], [-1, 0]]],
+                ],
+                targets=[1, 2],
+            ),
+        ),
+        (
+            jaqcd.Expectation(observable=["y", "z"], targets=[1, 2]),
+            jaqcd.Expectation(observable=["y", "z"], targets=[1, 2]),
+        ),
+    ],
+)
+def test_hash_result_types(observable_1, observable_2):
+    assert GateModelQuantumTaskResult._result_type_hash(
+        observable_1
+    ) == GateModelQuantumTaskResult._result_type_hash(observable_2)

@@ -26,7 +26,17 @@ from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.device_schema import GateModelParameters
-from braket.device_schema.dwave import DwaveDeviceParameters
+from braket.device_schema.dwave import (
+    Dwave2000QDeviceParameters,
+    DwaveAdvantageDeviceParameters,
+    DwaveDeviceParameters,
+)
+from braket.device_schema.dwave.dwave_2000Q_device_level_parameters_v1 import (
+    Dwave2000QDeviceLevelParameters,
+)
+from braket.device_schema.dwave.dwave_advantage_device_level_parameters_v1 import (
+    DwaveAdvantageDeviceLevelParameters,
+)
 from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
@@ -42,9 +52,10 @@ class AwsQuantumTask(QuantumTask):
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
     RESULTS_READY_STATES = {"COMPLETED"}
+    TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
 
-    DEFAULT_RESULTS_POLL_TIMEOUT = 120
-    DEFAULT_RESULTS_POLL_INTERVAL = 0.25
+    DEFAULT_RESULTS_POLL_TIMEOUT = 432000
+    DEFAULT_RESULTS_POLL_INTERVAL = 1
     RESULTS_FILENAME = "results.json"
 
     @staticmethod
@@ -55,6 +66,8 @@ class AwsQuantumTask(QuantumTask):
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
+        disable_qubit_rewiring: bool = False,
+        tags: Dict[str, str] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -83,6 +96,16 @@ class AwsQuantumTask(QuantumTask):
                 For example, for D-Wave:
                 `{"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
+            disable_qubit_rewiring (bool): Whether to run the circuit with the exact qubits chosen,
+                without any rewiring downstream, if this is supported by the device.
+                Only applies to digital, gate-based circuits (as opposed to annealing problems).
+                If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
+                Default: ``False``.
+
+            tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
+                An example would be:
+                `{"state": "washington"}`
+
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
 
@@ -106,12 +129,15 @@ class AwsQuantumTask(QuantumTask):
             s3_destination_folder,
             shots if shots is not None else AwsQuantumTask.DEFAULT_SHOTS,
         )
+        if tags is not None:
+            create_task_kwargs.update({"tags": tags})
         return _create_internal(
             task_specification,
             aws_session,
             create_task_kwargs,
-            device_parameters or {},
             device_arn,
+            device_parameters or {},
+            disable_qubit_rewiring,
             *args,
             **kwargs,
         )
@@ -120,8 +146,8 @@ class AwsQuantumTask(QuantumTask):
         self,
         arn: str,
         aws_session: AwsSession = None,
-        poll_timeout_seconds: int = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: int = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
     ):
         """
@@ -130,9 +156,8 @@ class AwsQuantumTask(QuantumTask):
             aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the task.
-            poll_timeout_seconds (int): The polling timeout for result(), default is 120 seconds.
-            poll_interval_seconds (int): The polling interval for result(), default is 0.25
-                seconds.
+            poll_timeout_seconds (float): The polling timeout for `result()`. Default: 5 days.
+            poll_interval_seconds (float): The polling interval for `result()`. Default: 1 second.
             logger (Logger): Logger object with which to write logs, such as task statuses
                 while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
 
@@ -154,6 +179,7 @@ class AwsQuantumTask(QuantumTask):
         )
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
+
         self._logger = logger
 
         self._metadata: Dict[str, Any] = {}
@@ -165,7 +191,7 @@ class AwsQuantumTask(QuantumTask):
         Get an AwsSession for the Task ARN. The AWS session should be in the region of the task.
 
         Returns:
-            AwsSession: `AwsSession` object with default `boto_session` in task's region
+            AwsSession: `AwsSession` object with default `boto_session` in task's region.
         """
         task_region = task_arn.split(":")[3]
         boto_session = boto3.Session(region_name=task_region)
@@ -195,15 +221,16 @@ class AwsQuantumTask(QuantumTask):
 
         Args:
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
-                from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
-                `GetQuantumTask` operation  to retrieve metadata, which also updates the cached
-                value. Default = `False`.
+                from the Amazon Braket `GetQuantumTask` operation, if it exists; if not,
+                `GetQuantumTask` will be called to retrieve the metadata. If `False`, always calls
+                `GetQuantumTask`, which also updates the cached value. Default: `False`.
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
-            retrieved value is used.
+            retrieved value is used, unless `GetQuantumTask` was never called, in which case
+            it wil still be called to populate the metadata for the first time.
         """
-        if not use_cached_value:
+        if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_quantum_task(self._arn)
         return self._metadata
 
@@ -223,7 +250,20 @@ class AwsQuantumTask(QuantumTask):
         See Also:
             `metadata()`
         """
-        return self.metadata(use_cached_value).get("status")
+        return self._status(use_cached_value)
+
+    def _status(self, use_cached_value=False):
+        status = self.metadata(use_cached_value).get("status")
+        if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
+            self._logger.warning(f"Task is in terminal state {status} and no result is available")
+        return status
+
+    def _update_status_if_nonterminal(self):
+        # If metadata has not been populated, the first call to _status will fetch it,
+        # so the second _status call will no longer need to
+        metadata_absent = not self._metadata
+        cached = self._status(True)
+        return cached if cached in self.TERMINAL_STATES else self._status(metadata_absent)
 
     def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """
@@ -231,13 +271,24 @@ class AwsQuantumTask(QuantumTask):
         Once the task is completed, the result is retrieved from S3 and returned as a
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
-        This method is a blocking thread call and synchronously returns a result. Call
-        async_result() if you require an asynchronous invocation.
+        This method is a blocking thread call and synchronously returns a result.
+        Call `async_result()` if you require an asynchronous invocation.
         Consecutive calls to this method return a cached result from the preceding request.
+
+        Returns:
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: The result of the task,
+            if the task completed successfully; returns `None` if the task did not complete
+            successfully or the future timed out.
         """
+        if self._result or (
+            self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
+        ):
+            return self._result
+        if self._metadata and self._status(True) in self.RESULTS_READY_STATES:
+            return self._download_result()
         try:
             async_result = self.async_result()
-            return asyncio.get_event_loop().run_until_complete(async_result)
+            return async_result.get_loop().run_until_complete(async_result)
         except asyncio.CancelledError:
             # Future was cancelled, return whatever is in self._result if anything
             self._logger.warning("Task future was cancelled")
@@ -250,19 +301,14 @@ class AwsQuantumTask(QuantumTask):
             self._logger.debug(e)
             self._logger.info("No event loop found; creating new event loop")
             asyncio.set_event_loop(asyncio.new_event_loop())
-
-        if not hasattr(self, "_future"):
+        if not hasattr(self, "_future") or (
+            self._future.done()
+            and not self._future.cancelled()
+            and self._result is None
+            # timed out and no result
+            and self._update_status_if_nonterminal() not in self.NO_RESULT_TERMINAL_STATES
+        ):
             self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
-        elif (
-            self._future.done() and not self._future.cancelled() and self._result is None
-        ):  # timed out and no result
-            task_status = self.metadata()["status"]
-            if task_status in self.NO_RESULT_TERMINAL_STATES:
-                self._logger.warning(
-                    f"Task is in terminal state {task_status} and no result is available"
-                )
-            else:
-                self._future = asyncio.get_event_loop().run_until_complete(self._create_future())
         return self._future
 
     def async_result(self) -> asyncio.Task:
@@ -279,7 +325,7 @@ class AwsQuantumTask(QuantumTask):
         that contains it. Note that this does not block on the coroutine to finish.
 
         Returns:
-            asyncio.Task: An asyncio Task that contains the _wait_for_completion() coroutine.
+            asyncio.Task: An asyncio Task that contains the `_wait_for_completion()` coroutine.
         """
         return asyncio.create_task(self._wait_for_completion())
 
@@ -303,20 +349,12 @@ class AwsQuantumTask(QuantumTask):
         start_time = time.time()
 
         while (time.time() - start_time) < self._poll_timeout_seconds:
-            current_metadata = self.metadata()
-            task_status = current_metadata["status"]
+            # Used cached metadata if cached status is terminal
+            task_status = self._update_status_if_nonterminal()
             self._logger.debug(f"Task {self._arn}: task status {task_status}")
             if task_status in AwsQuantumTask.RESULTS_READY_STATES:
-                result_string = self._aws_session.retrieve_s3_object_body(
-                    current_metadata["outputS3Bucket"],
-                    current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
-                )
-                self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
-                return self._result
+                return self._download_result()
             elif task_status in AwsQuantumTask.NO_RESULT_TERMINAL_STATES:
-                self._logger.warning(
-                    f"Task is in terminal state {task_status} and no result is available"
-                )
                 self._result = None
                 return None
             else:
@@ -331,6 +369,15 @@ class AwsQuantumTask(QuantumTask):
         )
         self._result = None
         return None
+
+    def _download_result(self):
+        current_metadata = self.metadata(True)
+        result_string = self._aws_session.retrieve_s3_object_body(
+            current_metadata["outputS3Bucket"],
+            current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
+        )
+        self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
+        return self._result
 
     def __repr__(self) -> str:
         return f"AwsQuantumTask('id':{self.id})"
@@ -349,8 +396,9 @@ def _create_internal(
     task_specification: Union[Circuit, Problem],
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Union[dict, BraketSchemaBase],
     device_arn: str,
+    device_parameters: Union[dict, BraketSchemaBase],
+    disable_qubit_rewiring,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -362,8 +410,9 @@ def _(
     circuit: Circuit,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Union[dict, BraketSchemaBase],
     device_arn: str,
+    device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for circuits
+    disable_qubit_rewiring,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -371,7 +420,9 @@ def _(
 
     # TODO: Update this to use `deviceCapabilities` from Amazon Braket's GetDevice operation
     # in order to decide what parameters to build.
-    paradigm_parameters = GateModelParameters(qubitCount=circuit.qubit_count)
+    paradigm_parameters = GateModelParameters(
+        qubitCount=circuit.qubit_count, disableQubitRewiring=disable_qubit_rewiring
+    )
     if "ionq" in device_arn:
         device_parameters = IonqDeviceParameters(paradigmParameters=paradigm_parameters)
     elif "rigetti" in device_arn:
@@ -393,20 +444,55 @@ def _(
     problem: Problem,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
-    device_parameters: Union[dict, DwaveDeviceParameters],
     device_arn: str,
+    device_parameters: Union[
+        # TODO: add tests for initializing w device-specific parameters
+        dict,
+        DwaveDeviceParameters,
+        DwaveAdvantageDeviceParameters,
+        Dwave2000QDeviceParameters,
+    ],
+    disable_qubit_rewiring,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
+    device_params = _create_annealing_device_params(device_parameters, device_arn)
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
-            "deviceParameters": DwaveDeviceParameters.parse_obj(device_parameters).json(),
+            "deviceParameters": device_params.json(),
         }
     )
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+def _create_annealing_device_params(device_params, device_arn):
+    if type(device_params) is not dict:
+        device_params = device_params.dict()
+
+    device_level_parameters = device_params.get("deviceLevelParameters", None) or device_params.get(
+        "providerLevelParameters", None
+    )
+
+    if "braketSchemaHeader" in device_level_parameters:
+        del device_level_parameters["braketSchemaHeader"]
+
+    if "Advantage" in device_arn:
+        device_level_parameters = DwaveAdvantageDeviceLevelParameters.parse_obj(
+            device_level_parameters
+        )
+        return DwaveAdvantageDeviceParameters(deviceLevelParameters=device_level_parameters)
+    elif "2000Q" in device_arn:
+        device_level_parameters = Dwave2000QDeviceLevelParameters.parse_obj(device_level_parameters)
+        return Dwave2000QDeviceParameters(deviceLevelParameters=device_level_parameters)
+    else:
+        raise Exception(
+            f"Amazon Braket could not find a device with ARN: {device_arn}. "
+            "To continue, make sure that the value of the device_arn parameter "
+            "corresponds to a valid QPU."
+        )
 
 
 def _create_common_params(
