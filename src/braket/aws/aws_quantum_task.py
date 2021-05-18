@@ -380,7 +380,7 @@ class AwsQuantumTask(QuantumTask):
         return self._result
 
     def __repr__(self) -> str:
-        return f"AwsQuantumTask('id':{self.id})"
+        return f"AwsQuantumTask('id/taskArn':'{self.id}')"
 
     def __eq__(self, other) -> bool:
         if isinstance(other, AwsQuantumTask):

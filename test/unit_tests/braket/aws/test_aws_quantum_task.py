@@ -85,7 +85,7 @@ def test_equality(arn, aws_session):
 
 
 def test_str(quantum_task):
-    expected = "AwsQuantumTask('id':{})".format(quantum_task.id)
+    expected = "AwsQuantumTask('id/taskArn':'{}')".format(quantum_task.id)
     assert str(quantum_task) == expected
 
 

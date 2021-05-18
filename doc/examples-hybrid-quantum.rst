@@ -22,7 +22,7 @@ This tutorial shows how to solve for the ground state of the Transverse Ising Mo
 using the variational quantum eigenvalue solver (VQE). 
 
 **************************
-`VQE Chemestry <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_quantum_algorithms/VQE_Chemistry/VQE_chemistry_braket.ipynb>`_
+`VQE Chemistry <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_quantum_algorithms/VQE_Chemistry/VQE_chemistry_braket.ipynb>`_
 **************************
 
 This tutorial shows how to implement the Variational Quantum Eigensolver (VQE) algorithm in 

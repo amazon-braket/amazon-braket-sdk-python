@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.5.16 (2021-05-05)
+
+### Bug Fixes and Other Changes
+
+ * Added /taskArn to id field in AwsQuantumTask __repr__
+
+### Documentation Changes
+
+ * Fix link, typos, order
+
 ## v1.5.15 (2021-04-08)
 
 ### Bug Fixes and Other Changes
