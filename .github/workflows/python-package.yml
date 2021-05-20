@@ -27,8 +27,6 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python@main
-        pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python@main
         pip install -e .[test]
     - name: Check code format
       run: |
