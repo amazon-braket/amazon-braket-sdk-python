@@ -36,3 +36,12 @@ and how to gain access to their properties.
 
 This notebook introduces the Amazon Braket managed tensor network simulator, TN1. 
 You will learn about how TN1 works, how to use it, and which problems are best suited to run on TN1.
+
+
+**************************
+`Simulating noise on Amazon Braket <https://github.com/aws/amazon-braket-examples/blob/main/examples/braket_features/Simulating_Noise_On_Amazon_Braket.ipynb>`_
+**************************
+
+This notebook provides a detailed overview of noise simulation on Amazon Braket.
+You will learn how to define noise channels, apply noise to new or existing circuits, and run those circuits
+on the Braket noise simulators.
