@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.0 (2021-05-24)
+
+### Features
+
+ * Noise operators
+
+### Testing and Release Infrastructure
+
+ * Use GitHub source for tox tests
+
 ## v1.5.16 (2021-05-05)
 
 ### Bug Fixes and Other Changes
