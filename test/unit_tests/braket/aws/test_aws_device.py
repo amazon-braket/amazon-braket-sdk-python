@@ -225,7 +225,7 @@ def boto_session():
 
 
 @pytest.fixture
-def aws_session():
+def aws_explicit_session():
     _boto_session = Mock()
     _boto_session.region_name = RIGETTI_REGION
 
@@ -233,6 +233,21 @@ def aws_session():
     creds.access_key = "access key"
     creds.secret_key = "secret key"
     creds.token = "token"
+    creds.method = "explicit"
+    _boto_session.get_credentials.return_value = creds
+
+    _aws_session = Mock()
+    _aws_session.boto_session = _boto_session
+    return _aws_session
+
+
+@pytest.fixture
+def aws_session():
+    _boto_session = Mock()
+    _boto_session.region_name = RIGETTI_REGION
+
+    creds = Mock()
+    creds.method = "other"
     _boto_session.get_credentials.return_value = creds
 
     _aws_session = Mock()
@@ -273,6 +288,25 @@ def test_device_simulator_no_aws_session(aws_session_init, aws_session):
     device = AwsDevice(arn)
     _assert_device_fields(device, MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES, MOCK_GATE_MODEL_SIMULATOR)
     aws_session.get_device.assert_called_with(arn)
+
+
+@patch("boto3.Session")
+def test_copy_session(boto_session_init, aws_session):
+    boto_session_init.return_value = Mock()
+    AwsDevice._copy_aws_session(aws_session, RIGETTI_REGION)
+    boto_session_init.assert_called_with(region_name=RIGETTI_REGION)
+
+
+@patch("boto3.Session")
+def test_copy_explicit_session(boto_session_init, aws_explicit_session):
+    boto_session_init.return_value = Mock()
+    AwsDevice._copy_aws_session(aws_explicit_session, RIGETTI_REGION)
+    boto_session_init.assert_called_with(
+        aws_access_key_id="access key",
+        aws_secret_access_key="secret key",
+        aws_session_token="token",
+        region_name=RIGETTI_REGION,
+    )
 
 
 @patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
