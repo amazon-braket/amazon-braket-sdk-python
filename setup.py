@@ -32,8 +32,8 @@ setup(
         "boltons",
         "boto3",
         "nest-asyncio",
-        "numpy",
         "networkx",
+        "numpy",
     ],
     extras_require={
         "test": [

@@ -37,8 +37,8 @@ def test_add():
     moments.add([h(0)])
 
     expected = OrderedDict()
-    expected[MomentsKey(0, QubitSet(0))] = h(0)
-    expected[MomentsKey(1, QubitSet(0))] = h(0)
+    expected[MomentsKey(0, QubitSet(0), "gate", 0)] = h(0)
+    expected[MomentsKey(1, QubitSet(0), "gate", 0)] = h(0)
     assert OrderedDict(moments) == expected
 
 
@@ -106,16 +106,20 @@ def test_time_slices():
 
 def test_keys():
     moments = Moments([h(0), h(0), h(1)])
-    expected = [MomentsKey(0, QubitSet(0)), MomentsKey(1, QubitSet(0)), MomentsKey(0, QubitSet(1))]
+    expected = [
+        MomentsKey(0, QubitSet(0), "gate", 0),
+        MomentsKey(1, QubitSet(0), "gate", 0),
+        MomentsKey(0, QubitSet(1), "gate", 0),
+    ]
     assert list(moments.keys()) == expected
 
 
 def test_items():
     moments = Moments([h(0), h(0), h(1)])
     expected = [
-        (MomentsKey(0, QubitSet(0)), h(0)),
-        (MomentsKey(1, QubitSet(0)), h(0)),
-        (MomentsKey(0, QubitSet(1)), h(1)),
+        (MomentsKey(0, QubitSet(0), "gate", 0), h(0)),
+        (MomentsKey(1, QubitSet(0), "gate", 0), h(0)),
+        (MomentsKey(0, QubitSet(1), "gate", 0), h(1)),
     ]
     assert list(moments.items()) == expected
 
@@ -128,15 +132,15 @@ def test_values():
 
 def test_get():
     moments = Moments([h(0)])
-    unknown_key = MomentsKey(100, QubitSet(100))
-    assert moments.get(MomentsKey(0, QubitSet(0))) == h(0)
+    unknown_key = MomentsKey(100, QubitSet(100), "gate", 0)
+    assert moments.get(MomentsKey(0, QubitSet(0), "gate", 0)) == h(0)
     assert moments.get(unknown_key) is None
     assert moments.get(unknown_key, h(0)) == h(0)
 
 
 def test_getitem():
     moments = Moments([h(0)])
-    assert moments[MomentsKey(0, QubitSet(0))] == h(0)
+    assert moments[MomentsKey(0, QubitSet(0), "gate", 0)] == h(0)
 
 
 def test_iter(moments):
@@ -150,8 +154,8 @@ def test_len():
 
 def test_contains():
     moments = Moments([h(0), h(0)])
-    assert MomentsKey(0, QubitSet(0)) in moments
-    assert MomentsKey(0, QubitSet(100)) not in moments
+    assert MomentsKey(0, QubitSet(0), "gate", 0) in moments
+    assert MomentsKey(0, QubitSet(100), "gate", 0) not in moments
 
 
 def test_equals():

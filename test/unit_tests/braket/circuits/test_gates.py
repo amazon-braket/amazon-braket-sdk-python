@@ -311,6 +311,14 @@ def test_equality():
     assert u1 != non_gate
 
 
+def test_large_unitary():
+    matrix = np.eye(16, dtype=np.float32)
+    # Permute rows of matrix
+    matrix[[*range(16)]] = matrix[[(i + 1) % 16 for i in range(16)]]
+    unitary = Gate.Unitary(matrix)
+    assert unitary.qubit_count == 4
+
+
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):
