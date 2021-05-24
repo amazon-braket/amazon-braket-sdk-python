@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.0.post0 (2021-05-24)
+
+### Documentation Changes
+
+ * Add reference to the noise simulation example notebook
+
 ## v1.6.0 (2021-05-24)
 
 ### Features
