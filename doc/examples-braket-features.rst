@@ -44,4 +44,4 @@ You will learn about how TN1 works, how to use it, and which problems are best s
 
 This notebook provides a detailed overview of noise simulation on Amazon Braket.
 You will learn how to define noise channels, apply noise to new or existing circuits, and run those circuits
-on the Braket noise simulators.
+on the Amazon Braket noise simulators.
