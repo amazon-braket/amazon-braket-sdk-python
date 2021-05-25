@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.1 (2021-05-25)
+
+### Bug Fixes and Other Changes
+
+ * copy the boto3 session using the default botocore session
+
 ## v1.6.0.post0 (2021-05-24)
 
 ### Documentation Changes
