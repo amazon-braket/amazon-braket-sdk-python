@@ -501,7 +501,7 @@ def _assert_create_quantum_task_called_with(
         "outputS3Bucket": s3_results_prefix[0],
         "outputS3KeyPrefix": s3_results_prefix[1],
         "action": task_description.to_ir().json(),
-        "deviceParameters": device_parameters.json(),
+        "deviceParameters": device_parameters.json(exclude_none=True),
         "shots": shots,
     }
     if tags is not None:

@@ -443,7 +443,9 @@ def _(
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
-            "deviceParameters": DwaveDeviceParameters.parse_obj(device_parameters).json(),
+            "deviceParameters": DwaveDeviceParameters.parse_obj(device_parameters).json(
+                exclude_none=True
+            ),
         }
     )
 
