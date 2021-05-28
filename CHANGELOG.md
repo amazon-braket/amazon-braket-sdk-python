@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.2 (2021-05-28)
+
+### Bug Fixes and Other Changes
+
+ * exclude null values from device parameters for annealing tasks
+
 ## v1.6.1 (2021-05-25)
 
 ### Bug Fixes and Other Changes
