@@ -42,6 +42,8 @@ To add a new gate:
 class H(Gate):
     """Hadamard gate."""
 
+    qubit_count = 2
+
     def __init__(self):
         super().__init__(qubit_count=1, ascii_symbols=["H"])
 

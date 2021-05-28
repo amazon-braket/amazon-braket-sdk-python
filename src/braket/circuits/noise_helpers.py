@@ -64,8 +64,7 @@ def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
         for g in target_gates:
             if g != Gate.Unitary and g().qubit_count != noise.qubit_count:
                 raise ValueError(
-                    "The target_targets must be gates that have the same number of \
-qubits as defined by the multi-qubit noise channel."
+                    "The target_gates must be gates that have the same number of qubits as defined by the multi-qubit noise channel."
                 )
 
 
