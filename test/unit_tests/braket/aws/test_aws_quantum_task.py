@@ -22,10 +22,15 @@ from common_test_utils import MockS3
 
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
+from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import GateModelParameters
-from braket.device_schema.dwave import DwaveDeviceParameters
+from braket.device_schema.dwave import (
+    Dwave2000QDeviceParameters,
+    DwaveAdvantageDeviceParameters,
+    DwaveDeviceParameters,
+)
 from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
@@ -406,11 +411,54 @@ def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
 
 
 @pytest.mark.parametrize(
-    "device_parameters",
+    "device_parameters,arn",
     [
-        {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
-        DwaveDeviceParameters.parse_obj(
-            {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+        (
+            {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
+        ),
+        pytest.param(
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+            # this doesn't fail... yet
+            # marks=pytest.mark.xfail(reason='beta not a valid parameter for Advantage device'),
+        ),
+        pytest.param(
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            "arn:aws:braket:::device/qpu/d-wave/fake_arn",
+            marks=pytest.mark.xfail(reason="Bad ARN"),
+        ),
+        (
+            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
+        ),
+        (
+            DwaveDeviceParameters.parse_obj(
+                {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            DwaveDeviceParameters.parse_obj(
+                {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            DwaveAdvantageDeviceParameters.parse_obj(
+                {"deviceLevelParameters": {"autoScale": "False"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            Dwave2000QDeviceParameters.parse_obj(
+                {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
     ],
 )
@@ -435,7 +483,7 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
         problem,
         S3_TARGET,
         1000,
-        DwaveDeviceParameters.parse_obj(device_parameters),
+        _create_annealing_device_params(device_parameters, device_arn=arn),
     )
 
 
