@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.6.2 (2021-05-28)
+
+### Bug Fixes and Other Changes
+
+ * exclude null values from device parameters for annealing tasks
+
+## v1.6.1 (2021-05-25)
+
+### Bug Fixes and Other Changes
+
+ * copy the boto3 session using the default botocore session
+
+## v1.6.0.post0 (2021-05-24)
+
+### Documentation Changes
+
+ * Add reference to the noise simulation example notebook
+
+## v1.6.0 (2021-05-24)
+
+### Features
+
+ * Noise operators
+
+### Testing and Release Infrastructure
+
+ * Use GitHub source for tox tests
+
 ## v1.5.16 (2021-05-05)
 
 ### Bug Fixes and Other Changes

@@ -325,12 +325,15 @@ class AwsDevice(Device):
         session_region = aws_session.boto_session.region_name
         new_region = region or session_region
         creds = aws_session.boto_session.get_credentials()
-        boto_session = boto3.Session(
-            aws_access_key_id=creds.access_key,
-            aws_secret_access_key=creds.secret_key,
-            aws_session_token=creds.token,
-            region_name=new_region,
-        )
+        if creds.method == "explicit":
+            boto_session = boto3.Session(
+                aws_access_key_id=creds.access_key,
+                aws_secret_access_key=creds.secret_key,
+                aws_session_token=creds.token,
+                region_name=new_region,
+            )
+        else:
+            boto_session = boto3.Session(region_name=new_region)
         return AwsSession(boto_session=boto_session, config=config)
 
     def __repr__(self):

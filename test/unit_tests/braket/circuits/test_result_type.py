@@ -47,11 +47,21 @@ def test_ascii_symbol():
     assert result_type.ascii_symbols == ascii_symbols
 
 
-def test_equality():
+def test_equality_statevector():
     result1 = ResultType.StateVector()
     result2 = ResultType.StateVector()
     result3 = ResultType.Probability([1])
     result4 = "hi"
+    assert result1 == result2
+    assert result1 != result3
+    assert result1 != result4
+
+
+def test_equality_densitymatrix():
+    result1 = ResultType.DensityMatrix()
+    result2 = ResultType.DensityMatrix()
+    result3 = ResultType.StateVector()
+    result4 = "foo"
     assert result1 == result2
     assert result1 != result3
     assert result1 != result4

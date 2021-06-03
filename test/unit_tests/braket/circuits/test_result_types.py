@@ -19,6 +19,14 @@ from braket.circuits.result_types import ObservableResultType
 
 testdata = [
     (ResultType.StateVector, "state_vector", ir.StateVector, {}, {}),
+    (ResultType.DensityMatrix, "density_matrix", ir.DensityMatrix, {}, {}),
+    (
+        ResultType.DensityMatrix,
+        "density_matrix",
+        ir.DensityMatrix,
+        {"target": [0, 1]},
+        {"targets": [0, 1]},
+    ),
     (ResultType.Amplitude, "amplitude", ir.Amplitude, {"state": ["0"]}, {"states": ["0"]}),
     (
         ResultType.Probability,

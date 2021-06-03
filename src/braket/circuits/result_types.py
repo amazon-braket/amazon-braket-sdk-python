@@ -74,6 +74,78 @@ class StateVector(ResultType):
 ResultType.register_result_type(StateVector)
 
 
+class DensityMatrix(ResultType):
+    """
+    The full density matrix as a requested result type.
+    This is available on simulators only when `shots=0`.
+    """
+
+    def __init__(self, target: QubitSetInput = None):
+        """
+        Args:
+            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
+                of the reduced density matrix. Default is `None`, and the
+                full density matrix is returned.
+
+        Examples:
+            >>> ResultType.DensityMatrix(target=[0, 1])
+        """
+        self._target = QubitSet(target)
+        ascii_symbols = ["DensityMatrix"] * len(self._target) if self._target else ["DensityMatrix"]
+        super().__init__(ascii_symbols=ascii_symbols)
+
+    @property
+    def target(self) -> QubitSet:
+        return self._target
+
+    @target.setter
+    def target(self, target: QubitSetInput) -> None:
+        self._target = QubitSet(target)
+
+    def to_ir(self) -> ir.DensityMatrix:
+        if self.target:
+            # convert qubits to int as required by the ir type
+            return ir.DensityMatrix.construct(targets=[int(qubit) for qubit in self.target])
+        else:
+            return ir.DensityMatrix.construct()
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def density_matrix(target: QubitSetInput = None) -> ResultType:
+        """Registers this function into the circuit class.
+        Args:
+            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
+                of the reduced density matrix. Default is `None`, and the
+                full density matrix is returned.
+
+        Returns:
+            ResultType: density matrix as a requested result type
+
+        Examples:
+            >>> circ = Circuit().density_matrix(target=[0, 1])
+        """
+        return ResultType.DensityMatrix(target=target)
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DensityMatrix):
+            return self.target == other.target
+        return False
+
+    def __repr__(self) -> str:
+        return f"DensityMatrix(target={self.target})"
+
+    def __copy__(self) -> DensityMatrix:
+        return type(self)(target=self.target)
+
+    # must redefine __hash__ since __eq__ is overwritten
+    # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+    def __hash__(self) -> int:
+        return super().__hash__()
+
+
+ResultType.register_result_type(DensityMatrix)
+
+
 class Amplitude(ResultType):
     """
     The amplitude of the specified quantum states as a requested result type.

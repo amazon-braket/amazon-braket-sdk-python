@@ -11,6 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
+from enum import Enum
 from typing import (
     Dict,
     ItemsView,
@@ -24,23 +27,52 @@ from typing import (
 )
 
 from braket.circuits.instruction import Instruction
+from braket.circuits.noise import Noise
 from braket.circuits.qubit import Qubit
 from braket.circuits.qubit_set import QubitSet
 
 
+class MomentType(str, Enum):
+    """
+    The type of moments.
+    GATE: a gate
+    NOISE: a noise channel added directly to the circuit
+    GATE_NOISE: a gate-based noise channel
+    INITIALIZATION_NOISE: a initialization noise channel
+    READOUT_NOISE: a readout noise channel
+    """
+
+    GATE = "gate"
+    NOISE = "noise"
+    GATE_NOISE = "gate_noise"
+    INITIALIZATION_NOISE = "initialization_noise"
+    READOUT_NOISE = "readout_noise"
+
+
 class MomentsKey(NamedTuple):
-    """Key of the Moments mapping."""
+    """Key of the Moments mapping.
+    Args:
+     time: moment
+     qubits: qubit set
+     moment_type: can be GATE, NOISE, or GATE_NOISE which is associated with gates;
+        and READOUT_NOISE or INITIALIZATION_NOISE.
+     noise_index: the number of noise channels at the same moment. For gates, this is the
+        number of gate_noise channels associated with that gate. For all other noise
+        types, noise_index starts from 0; but for gate noise, it starts from 1.
+    """
 
     time: int
     qubits: QubitSet
+    moment_type: MomentType
+    noise_index: int
 
 
 class Moments(Mapping[MomentsKey, Instruction]):
     """
-    An ordered mapping of `MomentsKey` to `Instruction`. The core data structure that
-    contains instructions, ordering they are inserted in, and time slices when they
-    occur. `Moments` implements `Mapping` and functions the same as a read-only
-    dictionary. It is mutable only through the `add()` method.
+    An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
+    core data structure that contains instructions, ordering they are inserted in, and
+    time slices when they occur. `Moments` implements `Mapping` and functions the same as
+    a read-only dictionary. It is mutable only through the `add()` method.
 
     This data structure is useful to determine a dependency of instructions, such as
     printing or optimizing circuit structure, before sending it to a quantum
@@ -119,6 +151,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """
 
         time_slices = {}
+        self.sort_moments()
         for key, instruction in self._moments.items():
             instructions = time_slices.get(key.time, [])
             instructions.append(instruction)
@@ -126,28 +159,89 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         return time_slices
 
-    def add(self, instructions: Iterable[Instruction]) -> None:
+    def add(self, instructions: Iterable[Instruction], noise_index: int = 0) -> None:
         """
         Add instructions to self.
 
         Args:
-            instructions (Iterable[Instruction]): Instructions to add to self. The instruction
-            is added to the max time slice in which the instruction fits.
+            instructions (Iterable[Instruction]): Instructions to add to self. The instruction is
+                added to the max time slice in which the instruction fits.
         """
         for instruction in instructions:
-            self._add(instruction)
+            self._add(instruction, noise_index)
 
-    def _add(self, instruction: Instruction) -> None:
+    def _add(self, instruction: Instruction, noise_index: int = 0) -> None:
+
+        if isinstance(instruction.operator, Noise):
+            self.add_noise(instruction)
+
+        else:
+            qubit_range = instruction.target
+            time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
+
+            # Mark all qubits in qubit_range with max_time
+            for qubit in qubit_range:
+                self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
+
+            self._moments[
+                MomentsKey(time, instruction.target, MomentType.GATE, noise_index)
+            ] = instruction
+            self._qubits.update(instruction.target)
+            self._depth = max(self._depth, time + 1)
+
+    def add_noise(
+        self, instruction: Instruction, input_type: str = "noise", noise_index: int = 0
+    ) -> None:
+
         qubit_range = instruction.target
-        time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
+        time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
+        if input_type == MomentType.INITIALIZATION_NOISE:
+            time = 0
 
-        # Mark all qubits in qubit_range with max_time
-        for qubit in qubit_range:
-            self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
+        while MomentsKey(time, qubit_range, input_type, noise_index) in self._moments:
+            noise_index = noise_index + 1
 
-        self._moments[MomentsKey(time, instruction.target)] = instruction
-        self._qubits.update(instruction.target)
-        self._depth = max(self._depth, time + 1)
+        self._moments[MomentsKey(time, qubit_range, input_type, noise_index)] = instruction
+        self._qubits.update(qubit_range)
+
+    def sort_moments(self) -> None:
+        """
+        Make the disordered moments in order.
+
+        1. Make the readout noise in the end
+        2. Make the initialization noise at the beginning
+        """
+        # key for NOISE, GATE and GATE_NOISE
+        key_noise = []
+        # key for INITIALIZATION_NOISE
+        key_initialization_noise = []
+        # key for READOUT_NOISE
+        key_readout_noise = []
+        moment_copy = OrderedDict()
+        sorted_moment = OrderedDict()
+
+        for key, instruction in self._moments.items():
+            moment_copy[key] = instruction
+            if key.moment_type == MomentType.READOUT_NOISE:
+                key_readout_noise.append(key)
+            elif key.moment_type == MomentType.INITIALIZATION_NOISE:
+                key_initialization_noise.append(key)
+            else:
+                key_noise.append(key)
+
+        for key in key_initialization_noise:
+            sorted_moment[key] = moment_copy[key]
+        for key in key_noise:
+            sorted_moment[key] = moment_copy[key]
+        # find the max time in the circuit and make it the time for readout noise
+        max_time = max(self._depth - 1, 0)
+
+        for key in key_readout_noise:
+            sorted_moment[
+                MomentsKey(max_time, key.qubits, MomentType.READOUT_NOISE, key.noise_index)
+            ] = moment_copy[key]
+
+        self._moments = sorted_moment
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
         return self._max_times.get(qubit, -1)
@@ -166,6 +260,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     def values(self) -> ValuesView[Instruction]:
         """Return a view of self's instructions."""
+        self.sort_moments()
         return self._moments.values()
 
     def get(self, key: MomentsKey, default=None) -> Instruction:
