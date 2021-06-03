@@ -460,9 +460,7 @@ def _(
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
-            "deviceParameters": DwaveDeviceParameters.parse_obj(device_parameters).json(
-                exclude_none=True
-            ),
+            "deviceParameters": device_params.json(exclude_none=True),
         }
     )
 
@@ -478,6 +476,7 @@ def _create_annealing_device_params(device_params, device_arn):
         "providerLevelParameters", None
     )
 
+    # deleting since it may be the old version
     if "braketSchemaHeader" in device_level_parameters:
         del device_level_parameters["braketSchemaHeader"]
 
