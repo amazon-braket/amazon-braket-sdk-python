@@ -26,7 +26,11 @@ from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import GateModelParameters
-from braket.device_schema.dwave import DwaveDeviceParameters
+from braket.device_schema.dwave import (
+    Dwave2000QDeviceParameters,
+    DwaveAdvantageDeviceParameters,
+    DwaveDeviceParameters,
+)
 from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
@@ -443,6 +447,18 @@ def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
                 {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
             ),
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            DwaveAdvantageDeviceParameters.parse_obj(
+                {"deviceLevelParameters": {"autoScale": "False"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
+        ),
+        (
+            Dwave2000QDeviceParameters.parse_obj(
+                {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+            ),
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
     ],
 )

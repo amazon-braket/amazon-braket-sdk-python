@@ -446,7 +446,6 @@ def _(
     create_task_kwargs: Dict[str, Any],
     device_arn: str,
     device_parameters: Union[
-        # TODO: add tests for initializing w device-specific parameters
         dict,
         DwaveDeviceParameters,
         DwaveAdvantageDeviceParameters,
