@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.3 (2021-06-04)
+
+### Bug Fixes and Other Changes
+
+ * use device data to create device level parameter data when creating a…
+
 ## v1.6.2 (2021-05-28)
 
 ### Bug Fixes and Other Changes
