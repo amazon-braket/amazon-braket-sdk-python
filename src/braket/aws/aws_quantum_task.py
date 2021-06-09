@@ -472,7 +472,7 @@ def _create_annealing_device_params(device_params, device_arn):
         device_params = device_params.dict()
 
     device_level_parameters = device_params.get("deviceLevelParameters", None) or device_params.get(
-        "providerLevelParameters", None
+        "providerLevelParameters", {}
     )
 
     # deleting since it may be the old version
