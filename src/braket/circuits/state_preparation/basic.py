@@ -20,7 +20,7 @@ from braket.circuits.gate import Gate
 from braket.circuits.qubit import Qubit
 from braket.circuits.gates import Ry, Rz
 
-_ABS_TOL = 1E-6
+_ABS_TOL = 1E-8
 
 def prepare_1q_state(qstate: np.ndarray, qubits: List[int]) -> List[Type[Gate]]:
     """
@@ -54,26 +54,3 @@ def prepare_1q_state(qstate: np.ndarray, qubits: List[int]) -> List[Type[Gate]]:
             ret_gates.append(Rz.rz(Qubit(qubits[0]), phi)[0])
 
     return ret_gates
-
-def prepare_2q_state(qstate: np.ndarray, qubits: List[int]) -> List[Type[Gate]]:
-    """
-    Find the 2-qubit circuit to prepare
-    an arbitrary 2-qubit quantum states
-    (up to a global phase).
-    
-    Args:
-        qstate (ndarray): The quantum state to be prepared.
-        qubits (list): The qubits to prepare quantum states on.
-
-    Returns:
-        ret_gates (list): The gate sequence to prepare the quantum state.
-
-    Raises:
-        ValueError: If incorrect quantum state dimension or incorrect
-                    qubit count is given.
-    """
-
-    if len(qubits) != 2 or np.shape(qstate) != (4,):
-        raise ValueError("Incorrect quantum state dimension or incorrect qubit count to initialize.")
-
-

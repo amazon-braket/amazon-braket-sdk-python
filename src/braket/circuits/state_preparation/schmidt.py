@@ -22,7 +22,7 @@ ABS_TOL = 1E-7 # Tolerance of absolute error in state normalization.
 def schmidt_decomposition(qstate: np.ndarray, qubits: List[int]) -> List[Type[Gate]]
     """
     Using Schmidt decomposition to find the circuit to prepare
-    an arbitrary quantum states.
+    an arbitrary quantum state.
     
     Args:
         qstate (ndarray): The quantum state to be prepared.
@@ -43,8 +43,7 @@ def schmidt_decomposition(qstate: np.ndarray, qubits: List[int]) -> List[Type[Ga
     dim_2 = dim // dim_1
 
     qsquare = qstate.reshape((dim_1, dim_2))
+    
+    u, s, v = np.linalg.svd(qsquare)
 
-
-
-        
 
