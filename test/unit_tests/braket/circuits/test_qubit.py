@@ -28,7 +28,7 @@ def test_index_lt_zero():
 
 @pytest.mark.xfail(raises=TypeError)
 def test_index_non_int():
-    Qubit("not a number")
+    Qubit(0.5)
 
 
 def test_index_gte_zero():
