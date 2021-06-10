@@ -26,9 +26,10 @@ def test_index_lt_zero():
     Qubit(-1)
 
 
+@pytest.mark.parametrize("qubit_arg", ("not a number", 0.5))
 @pytest.mark.xfail(raises=TypeError)
-def test_index_non_int():
-    Qubit("not a number")
+def test_index_non_int(qubit_arg):
+    Qubit(qubit_arg)
 
 
 def test_index_gte_zero():
