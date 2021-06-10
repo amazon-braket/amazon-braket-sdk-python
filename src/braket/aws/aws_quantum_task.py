@@ -471,6 +471,7 @@ def _create_annealing_device_params(device_params, device_arn):
     if type(device_params) is not dict:
         device_params = device_params.dict()
 
+    # check for device level or provider level parameters
     device_level_parameters = device_params.get("deviceLevelParameters", None) or device_params.get(
         "providerLevelParameters", {}
     )
