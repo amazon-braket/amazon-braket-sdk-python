@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.4 (2021-06-10)
+
+### Bug Fixes and Other Changes
+
+ * fallback on empty dict for device level parameters
+
 ## v1.6.3 (2021-06-04)
 
 ### Bug Fixes and Other Changes
