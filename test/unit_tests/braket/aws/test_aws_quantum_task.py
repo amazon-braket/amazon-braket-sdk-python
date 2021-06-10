@@ -460,6 +460,10 @@ def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
             ),
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
+        (
+            {},
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
+        ),
     ],
 )
 def test_from_annealing(device_parameters, aws_session, arn, problem):
