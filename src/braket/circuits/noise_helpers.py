@@ -63,10 +63,15 @@ def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
     if noise.qubit_count > 1:
         for g in target_gates:
             fixed_qubit_count = g.fixed_qubit_count()
-            if g != Gate.Unitary and fixed_qubit_count != noise.qubit_count:
+            if fixed_qubit_count is NotImplemented:
                 raise ValueError(
-                    f"Target gate {g} acts on {fixed_qubit_count} qubits"
-                    f"but {noise} acts on {noise.qubit_count} qubits."
+                    f"Target gate {g} can be instantiated on a variable number of qubits,"
+                    " but noise can only target gates with fixed qubit counts"
+                )
+            if fixed_qubit_count != noise.qubit_count:
+                raise ValueError(
+                    f"Target gate {g} acts on {fixed_qubit_count} qubits,"
+                    f" but {noise} acts on {noise.qubit_count} qubits."
                 )
 
 
