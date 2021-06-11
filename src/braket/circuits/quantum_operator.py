@@ -46,9 +46,6 @@ class QuantumOperator(Operator):
         if ascii_symbols is None:
             raise ValueError("ascii_symbols must not be None")
 
-        if len(ascii_symbols) != qubit_count:
-            msg = f"ascii_symbols, {ascii_symbols}, length must equal qubit_count, {qubit_count}"
-            raise ValueError(msg)
         self._ascii_symbols = tuple(ascii_symbols)
 
     @property

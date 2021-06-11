@@ -16,6 +16,7 @@ import braket.circuits.circuit as circuit  # noqa: F401
 
 # Execute initialization code in gates module
 import braket.circuits.gates as gates  # noqa: F401
+import braket.circuits.composite_operators as composite_operators
 import braket.circuits.noises as noises  # noqa: F401
 import braket.circuits.observables as observables  # noqa: F401
 import braket.circuits.result_types as result_types  # noqa: F401
@@ -33,3 +34,4 @@ from braket.circuits.quantum_operator import QuantumOperator  # noqa: F401
 from braket.circuits.qubit import Qubit, QubitInput  # noqa: F401
 from braket.circuits.qubit_set import QubitSet, QubitSetInput  # noqa: F401
 from braket.circuits.result_type import ObservableResultType, ResultType  # noqa: F401
+from braket.circuits.composite_operator import CompositeOperator

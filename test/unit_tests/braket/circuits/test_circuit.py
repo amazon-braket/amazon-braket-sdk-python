@@ -27,6 +27,7 @@ from braket.circuits import (
     QubitSet,
     ResultType,
     circuit,
+    CompositeOperator
 )
 
 
@@ -807,3 +808,16 @@ def test_diagram(h):
 
     assert h.diagram(mock_diagram) == expected
     mock_diagram.build_diagram.assert_called_with(h)
+
+
+def test_decompose():
+    ghz_circ1 = Circuit().ghz([0, 1, 2]).decompose()
+    ghz_circ2 = Circuit().ghz([0, 1, 2, 3]).decompose()
+    qft_circ = Circuit().qft([0, 1, 2]).decompose()
+    operator = CompositeOperator.GHZ(3)
+
+    assert ghz_circ1 == Circuit(
+        operator.decompose([0, 1, 2])
+    )
+    assert ghz_circ1 != ghz_circ2
+    assert ghz_circ1 != qft_circ

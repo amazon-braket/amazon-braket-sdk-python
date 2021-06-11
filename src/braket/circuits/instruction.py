@@ -13,14 +13,15 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Union
 
 from braket.circuits.gate import Gate
+from braket.circuits.composite_operator import CompositeOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
-InstructionOperator = Gate
+InstructionOperator = Union[Gate, CompositeOperator]
 
 
 class Instruction:

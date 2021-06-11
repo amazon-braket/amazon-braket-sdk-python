@@ -13,7 +13,7 @@
 
 import numpy as np
 
-from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator
+from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator, CompositeOperator
 
 
 def test_empty_circuit():
@@ -200,6 +200,25 @@ def test_connector_across_non_used_qubits():
         "q101 : -H-----",
         "",
         "T    : | 0 |1|",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_connector_for_composite_operator():
+    circ = Circuit().h(3).qft([0, 1, 3]).i(2).h(2)
+    expected = (
+        "T  : |0|  1  |",
+        "              ",
+        "q0 : ---QFT---",
+        "        | |   ",
+        "q1 : ---|*|---",
+        "        | |   ",
+        "q2 : -I-| |-H-",
+        "        | |   ",
+        "q3 : -H-|*|---",
+        "",
+        "T  : |0|  1  |",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected

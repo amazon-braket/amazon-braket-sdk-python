@@ -19,6 +19,7 @@ import numpy as np
 
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.gate import Gate
+from braket.circuits.composite_operator import CompositeOperator
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
@@ -890,6 +891,24 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
             Circuit: A shallow copy of the circuit.
         """
         return self._copy()
+
+    def decompose(self) -> Circuit:
+        """
+        Call a decomposition pass across the circuit.
+
+        Returns:
+            Circuit: Circuit decomposed by one level.
+        """
+        decomposed_instr = []
+        for instr in self.instructions:
+            if isinstance(instr.operator, CompositeOperator):
+                decomposed_instr += instr.operator.decompose(instr.target)
+            else:
+                decomposed_instr.append(instr)
+        self._moments = Moments()
+        self.add(decomposed_instr)
+
+        return self
 
     def __iadd__(self, addable: AddableTypes) -> Circuit:
         return self.add(addable)
