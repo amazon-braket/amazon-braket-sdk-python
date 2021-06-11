@@ -296,6 +296,14 @@ def test_gate_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwarg
     assert gate1.matrix_equivalence(gate2)
 
 
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_fixed_qubit_count(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    fixed_qubit_count = testclass.fixed_qubit_count()
+    if fixed_qubit_count is not NotImplemented:
+        gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
+        assert gate.qubit_count == fixed_qubit_count
+
+
 # Additional Unitary gate tests
 
 

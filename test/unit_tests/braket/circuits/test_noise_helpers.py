@@ -36,6 +36,11 @@ def circuit_2qubit():
 
 
 @pytest.fixture
+def circuit_2qubit_parametrized():
+    return Circuit().x(0).y(1).x(0).rx(1, np.pi).xy(0, 1, np.pi / 2)
+
+
+@pytest.fixture
 def circuit_2qubit_with_unitary():
     return Circuit().x(0).y(1).x(0).x(1).cnot(0, 1).unitary([0], matrix=np.array([[0, 1], [1, 0]]))
 
@@ -217,7 +222,29 @@ def test_apply_gate_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     assert circ == expected
 
 
-def test_apply_gate_noise_1QubitNoise2_1(circuit_2qubit, noise_2qubit):
+def test_apply_gate_noise_1QubitNoise_parametrized(circuit_2qubit_parametrized, noise_1qubit):
+    circ = circuit_2qubit_parametrized.apply_gate_noise(
+        noise_1qubit,
+        target_gates=[Gate.X, Gate.Rx],
+        target_qubits=[0, 1],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.Rx(np.pi), 1))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.XY(np.pi / 2), [0, 1]))
+    )
+
+    assert circ == expected
+
+
+def test_apply_gate_noise_2QubitNoise(circuit_2qubit, noise_2qubit):
     circ = circuit_2qubit.apply_gate_noise(
         noise_2qubit,
         target_gates=[Gate.CNot],
@@ -231,6 +258,26 @@ def test_apply_gate_noise_1QubitNoise2_1(circuit_2qubit, noise_2qubit):
         .add_instruction(Instruction(Gate.X(), 0))
         .add_instruction(Instruction(Gate.X(), 1))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(noise_2qubit, [0, 1]))
+    )
+
+    assert circ == expected
+
+
+def test_apply_gate_noise_2QubitNoise2_parametrized(circuit_2qubit_parametrized, noise_2qubit):
+    circ = circuit_2qubit_parametrized.apply_gate_noise(
+        noise_2qubit,
+        target_gates=[Gate.XY],
+        target_qubits=[0, 1],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Rx(np.pi), 1))
+        .add_instruction(Instruction(Gate.XY(np.pi / 2), [0, 1]))
         .add_instruction(Instruction(noise_2qubit, [0, 1]))
     )
 
@@ -516,7 +563,7 @@ def test_noise_not_applied_1QubitNoise_1(circuit_2qubit, noise_2qubit):
     assert circ == expected
 
 
-def test_apply_multipe_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_1qubit_2):
+def test_apply_multiple_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_1qubit_2):
     circ = circuit_2qubit.apply_gate_noise(noise_1qubit).apply_readout_noise(
         noise_1qubit_2,
         target_qubits=[0, 1],
@@ -542,7 +589,7 @@ def test_apply_multipe_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_1
     assert circ == expected
 
 
-def test_apply_multipe_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit, noise_1qubit_2):
+def test_apply_multiple_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit, noise_1qubit_2):
     circ = circuit_2qubit.apply_gate_noise(noise_1qubit, target_gates=[Gate.X],).apply_gate_noise(
         noise_1qubit_2,
         target_qubits=[0],

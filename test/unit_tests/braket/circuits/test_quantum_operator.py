@@ -26,6 +26,21 @@ def test_is_operator(quantum_operator):
     assert isinstance(quantum_operator, Operator)
 
 
+def test_fixed_qubit_count_implemented():
+    class DummyQuantumOperator(QuantumOperator):
+        @staticmethod
+        def fixed_qubit_count():
+            return 2
+
+    operator = DummyQuantumOperator(qubit_count=None, ascii_symbols=["foo", "bar"])
+    assert operator.qubit_count == DummyQuantumOperator.fixed_qubit_count()
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_qubit_count_not_int():
+    QuantumOperator(qubit_count="hello", ascii_symbols=[])
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_qubit_count_lt_one():
     QuantumOperator(qubit_count=0, ascii_symbols=[])
