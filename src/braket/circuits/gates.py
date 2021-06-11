@@ -43,7 +43,7 @@ class H(Gate):
     """Hadamard gate."""
 
     def __init__(self):
-        super().__init__(qubit_count=self.fixed_qubit_count(), ascii_symbols=["H"])
+        super().__init__(qubit_count=None, ascii_symbols=["H"])
 
     def to_ir(self, target: QubitSet):
         return ir.H.construct(target=target[0])
