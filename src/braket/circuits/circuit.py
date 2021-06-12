@@ -877,6 +877,67 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
             basis_rotation_instructions=ir_basis_rotation_instructions,
         )
 
+    @staticmethod
+    def _einsum_subscripts(targets: QubitSet, qubit_count: int) -> str:
+        target_count = len(targets)
+
+        gate_left_indexes = list(range(target_count))
+        un_left_indexes = list(range(target_count, target_count + qubit_count))
+        un_right_indexes = list(range(target_count + qubit_count, target_count + 2 * qubit_count))
+
+        gate_right_indexes = [un_left_indexes[-1 - target] for target in targets]
+
+        result_left_indexes = un_left_indexes.copy()
+        for pos, target in enumerate(targets):
+            result_left_indexes[-1 - target] = gate_left_indexes[pos]
+
+        return (
+            gate_left_indexes + gate_right_indexes,
+            un_left_indexes + un_right_indexes,
+            result_left_indexes + un_right_indexes,
+        )
+
+    def as_unitary(self) -> np.ndarray:
+        """
+        Unitary matrix representation of the entire circuit.
+        Notice that noise operations are not part of the returned matrix. Also,
+        any circuit with 10 qubits or more can get slow.
+
+        Returns:
+            np.ndarray: 2^qubit_count by 2^qubit_count circuit unitary matrix
+
+        Raises:
+            ValueError: If circuit does not have at least 1 qubit.
+        """
+        qubits = self.qubits
+        if not qubits:
+            raise ValueError("Circuit must have at last 1 qubit")
+        qubit_count = max(qubits) + 1
+
+        unitary = np.eye(2 ** qubit_count, dtype=complex)
+        un_tensor = np.reshape(unitary, qubit_count * [2, 2])
+
+        for instr in (instr for instr in self.instructions if isinstance(instr.operator, Gate)):
+            matrix = instr.operator.to_matrix()
+            targets = instr.target
+
+            gate_indexes, un_indexes, result_indexes = Circuit._einsum_subscripts(
+                targets, qubit_count
+            )
+            gate_matrix = np.reshape(matrix, len(targets) * [2, 2])
+
+            un_tensor = np.einsum(
+                gate_matrix,
+                gate_indexes,
+                un_tensor,
+                un_indexes,
+                result_indexes,
+                dtype=complex,
+                casting="no",
+            )
+
+        return np.reshape(un_tensor, 2 * [2 ** qubit_count])
+
     def _copy(self) -> Circuit:
         copy = Circuit().add(self.instructions)
         copy.add(self.result_types)
