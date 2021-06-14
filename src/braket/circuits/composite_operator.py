@@ -30,7 +30,7 @@ class CompositeOperator(QuantumOperator):
         Args:
             target (QubitSet): target qubit(s)
         """
-        raise NotImplementedError("decompose has not been implemented yet.")
+        return []
 
     def __eq__(self, other):
         if isinstance(other, CompositeOperator):
