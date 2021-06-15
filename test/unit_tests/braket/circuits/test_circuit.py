@@ -28,6 +28,7 @@ from braket.circuits import (
     ResultType,
     circuit,
     gates,
+    noise,
 )
 
 
@@ -471,7 +472,17 @@ def test_as_unitary_empty_instructions_raises_error():
         (Circuit().ry(0, 0.15), gates.Ry(0.15).to_matrix()),
         (Circuit().rz(0, 0.15), gates.Rz(0.15).to_matrix()),
         (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
+        (
+            Circuit().phaseshift(0, 0.15).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)),
+            gates.PhaseShift(0.15).to_matrix(),
+        ),
         (Circuit().cnot(1, 0), gates.CNot().to_matrix()),
+        (
+            Circuit()
+            .cnot(1, 0)
+            .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1)),
+            gates.CNot().to_matrix(),
+        ),
         (Circuit().swap(1, 0), gates.Swap().to_matrix()),
         (Circuit().swap(0, 1), gates.Swap().to_matrix()),
         (Circuit().iswap(1, 0), gates.ISwap().to_matrix()),
@@ -496,7 +507,51 @@ def test_as_unitary_empty_instructions_raises_error():
         (Circuit().h(1), np.kron(gates.H().to_matrix(), np.eye(2))),
         (Circuit().x(1).i(2), np.kron(np.eye(2), np.kron(gates.X().to_matrix(), np.eye(2)))),
         (
+            Circuit()
+            .x(1)
+            .i(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1]),
+            np.kron(np.eye(2), np.kron(gates.X().to_matrix(), np.eye(2))),
+        ),
+        (
+            Circuit()
+            .x(1)
+            .i(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2]),
+            np.kron(np.eye(2), np.kron(gates.X().to_matrix(), np.eye(2))),
+        ),
+        (
+            Circuit().x(1).i(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)),
+            np.kron(np.eye(2), np.kron(gates.X().to_matrix(), np.eye(2))),
+        ),
+        (
+            Circuit().x(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).i(2),
+            np.kron(np.eye(2), np.kron(gates.X().to_matrix(), np.eye(2))),
+        ),
+        (
             Circuit().y(1).z(2),
+            np.kron(gates.Z().to_matrix(), np.kron(gates.Y().to_matrix(), np.eye(2))),
+        ),
+        (
+            Circuit()
+            .y(1)
+            .z(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1]),
+            np.kron(gates.Z().to_matrix(), np.kron(gates.Y().to_matrix(), np.eye(2))),
+        ),
+        (
+            Circuit()
+            .y(1)
+            .z(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2]),
+            np.kron(gates.Z().to_matrix(), np.kron(gates.Y().to_matrix(), np.eye(2))),
+        ),
+        (
+            Circuit().y(1).z(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)),
+            np.kron(gates.Z().to_matrix(), np.kron(gates.Y().to_matrix(), np.eye(2))),
+        ),
+        (
+            Circuit().y(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).z(2),
             np.kron(gates.Z().to_matrix(), np.kron(gates.Y().to_matrix(), np.eye(2))),
         ),
         (Circuit().rx(1, 0.15), np.kron(gates.Rx(0.15).to_matrix(), np.eye(2))),
@@ -520,6 +575,37 @@ def test_as_unitary_empty_instructions_raises_error():
         ),
         (
             Circuit().cphaseshift(2, 1, 0.15).si(3),
+            np.kron(
+                gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))
+            ),
+        ),
+        (
+            Circuit()
+            .cphaseshift(2, 1, 0.15)
+            .si(3)
+            .apply_gate_noise(
+                noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 2]
+            ),
+            np.kron(
+                gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))
+            ),
+        ),
+        (
+            Circuit()
+            .cphaseshift(2, 1, 0.15)
+            .si(3)
+            .apply_gate_noise(
+                noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3]
+            ),
+            np.kron(
+                gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))
+            ),
+        ),
+        (
+            Circuit()
+            .cphaseshift(2, 1, 0.15)
+            .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1))
+            .si(3),
             np.kron(
                 gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))
             ),
