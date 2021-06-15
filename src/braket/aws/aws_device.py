@@ -29,6 +29,7 @@ from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmPropert
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
 from braket.schema_common import BraketSchemaBase
+from braket.aws.aws_jobs import AwsJob
 
 
 class AwsDeviceType(str, Enum):
@@ -145,6 +146,24 @@ class AwsDevice(Device):
             shots if shots is not None else self._default_shots,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
+            *aws_quantum_task_args,
+            **aws_quantum_task_kwargs,
+        )
+
+    def run_job(
+        self,
+        entry_point,
+        image_uri,
+        code_location,
+        *aws_quantum_task_args,
+        **aws_quantum_task_kwargs,
+    ) -> AwsJob:
+        return AwsJob.create(
+            self._aws_session,
+            entry_point,
+            image_uri,
+            code_location,
+            self._arn,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )

@@ -92,6 +92,19 @@ class AwsSession(object):
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         return response["quantumTaskArn"]
 
+    def create_job(self, **boto3_kwargs) -> str:
+        """
+        Create a quantum job.
+
+        Args:
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateJob` operation.
+
+        Returns:
+            str: The ARN of the job.
+        """
+        response = self.braket_client.create_job(**boto3_kwargs)
+        return response["jobArn"]
+
     @staticmethod
     def _should_giveup(err):
         return not (
@@ -121,6 +134,25 @@ class AwsSession(object):
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
+
+    @backoff.on_exception(
+        backoff.expo,
+        ClientError,
+        max_tries=3,
+        jitter=backoff.full_jitter,
+        giveup=_should_giveup.__func__,
+    )
+    def get_job(self, arn: str) -> str:
+        """
+        Gets the quantum job.
+
+        Args:
+            arn (str): The ARN of the quantum job to get.
+
+        Returns:
+            Dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
+        """
+        return self.braket_client.get_job(jobArn=arn)
 
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
