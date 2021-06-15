@@ -455,6 +455,15 @@ def test_as_unitary_empty_instructions_raises_error():
     circ.as_unitary() == []
 
 
+def test_as_unitary_10_qubits_circuit_produce_warning():
+    logger = Mock()
+    Circuit(logger=logger).i(range(10)).as_unitary()
+
+    logger.warning.assert_called_once_with(
+        "To produce an unitary for 10 or more qubits can get slow. Current count: 10"
+    )
+
+
 @pytest.mark.parametrize(
     "circuit,expected_unitary",
     [

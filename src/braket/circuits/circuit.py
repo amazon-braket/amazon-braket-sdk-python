@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from logging import Logger, getLogger
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
 import numpy as np
@@ -94,11 +95,13 @@ class Circuit:
         function_attr = getattr(cls, function_name)
         setattr(function_attr, "__doc__", func.__doc__)
 
-    def __init__(self, addable: AddableTypes = None, *args, **kwargs):
+    def __init__(self, addable: AddableTypes = None, logger: Logger = None, *args, **kwargs):
         """
         Args:
             addable (AddableTypes): The item(s) to add to self.
                 Default = None.
+            logger (Logger): Logger object with which to write logs.
+                Default = `getLogger(__name__)`.
             *args: Variable length argument list. Supports any arguments that `add()` offers.
             **kwargs: Arbitrary keyword arguments. Supports any keyword arguments that `add()`
                 offers.
@@ -127,6 +130,8 @@ class Circuit:
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
+
+        self._logger = logger or getLogger(__name__)
 
     @property
     def depth(self) -> int:
@@ -912,7 +917,13 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         qubits = self.qubits
         if not qubits:
             raise ValueError("Circuit must have at last 1 qubit")
+
         qubit_count = max(qubits) + 1
+        if qubit_count >= 10:
+            self._logger.warning(
+                "To produce an unitary for 10 or more qubits can get slow. "
+                f"Current count: {qubit_count}"
+            )
 
         unitary = np.eye(2 ** qubit_count, dtype=complex)
         un_tensor = np.reshape(unitary, qubit_count * [2, 2])
