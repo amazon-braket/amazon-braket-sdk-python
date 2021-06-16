@@ -150,24 +150,6 @@ class AwsDevice(Device):
             **aws_quantum_task_kwargs,
         )
 
-    def run_job(
-        self,
-        entry_point,
-        image_uri,
-        code_location,
-        *aws_quantum_task_args,
-        **aws_quantum_task_kwargs,
-    ) -> AwsQuantumJob:
-        return AwsQuantumJob.create(
-            self._aws_session,
-            entry_point,
-            image_uri,
-            code_location,
-            self._arn,
-            *aws_quantum_task_args,
-            **aws_quantum_task_kwargs,
-        )
-
     def run_batch(
         self,
         task_specifications: List[Union[Circuit, Problem]],
