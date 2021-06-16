@@ -29,7 +29,7 @@ from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmPropert
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
 from braket.schema_common import BraketSchemaBase
-from braket.aws.aws_jobs import AwsJob
+from braket.aws.aws_quantum_job import AwsQuantumJob
 
 
 class AwsDeviceType(str, Enum):
@@ -157,8 +157,8 @@ class AwsDevice(Device):
         code_location,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
-    ) -> AwsJob:
-        return AwsJob.create(
+    ) -> AwsQuantumJob:
+        return AwsQuantumJob.create(
             self._aws_session,
             entry_point,
             image_uri,

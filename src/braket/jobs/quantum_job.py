@@ -14,8 +14,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-from braket.utils.metric_period import MetricPeriod
-from braket.utils.metric_statistic import MetricStatistic
+from braket.job_services.metric_period import MetricPeriod
+from braket.job_services.metric_statistic import MetricStatistic
 
 
 class QuantumJob(ABC):
@@ -45,11 +45,12 @@ class QuantumJob(ABC):
         """Returns the job metadata defined in Amazon Braket (uses the GetJob API call)"""
 
     @abstractmethod
-    def metrics(self,
-                metric_names: List[str] = None,
-                period: MetricPeriod = MetricPeriod.ONE_MINUTE,
-                statistic: MetricStatistic = MetricStatistic.AVG,
-                ) -> Dict[str, Any]:
+    def metrics(
+        self,
+        metric_names: List[str] = None,
+        period: MetricPeriod = MetricPeriod.ONE_MINUTE,
+        statistic: MetricStatistic = MetricStatistic.AVG,
+    ) -> Dict[str, Any]:
         """
         Note: The function definition here is subject to change depending on our metric
         strategy for the console.
