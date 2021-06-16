@@ -131,6 +131,12 @@ def test_retrieve_s3_object_body_client_error(boto_session):
     aws_session.retrieve_s3_object_body(bucket_name, filename)
 
 
+def test_create_logs_client(boto_session):
+    aws_session = AwsSession(boto_session=boto_session)
+    aws_session.create_logs_client()
+    boto_session.client.assert_called_with("logs", config=None)
+
+
 def test_get_device(boto_session):
     braket_client = Mock()
     return_val = {"deviceArn": "arn1", "deviceName": "name1"}
