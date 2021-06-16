@@ -29,7 +29,6 @@ from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmPropert
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
 from braket.schema_common import BraketSchemaBase
-from braket.aws.aws_quantum_job import AwsQuantumJob
 
 
 class AwsDeviceType(str, Enum):

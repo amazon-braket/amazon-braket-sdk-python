@@ -1,19 +1,17 @@
-import os
-from functools import singledispatch
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 import boto3
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.quantum_job import QuantumJob
-from braket.job_services.instance_config import InstanceConfig
 from braket.job_services.checkpoint_config import CheckpointConfig
+from braket.job_services.instance_config import InstanceConfig
 from braket.job_services.metric_definition import MetricDefinition
 from braket.job_services.metric_period import MetricPeriod
 from braket.job_services.metric_statistic import MetricStatistic
 from braket.job_services.output_data_config import OutputDataConfig
 from braket.job_services.stopping_condition import StoppingCondition
 from braket.job_services.vpc_config import VpcConfig
+from braket.jobs.quantum_job import QuantumJob
 
 
 class AwsQuantumJob(QuantumJob):
@@ -131,10 +129,8 @@ class AwsQuantumJob(QuantumJob):
 
         """
         [IMPLEMENT]
-        
-        if entry_point file is provided, then we raise the error. 
-        
-        if code_location is not provided by the customer, 
+        if entry_point file is provided, then we raise the error.
+        if code_location is not provided by the customer,
         then we default it with the bucket_name with we get from the AwsSession object.
 
         default => code_location:str = "s3://braket-{region}-{account}/jobs/{jobname}/source"
