@@ -905,13 +905,14 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
     def as_unitary(self) -> np.ndarray:
         """
         Unitary matrix representation of the entire circuit.
-        Notice that noise operations are not part of the returned matrix. Also,
-        any circuit with 10 qubits or more can get slow.
+        Notice that any circuit with 10 qubits or more can get slow.
 
         Returns:
             np.ndarray: 2^qubit_count by 2^qubit_count circuit unitary matrix
 
         Raises:
+            TypeError: If circuit is not composed only of `Gate` instances,
+                i.e. a circuit with `Noise` operators will raise this error.
             ValueError: If circuit does not have at least 1 qubit.
         """
         qubits = self.qubits
@@ -928,7 +929,10 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         unitary = np.eye(2 ** qubit_count, dtype=complex)
         un_tensor = np.reshape(unitary, qubit_count * [2, 2])
 
-        for instr in (instr for instr in self.instructions if isinstance(instr.operator, Gate)):
+        for instr in self.instructions:
+            if not isinstance(instr.operator, Gate):
+                raise TypeError("Only Gate operators are supported to build the unitary")
+
             matrix = instr.operator.to_matrix()
             targets = instr.target
 
