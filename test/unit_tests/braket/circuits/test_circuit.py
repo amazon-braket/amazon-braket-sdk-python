@@ -506,14 +506,6 @@ def test_as_unitary_10_qubits_circuit_produce_warning(targets):
                 noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 2]
             )
         ),
-        # (
-        #     Circuit()
-        #     .cphaseshift(2, 1, 0.15)
-        #     .si(3)
-        #     .apply_gate_noise(
-        #         noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3]
-        #     )
-        # ),
         (
             Circuit()
             .cphaseshift(2, 1, 0.15)
@@ -525,6 +517,23 @@ def test_as_unitary_10_qubits_circuit_produce_warning(targets):
 @pytest.mark.xfail(raises=TypeError)
 def test_as_unitary_noise_raises_error(circuit):
     circuit.as_unitary()
+
+
+def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
+    circuit = (
+        Circuit()
+        .cphaseshift(2, 1, 0.15)
+        .si(3)
+        .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3])
+    )
+
+    assert len(recwarn) == 1
+    assert str(recwarn[0].message).startswith("Noise is not applied to any gate")
+
+    assert np.allclose(
+        circuit.as_unitary(),
+        np.kron(gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))),
+    )
 
 
 @pytest.mark.parametrize(
