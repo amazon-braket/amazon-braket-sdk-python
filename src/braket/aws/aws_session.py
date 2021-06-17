@@ -154,6 +154,16 @@ class AwsSession(object):
         """
         return self.braket_client.get_job(jobArn=arn)
 
+    def get_execution_role(aws_session):
+        """Return the role ARN whose credentials are used to call the API.
+           Throws an exception if role doesn't exist.
+        Args:
+            aws_session (AwsSession): Current braket session.
+
+        Returns:
+            (str): The role ARN
+        """
+
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
         Retrieve the S3 object body.
