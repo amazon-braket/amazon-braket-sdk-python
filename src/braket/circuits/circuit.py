@@ -905,10 +905,8 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
                 decomposed_instr += instr.operator.decompose(instr.target)
             else:
                 decomposed_instr.append(instr)
-        self._moments = Moments()
-        self.add(decomposed_instr)
 
-        return self
+        return Circuit(decomposed_instr)
 
     def __iadd__(self, addable: AddableTypes) -> Circuit:
         return self.add(addable)

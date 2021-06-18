@@ -821,3 +821,8 @@ def test_decompose():
     )
     assert ghz_circ1 != ghz_circ2
     assert ghz_circ1 != qft_circ
+
+def test_original_circuit_unchanged_after_decompose():
+    qft_circ = Circuit().qft([0, 1, 2])
+    qft_circ_decomposed = qft_circ.decompose()
+    assert qft_circ_decomposed != qft_circ
