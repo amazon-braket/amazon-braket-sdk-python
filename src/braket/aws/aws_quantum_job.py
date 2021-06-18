@@ -29,9 +29,6 @@ from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
 class AwsQuantumJob:
     """Amazon Braket implementation of a quantum job."""
 
-    # TODO: Decide on where default_bucket_name should be defined.
-    # DEFAULT_BUCKET_NAME = "some_bucket_name"
-
     @classmethod
     def create(
         cls,
@@ -142,6 +139,8 @@ class AwsQuantumJob:
         # TODO: if job_name is None, then we set it to default_job_name
         # TODO: if code_location is not provided by the customer, then we default it with the
         # bucket_name with we get from the AwsSession object.
+        # TODO: Decide on where default_bucket_name should be defined. If bucket is not present
+        # in the customer's account then raise ValidationException.
         # TODO: call getExecutionRole() from aws_session.py
 
     def __init__(
