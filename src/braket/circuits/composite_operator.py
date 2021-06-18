@@ -45,6 +45,6 @@ class CompositeOperator(QuantumOperator):
         """Register a composite operator implementation by adding it into the CompositeOperator class.
 
         Args:
-            CompositeOperator (CompositeOperator): CompositeOperator class to register.
+            composite_operator (CompositeOperator): CompositeOperator class to register.
         """
         setattr(cls, composite_operator.__name__, composite_operator)
