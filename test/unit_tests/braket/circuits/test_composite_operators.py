@@ -201,8 +201,9 @@ def test_composite_operator_subroutine(testclass, subroutine_name, irsubclasses,
 def expected_ghz_circuit():
     targets = create_valid_subroutine_input([MultiTarget])['targets']
     ghzcirc = Circuit().h(targets[0])
-    for i in range(1, len(targets)):
-        ghzcirc.cnot(targets[0], targets[i])
+    for i in range(0, len(targets)-1):
+        ghzcirc.cnot(targets[i], targets[i+1])
+
     return ghzcirc
 
 def expected_qft_circuit():

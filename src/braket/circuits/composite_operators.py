@@ -41,8 +41,8 @@ class GHZ(CompositeOperator):
                              f"equal to size of target qubit set {target}")
 
         instructions = [Instruction(Gate.H(), target=target[0])]
-        for i in range(1, len(target)):
-            instructions.append(Instruction(Gate.CNot(), target=[target[0], target[i]]))
+        for i in range(0, len(target) - 1):
+            instructions.append(Instruction(Gate.CNot(), target=[target[i], target[i + 1]]))
         return instructions
 
     @staticmethod
