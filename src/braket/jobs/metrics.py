@@ -1,9 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-"""'name' specifies the name to use for the metric, 'regex' is the regular
-    expression used to extract the metric from the logs."""
-
 
 @dataclass
 class MetricDefinition:

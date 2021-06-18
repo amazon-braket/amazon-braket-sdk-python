@@ -60,16 +60,6 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
     """
 
 
-"""
-    Saves the result_data to the local output directory with the filename 'result.json'.
-
-    Args:
-        result_data(Dict[str, Any]): Dict specifying the result data to be persisted.
-        pickled(bool): bool indicating whether the result values should be pickled.
-          (default: False)
-    """
-
-
 def save_job_result(
     result_data: Dict[str, Any],
     format: PersistedJobDataFormat = PersistedJobDataFormat.format.PLAINTEXT,
@@ -78,6 +68,6 @@ def save_job_result(
 
     Args:
         result_data (Dict[str, Any]): Dict specifying the result data to be persisted.
-        format (PersistedJobDataFormat): Indicates whether the result values should be pickled or
-            not.
+        format (PersistedJobDataFormat): Indicates whether the result values should be pickled
+        or not.
     """

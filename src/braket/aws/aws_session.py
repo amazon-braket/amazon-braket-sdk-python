@@ -92,6 +92,7 @@ class AwsSession(object):
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         return response["quantumTaskArn"]
 
+    # TODO: Implementation suggestions, uncomment when ready with tests.
     def create_job(self, **boto3_kwargs) -> str:
         """
         Create a quantum job.
@@ -102,8 +103,8 @@ class AwsSession(object):
         Returns:
             str: The ARN of the job.
         """
-        response = self.braket_client.create_job(**boto3_kwargs)
-        return response["jobArn"]
+        # response = self.braket_client.create_job(**boto3_kwargs)
+        # return response["jobArn"]
 
     @staticmethod
     def _should_giveup(err):
@@ -135,6 +136,7 @@ class AwsSession(object):
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
 
+    # TODO: Implementation suggestions, uncomment when ready with tests.
     @backoff.on_exception(
         backoff.expo,
         ClientError,
@@ -152,7 +154,7 @@ class AwsSession(object):
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
         """
-        return self.braket_client.get_job(jobArn=arn)
+        # return self.braket_client.get_job(jobArn=arn)
 
     def get_execution_role(aws_session):
         """Return the role ARN whose credentials are used to call the API.
@@ -161,7 +163,7 @@ class AwsSession(object):
             aws_session (AwsSession): Current braket session.
 
         Returns:
-            (str): The role ARN
+            (str): The execution role ARN.
         """
 
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:

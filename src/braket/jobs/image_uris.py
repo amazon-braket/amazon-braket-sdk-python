@@ -2,7 +2,7 @@
 # and is subject to change.
 
 
-def retrieve(framework="pytorch", framework_version="1.8", py_version="3.7"):
+def retrieve(framework="base", framework_version="1.8", py_version="3.7"):
     """Retrieves the ECR URI for the Docker image matching the given arguments.
 
     Args:

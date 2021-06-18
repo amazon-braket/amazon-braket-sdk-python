@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, List, Union
 
 from braket.aws.aws_session import AwsSession
@@ -25,9 +24,6 @@ from braket.jobs.config import (
     VpcConfig,
 )
 from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
-
-
-timestamp = datetime.strftime(datetime.now(), "%Y%m%d%H%M%S")
 
 
 class AwsQuantumJob:
@@ -170,18 +166,6 @@ class AwsQuantumJob:
 
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in job's region.
-        """
-
-    # TODO: we should have get the execution role from the boto3 client
-    def _get_execution_role(aws_session: AwsSession) -> str:
-        """[summary]
-
-        Args:
-            aws_session (AwsSession): `AwsSession` object with default `boto_session` in job's
-                region.
-
-        Returns:
-            str: ARN of the
         """
 
     @property
