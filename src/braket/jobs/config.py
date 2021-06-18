@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-# TODO: This will be the bucket_name we want in customer's account.
-# If this bucket doesn't exist then we create it in the customers' account.
-# DEFAULT_BUCKET_NAME = "some_bucket_name"
+# TODO: Decide on where default_bucket_name should be defined. If bucket is not present
+# in the customer's account then raise ValidationException.
 
 
 @dataclass
