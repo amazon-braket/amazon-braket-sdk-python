@@ -13,14 +13,17 @@
 
 import re
 import time
+from collections import defaultdict
 from logging import Logger, getLogger
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Dict, FrozenSet, Iterator, List, Optional
 
 from braket.aws.aws_session import AwsSession
+from braket.jobs.metrics.metrics_timeout_error import MetricsTimeoutError
 
 
 class CwlInsightsMetricsFetcher(object):
 
+    # TODO : Update this once we know the log group name for jobs.
     LOG_GROUP_NAME = "/aws/lambda/my-python-test-function"
     METRICS_DEFINITIONS = re.compile(r"(\w+)\s*=\s*(\d*\.?\d*)\s*;")
     TIMESTAMP = "Timestamp"
@@ -58,36 +61,18 @@ class CwlInsightsMetricsFetcher(object):
         Returns:
             List[Any]: The results from CloudWatch insights 'GetQueryResults' operation.
         """
-        start_time = time.time()
-        while (time.time() - start_time) < self._poll_timeout_seconds:
+        timeout_time = time.time() + self._poll_timeout_seconds
+        while time.time() < timeout_time:
             response = self._logs_client.get_query_results(queryId=query_id)
             query_status = response["status"]
             if query_status in ["Failed", "Cancelled"]:
-                raise Exception(f"Query {query_id} failed with status {query_status}")
+                raise MetricsTimeoutError(f"Query {query_id} failed with status {query_status}")
             elif query_status == "Complete":
                 return response["results"]
             else:
                 time.sleep(self._poll_interval_seconds)
         self._logger.warning(f"Timed out waiting for query {query_id}.")
         return []
-
-    @staticmethod
-    def _metrics_id_from_metrics(metrics: Dict[str, float]) -> int:
-        """
-        Determines the semi-unique ID for a set of metrics that will represent the table for that
-        set of columns. The current implementation doesn't treat a difference in order as unique;
-        therefore, the same metrics output in various different orders will map to the same table.
-
-        Args:
-            metrics (Dict[str, float]): The set of metrics.
-
-        Returns:
-            int : The Metrics ID.
-        """
-        metrics_id = 0
-        for column_name in metrics.keys():
-            metrics_id += hash(column_name)
-        return metrics_id
 
     @staticmethod
     def _get_metrics_from_log_line_matches(all_matches: Iterator) -> Dict[str, float]:
@@ -109,93 +94,63 @@ class CwlInsightsMetricsFetcher(object):
         return metrics
 
     @staticmethod
-    def _get_timestamp_from_log_line(log_line: List[Dict[str, Any]]) -> str:
+    def _get_element_from_log_line(
+        element_name: str, log_line: List[Dict[str, Any]]
+    ) -> Optional[str]:
         """
-        Finds and returns the timestamp of a log line from CloudWatch Insights results.
+        Finds and returns an element of a log line from CloudWatch Insights results.
 
         Args:
+            element_name (str): The element to find.
             log_line (List[Dict[str, Any]]): An iterator for RegEx matches on a log line.
 
         Returns:
-            str : The timestamp of the log line or 'N/A' if no timestamp is found.
+            Optional[str] : The value of the element with the element name, or None if no such
+            element is found.
         """
         for element in log_line:
-            if element["field"] == "@timestamp":
+            if element["field"] == element_name:
                 return element["value"]
-        return "N/A"
+        return None
 
+    @staticmethod
     def _add_metrics(
-        self,
-        metrics_id: int,
+        columns: FrozenSet[str],
         metrics: Dict[str, float],
         all_metrics: Dict[int, Dict[str, List[Any]]],
     ) -> None:
         """
-        Adds the given metrics to the appropriate table in 'all_metrics'. If 'all_metrics' does not
-        currently have a table that represents the metrics, a new entry will be created to
-        represent the data. When the table entry is created, a "Timestamp" field is also added by
-        default, since all log metrics should have a timestamp.
+        Adds the given metrics to the appropriate table in 'all_metrics'.
 
         Args:
-            metrics_id (int): An ID to represent the given set of metrics.
+            columns (FrozenSet[str]): The set of column names representing the metrics.
             metrics (Dict[str, float]): A set of metrics in the format {<metric name> : <value>}.
             all_metrics (Dict[int, Dict[str, List[Any]]]) : The list of all metrics.
         """
-        if metrics_id not in all_metrics:
-            metrics_table = {}
-            for column_name in metrics.keys():
-                metrics_table[column_name] = []
-            metrics_table[self.TIMESTAMP] = []
-            all_metrics[metrics_id] = metrics_table
-        metrics_table = all_metrics[metrics_id]
+        metrics_table = all_metrics[columns]
         for column_name in metrics.keys():
             metrics_table[column_name].append(metrics[column_name])
 
     def _parse_metrics_from_message(
-        self, message: str, all_metrics: Dict[int, Dict[str, List[Any]]]
-    ) -> Optional[int]:
+        self, timestamp: str, message: str, all_metrics: Dict[int, Dict[str, List[Any]]]
+    ) -> None:
         """
         Parses a line from CloudWatch Logs to find all the metrics that have been logged
-        on that line. Any found metrics will be added to 'all_metrics'.
+        on that line. Any found metrics will be added to 'all_metrics'. The timestamp is
+        also added to match the corresponding values in 'all_metrics'.
 
         Args:
+            timestamp (str): A formatted string representing the timestamp for any found metrics.
             message (str): A log line from CloudWatch Logs.
             all_metrics (Dict[int, Dict[str, List[Any]]]) : The list of all metrics.
-
-        Returns:
-            int : The ID to represent the given set of logged metrics, or None if no metrics
-                are found in the message.
         """
         all_matches = self.METRICS_DEFINITIONS.finditer(message)
         metrics = self._get_metrics_from_log_line_matches(all_matches)
         if not metrics:
             return None
-        metrics_id = self._metrics_id_from_metrics(metrics)
-        self._add_metrics(metrics_id, metrics, all_metrics)
-        return metrics_id
-
-    def _parse_metrics_from_result_entry(
-        self, result_entry: List[Any], timestamp: str, all_metrics: Dict[int, Dict[str, List[Any]]]
-    ) -> None:
-        """
-        Finds the actual log line containing metrics from a given CloudWatch Insights result entry,
-        and adds them to 'all_metrics'. The timestamp is added to match the corresponding values in
-        'all_metrics'.
-
-        Args:
-            result_entry (List[Any]): A structured result from calling CloudWatch Insights to get
-                logs that contain metrics. A single entry will contain the message
-                (the actual line logged to output), the timestamp (generated by CloudWatch Logs),
-                and other metadata that we (currently) do not use.
-            timestamp (str): A formatted string representing the timestamp for any found metrics.
-            all_metrics (Dict[int, Dict[str, List[Any]]]) : The list of all metrics.
-        """
-        for element in result_entry:
-            if element["field"] == "@message":
-                metrics_id = self._parse_metrics_from_message(element["value"], all_metrics)
-                if metrics_id is not None:
-                    all_metrics[metrics_id][self.TIMESTAMP].append(timestamp)
-                break
+        columns = frozenset(metrics.keys())
+        self._add_metrics(columns, metrics, all_metrics)
+        all_metrics[columns][self.TIMESTAMP].append(timestamp or "N/A")
 
     def _parse_log_line(
         self, result_entry: List[Any], all_metrics: Dict[int, Dict[str, List[Any]]]
@@ -211,8 +166,10 @@ class CwlInsightsMetricsFetcher(object):
                 and other metadata that we (currently) do not use.
             all_metrics (Dict[int, Dict[str, List[Any]]]) : The list of all metrics.
         """
-        timestamp = self._get_timestamp_from_log_line(result_entry)
-        self._parse_metrics_from_result_entry(result_entry, timestamp, all_metrics)
+        message = self._get_element_from_log_line("@message", result_entry)
+        if message:
+            timestamp = self._get_element_from_log_line("@timestamp", result_entry)
+            self._parse_metrics_from_message(timestamp, message, all_metrics)
 
     def _parse_log_query_results(self, results: List[Any]) -> Dict[int, Dict[str, List[Any]]]:
         """
@@ -229,7 +186,7 @@ class CwlInsightsMetricsFetcher(object):
                 Each table will have a set of metrics, indexed by the column name. The
                 entries are not sorted.
         """
-        all_metrics = {}
+        all_metrics = defaultdict(lambda: defaultdict(list))
         for result in results:
             self._parse_log_line(result, all_metrics)
         return all_metrics
@@ -277,8 +234,4 @@ class CwlInsightsMetricsFetcher(object):
 
         metric_data = self._parse_log_query_results(results)
 
-        metric_data_list = []
-        for metric_graph in metric_data.keys():
-            metric_data_list.append(metric_data[metric_graph])
-
-        return metric_data_list
+        return list(metric_data.values())

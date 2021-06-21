@@ -15,7 +15,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from braket.jobs.metrics import CwlInsightsMetricsFetcher
+from braket.jobs.metrics import CwlInsightsMetricsFetcher, MetricsTimeoutError
 
 
 @pytest.fixture
@@ -123,6 +123,8 @@ MULTIPLE_TABLES_METRICS_RESULT = [
         (MALFORMED_METRICS_LOG_LINES, []),
         (SIMPLE_METRICS_LOG_LINES, SIMPLE_METRICS_RESULT),
         (MULTIPLE_TABLES_METRICS_LOG_LINES, MULTIPLE_TABLES_METRICS_RESULT),
+        # TODO: https://app.asana.com/0/1199668788990775/1200502190825620
+        #  We should also test some real-world data, once we have it.
     ],
 )
 def test_get_all_metrics_complete_results(aws_session, log_insights_results, metrics_results):
@@ -152,7 +154,7 @@ def test_get_all_metrics_timeout(aws_session):
     assert result == []
 
 
-@pytest.mark.xfail(raises=Exception)
+@pytest.mark.xfail(raises=MetricsTimeoutError)
 def test_get_all_metrics_failed(aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock

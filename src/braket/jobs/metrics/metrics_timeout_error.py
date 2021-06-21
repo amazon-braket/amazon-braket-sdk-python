@@ -11,5 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.jobs.metrics.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher  # noqa: F401
-from braket.jobs.metrics.metrics_timeout_error import MetricsTimeoutError  # noqa: F401
+
+class MetricsTimeoutError(Exception):
+    """Raised when retrieving metrics times out."""
+
+    pass
