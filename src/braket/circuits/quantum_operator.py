@@ -29,8 +29,10 @@ class QuantumOperator(Operator):
             qubit_count (int, optional): Number of qubits this quantum operator acts on.
                 If all instances of the operator act on the same number of qubits, this argument
                 should be ``None``, and ``fixed_qubit_count`` should be implemented to return
-                the qubit count. Only pass an int to this argument if instances can have a varying
-                number of qubits, in which case ``fixed_qubit_count`` should not be implemented.
+                the qubit count; if ``fixed_qubit_count`` is implemented and an int is passed in,
+                it must equal ``fixed_qubit_count``, or instantiation will raise a ValueError.
+                An int must be passed in if instances can have a varying number of qubits,
+                in which case ``fixed_qubit_count`` should not be implemented,
             ascii_symbols (Sequence[str]): ASCII string symbols for the quantum operator.
                 These are used when printing a diagram of circuits.
                 Length must be the same as `qubit_count`, and index ordering is expected
@@ -41,14 +43,21 @@ class QuantumOperator(Operator):
 
         Raises:
             TypeError: `qubit_count` is not an int
-            ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`
+            ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`,
+                ``fixed_qubit_count`` is implemented and and not equal to ``qubit_count``,
+                or ``len(ascii_symbols) != qubit_count``
         """
 
         fixed_qubit_count = self.fixed_qubit_count()
-        self._qubit_count = (
-            qubit_count if fixed_qubit_count is NotImplemented else fixed_qubit_count
-        )
+        if fixed_qubit_count is NotImplemented:
+            self._qubit_count = qubit_count
+        else:
+            if qubit_count and qubit_count != fixed_qubit_count:
+                raise ValueError(
+                    f"Provided qubit count {qubit_count}"
+                    "does not equal fixed qubit count {fixed_qubit_count}"
+                )
+            self._qubit_count = fixed_qubit_count
 
         if not isinstance(self._qubit_count, int):
             raise TypeError(f"qubit_count, {self._qubit_count}, must be an integer")

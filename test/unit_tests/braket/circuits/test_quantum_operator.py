@@ -17,6 +17,12 @@ import pytest
 from braket.circuits import Operator, QuantumOperator
 
 
+class _DummyQuantumOperator(QuantumOperator):
+    @staticmethod
+    def fixed_qubit_count():
+        return 2
+
+
 @pytest.fixture
 def quantum_operator():
     return QuantumOperator(qubit_count=1, ascii_symbols=["foo"])
@@ -27,13 +33,13 @@ def test_is_operator(quantum_operator):
 
 
 def test_fixed_qubit_count_implemented():
-    class DummyQuantumOperator(QuantumOperator):
-        @staticmethod
-        def fixed_qubit_count():
-            return 2
+    operator = _DummyQuantumOperator(qubit_count=None, ascii_symbols=["foo", "bar"])
+    assert operator.qubit_count == _DummyQuantumOperator.fixed_qubit_count()
 
-    operator = DummyQuantumOperator(qubit_count=None, ascii_symbols=["foo", "bar"])
-    assert operator.qubit_count == DummyQuantumOperator.fixed_qubit_count()
+
+@pytest.mark.xfail(raises=ValueError)
+def test_qubit_count_fixed_qubit_count_unequal():
+    _DummyQuantumOperator(qubit_count=1, ascii_symbols=["foo", "bar"])
 
 
 @pytest.mark.xfail(raises=TypeError)
