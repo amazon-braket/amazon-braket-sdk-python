@@ -17,7 +17,7 @@ from typing import Any, Dict
 # TODO: Below classes will be added in braket_schemas and have added here just for reference.
 
 
-class JobFormat(Enum):
+class PersistedJobDataFormat(Enum):
     """
     Enum class for the the required formats.
     """
@@ -26,14 +26,14 @@ class JobFormat(Enum):
     PICKLED = None
 
 
-class PersistedJobDataFormat:
+class PersistedJobData:
     """This is the model used by save_job_result/save_job_checkpoint/load_job_checkpoint.
     It defines how the dictionary passed in to the save* functions is persisted, and
     what the load_job_checkpoint function expects the persisted data to look like.
     """
 
     dataDictionary: dict[str, Any]
-    format: Enum[JobFormat.PLAINTEXT, JobFormat.PICKLED]
+    format: Enum[PersistedJobDataFormat.PLAINTEXT, PersistedJobDataFormat.PICKLED]
 
 
 # Functions defined for this file.
@@ -42,7 +42,7 @@ class PersistedJobDataFormat:
 def save_job_checkpoint(
     checkpoint_data: Dict[str, Any],
     checkpoint_file_suffix: str = "",
-    format: PersistedJobDataFormat = PersistedJobDataFormat.format.PLAINTEXT,
+    format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ):
     """Saves the specified checkpoint data to the job's CheckpointConfig.localPath
     directory with the file name f'{JOB_NAME}#{checkpoint_file_suffix}'
@@ -75,7 +75,7 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
 
 def save_job_result(
     result_data: Dict[str, Any],
-    format: PersistedJobDataFormat = PersistedJobDataFormat.format.PLAINTEXT,
+    format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ):
     """Saves the result_data to the local output directory with the filename 'result.json'.
 
