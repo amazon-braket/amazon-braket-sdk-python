@@ -73,7 +73,7 @@ class BitFlip(SingleProbabilisticNoise):
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
-            qubit_count=1,
+            qubit_count=None,
             ascii_symbols=["BF({:.2g})".format(probability)],
         )
 
@@ -84,6 +84,10 @@ class BitFlip(SingleProbabilisticNoise):
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
         return [K0, K1]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -138,7 +142,7 @@ class PhaseFlip(SingleProbabilisticNoise):
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
-            qubit_count=1,
+            qubit_count=None,
             ascii_symbols=["PF({:.2g})".format(probability)],
         )
 
@@ -149,6 +153,10 @@ class PhaseFlip(SingleProbabilisticNoise):
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
         return [K0, K1]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -221,7 +229,7 @@ class PauliChannel(PauliNoise):
             probX=probX,
             probY=probY,
             probZ=probZ,
-            qubit_count=1,
+            qubit_count=None,
             ascii_symbols=["PC({:.2g},{:.2g},{:.2g})".format(probX, probY, probZ)],
         )
 
@@ -236,6 +244,10 @@ class PauliChannel(PauliNoise):
         K2 = np.sqrt(self.probY) * 1j * np.array([[0.0, -1.0], [1.0, 0.0]], dtype=complex)
         K3 = np.sqrt(self.probZ) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
         return [K0, K1, K2, K3]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -311,7 +323,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
-            qubit_count=1,
+            qubit_count=None,
             ascii_symbols=["DEPO({:.2g})".format(probability)],
         )
 
@@ -324,6 +336,10 @@ class Depolarizing(SingleProbabilisticNoise_34):
         K2 = np.sqrt(self.probability / 3) * 1j * np.array([[0.0, -1.0], [1.0, 0.0]], dtype=complex)
         K3 = np.sqrt(self.probability / 3) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
         return [K0, K1, K2, K3]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -399,7 +415,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
-            qubit_count=2,
+            qubit_count=None,
             ascii_symbols=["DEPO({:.2g})".format(probability)] * 2,
         )
 
@@ -423,6 +439,10 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         K_list[1:] = [np.sqrt(self._probability / 15) * i for i in K_list[1:]]
 
         return K_list
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 2
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -483,7 +503,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     def __init__(self, probability: float):
         super().__init__(
             probability=probability,
-            qubit_count=2,
+            qubit_count=None,
             ascii_symbols=["DEPH({:.2g})".format(probability)] * 2,
         )
 
@@ -502,6 +522,10 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         K3 = np.sqrt(self._probability / 3) * np.kron(SZ, SZ)
 
         return [K0, K1, K2, K3]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 2
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -555,7 +579,7 @@ class AmplitudeDamping(DampingNoise):
     def __init__(self, gamma: float):
         super().__init__(
             gamma=gamma,
-            qubit_count=1,
+            qubit_count=None,
             ascii_symbols=["AD({:.2g})".format(gamma)],
         )
 
@@ -566,6 +590,10 @@ class AmplitudeDamping(DampingNoise):
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
         K1 = np.array([[0.0, np.sqrt(self.gamma)], [0.0, 0.0]], dtype=complex)
         return [K0, K1]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -633,7 +661,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         super().__init__(
             gamma=gamma,
             probability=probability,
-            qubit_count=1,
+            qubit_count=None,
             ascii_symbols=["GAD({:.2g},{:.2g})".format(gamma, probability)],
         )
 
@@ -652,6 +680,10 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         K2 = np.sqrt(1 - self.probability) * np.array([[np.sqrt(1 - self.gamma), 0.0], [0.0, 1.0]])
         K3 = np.sqrt(1 - self.probability) * np.array([[0.0, 0.0], [np.sqrt(self.gamma), 0.0]])
         return [K0, K1, K2, K3]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -712,7 +744,7 @@ class PhaseDamping(DampingNoise):
     def __init__(self, gamma: float):
         super().__init__(
             gamma=gamma,
-            qubit_count=1,
+            qubit_count=None,
             ascii_symbols=["PD({:.2g})".format(gamma)],
         )
 
@@ -723,6 +755,10 @@ class PhaseDamping(DampingNoise):
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
         K1 = np.array([[0.0, 0.0], [0.0, np.sqrt(self.gamma)]], dtype=complex)
         return [K0, K1]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
 
     @staticmethod
     @circuit.subroutine(register=True)
