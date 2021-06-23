@@ -47,23 +47,33 @@ MALFORMED_METRICS_LOG_LINES = [
 SIMPLE_METRICS_LOG_LINES = [
     [
         {"field": "@timestamp", "value": "Test timestamp 0"},
-        {"field": "@message", "value": "metric0=0.0; metric1=1.0; metric2=2.0"},
+        {"field": "@message", "value": "metric0=0.0; metric1=1.0; metric2=2.0;"},
     ],
     [
         {"field": "@timestamp", "value": "Test timestamp 1"},
-        {"field": "@message", "value": "metric0=0.1; metric1=1.1; metric2=2.1"},
+        {"field": "@message", "value": "metric0=0.1; metric1=1.1; metric2=2.1;"},
     ],
     [
         {"field": "@timestamp", "value": "Test timestamp 2"},
-        {"field": "@message", "value": "metric0=0.2; metric1=1.2; metric2=2.2"},
+        {"field": "@message", "value": "metric0=0.2; metric1=1.2; metric2=2.2;"},
+    ],
+    [
+        {"field": "@timestamp", "value": "Test timestamp 3"},
+        {"field": "@message", "value": "metric0=-0.4; metric1=3.14e-22; metric2=3.14E22;"},
     ],
 ]
 
 SIMPLE_METRICS_RESULT = [
     {
-        "Timestamp": ["Test timestamp 0", "Test timestamp 1", "Test timestamp 2"],
-        "metric0": ["0.0", "0.1", "0.2"],
-        "metric1": ["1.0", "1.1", "1.2"],
+        "Timestamp": [
+            "Test timestamp 0",
+            "Test timestamp 1",
+            "Test timestamp 2",
+            "Test timestamp 3",
+        ],
+        "metric0": [0.0, 0.1, 0.2, -0.4],
+        "metric1": [1.0, 1.1, 1.2, 3.14e-22],
+        "metric2": [2.0, 2.1, 2.2, 3.14e22],
     }
 ]
 
@@ -104,15 +114,15 @@ MULTIPLE_TABLES_METRICS_LOG_LINES = [
 
 
 MULTIPLE_TABLES_METRICS_RESULT = [
-    {"Timestamp": ["Test timestamp 0", "N/A"], "metric0": ["0.0", "0.7"]},
+    {"Timestamp": ["Test timestamp 0", "N/A"], "metric0": [0.0, 0.7]},
     {
         "Timestamp": ["Test timestamp 1", "Test timestamp 3", "Test timestamp 6"],
-        "metric0": ["0.1", "0.3", "0.6"],
-        "metric1": ["1.1", "1.3", "0.6"],
+        "metric0": [0.1, 0.3, 0.6],
+        "metric1": [1.1, 1.3, 0.6],
     },
-    {"Timestamp": ["Test timestamp 2"], "metric0": ["0.2"], "metric2": ["2.2"]},
-    {"Timestamp": ["Test timestamp 4"], "metric1": ["1.4"], "metric2": ["2.4"]},
-    {"Timestamp": ["Test timestamp 5"], "metric0": ["0.5"], "metric1": ["1.5"], "metric2": ["2.5"]},
+    {"Timestamp": ["Test timestamp 2"], "metric0": [0.2], "metric2": [2.2]},
+    {"Timestamp": ["Test timestamp 4"], "metric1": [1.4], "metric2": [2.4]},
+    {"Timestamp": ["Test timestamp 5"], "metric0": [0.5], "metric1": [1.5], "metric2": [2.5]},
 ]
 
 

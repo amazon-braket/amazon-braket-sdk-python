@@ -12,4 +12,4 @@
 # language governing permissions and limitations under the License.
 
 from braket.jobs.metrics.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher  # noqa: F401
-from braket.jobs.metrics.metrics_timeout_error import MetricsTimeoutError  # noqa: F401
+from braket.jobs.metrics.exceptions import MetricsTimeoutError  # noqa: F401
