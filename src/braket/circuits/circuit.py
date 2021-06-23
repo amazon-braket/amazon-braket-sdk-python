@@ -905,7 +905,7 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         else:
             return (
                 f"Circuit('instructions': {list(self.instructions)}"
-                + f"result_types': {self.result_types})"
+                + f", 'result_types': {self.result_types})"
             )
 
     def __str__(self):
