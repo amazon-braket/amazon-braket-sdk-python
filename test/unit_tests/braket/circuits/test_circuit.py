@@ -449,8 +449,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
     assert circ.to_ir() == expected
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_as_unitary_empty_instructions_raises_error():
+def test_as_unitary_empty_instructions_returns_empty_array():
     circ = Circuit()
     circ.as_unitary() == []
 
