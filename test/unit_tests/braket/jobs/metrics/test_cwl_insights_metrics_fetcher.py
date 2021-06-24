@@ -68,7 +68,7 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
     result = fetcher.get_all_metrics_for_job("test_job", job_start_time=1, job_end_time=2)
     logs_client_mock.get_query_results.assert_called_with(queryId="test")
     logs_client_mock.start_query.assert_called_with(
-        logGroupName="/aws/lambda/my-python-test-function",
+        logGroupName="/aws/braket/jobs",
         startTime=1,
         endTime=2,
         queryString="fields @timestamp, @message | filter @logStream like /^test_job$/"

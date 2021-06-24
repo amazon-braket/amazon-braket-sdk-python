@@ -21,8 +21,7 @@ from braket.jobs.metrics.cwl_metrics import CwlMetrics
 
 class CwlMetricsFetcher(object):
 
-    # TODO : Update this once we know the log group name for jobs.
-    LOG_GROUP_NAME = "/aws/lambda/my-python-test-function"
+    LOG_GROUP_NAME = "/aws/braket/jobs"
 
     def __init__(
         self,

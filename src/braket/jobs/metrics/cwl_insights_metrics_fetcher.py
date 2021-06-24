@@ -23,8 +23,7 @@ from braket.jobs.metrics.exceptions import MetricsRetrievalError
 
 class CwlInsightsMetricsFetcher(object):
 
-    # TODO : Update this once we know the log group name for jobs.
-    LOG_GROUP_NAME = "/aws/lambda/my-python-test-function"
+    LOG_GROUP_NAME = "/aws/braket/jobs"
     QUERY_DEFAULT_JOB_DURATION = 3 * 60 * 60
 
     def __init__(
