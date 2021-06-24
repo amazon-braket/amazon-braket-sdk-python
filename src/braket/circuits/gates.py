@@ -1101,7 +1101,7 @@ class CZ(Gate):
         return ir.CZ.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
-        return np.diag([1.0, 1.0, 1.0, -1.0])
+        return np.diag([complex(1.0), 1.0, 1.0, -1.0])
 
     @staticmethod
     def fixed_qubit_count() -> int:
