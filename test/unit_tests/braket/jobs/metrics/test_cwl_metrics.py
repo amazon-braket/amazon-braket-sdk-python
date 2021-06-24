@@ -17,9 +17,10 @@ from braket.jobs.metrics import CwlMetrics
 
 MALFORMED_METRICS_LOG_LINES = [
     {"timestamp": "Test timestamp 0", "message": ""},
-    {"timestamp": "Test timestamp 1", "message": "No metrics prefix metric0=2.0"},
-    {"timestamp": "Test timestamp 2", "message": "Metrics - metric0=not_a_number;"},
-    {"timestamp": "Test timestamp 3"},
+    {"timestamp": "Test timestamp 1", "message": "No semicolon metric0=2.0"},
+    {"timestamp": "Test timestamp 2", "message": "metric0=not_a_number;"},
+    {"timestamp": "Test timestamp 3", "message": "also not a number metric0=2 . 0;"},
+    {"timestamp": "Test timestamp 4"},
     {"unknown": "Unknown"},
 ]
 
@@ -27,15 +28,15 @@ MALFORMED_METRICS_LOG_LINES = [
 SIMPLE_METRICS_LOG_LINES = [
     {
         "timestamp": "Test timestamp 0",
-        "message": "Metrics - metric0=0.0; metric1=1.0; metric2=2.0;",
+        "message": "Metrics - metric0=0.0; metric1=1.0; metric2=2.0 ;",
     },
     {
         "timestamp": "Test timestamp 1",
-        "message": "Metrics - metric0=0.1; metric1=1.1; metric2=2.1;",
+        "message": "Metrics - metric0=0.1; metric1=1.1; metric2= 2.1;",
     },
     {
         "timestamp": "Test timestamp 2",
-        "message": "Metrics - metric0=0.2; metric1=1.2; metric2=2.2;",
+        "message": "Metrics - metric0=0.2; metric1=1.2; metric2= 2.2 ;",
     },
     {
         "timestamp": "Test timestamp 3",
