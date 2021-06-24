@@ -11,11 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from unittest.mock import Mock
+from unittest.mock import Mock, call, patch
 
 import pytest
 
-from braket.jobs.metrics import CwlInsightsMetricsFetcher, MetricsTimeoutError
+from braket.jobs.metrics import CwlInsightsMetricsFetcher, MetricsRetrievalError
 
 
 @pytest.fixture
@@ -24,132 +24,59 @@ def aws_session():
     return _aws_session
 
 
-MALFORMED_METRICS_LOG_LINES = [
+EXAMPLE_METRICS_LOG_LINES = [
     [
         {"field": "@timestamp", "value": "Test timestamp 0"},
-        {"field": "@message", "value": ""},
+        {"field": "@message", "value": "Test value 0"},
     ],
     [
         {"field": "@timestamp", "value": "Test timestamp 1"},
-        {"field": "@message", "value": "Test Test"},
+        {"field": "@message", "value": "Test value 1"},
     ],
     [
         {"field": "@timestamp", "value": "Test timestamp 2"},
-        {"field": "@message", "value": "metric0=not_a_number;"},
     ],
-    [{"field": "@timestamp", "value": "Test timestamp 0"}],
     [
-        {"field": "@unknown", "value": "Unknown"},
+        {"field": "@message", "value": "Test value 3"},
     ],
+    [],
+]
+
+EXPECTED_CALL_LIST = [
+    call("Test timestamp 0", "Test value 0"),
+    call("Test timestamp 1", "Test value 1"),
+    call(None, "Test value 3"),
 ]
 
 
-SIMPLE_METRICS_LOG_LINES = [
-    [
-        {"field": "@timestamp", "value": "Test timestamp 0"},
-        {"field": "@message", "value": "metric0=0.0; metric1=1.0; metric2=2.0;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 1"},
-        {"field": "@message", "value": "metric0=0.1; metric1=1.1; metric2=2.1;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 2"},
-        {"field": "@message", "value": "metric0=0.2; metric1=1.2; metric2=2.2;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 3"},
-        {"field": "@message", "value": "metric0=-0.4; metric1=3.14e-22; metric2=3.14E22;"},
-    ],
-]
-
-SIMPLE_METRICS_RESULT = [
-    {
-        "Timestamp": [
-            "Test timestamp 0",
-            "Test timestamp 1",
-            "Test timestamp 2",
-            "Test timestamp 3",
-        ],
-        "metric0": [0.0, 0.1, 0.2, -0.4],
-        "metric1": [1.0, 1.1, 1.2, 3.14e-22],
-        "metric2": [2.0, 2.1, 2.2, 3.14e22],
-    }
-]
-
-
-MULTIPLE_TABLES_METRICS_LOG_LINES = [
-    [
-        {"field": "@timestamp", "value": "Test timestamp 0"},
-        {"field": "@message", "value": "metric0=0.0;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 1"},
-        {"field": "@message", "value": "metric0=0.1; metric1=1.1;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 2"},
-        {"field": "@message", "value": "metric0=0.2; metric2=2.2;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 3"},
-        {"field": "@message", "value": "metric0=0.3; metric1=1.3;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 4"},
-        {"field": "@message", "value": "metric1=1.4; metric2=2.4;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 5"},
-        {"field": "@message", "value": "metric0=0.5; metric1=1.5; metric2=2.5;"},
-    ],
-    [
-        {"field": "@timestamp", "value": "Test timestamp 6"},
-        {"field": "@message", "value": "metric1=0.6; metric0=0.6;"},
-    ],
-    [
-        {"field": "@message", "value": "metric0=0.7; "},
-    ],
-]
-
-
-MULTIPLE_TABLES_METRICS_RESULT = [
-    {"Timestamp": ["Test timestamp 0", "N/A"], "metric0": [0.0, 0.7]},
-    {
-        "Timestamp": ["Test timestamp 1", "Test timestamp 3", "Test timestamp 6"],
-        "metric0": [0.1, 0.3, 0.6],
-        "metric1": [1.1, 1.3, 0.6],
-    },
-    {"Timestamp": ["Test timestamp 2"], "metric0": [0.2], "metric2": [2.2]},
-    {"Timestamp": ["Test timestamp 4"], "metric1": [1.4], "metric2": [2.4]},
-    {"Timestamp": ["Test timestamp 5"], "metric0": [0.5], "metric1": [1.5], "metric2": [2.5]},
-]
-
-
-@pytest.mark.parametrize(
-    "log_insights_results, metrics_results",
-    [
-        ([], []),
-        (MALFORMED_METRICS_LOG_LINES, []),
-        (SIMPLE_METRICS_LOG_LINES, SIMPLE_METRICS_RESULT),
-        (MULTIPLE_TABLES_METRICS_LOG_LINES, MULTIPLE_TABLES_METRICS_RESULT),
-        # TODO: https://app.asana.com/0/1199668788990775/1200502190825620
-        #  We should also test some real-world data, once we have it.
-    ],
-)
-def test_get_all_metrics_complete_results(aws_session, log_insights_results, metrics_results):
+@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetrics.get_metric_data_as_list")
+@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetrics.add_metrics_from_log_message")
+def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock
 
     logs_client_mock.start_query.return_value = {"queryId": "test"}
     logs_client_mock.get_query_results.return_value = {
         "status": "Complete",
-        "results": log_insights_results,
+        "results": EXAMPLE_METRICS_LOG_LINES,
     }
+    expected_result = ["Test"]
+    mock_get_metrics.return_value = expected_result
 
     fetcher = CwlInsightsMetricsFetcher(aws_session)
-    result = fetcher.get_all_metrics_for_job("test_job")
-    assert result == metrics_results
+
+    result = fetcher.get_all_metrics_for_job("test_job", job_start_time=1, job_end_time=2)
+    logs_client_mock.get_query_results.assert_called_with(queryId="test")
+    logs_client_mock.start_query.assert_called_with(
+        logGroupName="/aws/lambda/my-python-test-function",
+        startTime=1,
+        endTime=2,
+        queryString="fields @timestamp, @message | filter @logStream like /^test_job$/"
+        " | filter @message like /^Metrics - /",
+        limit=10000,
+    )
+    assert mock_add_metrics.call_args_list == EXPECTED_CALL_LIST
+    assert result == expected_result
 
 
 def test_get_all_metrics_timeout(aws_session):
@@ -159,12 +86,13 @@ def test_get_all_metrics_timeout(aws_session):
     logs_client_mock.start_query.return_value = {"queryId": "test"}
     logs_client_mock.get_query_results.return_value = {"status": "Queued"}
 
-    fetcher = CwlInsightsMetricsFetcher(aws_session, 0.25, 0.5)
+    fetcher = CwlInsightsMetricsFetcher(aws_session, 0.1, 0.2)
     result = fetcher.get_all_metrics_for_job("test_job")
+    logs_client_mock.get_query_results.assert_called()
     assert result == []
 
 
-@pytest.mark.xfail(raises=MetricsTimeoutError)
+@pytest.mark.xfail(raises=MetricsRetrievalError)
 def test_get_all_metrics_failed(aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock

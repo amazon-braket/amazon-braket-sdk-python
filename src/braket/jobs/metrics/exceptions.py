@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 
-class MetricsTimeoutError(Exception):
-    """Raised when retrieving metrics times out."""
+class MetricsRetrievalError(Exception):
+    """Raised when retrieving metrics fails."""
 
     pass
