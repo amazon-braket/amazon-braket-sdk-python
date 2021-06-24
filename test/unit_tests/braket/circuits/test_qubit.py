@@ -32,9 +32,9 @@ def test_index_non_int(qubit_arg):
     Qubit(qubit_arg)
 
 
-def test_index_gte_zero():
-    Qubit(0)
-    Qubit(5)
+@pytest.mark.parametrize("qubit_index", (0, 5, float(0)))
+def test_index_gte_zero(qubit_index):
+    Qubit(qubit_index)
 
 
 def test_str(qubit):

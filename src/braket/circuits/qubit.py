@@ -36,7 +36,9 @@ class Qubit(int):
             >>> Qubit(0)
             >>> Qubit(1)
         """
-        if not isinstance(index, int):
+        try:
+            assert int(index) == index
+        except (ValueError, AssertionError):
             raise TypeError(f"Supplied qubit index, {index}, must be an integer.")
         if index < 0:
             raise ValueError(f"Supplied qubit index, {index}, cannot be less than zero.")
