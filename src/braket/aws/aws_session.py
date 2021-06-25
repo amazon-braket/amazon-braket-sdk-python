@@ -156,7 +156,7 @@ class AwsSession(object):
         """
         # return self.braket_client.get_job(jobArn=arn)
 
-    def get_execution_role(aws_session):
+    def get_execution_role(self, aws_session):
         """Return the role ARN whose credentials are used to call the API.
            Throws an exception if role doesn't exist.
         Args:

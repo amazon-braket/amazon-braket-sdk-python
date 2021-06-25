@@ -69,51 +69,51 @@ class AwsQuantumJob:
 
             image_uri (str): str specifying the ECR image to use for executing the job.
                 `image_uris.retrieve()` function may be used for retrieving the ECR image uris
-                for the containers supported by Braket (default: <Braket base image_uri>).
+                for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
             source_dir (str): Path (absolute, relative or an S3 URI) to a directory with any
                 other source code dependencies aside from the entry point file. If `source_dir`
                 is an S3 URI, it must point to a tar.gz file. Structure within this directory are
-                preserved when executing on Amazon Braket. (default: None).
+                preserved when executing on Amazon Braket. Default = `None`.
 
             job_name (str): str representing the name with which the job will be created.
-                (default: {image_uri_type}-{timestamp})
+                Default = `{image_uri_type}-{timestamp}`.
 
             code_location (str): The S3 prefix URI where custom code will be uploaded.
-                (default: 's3://{default_bucket_name}/jobs/{job_name}/source')
+                Default = `'s3://{default_bucket_name}/jobs/{job_name}/source'`.
 
             role_arn (str): str representing the IAM role arn to be used for executing the
-                script. (default: IAM role returned by get_execution_role())
+                script. Default = `IAM role returned by get_execution_role()`.
 
             wait (bool): bool representing whether we should wait until the job completes.
-                This would tail the job logs as it waits.
+                This would tail the job logs as it waits. Default = `False`.
 
             priority_access_device_arn (str): ARN for the AWS device which should have priority
-                access for the execution of this job.
+                access for the execution of this job. Default = `None`.
 
             hyper_parameters (Dict[str, Any]): Hyperparameters that will be made accessible to
                 the job. The hyperparameters are made accessible as a Dict[str, str] to the
                 job. For convenience, this accepts other types for keys and values, but
-                `str()` will be called to convert them before being passed on. (default: None)
+                `str()` will be called to convert them before being passed on. Default = `None`.
 
             metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
-                defines the metric(s) used to evaluate the training jobs. (default: None)
+                defines the metric(s) used to evaluate the training jobs. Default = `None`.
 
-            input_data_config (Union[Any]): Information about the training data.
+            input_data_config (Union[Any]): Information about the training data. Default = `None`.
 
             instance_config (InstanceConfig): Configuration of the instances to be used for
-                executing the job. (default: InstanceConfig(instanceType='ml.m5.large',
-                instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None))
+                executing the job. Default = `InstanceConfig(instanceType='ml.m5.large',
+                instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None)`.
 
             stopping_condition (StoppingCondition): Conditions denoting when the job should be
                 forcefully stopped.
-                (default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60,
-                maxTaskLimit=100,000))
+                Default = `StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60,
+                maxTaskLimit=100,000)`.
 
             output_data_config (OutputDataConfig): Configuration specifying the location for
                 the output of the job.
-                (default:OutputDataConfig(s3Path=s3://{default_bucket_name}/jobs/{job_name}/output,
-                kmsKeyId=None))
+                Default = `OutputDataConfig(s3Path=s3://{default_bucket_name}/jobs/{job_name}/
+                output, kmsKeyId=None)`.
 
             copy_checkpoints_from_job (str): str specifying the job name whose checkpoint you wish
                 to use in the current job. Specifying this value will copy over the checkpoint
@@ -123,14 +123,14 @@ class AwsQuantumJob:
 
             checkpoint_config (CheckpointConfig): Configuration specifying the location where
                 checkpoint data would be stored.
-                (default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
-                s3Uri='s3://{default_bucket_name}/jobs/{job_name}/checkpoints'))
+                Default = `CheckpointConfig(localPath='/opt/jobs/checkpoints',
+                s3Uri=None)`.
 
             vpc_config (VpcConfig): Configuration specifying the security groups and subnets
-                to use for running the job. (default: None)
+                to use for running the job. Default = `None`.
 
             tags (Dict[str, str]): Dict specifying the Key-Value pairs to tag the quantum job with.
-                (default: None)
+                Default = `None`.
 
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.

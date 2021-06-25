@@ -17,7 +17,7 @@ from typing import Any, Dict
 # TODO: Below classes will be added in braket_schemas and have added here just for reference.
 
 
-class PersistedJobDataFormat(Enum):
+class PersistedJobDataFormat(str, Enum):
     """
     Enum class for the the required formats.
     """
@@ -33,7 +33,7 @@ class PersistedJobData:
     """
 
     dataDictionary: dict[str, Any]
-    format: Enum[PersistedJobDataFormat.PLAINTEXT, PersistedJobDataFormat.PICKLED]
+    format: PersistedJobDataFormat
 
 
 # Functions defined for this file.

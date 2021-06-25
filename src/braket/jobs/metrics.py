@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, unique
 
 
 @dataclass
@@ -25,12 +25,14 @@ class MetricDefinition:
     regex: str
 
 
+@unique
 class MetricPeriod(Enum):
     """Period over which the cloudwatch metric is aggregated."""
 
     ONE_MINUTE: int = 60
 
 
+@unique
 class MetricStatistic(Enum):
     """Metric data aggregation to use over the specified period."""
 

@@ -22,10 +22,8 @@ from typing import List
 class CheckpointConfig:
     """Configuration specifying the location where checkpoint data would be stored."""
 
-    # TODO: Might have to add the default_bucket_name and jobname as a parameter for using here.
-    # TODO: job_name = image_uri_type + current_timestamp
     localPath: str = "/opt/jobs/checkpoints"
-    s3Uri: str = "s3://{default_bucket_name}/jobs/{job_name}/checkpoints"
+    s3Uri: str = None
 
 
 @dataclass
@@ -43,6 +41,7 @@ class OutputDataConfig:
     """Configuration specifying the location for the output of the job."""
 
     # TODO: Might have to add the default_bucket_name and jobname as a parameter for using here.
+    # TODO: job_name = image_uri_type + current_timestamp -- if job_name is not specified by user.
     s3Path = "s3://{default_bucket_name}/jobs/{job_name}/output"
     kmsKeyId = None
 
