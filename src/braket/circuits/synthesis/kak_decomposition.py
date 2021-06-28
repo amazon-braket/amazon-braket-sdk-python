@@ -16,24 +16,14 @@ from scipy.linalg import expm
 from typing import Tuple
 
 from braket.circuits.synthesis.util import (diagonalize_two_matrices_with_hermitian_products,
-                                            makhlin_invariants, magic_basis, is_diag)
+                                            decompose_one_qubit_product,
+                                            magic_basis,
+                                            is_diag)
 
 kak_theta_transform = np.array([[1,  1, -1,  1], 
                               [1,  1,  1, -1],
                               [1, -1, -1, -1],
                               [1, -1,  1,  1]])
-
-x = np.array([[0, 1],
-	      [1, 0]], dtype=np.complex128)
-
-y = np.array([[0, -1j],
-              [1j, 0]])
-
-z = np.array([[1, 0],
-	      [0, -1]], dtype=np.complex128)
-
-I = np.array([[1, 0],
-	      [0, 1]], dtype=np.complex128)
 
 def odo_decomposition(U: np.ndarray,
                       validate_input: bool=True,
@@ -90,53 +80,6 @@ def odo_decomposition(U: np.ndarray,
 
     return (QL.T, theta, QR.T)
 
-def decompose_two_qubit_product(U:np.ndarray,
-                                validate_input: bool=True,
-                                atol: float=1E-8,
-                                rtol: float=1E-5):
-    """
-    Decompose a 4x4 unitary matrix to two 2x2 unitary matrices.
-
-    Args:
-        U (np.ndarray): input 4x4 unitary matrix to decompose.
-        validate_input (bool): if check input.
-
-    Returns:
-        phase: global phase.
-        U1: decomposed unitary matrix U1.
-        U2: decomposed unitary matrix U2.
-        atol: absolute tolerance parameter.
-        rtol: relative tolerance parameter.
-
-    Raises:
-        AssertionError: if the input is not a 4x4 unitary or
-        cannot be decomposed.
-    """
-
-    if validate_input:
-        assert np.allclose(makhlin_invariants(U),
-                           (1, 0, 3),
-                           atol=atol,
-                           rtol=rtol)
-
-    i, j = np.unravel_index(np.argmax(U, axis=None), U.shape)
-
-    def u1_set(i): return (1, 3) if i % 2 else (0, 2)
-    def u2_set(i): return (0, 1) if i < 2 else (2, 3)
-
-    u1 = U[np.ix_(u1_set(i), u1_set(j))]
-    u2 = U[np.ix_(u2_set(i), u2_set(j))]
-    
-    try:
-        u1 = u1 / np.sqrt(np.linalg.det(u1))
-        u2 = u2 / np.sqrt(np.linalg.det(u2))
-    except ValueError:
-        print("The decomposed 1q product gate is ill-conditioned.")
-    
-    phase = U[i, j] / (u1[i // 2, j // 2] * u2[i % 2, j % 2])
-    
-    return phase, u1, u2
-
 
 def kak_decomposition(U: np.ndarray,
                       validate_input: bool=True,
@@ -181,13 +124,13 @@ def kak_decomposition(U: np.ndarray,
 
     kak_4vector = 0.25 * kak_theta_transform.T @ theta
     
-    g1, u1, u2 = decompose_two_qubit_product(magic_basis @ 
+    g1, u1, u2 = decompose_one_qubit_product(magic_basis @ 
                                              ql @ 
                                              magic_basis.conj().T,
                                              atol=atol,
                                              rtol=rtol)
 
-    g2, u3, u4 = decompose_two_qubit_product(magic_basis @
+    g2, u3, u4 = decompose_one_qubit_product(magic_basis @
                                              qr @ 
                                              magic_basis.conj().T,
                                              atol=atol,

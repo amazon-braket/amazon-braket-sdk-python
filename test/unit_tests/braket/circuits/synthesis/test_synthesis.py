@@ -225,7 +225,7 @@ def test_makhlin_invariants(nonunitary_test_cases):
 
     mk = util.makhlin_invariants(nonunitary_test_cases)
 
-# Test decompose two qubit product
+# Test decompose one qubit product
 @pytest.mark.parametrize("unitary_test_cases", [
     np.kron(x, z),
     np.kron(x, y),
@@ -233,9 +233,9 @@ def test_makhlin_invariants(nonunitary_test_cases):
     np.kron(x, I),
     np.kron(h, x)
     ])
-def test_decompose_two_qubit_product(unitary_test_cases):
+def test_decompose_one_qubit_product(unitary_test_cases):
 
-    phase, u1, u2 = kak.decompose_two_qubit_product(unitary_test_cases)
+    phase, u1, u2 = util.decompose_one_qubit_product(unitary_test_cases)
 
     assert np.allclose(phase * np.kron(u1, u2), unitary_test_cases)
     

@@ -89,6 +89,54 @@ def makhlin_invariants(U:np.ndarray,
 
     return makhlin_invariants
 
+def decompose_one_qubit_product(U:np.ndarray,
+                                validate_input: bool=True,
+                                atol: float=1E-8,
+                                rtol: float=1E-5):
+    """
+    Decompose a 4x4 unitary matrix to two 2x2 unitary matrices.
+
+    Args:
+        U (np.ndarray): input 4x4 unitary matrix to decompose.
+        validate_input (bool): if check input.
+
+    Returns:
+        phase: global phase.
+        U1: decomposed unitary matrix U1.
+        U2: decomposed unitary matrix U2.
+        atol: absolute tolerance parameter.
+        rtol: relative tolerance parameter.
+
+    Raises:
+        AssertionError: if the input is not a 4x4 unitary or
+        cannot be decomposed.
+    """
+
+    if validate_input:
+        assert np.allclose(makhlin_invariants(U),
+                           (1, 0, 3),
+                           atol=atol,
+                           rtol=rtol)
+
+    i, j = np.unravel_index(np.argmax(U, axis=None), U.shape)
+
+    def u1_set(i): return (1, 3) if i % 2 else (0, 2)
+    def u2_set(i): return (0, 1) if i < 2 else (2, 3)
+
+    u1 = U[np.ix_(u1_set(i), u1_set(j))]
+    u2 = U[np.ix_(u2_set(i), u2_set(j))]
+    
+    try:
+        u1 = u1 / np.sqrt(np.linalg.det(u1))
+        u2 = u2 / np.sqrt(np.linalg.det(u2))
+    except ValueError:
+        print("The decomposed 1q product gate is ill-conditioned.")
+    
+    phase = U[i, j] / (u1[i // 2, j // 2] * u2[i % 2, j % 2])
+    
+    return phase, u1, u2
+
+
 def diagonalize_commuting_hermitian_matrices(Ha: np.ndarray,
                                              Hb: np.ndarray,
                                              validate_input: bool=True,
