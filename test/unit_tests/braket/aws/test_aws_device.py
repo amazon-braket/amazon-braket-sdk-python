@@ -24,6 +24,7 @@ from common_test_utils import (
     run_and_assert,
     run_batch_and_assert,
 )
+from jsonschema import validate
 
 from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.circuits import Circuit
@@ -31,37 +32,45 @@ from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 
-MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
-    {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
-            "version": "1",
-        },
-        "service": {
-            "executionWindows": [
-                {
-                    "executionDay": "Everyday",
-                    "windowStartHour": "11:00",
-                    "windowEndHour": "12:00",
-                }
-            ],
-            "shotsRange": [1, 10],
-        },
-        "action": {
-            "braket.ir.jaqcd.program": {
-                "actionType": "braket.ir.jaqcd.program",
-                "version": ["1"],
-                "supportedOperations": ["H"],
+MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
             }
-        },
-        "paradigm": {
-            "qubitCount": 30,
-            "nativeGateSet": ["ccnot", "cy"],
-            "connectivity": {"fullyConnected": False, "connectivityGraph": {"1": ["2", "3"]}},
-        },
-        "deviceParameters": {},
-    }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.jaqcd.program": {
+            "actionType": "braket.ir.jaqcd.program",
+            "version": ["1"],
+            "supportedOperations": ["H"],
+        }
+    },
+    "paradigm": {
+        "qubitCount": 30,
+        "nativeGateSet": ["ccnot", "cy"],
+        "connectivity": {"fullyConnected": False, "connectivityGraph": {"1": ["2", "3"]}},
+    },
+    "deviceParameters": {},
+}
+
+
+MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
+    MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1
 )
+
+
+def test_mock_regetti_schema_1():
+    validate(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1, RigettiDeviceCapabilities.schema())
+
 
 MOCK_GATE_MODEL_QPU_1 = {
     "deviceName": "Aspen-9",
@@ -71,37 +80,44 @@ MOCK_GATE_MODEL_QPU_1 = {
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
 }
 
-MOCK_GATE_MODEL_QPU_CAPABILITIES_2 = RigettiDeviceCapabilities.parse_obj(
-    {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
-            "version": "1",
-        },
-        "service": {
-            "executionWindows": [
-                {
-                    "executionDay": "Everyday",
-                    "windowStartHour": "11:00",
-                    "windowEndHour": "12:00",
-                }
-            ],
-            "shotsRange": [1, 10],
-        },
-        "action": {
-            "braket.ir.jaqcd.program": {
-                "actionType": "braket.ir.jaqcd.program",
-                "version": ["1"],
-                "supportedOperations": ["H"],
+MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_2 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
             }
-        },
-        "paradigm": {
-            "qubitCount": 30,
-            "nativeGateSet": ["ccnot", "cy"],
-            "connectivity": {"fullyConnected": True, "connectivityGraph": {}},
-        },
-        "deviceParameters": {},
-    }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.jaqcd.program": {
+            "actionType": "braket.ir.jaqcd.program",
+            "version": ["1"],
+            "supportedOperations": ["H"],
+        }
+    },
+    "paradigm": {
+        "qubitCount": 30,
+        "nativeGateSet": ["ccnot", "cy"],
+        "connectivity": {"fullyConnected": True, "connectivityGraph": {}},
+    },
+    "deviceParameters": {},
+}
+
+MOCK_GATE_MODEL_QPU_CAPABILITIES_2 = RigettiDeviceCapabilities.parse_obj(
+    MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_2
 )
+
+
+def test_mock_regetti_schema_2():
+    validate(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_2, RigettiDeviceCapabilities.schema())
+
 
 MOCK_GATE_MODEL_QPU_2 = {
     "deviceName": "Blah",
@@ -111,51 +127,56 @@ MOCK_GATE_MODEL_QPU_2 = {
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_2.json(),
 }
 
-MOCK_DWAVE_QPU_CAPABILITIES = DwaveDeviceCapabilities.parse_obj(
-    {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.dwave.dwave_device_capabilities",
-            "version": "1",
-        },
-        "provider": {
-            "annealingOffsetStep": 1.45,
-            "annealingOffsetStepPhi0": 1.45,
-            "annealingOffsetRanges": [[1.45, 1.45], [1.45, 1.45]],
-            "annealingDurationRange": [1, 2, 3],
-            "couplers": [[1, 2], [1, 2]],
-            "defaultAnnealingDuration": 1,
-            "defaultProgrammingThermalizationDuration": 1,
-            "defaultReadoutThermalizationDuration": 1,
-            "extendedJRange": [1, 2, 3],
-            "hGainScheduleRange": [1, 2, 3],
-            "hRange": [1, 2, 3],
-            "jRange": [1, 2, 3],
-            "maximumAnnealingSchedulePoints": 1,
-            "maximumHGainSchedulePoints": 1,
-            "perQubitCouplingRange": [1, 2, 3],
-            "programmingThermalizationDurationRange": [1, 2, 3],
-            "qubits": [1, 2, 3],
-            "qubitCount": 1,
-            "quotaConversionRate": 1,
-            "readoutThermalizationDurationRange": [1, 2, 3],
-            "taskRunDurationRange": [1, 2, 3],
-            "topology": {},
-        },
-        "service": {
-            "executionWindows": [
-                {"executionDay": "Everyday", "windowStartHour": "11:00", "windowEndHour": "12:00"}
-            ],
-            "shotsRange": [1, 10],
-        },
-        "action": {
-            "braket.ir.annealing.problem": {
-                "actionType": "braket.ir.annealing.problem",
-                "version": ["1"],
-            }
-        },
-        "deviceParameters": {},
-    }
-)
+MOCK_DWAVE_QPU_CAPABILITIES_JSON = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.dwave.dwave_device_capabilities",
+        "version": "1",
+    },
+    "provider": {
+        "annealingOffsetStep": 1.45,
+        "annealingOffsetStepPhi0": 1.45,
+        "annealingOffsetRanges": [[1.45, 1.45], [1.45, 1.45]],
+        "annealingDurationRange": [1, 2, 3],
+        "couplers": [[1, 2], [1, 2]],
+        "defaultAnnealingDuration": 1,
+        "defaultProgrammingThermalizationDuration": 1,
+        "defaultReadoutThermalizationDuration": 1,
+        "extendedJRange": [1, 2, 3],
+        "hGainScheduleRange": [1, 2, 3],
+        "hRange": [1, 2, 3],
+        "jRange": [1, 2, 3],
+        "maximumAnnealingSchedulePoints": 1,
+        "maximumHGainSchedulePoints": 1,
+        "perQubitCouplingRange": [1, 2, 3],
+        "programmingThermalizationDurationRange": [1, 2, 3],
+        "qubits": [1, 2, 3],
+        "qubitCount": 1,
+        "quotaConversionRate": 1,
+        "readoutThermalizationDurationRange": [1, 2, 3],
+        "taskRunDurationRange": [1, 2, 3],
+        "topology": {},
+    },
+    "service": {
+        "executionWindows": [
+            {"executionDay": "Everyday", "windowStartHour": "11:00", "windowEndHour": "12:00"}
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.annealing.problem": {
+            "actionType": "braket.ir.annealing.problem",
+            "version": ["1"],
+        }
+    },
+    "deviceParameters": {},
+}
+
+MOCK_DWAVE_QPU_CAPABILITIES = DwaveDeviceCapabilities.parse_obj(MOCK_DWAVE_QPU_CAPABILITIES_JSON)
+
+
+def test_d_wave_schema():
+    validate(MOCK_DWAVE_QPU_CAPABILITIES_JSON, DwaveDeviceCapabilities.schema())
+
 
 MOCK_DWAVE_QPU = {
     "deviceName": "Advantage_system1.1",
@@ -165,33 +186,42 @@ MOCK_DWAVE_QPU = {
     "deviceCapabilities": MOCK_DWAVE_QPU_CAPABILITIES.json(),
 }
 
-MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.parse_obj(
-    {
-        "braketSchemaHeader": {
-            "name": "braket.device_schema.simulators.gate_model_simulator_device_capabilities",
-            "version": "1",
-        },
-        "service": {
-            "executionWindows": [
-                {
-                    "executionDay": "Everyday",
-                    "windowStartHour": "11:00",
-                    "windowEndHour": "12:00",
-                }
-            ],
-            "shotsRange": [1, 10],
-        },
-        "action": {
-            "braket.ir.jaqcd.program": {
-                "actionType": "braket.ir.jaqcd.program",
-                "version": ["1"],
-                "supportedOperations": ["H"],
+MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.simulators.gate_model_simulator_device_capabilities",
+        "version": "1",
+    },
+    "service": {
+        "executionWindows": [
+            {
+                "executionDay": "Everyday",
+                "windowStartHour": "11:00",
+                "windowEndHour": "12:00",
             }
-        },
-        "paradigm": {"qubitCount": 30},
-        "deviceParameters": {},
-    }
+        ],
+        "shotsRange": [1, 10],
+    },
+    "action": {
+        "braket.ir.jaqcd.program": {
+            "actionType": "braket.ir.jaqcd.program",
+            "version": ["1"],
+            "supportedOperations": ["H"],
+        }
+    },
+    "paradigm": {"qubitCount": 30},
+    "deviceParameters": {},
+}
+
+MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES = GateModelSimulatorDeviceCapabilities.parse_obj(
+    MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON
 )
+
+
+def test_gate_model_sim_schema():
+    validate(
+        MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON, GateModelSimulatorDeviceCapabilities.schema()
+    )
+
 
 MOCK_GATE_MODEL_SIMULATOR = {
     "deviceName": "SV1",
