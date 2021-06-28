@@ -137,6 +137,15 @@ class AwsSession(object):
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
 
+    def create_logs_client(self) -> "boto3.session.Session.client":
+        """
+        Create a CloudWatch Logs boto client.
+
+        Returns:
+            'boto3.session.Session.client': The CloudWatch Logs boto client.
+        """
+        return self.boto_session.client("logs", config=self._config)
+
     def get_device(self, arn: str) -> Dict[str, Any]:
         """
         Calls the Amazon Braket `get_device` API to
