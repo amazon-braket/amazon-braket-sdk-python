@@ -11,6 +11,19 @@ class CompositeOperator(QuantumOperator):
     """
 
     def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
+        """
+        Args:
+            qubit_count (int): Number of qubits this composite operator interacts with.
+            ascii_symbols (str): ASCII string symbols for the composite operator. These are used
+                when printing a diagram of circuits.
+
+        Raises:
+            ValueError: `qubit_count` is less than 1, or `ascii_symbols` are `None`
+        """
+        if len(ascii_symbols) != 1:
+            msg = f"ascii_symbols, {ascii_symbols}, length must 1"
+            raise ValueError(msg)
+
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     def to_ir(self, *args, **kwargs) -> Any:

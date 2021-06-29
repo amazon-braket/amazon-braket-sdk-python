@@ -35,9 +35,15 @@ def test_to_matrix_not_implemented_by_default(composite_operator):
     composite_operator.to_matrix(None)
 
 
+@pytest.mark.xfail(raises=ValueError)
+def test_incorrect_length_ascii():
+    CompositeOperator(qubit_count=2, ascii_symbols=["foo", "bar"])
+
+
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_to_matrix_not_implemented_by_default(composite_operator):
     composite_operator.matrix_equivalence(composite_operator)
+
 
 def test_decompose_return_empty_list_by_default(composite_operator):
     assert composite_operator.decompose(QubitSet([1])) == []

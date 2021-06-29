@@ -814,15 +814,23 @@ def test_decompose():
     ghz_circ1 = Circuit().ghz([0, 1, 2]).decompose()
     ghz_circ2 = Circuit().ghz([0, 1, 2, 3]).decompose()
     qft_circ = Circuit().qft([0, 1, 2]).decompose()
-    operator = CompositeOperator.GHZ(3)
+    ghz_instr1 = Instruction(CompositeOperator.GHZ(3), [0, 1, 2])
 
     assert ghz_circ1 == Circuit(
-        operator.decompose([0, 1, 2])
+        ghz_instr1.decompose()
     )
     assert ghz_circ1 != ghz_circ2
     assert ghz_circ1 != qft_circ
+
 
 def test_original_circuit_unchanged_after_decompose():
     qft_circ = Circuit().qft([0, 1, 2])
     qft_circ_decomposed = qft_circ.decompose()
     assert qft_circ_decomposed != qft_circ
+
+
+def test_decomposition_levels():
+    qft_circ = Circuit().qft([0, 1, 2, 3], method="recursive")
+    assert qft_circ.decompose(level=1) == qft_circ.decompose()
+    assert qft_circ.decompose(level=2) == qft_circ.decompose().decompose()
+    assert qft_circ.decompose(level="infinite") == qft_circ.decompose().decompose().decompose().decompose()

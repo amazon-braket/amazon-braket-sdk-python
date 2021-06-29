@@ -132,6 +132,18 @@ class Instruction:
         else:
             return Instruction(self._operator, self._target.map(target_mapping))
 
+    def decompose(self):
+        """
+        Decomposes the instruction.
+
+        Returns:
+            Iterable[Instruction]: iterable of instructions
+        """
+        if isinstance(self._operator, CompositeOperator):
+            return self._operator.decompose(self._target)
+        else:
+            return [self]
+
     def __repr__(self):
         return f"Instruction('operator': {self._operator}, 'target': {self._target})"
 

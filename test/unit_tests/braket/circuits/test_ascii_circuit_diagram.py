@@ -13,7 +13,7 @@
 
 import numpy as np
 
-from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator, CompositeOperator
+from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator
 
 
 def test_empty_circuit():
@@ -267,10 +267,10 @@ def test_result_types_target_none():
 def test_result_types_target_some():
     circ = (
         Circuit()
-        .h(0)
-        .h(1)
-        .h(100)
-        .expectation(observable=Observable.Y() @ Observable.Z(), target=[0, 100])
+            .h(0)
+            .h(1)
+            .h(100)
+            .expectation(observable=Observable.Y() @ Observable.Z(), target=[0, 100])
     )
     expected = (
         "T    : |0|  Result Types  |",
@@ -309,12 +309,12 @@ def test_additional_result_types():
 def test_multiple_result_types():
     circ = (
         Circuit()
-        .cnot(0, 2)
-        .cnot(1, 3)
-        .h(0)
-        .variance(observable=Observable.Y(), target=0)
-        .expectation(observable=Observable.Y(), target=2)
-        .sample(observable=Observable.Y())
+            .cnot(0, 2)
+            .cnot(1, 3)
+            .h(0)
+            .variance(observable=Observable.Y(), target=0)
+            .expectation(observable=Observable.Y(), target=2)
+            .sample(observable=Observable.Y())
     )
     expected = (
         "T  : | 0 |1|      Result Types      |",
@@ -336,14 +336,14 @@ def test_multiple_result_types():
 def test_multiple_result_types_with_state_vector_amplitude():
     circ = (
         Circuit()
-        .cnot(0, 2)
-        .cnot(1, 3)
-        .h(0)
-        .variance(observable=Observable.Y(), target=0)
-        .expectation(observable=Observable.Y(), target=3)
-        .expectation(observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])), target=1)
-        .amplitude(["0001"])
-        .state_vector()
+            .cnot(0, 2)
+            .cnot(1, 3)
+            .h(0)
+            .variance(observable=Observable.Y(), target=0)
+            .expectation(observable=Observable.Y(), target=3)
+            .expectation(observable=Observable.Hermitian(np.array([[1.0, 0.0], [0.0, 1.0]])), target=1)
+            .amplitude(["0001"])
+            .state_vector()
     )
     expected = (
         "T  : | 0 |1|     Result Types     |",
@@ -368,12 +368,12 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
     herm_matrix = (Observable.Y() @ Observable.Z()).to_matrix()
     circ = (
         Circuit()
-        .cnot(0, 2)
-        .cnot(1, 3)
-        .h(0)
-        .variance(observable=Observable.Y(), target=0)
-        .expectation(observable=Observable.Y(), target=3)
-        .expectation(
+            .cnot(0, 2)
+            .cnot(1, 3)
+            .h(0)
+            .variance(observable=Observable.Y(), target=0)
+            .expectation(observable=Observable.Y(), target=3)
+            .expectation(
             observable=Observable.Hermitian(
                 matrix=herm_matrix,
                 display_name="MyHerm",

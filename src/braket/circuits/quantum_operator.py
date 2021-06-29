@@ -35,8 +35,7 @@ class QuantumOperator(Operator):
                 correlate a symbol with that index.
 
         Raises:
-            ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`
+            ValueError: `qubit_count` is less than 1, or `ascii_symbols` are `None`
         """
 
         if qubit_count < 1:

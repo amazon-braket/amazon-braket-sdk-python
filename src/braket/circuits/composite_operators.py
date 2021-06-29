@@ -5,7 +5,7 @@ import math
 from braket.circuits.composite_operator import CompositeOperator
 from braket.circuits.gates import *
 from braket.circuits.instruction import Instruction
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.qubit_set import QubitSet
 
 
 class GHZ(CompositeOperator):
@@ -72,9 +72,17 @@ class QFT(CompositeOperator):
 
     Args:
         qubit_count (int): Number of target qubits.
+        method (bool): Optional boolean flag for decomposition,
+                         with recursive approach by default (default is True),
+                         or non-recursive approach.
     """
 
-    def __init__(self, qubit_count):
+    def __init__(self, qubit_count, method="default"):
+
+        if method != "default" and method != "recursive":
+            raise NameError("method must either be 'default' or 'recursive'.")
+
+        self._method = method
         super().__init__(qubit_count=qubit_count, ascii_symbols=["QFT"])
 
     def to_ir(self, target: QubitSet):
@@ -104,15 +112,35 @@ class QFT(CompositeOperator):
         # get number of qubits
         num_qubits = len(target)
 
-        for k in range(num_qubits):
-            # First add a Hadamard gate
-            instructions.append(Instruction(Gate.H(), target=[target[k]]))
+        if self._method == "recursive":
+            # On a single qubit, the QFT is just a Hadamard.
+            if len(target) == 1:
+                instructions.append(Instruction(Gate.H(), target=target))
 
-            # Then apply the controlled rotations, with weights (angles) defined by the distance to the control qubit.
-            # Start on the qubit after qubit k, and iterate until the end.  When num_qubits==1, this loop does not run.
-            for j in range(1, num_qubits - k):
-                angle = 2 * math.pi / (2 ** (j + 1))
-                instructions.append(Instruction(Gate.CPhaseShift(angle), target=[target[k + j], target[k]]))
+            # For more than one qubit, we define mQFT recursively:
+            else:
+
+                # First add a Hadamard gate
+                instructions.append(Instruction(Gate.H(), target=target[0]))
+
+                # Then apply the controlled rotations, with weights (angles) defined by the distance to the control qubit.
+                for k, qubit in enumerate(target[1:]):
+                    instructions.append(
+                        Instruction(Gate.CPhaseShift(2 * math.pi / (2 ** (k + 2))), target=[qubit, target[0]]))
+
+                # Now apply the above gates recursively to the rest of the qubits
+                instructions.append(Instruction(CompositeOperator.mQFT(len(target[1:])), target=target[1:]))
+
+        elif self._method == "default":
+            for k in range(num_qubits):
+                # First add a Hadamard gate
+                instructions.append(Instruction(Gate.H(), target=[target[k]]))
+
+                # Then apply the controlled rotations, with weights (angles) defined by the distance to the control qubit.
+                # Start on the qubit after qubit k, and iterate until the end.  When num_qubits==1, this loop does not run.
+                for j in range(1, num_qubits - k):
+                    angle = 2 * math.pi / (2 ** (j + 1))
+                    instructions.append(Instruction(Gate.CPhaseShift(angle), target=[target[k + j], target[k]]))
 
         # Then add SWAP gates to reverse the order of the qubits:
         for i in range(math.floor(num_qubits / 2)):
@@ -122,7 +150,7 @@ class QFT(CompositeOperator):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def qft(targets: QubitSet) -> Instruction:
+    def qft(targets: QubitSet, method: str = "default") -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
@@ -132,12 +160,90 @@ class QFT(CompositeOperator):
             Instruction: QFT instruction.
 
         Examples:
-            >>> circ = Circuit().qft([0, 1, 2])
+            >>> circ = Circuit().mqft([0, 1, 2])
         """
-        return Instruction(CompositeOperator.QFT(len(targets)), target=targets)
+        return Instruction(CompositeOperator.QFT(len(targets), method), target=targets)
 
 
 CompositeOperator.register_composite_operator(QFT)
+
+
+class mQFT(CompositeOperator):
+    """
+    Operator for "modified" quantom fourier transform. This is the same as quantum fourier transform but
+    excluding the SWAP gates.
+
+    Args:
+        qubit_count (int): Number of target qubits.
+        recursive (bool): Optional boolean flag for decomposition,
+                         with recursive approach by default (default is True),
+                         or non-recursive approach.
+    """
+
+    def __init__(self, qubit_count):
+        super().__init__(qubit_count=qubit_count, ascii_symbols=["mQFT"])
+
+    def to_ir(self, target: QubitSet):
+        return [instr.to_ir() for instr in self.decompose(target)]
+
+    def decompose(self, target: QubitSet) -> Iterable[Instruction]:
+        """
+        Returns an iterable of instructions corresponding to the Quantum Fourier Transform (QFT)
+        algorithm, applied to the argument qubits.
+
+        Args:
+            target (QubitSet): Target qubits
+
+        Returns:
+            Iterable[Instruction]: iterable of instructions for QFT
+
+        Raises:
+            ValueError: If number of qubits in `target` does not equal `qubit_count`.
+        """
+
+        if len(target) != self.qubit_count:
+            raise ValueError(f"Operator qubit count {self.qubit_count} must be "
+                             f"equal to size of target qubit set {target}")
+
+        instructions = []
+
+        if len(target) == 1:
+            instructions.append(Instruction(Gate.H(), target=target))
+
+        # For more than one qubit, we define mQFT recursively:
+        else:
+
+            # First add a Hadamard gate
+            instructions.append(Instruction(Gate.H(), target=target[0]))
+
+            # Then apply the controlled rotations, with weights (angles) defined by the distance to the control qubit.
+            for k, qubit in enumerate(target[1:]):
+                instructions.append(
+                    Instruction(Gate.CPhaseShift(2 * math.pi / (2 ** (k + 2))), target=[qubit, target[0]]))
+
+            # Now apply the above gates recursively to the rest of the qubits
+            instructions.append(Instruction(CompositeOperator.mQFT(len(target[1:])), target=target[1:]))
+
+        return instructions
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def mqft(targets: QubitSet) -> Instruction:
+        """Registers this function into the circuit class.
+
+        Args:
+            targets (QubitSet): Target qubits.
+
+        Returns:
+            Instruction: QFT instruction.
+
+        Examples:
+            >>> circ = Circuit().mqft([0, 1, 2])
+        """
+        return Instruction(CompositeOperator.mQFT(len(targets)), target=targets)
+
+
+CompositeOperator.register_composite_operator(mQFT)
 
 
 class iQFT(CompositeOperator):
