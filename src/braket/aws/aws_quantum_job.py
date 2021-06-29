@@ -23,7 +23,10 @@ from braket.jobs.config import (
     StoppingCondition,
     VpcConfig,
 )
-from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
+
+# TODO: Have added metric file in metrics folder, but have to decide on the name for keep
+# for the files, since all those metrics are retrieved from the CW.
+from braket.jobs.metrics.metrics import MetricDefinition, MetricPeriod, MetricStatistic
 
 
 class AwsQuantumJob:
