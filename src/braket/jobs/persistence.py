@@ -22,8 +22,8 @@ class PersistedJobDataFormat(str, Enum):
     Enum class for the the required formats.
     """
 
-    PLAINTEXT = None
-    PICKLED = None
+    PLAINTEXT = "plaintext"
+    PICKLED = "pickled"
 
 
 class PersistedJobData:

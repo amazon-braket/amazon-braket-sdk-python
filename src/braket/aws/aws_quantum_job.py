@@ -39,12 +39,13 @@ class AwsQuantumJob:
         # in the `jobs` folder and the function defined in it.
         image_uri: str = "Base Image URI",
         source_dir: str = None,
-        # TODO: Extract image_uri_type from image_uri for job_name.
-        # TODO: Before passing the job_name to other parameters append timestamp to it.
+        # TODO: If job_name is specified by customer then we don't append timestamp to it.
+        # TODO: Else we, extract image_uri_type from image_uri for job_name and append timestamp.
+        # TODO: timestamp should be in epoch format
         job_name: str = None,
         code_location: str = None,
         role_arn: str = None,
-        wait: bool = False,
+        wait_until_complete: bool = False,
         priority_access_device_arn: str = None,
         hyper_parameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
@@ -85,8 +86,8 @@ class AwsQuantumJob:
             role_arn (str): str representing the IAM role arn to be used for executing the
                 script. Default = `IAM role returned by get_execution_role()`.
 
-            wait (bool): bool representing whether we should wait until the job completes.
-                This would tail the job logs as it waits. Default = `False`.
+            wait_until_complete (bool): bool representing whether we should wait until the job
+                completes. This would tail the job logs as it waits. Default = `False`.
 
             priority_access_device_arn (str): ARN for the AWS device which should have priority
                 access for the execution of this job. Default = `None`.
