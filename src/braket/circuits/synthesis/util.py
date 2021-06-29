@@ -85,7 +85,7 @@ def makhlin_invariants(U:np.ndarray,
 
     makhlin_invariants = (np.real(np.trace(m) ** 2 / (16 * det)),
                           np.imag(np.trace(m) ** 2 / (16 * det)),
-                          (np.trace(m) ** 2 - np.trace(m @ m)) / (4 * det))
+                          np.real((np.trace(m) ** 2 - np.trace(m @ m)) / (4 * det)))
 
     return makhlin_invariants
 
@@ -178,11 +178,6 @@ def diagonalize_commuting_hermitian_matrices(Ha: np.ndarray,
                            rtol=rtol):
             raise ValueError("Input matrices do not commute.")
 
-        print("Ha\n", Ha)
-        print("Hb\n", Hb)
-        print("atol", atol)
-        print("rtol", rtol)
-    
         if not (np.allclose(Ha, 
                             Ha.conj().T,
                             atol=atol,
