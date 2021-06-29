@@ -32,7 +32,7 @@ class PersistedJobData:
     what the load_job_checkpoint function expects the persisted data to look like.
     """
 
-    dataDictionary: dict[str, Any]
+    dataDictionary: Dict[str, Any]
     format: PersistedJobDataFormat
 
 
