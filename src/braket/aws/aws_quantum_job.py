@@ -44,7 +44,7 @@ class AwsQuantumJob:
         source_dir: str = None,
         # TODO: If job_name is specified by customer then we don't append timestamp to it.
         # TODO: Else we, extract image_uri_type from image_uri for job_name and append timestamp.
-        # TODO: timestamp should be in epoch format
+        # TODO: timestamp should be in epoch or any other date format we decide on like `yyyy-mm-dd`
         job_name: str = None,
         code_location: str = None,
         role_arn: str = None,
@@ -195,6 +195,10 @@ class AwsQuantumJob:
         period: MetricPeriod = MetricPeriod.ONE_MINUTE,
         statistic: MetricStatistic = MetricStatistic.AVG,
     ) -> Dict[str, Any]:
+
+        # TODO: We might have to update the method signature & associated enums based when we
+        # integrate with metric retrieval classes.
+
         """Queries cloudwatch to retrieve the metric values for the specified metric_names
         for the job.
 
