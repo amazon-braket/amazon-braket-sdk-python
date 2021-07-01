@@ -15,3 +15,8 @@ from braket.jobs.metrics.cwl_insights_metrics_fetcher import CwlInsightsMetricsF
 from braket.jobs.metrics.cwl_metrics import CwlMetrics  # noqa: F401
 from braket.jobs.metrics.cwl_metrics_fetcher import CwlMetricsFetcher  # noqa: F401
 from braket.jobs.metrics.exceptions import MetricsRetrievalError  # noqa: F401
+from braket.jobs.metrics.metrics import (  # noqa: F401
+    MetricDefinition,
+    MetricPeriod,
+    MetricStatistic,
+)
