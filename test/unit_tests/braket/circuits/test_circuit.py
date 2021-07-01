@@ -833,4 +833,9 @@ def test_decomposition_levels():
     qft_circ = Circuit().qft([0, 1, 2, 3], method="recursive")
     assert qft_circ.decompose(level=1) == qft_circ.decompose()
     assert qft_circ.decompose(level=2) == qft_circ.decompose().decompose()
-    assert qft_circ.decompose(level="infinite") == qft_circ.decompose().decompose().decompose().decompose()
+    assert qft_circ.decompose(level=0) == qft_circ.decompose().decompose().decompose().decompose()
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_decompose_negative_level():
+    Circuit().qft([0, 1, 2, 3]).decompose(level=-1)

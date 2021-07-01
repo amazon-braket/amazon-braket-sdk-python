@@ -18,7 +18,8 @@ class CompositeOperator(QuantumOperator):
                 when printing a diagram of circuits.
 
         Raises:
-            ValueError: `qubit_count` is less than 1, or `ascii_symbols` are `None`
+            ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != 1
         """
         if len(ascii_symbols) != 1:
             msg = f"ascii_symbols, {ascii_symbols}, length must 1"

@@ -16,7 +16,7 @@ class GHZ(CompositeOperator):
         qubit_count (int): Number of target qubits.
     """
 
-    def __init__(self, qubit_count):
+    def __init__(self, qubit_count: int):
         super().__init__(qubit_count=qubit_count, ascii_symbols=["GHZ"])
 
     def to_ir(self, target: QubitSet):
@@ -72,15 +72,15 @@ class QFT(CompositeOperator):
 
     Args:
         qubit_count (int): Number of target qubits.
-        method (bool): Optional boolean flag for decomposition,
-                         with recursive approach by default (default is True),
-                         or non-recursive approach.
+        method (str): String specification of method to use for decomposition,
+                         with non-recursive approach by default (method="default"),
+                         or recursive approach (method="recursive").
     """
 
-    def __init__(self, qubit_count, method="default"):
+    def __init__(self, qubit_count: int, method: str = "default"):
 
         if method != "default" and method != "recursive":
-            raise NameError("method must either be 'default' or 'recursive'.")
+            raise TypeError("method must either be 'default' or 'recursive'.")
 
         self._method = method
         super().__init__(qubit_count=qubit_count, ascii_symbols=["QFT"])
@@ -175,12 +175,9 @@ class mQFT(CompositeOperator):
 
     Args:
         qubit_count (int): Number of target qubits.
-        recursive (bool): Optional boolean flag for decomposition,
-                         with recursive approach by default (default is True),
-                         or non-recursive approach.
     """
 
-    def __init__(self, qubit_count):
+    def __init__(self, qubit_count: int):
         super().__init__(qubit_count=qubit_count, ascii_symbols=["mQFT"])
 
     def to_ir(self, target: QubitSet):

@@ -23,10 +23,6 @@ def single_target_valid_input(**kwargs):
     return {"target": 2}
 
 
-def double_target_valid_ir_input(**kwargs):
-    return {"targets": [2, 3]}
-
-
 def double_target_valid_input(**kwargs):
     return {"target1": 2, "target2": 3}
 
@@ -37,10 +33,6 @@ def angle_valid_input(**kwargs):
 
 def single_control_valid_input(**kwargs):
     return {"control": 0}
-
-
-def double_control_valid_ir_input(**kwargs):
-    return {"controls": [0, 1]}
 
 
 def double_control_valid_input(**kwargs):
@@ -57,34 +49,21 @@ def multi_control_valid_input(**kwargs):
     return {"controls": list(range(4, 7))}
 
 
-def two_dimensional_matrix_valid_ir_input(**kwargs):
-    return {"matrix": [[[0, 0], [1, 0]], [[1, 0], [0, 0]]]}
-
-
 def two_dimensional_matrix_valid_input(**kwargs):
     input_type = kwargs.get("input_type")
     unitary = np.array([[input_type(0), input_type(1)], [input_type(1), input_type(0)]])
     return {"matrix": np.kron(np.kron(unitary, unitary), unitary)}
 
 
-valid_ir_switcher = {
+valid_subroutine_input = {
     "SingleTarget": single_target_valid_input,
-    "DoubleTarget": double_target_valid_ir_input,
+    "DoubleTarget": double_target_valid_input,
     "SingleControl": single_control_valid_input,
-    "DoubleControl": double_control_valid_ir_input,
+    "DoubleControl": double_control_valid_input,
     "MultiTarget": multi_target_valid_input,
     "MultiControl": multi_control_valid_input,
-    "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
+    "TwoDimensionalMatrix": two_dimensional_matrix_valid_input,
 }
-
-valid_subroutine_switcher = dict(
-    valid_ir_switcher,
-    **{
-        "TwoDimensionalMatrix": two_dimensional_matrix_valid_input,
-        "DoubleTarget": double_target_valid_input,
-        "DoubleControl": double_control_valid_input,
-    }
-)
 
 
 def create_valid_subroutine_input(subclasses, **kwargs):
@@ -95,11 +74,11 @@ def create_valid_subroutine_input(subclasses, **kwargs):
             num_multi_target += 1
         else:
             input.update(
-                valid_subroutine_switcher.get(subclass, lambda: "Invalid subclass")(**kwargs)
+                valid_subroutine_input.get(subclass, lambda: "Invalid subclass")(**kwargs)
             )
     if num_multi_target == 1:
         input.update(
-            valid_subroutine_switcher.get("MultiTarget", lambda: "Invalid subclass")(**kwargs)
+            valid_subroutine_input.get("MultiTarget", lambda: "Invalid subclass")(**kwargs)
         )
     elif num_multi_target > 1:
         for i in range(num_multi_target):
@@ -116,14 +95,14 @@ def create_valid_target_input(subclasses):
         if subclass == "SingleTarget":
             qubit_set.extend(list(single_target_valid_input().values()))
         elif subclass == "DoubleTarget":
-            qubit_set.extend(list(double_target_valid_ir_input().values()))
+            qubit_set.extend(list(double_target_valid_input().values()))
         elif subclass == "MultiTarget":
             qubit_set.extend(list(multi_target_valid_input(multi_target_counter).values()))
             multi_target_counter += 1
         elif subclass == "SingleControl":
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == "DoubleControl":
-            qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
+            qubit_set = list(double_control_valid_input().values()) + qubit_set
         elif subclass == "Angle" or subclass == "TwoDimensionalMatrix":
             pass
         else:
@@ -298,6 +277,11 @@ def test_decompose_with_mismatched_target(testclass, subroutine_name, subclasses
     testclass(**create_valid_composite_operator_class_input(subroutine_name, subclasses, **kwargs)).decompose(
         QubitSet(create_valid_target_input(subclasses).values())[:-1]
     )
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_qft_nonexistant_method():
+    CompositeOperator.QFT(3, method="foo")
 
 
 def get_expected_circuit(**kwargs):

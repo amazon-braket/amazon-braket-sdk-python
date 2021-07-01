@@ -892,29 +892,31 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         """
         return self._copy()
 
-    def decompose(self, level: Union[str, int]=1) -> Circuit:
+    def decompose(self, level: int=1) -> Circuit:
         """
         Call a decomposition pass across the circuit.
 
         Returns:
             Circuit: Circuit decomposed by one level.
         """
+        if level < 0:
+            raise ValueError(f"level {level} must be non-negative.")
+
         circ = Circuit()
-        if level != 0:
-            decomposed_instr = []
-            for instr in self.instructions:
-                decomposed_instr += instr.decompose()
-                circ = Circuit(decomposed_instr)
-            if isinstance(level, int):
-                for i in range(level - 1):
-                    circ = circ.decompose()
-            elif level == "infinite":
-                while circ.contains_composite_operator() == True:
-                    circ = circ.decompose()
+        decomposed_instr = []
+        for instr in self.instructions:
+            decomposed_instr += instr.decompose()
+            circ = Circuit(decomposed_instr)
+        if level > 0:
+            for i in range(level - 1):
+                circ = circ.decompose()
+        elif level == 0:
+            while circ._contains_composite_operator() == True:
+                circ = circ.decompose()
 
         return circ
 
-    def contains_composite_operator(self):
+    def _contains_composite_operator(self):
         for instr in self.instructions:
             if isinstance(instr.operator, CompositeOperator):
                 return True
