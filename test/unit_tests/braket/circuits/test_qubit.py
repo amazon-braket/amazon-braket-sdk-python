@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import numpy as np
 import pytest
 
 from braket.circuits import Qubit
@@ -26,14 +27,15 @@ def test_index_lt_zero():
     Qubit(-1)
 
 
+@pytest.mark.parametrize("qubit_arg", ("not a number", 0.5))
 @pytest.mark.xfail(raises=TypeError)
-def test_index_non_int():
-    Qubit("not a number")
+def test_index_non_int(qubit_arg):
+    Qubit(qubit_arg)
 
 
-def test_index_gte_zero():
-    Qubit(0)
-    Qubit(5)
+@pytest.mark.parametrize("qubit_index", (0, 5, np.int64(5)))
+def test_index_gte_zero(qubit_index):
+    Qubit(qubit_index)
 
 
 def test_str(qubit):

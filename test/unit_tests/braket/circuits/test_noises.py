@@ -372,6 +372,14 @@ def test_noise_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwar
     assert all(np.allclose(m1, m2) for m1, m2 in zip(noise1.to_matrix(), noise2.to_matrix()))
 
 
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_fixed_qubit_count(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    fixed_qubit_count = testclass.fixed_qubit_count()
+    if fixed_qubit_count is not NotImplemented:
+        noise = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
+        assert noise.qubit_count == fixed_qubit_count
+
+
 # Additional Unitary noise tests
 
 

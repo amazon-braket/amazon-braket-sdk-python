@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -24,10 +24,10 @@ class Gate(QuantumOperator):
     the metadata that defines what a gate is and what it does.
     """
 
-    def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
+    def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
         """
         Args:
-            qubit_count (int): Number of qubits this gate interacts with.
+            qubit_count (int, optional): Number of qubits this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of circuits. Length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with target ordering on the instruction.
