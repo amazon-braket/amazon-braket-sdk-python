@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.7.0 (2021-06-25)
+
+### Features
+
+ * code Circuit.as_unitary()
+
+### Bug Fixes and Other Changes
+
+ * allow integral number types that aren't type int
+
+## v1.6.5 (2021-06-23)
+
+### Bug Fixes and Other Changes
+
+ * Get qubit count without instantiating op
+ * Require qubit indices to be integers
+
 ## v1.6.4 (2021-06-10)
 
 ### Bug Fixes and Other Changes

@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import numbers
 from typing import Union
 
 QubitInput = Union["Qubit", int]
@@ -36,7 +37,7 @@ class Qubit(int):
             >>> Qubit(0)
             >>> Qubit(1)
         """
-        if not isinstance(index, int):
+        if not isinstance(index, numbers.Integral):
             raise TypeError(f"Supplied qubit index, {index}, must be an integer.")
         if index < 0:
             raise ValueError(f"Supplied qubit index, {index}, cannot be less than zero.")
