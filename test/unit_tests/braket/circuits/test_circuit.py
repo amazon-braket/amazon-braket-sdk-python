@@ -81,7 +81,7 @@ def test_repr_result_types(cnot_prob):
     circuit = cnot_prob
     expected = (
         f"Circuit('instructions': {list(circuit.instructions)}"
-        + f"result_types': {circuit.result_types})"
+        + f", 'result_types': {circuit.result_types})"
     )
     assert repr(circuit) == expected
 
