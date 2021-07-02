@@ -1,0 +1,9 @@
+T  : |    0    |    1    |    2    |              Result Types              |
+                                                                             
+q0 : -X-AD(0.1)-C-AD(0.1)-----------Probability-Expectation(Z)-DensityMatrix-
+                |                   |                          |             
+q1 : -Y---------|-X-----------------Probability----------------DensityMatrix-
+                |                   |                                        
+q2 : -----------X-AD(0.1)-Z-AD(0.1)-Probability------------------------------
+
+T  : |    0    |    1    |    2    |              Result Types              |

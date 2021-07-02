@@ -14,6 +14,7 @@ __pycache__/
 *$py.class
 *.egg-info/
 *.ipynb_checkpoints/
+*.cache/
 
 /.coverage
 /.coverage.*
