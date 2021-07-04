@@ -1,11 +1,20 @@
 # general imports
 import math
+from enum import Enum
 
 # AWS imports: Import Braket SDK modules
 from braket.circuits.composite_operator import CompositeOperator
 from braket.circuits.gates import *
 from braket.circuits.instruction import Instruction
 from braket.circuits.qubit_set import QubitSet
+
+
+class QFT_Method(Enum):
+    DEFAULT = "default"
+    RECURSIVE = "recursive"
+
+    def __str__(self):
+        return self.value
 
 
 class GHZ(CompositeOperator):
@@ -72,17 +81,17 @@ class QFT(CompositeOperator):
 
     Args:
         qubit_count (int): Number of target qubits.
-        method (str): String specification of method to use for decomposition,
+        method (Union[Enum, str]): Specification of method to use for decomposition,
                          with non-recursive approach by default (method="default"),
                          or recursive approach (method="recursive").
     """
 
-    def __init__(self, qubit_count: int, method: str = "default"):
+    def __init__(self, qubit_count: int, method=QFT_Method.DEFAULT):
 
-        if method != "default" and method != "recursive":
+        if str(method) not in ["default", "recursive"]:
             raise TypeError("method must either be 'default' or 'recursive'.")
 
-        self._method = method
+        self._method = str(method)
         super().__init__(qubit_count=qubit_count, ascii_symbols=["QFT"])
 
     def to_ir(self, target: QubitSet):
@@ -329,7 +338,7 @@ class QPE(CompositeOperator):
         precision_qubit_count (int): The number of qubits in the precision register.
         query_qubit_count (int): The number of qubits in the query register.
         matrix (numpy.ndarray): Unitary matrix whose eigenvalues we wish to estimate.
-        condense (boolean): Optional boolean flag for controlled unitaries,
+        control (boolean): Optional boolean flag for controlled unitaries,
                          with C-(U^{2^k}) by default (default is True),
                          or C-U controlled-unitary (2**power) times.
 
@@ -339,14 +348,14 @@ class QPE(CompositeOperator):
             or is not unitary.
     """
 
-    def __init__(self, precision_qubit_count: int, query_qubit_count: int, matrix: np.ndarray, condense=True):
+    def __init__(self, precision_qubit_count: int, query_qubit_count: int, matrix: np.ndarray, control=True):
         verify_quantum_operator_matrix_dimensions(matrix)
         self._matrix = np.array(matrix, dtype=complex)
 
         if not is_unitary(self._matrix):
             raise ValueError(f"{self._matrix} is not unitary")
 
-        self._condense = condense
+        self._condense = control
         self._precision_qubit_count = precision_qubit_count
         self._query_qubit_count = query_qubit_count
         super().__init__(qubit_count=precision_qubit_count + query_qubit_count, ascii_symbols=["QPE"])
@@ -419,13 +428,16 @@ class QPE(CompositeOperator):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def qpe(targets1: QubitSet, targets2: QubitSet, matrix: np.ndarray, condense=True):
+    def qpe(targets1: QubitSet, targets2: QubitSet, matrix: np.ndarray, control=True):
         """Registers this function into the circuit class.
 
         Args:
             targets1 (QubitSet): Qubits defining the precision register.
             targets2 (QubitSet): Qubits defining the query register.
             matrix: Unitary matrix whose eigenvalues we wish to estimate
+            control: Optional boolean flag for controlled unitaries,
+                         with C-(U^{2^k}) by default (default is True),
+                         or C-U controlled-unitary (2**power) times.
 
         Returns:
             Instruction: QPE instruction.
@@ -441,7 +453,7 @@ class QPE(CompositeOperator):
         if 2 ** len(targets2) != matrix.shape[0]:
             raise ValueError("Dimensions of the supplied unitary are incompatible with the query qubits")
 
-        return Instruction(CompositeOperator.QPE(len(targets1), len(targets2), matrix, condense),
+        return Instruction(CompositeOperator.QPE(len(targets1), len(targets2), matrix, control),
                            target=targets1 + targets2)
 
 

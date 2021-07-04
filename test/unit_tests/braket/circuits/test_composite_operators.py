@@ -66,19 +66,19 @@ valid_subroutine_input = {
 }
 
 
-def create_valid_subroutine_input(subclasses, **kwargs):
+def create_valid_subroutine_input(input_types, **kwargs):
     input = {}
     num_multi_target = 0
-    for subclass in subclasses:
-        if subclass is "MultiTarget":
+    for input_type in input_types:
+        if input_type is "MultiTarget":
             num_multi_target += 1
         else:
             input.update(
-                valid_subroutine_input.get(subclass, lambda: "Invalid subclass")(**kwargs)
+                valid_subroutine_input.get(input_type, lambda: "Invalid input_type")(**kwargs)
             )
     if num_multi_target == 1:
         input.update(
-            valid_subroutine_input.get("MultiTarget", lambda: "Invalid subclass")(**kwargs)
+            valid_subroutine_input.get("MultiTarget", lambda: "Invalid input_type")(**kwargs)
         )
     elif num_multi_target > 1:
         for i in range(num_multi_target):
@@ -86,40 +86,40 @@ def create_valid_subroutine_input(subclasses, **kwargs):
     return input
 
 
-def create_valid_target_input(subclasses):
+def create_valid_target_input(input_types):
     input = {}
     qubit_set = []
     multi_target_counter = 0
     # based on the concept that control goes first in target input
-    for subclass in subclasses:
-        if subclass == "SingleTarget":
+    for input_type in input_types:
+        if input_type == "SingleTarget":
             qubit_set.extend(list(single_target_valid_input().values()))
-        elif subclass == "DoubleTarget":
+        elif input_type == "DoubleTarget":
             qubit_set.extend(list(double_target_valid_input().values()))
-        elif subclass == "MultiTarget":
+        elif input_type == "MultiTarget":
             qubit_set.extend(list(multi_target_valid_input(multi_target_counter).values()))
             multi_target_counter += 1
-        elif subclass == "SingleControl":
+        elif input_type == "SingleControl":
             qubit_set = list(single_control_valid_input().values()) + qubit_set
-        elif subclass == "DoubleControl":
+        elif input_type == "DoubleControl":
             qubit_set = list(double_control_valid_input().values()) + qubit_set
-        elif subclass == "Angle" or subclass == "TwoDimensionalMatrix":
+        elif input_type == "Angle" or input_type == "TwoDimensionalMatrix":
             pass
         else:
-            raise ValueError("Invalid subclass")
+            raise ValueError("Invalid input_type")
     input["target"] = QubitSet(qubit_set)
     return input
 
 
-def create_valid_composite_operator_class_input(subroutine_name, subclasses, **kwargs):
+def create_valid_composite_operator_class_input(subroutine_name, input_types, **kwargs):
     input = {}
-    num_multi_target = subclasses.count("MultiTarget")
+    num_multi_target = input_types.count("MultiTarget")
     if num_multi_target > 1:
         if subroutine_name == 'qpe':
             input.update({
                 'precision_qubit_count': 3,
                 'query_qubit_count': 3,
-                'condense': kwargs.get('option')
+                'control': kwargs.get('option')
             })
     elif num_multi_target == 1:
         if subroutine_name == 'qft':
@@ -129,104 +129,101 @@ def create_valid_composite_operator_class_input(subroutine_name, subclasses, **k
         input.update({
             'qubit_count': 3
         })
-    if "Angle" in subclasses:
+    if "Angle" in input_types:
         input.update(angle_valid_input())
-    if "TwoDimensionalMatrix" in subclasses:
+    if "TwoDimensionalMatrix" in input_types:
         input.update(two_dimensional_matrix_valid_input(**kwargs))
     return input
 
 
-def create_valid_instruction_input(testclass, subroutine_name, subclasses, **kwargs):
-    input = create_valid_target_input(subclasses)
-    input["operator"] = testclass(**create_valid_composite_operator_class_input(subroutine_name, subclasses, **kwargs))
+def create_valid_instruction_input(testclass, subroutine_name, input_types, **kwargs):
+    input = create_valid_target_input(input_types)
+    input["operator"] = testclass(**create_valid_composite_operator_class_input(subroutine_name, input_types, **kwargs))
     return input
 
 
-@pytest.mark.parametrize("testclass,subroutine_name,subclasses,kwargs", testdata)
-def test_composite_operator_subroutine(testclass, subroutine_name, subclasses, kwargs):
+@pytest.mark.parametrize("testclass,subroutine_name,input_types,kwargs", testdata)
+def test_composite_operator_subroutine(testclass, subroutine_name, input_types, kwargs):
     subroutine = getattr(Circuit(), subroutine_name)
-    assert subroutine(**create_valid_subroutine_input(subclasses, **kwargs)) == Circuit(
-        Instruction(**create_valid_instruction_input(testclass, subroutine_name, subclasses, **kwargs))
+    assert subroutine(**create_valid_subroutine_input(input_types, **kwargs)) == Circuit(
+        Instruction(**create_valid_instruction_input(testclass, subroutine_name, input_types, **kwargs))
     )
 
 
-def expected_ghz_circuit():
+def test_ghz_decompose():
     targets = create_valid_subroutine_input(["MultiTarget"])['targets']
     ghzcirc = Circuit().h(targets[0])
     for i in range(0, len(targets) - 1):
         ghzcirc.cnot(targets[i], targets[i + 1])
 
-    return ghzcirc
+    assert Circuit(CompositeOperator.GHZ(3).decompose(targets)) == ghzcirc
 
 
-def expected_qft_circuit(method):
+def test_qft_default_decompose():
     targets = create_valid_subroutine_input(["MultiTarget"])['targets']
     qftcirc = Circuit()
     num_qubits = len(targets)
+    for k in range(num_qubits):
+        qftcirc.h(targets[k])
 
-    if method == "recursive":
-        if len(targets) == 1:
-            qftcirc.h(targets)
+        for j in range(1, num_qubits - k):
+            angle = 2 * math.pi / (2 ** (j + 1))
+            qftcirc.cphaseshift(targets[k + j], targets[k], angle)
 
-        else:
+    qftcirc.swap(targets[0], targets[-1])
 
-            qftcirc.h(targets[0])
-
-            for k, qubit in enumerate(targets[1:]):
-                qftcirc.cphaseshift(qubit, targets[0], 2 * math.pi / (2 ** (k + 2)))
-
-            qftcirc.mqft(targets[1:])
-
-    elif method == "default":
-        for k in range(num_qubits):
-            qftcirc.h(targets[k])
-
-            for j in range(1, num_qubits - k):
-                angle = 2 * math.pi / (2 ** (j + 1))
-                qftcirc.cphaseshift(targets[k + j], targets[k], angle)
-
-    for i in range(math.floor(num_qubits / 2)):
-        qftcirc.swap(targets[i], targets[-i - 1])
-
-    return qftcirc
+    assert Circuit(CompositeOperator.QFT(3).decompose(targets)) == qftcirc
 
 
-def expected_mqft_circuit():
+def test_qft_recursive_decompose():
     targets = create_valid_subroutine_input(["MultiTarget"])['targets']
-    mqftcirc = Circuit()
+    qftcirc1 = Circuit().h(targets[0])
+    qftcirc2 = Circuit().h([0])
 
-    if len(targets) == 1:
-        mqftcirc.h(targets)
+    for k, qubit in enumerate(targets[1:]):
+        qftcirc1.cphaseshift(qubit, targets[0], 2 * math.pi / (2 ** (k + 2)))
 
-    else:
+    qftcirc1.mqft(targets[1:])
 
-        mqftcirc.h(targets[0])
+    qftcirc1.swap(targets[0], targets[-1])
 
-        for k, qubit in enumerate(targets[1:]):
-            mqftcirc.cphaseshift(qubit, targets[0], 2 * math.pi / (2 ** (k + 2)))
-
-        mqftcirc.mqft(targets[1:])
-
-    return mqftcirc
+    assert Circuit(CompositeOperator.QFT(3, method="recursive").decompose(targets)) == qftcirc1
+    assert Circuit(CompositeOperator.QFT(1, method="recursive").decompose([0])) == qftcirc2
 
 
-def expected_iqft_circuit():
+@pytest.mark.xfail(raises=TypeError)
+def test_qft_nonexistant_method():
+    CompositeOperator.QFT(3, method="foo")
+
+
+def test_mqft_decompose():
     targets = create_valid_subroutine_input(["MultiTarget"])['targets']
-    qftcirc = Circuit()
+    mqftcirc1 = Circuit().h(targets[0])
+    mqftcirc2 = Circuit().h([0])
+
+    for k, qubit in enumerate(targets[1:]):
+        mqftcirc1.cphaseshift(qubit, targets[0], 2 * math.pi / (2 ** (k + 2)))
+
+    mqftcirc1.mqft(targets[1:])
+
+    assert Circuit(CompositeOperator.mQFT(3).decompose(targets)) == mqftcirc1
+    assert Circuit(CompositeOperator.mQFT(1).decompose([0])) == mqftcirc2
+
+
+def test_iqft_decompose():
+    targets = create_valid_subroutine_input(["MultiTarget"])['targets']
+    iqftcirc = Circuit().swap(targets[0], targets[-1])
     num_qubits = len(targets)
-
-    for i in range(math.floor(num_qubits / 2)):
-        qftcirc.swap(targets[i], targets[-i - 1])
 
     for k in reversed(range(num_qubits)):
 
         for j in reversed(range(1, num_qubits - k)):
             angle = -2 * math.pi / (2 ** (j + 1))
-            qftcirc.cphaseshift(targets[k + j], targets[k], angle)
+            iqftcirc.cphaseshift(targets[k + j], targets[k], angle)
 
-        qftcirc.h(targets[k])
+        iqftcirc.h(targets[k])
 
-    return qftcirc
+    assert Circuit(CompositeOperator.iQFT(3).decompose(targets)) == iqftcirc
 
 
 def controlled_unitary(control, target_qubits, unitary):
@@ -247,62 +244,42 @@ def controlled_unitary(control, target_qubits, unitary):
     return circ
 
 
-def expected_qpe_circuit(control):
+def test_qpe_control_decompose():
     input = create_valid_subroutine_input(["MultiTarget", "MultiTarget", "TwoDimensionalMatrix"], input_type=complex)
     precision_qubits = input['targets1']
     query_qubits = input['targets2']
     matrix = input['matrix']
-    qpe_circ = Circuit()
-    qpe_circ.h(precision_qubits)
+    qpe_circ = Circuit().h(precision_qubits)
 
     for ii, qubit in enumerate(reversed(precision_qubits)):
-        power = ii
-
-        if control:
-            Uexp = np.linalg.matrix_power(matrix, 2 ** power)
-
-            qpe_circ.add_circuit(controlled_unitary(qubit, query_qubits, Uexp))
-        else:
-            for _ in range(2 ** power):
-                qpe_circ.add_circuit(controlled_unitary(qubit, query_qubits, matrix))
+        Uexp = np.linalg.matrix_power(matrix, 2 ** ii)
+        qpe_circ.add_circuit(controlled_unitary(qubit, query_qubits, Uexp))
 
     qpe_circ.add(Circuit().iqft(precision_qubits))
 
-    return qpe_circ
+    assert Circuit(CompositeOperator.QPE(3, 3, matrix).decompose(precision_qubits + query_qubits)) == qpe_circ
+
+
+def test_qpe_no_control_decompose():
+    input = create_valid_subroutine_input(["MultiTarget", "MultiTarget", "TwoDimensionalMatrix"], input_type=complex)
+    precision_qubits = input['targets1']
+    query_qubits = input['targets2']
+    matrix = input['matrix']
+    qpe_circ = Circuit().h(precision_qubits)
+
+    for ii, qubit in enumerate(reversed(precision_qubits)):
+        for _ in range(2 ** ii):
+            qpe_circ.add_circuit(controlled_unitary(qubit, query_qubits, matrix))
+
+    qpe_circ.add(Circuit().iqft(precision_qubits))
+
+    assert Circuit(CompositeOperator.QPE(3, 3, matrix, control=False).decompose(precision_qubits + query_qubits))\
+           == qpe_circ
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("testclass,subroutine_name,subclasses,kwargs", testdata)
-def test_decompose_with_mismatched_target(testclass, subroutine_name, subclasses, kwargs):
-    testclass(**create_valid_composite_operator_class_input(subroutine_name, subclasses, **kwargs)).decompose(
-        QubitSet(create_valid_target_input(subclasses).values())[:-1]
+@pytest.mark.parametrize("testclass,subroutine_name,input_types,kwargs", testdata)
+def test_decompose_with_mismatched_target(testclass, subroutine_name, input_types, kwargs):
+    testclass(**create_valid_composite_operator_class_input(subroutine_name, input_types, **kwargs)).decompose(
+        QubitSet(create_valid_target_input(input_types).values())[:-1]
     )
-
-
-@pytest.mark.xfail(raises=TypeError)
-def test_qft_nonexistant_method():
-    CompositeOperator.QFT(3, method="foo")
-
-
-def get_expected_circuit(**kwargs):
-    if 'option' in kwargs.keys():
-        return {
-            "qpe": expected_qpe_circuit(kwargs.get('option')),
-            "qft": expected_qft_circuit(kwargs.get('option')),
-        }
-    return {
-        "ghz": expected_ghz_circuit(),
-        "mqft": expected_mqft_circuit(),
-        "iqft": expected_iqft_circuit(),
-    }
-
-
-@pytest.mark.parametrize("testclass,subroutine_name,subclasses,kwargs", testdata)
-def test_decompose(testclass, subroutine_name, subclasses, kwargs):
-    ret = testclass(**create_valid_composite_operator_class_input(subroutine_name, subclasses, **kwargs)).decompose(
-        create_valid_target_input(subclasses)['target']
-    )
-    assert isinstance(ret, Iterable)
-    for obj in ret:
-        assert isinstance(obj, Instruction)
-    assert get_expected_circuit(**kwargs)[subroutine_name] == Circuit().add(ret)
