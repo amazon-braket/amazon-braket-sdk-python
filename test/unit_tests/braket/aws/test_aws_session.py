@@ -438,3 +438,40 @@ def test_search_devices_arns(aws_session):
         ],
         PaginationConfig={"MaxItems": 100},
     )
+
+
+def test_create_job(aws_session):
+    arn = "foo:bar:arn"
+    aws_session.braket_client.create_job.return_value = {"jobArn": arn}
+
+    kwargs = {
+        "jobName": "job-name",
+        "roleArn": "role-arn",
+        "algorithmSpecification": {
+            "scriptModeConfig": {
+                "entryPoint": "entry-point",
+                "s3Uri": "s3-uri",
+                "compressionType": "GZIP",
+            }
+        },
+    }
+    assert aws_session.create_job(**kwargs) == arn
+    aws_session.braket_client.create_job.assert_called_with(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "bucket, dirs",
+    [
+        ("bucket", ("d1", "d2", "d3")),
+        ("bucket-123-braket", ("dir",)),
+        pytest.param(
+            "braket",
+            (),
+            marks=pytest.mark.raises(Exception("Not a valid S3 uri"), exception=ValueError),
+        ),
+    ],
+)
+def test_construct_and_parse_s3_uri(bucket, dirs):
+    parsed_bucket, parsed_key = AwsSession.parse_s3_uri(AwsSession.construct_s3_uri(bucket, *dirs))
+    assert parsed_bucket == bucket
+    assert parsed_key == "/".join(dirs)

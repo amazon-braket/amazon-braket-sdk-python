@@ -43,6 +43,7 @@ class AwsSession(object):
         else:
             self.braket_client = self.boto_session.client("braket", config=self._config)
         self._update_user_agent()
+        self._default_bucket = None
 
     def _update_user_agent(self):
         """
@@ -92,19 +93,16 @@ class AwsSession(object):
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         return response["quantumTaskArn"]
 
-    # TODO: Implementation suggestions, uncomment when ready with tests.
     def create_job(self, **boto3_kwargs) -> str:
         """
         Create a quantum job.
-
         Args:
             **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateJob` operation.
-
         Returns:
             str: The ARN of the job.
         """
-        # response = self.braket_client.create_job(**boto3_kwargs)
-        # return response["jobArn"]
+        response = self.braket_client.create_job(**boto3_kwargs)
+        return response["jobArn"]
 
     @staticmethod
     def _should_giveup(err):
@@ -136,6 +134,19 @@ class AwsSession(object):
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
 
+    def get_execution_role(self) -> str:
+        """Return the role ARN whose credentials are used to call the API.
+           Throws an exception if role doesn't exist.
+        Args:
+            aws_session (AwsSession): Current braket session.
+        Returns:
+            (str): The execution role ARN.
+        """
+        iam = self.boto_session.resource("iam", region_name=self.boto_session.region_name)
+        # TODO: possibly wrap this call with a more specific error message
+        role = iam.Role(name="AmazonBraketInternalSLR")
+        return role.arn
+
     # TODO: Implementation suggestions, uncomment when ready with tests.
     @backoff.on_exception(
         backoff.expo,
@@ -156,16 +167,6 @@ class AwsSession(object):
         """
         # return self.braket_client.get_job(jobArn=arn)
 
-    def get_execution_role(self, aws_session):
-        """Return the role ARN whose credentials are used to call the API.
-           Throws an exception if role doesn't exist.
-        Args:
-            aws_session (AwsSession): Current braket session.
-
-        Returns:
-            (str): The execution role ARN.
-        """
-
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
         Retrieve the S3 object body.
@@ -180,6 +181,99 @@ class AwsSession(object):
         s3 = self.boto_session.resource("s3", config=self._config)
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
+
+    def upload_source_to_s3(self, filename: str, code_location: str) -> None:
+        """
+        Upload file to S3
+
+        Args:
+            filename (str): local file to be uploaded.
+            code_location (str): The S3 uri where the will source will be uploaded.
+
+        Returns:
+            None
+        """
+        bucket, job_location = self.parse_s3_uri(code_location)
+        s3 = self.boto_session.client("s3", config=self._config)
+        s3.upload_file(filename, bucket, f"{job_location}/{filename}")
+
+    def copy_source(self, source_dir: str, code_location: str) -> None:
+        """
+        Copy source from another location in s3
+
+        Args:
+            'source_dir': S3 uri pointing to a tar.gz file containing the source code.
+            'code_location': S3 uri where the code will be copied.
+        """
+        source_bucket, source_key = self.parse_s3_uri(source_dir)
+        destination_bucket, destination_key = self.parse_s3_uri(code_location)
+
+        if (source_bucket, source_key) == (destination_bucket, destination_key):
+            return
+
+        s3 = self.boto_session.client("s3")
+        s3.copy(
+            {
+                "Bucket": source_bucket,
+                "Key": source_key,
+            },
+            destination_bucket,
+            destination_key,
+        )
+
+    def default_bucket(self):
+        if self._default_bucket:
+            return self._default_bucket
+        aws_account_id = self.boto_session.client("sts").get_caller_identity()["Account"]
+        region = self.boto_session.region_name
+        default_bucket = f"amazon-braket-{region}-{aws_account_id}"
+
+        self._create_s3_bucket_if_it_does_not_exist(bucket_name=default_bucket, region=region)
+
+        self._default_bucket = default_bucket
+        return self._default_bucket
+
+    def _create_s3_bucket_if_it_does_not_exist(self, bucket_name, region):
+        """Creates an S3 Bucket if it does not exist.
+        Also swallows a few common exceptions that indicate that the bucket already exists or
+        that it is being created.
+        Args:
+            bucket_name (str): Name of the S3 bucket to be created.
+            region (str): The region in which to create the bucket.
+        Raises:
+            botocore.exceptions.ClientError: If S3 throws an unexpected exception during bucket
+                creation.
+                If the exception is due to the bucket already existing or
+                already being created, no exception is raised.
+        """
+        s3 = self.boto_session.resource("s3", region_name=region)
+
+        bucket = s3.Bucket(name=bucket_name)
+        if bucket.creation_date is None:
+            try:
+                if region == "us-east-1":
+                    # 'us-east-1' cannot be specified because it is the default region:
+                    # https://github.com/boto/boto3/issues/125
+                    s3.create_bucket(Bucket=bucket_name)
+                else:
+                    s3.create_bucket(
+                        Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
+                    )
+            except ClientError as e:
+                error_code = e.response["Error"]["Code"]
+                message = e.response["Error"]["Message"]
+
+                if error_code == "BucketAlreadyOwnedByYou":
+                    pass
+                elif (
+                    error_code == "OperationAborted"
+                    and "conflicting conditional operation" in message
+                ):
+                    # If this bucket is already being concurrently created, we don't need to create
+                    # it again.
+                    pass
+                else:
+                    raise
 
     def create_logs_client(self) -> "boto3.session.Session.client":
         """
@@ -243,3 +337,25 @@ class AwsSession(object):
                     continue
                 results.append(result)
         return results
+
+    @staticmethod
+    def parse_s3_uri(s3_uri: str) -> (str, str):
+        """
+        Parse S3 uri to get bucket and key
+
+        Args:
+            's3_uri': S3 uri.
+
+        Returns:
+            (str, str): Bucket and Key tuple.
+        """
+        try:
+            assert s3_uri.startswith("s3://")
+            bucket, key = s3_uri.split("/", 3)[2:]
+            return bucket, key
+        except (AssertionError, ValueError):
+            raise ValueError("Not a valid S3 uri")
+
+    @staticmethod
+    def construct_s3_uri(bucket, *dirs):
+        return f"s3://{bucket}/{'/'.join(dirs)}"

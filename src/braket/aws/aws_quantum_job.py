@@ -13,20 +13,29 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Union
+import os.path
+import re
+import tarfile
+from dataclasses import asdict
+from datetime import datetime
+from typing import Any, Dict, List
+
+import boto3
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.config import (
+from braket.jobs.config import (  # VpcConfig,
     CheckpointConfig,
+    DeviceConfig,
+    InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
+    PriorityAccessConfig,
     StoppingCondition,
-    VpcConfig,
 )
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
 # for the files, since all those metrics are retrieved from the CW.
-from braket.jobs.metrics.metrics import MetricDefinition, MetricPeriod, MetricStatistic
+from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
 
 
 class AwsQuantumJob:
@@ -40,10 +49,10 @@ class AwsQuantumJob:
         # TODO: Replace with the correct default image name.
         # This image_uri will be retrieved from `image_uris.retreive()` which will a different file
         # in the `jobs` folder and the function defined in it.
-        image_uri: str = "Base Image URI",
+        image_uri: str = "Base-Image-URI",
         source_dir: str = None,
         # TODO: If job_name is specified by customer then we don't append timestamp to it.
-        # TODO: Else we, extract image_uri_type from image_uri for job_name and append timestamp.
+        # TODO: Else, we extract image_uri_type from image_uri for job_name and append timestamp.
         # TODO: timestamp should be in epoch or any other date format we decide on like `yyyy-mm-dd`
         job_name: str = None,
         code_location: str = None,
@@ -52,17 +61,17 @@ class AwsQuantumJob:
         priority_access_device_arn: str = None,
         hyper_parameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
-        input_data_config: Union[Any] = None,
+        input_data_config: List[InputDataConfig] = None,
         instance_config: InstanceConfig = InstanceConfig(),
         stopping_condition: StoppingCondition = StoppingCondition(),
         output_data_config: OutputDataConfig = OutputDataConfig(),
         copy_checkpoints_from_job: str = None,
         checkpoint_config: CheckpointConfig = CheckpointConfig(),
-        vpc_config: VpcConfig = None,
+        # vpc_config: VpcConfig = None,
         tags: Dict[str, str] = None,
         *args,
         **kwargs,
-    ) -> AwsQuantumJob:
+    ) -> "AwsQuantumJob":
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
@@ -91,6 +100,8 @@ class AwsQuantumJob:
 
             wait_until_complete (bool): bool representing whether we should wait until the job
                 completes. This would tail the job logs as it waits. Default = `False`.
+
+            # TODO: wait until complete polling parameters?
 
             priority_access_device_arn (str): ARN for the AWS device which should have priority
                 access for the execution of this job. Default = `None`.
@@ -139,13 +150,55 @@ class AwsQuantumJob:
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
         """
-        # TODO: if entry_point file is not provided, then we raise the error.
-        # TODO: if job_name is None, then we set it to default_job_name
-        # TODO: if code_location is not provided by the customer, then we default it with the
-        # bucket_name with we get from the AwsSession object.
-        # TODO: Decide on where default_bucket_name should be defined. If bucket is not present
-        # in the customer's account then raise ValidationException.
-        # TODO: call getExecutionRole() from aws_session.py
+        job_name = job_name or AwsQuantumJob.generate_default_job_name(image_uri)
+        role_arn = role_arn or aws_session.get_execution_role()
+        hyper_parameters = hyper_parameters or {}
+        device_config = DeviceConfig(
+            priorityAccess=PriorityAccessConfig(
+                devices=[arn for arn in [priority_access_device_arn] if arn]
+            )
+        )
+        default_bucket = aws_session.default_bucket()
+        code_location = code_location or aws_session.construct_s3_uri(
+            default_bucket, job_name, "script"
+        )
+        input_data_config = input_data_config or []
+        output_data_config = output_data_config or OutputDataConfig()
+        if not output_data_config.s3Path:
+            output_data_config.s3Path = aws_session.construct_s3_uri(
+                default_bucket, job_name, "output"
+            )
+        checkpoint_config = checkpoint_config or CheckpointConfig()
+        if not checkpoint_config.s3Uri:
+            checkpoint_config.s3Uri = aws_session.construct_s3_uri(
+                default_bucket, job_name, "checkpoints"
+            )
+        tarred_source_dir = AwsQuantumJob._process_source_dir(
+            source_dir, aws_session, code_location
+        )
+        stopping_condition = stopping_condition or StoppingCondition()
+
+        create_job_kwargs = {
+            "jobName": job_name,
+            "roleArn": role_arn,
+            "algorithmSpecification": {
+                "scriptModeConfig": {
+                    "entryPoint": entry_point,
+                    "s3Uri": f"{code_location}/{tarred_source_dir}",
+                    "compressionType": "GZIP",
+                }
+            },
+            "inputDataConfig": [asdict(input_channel) for input_channel in input_data_config],
+            "instanceConfig": asdict(instance_config),
+            "outputDataConfig": asdict(output_data_config),
+            "checkpointConfig": asdict(checkpoint_config),
+            "deviceConfig": asdict(device_config),
+            "hyperParameters": hyper_parameters,
+            "stoppingCondition": asdict(stopping_condition),
+        }
+
+        job_arn = aws_session.create_job(**create_job_kwargs)
+        return AwsQuantumJob(job_arn, aws_session)
 
     def __init__(
         self,
@@ -159,21 +212,41 @@ class AwsQuantumJob:
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the job.
         """
+        self._arn: str = arn
+        self._aws_session: AwsSession = aws_session or AwsQuantumJob._aws_session_for_job_arn(
+            job_arn=arn
+        )
 
     @staticmethod
     def _aws_session_for_job_arn(job_arn: str) -> AwsSession:
         """Get an AwsSession for the Job ARN. The AWS session should be in the region of the task.
-
         Args:
             job_arn (str): The ARN for the quantum job.
-
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in job's region.
         """
+        try:
+            job_region = re.match(r"^arn:aws:braket:([\w-]+):\d+:job/", job_arn).group(1)
+        except AttributeError:
+            raise ValueError(f"Not a valid job arn: {job_arn}")
+        boto_session = boto3.Session(region_name=job_region)
+        return AwsSession(boto_session=boto_session)
+
+    # following AwsQuantumTask precedent for `id` over `arn`
+    # is that what we want?
+    @property
+    def id(self) -> str:
+        """str: The ARN of the quantum task."""
+        return self._arn
+
+    @staticmethod
+    def generate_default_job_name(image_uri_type: str):
+        return f"{image_uri_type}-{datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')}"
 
     @property
-    def arn(self) -> str:
+    def arn(self) -> str:  # do we want arn or id or both?
         """Returns the job arn corresponding to the job"""
+        return self._arn
 
     @property
     def state(self) -> str:
@@ -237,3 +310,26 @@ class AwsQuantumJob:
         Args:
             extract_to (str): Location where results will be extracted.
         """
+
+    def __repr__(self) -> str:
+        return f"AwsQuantumJob('id/jobArn':'{self.id}')"
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, AwsQuantumJob):
+            return self.id == other.id
+        return NotImplemented  # should this be False?
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    @staticmethod
+    def _process_source_dir(source_dir, aws_session, code_location):
+        tarred_source_dir = f"{source_dir.split('/')[-1]}.tar.gz"
+        if source_dir.startswith("s3://"):
+            aws_session.copy_source(source_dir, code_location)
+        else:
+            with tarfile.open(tarred_source_dir, "w:gz") as tar:
+                tar.add(source_dir, arcname=os.path.basename(source_dir))
+            aws_session.upload_source_to_s3(tarred_source_dir, code_location)
+            os.remove(tarred_source_dir)
+        return tarred_source_dir
