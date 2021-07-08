@@ -23,7 +23,7 @@ from typing import Any, Dict, List
 import boto3
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.config import (  # VpcConfig,
+from braket.jobs.config import (
     CheckpointConfig,
     DeviceConfig,
     InputDataConfig,
@@ -31,6 +31,7 @@ from braket.jobs.config import (  # VpcConfig,
     OutputDataConfig,
     PriorityAccessConfig,
     StoppingCondition,
+    # VpcConfig,
 )
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
@@ -220,8 +221,10 @@ class AwsQuantumJob:
     @staticmethod
     def _aws_session_for_job_arn(job_arn: str) -> AwsSession:
         """Get an AwsSession for the Job ARN. The AWS session should be in the region of the task.
+
         Args:
             job_arn (str): The ARN for the quantum job.
+
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in job's region.
         """

@@ -137,8 +137,10 @@ class AwsSession(object):
     def get_execution_role(self) -> str:
         """Return the role ARN whose credentials are used to call the API.
            Throws an exception if role doesn't exist.
+
         Args:
             aws_session (AwsSession): Current braket session.
+
         Returns:
             (str): The execution role ARN.
         """
@@ -237,9 +239,11 @@ class AwsSession(object):
         """Creates an S3 Bucket if it does not exist.
         Also swallows a few common exceptions that indicate that the bucket already exists or
         that it is being created.
+
         Args:
             bucket_name (str): Name of the S3 bucket to be created.
             region (str): The region in which to create the bucket.
+
         Raises:
             botocore.exceptions.ClientError: If S3 throws an unexpected exception during bucket
                 creation.
