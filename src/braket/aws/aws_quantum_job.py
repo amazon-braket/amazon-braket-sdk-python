@@ -72,7 +72,7 @@ class AwsQuantumJob:
         tags: Dict[str, str] = None,
         *args,
         **kwargs,
-    ) -> "AwsQuantumJob":
+    ) -> AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
@@ -320,19 +320,19 @@ class AwsQuantumJob:
     def __eq__(self, other) -> bool:
         if isinstance(other, AwsQuantumJob):
             return self.id == other.id
-        return NotImplemented  # should this be False?
+        return False
 
     def __hash__(self) -> int:
         return hash(self.id)
 
     @staticmethod
     def _process_source_dir(source_dir, aws_session, code_location):
-        tarred_source_dir = f"{source_dir.split('/')[-1]}.tar.gz"
+        tarred_source_dir = f"{source_dir.split('/')[-1]}{'.tar.gz' if not source_dir.endswith('.tar.gz') else ''}"
         if source_dir.startswith("s3://"):
-            aws_session.copy_source(source_dir, code_location)
+            aws_session.copy_s3(source_dir, f"{code_location}/{tarred_source_dir}")
         else:
             with tarfile.open(tarred_source_dir, "w:gz") as tar:
                 tar.add(source_dir, arcname=os.path.basename(source_dir))
-            aws_session.upload_source_to_s3(tarred_source_dir, code_location)
+            aws_session.upload_to_s3(tarred_source_dir, f"{code_location}/{tarred_source_dir}")
             os.remove(tarred_source_dir)
         return tarred_source_dir

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -184,31 +184,31 @@ class AwsSession(object):
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
 
-    def upload_source_to_s3(self, filename: str, code_location: str) -> None:
+    def upload_to_s3(self, filename: str, s3_uri: str) -> None:
         """
         Upload file to S3
 
         Args:
             filename (str): local file to be uploaded.
-            code_location (str): The S3 uri where the will source will be uploaded.
+            s3_uri (str): The S3 uri where the file will be uploaded.
 
         Returns:
             None
         """
-        bucket, job_location = self.parse_s3_uri(code_location)
+        bucket, key = self.parse_s3_uri(s3_uri)
         s3 = self.boto_session.client("s3", config=self._config)
-        s3.upload_file(filename, bucket, f"{job_location}/{filename}")
+        s3.upload_file(filename, bucket, key)
 
-    def copy_source(self, source_dir: str, code_location: str) -> None:
+    def copy_s3(self, source_s3_uri: str, destination_s3_uri: str) -> None:
         """
         Copy source from another location in s3
 
         Args:
-            'source_dir': S3 uri pointing to a tar.gz file containing the source code.
-            'code_location': S3 uri where the code will be copied.
+            'source_s3_uri': S3 uri pointing to a tar.gz file containing the source code.
+            'destination_s3_uri': S3 uri where the code will be copied.
         """
-        source_bucket, source_key = self.parse_s3_uri(source_dir)
-        destination_bucket, destination_key = self.parse_s3_uri(code_location)
+        source_bucket, source_key = self.parse_s3_uri(source_s3_uri)
+        destination_bucket, destination_key = self.parse_s3_uri(destination_s3_uri)
 
         if (source_bucket, source_key) == (destination_bucket, destination_key):
             return
@@ -250,34 +250,40 @@ class AwsSession(object):
                 If the exception is due to the bucket already existing or
                 already being created, no exception is raised.
         """
-        s3 = self.boto_session.resource("s3", region_name=region)
+        s3_client = self.boto_session.client("s3", region_name=region)
+        try:
+            if region == "us-east-1":
+                # 'us-east-1' cannot be specified because it is the default region:
+                # https://github.com/boto/boto3/issues/125
+                s3_client.create_bucket(Bucket=bucket_name)
+            else:
+                s3_client.create_bucket(
+                    Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
+                )
+            s3_client.put_public_access_block(
+                Bucket=bucket_name,
+                PublicAccessBlockConfiguration={
+                    'BlockPublicAcls': True,
+                    'IgnorePublicAcls': True,
+                    'BlockPublicPolicy': True,
+                    'RestrictPublicBuckets': True
+                },
+            )
+        except ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            message = e.response["Error"]["Message"]
 
-        bucket = s3.Bucket(name=bucket_name)
-        if bucket.creation_date is None:
-            try:
-                if region == "us-east-1":
-                    # 'us-east-1' cannot be specified because it is the default region:
-                    # https://github.com/boto/boto3/issues/125
-                    s3.create_bucket(Bucket=bucket_name)
-                else:
-                    s3.create_bucket(
-                        Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
-                    )
-            except ClientError as e:
-                error_code = e.response["Error"]["Code"]
-                message = e.response["Error"]["Message"]
-
-                if error_code == "BucketAlreadyOwnedByYou":
-                    pass
-                elif (
-                    error_code == "OperationAborted"
-                    and "conflicting conditional operation" in message
-                ):
-                    # If this bucket is already being concurrently created, we don't need to create
-                    # it again.
-                    pass
-                else:
-                    raise
+            if error_code == "BucketAlreadyOwnedByYou":
+                pass
+            elif (
+                error_code == "OperationAborted"
+                and "conflicting conditional operation" in message
+            ):
+                # If this bucket is already being concurrently created, we don't need to create
+                # it again.
+                pass
+            else:
+                raise
 
     def create_logs_client(self) -> "boto3.session.Session.client":
         """

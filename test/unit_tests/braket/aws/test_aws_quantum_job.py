@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -10,8 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
-
 from collections import defaultdict
 from dataclasses import asdict
 from unittest.mock import Mock, patch
@@ -237,9 +235,9 @@ def test_no_id_setter(quantum_job):
     quantum_job.id = 123
 
 
-@patch.object(AwsQuantumJob, "generate_default_job_name", return_value="default_job_name-000000")
+# @patch.object(AwsQuantumJob, "generate_default_job_name", return_value="default_job_name-000000")
 def test_create_job(
-    mock_generate_default_job_name,
+    # mock_generate_default_job_name,
     aws_session,
     create_job_args,
 ):
@@ -249,15 +247,16 @@ def test_create_job(
     _assert_create_job_called_with(create_job_args)
 
 
-@patch(
-    "braket.aws.aws_quantum_job.AwsQuantumJob.generate_default_job_name",
-    return_value="default_job_name-000000",
-)
+# @patch(
+#     "braket.aws.aws_quantum_job.AwsQuantumJob.generate_default_job_name",
+#     return_value="default_job_name-000000",
+# )
 def _assert_create_job_called_with(
     create_job_args,
-    mock_default_job_name,
+    # mock_default_job_name,
 ):
     aws_session = create_job_args["aws_session"]
+    image_uri = create_job_args["image_uri"] or "Base-Image-URI"
     job_name = create_job_args["job_name"] or AwsQuantumJob.generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
     code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
@@ -306,7 +305,10 @@ def setup_function(test_create_job):
     """
     import os
 
-    os.mkdir("test-source-dir")
+    try:
+        os.mkdir("test-source-dir")
+    except FileExistsError:
+        pass
 
 
 def teardown_function(test_create_job):
