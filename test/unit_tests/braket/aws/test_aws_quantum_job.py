@@ -235,9 +235,9 @@ def test_no_id_setter(quantum_job):
     quantum_job.id = 123
 
 
-# @patch.object(AwsQuantumJob, "generate_default_job_name", return_value="default_job_name-000000")
+@patch.object(AwsQuantumJob, "generate_default_job_name", return_value="default_job_name-000000")
 def test_create_job(
-    # mock_generate_default_job_name,
+    mock_generate_default_job_name,
     aws_session,
     create_job_args,
 ):
@@ -247,13 +247,10 @@ def test_create_job(
     _assert_create_job_called_with(create_job_args)
 
 
-# @patch(
-#     "braket.aws.aws_quantum_job.AwsQuantumJob.generate_default_job_name",
-#     return_value="default_job_name-000000",
-# )
+@patch.object(AwsQuantumJob, "generate_default_job_name", return_value="default_job_name-000000")
 def _assert_create_job_called_with(
     create_job_args,
-    # mock_default_job_name,
+    mock_default_job_name,
 ):
     aws_session = create_job_args["aws_session"]
     image_uri = create_job_args["image_uri"] or "Base-Image-URI"

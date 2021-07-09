@@ -31,7 +31,7 @@ from braket.jobs.config import (
     OutputDataConfig,
     PriorityAccessConfig,
     StoppingCondition,
-    # VpcConfig,
+    VpcConfig,
 )
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
@@ -68,7 +68,7 @@ class AwsQuantumJob:
         output_data_config: OutputDataConfig = OutputDataConfig(),
         copy_checkpoints_from_job: str = None,
         checkpoint_config: CheckpointConfig = CheckpointConfig(),
-        # vpc_config: VpcConfig = None,
+        vpc_config: VpcConfig = None,
         tags: Dict[str, str] = None,
         *args,
         **kwargs,
@@ -327,7 +327,9 @@ class AwsQuantumJob:
 
     @staticmethod
     def _process_source_dir(source_dir, aws_session, code_location):
-        tarred_source_dir = f"{source_dir.split('/')[-1]}{'.tar.gz' if not source_dir.endswith('.tar.gz') else ''}"
+        tarred_source_dir = (
+            f"{source_dir.split('/')[-1]}{'.tar.gz' if not source_dir.endswith('.tar.gz') else ''}"
+        )
         if source_dir.startswith("s3://"):
             aws_session.copy_s3(source_dir, f"{code_location}/{tarred_source_dir}")
         else:

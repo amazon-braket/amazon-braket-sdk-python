@@ -263,10 +263,10 @@ class AwsSession(object):
             s3_client.put_public_access_block(
                 Bucket=bucket_name,
                 PublicAccessBlockConfiguration={
-                    'BlockPublicAcls': True,
-                    'IgnorePublicAcls': True,
-                    'BlockPublicPolicy': True,
-                    'RestrictPublicBuckets': True
+                    "BlockPublicAcls": True,
+                    "IgnorePublicAcls": True,
+                    "BlockPublicPolicy": True,
+                    "RestrictPublicBuckets": True,
                 },
             )
         except ClientError as e:
@@ -276,8 +276,7 @@ class AwsSession(object):
             if error_code == "BucketAlreadyOwnedByYou":
                 pass
             elif (
-                error_code == "OperationAborted"
-                and "conflicting conditional operation" in message
+                error_code == "OperationAborted" and "conflicting conditional operation" in message
             ):
                 # If this bucket is already being concurrently created, we don't need to create
                 # it again.
