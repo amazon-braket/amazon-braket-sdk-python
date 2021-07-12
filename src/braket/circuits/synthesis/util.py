@@ -17,7 +17,6 @@ from typing import List, Tuple, Union
 
 from braket.circuits.synthesis.predicates import is_diag, is_hermitian, commute, is_unitary
 
-
 def to_su(u: np.ndarray) -> np.ndarray:
     """
     Given a unitary in U(N), return the
@@ -31,7 +30,6 @@ def to_su(u: np.ndarray) -> np.ndarray:
     """
 
     return u * np.linalg.det(u) ** (-1 / np.shape(u)[0])
-
 
 def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
     """

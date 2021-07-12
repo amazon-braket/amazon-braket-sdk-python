@@ -83,7 +83,7 @@ def is_unitary(
         when condition is not met.
 
     Returns:
-        (bool): True if U is unitary otherwise False.
+        pred (bool): True if U is unitary otherwise False.
     """
     pred = np.shape(U)[0] == np.shape(U)[1] and np.allclose(
         np.linalg.det(U.conj().T @ U), 1, atol=atol, rtol=rtol
@@ -109,11 +109,41 @@ def is_hermitian(
         when condition is not met.
 
     Returns:
-        (bool): True if U is hermitian otherwise False.
+        pred (bool): True if U is hermitian otherwise False.
     """
+
     pred = np.allclose(U, U.conj().T, atol=atol, rtol=rtol)
 
     if raise_exception and not pred:
         raise ValueError(f"{U} has to be hermitian.")
 
     return pred
+
+def eq_up_to_phase(U1, U2, atol:float=1E-8, rtol:float=1E-5, raise_exception:bool=False) -> bool:
+    """
+    Find out if U1 and U2 are equivalent up to a global phase.
+
+    Args:
+        U1 (np.ndarray): first 2x2 matrix to compare.
+        U2 (np.ndarray): second 2x2 matrix to compare.
+        atol (np.dtype): absolute tolerance parameter.
+        rtol (np.dtype): relative tolerance parameter.
+        raise_exception (bool): if raise an exception
+        when condition is not met.
+
+    Returns:
+        eq (bool): True if U1 and U2 are equal up to a global phase.
+    """
+
+    i, j = np.unravel_index(np.argmax(abs(U1), axis=None), U1.shape)
+    phase = U2[i, j] / U1[i, j]
+
+    eq = np.allclose(U1 * phase,
+                     U2,
+                     atol=atol,
+                     rtol=rtol)
+
+    if raise_exception and not eq:
+        raise ValueError(f"{U1} and {U2} are not equal up to a phase")
+    
+    return eq
