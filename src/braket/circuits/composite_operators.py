@@ -344,16 +344,17 @@ class QPE(CompositeOperator):
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
-            or has a dimension length that is not a positive power of 2,
-            or is not unitary.
+            has a dimension length that is not a positive power of 2 or
+            does not match 2 ** (number of query qubits), or is not
+            unitary.
     """
 
     def __init__(self, precision_qubit_count: int, query_qubit_count: int, matrix: np.ndarray, control=True):
-        verify_quantum_operator_matrix_dimensions(matrix)
+        Gate.Unitary(matrix)
         self._matrix = np.array(matrix, dtype=complex)
 
-        if not is_unitary(self._matrix):
-            raise ValueError(f"{self._matrix} is not unitary")
+        if len(matrix) != 2 ** query_qubit_count:
+            raise ValueError(f"dim of matrix {self._matrix} must match the number of query qubits {query_qubit_count}")
 
         self._condense = control
         self._precision_qubit_count = precision_qubit_count
@@ -363,7 +364,7 @@ class QPE(CompositeOperator):
     def to_ir(self, target: QubitSet):
         return [instr.to_ir() for instr in self.decompose(target)]
 
-    def controlled_unitary(self, unitary) -> np.ndarray:
+    def _controlled_unitary(self, unitary) -> np.ndarray:
         # Define projectors onto the computational basis
         p0 = np.array([[1.0, 0.0], [0.0, 0.0]])
 
@@ -410,7 +411,7 @@ class QPE(CompositeOperator):
             if self._condense:
                 # Define new unitary with matrix U^{2^k}
                 Uexp = np.linalg.matrix_power(self._matrix, 2 ** power)
-                CUexp = self.controlled_unitary(Uexp)
+                CUexp = self._controlled_unitary(Uexp)
 
                 # Apply the controlled unitary C-(U^{2^k})
                 instructions.append(Instruction(Gate.Unitary(CUexp), target=[qubit] + list(query_qubits)))
@@ -418,7 +419,7 @@ class QPE(CompositeOperator):
             # Alternative 2: One can instead apply controlled-unitary (2**power) times to get C-U^{2^power}
             else:
                 for _ in range(2 ** power):
-                    CU = self.controlled_unitary(self._matrix)
+                    CU = self._controlled_unitary(self._matrix)
                     instructions.append(Instruction(Gate.Unitary(CU), target=[qubit] + list(query_qubits)))
 
         # Apply inverse qft to the precision_qubits
@@ -448,7 +449,7 @@ class QPE(CompositeOperator):
                 or is not unitary.
 
         Examples:
-            >>> circ = Circuit().qpe(QubitSet([0, 1, 2]), QubitSet([4, 5, 6]), np.array([[0, 1], [1, 0]]))
+            >>> circ = Circuit().qpe(QubitSet([0, 1, 2]), QubitSet([4]), np.array([[0, 1], [1, 0]]))
         """
         if 2 ** len(targets2) != matrix.shape[0]:
             raise ValueError("Dimensions of the supplied unitary are incompatible with the query qubits")

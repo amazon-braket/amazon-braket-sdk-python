@@ -1,3 +1,4 @@
+
 import math
 from typing import Iterable
 
@@ -17,6 +18,26 @@ testdata = [
     (CompositeOperator.QPE, "qpe", ["MultiTarget", "MultiTarget", "TwoDimensionalMatrix"], {
         "input_type": complex, "option": False}),
 ]
+
+
+invalid_unitary_matrices = [
+    (np.array([[1]])),
+    (np.array([1])),
+    (np.array([0, 1, 2])),
+    (np.array([[0, 1], [1, 2], [3, 4]])),
+    (np.array([[0, 1, 2], [2, 3]])),
+    (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])),
+    (np.array([[0, 1], [1, 1]])),
+]
+
+
+ascii_symbols = {
+    "ghz": "GHZ",
+    "qft": "QFT",
+    "iqft": "iQFT",
+    "mqft": "mQFT",
+    "qpe": "QPE"
+}
 
 
 def single_target_valid_input(**kwargs):
@@ -49,10 +70,13 @@ def multi_control_valid_input(**kwargs):
     return {"controls": list(range(4, 7))}
 
 
-def two_dimensional_matrix_valid_input(**kwargs):
+def two_dimensional_matrix_valid_input(i=3, **kwargs):
     input_type = kwargs.get("input_type")
     unitary = np.array([[input_type(0), input_type(1)], [input_type(1), input_type(0)]])
-    return {"matrix": np.kron(np.kron(unitary, unitary), unitary)}
+    matrix = unitary
+    for _ in range(i - 1):
+        matrix = np.kron(matrix, unitary)
+    return {"matrix": matrix}
 
 
 valid_subroutine_input = {
@@ -111,14 +135,36 @@ def create_valid_target_input(input_types):
     return input
 
 
-def create_valid_composite_operator_class_input(subroutine_name, input_types, **kwargs):
+def calculate_qubit_count(input_types, multi_test_value=3):
+    qubit_count = 0
+    for input_type in input_types:
+        if input_type == "SingleTarget":
+            qubit_count += 1
+        elif input_type == "DoubleTarget":
+            qubit_count += 2
+        elif input_type == "SingleControl":
+            qubit_count += 1
+        elif input_type == "DoubleControl":
+            qubit_count += 2
+        elif input_type == "MultiTarget":
+            qubit_count += multi_test_value
+        elif input_type == "MultiControl":
+            qubit_count += multi_test_value
+        elif input_type == "Angle" or input_type == "TwoDimensionalMatrix":
+            pass
+        else:
+            raise ValueError("Invalid input type")
+    return qubit_count
+
+
+def create_valid_composite_operator_class_input(subroutine_name, input_types, multi_test_value=3, **kwargs):
     input = {}
     num_multi_target = input_types.count("MultiTarget")
     if num_multi_target > 1:
         if subroutine_name == 'qpe':
             input.update({
-                'precision_qubit_count': 3,
-                'query_qubit_count': 3,
+                'precision_qubit_count': multi_test_value,
+                'query_qubit_count': multi_test_value,
                 'control': kwargs.get('option')
             })
     elif num_multi_target == 1:
@@ -127,12 +173,12 @@ def create_valid_composite_operator_class_input(subroutine_name, input_types, **
                 'method': kwargs.get('option')
             })
         input.update({
-            'qubit_count': 3
+            'qubit_count': multi_test_value
         })
     if "Angle" in input_types:
         input.update(angle_valid_input())
     if "TwoDimensionalMatrix" in input_types:
-        input.update(two_dimensional_matrix_valid_input(**kwargs))
+        input.update(two_dimensional_matrix_valid_input(multi_test_value, **kwargs))
     return input
 
 
@@ -148,6 +194,28 @@ def test_composite_operator_subroutine(testclass, subroutine_name, input_types, 
     assert subroutine(**create_valid_subroutine_input(input_types, **kwargs)) == Circuit(
         Instruction(**create_valid_instruction_input(testclass, subroutine_name, input_types, **kwargs))
     )
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,input_types,kwargs", testdata)
+def test_to_ir(testclass, subroutine_name, input_types, kwargs):
+    operator = testclass(**create_valid_composite_operator_class_input(subroutine_name, input_types, **kwargs))
+    target = QubitSet(create_valid_target_input(input_types).values())
+    assert operator.to_ir(target) == [instr.to_ir() for instr in operator.decompose(target)]
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,input_types,kwargs", testdata)
+def test_correct_ascii_symbols(testclass, subroutine_name, input_types, kwargs):
+    operator = testclass(**create_valid_composite_operator_class_input(subroutine_name, input_types, **kwargs))
+    assert operator.ascii_symbols[0] == ascii_symbols[subroutine_name]
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,input_types,kwargs", testdata)
+def test_correct_qubit_count(testclass, subroutine_name, input_types, kwargs):
+    operator1 = testclass(**create_valid_composite_operator_class_input(subroutine_name, input_types, **kwargs))
+    operator2 = testclass(**create_valid_composite_operator_class_input(subroutine_name, input_types, 4, **kwargs))
+
+    assert operator1.qubit_count == calculate_qubit_count(input_types)
+    assert operator2.qubit_count == calculate_qubit_count(input_types, 4)
 
 
 def test_ghz_decompose():
@@ -275,6 +343,28 @@ def test_qpe_no_control_decompose():
 
     assert Circuit(CompositeOperator.QPE(3, 3, matrix, control=False).decompose(precision_qubits + query_qubits))\
            == qpe_circ
+
+
+def test_qpe_qubit_count():
+    matrix = create_valid_subroutine_input(["TwoDimensionalMatrix"], input_type=complex)['matrix']
+    operator1 = CompositeOperator.QPE(2,3,matrix)
+    operator2 = CompositeOperator.QPE(1,3,matrix)
+
+    assert operator1.qubit_count == 5
+    assert operator2.qubit_count == 4
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_qpe_matrix_dim_mismatch():
+    matrix = create_valid_subroutine_input(["TwoDimensionalMatrix"], input_type=complex)['matrix']
+    CompositeOperator.QPE(3,2,matrix)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("matrix", invalid_unitary_matrices)
+def test_qpe_unitary_invalid_matrix(matrix):
+    query_qubit_count = np.log2(len(matrix))
+    CompositeOperator.QPE(3, query_qubit_count, matrix)
 
 
 @pytest.mark.xfail(raises=ValueError)
