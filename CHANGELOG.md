@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.1 (2021-07-02)
+
+### Bug Fixes and Other Changes
+
+ * Result Type syntax in IR
+ * Update test_circuit.py
+
 ## v1.7.0 (2021-06-25)
 
 ### Features
