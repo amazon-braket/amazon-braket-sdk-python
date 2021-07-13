@@ -44,6 +44,19 @@ class StateVector(ResultType):
     def to_ir(self) -> ir.StateVector:
         return ir.StateVector.construct()
 
+    @classmethod
+    def from_ir(cls, ir_result) -> StateVector:
+        """Create a StateVector object from an IR result.
+
+        Args:
+            ir_result: The IR result to create the StateVector object from
+                This argument is not used as StateVector objects need no arguments.
+
+        Returns:
+            StateVector: The state vector result type object created
+        """
+        return cls()
+
     @staticmethod
     @circuit.subroutine(register=True)
     def state_vector() -> ResultType:
@@ -108,6 +121,18 @@ class DensityMatrix(ResultType):
             return ir.DensityMatrix.construct(targets=[int(qubit) for qubit in self.target])
         else:
             return ir.DensityMatrix.construct()
+
+    @classmethod
+    def from_ir(cls, ir_result) -> DensityMatrix:
+        """Create a DensityMatrix object from an IR result.
+
+        Args:
+            ir_result: The IR result to create the DensityMatrix object from
+
+        Returns:
+            DensityMatrix: The density matrix result type object created
+        """
+        return cls(getattr(ir_result, "targets"))
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -185,6 +210,18 @@ class Amplitude(ResultType):
     def to_ir(self) -> ir.Amplitude:
         return ir.Amplitude.construct(states=self.state)
 
+    @classmethod
+    def from_ir(cls, ir_result) -> Amplitude:
+        """Create an Amplitude object from an IR result.
+
+        Args:
+            ir_result: The IR result to create the Amplitude object from
+
+        Returns:
+            Amplitude: The amplitude result type object created
+        """
+        return cls(getattr(ir_result, "states"))
+
     @staticmethod
     @circuit.subroutine(register=True)
     def amplitude(state: List[str]) -> ResultType:
@@ -258,6 +295,18 @@ class Probability(ResultType):
             return ir.Probability.construct(targets=[int(qubit) for qubit in self.target])
         else:
             return ir.Probability.construct()
+
+    @classmethod
+    def from_ir(cls, ir_result) -> Probability:
+        """Create a Probability object from an IR result.
+
+        Args:
+            ir_result: The IR result to create the Probability object from
+
+        Returns:
+            Amplitude: The probability result type object created
+        """
+        return cls(getattr(ir_result, "targets"))
 
     @staticmethod
     @circuit.subroutine(register=True)

@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Dict
 
 from braket.circuits.gate import Gate
+from braket.circuits.noise import Noise
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
@@ -88,6 +89,36 @@ class Instruction:
         If the operator is passed in a request, this method is called before it is passed.
         """
         return self._operator.to_ir([int(qubit) for qubit in self._target])
+
+    @classmethod
+    def from_ir(cls, ir_instruction) -> Instruction:
+        """
+        Create an Instruction object from an IR instruction by calling
+        the same subclass method to implement.
+
+        Args:
+            ir_instruction: The IR instruction to create the Instruction object from
+
+        Returns:
+            Instruction: The instruction object created
+        """
+        type_name = type(ir_instruction).__name__
+        op_class = None
+        if hasattr(Gate, type_name):
+            op_class = getattr(Gate, type_name)
+        elif hasattr(Noise, type_name):  # pragma: no branch
+            op_class = getattr(Noise, type_name)
+        qubit_set = []
+        # Controls must come before targets
+        for attr_name in ["control", "controls", "target", "targets"]:
+            if hasattr(ir_instruction, attr_name):
+                attr = getattr(ir_instruction, attr_name)
+                # Flatten the list
+                if type(attr) == list:
+                    qubit_set += attr
+                else:
+                    qubit_set.append(attr)
+        return cls(op_class.from_ir(ir_instruction), qubit_set)
 
     def copy(
         self, target_mapping: Dict[QubitInput, QubitInput] = {}, target: QubitSetInput = None

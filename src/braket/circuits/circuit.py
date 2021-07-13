@@ -878,6 +878,22 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
             basis_rotation_instructions=ir_basis_rotation_instructions,
         )
 
+    @classmethod
+    def from_ir(cls, program: Program) -> Circuit:
+        """Create a Circuit object from an IR (a list of instructions and results).
+
+        Args:
+            program (Program): The IR to create the Circuit object from
+
+        Returns:
+            Circuit: The circuit object created
+        """
+        instructions = [
+            Instruction.from_ir(ir_instruction) for ir_instruction in program.instructions
+        ]
+        results = [ResultType.from_ir(ir_result) for ir_result in program.results]
+        return cls(instructions + results)
+
     def as_unitary(self) -> np.ndarray:
         """
         Returns the unitary matrix representation of the entire circuit.

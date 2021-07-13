@@ -15,7 +15,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+import numpy as np
+
 from braket.circuits.observable import Observable
+from braket.circuits.observables import observable_from_ir
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
@@ -68,6 +71,22 @@ class ResultType:
             IR object of the result type
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
+
+    @classmethod
+    def from_ir(cls, ir_result) -> ResultType:
+        """
+        Create a ResultType object from an IR result by calling
+        the same subclass method to implement.
+
+        Args:
+            ir_result: The IR result to create the Gate object from
+
+        Returns:
+            ResultType: The result type object created
+        """
+        type_name = type(ir_result).__name__
+        rt_class = getattr(ResultType, type_name)
+        return rt_class.from_ir(ir_result)
 
     def copy(self, target_mapping: Dict[QubitInput, QubitInput] = {}, target: QubitSetInput = None):
         """
@@ -203,3 +222,49 @@ class ObservableResultType(ResultType):
 
     def __hash__(self) -> int:
         return super().__hash__()
+
+    @classmethod
+    def from_ir(cls, ir_result) -> ObservableResultType:
+        """
+        Create a ObservableResultType object from an IR result.
+        The arguments 'observable' and 'target' cover all subclasses.
+
+        Args:
+            ir_result: The IR result to create the ObservableResultType object from
+
+        Returns:
+            ObservableResultType: The observable result type object created
+        """
+        observable = observable_from_ir(getattr(ir_result, "observable"))
+        return cls(observable, getattr(ir_result, "targets"))
+
+
+def complex_matrices(float_matrix: np.array):
+    """Convert a single matrix or a list of matrices from [real, imaginary] pairs into complex numbers.
+
+    Args:
+        float_matrix (np.array): Matrix or list of matrices of [real, imaginary] pairs
+
+    Returns:
+        Matrix or list of matrices of complex numbers
+    """
+    cm = np.array([])
+    # Assume float_matrix not empty
+    if type(float_matrix[0][0][0]) != list:
+        # Single matrix
+        cm = np.array([[complex(col[0], col[1]) for col in row] for row in float_matrix])
+    else:
+        # Return an array of matrices
+        mats = []
+        for mat in float_matrix:
+            mats.append(np.array([[complex(col[0], col[1]) for col in row] for row in mat]))
+        cm = mats
+    return cm
+
+
+def _attr_dict(obj, attr_names):
+    return {
+        attr_name: getattr(obj, attr_name)
+        for attr_name in attr_names
+        if attr_name in obj.__fields__
+    }

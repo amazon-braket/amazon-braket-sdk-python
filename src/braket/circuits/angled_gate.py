@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 import math
 from typing import Optional, Sequence
 
@@ -60,3 +62,15 @@ class AngledGate(Gate):
 
     def __repr__(self):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
+
+    @classmethod
+    def from_ir(cls, ir_instruction) -> AngledGate:
+        """Create an AngledGate object from an IR instruction.
+
+        Args:
+            ir_instruction: The IR instruction to create the AngledGate object from
+
+        Returns:
+            AngledGate: The angled gate object created
+        """
+        return cls(angle=getattr(ir_instruction, "angle"))

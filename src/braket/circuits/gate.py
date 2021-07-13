@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Any, Optional, Sequence
 
 from braket.circuits.quantum_operator import QuantumOperator
@@ -67,3 +69,19 @@ class Gate(QuantumOperator):
             gate (Gate): Gate class to register.
         """
         setattr(cls, gate.__name__, gate)
+
+    @classmethod
+    def from_ir(cls, ir_instruction) -> Gate:
+        """
+        Create a Gate object from an IR instruction.
+        This implementation is for subclasses that do not need arguments.
+
+        Args:
+            ir_instruction: The IR instruction to create the Gate object from
+                The Base (Gate) implementation does not use this argument.
+                It is included for subclasses that do, e.g., AngledGate.
+
+        Returns:
+            Gate: The gate object created
+        """
+        return cls()

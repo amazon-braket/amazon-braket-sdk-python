@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Iterable
 
 import numpy as np
@@ -26,6 +28,7 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.result_type import _attr_dict, complex_matrices
 
 """
 To add a new gate:
@@ -1435,6 +1438,20 @@ class Unitary(Gate):
             targets=[qubit for qubit in target],
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
+
+    @classmethod
+    def from_ir(cls, ir_instruction) -> Unitary:
+        """Create a Unitary object from an IR instruction.
+
+        Args:
+            ir_instruction: The IR instruction to create the Unitary object from
+
+        Returns:
+            Unitary: The unitary gate object created
+        """
+        attr_dict = _attr_dict(ir_instruction, ["matrix"])
+        attr_dict["matrix"] = complex_matrices(attr_dict["matrix"])
+        return cls(**attr_dict)
 
     def __eq__(self, other):
         if isinstance(other, Unitary):

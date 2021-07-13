@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Iterable
 
 import numpy as np
@@ -33,6 +35,7 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.result_type import _attr_dict, complex_matrices
 
 """
 To add a new Noise implementation:
@@ -828,6 +831,20 @@ class Kraus(Noise):
             targets=[qubit for qubit in target],
             matrices=Kraus._transform_matrix_to_ir(self._matrices),
         )
+
+    @classmethod
+    def from_ir(cls, ir_instruction) -> Kraus:
+        """Create a Kraus object from an IR instruction.
+
+        Args:
+            ir_instruction: The IR instruction to create the Kraus object from
+
+        Returns:
+            Kraus: The Kraus noise object created
+        """
+        attr_dict = _attr_dict(ir_instruction, ["matrices"])
+        attr_dict["matrices"] = complex_matrices(attr_dict["matrices"])
+        return cls(**attr_dict)
 
     @staticmethod
     def _transform_matrix_to_ir(matrices: Iterable[np.ndarray]):

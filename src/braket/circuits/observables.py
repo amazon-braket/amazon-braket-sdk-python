@@ -382,7 +382,7 @@ def observable_from_ir(ir_observable: List[Union[str, List[List[List[float]]]]])
     Args:
         ir_observable (List[Union[str, List[List[List[float]]]]]): observable as defined in IR
 
-    Return:
+    Returns:
         Observable: observable object
     """
     if len(ir_observable) == 1:

@@ -23,7 +23,6 @@ from braket.circuits.angled_gate import AngledGate  # noqa: F401
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F401
 from braket.circuits.circuit import Circuit  # noqa: F401
 from braket.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
-from braket.circuits.circuit_from import from_diagram, from_ir, from_repr  # noqa: F401
 from braket.circuits.gate import Gate  # noqa: F401
 from braket.circuits.instruction import Instruction  # noqa: F401
 from braket.circuits.moments import Moments, MomentsKey  # noqa: F401
