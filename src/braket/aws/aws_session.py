@@ -27,7 +27,7 @@ class AwsSession(object):
 
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
-    def __init__(self, boto_session=None, braket_client=None, config=None):
+    def __init__(self, boto_session=None, braket_client=None, config=None, default_bucket=None):
         """
         Args:
             boto_session: A boto3 session object.
@@ -43,7 +43,7 @@ class AwsSession(object):
         else:
             self.braket_client = self.boto_session.client("braket", config=self._config)
         self._update_user_agent()
-        self._default_bucket = None
+        self._default_bucket = default_bucket
 
     def _update_user_agent(self):
         """
@@ -361,10 +361,15 @@ class AwsSession(object):
         try:
             assert s3_uri.startswith("s3://")
             bucket, key = s3_uri.split("/", 3)[2:]
+            assert key
             return bucket, key
         except (AssertionError, ValueError):
-            raise ValueError("Not a valid S3 uri")
+            print("raising....")
+            raise ValueError(f"Not a valid S3 uri: {s3_uri}")
 
     @staticmethod
     def construct_s3_uri(bucket, *dirs):
+        print(dirs, bool(dirs))
+        if not dirs:
+            raise ValueError(f"Not a valid S3 location: s3://{bucket}")
         return f"s3://{bucket}/{'/'.join(dirs)}"

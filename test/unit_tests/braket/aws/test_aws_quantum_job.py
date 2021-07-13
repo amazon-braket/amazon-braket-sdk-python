@@ -12,11 +12,11 @@
 # language governing permissions and limitations under the License.
 from collections import defaultdict
 from dataclasses import asdict
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
 
-from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
@@ -43,13 +43,13 @@ def aws_session():
 
 
 @pytest.fixture
-def quantum_job(aws_session):
-    return AwsQuantumJob("foo:bar:arn", aws_session)
+def quantum_job(aws_session, arn):
+    return AwsQuantumJob(arn, aws_session)
 
 
 @pytest.fixture
-def arn():
-    return "foo:bar:arn"
+def arn(image_uri):
+    return f"arn:aws:braket:us-west-2:0000000000:job/{image_uri}-00000000000000"
 
 
 @pytest.fixture
@@ -226,8 +226,9 @@ def test_hash(quantum_job):
 
 
 def test_id_getter(arn, aws_session):
-    quantum_job = AwsQuantumTask(arn, aws_session)
+    quantum_job = AwsQuantumJob(arn, aws_session)
     assert quantum_job.id == arn
+    assert quantum_job.arn == arn
 
 
 @pytest.mark.xfail(raises=AttributeError)
@@ -235,7 +236,7 @@ def test_no_id_setter(quantum_job):
     quantum_job.id = 123
 
 
-@patch.object(AwsQuantumJob, "generate_default_job_name", return_value="default_job_name-000000")
+@patch.object(AwsQuantumJob, "_generate_default_job_name", return_value="default_job_name-000000")
 def test_create_job(
     mock_generate_default_job_name,
     aws_session,
@@ -247,14 +248,14 @@ def test_create_job(
     _assert_create_job_called_with(create_job_args)
 
 
-@patch.object(AwsQuantumJob, "generate_default_job_name", return_value="default_job_name-000000")
+@patch.object(AwsQuantumJob, "_generate_default_job_name", return_value="default_job_name-000000")
 def _assert_create_job_called_with(
     create_job_args,
     mock_default_job_name,
 ):
     aws_session = create_job_args["aws_session"]
     image_uri = create_job_args["image_uri"] or "Base-Image-URI"
-    job_name = create_job_args["job_name"] or AwsQuantumJob.generate_default_job_name(image_uri)
+    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
     code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
         default_bucket, job_name, "script"
@@ -315,3 +316,10 @@ def teardown_function(test_create_job):
     import os
 
     os.rmdir("test-source-dir")
+
+
+def test_generate_default_job_name(image_uri):
+    assert (
+        AwsQuantumJob._generate_default_job_name(image_uri)
+        == f"{image_uri}-{datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')}"
+    )

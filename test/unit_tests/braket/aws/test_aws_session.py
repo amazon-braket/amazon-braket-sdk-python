@@ -460,6 +460,50 @@ def test_create_job(aws_session):
 
 
 @pytest.mark.parametrize(
+    "uri, bucket, key",
+    [
+        (
+            "s3://bucket-name-123/key/with/multiple/dirs",
+            "bucket-name-123",
+            "key/with/multiple/dirs",
+        ),
+        (
+            "s3://bucket-name-123/key-with_one.dirs",
+            "bucket-name-123",
+            "key-with_one.dirs",
+        ),
+        pytest.param(
+            "http://bucket-name-123/key/with/multiple/dirs",
+            "bucket-name-123",
+            "key/with/multiple/dirs",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+        pytest.param(
+            "bucket-name-123/key/with/multiple/dirs",
+            "bucket-name-123",
+            "key/with/multiple/dirs",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+        pytest.param(
+            "s3://bucket-name-123/",
+            "bucket-name-123",
+            "",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+        pytest.param(
+            "s3://bucket-name-123",
+            "bucket-name-123",
+            "",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+    ],
+)
+def test_parse_s3_uri(uri, bucket, key):
+    parsed = AwsSession.parse_s3_uri(uri)
+    assert bucket, key == parsed
+
+
+@pytest.mark.parametrize(
     "bucket, dirs",
     [
         ("bucket", ("d1", "d2", "d3")),
@@ -467,11 +511,142 @@ def test_create_job(aws_session):
         pytest.param(
             "braket",
             (),
-            marks=pytest.mark.raises(Exception("Not a valid S3 uri"), exception=ValueError),
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
         ),
     ],
 )
-def test_construct_and_parse_s3_uri(bucket, dirs):
+def test_construct_s3_uri(bucket, dirs):
     parsed_bucket, parsed_key = AwsSession.parse_s3_uri(AwsSession.construct_s3_uri(bucket, *dirs))
     assert parsed_bucket == bucket
     assert parsed_key == "/".join(dirs)
+
+
+def test_get_execution_role(aws_session):
+    role_arn = "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
+    aws_session.boto_session.resource.return_value.Role.return_value.arn = role_arn
+    assert aws_session.get_execution_role() == role_arn
+
+
+def test_upload_to_s3(aws_session):
+    filename = "file.txt"
+    s3_uri = "s3://bucket-123/key"
+    bucket, key = AwsSession.parse_s3_uri(s3_uri)
+    aws_session.upload_to_s3(filename, s3_uri)
+    aws_session.boto_session.client.return_value.upload_file.assert_called_with(
+        filename, bucket, key
+    )
+
+
+def test_copy_s3(aws_session):
+    source_s3_uri = "s3://here/now"
+    dest_s3_uri = "s3://there/then"
+    source_bucket, source_key = AwsSession.parse_s3_uri(source_s3_uri)
+    dest_bucket, dest_key = AwsSession.parse_s3_uri(dest_s3_uri)
+    aws_session.copy_s3(source_s3_uri, dest_s3_uri)
+    aws_session.boto_session.client.return_value.copy.assert_called_with(
+        {
+            "Bucket": source_bucket,
+            "Key": source_key,
+        },
+        dest_bucket,
+        dest_key,
+    )
+
+
+def test_copy_identical_s3(aws_session):
+    s3_uri = "s3://bucket/key"
+    aws_session.copy_s3(s3_uri, s3_uri)
+    aws_session.boto_session.client.return_value.copy.assert_not_called()
+
+
+def test_default_bucket(aws_session):
+    region = "test-region-0"
+    account_id = "000000000"
+    aws_session.boto_session.region_name = region
+    aws_session.boto_session.client.return_value.get_caller_identity.return_value = {
+        "Account": account_id,
+    }
+    assert aws_session.default_bucket() == f"amazon-braket-{region}-{account_id}"
+
+
+def test_default_bucket_given(aws_session):
+    default_bucket = "default_bucket"
+    aws_session._default_bucket = default_bucket
+    assert aws_session.default_bucket() == default_bucket
+    aws_session.boto_session.client.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "region",
+    (
+        "test-region-0",
+        "us-east-1",
+    ),
+)
+def test_create_s3_bucket_if_it_does_not_exist(aws_session, region):
+    account_id = "000000000"
+    bucket = f"amazon-braket-{region}-{account_id}"
+    aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)
+    kwargs = {
+        "Bucket": bucket,
+        "CreateBucketConfiguration": {
+            "LocationConstraint": region,
+        },
+    }
+    if region == "us-east-1":
+        del kwargs["CreateBucketConfiguration"]
+    aws_session.boto_session.client.return_value.create_bucket.assert_called_with(**kwargs)
+    aws_session.boto_session.client.return_value.put_public_access_block.assert_called_with(
+        Bucket=bucket,
+        PublicAccessBlockConfiguration={
+            "BlockPublicAcls": True,
+            "IgnorePublicAcls": True,
+            "BlockPublicPolicy": True,
+            "RestrictPublicBuckets": True,
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    (
+        ClientError(
+            {
+                "Error": {
+                    "Code": "BucketAlreadyOwnedByYou",
+                    "Message": "Your previous request to create the named bucket succeeded "
+                    "and you already own it.",
+                }
+            },
+            "CreateBucket",
+        ),
+        ClientError(
+            {
+                "Error": {
+                    "Code": "OperationAborted",
+                    "Message": "A conflicting conditional operation is currently in progress "
+                    "against this resource. Please try again.",
+                }
+            },
+            "CreateBucket",
+        ),
+        pytest.param(
+            ClientError(
+                {
+                    "Error": {
+                        "Code": "OtherCode",
+                        "Message": "This should fail properly.",
+                    }
+                },
+                "CreateBucket",
+            ),
+            marks=pytest.mark.xfail(raises=ClientError, strict=True),
+        ),
+    ),
+)
+def test_create_s3_bucket_if_it_does_not_exist_error(aws_session, error):
+    account_id = "000000000"
+    region = "test-region-0"
+    bucket = f"amazon-braket-{region}-{account_id}"
+    aws_session.boto_session.client.return_value.create_bucket.side_effect = error
+    aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)

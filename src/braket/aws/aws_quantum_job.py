@@ -14,13 +14,10 @@
 from __future__ import annotations
 
 import os.path
-import re
 import tarfile
 from dataclasses import asdict
 from datetime import datetime
 from typing import Any, Dict, List
-
-import boto3
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
@@ -151,7 +148,7 @@ class AwsQuantumJob:
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
         """
-        job_name = job_name or AwsQuantumJob.generate_default_job_name(image_uri)
+        job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
         role_arn = role_arn or aws_session.get_execution_role()
         hyper_parameters = hyper_parameters or {}
         device_config = DeviceConfig(
@@ -161,21 +158,29 @@ class AwsQuantumJob:
         )
         default_bucket = aws_session.default_bucket()
         code_location = code_location or aws_session.construct_s3_uri(
-            default_bucket, job_name, "script"
+            default_bucket,
+            job_name,
+            "script",
         )
         input_data_config = input_data_config or []
         output_data_config = output_data_config or OutputDataConfig()
         if not output_data_config.s3Path:
             output_data_config.s3Path = aws_session.construct_s3_uri(
-                default_bucket, job_name, "output"
+                default_bucket,
+                job_name,
+                "output",
             )
         checkpoint_config = checkpoint_config or CheckpointConfig()
         if not checkpoint_config.s3Uri:
             checkpoint_config.s3Uri = aws_session.construct_s3_uri(
-                default_bucket, job_name, "checkpoints"
+                default_bucket,
+                job_name,
+                "checkpoints",
             )
         tarred_source_dir = AwsQuantumJob._process_source_dir(
-            source_dir, aws_session, code_location
+            source_dir,
+            aws_session,
+            code_location,
         )
         stopping_condition = stopping_condition or StoppingCondition()
 
@@ -228,12 +233,13 @@ class AwsQuantumJob:
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in job's region.
         """
-        try:
-            job_region = re.match(r"^arn:aws:braket:([\w-]+):\d+:job/", job_arn).group(1)
-        except AttributeError:
-            raise ValueError(f"Not a valid job arn: {job_arn}")
-        boto_session = boto3.Session(region_name=job_region)
-        return AwsSession(boto_session=boto_session)
+        # commenting until usage and testing, suggested implementation below.
+        # try:
+        #     job_region = re.match(r"^arn:aws:braket:([\w-]+):\d+:job/", job_arn).group(1)
+        # except AttributeError:
+        #     raise ValueError(f"Not a valid job arn: {job_arn}")
+        # boto_session = boto3.Session(region_name=job_region)
+        # return AwsSession(boto_session=boto_session)
 
     # following AwsQuantumTask precedent for `id` over `arn`
     # is that what we want?
@@ -243,7 +249,7 @@ class AwsQuantumJob:
         return self._arn
 
     @staticmethod
-    def generate_default_job_name(image_uri_type: str):
+    def _generate_default_job_name(image_uri_type: str):
         return f"{image_uri_type}-{datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')}"
 
     @property

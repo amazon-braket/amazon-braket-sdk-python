@@ -31,4 +31,3 @@ def retrieve(framework="base", framework_version="1.8", py_version="3.7"):
     Raises:
         ValueError: If the combination of arguments specified is not supported.
     """
-    pass
