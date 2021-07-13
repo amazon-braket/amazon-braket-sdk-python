@@ -242,8 +242,8 @@ def test_create_job(
     aws_session,
     create_job_args,
 ):
-    task = AwsQuantumJob.create(**create_job_args)
-    assert task == AwsQuantumJob("test-job-arn", aws_session)
+    job = AwsQuantumJob.create(**create_job_args)
+    assert job == AwsQuantumJob("test-job-arn", aws_session)
 
     _assert_create_job_called_with(create_job_args)
 
