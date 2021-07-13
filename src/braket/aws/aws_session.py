@@ -364,12 +364,10 @@ class AwsSession(object):
             assert key
             return bucket, key
         except (AssertionError, ValueError):
-            print("raising....")
             raise ValueError(f"Not a valid S3 uri: {s3_uri}")
 
     @staticmethod
     def construct_s3_uri(bucket, *dirs):
-        print(dirs, bool(dirs))
         if not dirs:
             raise ValueError(f"Not a valid S3 location: s3://{bucket}")
         return f"s3://{bucket}/{'/'.join(dirs)}"
