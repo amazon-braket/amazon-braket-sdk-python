@@ -83,13 +83,13 @@ simple_u_test = [u(2*np.pi*random.random(),
 
 product_gate_test = [random_kron_u() for _ in range(10)]
 
-one_product_gate_test = [random_kron_u() @ cnot @ random_kron_u() for _ in range(10)]
+one_cnot_test = [random_kron_u() @ cnot @ random_kron_u() for _ in range(10)]
 
-two_product_gate_test = [
+two_cnot_test = [
     random_kron_u() @ cnot @ random_kron_u() @ cnot @ random_kron_u() for _ in range(10)
 ]
 
-three_product_gate_test = [
+three_cnot_test = [
     random_kron_u() @ cnot @ random_kron_u() @ cnot_re @ random_kron_u() @ cnot @ random_kron_u()
     for _ in range(10)
 ]
@@ -102,13 +102,12 @@ dim16_test = [np.kron(random_kron_u(), random_kron_u()) for _ in range(5)]
 
 # Test to_su
 
-# Test decompose_one_qubit_product
 @pytest.mark.parametrize(
     "unitary_test_cases", 
     simple_u_test +
-    one_product_gate_test +
-    two_product_gate_test +
-    three_product_gate_test +
+    one_cnot_test +
+    two_cnot_test +
+    three_cnot_test +
     dim8_test +
     dim16_test
 )
@@ -118,7 +117,6 @@ def test_to_su(unitary_test_cases):
 
 
 # Test diagonalize_commuting_hermitian_matrices function
-
 
 @pytest.mark.parametrize(
     "d_c_h_m_test_1, d_c_h_m_test_2",
@@ -139,7 +137,6 @@ def test_to_su(unitary_test_cases):
 )
 def test_d_c_h_m(d_c_h_m_test_1, d_c_h_m_test_2):
 
-    print(d_c_h_m_test_1, d_c_h_m_test_2)
     p = util.diagonalize_commuting_hermitian_matrices(d_c_h_m_test_1, d_c_h_m_test_2)
 
     assert util.is_diag(p.conj().T @ d_c_h_m_test_1 @ p) and util.is_diag(
@@ -210,7 +207,6 @@ def test_d_t_m_w_h_p(d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2):
 @pytest.mark.xfail
 def test_d_t_m_w_h_p_edge_cases(d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2):
 
-    print(d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2)
     u, v = util.diagonalize_two_matrices_with_hermitian_products(
         d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2
     )
