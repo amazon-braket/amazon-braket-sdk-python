@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import os.path
 import tarfile
+import time
 from dataclasses import asdict
-from datetime import datetime
 from typing import Any, Dict, List
 
 from braket.aws.aws_session import AwsSession
@@ -26,6 +26,7 @@ from braket.jobs.config import (
     InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
+    PollingConfig,
     PriorityAccessConfig,
     StoppingCondition,
     VpcConfig,
@@ -39,16 +40,18 @@ from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
 class AwsQuantumJob:
     """Amazon Braket implementation of a quantum job."""
 
+    TERMINAL_STATES = ["FAILED", "COMPLETED", "CANCELLED"]
+
     @classmethod
     def create(
         cls,
         aws_session: AwsSession,
         entry_point: str,
+        source_dir: str,
         # TODO: Replace with the correct default image name.
         # This image_uri will be retrieved from `image_uris.retreive()` which will a different file
         # in the `jobs` folder and the function defined in it.
         image_uri: str = "Base-Image-URI",
-        source_dir: str = None,
         # TODO: If job_name is specified by customer then we don't append timestamp to it.
         # TODO: Else, we extract image_uri_type from image_uri for job_name and append timestamp.
         # TODO: timestamp should be in epoch or any other date format we decide on like `yyyy-mm-dd`
@@ -56,15 +59,16 @@ class AwsQuantumJob:
         code_location: str = None,
         role_arn: str = None,
         wait_until_complete: bool = False,
+        polling_config: PollingConfig = None,
         priority_access_device_arn: str = None,
         hyper_parameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
         input_data_config: List[InputDataConfig] = None,
-        instance_config: InstanceConfig = InstanceConfig(),
-        stopping_condition: StoppingCondition = StoppingCondition(),
-        output_data_config: OutputDataConfig = OutputDataConfig(),
+        instance_config: InstanceConfig = None,
+        stopping_condition: StoppingCondition = None,
+        output_data_config: OutputDataConfig = None,
         copy_checkpoints_from_job: str = None,
-        checkpoint_config: CheckpointConfig = CheckpointConfig(),
+        checkpoint_config: CheckpointConfig = None,
         vpc_config: VpcConfig = None,
         tags: Dict[str, str] = None,
         *args,
@@ -78,14 +82,14 @@ class AwsQuantumJob:
             entry_point (str): str specifying the 'module' or 'module:method' to be executed as
                 an entry point for the job.
 
-            image_uri (str): str specifying the ECR image to use for executing the job.
-                `image_uris.retrieve()` function may be used for retrieving the ECR image uris
-                for the containers supported by Braket. Default = `<Braket base image_uri>`.
-
             source_dir (str): Path (absolute, relative or an S3 URI) to a directory with any
                 other source code dependencies aside from the entry point file. If `source_dir`
                 is an S3 URI, it must point to a tar.gz file. Structure within this directory are
-                preserved when executing on Amazon Braket. Default = `None`.
+                preserved when executing on Amazon Braket.
+
+            image_uri (str): str specifying the ECR image to use for executing the job.
+                `image_uris.retrieve()` function may be used for retrieving the ECR image uris
+                for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
             job_name (str): str representing the name with which the job will be created.
                 Default = `{image_uri_type}-{timestamp}`.
@@ -96,10 +100,12 @@ class AwsQuantumJob:
             role_arn (str): str representing the IAM role arn to be used for executing the
                 script. Default = `IAM role returned by get_execution_role()`.
 
+            # TODO: implement wait until complete
             wait_until_complete (bool): bool representing whether we should wait until the job
                 completes. This would tail the job logs as it waits. Default = `False`.
 
-            # TODO: wait until complete polling parameters?
+            polling_config (PollingConfig): A PollingConfig specifying the timeout limit and
+            polling interval to use if wait_until_complete is true. Default = `PollingConfig()`.
 
             priority_access_device_arn (str): ARN for the AWS device which should have priority
                 access for the execution of this job. Default = `None`.
@@ -128,6 +134,7 @@ class AwsQuantumJob:
                 Default = `OutputDataConfig(s3Path=s3://{default_bucket_name}/jobs/{job_name}/
                 output, kmsKeyId=None)`.
 
+            TODO: implement copy_checkpoints_from_job
             copy_checkpoints_from_job (str): str specifying the job name whose checkpoint you wish
                 to use in the current job. Specifying this value will copy over the checkpoint
                 data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current job's
@@ -151,6 +158,12 @@ class AwsQuantumJob:
         job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
         role_arn = role_arn or aws_session.get_execution_role()
         hyper_parameters = hyper_parameters or {}
+        input_data_config = input_data_config or []
+        instance_config = instance_config or InstanceConfig()
+        stopping_condition = stopping_condition or StoppingCondition()
+        output_data_config = output_data_config or OutputDataConfig()
+        checkpoint_config = checkpoint_config or CheckpointConfig()
+        # tags = tags or {}
         device_config = DeviceConfig(
             priorityAccess=PriorityAccessConfig(
                 devices=[arn for arn in [priority_access_device_arn] if arn]
@@ -162,15 +175,12 @@ class AwsQuantumJob:
             job_name,
             "script",
         )
-        input_data_config = input_data_config or []
-        output_data_config = output_data_config or OutputDataConfig()
         if not output_data_config.s3Path:
             output_data_config.s3Path = aws_session.construct_s3_uri(
                 default_bucket,
                 job_name,
                 "output",
             )
-        checkpoint_config = checkpoint_config or CheckpointConfig()
         if not checkpoint_config.s3Uri:
             checkpoint_config.s3Uri = aws_session.construct_s3_uri(
                 default_bucket,
@@ -182,7 +192,6 @@ class AwsQuantumJob:
             aws_session,
             code_location,
         )
-        stopping_condition = stopping_condition or StoppingCondition()
 
         create_job_kwargs = {
             "jobName": job_name,
@@ -201,10 +210,25 @@ class AwsQuantumJob:
             "deviceConfig": asdict(device_config),
             "hyperParameters": hyper_parameters,
             "stoppingCondition": asdict(stopping_condition),
+            # TODO: uncomment when tags works
+            # "tags": tags,
         }
 
+        if vpc_config:
+            create_job_kwargs["vpcConfig"] = vpc_config
+
         job_arn = aws_session.create_job(**create_job_kwargs)
-        return AwsQuantumJob(job_arn, aws_session)
+        job = AwsQuantumJob(job_arn, aws_session)
+
+        if wait_until_complete:
+            polling_config = polling_config or PollingConfig()
+            timeout_time = time.time() + polling_config.pollTimeoutSeconds
+            while time.time() < timeout_time:
+                if job.state in AwsQuantumJob.TERMINAL_STATES:
+                    return job
+                time.sleep(polling_config.pollIntervalSeconds)
+
+        return job
 
     def __init__(
         self,
@@ -250,7 +274,7 @@ class AwsQuantumJob:
 
     @staticmethod
     def _generate_default_job_name(image_uri_type: str):
-        return f"{image_uri_type}-{datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')}"
+        return f"{image_uri_type}-{time.time() * 1000:.0f}"
 
     @property
     def arn(self) -> str:  # do we want arn or id or both?
@@ -260,6 +284,7 @@ class AwsQuantumJob:
     @property
     def state(self) -> str:
         """Returns the status for the job"""
+        return self._aws_session.get_job(self.arn)["status"]
 
     def logs(self) -> None:
         """Prints the logs from cloudwatch to stdout"""

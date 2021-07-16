@@ -87,3 +87,9 @@ class PriorityAccessConfig:
 @dataclass
 class DeviceConfig:
     priorityAccess: PriorityAccessConfig = PriorityAccessConfig()
+
+
+@dataclass
+class PollingConfig:
+    pollTimeoutSeconds: float = 864000
+    pollIntervalSeconds: float = 1

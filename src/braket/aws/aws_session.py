@@ -144,10 +144,11 @@ class AwsSession(object):
         Returns:
             (str): The execution role ARN.
         """
-        iam = self.boto_session.resource("iam", region_name=self.boto_session.region_name)
+        iam = self.boto_session.client("iam", region_name=self.boto_session.region_name)
         # TODO: possibly wrap this call with a more specific error message
-        role = iam.Role(name="AmazonBraketInternalSLR")
-        return role.arn
+        # TODO: replace with Braket external role before launch
+        role = iam.get_role(RoleName="AmazonBraketInternalSLR")
+        return role["Role"]["Arn"]
 
     # TODO: Implementation suggestions, uncomment when ready with tests.
     @backoff.on_exception(
@@ -157,7 +158,7 @@ class AwsSession(object):
         jitter=backoff.full_jitter,
         giveup=_should_giveup.__func__,
     )
-    def get_job(self, arn: str) -> str:
+    def get_job(self, arn: str) -> dict:
         """
         Gets the quantum job.
 
@@ -167,7 +168,7 @@ class AwsSession(object):
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
         """
-        # return self.braket_client.get_job(jobArn=arn)
+        return self.braket_client.get_job(jobArn=arn)
 
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
@@ -268,6 +269,29 @@ class AwsSession(object):
                     "BlockPublicPolicy": True,
                     "RestrictPublicBuckets": True,
                 },
+            )
+            s3_client.put_bucket_policy(
+                Bucket=bucket_name,
+                Policy=f"""{{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {{
+                            "Effect": "Allow",
+                            "Principal": {{
+                                "AWS": [
+                                    "arn:aws:iam::417169153231:role/AQxJobService-BraketSagemakerExecutionRole-1V6NSICGKR0U5",
+                                    "arn:aws:iam::704505939570:role/AQxJobService-BraketSagemakerExecutionRole-8F06EZUWOGIE",
+                                    "arn:aws:iam::125478631194:role/AQxJobService-BraketSagemakerExecutionRole-IBE5QFBDHC2D"
+                                ]
+                            }},
+                            "Action": "s3:*",
+                            "Resource": [
+                                "arn:aws:s3:::{bucket_name}",
+                                "arn:aws:s3:::{bucket_name}/*"
+                            ]
+                        }}
+                    ]
+                }}""",
             )
         except ClientError as e:
             error_code = e.response["Error"]["Code"]

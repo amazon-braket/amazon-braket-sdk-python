@@ -459,6 +459,14 @@ def test_create_job(aws_session):
     aws_session.braket_client.create_job.assert_called_with(**kwargs)
 
 
+def test_get_job(aws_session):
+    arn = "foo:bar:arn"
+    job = "JOB"
+    aws_session.braket_client.get_job.return_value = job
+    assert aws_session.get_job(arn) == job
+    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+
+
 @pytest.mark.parametrize(
     "uri, bucket, key",
     [
@@ -523,7 +531,11 @@ def test_construct_s3_uri(bucket, dirs):
 
 def test_get_execution_role(aws_session):
     role_arn = "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
-    aws_session.boto_session.resource.return_value.Role.return_value.arn = role_arn
+    aws_session.boto_session.client.return_value.get_role.return_value = {
+        "Role": {
+            "Arn": role_arn,
+        }
+    }
     assert aws_session.get_execution_role() == role_arn
 
 

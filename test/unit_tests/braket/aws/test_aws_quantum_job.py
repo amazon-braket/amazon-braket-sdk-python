@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 from collections import defaultdict
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import Mock, patch
 
 import pytest
@@ -25,6 +25,7 @@ from braket.jobs.config import (
     InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
+    PollingConfig,
     S3DataSource,
     StoppingCondition,
 )
@@ -38,6 +39,7 @@ def aws_session():
     mock.create_job.return_value = "test-job-arn"
     mock.default_bucket.return_value = "default-bucket-name"
     mock.get_execution_role.return_value = "default-role-arn"
+    mock.get_job.side_effect = [{"status": "RUNNING"}] * 5 + [{"status": "COMPLETED"}]
     mock.construct_s3_uri.side_effect = lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
     return mock
 
@@ -155,7 +157,28 @@ def checkpoint_config(bucket, s3_prefix):
     )
 
 
-@pytest.fixture(params=["fixtures", "defaults"])
+@pytest.fixture(params=["wait", "dont_wait"])
+def wait_until_complete(request):
+    return request.param == "wait"
+
+
+@pytest.fixture(params=["job_completes", "job_times_out"])
+def polling_config(request):
+    timeout = 1 if request.param == "job_completes" else 0.1
+    return PollingConfig(timeout, 0.05)
+
+
+@pytest.fixture
+def vpc_config():
+    return None
+
+
+@pytest.fixture
+def tags():
+    return {"tagKey": "tagValue"}
+
+
+@pytest.fixture(params=["fixtures", "defaults", "nones"])
 def create_job_args(
     request,
     aws_session,
@@ -165,6 +188,8 @@ def create_job_args(
     job_name,
     code_location,
     role_arn,
+    wait_until_complete,
+    polling_config,
     priority_access_device_arn,
     hyper_parameters,
     input_data_config,
@@ -172,30 +197,43 @@ def create_job_args(
     stopping_condition,
     output_data_config,
     checkpoint_config,
+    vpc_config,
+    tags,
 ):
     if request.param == "fixtures":
+        return dict(
+            (key, value)
+            for key, value in {
+                "aws_session": aws_session,
+                "entry_point": entry_point,
+                "source_dir": source_dir,
+                "image_uri": image_uri,
+                "job_name": job_name,
+                "code_location": code_location,
+                "role_arn": role_arn,
+                "wait_until_complete": wait_until_complete,
+                "polling_config": polling_config,
+                "priority_access_device_arn": priority_access_device_arn,
+                "hyper_parameters": hyper_parameters,
+                # "metric_defintions": None,
+                "input_data_config": input_data_config,
+                "instance_config": instance_config,
+                "stopping_condition": stopping_condition,
+                "output_data_config": output_data_config,
+                # "copy_checkpoints_from_job": None,
+                "checkpoint_config": checkpoint_config,
+                "vpc_config": vpc_config,
+                "tags": tags,
+            }.items()
+            if value is not None
+        )
+    elif request.param == "defaults":
         return {
             "aws_session": aws_session,
             "entry_point": entry_point,
-            "image_uri": image_uri,
             "source_dir": source_dir,
-            "job_name": job_name,
-            "code_location": code_location,
-            "role_arn": role_arn,
-            # "wait": False,
-            "priority_access_device_arn": priority_access_device_arn,
-            "hyper_parameters": hyper_parameters,
-            # "metric_defintions": None,
-            "input_data_config": input_data_config,
-            "instance_config": instance_config,
-            "stopping_condition": stopping_condition,
-            "output_data_config": output_data_config,
-            # "copy_checkpoints_from_job": None,
-            "checkpoint_config": checkpoint_config,
-            # "vpc_config": None,
-            # "tags": None,
         }
-    elif request.param == "defaults":
+    elif request.param == "nones":
         return defaultdict(
             lambda: None,
             aws_session=aws_session,
@@ -254,6 +292,8 @@ def _assert_create_job_called_with(
     mock_default_job_name,
 ):
     aws_session = create_job_args["aws_session"]
+    source_dir_name = create_job_args["source_dir"].split("/")[-1]
+    create_job_args = defaultdict(lambda: None, **create_job_args)
     image_uri = create_job_args["image_uri"] or "Base-Image-URI"
     job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
@@ -261,7 +301,6 @@ def _assert_create_job_called_with(
         default_bucket, job_name, "script"
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
-    source_dir_name = create_job_args["source_dir"].split("/")[-1]
     priority_access_devices = [
         arn for arn in [create_job_args["priority_access_device_arn"]] if arn
     ]
@@ -275,6 +314,8 @@ def _assert_create_job_called_with(
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
         s3Uri=aws_session.construct_s3_uri(default_bucket, job_name, "checkpoints")
     )
+    # vpc_config = create_job_args["vpc_config"]
+    # tags = create_job_args["tags"] or {}
 
     test_kwargs = {
         "jobName": job_name,
@@ -293,6 +334,8 @@ def _assert_create_job_called_with(
         "deviceConfig": {"priorityAccess": {"devices": priority_access_devices}},
         "hyperParameters": hyper_parameters,
         "stoppingCondition": asdict(stopping_condition),
+        # "vpcConfig": vpc_config,
+        # "tags": tags,
     }
     aws_session.create_job.assert_called_with(**test_kwargs)
 
@@ -321,5 +364,15 @@ def teardown_function(test_create_job):
 def test_generate_default_job_name(image_uri):
     assert (
         AwsQuantumJob._generate_default_job_name(image_uri)
-        == f"{image_uri}-{datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')}"
+        == f"{image_uri}-{datetime.now(timezone.utc).timestamp() * 1000:.0f}"
     )
+
+
+def test_state(arn, aws_session):
+    job = AwsQuantumJob(
+        arn,
+        aws_session,
+    )
+    for _ in range(5):
+        assert job.state == "RUNNING"
+    assert job.state == "COMPLETED"
