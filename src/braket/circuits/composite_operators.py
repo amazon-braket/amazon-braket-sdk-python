@@ -16,6 +16,10 @@ class QFT_Method(Enum):
     def __str__(self):
         return self.value
 
+    @staticmethod
+    def values():
+        return list(map(str, QFT_Method))
+
 
 class GHZ(CompositeOperator):
     """
@@ -88,7 +92,7 @@ class QFT(CompositeOperator):
 
     def __init__(self, qubit_count: int, method=QFT_Method.DEFAULT):
 
-        if str(method) not in ["default", "recursive"]:
+        if str(method) not in QFT_Method.values():
             raise TypeError("method must either be 'default' or 'recursive'.")
 
         self._method = str(method)
