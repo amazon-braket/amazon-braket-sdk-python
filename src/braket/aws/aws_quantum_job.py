@@ -105,7 +105,8 @@ class AwsQuantumJob:
                 completes. This would tail the job logs as it waits. Default = `False`.
 
             polling_config (PollingConfig): A PollingConfig specifying the timeout limit and
-            polling interval to use if wait_until_complete is true. Default = `PollingConfig()`.
+                polling interval to use if wait_until_complete is true.
+                Default = `PollingConfig()`.
 
             priority_access_device_arn (str): ARN for the AWS device which should have priority
                 access for the execution of this job. Default = `None`.
