@@ -16,13 +16,12 @@ invalid_unitary_matrices = [
 ]
 
 
-def two_dimensional_matrix_valid_input(i=3, **kwargs):
-    input_type = complex
-    unitary = np.array([[input_type(0), input_type(1)], [input_type(1), input_type(0)]])
+def two_dimensional_matrix_valid_input(i=3):
+    unitary = np.array([[complex(0), complex(1)], [complex(1), complex(0)]])
     matrix = unitary
     for _ in range(i - 1):
         matrix = np.kron(matrix, unitary)
-    return {"matrix": matrix}
+    return matrix
 
 
 @pytest.mark.parametrize("operator,subroutine_name,subroutine_inputs,targets", [
@@ -31,10 +30,10 @@ def two_dimensional_matrix_valid_input(i=3, **kwargs):
     (CompositeOperator.QFT(3, "recursive"), "qft", [[0, 1, 2], "recursive"], [0, 1, 2]),
     (CompositeOperator.mQFT(3), "mqft", [[0, 1, 2]], [0, 1, 2]),
     (CompositeOperator.iQFT(3), "iqft", [[0, 1, 2]], [0, 1, 2]),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], True), "qpe",
-     [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input()["matrix"], True], list(range(6))),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], False), "qpe",
-     [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input()["matrix"], False], list(range(6))),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), "qpe",
+     [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input(), True], list(range(6))),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), "qpe",
+     [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input(), False], list(range(6))),
 ])
 def test_composite_operator_subroutine(operator, subroutine_name, subroutine_inputs, targets):
     subroutine = getattr(Circuit(), subroutine_name)
@@ -49,8 +48,8 @@ def test_composite_operator_subroutine(operator, subroutine_name, subroutine_inp
     (CompositeOperator.QFT(3, "recursive"), [0, 1, 2]),
     (CompositeOperator.mQFT(3), [0, 1, 2]),
     (CompositeOperator.iQFT(3), [0, 1, 2]),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], True), list(range(6))),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], False), list(range(6))),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), list(range(6))),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), list(range(6))),
 ])
 def test_to_ir(operator, targets):
     assert operator.to_ir(targets) == [instr.to_ir() for instr in operator.decompose(targets)]
@@ -62,8 +61,8 @@ def test_to_ir(operator, targets):
     (CompositeOperator.QFT(3, "recursive"), ["QFT"], 3),
     (CompositeOperator.mQFT(3), ["mQFT"], 3),
     (CompositeOperator.iQFT(3), ["iQFT"], 3),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], True), ["QPE"], 6),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], False), ["QPE"], 6),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), ["QPE"], 6),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), ["QPE"], 6),
 ])
 def test_constructor_properties(operator, ascii_symbols, qubit_count):
     assert list(operator.ascii_symbols) == ascii_symbols
@@ -167,7 +166,7 @@ def controlled_unitary(control, target_qubits, unitary):
 def test_qpe_control_decompose():
     precision_qubits = [0, 1, 2]
     query_qubits = [3, 4, 5]
-    matrix = two_dimensional_matrix_valid_input()["matrix"]
+    matrix = two_dimensional_matrix_valid_input()
     qpe_circ = Circuit().h(precision_qubits)
 
     for ii, qubit in enumerate(reversed(precision_qubits)):
@@ -182,7 +181,7 @@ def test_qpe_control_decompose():
 def test_qpe_no_control_decompose():
     precision_qubits = [0, 1, 2]
     query_qubits = [3, 4, 5]
-    matrix = two_dimensional_matrix_valid_input()["matrix"]
+    matrix = two_dimensional_matrix_valid_input()
     qpe_circ = Circuit().h(precision_qubits)
 
     for ii, qubit in enumerate(reversed(precision_qubits)):
@@ -196,7 +195,7 @@ def test_qpe_no_control_decompose():
 
 
 def test_qpe_qubit_count():
-    matrix = two_dimensional_matrix_valid_input()["matrix"]
+    matrix = two_dimensional_matrix_valid_input()
     operator1 = CompositeOperator.QPE(2, 3, matrix)
     operator2 = CompositeOperator.QPE(1, 3, matrix)
 
@@ -206,7 +205,7 @@ def test_qpe_qubit_count():
 
 @pytest.mark.xfail(raises=ValueError)
 def test_qpe_matrix_dim_mismatch():
-    matrix = two_dimensional_matrix_valid_input()["matrix"]
+    matrix = two_dimensional_matrix_valid_input()
     CompositeOperator.QPE(3, 2, matrix)
 
 
@@ -224,8 +223,8 @@ def test_qpe_unitary_invalid_matrix(matrix):
     (CompositeOperator.QFT(3, "recursive"), [0, 1]),
     (CompositeOperator.mQFT(3), [0, 1]),
     (CompositeOperator.iQFT(3), [0, 1]),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], True), list(range(5))),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input()["matrix"], False), list(range(5))),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), list(range(5))),
+    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), list(range(5))),
 ])
 def test_decompose_with_mismatched_target(operator, target):
     operator.decompose(target)
