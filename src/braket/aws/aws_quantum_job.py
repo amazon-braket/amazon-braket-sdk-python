@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Union
 
+import boto3
+
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
     CheckpointConfig,
@@ -159,10 +161,26 @@ class AwsQuantumJob:
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the job.
         """
+        self._arn = arn
+        if aws_session:
+            if not self._is_valid_aws_session_region_for_job_arn(aws_session, arn):
+                raise ValueError(
+                    "The aws session region does not match the region for the supplied arn"
+                )
+            self._aws_session = aws_session
+        else:
+            self._aws_session = AwsQuantumJob._default_session_for_job_arn(arn)
+        self._metadata = {}
 
     @staticmethod
-    def _aws_session_for_job_arn(job_arn: str) -> AwsSession:
-        """Get an AwsSession for the Job ARN. The AWS session should be in the region of the task.
+    def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
+        """bool: bool indicating whether the aws_session region matches the job_arn region"""
+        job_region = job_arn.split(":")[3]
+        return job_region == aws_session.braket_client.meta.region_name
+
+    @staticmethod
+    def _default_session_for_job_arn(job_arn: str) -> AwsSession:
+        """Get an AwsSession for the Job ARN. The AWS session should be in the region of the job.
 
         Args:
             job_arn (str): The ARN for the quantum job.
@@ -170,24 +188,48 @@ class AwsQuantumJob:
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in job's region.
         """
+        job_region = job_arn.split(":")[3]
+        boto_session = boto3.Session(region_name=job_region)
+        return AwsSession(boto_session=boto_session)
 
     @property
     def arn(self) -> str:
-        """Returns the job arn corresponding to the job"""
+        """str: The ARN (Amazon Resource Name) of the quantum job."""
+        return self._arn
 
-    @property
-    def state(self) -> str:
-        """Returns the status for the job"""
+    def state(self, use_cached_value: bool = False) -> str:
+        """The state of the quantum job.
+
+        Args:
+            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+                value from the Amazon Braket `GetJob` operation. If `False`, calls the
+                `GetJob` operation to retrieve metadata, which also updates the cached
+                value. Default = `False`.
+        Returns:
+            str: The value of `status` in `metadata()`. This is the value of the `status` key
+            in the Amazon Braket `GetJob` operation.
+        See Also:
+            `metadata()`
+        """
+        return self.metadata(use_cached_value).get("status")
 
     def logs(self) -> None:
         """Prints the logs from cloudwatch to stdout"""
 
-    def metadata(self) -> Dict[str, Any]:
-        """Returns the job metadata defined in Amazon Braket (uses the GetJob API call).
+    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+        """Get job metadata defined in Amazon Braket.
 
+        Args:
+            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+                value from the Amazon Braket `GetJob` operation, if it exists; if not,
+                `GetJob` will be called to retrieve the metadata. If `False`, always calls
+                `GetJob`, which also updates the cached value. Default: `False`.
         Returns:
             Dict[str, Any]: Dict specifying the job metadata defined in Amazon Braket.
         """
+        if not use_cached_value or not self._metadata:
+            self._metadata = self._aws_session.get_job(self._arn)
+        return self._metadata
 
     def metrics(
         self,
@@ -237,3 +279,11 @@ class AwsQuantumJob:
         Args:
             extract_to (str): Location where results will be extracted.
         """
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, AwsQuantumJob):
+            return self.arn == other.arn
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.arn)

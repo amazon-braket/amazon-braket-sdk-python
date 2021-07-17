@@ -136,7 +136,6 @@ class AwsSession(object):
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
 
-    # TODO: Implementation suggestions, uncomment when ready with tests.
     @backoff.on_exception(
         backoff.expo,
         ClientError,
@@ -144,7 +143,7 @@ class AwsSession(object):
         jitter=backoff.full_jitter,
         giveup=_should_giveup.__func__,
     )
-    def get_job(self, arn: str) -> str:
+    def get_job(self, arn: str) -> Dict[str, Any]:
         """
         Gets the quantum job.
 
@@ -154,7 +153,7 @@ class AwsSession(object):
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
         """
-        # return self.braket_client.get_job(jobArn=arn)
+        return self.braket_client.get_job(jobArn=arn)
 
     def get_execution_role(self, aws_session):
         """Return the role ARN whose credentials are used to call the API.

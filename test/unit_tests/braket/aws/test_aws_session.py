@@ -40,6 +40,52 @@ def aws_session(boto_session):
     return AwsSession(boto_session=boto_session, braket_client=Mock())
 
 
+@pytest.fixture
+def get_job_response():
+    return {
+        "algorithmSpecification": {
+            "scriptModeConfig": {
+                "entryPoint": "my_file:start_here",
+                "s3Uri": "s3://amazon-braket-jobs/job-path/my_file.py",
+            }
+        },
+        "checkpointConfig": {
+            "localPath": "/opt/omega/checkpoints",
+            "s3Uri": "s3://amazon-braket-jobs/job-path/checkpoints",
+        },
+        "instanceConfig": {
+            "instanceCount": 1,
+            "instanceType": "ml.m5.large",
+            "volumeSizeInGb": 1,
+        },
+        "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
+        "jobName": "job-test-20210628140446",
+        "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/output"},
+        "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
+        "status": "RUNNING",
+    }
+
+
+@pytest.fixture
+def resource_not_found_response():
+    return {
+        "Error": {
+            "Code": "ResourceNotFoundException",
+            "Message": "unit-test-error",
+        }
+    }
+
+
+@pytest.fixture
+def throttling_response():
+    return {
+        "Error": {
+            "Code": "ThrottlingException",
+            "Message": "unit-test-error",
+        }
+    }
+
+
 def test_initializes_boto_client_if_required(boto_session):
     AwsSession(boto_session=boto_session)
     boto_session.client.assert_called_with("braket", config=None)
@@ -178,22 +224,9 @@ def test_get_quantum_task(aws_session):
     aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
 
 
-def test_get_quantum_task_retry(aws_session):
+def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_found_response):
     arn = "foo:bar:arn"
     return_value = {"quantumTaskArn": arn}
-
-    resource_not_found_response = {
-        "Error": {
-            "Code": "ResourceNotFoundException",
-            "Message": "unit-test-error",
-        }
-    }
-    throttling_response = {
-        "Error": {
-            "Code": "ThrottlingException",
-            "Message": "unit-test-error",
-        }
-    }
 
     aws_session.braket_client.get_quantum_task.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
@@ -206,20 +239,9 @@ def test_get_quantum_task_retry(aws_session):
     aws_session.braket_client.get_quantum_task.call_count == 3
 
 
-def test_get_quantum_task_fail_after_retries(aws_session):
-    resource_not_found_response = {
-        "Error": {
-            "Code": "ResourceNotFoundException",
-            "Message": "unit-test-error",
-        }
-    }
-    throttling_response = {
-        "Error": {
-            "Code": "ThrottlingException",
-            "Message": "unit-test-error",
-        }
-    }
-
+def test_get_quantum_task_fail_after_retries(
+    aws_session, throttling_response, resource_not_found_response
+):
     aws_session.braket_client.get_quantum_task.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
         ClientError(throttling_response, "unit-test"),
@@ -246,6 +268,64 @@ def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
     with pytest.raises(ClientError):
         aws_session.get_quantum_task("some-arn")
     aws_session.braket_client.get_quantum_task.call_count == 1
+
+
+def test_get_job(aws_session, get_job_response):
+    arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    aws_session.braket_client.get_job.return_value = get_job_response
+
+    assert aws_session.get_job(arn) == get_job_response
+    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+
+
+def test_get_job_retry(
+    aws_session, get_job_response, throttling_response, resource_not_found_response
+):
+    arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+
+    aws_session.braket_client.get_job.side_effect = [
+        ClientError(resource_not_found_response, "unit-test"),
+        ClientError(throttling_response, "unit-test"),
+        get_job_response,
+    ]
+
+    assert aws_session.get_job(arn) == get_job_response
+    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    assert aws_session.braket_client.get_job.call_count == 3
+
+
+def test_get_job_fail_after_retries(aws_session, throttling_response, resource_not_found_response):
+    arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+
+    aws_session.braket_client.get_job.side_effect = [
+        ClientError(resource_not_found_response, "unit-test"),
+        ClientError(throttling_response, "unit-test"),
+        ClientError(throttling_response, "unit-test"),
+    ]
+
+    with pytest.raises(ClientError):
+        aws_session.get_job(arn)
+    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    assert aws_session.braket_client.get_job.call_count == 3
+
+
+def test_get_job_does_not_retry_other_exceptions(aws_session):
+    arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    exception_response = {
+        "Error": {
+            "Code": "SomeOtherException",
+            "Message": "unit-test-error",
+        }
+    }
+
+    aws_session.braket_client.get_job.side_effect = [
+        ClientError(exception_response, "unit-test"),
+    ]
+
+    with pytest.raises(ClientError):
+        aws_session.get_job(arn)
+    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    assert aws_session.braket_client.get_job.call_count == 1
 
 
 @pytest.mark.parametrize(
