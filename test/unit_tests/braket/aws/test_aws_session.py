@@ -539,14 +539,6 @@ def test_create_job(aws_session):
     aws_session.braket_client.create_job.assert_called_with(**kwargs)
 
 
-def test_get_job(aws_session):
-    arn = "foo:bar:arn"
-    job = "JOB"
-    aws_session.braket_client.get_job.return_value = job
-    assert aws_session.get_job(arn) == job
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
-
-
 @pytest.mark.parametrize(
     "uri, bucket, key",
     [
