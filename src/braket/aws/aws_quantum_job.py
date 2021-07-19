@@ -19,6 +19,8 @@ import time
 from dataclasses import asdict
 from typing import Any, Dict, List
 
+import boto3
+
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
     CheckpointConfig,
@@ -100,7 +102,6 @@ class AwsQuantumJob:
             role_arn (str): str representing the IAM role arn to be used for executing the
                 script. Default = `IAM role returned by get_execution_role()`.
 
-            # TODO: implement wait until complete
             wait_until_complete (bool): bool representing whether we should wait until the job
                 completes. This would tail the job logs as it waits. Default = `False`.
 
@@ -244,13 +245,25 @@ class AwsQuantumJob:
                 region of the job.
         """
         self._arn: str = arn
-        self._aws_session: AwsSession = aws_session or AwsQuantumJob._aws_session_for_job_arn(
-            job_arn=arn
-        )
+        if aws_session:
+            if not self._is_valid_aws_session_region_for_job_arn(aws_session, arn):
+                raise ValueError(
+                    "The aws session region does not match the region for the supplied arn"
+                )
+            self._aws_session = aws_session
+        else:
+            self._aws_session = AwsQuantumJob._default_session_for_job_arn(arn)
+        self._metadata = {}
 
     @staticmethod
-    def _aws_session_for_job_arn(job_arn: str) -> AwsSession:
-        """Get an AwsSession for the Job ARN. The AWS session should be in the region of the task.
+    def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
+        """bool: bool indicating whether the aws_session region matches the job_arn region"""
+        job_region = job_arn.split(":")[3]
+        return job_region == aws_session.braket_client.meta.region_name
+
+    @staticmethod
+    def _default_session_for_job_arn(job_arn: str) -> AwsSession:
+        """Get an AwsSession for the Job ARN. The AWS session should be in the region of the job.
 
         Args:
             job_arn (str): The ARN for the quantum job.
@@ -258,13 +271,9 @@ class AwsQuantumJob:
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in job's region.
         """
-        # commenting until usage and testing, suggested implementation below.
-        # try:
-        #     job_region = re.match(r"^arn:aws:braket:([\w-]+):\d+:job/", job_arn).group(1)
-        # except AttributeError:
-        #     raise ValueError(f"Not a valid job arn: {job_arn}")
-        # boto_session = boto3.Session(region_name=job_region)
-        # return AwsSession(boto_session=boto_session)
+        job_region = job_arn.split(":")[3]
+        boto_session = boto3.Session(region_name=job_region)
+        return AwsSession(boto_session=boto_session)
 
     # following AwsQuantumTask precedent for `id` over `arn`
     # is that what we want?
@@ -279,23 +288,42 @@ class AwsQuantumJob:
 
     @property
     def arn(self) -> str:  # do we want arn or id or both?
-        """Returns the job arn corresponding to the job"""
+        """str: The ARN (Amazon Resource Name) of the quantum job."""
         return self._arn
 
-    @property
-    def state(self) -> str:
-        """Returns the status for the job"""
-        return self._aws_session.get_job(self.arn)["status"]
+    def state(self, use_cached_value: bool = False) -> str:
+        """The state of the quantum job.
+
+        Args:
+            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+                value from the Amazon Braket `GetJob` operation. If `False`, calls the
+                `GetJob` operation to retrieve metadata, which also updates the cached
+                value. Default = `False`.
+        Returns:
+            str: The value of `status` in `metadata()`. This is the value of the `status` key
+            in the Amazon Braket `GetJob` operation.
+        See Also:
+            `metadata()`
+        """
+        return self.metadata(use_cached_value).get("status")
 
     def logs(self) -> None:
         """Prints the logs from cloudwatch to stdout"""
 
-    def metadata(self) -> Dict[str, Any]:
-        """Returns the job metadata defined in Amazon Braket (uses the GetJob API call).
+    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+        """Get job metadata defined in Amazon Braket.
 
+        Args:
+            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+                value from the Amazon Braket `GetJob` operation, if it exists; if not,
+                `GetJob` will be called to retrieve the metadata. If `False`, always calls
+                `GetJob`, which also updates the cached value. Default: `False`.
         Returns:
             Dict[str, Any]: Dict specifying the job metadata defined in Amazon Braket.
         """
+        if not use_cached_value or not self._metadata:
+            self._metadata = self._aws_session.get_job(self._arn)
+        return self._metadata
 
     def metrics(
         self,
@@ -347,15 +375,15 @@ class AwsQuantumJob:
         """
 
     def __repr__(self) -> str:
-        return f"AwsQuantumJob('id/jobArn':'{self.id}')"
+        return f"AwsQuantumJob('id/jobArn':'{self.arn}')"
 
     def __eq__(self, other) -> bool:
         if isinstance(other, AwsQuantumJob):
-            return self.id == other.id
+            return self.arn == other.arn
         return False
 
     def __hash__(self) -> int:
-        return hash(self.id)
+        return hash(self.arn)
 
     @staticmethod
     def _process_source_dir(source_dir, aws_session, code_location):

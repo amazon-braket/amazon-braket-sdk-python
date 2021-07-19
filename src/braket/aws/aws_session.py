@@ -96,8 +96,10 @@ class AwsSession(object):
     def create_job(self, **boto3_kwargs) -> str:
         """
         Create a quantum job.
+
         Args:
             **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateJob` operation.
+
         Returns:
             str: The ARN of the job.
         """
@@ -158,7 +160,7 @@ class AwsSession(object):
         jitter=backoff.full_jitter,
         giveup=_should_giveup.__func__,
     )
-    def get_job(self, arn: str) -> dict:
+    def get_job(self, arn: str) -> Dict[str, Any]:
         """
         Gets the quantum job.
 

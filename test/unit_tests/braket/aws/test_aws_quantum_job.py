@@ -12,13 +12,13 @@
 # language governing permissions and limitations under the License.
 from collections import defaultdict
 from dataclasses import asdict
-from datetime import datetime, timezone
+import datetime
 from unittest.mock import Mock, patch
 
 import pytest
 
-from braket.aws.aws_quantum_job import AwsQuantumJob
-from braket.aws.aws_session import AwsSession
+from braket.aws import AwsQuantumJob
+from braket.aws import AwsSession
 from braket.jobs.config import (
     CheckpointConfig,
     DataSource,
@@ -254,6 +254,99 @@ def test_equality(arn, aws_session):
     assert quantum_job_1 != non_quantum_job
 
 
+def test_hash(quantum_job):
+    assert hash(quantum_job) == hash(quantum_job.arn)
+
+
+@pytest.mark.parametrize(
+    "arn, expected_region",
+    [
+        ("arn:aws:braket:us-west-2:875981177017:job/job-name", "us-west-2"),
+        ("arn:aws:braket:us-west-1:1234567890:job/job-name", "us-west-1"),
+    ],
+)
+@patch("braket.aws.aws_quantum_job.boto3.Session")
+@patch("braket.aws.aws_quantum_job.AwsSession")
+def test_quantum_job_constructor_default_session(
+    aws_session_mock, mock_session, arn, expected_region
+):
+    mock_boto_session = Mock()
+    aws_session_mock.return_value = Mock()
+    mock_session.return_value = mock_boto_session
+    job = AwsQuantumJob(arn)
+    mock_session.assert_called_with(region_name=expected_region)
+    aws_session_mock.assert_called_with(boto_session=mock_boto_session)
+    assert job.arn == arn
+    assert job._aws_session == aws_session_mock.return_value
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_quantum_job_constructor_invalid_region(aws_session):
+    arn = "arn:aws:braket:unknown-region:875981177017:job/quantum_job_name"
+    AwsQuantumJob(arn, aws_session)
+
+
+@patch("braket.aws.aws_quantum_job.boto3.Session")
+def test_quantum_job_constructor_explicit_session(mock_session, quantum_job_arn, job_region):
+    aws_session_mock = Mock(braket_client=Mock(meta=Mock(region_name=job_region)))
+    job = AwsQuantumJob(quantum_job_arn, aws_session_mock)
+    assert job._aws_session == aws_session_mock
+    assert job.arn == quantum_job_arn
+    mock_session.assert_not_called()
+
+
+def test_metadata(quantum_job, aws_session, generate_get_job_response, quantum_job_arn):
+    get_job_response_running = generate_get_job_response(status="RUNNING")
+    aws_session.get_job.return_value = get_job_response_running
+    assert quantum_job.metadata() == get_job_response_running
+    aws_session.get_job.assert_called_with(quantum_job_arn)
+
+    get_job_response_completed = generate_get_job_response(status="COMPLETED")
+    aws_session.get_job.return_value = get_job_response_completed
+    assert quantum_job.metadata() == get_job_response_completed
+    aws_session.get_job.assert_called_with(quantum_job_arn)
+    assert aws_session.get_job.call_count == 2
+
+
+def test_metadata_caching(quantum_job, aws_session, generate_get_job_response, quantum_job_arn):
+    get_job_response_running = generate_get_job_response(status="RUNNING")
+    aws_session.get_job.return_value = get_job_response_running
+    assert quantum_job.metadata(True) == get_job_response_running
+
+    get_job_response_completed = generate_get_job_response(status="COMPLETED")
+    aws_session.get_job.return_value = get_job_response_completed
+    assert quantum_job.metadata(True) == get_job_response_running
+    aws_session.get_job.assert_called_with(quantum_job_arn)
+    assert aws_session.get_job.call_count == 1
+
+
+def test_state(quantum_job, aws_session, generate_get_job_response, quantum_job_arn):
+    state_1 = "RUNNING"
+    get_job_response_running = generate_get_job_response(status=state_1)
+    aws_session.get_job.return_value = get_job_response_running
+    assert quantum_job.state() == state_1
+    aws_session.get_job.assert_called_with(quantum_job_arn)
+
+    state_2 = "COMPLETED"
+    get_job_response_completed = generate_get_job_response(status=state_2)
+    aws_session.get_job.return_value = get_job_response_completed
+    assert quantum_job.state() == state_2
+    aws_session.get_job.assert_called_with(quantum_job_arn)
+    assert aws_session.get_job.call_count == 2
+
+
+def test_state_caching(quantum_job, aws_session, generate_get_job_response, quantum_job_arn):
+    state_1 = "RUNNING"
+    get_job_response_running = generate_get_job_response(status=state_1)
+    aws_session.get_job.return_value = get_job_response_running
+    assert quantum_job.state(True) == state_1
+
+    state_2 = "COMPLETED"
+    get_job_response_completed = generate_get_job_response(status=state_2)
+    aws_session.get_job.return_value = get_job_response_completed
+    assert quantum_job.state(True) == state_1
+    aws_session.get_job.assert_called_with(quantum_job_arn)
+    assert aws_session.get_job.call_count == 1
 def test_str(quantum_job):
     expected = f"AwsQuantumJob('id/jobArn':'{quantum_job.id}')"
     assert str(quantum_job) == expected
@@ -364,7 +457,7 @@ def teardown_function(test_create_job):
 def test_generate_default_job_name(image_uri):
     assert (
         AwsQuantumJob._generate_default_job_name(image_uri)
-        == f"{image_uri}-{datetime.now(timezone.utc).timestamp() * 1000:.0f}"
+        == f"{image_uri}-{datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000:.0f}"
     )
 
 
