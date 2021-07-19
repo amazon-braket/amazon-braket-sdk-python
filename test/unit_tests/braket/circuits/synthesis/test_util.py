@@ -94,20 +94,42 @@ three_cnot_test = [
     for _ in range(10)
 ]
 
+unitary_test = (simple_u_test +
+                product_gate_test +
+                one_cnot_test +
+                two_cnot_test +
+                three_cnot_test)
+
+unitary_test_with_phase = [u * np.exp(2*np.pi*random.random()) for u in unitary_test]
+
 dim8_test = [np.kron(u(2*np.pi*random.random(),
                        2*np.pi*random.random(),
                        2*np.pi*random.random()),
                      random_kron_u()) for _ in range(5)]
+
 dim16_test = [np.kron(random_kron_u(), random_kron_u()) for _ in range(5)]
+
+# Test rx, ry, rz
+
+@pytest.mark.parametrize(
+    "theta",
+    [2*np.pi*random.random() for _ in range(10)]
+)
+def test_r_gates(theta):
+    rx_result = util.rx(theta)
+    ry_result = util.ry(theta)
+    rz_result = util.rz(theta)
+
+    assert np.allclose(rx_result, expm(-0.5j*theta*x))
+    assert np.allclose(ry_result, expm(-0.5j*theta*y))
+    assert np.allclose(rz_result, expm(-0.5j*theta*z))
+
 
 # Test to_su
 
 @pytest.mark.parametrize(
     "unitary_test_cases", 
-    simple_u_test +
-    one_cnot_test +
-    two_cnot_test +
-    three_cnot_test +
+    unitary_test +
     dim8_test +
     dim16_test
 )

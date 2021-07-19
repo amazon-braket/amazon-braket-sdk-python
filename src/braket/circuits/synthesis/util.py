@@ -17,6 +17,43 @@ from typing import List, Tuple, Union
 
 from braket.circuits.synthesis.predicates import is_diag, is_hermitian, commute, is_unitary
 
+def rx(theta):
+    """
+    Unitary for 1-qubit X rotations.
+
+    Args:
+        theta (float): the rotation angle.
+    """
+
+    # faster than expm(-0.5j * theta * x)
+    return np.array(
+        [
+            [np.cos(0.5 * theta), -1j * np.sin(0.5 * theta)],
+            [-1j * np.sin(0.5 * theta), np.cos(0.5 * theta)],
+        ]
+    )
+
+def ry(theta):
+    """
+    Unitary for 1-qubit Y rotations.
+
+    Args:
+        theta (float): the rotation angle.
+    """
+    return np.array(
+        [[np.cos(0.5 * theta), -np.sin(0.5 * theta)], [np.sin(0.5 * theta), np.cos(0.5 * theta)]]
+    )
+
+
+def rz(theta):
+    """
+    Unitary for 1-qubit Z rotations.
+
+    Args:
+        theta (float): the rotation angle.
+    """
+    return np.array([[np.exp(-0.5j * theta), 0], [0, np.exp(0.5j * theta)]])
+
 def to_su(u: np.ndarray) -> np.ndarray:
     """
     Given a unitary in U(N), return the

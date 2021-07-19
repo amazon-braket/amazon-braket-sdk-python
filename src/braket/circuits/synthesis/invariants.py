@@ -31,8 +31,8 @@ def makhlin_invariants(
     Args:
         U (np.ndarray): matrix to calculate the Makelin invariant.
         validate_input (bool): if validate input.
-        atol: absolute tolerance parameter.
-        rtol: relative tolerance parameter.
+        atol (float): absolute tolerance of loss.
+        rtol (float): relative tolerance of loss.
 
     Returns:
         makhlin_invariants (np.dtype): the calculated Makhlin invariants.
@@ -73,8 +73,8 @@ def gamma_invariants(
     Args:
         U (np.ndarray): matrix to calculate the gamma invariants.
         validate_input (bool): if validate input.
-        atol: absolute tolerance parameter.
-        rtol: relative tolerance parameter.
+        atol (float): absolute tolerance of loss.
+        rtol (float): relative tolerance of loss.
 
     Returns:
         gamma_invariants (np.dtype): the calculated gamma invariants.

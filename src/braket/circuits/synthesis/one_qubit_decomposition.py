@@ -182,13 +182,13 @@ class OneQubitDecomposition:
         return repr_str
 
     def build_circuit(self,
-                      qubit_num=0,
-                      method="zyz") -> braket_circ.Circuit:
+                      qubit:int=0,
+                      method:str="zyz") -> braket_circ.Circuit:
         """
         Build the Braket circuit for the input unitary.
 
         Args:
-            qubit_num (int): on which qubit the rotations are applied.
+            qubit (int): on which qubit the rotations are applied.
             method (str): the decomposition method.
 
         Returns:
@@ -210,12 +210,12 @@ class OneQubitDecomposition:
 
             elif abs(angles[i] - np.pi) < self.atol:
                 gate = XYZ[pauli_str.index(method[i])]()
-                ins = Instruction(gate, [qubit_num])
+                ins = Instruction(gate, [qubit])
                 circ = circ.add_instruction(ins)
 
             else:
                 gate = Rxyz[pauli_str.index(method[i])](angles[i])
-                ins = Instruction(gate, [qubit_num])
+                ins = Instruction(gate, [qubit])
                 circ = circ.add_instruction(ins)
         
         return circ
