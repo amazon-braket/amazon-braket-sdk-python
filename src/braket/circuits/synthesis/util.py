@@ -17,6 +17,7 @@ from typing import List, Tuple, Union
 
 from braket.circuits.synthesis.predicates import is_diag, is_hermitian, commute, is_unitary
 
+
 def rx(theta):
     """
     Unitary for 1-qubit X rotations.
@@ -32,6 +33,7 @@ def rx(theta):
             [-1j * np.sin(0.5 * theta), np.cos(0.5 * theta)],
         ]
     )
+
 
 def ry(theta):
     """
@@ -54,6 +56,7 @@ def rz(theta):
     """
     return np.array([[np.exp(-0.5j * theta), 0], [0, np.exp(0.5j * theta)]])
 
+
 def to_su(u: np.ndarray) -> np.ndarray:
     """
     Given a unitary in U(N), return the
@@ -67,6 +70,7 @@ def to_su(u: np.ndarray) -> np.ndarray:
     """
 
     return u * np.linalg.det(u) ** (-1 / np.shape(u)[0])
+
 
 def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
     """

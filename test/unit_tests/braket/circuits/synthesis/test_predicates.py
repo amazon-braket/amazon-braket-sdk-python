@@ -47,6 +47,7 @@ diag_matrix_3d = np.array([[2, 0, 0], [0, 2, 0], [0, 0, 1]], dtype=np.complex128
 
 cnot_re = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=np.complex128)
 
+
 def u(a, b, c):
     return np.array(
         [
@@ -56,15 +57,18 @@ def u(a, b, c):
         dtype=np.complex128,
     )
 
+
 def random_kron_u():
     return np.kron(
         u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
         u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
     )
 
-simple_u_test = [u(2*np.pi*random.random(),
-                   2*np.pi*random.random(),
-                   2*np.pi*random.random()) for _ in range(10)]
+
+simple_u_test = [
+    u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random())
+    for _ in range(10)
+]
 
 product_gate_test = [random_kron_u() for _ in range(10)]
 
@@ -79,13 +83,9 @@ three_cnot_test = [
     for _ in range(10)
 ]
 
-unitary_test = (simple_u_test +
-                product_gate_test +
-                one_cnot_test +
-                two_cnot_test +
-                three_cnot_test)
+unitary_test = simple_u_test + product_gate_test + one_cnot_test + two_cnot_test + three_cnot_test
 
-unitary_test_with_phase = [u * np.exp(2*np.pi*random.random()) for u in unitary_test]
+unitary_test_with_phase = [u * np.exp(2 * np.pi * random.random()) for u in unitary_test]
 
 # Test is_diag function
 @pytest.mark.parametrize(
@@ -111,15 +111,12 @@ def test_diag(diag_test_input, diag_test_output):
 def test_diag_edge_cases(diag_test_input):
     predicates.is_diag(diag_test_input, raise_exception=True)
 
+
 # Test eq_up_to_phase
 @pytest.mark.parametrize(
-    "test_input1, test_input2, expect", 
-    list(zip(unitary_test,
-             unitary_test_with_phase,
-             [True] * len(unitary_test))) +
-    list(zip(unitary_test,
-             [u @ u for u in unitary_test],
-             [False] * len(unitary_test)))
+    "test_input1, test_input2, expect",
+    list(zip(unitary_test, unitary_test_with_phase, [True] * len(unitary_test)))
+    + list(zip(unitary_test, [u @ u for u in unitary_test], [False] * len(unitary_test))),
 )
 def test_eq_up_to_phase(test_input1, test_input2, expect):
     result = predicates.eq_up_to_phase(test_input1, test_input2)
@@ -142,7 +139,8 @@ def test_commute(commute_test_input1, commute_test_input2, commute_test_output):
 
 
 @pytest.mark.parametrize(
-    "commute_test_input1, commute_test_input2", [(x, y), (x, z), (y, z), (cnot, y), (h, x), (h, cnot)]
+    "commute_test_input1, commute_test_input2",
+    [(x, y), (x, z), (y, z), (cnot, y), (h, x), (h, cnot)],
 )
 @pytest.mark.xfail
 def test_commute_edge_cases(commute_test_input1, commute_test_input2):

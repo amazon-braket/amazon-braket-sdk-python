@@ -39,7 +39,7 @@ from braket.circuits.synthesis.util import (
     rz,
     to_su,
     char_poly,
-    diagonalize_two_matrices_with_hermitian_products
+    diagonalize_two_matrices_with_hermitian_products,
 )
 
 x = X().to_matrix()
@@ -48,6 +48,7 @@ z = Z().to_matrix()
 cnot = CNot().to_matrix()
 I = np.eye(2)
 cnot_re = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=np.complex128)
+
 
 class TwoQubitDecomposition:
     """
@@ -58,7 +59,7 @@ class TwoQubitDecomposition:
         su2 (list): 1-qubit unitaries after decomposition.
         canonical_vector (np.ndarray): the KAK vector after
             decomposition.
-        atol (float): absolute tolerance of less.        
+        atol (float): absolute tolerance of less.
         rtol (float): relative tolerance of less.
     """
 
@@ -193,7 +194,7 @@ class TwoQubitDecomposition:
         else:
             return 3
 
-    def build_circuit(self, qubits:str=[0, 1]):
+    def build_circuit(self, qubits: str = [0, 1]):
 
         return build_cnot_circuit(self, qubits=qubits)
 
@@ -214,7 +215,10 @@ def two_qubit_decompose(
 
     return TwoQubitDecomposition(U, atol=atol, rtol=rtol)
 
-def build_cnot_circuit(kak:TwoQubitDecomposition, qubits:Sequence=[0,1]) -> braket_circ.Circuit:
+
+def build_cnot_circuit(
+    kak: TwoQubitDecomposition, qubits: Sequence = [0, 1]
+) -> braket_circ.Circuit:
     """
     Given a TwoQubitDecomposition, construct a CNOT based
     Circuit.
@@ -234,7 +238,7 @@ def build_cnot_circuit(kak:TwoQubitDecomposition, qubits:Sequence=[0,1]) -> brak
         circ_u1 = OneQubitDecomposition(u1).build_circuit(qubit=qubits[1])
         circ_u2 = OneQubitDecomposition(u2).build_circuit(qubit=qubits[0])
         circ.add_circuit(circ_u1).add_circuit(circ_u2)
-        
+
         return circ
 
     if kak.num_cnots() == 1:
@@ -295,7 +299,6 @@ def build_cnot_circuit(kak:TwoQubitDecomposition, qubits:Sequence=[0,1]) -> brak
         circ.add_circuit(circ_list[5])
 
         return circ
-
 
     if kak.num_cnots() == 3:
 
@@ -359,8 +362,9 @@ def build_cnot_circuit(kak:TwoQubitDecomposition, qubits:Sequence=[0,1]) -> brak
         circ.cnot(*qubits[::-1])
         circ.add_circuit(circ_list[5])
         circ.add_circuit(circ_list[6])
-        
+
         return circ
+
 
 def decompose_one_qubit_product(
     U: np.ndarray, validate_input: bool = True, atol: float = 1e-8, rtol: float = 1e-5

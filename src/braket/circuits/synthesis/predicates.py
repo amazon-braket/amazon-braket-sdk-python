@@ -119,7 +119,10 @@ def is_hermitian(
 
     return pred
 
-def eq_up_to_phase(U1, U2, atol:float=1E-8, rtol:float=1E-5, raise_exception:bool=False) -> bool:
+
+def eq_up_to_phase(
+    U1, U2, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
+) -> bool:
     """
     Find out if U1 and U2 are equivalent up to a global phase.
 
@@ -138,12 +141,9 @@ def eq_up_to_phase(U1, U2, atol:float=1E-8, rtol:float=1E-5, raise_exception:boo
     i, j = np.unravel_index(np.argmax(abs(U1), axis=None), U1.shape)
     phase = U2[i, j] / U1[i, j]
 
-    eq = np.allclose(U1 * phase,
-                     U2,
-                     atol=atol,
-                     rtol=rtol)
+    eq = np.allclose(U1 * phase, U2, atol=atol, rtol=rtol)
 
     if raise_exception and not eq:
         raise ValueError(f"{U1} and {U2} are not equal up to a phase")
-    
+
     return eq

@@ -28,6 +28,7 @@ h = H().to_matrix()
 s = S().to_matrix()
 t = T().to_matrix()
 
+
 def u(a, b, c):
     return np.array(
         [
@@ -37,43 +38,41 @@ def u(a, b, c):
         dtype=np.complex128,
     )
 
+
 @pytest.mark.parametrize(
     "unitary_test_cases",
-    [x, y, z, h, s, t] +
-    [u(2*np.pi*random.random(),
-       2*np.pi*random.random(),
-       2*np.pi*random.random()) for _ in range(1000)]
+    [x, y, z, h, s, t]
+    + [
+        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random())
+        for _ in range(1000)
+    ],
 )
 def test_one_qubit_decomposition(unitary_test_cases):
 
     test_decomp = decomp1q.OneQubitDecomposition(unitary_test_cases)
 
     # Test global phase
-    assert np.allclose(test_decomp.phase * to_su(unitary_test_cases),
-                       unitary_test_cases)
-    
+    assert np.allclose(test_decomp.phase * to_su(unitary_test_cases), unitary_test_cases)
+
     # Test zyz decomposition
     circ1 = test_decomp.build_circuit(method="zxz")
-    assert eq_up_to_phase(circ1.as_unitary(),
-                          unitary_test_cases)
-    
+    assert eq_up_to_phase(circ1.as_unitary(), unitary_test_cases)
+
     # Test zxz decomposition
     circ2 = test_decomp.build_circuit(method="zyz")
-    assert eq_up_to_phase(circ2.as_unitary(),
-                          unitary_test_cases)
+    assert eq_up_to_phase(circ2.as_unitary(), unitary_test_cases)
 
     # Test quaternion
     quat = test_decomp.quaternion
     assert np.isclose(np.linalg.norm(quat), 1)
-    
+
     # Test axis-angle decomposition
     theta = test_decomp.rotation_angle
     vec = test_decomp.canonical_vector
 
-    assert np.allclose(test_decomp.phase *
-                       expm(-0.5j * theta * (vec[0] * x +
-                                             vec[1] * y +
-                                             vec[2] * z)),
-                       unitary_test_cases,
-                       atol=1E-6,
-                       rtol=1E-4)
+    assert np.allclose(
+        test_decomp.phase * expm(-0.5j * theta * (vec[0] * x + vec[1] * y + vec[2] * z)),
+        unitary_test_cases,
+        atol=1e-6,
+        rtol=1e-4,
+    )

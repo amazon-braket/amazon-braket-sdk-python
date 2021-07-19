@@ -60,6 +60,7 @@ rx30 = np.array(
     [[np.cos(np.pi / 12), -1j * np.sin(np.pi / 12)], [-1j * np.sin(np.pi / 12), np.cos(np.pi / 12)]]
 )
 
+
 def u(a, b, c):
     return np.array(
         [
@@ -69,17 +70,18 @@ def u(a, b, c):
         dtype=np.complex128,
     )
 
-def random_kron_u():
-    return np.kron(u(2*np.pi*random.random(),
-                     2*np.pi*random.random(),
-                     2*np.pi*random.random()),
-                   u(2*np.pi*random.random(),
-                     2*np.pi*random.random(),
-                     2*np.pi*random.random()))
 
-simple_u_test = [u(2*np.pi*random.random(),
-                   2*np.pi*random.random(),
-                   2*np.pi*random.random()) for _ in range(10)]
+def random_kron_u():
+    return np.kron(
+        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
+        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
+    )
+
+
+simple_u_test = [
+    u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random())
+    for _ in range(10)
+]
 
 product_gate_test = [random_kron_u() for _ in range(10)]
 
@@ -94,51 +96,45 @@ three_cnot_test = [
     for _ in range(10)
 ]
 
-unitary_test = (simple_u_test +
-                product_gate_test +
-                one_cnot_test +
-                two_cnot_test +
-                three_cnot_test)
+unitary_test = simple_u_test + product_gate_test + one_cnot_test + two_cnot_test + three_cnot_test
 
-unitary_test_with_phase = [u * np.exp(2*np.pi*random.random()) for u in unitary_test]
+unitary_test_with_phase = [u * np.exp(2 * np.pi * random.random()) for u in unitary_test]
 
-dim8_test = [np.kron(u(2*np.pi*random.random(),
-                       2*np.pi*random.random(),
-                       2*np.pi*random.random()),
-                     random_kron_u()) for _ in range(5)]
+dim8_test = [
+    np.kron(
+        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
+        random_kron_u(),
+    )
+    for _ in range(5)
+]
 
 dim16_test = [np.kron(random_kron_u(), random_kron_u()) for _ in range(5)]
 
 # Test rx, ry, rz
 
-@pytest.mark.parametrize(
-    "theta",
-    [2*np.pi*random.random() for _ in range(10)]
-)
+
+@pytest.mark.parametrize("theta", [2 * np.pi * random.random() for _ in range(10)])
 def test_r_gates(theta):
     rx_result = util.rx(theta)
     ry_result = util.ry(theta)
     rz_result = util.rz(theta)
 
-    assert np.allclose(rx_result, expm(-0.5j*theta*x))
-    assert np.allclose(ry_result, expm(-0.5j*theta*y))
-    assert np.allclose(rz_result, expm(-0.5j*theta*z))
+    assert np.allclose(rx_result, expm(-0.5j * theta * x))
+    assert np.allclose(ry_result, expm(-0.5j * theta * y))
+    assert np.allclose(rz_result, expm(-0.5j * theta * z))
 
 
 # Test to_su
 
-@pytest.mark.parametrize(
-    "unitary_test_cases", 
-    unitary_test +
-    dim8_test +
-    dim16_test
-)
+
+@pytest.mark.parametrize("unitary_test_cases", unitary_test + dim8_test + dim16_test)
 def test_to_su(unitary_test_cases):
     su = util.to_su(unitary_test_cases)
-    assert np.isclose(np.linalg.det(su),1)
+    assert np.isclose(np.linalg.det(su), 1)
 
 
 # Test diagonalize_commuting_hermitian_matrices function
+
 
 @pytest.mark.parametrize(
     "d_c_h_m_test_1, d_c_h_m_test_2",
@@ -214,6 +210,7 @@ def test_d_t_m_w_h_p(d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2):
     assert np.allclose(u @ u.conj().T, np.eye(u.shape[0]))
     assert np.allclose(v @ v.conj().T, np.eye(v.shape[0]))
     assert util.is_diag(u @ d_t_m_w_h_p_test_1 @ v) and util.is_diag(u @ d_t_m_w_h_p_test_2 @ v)
+
 
 @pytest.mark.parametrize(
     "d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2",

@@ -55,6 +55,7 @@ rx30 = np.array(
     [[np.cos(np.pi / 12), -1j * np.sin(np.pi / 12)], [-1j * np.sin(np.pi / 12), np.cos(np.pi / 12)]]
 )
 
+
 def u(a, b, c):
     return np.array(
         [
@@ -64,13 +65,13 @@ def u(a, b, c):
         dtype=np.complex128,
     )
 
+
 def random_kron_u():
-    return np.kron(u(2*np.pi*random.random(),
-                     2*np.pi*random.random(),
-                     2*np.pi*random.random()),
-                   u(2*np.pi*random.random(),
-                     2*np.pi*random.random(),
-                     2*np.pi*random.random()))
+    return np.kron(
+        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
+        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
+    )
+
 
 product_gate_test = [random_kron_u() for _ in range(10)]
 
@@ -87,43 +88,41 @@ three_cnot_test = [
 
 # Test decompose_one_qubit_product
 
+
 @pytest.mark.parametrize(
     "unitary_test_cases",
-    [np.kron(x, z),
-     np.kron(x, y),
-     np.kron(y, z),
-     np.kron(x, I),
-     np.kron(h, x)] +
-    product_gate_test
+    [np.kron(x, z), np.kron(x, y), np.kron(y, z), np.kron(x, I), np.kron(h, x)] + product_gate_test,
 )
 def test_decompose_one_qubit_product(unitary_test_cases):
     phase, u1, u2 = kak.decompose_one_qubit_product(unitary_test_cases)
     assert np.allclose(phase * np.kron(u1, u2), unitary_test_cases)
 
-@pytest.mark.parametrize("unitary_test_cases", [
-    1,
-    0.5,
-    "random_matrix",
-    cnot,
-    cz,
-    cnot_re,
-    iswap_d])
+
+@pytest.mark.parametrize(
+    "unitary_test_cases", [1, 0.5, "random_matrix", cnot, cz, cnot_re, iswap_d]
+)
 @pytest.mark.xfail
 def test_decompose_one_qubit_product_edge_cases(unitary_test_cases):
     phase, u1, u2 = kak.decompose_one_qubit_product(unitary_test_cases)
 
+
 # Test odo_decomposition.
 
+
 @pytest.mark.parametrize(
-    "unitary_test_cases", [x, y, z, h, rx30, ry30, cnot, cz, unentangled_2q, half_cz, s]
-                          + product_gate_test
-                          + one_cnot_test
-                          + two_cnot_test
-                          + three_cnot_test
+    "unitary_test_cases",
+    [x, y, z, h, rx30, ry30, cnot, cz, unentangled_2q, half_cz, s]
+    + product_gate_test
+    + one_cnot_test
+    + two_cnot_test
+    + three_cnot_test,
 )
 def test_odo_decomposition(unitary_test_cases):
     ql, theta, qr = kak.odo_decomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    assert np.allclose(ql @ expm(1j * np.diag(theta)) @ qr, unitary_test_cases, atol=1e-6, rtol=1e-4)
+    assert np.allclose(
+        ql @ expm(1j * np.diag(theta)) @ qr, unitary_test_cases, atol=1e-6, rtol=1e-4
+    )
+
 
 @pytest.mark.parametrize(
     "nonunitary_test_cases",
@@ -133,6 +132,7 @@ def test_odo_decomposition(unitary_test_cases):
 def test_odo_decomposition_edge_cases(nonunitary_test_cases):
     ql, theta, qr = kak.odo_decomposition(nonunitary_test_cases)
 
+
 # Test kak decomposition
 @pytest.mark.parametrize(
     "unitary_test_cases",
@@ -140,7 +140,7 @@ def test_odo_decomposition_edge_cases(nonunitary_test_cases):
     + product_gate_test
     + one_cnot_test
     + two_cnot_test
-    + three_cnot_test
+    + three_cnot_test,
 )
 def test_kak_decomposition(unitary_test_cases):
 
@@ -161,53 +161,46 @@ def test_kak_decomposition(unitary_test_cases):
     assert np.allclose(result, unitary_test_cases)
     assert np.allclose(KAK.unitary(), unitary_test_cases)
 
+
 @pytest.mark.parametrize("unitary_test_cases", product_gate_test)
 def test_kak_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ  = KAK.build_circuit()
+    circ = KAK.build_circuit()
 
     assert KAK.num_cnots() == 0
-    assert predicates.eq_up_to_phase(circ.as_unitary(),
-                                     KAK.unitary(),
-                                     atol=KAK.atol,
-                                     rtol=KAK.rtol)
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+
 
 @pytest.mark.parametrize("unitary_test_cases", one_cnot_test)
 def test_kak_one_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ  = KAK.build_circuit()
+    circ = KAK.build_circuit()
 
     assert KAK.num_cnots() == 1
-    assert predicates.eq_up_to_phase(circ.as_unitary(),
-                                     KAK.unitary(),
-                                     atol=KAK.atol,
-                                     rtol=KAK.rtol)
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+
 
 @pytest.mark.parametrize("unitary_test_cases", two_cnot_test)
 def test_kak_two_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ  = KAK.build_circuit()
+    circ = KAK.build_circuit()
 
     assert KAK.num_cnots() == 2
-    assert predicates.eq_up_to_phase(circ.as_unitary(),
-                                     KAK.unitary(),
-                                     atol=KAK.atol,
-                                     rtol=KAK.rtol)
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+
 
 @pytest.mark.parametrize("unitary_test_cases", three_cnot_test)
 def test_kak_three_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ  = KAK.build_circuit()
+    circ = KAK.build_circuit()
 
     assert KAK.num_cnots() == 3
-    assert predicates.eq_up_to_phase(circ.as_unitary(),
-                                     KAK.unitary(),
-                                     atol=KAK.atol,
-                                     rtol=KAK.rtol)
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+
 
 @pytest.mark.parametrize(
     "nonunitary_test_cases",
