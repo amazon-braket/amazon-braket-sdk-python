@@ -232,7 +232,7 @@ class AwsQuantumJob:
             polling_config = polling_config or PollingConfig()
             timeout_time = time.time() + polling_config.pollTimeoutSeconds
             while time.time() < timeout_time:
-                if job.state in AwsQuantumJob.TERMINAL_STATES:
+                if job.state() in AwsQuantumJob.TERMINAL_STATES:
                     return job
                 time.sleep(polling_config.pollIntervalSeconds)
 

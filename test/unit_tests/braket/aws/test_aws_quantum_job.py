@@ -28,7 +28,7 @@ from braket.jobs.config import (
     OutputDataConfig,
     PollingConfig,
     S3DataSource,
-    StoppingCondition,
+    StoppingCondition, VpcConfig,
 )
 
 
@@ -371,7 +371,10 @@ def polling_config(request):
 
 @pytest.fixture
 def vpc_config():
-    return None
+    return VpcConfig(
+        securityGroupIds=["1", "2"],
+        subnets=["3", "4"],
+    )
 
 
 @pytest.fixture
@@ -502,7 +505,7 @@ def _assert_create_job_called_with(
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
         s3Uri=aws_session.construct_s3_uri(default_bucket, job_name, "checkpoints")
     )
-    # vpc_config = create_job_args["vpc_config"]
+    vpc_config = create_job_args["vpc_config"]
     # tags = create_job_args["tags"] or {}
 
     test_kwargs = {
@@ -522,9 +525,12 @@ def _assert_create_job_called_with(
         "deviceConfig": {"priorityAccess": {"devices": priority_access_devices}},
         "hyperParameters": hyper_parameters,
         "stoppingCondition": asdict(stopping_condition),
-        # "vpcConfig": vpc_config,
         # "tags": tags,
     }
+
+    if vpc_config:
+        test_kwargs["vpcConfig"] = vpc_config
+
     aws_session.create_job.assert_called_with(**test_kwargs)
 
 
