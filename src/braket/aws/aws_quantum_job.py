@@ -262,7 +262,12 @@ class AwsQuantumJob:
 
         Returns:
             str: Representing the status of the job.
+
+        Raises:
+            ClientError: If there are errors invoking the CancelJob API.
         """
+        cancellation_response = self._aws_session.cancel_job(self._arn)
+        return cancellation_response["cancellationStatus"]
 
     def result(self) -> Dict[str, Any]:
         """Retrieves the job result persisted using save_job_result() function.

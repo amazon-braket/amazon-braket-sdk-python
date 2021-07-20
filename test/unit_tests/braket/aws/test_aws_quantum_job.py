@@ -15,6 +15,7 @@ import datetime
 from unittest.mock import Mock, patch
 
 import pytest
+from botocore.exceptions import ClientError
 
 from braket.aws import AwsQuantumJob
 
@@ -81,6 +82,23 @@ def generate_get_job_response():
         return response
 
     return _get_job_response
+
+
+@pytest.fixture
+def generate_cancel_job_response():
+    def _cancel_job_response(**kwargs):
+        response = {
+            "ResponseMetadata": {
+                "RequestId": "857b0893-2073-4ad6-b828-744af8400dfe",
+                "HTTPStatusCode": 200,
+            },
+            "cancellationStatus": "CANCELLING",
+            "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
+        }
+        response.update(kwargs)
+        return response
+
+    return _cancel_job_response
 
 
 @pytest.fixture
@@ -215,3 +233,26 @@ def test_state_caching(quantum_job, aws_session, generate_get_job_response, quan
     assert quantum_job.state(True) == state_1
     aws_session.get_job.assert_called_with(quantum_job_arn)
     assert aws_session.get_job.call_count == 1
+
+
+def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):
+    cancellation_status = "CANCELLING"
+    aws_session.cancel_job.return_value = generate_cancel_job_response(
+        cancellationStatus=cancellation_status
+    )
+    quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
+    status = quantum_job.cancel()
+    aws_session.cancel_job.assert_called_with(quantum_job_arn)
+    assert status == cancellation_status
+
+
+@pytest.mark.xfail(raises=ClientError)
+def test_cancel_job_surfaces_exception(quantum_job, aws_session):
+    exception_response = {
+        "Error": {
+            "Code": "ValidationException",
+            "Message": "unit-test-error",
+        }
+    }
+    aws_session.cancel_job.side_effect = ClientError(exception_response, "cancel_job")
+    quantum_job.cancel()

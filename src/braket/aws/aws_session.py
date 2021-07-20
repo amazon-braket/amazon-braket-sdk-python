@@ -155,6 +155,18 @@ class AwsSession(object):
         """
         return self.braket_client.get_job(jobArn=arn)
 
+    def cancel_job(self, arn: str) -> Dict[str, Any]:
+        """
+        Cancel the quantum job.
+
+        Args:
+            arn (str): The ARN of the quantum job to cancel.
+
+        Returns:
+            Dict[str, Any]: The response from the Amazon Braket `CancelJob` operation.
+        """
+        return self.braket_client.cancel_job(jobArn=arn)
+
     def get_execution_role(self, aws_session):
         """Return the role ARN whose credentials are used to call the API.
            Throws an exception if role doesn't exist.

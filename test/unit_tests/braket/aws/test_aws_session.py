@@ -328,6 +328,52 @@ def test_get_job_does_not_retry_other_exceptions(aws_session):
     assert aws_session.braket_client.get_job.call_count == 1
 
 
+def test_cancel_job(aws_session):
+    arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    cancel_job_response = {
+        "ResponseMetadata": {
+            "RequestId": "857b0893-2073-4ad6-b828-744af8400dfe",
+            "HTTPStatusCode": 200,
+        },
+        "cancellationStatus": "CANCELLING",
+        "jobArn": "arn:aws:braket:us-west-2:1234567890:job/job-name",
+    }
+    aws_session.braket_client.cancel_job.return_value = cancel_job_response
+
+    assert aws_session.cancel_job(arn) == cancel_job_response
+    aws_session.braket_client.cancel_job.assert_called_with(jobArn=arn)
+
+
+@pytest.mark.parametrize(
+    "exception_type",
+    [
+        "ResourceNotFoundException",
+        "ValidationException",
+        "AccessDeniedException",
+        "ThrottlingException",
+        "InternalServiceException",
+        "ConflictException",
+    ],
+)
+def test_cancel_job_surfaces_errors(exception_type, aws_session):
+    arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    exception_response = {
+        "Error": {
+            "Code": "SomeOtherException",
+            "Message": "unit-test-error",
+        }
+    }
+
+    aws_session.braket_client.cancel_job.side_effect = [
+        ClientError(exception_response, "unit-test"),
+    ]
+
+    with pytest.raises(ClientError):
+        aws_session.cancel_job(arn)
+    aws_session.braket_client.cancel_job.assert_called_with(jobArn=arn)
+    assert aws_session.braket_client.cancel_job.call_count == 1
+
+
 @pytest.mark.parametrize(
     "input,output",
     [
