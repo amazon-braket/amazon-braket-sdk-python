@@ -180,7 +180,6 @@ class AwsSession(object):
         """
         return self.braket_client.get_job(jobArn=arn)
 
-
     def cancel_job(self, arn: str) -> Dict[str, Any]:
         """
         Cancel the quantum job.

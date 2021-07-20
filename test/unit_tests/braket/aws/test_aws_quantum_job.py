@@ -457,8 +457,8 @@ def test_arn(quantum_job_arn, aws_session):
 
 
 @pytest.mark.xfail(raises=AttributeError)
-def test_no_id_setter(quantum_job):
-    quantum_job.id = 123
+def test_no_arn_setter(quantum_job):
+    quantum_job.arn = 123
 
 
 @patch.object(AwsQuantumJob, "_generate_default_job_name", return_value="default_job_name-000000")
@@ -561,6 +561,7 @@ def test_generate_default_job_name(image_uri):
         AwsQuantumJob._generate_default_job_name(image_uri)
         == f"{image_uri}-{datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000:.0f}"
     )
+
 
 def test_copy_checkpoints_from_job(
     aws_session,
