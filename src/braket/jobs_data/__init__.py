@@ -11,10 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.jobs.config import (  # noqa: F401
-    CheckpointConfig,
-    InstanceConfig,
-    OutputDataConfig,
-    StoppingCondition,
-    VpcConfig,
+# TODO: Move this file to the schemas repository
+
+from braket.jobs_data.persisted_job_data_v1 import (  # noqa: F401
+    PersistedJobData,
+    PersistedJobDataFormat,
 )

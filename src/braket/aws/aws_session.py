@@ -172,6 +172,19 @@ class AwsSession(object):
         """
         return self.braket_client.get_job(jobArn=arn)
 
+
+    def cancel_job(self, arn: str) -> Dict[str, Any]:
+        """
+        Cancel the quantum job.
+
+        Args:
+            arn (str): The ARN of the quantum job to cancel.
+
+        Returns:
+            Dict[str, Any]: The response from the Amazon Braket `CancelJob` operation.
+        """
+        return self.braket_client.cancel_job(jobArn=arn)
+
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
         Retrieve the S3 object body.
