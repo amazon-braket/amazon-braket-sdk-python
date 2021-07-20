@@ -28,7 +28,8 @@ from braket.jobs.config import (
     OutputDataConfig,
     PollingConfig,
     S3DataSource,
-    StoppingCondition, VpcConfig,
+    StoppingCondition,
+    VpcConfig,
 )
 
 

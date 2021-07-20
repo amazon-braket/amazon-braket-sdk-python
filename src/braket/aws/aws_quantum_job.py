@@ -281,12 +281,6 @@ class AwsQuantumJob:
         boto_session = boto3.Session(region_name=job_region)
         return AwsSession(boto_session=boto_session)
 
-    # TODO: remove this
-    @property
-    def id(self) -> str:
-        """str: The ARN of the quantum task."""
-        return self._arn
-
     @staticmethod
     def _generate_default_job_name(image_uri_type: str):
         return f"{image_uri_type}-{time.time() * 1000:.0f}"
