@@ -421,7 +421,6 @@ def create_job_args(
                 "instance_config": instance_config,
                 "stopping_condition": stopping_condition,
                 "output_data_config": output_data_config,
-                # "copy_checkpoints_from_job": None,
                 "checkpoint_config": checkpoint_config,
                 "vpc_config": vpc_config,
                 "tags": tags,
@@ -444,13 +443,12 @@ def create_job_args(
 
 
 def test_str(quantum_job):
-    expected = f"AwsQuantumJob('id/jobArn':'{quantum_job.id}')"
+    expected = f"AwsQuantumJob('arn':'{quantum_job.arn}')"
     assert str(quantum_job) == expected
 
 
-def test_id_getter(quantum_job_arn, aws_session):
+def test_arn(quantum_job_arn, aws_session):
     quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
-    assert quantum_job.id == quantum_job_arn
     assert quantum_job.arn == quantum_job_arn
 
 
@@ -556,6 +554,34 @@ def test_generate_default_job_name(image_uri):
         AwsQuantumJob._generate_default_job_name(image_uri)
         == f"{image_uri}-{datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000:.0f}"
     )
+
+def test_copy_checkpoints_from_job(
+    aws_session,
+    entry_point,
+    source_dir,
+    checkpoint_config,
+    job_name,
+    quantum_job_arn,
+    generate_get_job_response,
+):
+    other_job_arn = f"{quantum_job_arn}-other"
+    checkpoint_s3_uri = "s3://other-bucket/checkpoint/path"
+    aws_session.get_job.return_value = generate_get_job_response(
+        checkpointConfig={"s3Uri": checkpoint_s3_uri}
+    )
+    job = AwsQuantumJob.create(
+        aws_session=aws_session,
+        entry_point=entry_point,
+        source_dir=source_dir,
+        job_name=job_name,
+        checkpoint_config=checkpoint_config,
+        copy_checkpoints_from_job=other_job_arn,
+    )
+    assert job == AwsQuantumJob(quantum_job_arn, aws_session)
+    checkpoint_config = checkpoint_config or CheckpointConfig(
+        s3Uri=aws_session.construct_s3_uri(aws_session.default_bucket(), job_name, "checkpoints")
+    )
+    aws_session.copy_s3.assert_any_call(checkpoint_s3_uri, checkpoint_config.s3Uri)
 
 
 def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):

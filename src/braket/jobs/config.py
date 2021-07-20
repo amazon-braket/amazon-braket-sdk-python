@@ -48,6 +48,7 @@ class DataSource:
 class InputDataConfig:
     """Configuration specifying the location for the output of the job."""
 
+    # TODO: test multiple channels with the same name in integ test
     channelName: str = "input"
     dataSource: DataSource = DataSource()
     compressionType: str = "NONE"

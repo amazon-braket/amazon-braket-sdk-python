@@ -136,8 +136,7 @@ class AwsQuantumJob:
                 Default = `OutputDataConfig(s3Path=s3://{default_bucket_name}/jobs/{job_name}/
                 output, kmsKeyId=None)`.
 
-            TODO: implement copy_checkpoints_from_job
-            copy_checkpoints_from_job (str): str specifying the job name whose checkpoint you wish
+            copy_checkpoints_from_job (str): str specifying the job arn whose checkpoint you wish
                 to use in the current job. Specifying this value will copy over the checkpoint
                 data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current job's
                 checkpoint_config s3Uri, making it available at checkpoint_config.localPath during
@@ -189,6 +188,12 @@ class AwsQuantumJob:
                 job_name,
                 "checkpoints",
             )
+        # TODO: change this variable from name to arn
+        if copy_checkpoints_from_job:
+            checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
+                "checkpointConfig"
+            ]["s3Uri"]
+            aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri)
         tarred_source_dir = AwsQuantumJob._process_source_dir(
             source_dir,
             aws_session,
@@ -222,6 +227,7 @@ class AwsQuantumJob:
         job_arn = aws_session.create_job(**create_job_kwargs)
         job = AwsQuantumJob(job_arn, aws_session)
 
+        # TODO: replace with .logs() output and consider whether we want a polling config
         if wait_until_complete:
             polling_config = polling_config or PollingConfig()
             timeout_time = time.time() + polling_config.pollTimeoutSeconds
@@ -275,8 +281,7 @@ class AwsQuantumJob:
         boto_session = boto3.Session(region_name=job_region)
         return AwsSession(boto_session=boto_session)
 
-    # following AwsQuantumTask precedent for `id` over `arn`
-    # is that what we want?
+    # TODO: remove this
     @property
     def id(self) -> str:
         """str: The ARN of the quantum task."""
@@ -380,7 +385,7 @@ class AwsQuantumJob:
         """
 
     def __repr__(self) -> str:
-        return f"AwsQuantumJob('id/jobArn':'{self.arn}')"
+        return f"AwsQuantumJob('arn':'{self.arn}')"
 
     def __eq__(self, other) -> bool:
         if isinstance(other, AwsQuantumJob):
@@ -392,6 +397,7 @@ class AwsQuantumJob:
 
     @staticmethod
     def _process_source_dir(source_dir, aws_session, code_location):
+        # TODO: check with product about copy in s3 behavior
         tarred_source_dir = (
             f"{source_dir.split('/')[-1]}{'.tar.gz' if not source_dir.endswith('.tar.gz') else ''}"
         )

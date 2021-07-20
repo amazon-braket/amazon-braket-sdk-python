@@ -45,6 +45,14 @@ class AwsSession(object):
         self._update_user_agent()
         self._default_bucket = default_bucket
 
+    @property
+    def region(self):
+        return self.boto_session.region_name
+
+    @property
+    def account_id(self):
+        return self.boto_session.client("sts").get_caller_identity()["Account"]
+
     def _update_user_agent(self):
         """
         Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
@@ -146,7 +154,7 @@ class AwsSession(object):
         Returns:
             (str): The execution role ARN.
         """
-        iam = self.boto_session.client("iam", region_name=self.boto_session.region_name)
+        iam = self.boto_session.client("iam", region_name=self.region)
         # TODO: possibly wrap this call with a more specific error message
         # TODO: replace with Braket external role before launch
         role = iam.get_role(RoleName="AmazonBraketInternalSLR")
@@ -242,11 +250,9 @@ class AwsSession(object):
     def default_bucket(self):
         if self._default_bucket:
             return self._default_bucket
-        aws_account_id = self.boto_session.client("sts").get_caller_identity()["Account"]
-        region = self.boto_session.region_name
-        default_bucket = f"amazon-braket-{region}-{aws_account_id}"
+        default_bucket = f"amazon-braket-{self.region}-{self.account_id}"
 
-        self._create_s3_bucket_if_it_does_not_exist(bucket_name=default_bucket, region=region)
+        self._create_s3_bucket_if_it_does_not_exist(bucket_name=default_bucket, region=self.region)
 
         self._default_bucket = default_bucket
         return self._default_bucket
@@ -386,6 +392,7 @@ class AwsSession(object):
                 results.append(result)
         return results
 
+    # TODO: think about placement of these methods
     @staticmethod
     def parse_s3_uri(s3_uri: str) -> (str, str):
         """
@@ -396,6 +403,9 @@ class AwsSession(object):
 
         Returns:
             (str, str): Bucket and Key tuple.
+
+        Raises:
+            ValueError: TODO add stuff here
         """
         try:
             assert s3_uri.startswith("s3://")
@@ -407,6 +417,9 @@ class AwsSession(object):
 
     @staticmethod
     def construct_s3_uri(bucket, *dirs):
+        """
+        # TODO: doc string
+        """
         if not dirs:
             raise ValueError(f"Not a valid S3 location: s3://{bucket}")
         return f"s3://{bucket}/{'/'.join(dirs)}"
