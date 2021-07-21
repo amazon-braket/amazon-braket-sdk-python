@@ -86,8 +86,8 @@ class TwoQubitDecomposition:
         Args:
             U (np.ndarray): input 4x4 unitary matrix to decompose.
             validate_input (bool): if check input.
-            atol (np.dtype): absolute tolerance parameter.
-            rtol (np.dtype): relative tolerance parameter.
+            atol (float): absolute tolerance parameter.
+            rtol (float): relative tolerance parameter.
         """
 
         if validate_input:
@@ -208,8 +208,8 @@ def two_qubit_decompose(
 
     Args:
         U (np.ndarray): the unitary to decompose.
-        atol (np.dtype): absolute tolerance parameter.
-        rtol (np.dtype): relative tolerance parameter.
+        atol (float): absolute tolerance parameter.
+        rtol (float): relative tolerance parameter.
           
     """
 
