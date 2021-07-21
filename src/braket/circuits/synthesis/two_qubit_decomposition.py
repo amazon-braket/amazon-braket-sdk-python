@@ -72,7 +72,7 @@ class TwoQubitDecomposition:
         self.build(U)
         _move_to_weyl_chamber(self)
 
-    def build(self, U: np.ndarray, validate_input: bool = True):
+    def build(self, U: np.ndarray):
         """
         Cartan's KAK decomposition of a 4x4 unitary matrix U:
         U = (u1 ⊗ u2) · exp(i(a·XX + b·YY+c·ZZ))·(u3 ⊗ u4)
@@ -85,13 +85,11 @@ class TwoQubitDecomposition:
 
         Args:
             U (np.ndarray): input 4x4 unitary matrix to decompose.
-            validate_input (bool): if check input.
-            atol (np.dtype): absolute tolerance parameter.
-            rtol (np.dtype): relative tolerance parameter.
+            atol (float): absolute tolerance parameter.
+            rtol (float): relative tolerance parameter.
         """
 
-        if validate_input:
-            is_unitary(U, raise_exception=True)
+        is_unitary(U, raise_exception=True)
 
         if np.allclose(
             makhlin_invariants(U, atol=self.atol, rtol=self.rtol),
@@ -208,8 +206,8 @@ def two_qubit_decompose(
 
     Args:
         U (np.ndarray): the unitary to decompose.
-        atol (np.dtype): absolute tolerance parameter.
-        rtol (np.dtype): relative tolerance parameter.
+        atol (float): absolute tolerance parameter.
+        rtol (float): relative tolerance parameter.
           
     """
 
