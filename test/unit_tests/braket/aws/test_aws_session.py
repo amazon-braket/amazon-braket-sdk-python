@@ -660,7 +660,7 @@ def test_get_execution_role(aws_session):
 def test_upload_to_s3(aws_session):
     filename = "file.txt"
     s3_uri = "s3://bucket-123/key"
-    bucket, key = AwsSession.parse_s3_uri(s3_uri)
+    bucket, key = "bucket-123", "key"
     aws_session.upload_to_s3(filename, s3_uri)
     aws_session.boto_session.client.return_value.upload_file.assert_called_with(
         filename, bucket, key

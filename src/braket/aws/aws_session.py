@@ -45,13 +45,17 @@ class AwsSession(object):
         self._update_user_agent()
         self._default_bucket = default_bucket
 
+        self._iam = self.boto_session.client("iam", region_name=self.region)
+        self._s3 = self.boto_session.client("s3", region_name=self.region)
+        self._sts = self.boto_session.client("sts")
+
     @property
     def region(self):
         return self.boto_session.region_name
 
     @property
     def account_id(self):
-        return self.boto_session.client("sts").get_caller_identity()["Account"]
+        return self._sts.get_caller_identity()["Account"]
 
     def _update_user_agent(self):
         """
@@ -154,13 +158,11 @@ class AwsSession(object):
         Returns:
             (str): The execution role ARN.
         """
-        iam = self.boto_session.client("iam", region_name=self.region)
         # TODO: possibly wrap this call with a more specific error message
         # TODO: replace with Braket external role before launch
-        role = iam.get_role(RoleName="AmazonBraketInternalSLR")
+        role = self._iam.get_role(RoleName="AmazonBraketInternalSLR")
         return role["Role"]["Arn"]
 
-    # TODO: Implementation suggestions, uncomment when ready with tests.
     @backoff.on_exception(
         backoff.expo,
         ClientError,
@@ -213,22 +215,21 @@ class AwsSession(object):
 
         Args:
             filename (str): local file to be uploaded.
-            s3_uri (str): The S3 uri where the file will be uploaded.
+            s3_uri (str): The S3 URI where the file will be uploaded.
 
         Returns:
             None
         """
         bucket, key = self.parse_s3_uri(s3_uri)
-        s3 = self.boto_session.client("s3", config=self._config)
-        s3.upload_file(filename, bucket, key)
+        self._s3.upload_file(filename, bucket, key)
 
     def copy_s3(self, source_s3_uri: str, destination_s3_uri: str) -> None:
         """
         Copy source from another location in s3
 
         Args:
-            'source_s3_uri': S3 uri pointing to a tar.gz file containing the source code.
-            'destination_s3_uri': S3 uri where the code will be copied.
+            'source_s3_uri': S3 URI pointing to the object to be copied.
+            'destination_s3_uri': S3 URI where the object will be copied to.
         """
         source_bucket, source_key = self.parse_s3_uri(source_s3_uri)
         destination_bucket, destination_key = self.parse_s3_uri(destination_s3_uri)
@@ -236,8 +237,7 @@ class AwsSession(object):
         if (source_bucket, source_key) == (destination_bucket, destination_key):
             return
 
-        s3 = self.boto_session.client("s3")
-        s3.copy(
+        self._s3.copy(
             {
                 "Bucket": source_bucket,
                 "Key": source_key,
@@ -249,7 +249,7 @@ class AwsSession(object):
     def default_bucket(self):
         if self._default_bucket:
             return self._default_bucket
-        default_bucket = f"amazon-braket-{self.region}-{self.account_id}"
+        default_bucket = f"amazon-braket-{self.region}-{self.account_id}-0"
 
         self._create_s3_bucket_if_it_does_not_exist(bucket_name=default_bucket, region=self.region)
 
@@ -271,17 +271,16 @@ class AwsSession(object):
                 If the exception is due to the bucket already existing or
                 already being created, no exception is raised.
         """
-        s3_client = self.boto_session.client("s3", region_name=region)
         try:
             if region == "us-east-1":
                 # 'us-east-1' cannot be specified because it is the default region:
                 # https://github.com/boto/boto3/issues/125
-                s3_client.create_bucket(Bucket=bucket_name)
+                self._s3.create_bucket(Bucket=bucket_name)
             else:
-                s3_client.create_bucket(
+                self._s3.create_bucket(
                     Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
                 )
-            s3_client.put_public_access_block(
+            self._s3.put_public_access_block(
                 Bucket=bucket_name,
                 PublicAccessBlockConfiguration={
                     "BlockPublicAcls": True,
@@ -290,7 +289,8 @@ class AwsSession(object):
                     "RestrictPublicBuckets": True,
                 },
             )
-            s3_client.put_bucket_policy(
+            # TODO: make this prettier
+            self._s3.put_bucket_policy(
                 Bucket=bucket_name,
                 Policy=f"""{{
                     "Version": "2012-10-17",
@@ -299,14 +299,11 @@ class AwsSession(object):
                             "Effect": "Allow",
                             "Principal": {{
                                 "AWS": [
-                                    "arn:aws:iam::417169153231:role/AQxJobService-BraketSagemakerExecutionRole-1V6NSICGKR0U5",
-                                    "arn:aws:iam::704505939570:role/AQxJobService-BraketSagemakerExecutionRole-8F06EZUWOGIE",
-                                    "arn:aws:iam::125478631194:role/AQxJobService-BraketSagemakerExecutionRole-IBE5QFBDHC2D"
+                                    "{self.get_execution_role()}"
                                 ]
                             }},
                             "Action": "s3:*",
                             "Resource": [
-                                "arn:aws:s3:::{bucket_name}",
                                 "arn:aws:s3:::{bucket_name}/*"
                             ]
                         }}
@@ -395,16 +392,17 @@ class AwsSession(object):
     @staticmethod
     def parse_s3_uri(s3_uri: str) -> (str, str):
         """
-        Parse S3 uri to get bucket and key
+        Parse S3 URI to get bucket and key
 
         Args:
-            's3_uri': S3 uri.
+            s3_uri (str): S3 URI.
 
         Returns:
             (str, str): Bucket and Key tuple.
 
         Raises:
-            ValueError: TODO add stuff here
+            ValueError: Raises a ValueError if the provided string is not
+            a valid S3 URI.
         """
         try:
             assert s3_uri.startswith("s3://")
@@ -415,9 +413,18 @@ class AwsSession(object):
             raise ValueError(f"Not a valid S3 uri: {s3_uri}")
 
     @staticmethod
-    def construct_s3_uri(bucket, *dirs):
+    def construct_s3_uri(bucket: str, *dirs: str):
         """
-        # TODO: doc string
+        Args:
+            bucket (str): S3 URI.
+            *dirs (str): directories to be appended in the resulting S3 URI
+
+        Returns:
+            str: S3 URI
+
+        Raises:
+            ValueError: Raises a ValueError if the provided arguments are not
+            valid to generate an S3 URI
         """
         if not dirs:
             raise ValueError(f"Not a valid S3 location: s3://{bucket}")

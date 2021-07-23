@@ -18,6 +18,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
+from freezegun import freeze_time
 
 from braket.aws import AwsQuantumJob, AwsSession
 from braket.jobs.config import (
@@ -37,7 +38,6 @@ from braket.jobs.config import (
 def aws_session(quantum_job_arn, job_region):
     _aws_session = Mock()
     _aws_session.create_job.return_value = quantum_job_arn
-    _aws_session.braket_client.meta.region_name = job_region
     _aws_session.default_bucket.return_value = "default-bucket-name"
     _aws_session.get_execution_role.return_value = "default-role-arn"
     _aws_session.construct_s3_uri.side_effect = (
@@ -282,12 +282,14 @@ def s3_prefix(job_name):
     return f"{job_name}/non-default"
 
 
-@pytest.fixture(params=["local_source", "s3_source"])
+@pytest.fixture(params=["local_source", "s3_source", "working_directory"])
 def source_dir(request, bucket, s3_prefix):
+    if request.param == "working_directory":
+        return "."
     if request.param == "local_source":
         return "test-source-dir"
     elif request.param == "s3_source":
-        return AwsSession.construct_s3_uri(bucket, "test-source-prefix", "source")
+        return AwsSession.construct_s3_uri(bucket, "test-source-prefix", "source.tar.gz")
 
 
 @pytest.fixture
@@ -340,7 +342,6 @@ def instance_config():
 def stopping_condition():
     return StoppingCondition(
         maxRuntimeInSeconds=1200,
-        maximumTaskLimit=10,
     )
 
 
@@ -381,6 +382,11 @@ def vpc_config():
 @pytest.fixture
 def tags():
     return {"tagKey": "tagValue"}
+
+
+@pytest.fixture
+def job_time():
+    return "1997-08-13 12:12:12"
 
 
 @pytest.fixture(params=["fixtures", "defaults", "nones"])
@@ -461,33 +467,42 @@ def test_no_arn_setter(quantum_job):
     quantum_job.arn = 123
 
 
-@patch.object(AwsQuantumJob, "_generate_default_job_name", return_value="default_job_name-000000")
 def test_create_job(
-    mock_generate_default_job_name,
+    # mock_generate_default_job_name,
     aws_session,
     create_job_args,
     quantum_job_arn,
     generate_get_job_response,
+    job_time,
 ):
     aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
         generate_get_job_response(status="COMPLETED")
     ]
-    job = AwsQuantumJob.create(**create_job_args)
+    with freeze_time(job_time):
+        job = AwsQuantumJob.create(**create_job_args)
     assert job == AwsQuantumJob(quantum_job_arn, aws_session)
 
-    _assert_create_job_called_with(create_job_args)
+    _assert_create_job_called_with(create_job_args, job_time)
 
 
-@patch.object(AwsQuantumJob, "_generate_default_job_name", return_value="default_job_name-000000")
 def _assert_create_job_called_with(
     create_job_args,
-    mock_default_job_name,
+    job_time,
 ):
     aws_session = create_job_args["aws_session"]
     source_dir_name = create_job_args["source_dir"].split("/")[-1]
+    tarred_source_dir_name = (
+        f"{source_dir_name.split('/')[-1]}"
+        f"{'.tar.gz' if not source_dir_name.endswith('.tar.gz') else ''}"
+    )
+    if source_dir_name in [".", ".."]:
+        tarred_source_dir_name = "source.tar.gz"
     create_job_args = defaultdict(lambda: None, **create_job_args)
     image_uri = create_job_args["image_uri"] or "Base-Image-URI"
-    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
+    with freeze_time(job_time):
+        job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(
+            image_uri
+        )
     default_bucket = aws_session.default_bucket()
     code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
         default_bucket, job_name, "script"
@@ -515,7 +530,7 @@ def _assert_create_job_called_with(
         "algorithmSpecification": {
             "scriptModeConfig": {
                 "entryPoint": create_job_args["entry_point"],
-                "s3Uri": f"{code_location}/{source_dir_name}.tar.gz",
+                "s3Uri": f"{code_location}/{tarred_source_dir_name}",
                 "compressionType": "GZIP",
             }
         },
@@ -557,10 +572,11 @@ def teardown_function(test_create_job):
 
 
 def test_generate_default_job_name(image_uri):
-    assert (
-        AwsQuantumJob._generate_default_job_name(image_uri)
-        == f"{image_uri}-{datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000:.0f}"
-    )
+    with freeze_time("1997-08-13 12:12:12"):
+        assert (
+            AwsQuantumJob._generate_default_job_name(image_uri)
+            == f"{image_uri}-{datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000:.0f}"
+        )
 
 
 def test_copy_checkpoints_from_job(
@@ -613,3 +629,18 @@ def test_cancel_job_surfaces_exception(quantum_job, aws_session):
     }
     aws_session.cancel_job.side_effect = ClientError(exception_response, "cancel_job")
     quantum_job.cancel()
+
+
+def test_create_job_source_dir_not_found(
+    aws_session,
+    entry_point,
+):
+    fake_source_dir = "fake-source-dir"
+    with pytest.raises(ValueError) as e:
+        AwsQuantumJob.create(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            source_dir=fake_source_dir,
+        )
+
+    assert str(e.value) == f"Source directory not found: {fake_source_dir}"

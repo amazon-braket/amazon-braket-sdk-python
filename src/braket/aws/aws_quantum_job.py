@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os.path
 import tarfile
+import tempfile
 import time
 from dataclasses import asdict
 from typing import Any, Dict, List
@@ -155,6 +156,9 @@ class AwsQuantumJob:
 
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
+
+        Raises:
+            ValueError: Raises ValueError if the parameters are not valid.
         """
         job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
         role_arn = role_arn or aws_session.get_execution_role()
@@ -188,7 +192,6 @@ class AwsQuantumJob:
                 job_name,
                 "checkpoints",
             )
-        # TODO: change this variable from name to arn
         if copy_checkpoints_from_job:
             checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
                 "checkpointConfig"
@@ -286,7 +289,7 @@ class AwsQuantumJob:
         return f"{image_uri_type}-{time.time() * 1000:.0f}"
 
     @property
-    def arn(self) -> str:  # do we want arn or id or both?
+    def arn(self) -> str:
         """str: The ARN (Amazon Resource Name) of the quantum job."""
         return self._arn
 
@@ -392,14 +395,27 @@ class AwsQuantumJob:
     @staticmethod
     def _process_source_dir(source_dir, aws_session, code_location):
         # TODO: check with product about copy in s3 behavior
+        # TODO: validate entry_point
         tarred_source_dir = (
             f"{source_dir.split('/')[-1]}{'.tar.gz' if not source_dir.endswith('.tar.gz') else ''}"
         )
+        if source_dir in [".", ".."]:
+            tarred_source_dir = "source.tar.gz"
         if source_dir.startswith("s3://"):
+            if not source_dir.endswith(".tar.gz"):
+                raise ValueError(
+                    f"If source_dir is an S3 URI, it must point to a tar.gz file. "
+                    f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
+                )
             aws_session.copy_s3(source_dir, f"{code_location}/{tarred_source_dir}")
         else:
-            with tarfile.open(tarred_source_dir, "w:gz") as tar:
-                tar.add(source_dir, arcname=os.path.basename(source_dir))
-            aws_session.upload_to_s3(tarred_source_dir, f"{code_location}/{tarred_source_dir}")
-            os.remove(tarred_source_dir)
+            with tempfile.TemporaryDirectory() as tmpdir:
+                try:
+                    with tarfile.open(f"{tmpdir}/{tarred_source_dir}", "w:gz") as tar:
+                        tar.add(source_dir, arcname=os.path.basename(source_dir))
+                except FileNotFoundError:
+                    raise ValueError(f"Source directory not found: {source_dir}")
+                aws_session.upload_to_s3(
+                    f"{tmpdir}/{tarred_source_dir}", f"{code_location}/{tarred_source_dir}"
+                )
         return tarred_source_dir

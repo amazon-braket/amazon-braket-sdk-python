@@ -38,7 +38,9 @@ setup(
     extras_require={
         "test": [
             "black",
+            "botocore",
             "flake8",
+            "freezegun",
             "isort",
             "pre-commit",
             "pylint",
