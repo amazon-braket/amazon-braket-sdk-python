@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import datetime
+import tempfile
 from collections import defaultdict
 from dataclasses import asdict
 from unittest.mock import Mock, patch
@@ -468,7 +469,6 @@ def test_no_arn_setter(quantum_job):
 
 
 def test_create_job(
-    # mock_generate_default_job_name,
     aws_session,
     create_job_args,
     quantum_job_arn,
@@ -556,7 +556,10 @@ def setup_function(test_create_job):
     """
     import os
 
+    dirpath = tempfile.mkdtemp()
+
     try:
+        os.chdir(dirpath)
         os.mkdir("test-source-dir")
     except FileExistsError:
         pass
@@ -644,3 +647,21 @@ def test_create_job_source_dir_not_found(
         )
 
     assert str(e.value) == f"Source directory not found: {fake_source_dir}"
+
+
+def test_create_job_source_dir_s3_but_not_tar(
+    aws_session,
+    entry_point,
+):
+    fake_source_dir = "s3://bucket/non-tar-file"
+    with pytest.raises(ValueError) as e:
+        AwsQuantumJob.create(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            source_dir=fake_source_dir,
+        )
+
+    assert str(e.value) == (
+        f"If source_dir is an S3 URI, it must point to a tar.gz file. "
+        f"Not a valid S3 URI for parameter `source_dir`: {fake_source_dir}"
+    )

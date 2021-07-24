@@ -249,7 +249,7 @@ class AwsSession(object):
     def default_bucket(self):
         if self._default_bucket:
             return self._default_bucket
-        default_bucket = f"amazon-braket-{self.region}-{self.account_id}-0"
+        default_bucket = f"amazon-braket-{self.region}-{self.account_id}"
 
         self._create_s3_bucket_if_it_does_not_exist(bucket_name=default_bucket, region=self.region)
 

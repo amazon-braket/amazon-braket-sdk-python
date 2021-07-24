@@ -231,13 +231,13 @@ class AwsQuantumJob:
         job = AwsQuantumJob(job_arn, aws_session)
 
         # TODO: replace with .logs() output and consider whether we want a polling config
-        if wait_until_complete:
-            polling_config = polling_config or PollingConfig()
-            timeout_time = time.time() + polling_config.pollTimeoutSeconds
-            while time.time() < timeout_time:
-                if job.state() in AwsQuantumJob.TERMINAL_STATES:
-                    return job
-                time.sleep(polling_config.pollIntervalSeconds)
+        # if wait_until_complete:
+        #     polling_config = polling_config or PollingConfig()
+        #     timeout_time = time.time() + polling_config.pollTimeoutSeconds
+        #     while time.time() < timeout_time:
+        #         if job.state() in AwsQuantumJob.TERMINAL_STATES:
+        #             return job
+        #         time.sleep(polling_config.pollIntervalSeconds)
 
         return job
 
