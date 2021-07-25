@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import get_args
-
 import numpy as np
 import pytest
 
@@ -77,7 +75,7 @@ def test_instr_ir_noise(noise):
     assert instr_inp == instr_out
 
 
-@pytest.mark.parametrize("result", get_args(Results))
+@pytest.mark.parametrize("result", Results.__args__)
 def test_instr_ir_rt(result):
     assert hasattr(ResultType, result.__name__)
     rt_class = getattr(ResultType, result.__name__)

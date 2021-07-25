@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Union, get_args
+from typing import Dict, Union
 
 from braket.circuits.circuit_utils import IRInstruction
 from braket.circuits.gate import Gate
@@ -105,7 +105,7 @@ class Instruction:
         """
         type_name = type(ir_instruction).__name__
         op_class = None
-        for instr_opc in get_args(InstructionOperator):
+        for instr_opc in InstructionOperator.__args__:
             if hasattr(instr_opc, type_name):
                 op_class = getattr(instr_opc, type_name)
                 break
