@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.3 (2021-07-22)
+
+### Bug Fixes and Other Changes
+
+ * Add json schema validation for dwave device schemas.
+
 ## v1.7.2 (2021-07-14)
 
 ### Bug Fixes and Other Changes

@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from common_test_utils import MockS3
+from jsonschema import validate
 
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
@@ -414,53 +415,236 @@ def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
     "device_parameters,arn",
     [
         (
-            {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
+            {
+                "providerLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
+                }
+            },
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
-            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            {
+                "deviceLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "beta": 0.2,
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
+                }
+            },
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         pytest.param(
-            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            {
+                "deviceLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "beta": 0.2,
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
+                }
+            },
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
             # this doesn't fail... yet
             # marks=pytest.mark.xfail(reason='beta not a valid parameter for Advantage device'),
         ),
         pytest.param(
-            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION", "beta": 0.2}},
+            {
+                "deviceLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "beta": 0.2,
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
+                }
+            },
             "arn:aws:braket:::device/qpu/d-wave/fake_arn",
             marks=pytest.mark.xfail(reason="Bad ARN"),
         ),
         (
-            {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}},
+            {
+                "deviceLevelParameters": {
+                    "postprocessingType": "OPTIMIZATION",
+                    "annealingOffsets": [3.67, 6.123],
+                    "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                    "annealingDuration": 1,
+                    "autoScale": False,
+                    "beta": 0.2,
+                    "chains": [[0, 1, 5], [6]],
+                    "compensateFluxDrift": False,
+                    "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                    "initialState": [1, 3, 0, 1],
+                    "maxResults": 1,
+                    "programmingThermalizationDuration": 625,
+                    "readoutThermalizationDuration": 256,
+                    "reduceIntersampleCorrelation": False,
+                    "reinitializeState": True,
+                    "resultFormat": "RAW",
+                    "spinReversalTransformCount": 100,
+                }
+            },
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (
             DwaveDeviceParameters.parse_obj(
-                {"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+                {
+                    "providerLevelParameters": {
+                        "postprocessingType": "OPTIMIZATION",
+                        "annealingOffsets": [3.67, 6.123],
+                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                        "annealingDuration": 1,
+                        "autoScale": False,
+                        "beta": 0.2,
+                        "chains": [[0, 1, 5], [6]],
+                        "compensateFluxDrift": False,
+                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                        "initialState": [1, 3, 0, 1],
+                        "maxResults": 1,
+                        "programmingThermalizationDuration": 625,
+                        "readoutThermalizationDuration": 256,
+                        "reduceIntersampleCorrelation": False,
+                        "reinitializeState": True,
+                        "resultFormat": "RAW",
+                        "spinReversalTransformCount": 100,
+                    }
+                }
             ),
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
             DwaveDeviceParameters.parse_obj(
-                {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+                {
+                    "deviceLevelParameters": {
+                        "postprocessingType": "OPTIMIZATION",
+                        "annealingOffsets": [3.67, 6.123],
+                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                        "annealingDuration": 1,
+                        "autoScale": False,
+                        "beta": 0.2,
+                        "chains": [[0, 1, 5], [6]],
+                        "compensateFluxDrift": False,
+                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                        "initialState": [1, 3, 0, 1],
+                        "maxResults": 1,
+                        "programmingThermalizationDuration": 625,
+                        "readoutThermalizationDuration": 256,
+                        "reduceIntersampleCorrelation": False,
+                        "reinitializeState": True,
+                        "resultFormat": "RAW",
+                        "spinReversalTransformCount": 100,
+                    }
+                },
             ),
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
             DwaveAdvantageDeviceParameters.parse_obj(
-                {"deviceLevelParameters": {"autoScale": "False"}}
+                {
+                    "deviceLevelParameters": {
+                        "annealingOffsets": [3.67, 6.123],
+                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                        "annealingDuration": 1,
+                        "autoScale": False,
+                        "beta": 0.2,
+                        "chains": [[0, 1, 5], [6]],
+                        "compensateFluxDrift": False,
+                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                        "initialState": [1, 3, 0, 1],
+                        "maxResults": 1,
+                        "programmingThermalizationDuration": 625,
+                        "readoutThermalizationDuration": 256,
+                        "reduceIntersampleCorrelation": False,
+                        "reinitializeState": True,
+                        "resultFormat": "RAW",
+                        "spinReversalTransformCount": 100,
+                    }
+                },
             ),
             "arn:aws:braket:::device/qpu/d-wave/Advantage_system1",
         ),
         (
             Dwave2000QDeviceParameters.parse_obj(
-                {"deviceLevelParameters": {"postprocessingType": "OPTIMIZATION"}}
+                {
+                    "deviceLevelParameters": {
+                        "postprocessingType": "OPTIMIZATION",
+                        "annealingOffsets": [3.67, 6.123],
+                        "annealingSchedule": [[13.37, 10.08], [3.14, 1.618]],
+                        "annealingDuration": 1,
+                        "autoScale": False,
+                        "beta": 0.2,
+                        "chains": [[0, 1, 5], [6]],
+                        "compensateFluxDrift": False,
+                        "fluxBiases": [1.1, 2.2, 3.3, 4.4],
+                        "initialState": [1, 3, 0, 1],
+                        "maxResults": 1,
+                        "programmingThermalizationDuration": 625,
+                        "readoutThermalizationDuration": 256,
+                        "reduceIntersampleCorrelation": False,
+                        "reinitializeState": True,
+                        "resultFormat": "RAW",
+                        "spinReversalTransformCount": 100,
+                    }
+                }
             ),
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
         (
+            Dwave2000QDeviceParameters.parse_obj({"deviceLevelParameters": {}}),
+            "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
+        ),
+        pytest.param(
             {},
             "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6",
         ),
@@ -480,14 +664,17 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
     assert task == AwsQuantumTask(
         mocked_task_arn, aws_session, AnnealingQuantumTaskResult.from_string
     )
-
+    annealing_parameters = _create_annealing_device_params(device_parameters, device_arn=arn)
+    validate(
+        json.loads(annealing_parameters.json(exclude_none=True)), annealing_parameters.schema()
+    )
     _assert_create_quantum_task_called_with(
         aws_session,
         arn,
         problem,
         S3_TARGET,
         1000,
-        _create_annealing_device_params(device_parameters, device_arn=arn),
+        annealing_parameters,
     )
 
 
