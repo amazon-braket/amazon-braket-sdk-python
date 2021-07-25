@@ -19,10 +19,12 @@ import numpy as np
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
+from braket.circuits.circuit_utils import IRInstruction, _attr_dict, complex_matrices
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
+    MultiTargetNoise,
     Noise,
     PauliNoise,
     SingleProbabilisticNoise,
@@ -35,7 +37,6 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
-from braket.circuits.result_type import _attr_dict, complex_matrices
 
 """
 To add a new Noise implementation:
@@ -368,7 +369,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
 Noise.register_noise(Depolarizing)
 
 
-class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
+class TwoQubitDepolarizing(SingleProbabilisticNoise_1516, MultiTargetNoise):
     """Two-Qubit Depolarizing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
@@ -474,7 +475,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
 Noise.register_noise(TwoQubitDepolarizing)
 
 
-class TwoQubitDephasing(SingleProbabilisticNoise_34):
+class TwoQubitDephasing(SingleProbabilisticNoise_34, MultiTargetNoise):
     """Two-Qubit Dephasing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
@@ -786,7 +787,7 @@ class PhaseDamping(DampingNoise):
 Noise.register_noise(PhaseDamping)
 
 
-class Kraus(Noise):
+class Kraus(MultiTargetNoise):
     """User-defined noise channel that uses the provided matrices as Kraus operators
     This noise channel is shown as `NK` in circuit diagrams.
 
@@ -833,11 +834,11 @@ class Kraus(Noise):
         )
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> Kraus:
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> Kraus:
         """Create a Kraus object from an IR instruction.
 
         Args:
-            ir_instruction: The IR instruction to create the Kraus object from
+            ir_instruction (IRInstruction): The IR instruction to create the Kraus object from
 
         Returns:
             Kraus: The Kraus noise object created

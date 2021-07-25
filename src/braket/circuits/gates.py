@@ -20,7 +20,14 @@ import numpy as np
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import AngledGate
-from braket.circuits.gate import Gate
+from braket.circuits.circuit_utils import IRInstruction, _attr_dict, complex_matrices
+from braket.circuits.gate import (
+    ControlledGate,
+    ControlledMultiTargetGate,
+    Gate,
+    MultiControlledGate,
+    MultiTargetGate,
+)
 from braket.circuits.instruction import Instruction
 from braket.circuits.quantum_operator_helpers import (
     is_unitary,
@@ -28,7 +35,6 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
-from braket.circuits.result_type import _attr_dict, complex_matrices
 
 """
 To add a new gate:
@@ -628,7 +634,7 @@ Gate.register_gate(PhaseShift)
 # Two qubit gates #
 
 
-class CNot(Gate):
+class CNot(ControlledGate):
     """Controlled NOT gate."""
 
     def __init__(self):
@@ -673,7 +679,7 @@ class CNot(Gate):
 Gate.register_gate(CNot)
 
 
-class Swap(Gate):
+class Swap(MultiTargetGate):
     """Swap gate."""
 
     def __init__(self):
@@ -718,7 +724,7 @@ class Swap(Gate):
 Gate.register_gate(Swap)
 
 
-class ISwap(Gate):
+class ISwap(MultiTargetGate):
     """ISwap gate."""
 
     def __init__(self):
@@ -763,7 +769,7 @@ class ISwap(Gate):
 Gate.register_gate(ISwap)
 
 
-class PSwap(AngledGate):
+class PSwap(AngledGate, MultiTargetGate):
     """PSwap gate.
 
     Args:
@@ -816,7 +822,7 @@ class PSwap(AngledGate):
 Gate.register_gate(PSwap)
 
 
-class XY(AngledGate):
+class XY(AngledGate, MultiTargetGate):
     """XY gate.
 
     Reference: https://arxiv.org/abs/1912.04424v1
@@ -873,7 +879,7 @@ class XY(AngledGate):
 Gate.register_gate(XY)
 
 
-class CPhaseShift(AngledGate):
+class CPhaseShift(AngledGate, ControlledGate):
     """Controlled phase shift gate.
 
     Args:
@@ -917,7 +923,7 @@ class CPhaseShift(AngledGate):
 Gate.register_gate(CPhaseShift)
 
 
-class CPhaseShift00(AngledGate):
+class CPhaseShift00(AngledGate, ControlledGate):
     """Controlled phase shift gate for phasing the \\|00> state.
 
     Args:
@@ -961,7 +967,7 @@ class CPhaseShift00(AngledGate):
 Gate.register_gate(CPhaseShift00)
 
 
-class CPhaseShift01(AngledGate):
+class CPhaseShift01(AngledGate, ControlledGate):
     """Controlled phase shift gate for phasing the \\|01> state.
 
     Args:
@@ -1005,7 +1011,7 @@ class CPhaseShift01(AngledGate):
 Gate.register_gate(CPhaseShift01)
 
 
-class CPhaseShift10(AngledGate):
+class CPhaseShift10(AngledGate, ControlledGate):
     """Controlled phase shift gate for phasing the \\|10> state.
 
     Args:
@@ -1049,7 +1055,7 @@ class CPhaseShift10(AngledGate):
 Gate.register_gate(CPhaseShift10)
 
 
-class CY(Gate):
+class CY(ControlledGate):
     """Controlled Pauli-Y gate."""
 
     def __init__(self):
@@ -1094,7 +1100,7 @@ class CY(Gate):
 Gate.register_gate(CY)
 
 
-class CZ(Gate):
+class CZ(ControlledGate):
     """Controlled Pauli-Z gate."""
 
     def __init__(self):
@@ -1131,7 +1137,7 @@ class CZ(Gate):
 Gate.register_gate(CZ)
 
 
-class XX(AngledGate):
+class XX(AngledGate, MultiTargetGate):
     """Ising XX coupling gate.
 
     Reference: https://arxiv.org/abs/1707.06356
@@ -1189,7 +1195,7 @@ class XX(AngledGate):
 Gate.register_gate(XX)
 
 
-class YY(AngledGate):
+class YY(AngledGate, MultiTargetGate):
     """Ising YY coupling gate.
 
     Reference: https://arxiv.org/abs/1707.06356
@@ -1247,7 +1253,7 @@ class YY(AngledGate):
 Gate.register_gate(YY)
 
 
-class ZZ(AngledGate):
+class ZZ(AngledGate, MultiTargetGate):
     """Ising ZZ coupling gate.
 
     Reference: https://arxiv.org/abs/1707.06356
@@ -1306,7 +1312,7 @@ Gate.register_gate(ZZ)
 # Three qubit gates #
 
 
-class CCNot(Gate):
+class CCNot(MultiControlledGate):
     """CCNOT gate or Toffoli gate."""
 
     def __init__(self):
@@ -1356,7 +1362,7 @@ class CCNot(Gate):
 Gate.register_gate(CCNot)
 
 
-class CSwap(Gate):
+class CSwap(ControlledMultiTargetGate):
     """Controlled Swap gate."""
 
     def __init__(self):
@@ -1406,7 +1412,7 @@ class CSwap(Gate):
 Gate.register_gate(CSwap)
 
 
-class Unitary(Gate):
+class Unitary(MultiTargetGate):
     """Arbitrary unitary gate
 
     Args:
@@ -1440,11 +1446,12 @@ class Unitary(Gate):
         )
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> Unitary:
-        """Create a Unitary object from an IR instruction.
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> Unitary:
+        """Create a Unitary Gate object from an IR instruction.
 
         Args:
-            ir_instruction: The IR instruction to create the Unitary object from
+            ir_instruction (IRInstruction): The IR instruction to create
+                the Unitary Gate object from
 
         Returns:
             Unitary: The unitary gate object created

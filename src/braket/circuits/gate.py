@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Optional, Sequence
 
+from braket.circuits.circuit_utils import IRInstruction, _ir_instr_to_qubit_set
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
 
@@ -71,17 +72,110 @@ class Gate(QuantumOperator):
         setattr(cls, gate.__name__, gate)
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> Gate:
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> Gate:
         """
-        Create a Gate object from an IR instruction.
-        This implementation is for subclasses that do not need arguments.
+        Create a Gate object from an IR instruction for a quantum gate without an argument.
 
         Args:
-            ir_instruction: The IR instruction to create the Gate object from
+            ir_instruction (IRInstruction): The IR instruction to create the Gate object from
                 The Base (Gate) implementation does not use this argument.
-                It is included for subclasses that do, e.g., AngledGate.
 
         Returns:
             Gate: The gate object created
         """
         return cls()
+
+    @classmethod
+    def ir_instr_to_qubit_set(cls, ir_instruction: IRInstruction) -> QubitSet:
+        """
+        Create a QubitSet object from an IR instruction for a single-target-qubit quantum gate.
+
+        Args:
+            ir_instruction (IRInstruction): The IR instruction to create the QubitSet object from
+
+        Returns:
+            QubitSet: The qubit set object created
+        """
+        return _ir_instr_to_qubit_set(ir_instruction, ["target"])
+
+
+class MultiTargetGate(Gate):
+    """
+    Class `MultiTargetGate` represents a quantum gate that has multiple target qubits.
+    """
+
+    @classmethod
+    def ir_instr_to_qubit_set(cls, ir_instruction: IRInstruction) -> QubitSet:
+        """
+        Create a QubitSet object from an IR instruction for a multi-target-qubit quantum gate.
+
+        Args:
+            ir_instruction (IRInstruction): The IR instruction to create the QubitSet object from
+
+        Returns:
+            QubitSet: The qubit set object created
+        """
+        return _ir_instr_to_qubit_set(ir_instruction, ["targets"])
+
+
+class ControlledGate(Gate):
+    """
+    Class `ControlledGate` represents a quantum gate that has
+    a single control qubit and a single target qubit.
+    """
+
+    @classmethod
+    def ir_instr_to_qubit_set(cls, ir_instruction: IRInstruction) -> QubitSet:
+        """
+        Create a QubitSet object from an IR instruction
+        for a controlled single-target-qubit quantum gate.
+
+        Args:
+            ir_instruction (IRInstruction): The IR instruction to create the QubitSet object from
+
+        Returns:
+            QubitSet: The qubit set object created
+        """
+        return _ir_instr_to_qubit_set(ir_instruction, ["control", "target"])
+
+
+class ControlledMultiTargetGate(Gate):
+    """
+    Class `ControlledGate` represents a quantum gate that has
+    a single control qubit and multiple target qubits.
+    """
+
+    @classmethod
+    def ir_instr_to_qubit_set(cls, ir_instruction: IRInstruction) -> QubitSet:
+        """
+        Create a QubitSet object from an IR instruction
+        for a controlled multi-target-qubit quantum gates.
+
+        Args:
+            ir_instruction (IRInstruction): The IR instruction to create the QubitSet object from
+
+        Returns:
+            QubitSet: The qubit set object created
+        """
+        return _ir_instr_to_qubit_set(ir_instruction, ["control", "targets"])
+
+
+class MultiControlledGate(Gate):
+    """
+    Class `MultiControlledGate` represents a quantum gate with
+    multiple control qubits and a single target qubit.
+    """
+
+    @classmethod
+    def ir_instr_to_qubit_set(cls, ir_instruction: IRInstruction) -> QubitSet:
+        """
+        Create a QubitSet object from an IR instruction for quantum gates
+        with multiple control qubits and a single target qubit.
+
+        Args:
+            ir_instruction (IRInstruction): The IR instruction to create the QubitSet object from
+
+        Returns:
+            QubitSet: The qubit set object created
+        """
+        return _ir_instr_to_qubit_set(ir_instruction, ["controls", "target"])

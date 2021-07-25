@@ -15,8 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-import numpy as np
-
+import braket.ir.jaqcd as ir
 from braket.circuits.observable import Observable
 from braket.circuits.observables import observable_from_ir
 from braket.circuits.qubit import QubitInput
@@ -73,7 +72,7 @@ class ResultType:
         raise NotImplementedError("to_ir has not been implemented yet.")
 
     @classmethod
-    def from_ir(cls, ir_result) -> ResultType:
+    def from_ir(cls, ir_result: ir.Results) -> ResultType:
         """
         Create a ResultType object from an IR result by calling
         the same subclass method to implement.
@@ -224,7 +223,7 @@ class ObservableResultType(ResultType):
         return super().__hash__()
 
     @classmethod
-    def from_ir(cls, ir_result) -> ObservableResultType:
+    def from_ir(cls, ir_result: ir.Results) -> ObservableResultType:
         """
         Create a ObservableResultType object from an IR result.
         The arguments 'observable' and 'target' cover all subclasses.
@@ -237,34 +236,3 @@ class ObservableResultType(ResultType):
         """
         observable = observable_from_ir(getattr(ir_result, "observable"))
         return cls(observable, getattr(ir_result, "targets"))
-
-
-def complex_matrices(float_matrix: np.array):
-    """Convert a single matrix or a list of matrices from [real, imaginary] pairs into complex numbers.
-
-    Args:
-        float_matrix (np.array): Matrix or list of matrices of [real, imaginary] pairs
-
-    Returns:
-        Matrix or list of matrices of complex numbers
-    """
-    cm = np.array([])
-    # Assume float_matrix not empty
-    if type(float_matrix[0][0][0]) != list:
-        # Single matrix
-        cm = np.array([[complex(col[0], col[1]) for col in row] for row in float_matrix])
-    else:
-        # Return an array of matrices
-        mats = []
-        for mat in float_matrix:
-            mats.append(np.array([[complex(col[0], col[1]) for col in row] for row in mat]))
-        cm = mats
-    return cm
-
-
-def _attr_dict(obj, attr_names):
-    return {
-        attr_name: getattr(obj, attr_name)
-        for attr_name in attr_names
-        if attr_name in obj.__fields__
-    }

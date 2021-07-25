@@ -15,9 +15,9 @@ from __future__ import annotations
 
 from typing import Any, Optional, Sequence
 
+from braket.circuits.circuit_utils import IRInstruction, _attr_dict, _ir_instr_to_qubit_set
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
-from braket.circuits.result_type import _attr_dict
 
 
 class Noise(QuantumOperator):
@@ -65,19 +65,31 @@ class Noise(QuantumOperator):
         raise NotImplementedError("to_ir has not been implemented yet.")
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> Noise:
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> Noise:
         """
         Create a Noise object from an IR instruction.
-        The argument 'probability' covers most subclasses.
-        Subclasses with different arguments will implement its own.
+        The argument 'probability' covers the majority of noise subclasses.
 
         Args:
-            ir_instruction: The IR instruction to create the Noise object from
+            ir_instruction (IRInstruction): The IR instruction to create the Noise object from
 
         Returns:
             Noise: The noise object created
         """
         return cls(**_attr_dict(ir_instruction, ["probability"]))
+
+    @classmethod
+    def ir_instr_to_qubit_set(cls, ir_instruction: IRInstruction) -> QubitSet:
+        """
+        Create a QubitSet object from an IR instruction with a 'target' argument.
+
+        Args:
+            ir_instruction (IRInstruction): The IR instruction to create the QubitSet object from
+
+        Returns:
+            QubitSet: The qubit set object created
+        """
+        return _ir_instr_to_qubit_set(ir_instruction, ["target"])
 
     def to_matrix(self, *args, **kwargs) -> Any:
         """Returns a list of matrices defining the Kraus matrices of the noise channel.
@@ -103,6 +115,25 @@ class Noise(QuantumOperator):
             noise (Noise): Noise class to register.
         """
         setattr(cls, noise.__name__, noise)
+
+
+class MultiTargetNoise(Noise):
+    """
+    Class `MultiTargetNoise` represents a noise channel on N qubits
+    """
+
+    @classmethod
+    def ir_instr_to_qubit_set(cls, ir_instruction: IRInstruction) -> QubitSet:
+        """
+        Create a QubitSet object from an IR instruction with a 'targets' argument.
+
+        Args:
+            ir_instruction (IRInstruction): The IR instruction to create the QubitSet object from
+
+        Returns:
+            QubitSet: The qubit set object created
+        """
+        return _ir_instr_to_qubit_set(ir_instruction, ["targets"])
 
 
 class SingleProbabilisticNoise(Noise):
@@ -310,11 +341,11 @@ class PauliNoise(Noise):
 'probZ': {self.probZ}, 'qubit_count': {self.qubit_count})"
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> PauliNoise:
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> PauliNoise:
         """Create a PauliNoise object from an IR instruction.
 
         Args:
-            ir_instruction: The IR instruction to create the PauliNoise object from
+            ir_instruction (IRInstruction): The IR instruction to create the PauliNoise object from
 
         Returns:
             Noise: The Pauli noise object created
@@ -362,11 +393,12 @@ class DampingNoise(Noise):
         return f"{self.name}('gamma': {self.gamma}, 'qubit_count': {self.qubit_count})"
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> DampingNoise:
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> DampingNoise:
         """Create a DampingNoise object from an IR instruction.
 
         Args:
-            ir_instruction: The IR instruction to create the DampingNoise object from
+            ir_instruction (IRInstruction): The IR instruction to create
+                the DampingNoise object from
 
         Returns:
             Noise: The damping noise object created
@@ -422,13 +454,13 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 'qubit_count': {self.qubit_count})"
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> GeneralizedAmplitudeDampingNoise:
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> GeneralizedAmplitudeDampingNoise:
         """
         Create a GeneralizedAmplitudeDampingNoise object from an IR instruction.
         The arguments 'probability' and 'gamma' cover all subclasses.
 
         Args:
-            ir_instruction: The IR instruction to create the
+            ir_instruction (IRInstruction): The IR instruction to create the
                 GeneralizedAmplitudeDampingNoise object from
 
         Returns:

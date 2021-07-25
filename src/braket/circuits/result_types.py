@@ -45,7 +45,7 @@ class StateVector(ResultType):
         return ir.StateVector.construct()
 
     @classmethod
-    def from_ir(cls, ir_result) -> StateVector:
+    def from_ir(cls, ir_result: ir.StateVector) -> StateVector:
         """Create a StateVector object from an IR result.
 
         Args:
@@ -123,7 +123,7 @@ class DensityMatrix(ResultType):
             return ir.DensityMatrix.construct()
 
     @classmethod
-    def from_ir(cls, ir_result) -> DensityMatrix:
+    def from_ir(cls, ir_result: ir.DensityMatrix) -> DensityMatrix:
         """Create a DensityMatrix object from an IR result.
 
         Args:
@@ -211,7 +211,7 @@ class Amplitude(ResultType):
         return ir.Amplitude.construct(states=self.state)
 
     @classmethod
-    def from_ir(cls, ir_result) -> Amplitude:
+    def from_ir(cls, ir_result: ir.Amplitude) -> Amplitude:
         """Create an Amplitude object from an IR result.
 
         Args:
@@ -297,7 +297,7 @@ class Probability(ResultType):
             return ir.Probability.construct()
 
     @classmethod
-    def from_ir(cls, ir_result) -> Probability:
+    def from_ir(cls, ir_result: ir.Probability) -> Probability:
         """Create a Probability object from an IR result.
 
         Args:

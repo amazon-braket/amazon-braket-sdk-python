@@ -16,6 +16,7 @@ from __future__ import annotations
 import math
 from typing import Optional, Sequence
 
+from braket.circuits.circuit_utils import IRInstruction
 from braket.circuits.gate import Gate
 
 
@@ -64,11 +65,11 @@ class AngledGate(Gate):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
 
     @classmethod
-    def from_ir(cls, ir_instruction) -> AngledGate:
+    def ir_instr_to_op(cls, ir_instruction: IRInstruction) -> AngledGate:
         """Create an AngledGate object from an IR instruction.
 
         Args:
-            ir_instruction: The IR instruction to create the AngledGate object from
+            ir_instruction (IRInstruction): The IR instruction to create the AngledGate object from
 
         Returns:
             AngledGate: The angled gate object created
