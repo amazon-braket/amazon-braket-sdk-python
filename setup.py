@@ -40,7 +40,6 @@ setup(
             "black",
             "botocore",
             "flake8",
-            "freezegun",
             "isort",
             "pre-commit",
             "pylint",

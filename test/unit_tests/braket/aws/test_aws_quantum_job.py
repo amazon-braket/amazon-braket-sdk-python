@@ -13,13 +13,13 @@
 
 import datetime
 import tempfile
+import time
 from collections import defaultdict
 from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
-from freezegun import freeze_time
 
 from braket.aws import AwsQuantumJob, AwsSession
 from braket.jobs.config import (
@@ -468,18 +468,20 @@ def test_no_arn_setter(quantum_job):
     quantum_job.arn = 123
 
 
+@patch("time.time")
 def test_create_job(
+    mock_time,
     aws_session,
     create_job_args,
     quantum_job_arn,
     generate_get_job_response,
     job_time,
 ):
+    mock_time.return_value = datetime.datetime.now().timestamp()
     aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
         generate_get_job_response(status="COMPLETED")
     ]
-    with freeze_time(job_time):
-        job = AwsQuantumJob.create(**create_job_args)
+    job = AwsQuantumJob.create(**create_job_args)
     assert job == AwsQuantumJob(quantum_job_arn, aws_session)
 
     _assert_create_job_called_with(create_job_args, job_time)
@@ -492,10 +494,7 @@ def _assert_create_job_called_with(
     aws_session = create_job_args["aws_session"]
     create_job_args = defaultdict(lambda: None, **create_job_args)
     image_uri = create_job_args["image_uri"] or "Base-Image-URI"
-    with freeze_time(job_time):
-        job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(
-            image_uri
-        )
+    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
     code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
         default_bucket, job_name, "script"
@@ -567,12 +566,13 @@ def teardown_function(test_create_job):
     os.rmdir("test-source-dir")
 
 
-def test_generate_default_job_name(image_uri):
-    with freeze_time("1997-08-13 12:12:12"):
-        assert (
-            AwsQuantumJob._generate_default_job_name(image_uri)
-            == f"{image_uri}-{datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000:.0f}"
-        )
+@patch("time.time")
+def test_generate_default_job_name(mock_time, image_uri):
+    mock_time.return_value = datetime.datetime.now().timestamp()
+    assert (
+        AwsQuantumJob._generate_default_job_name(image_uri)
+        == f"{image_uri}-{time.time() * 1000:.0f}"
+    )
 
 
 def test_copy_checkpoints_from_job(
