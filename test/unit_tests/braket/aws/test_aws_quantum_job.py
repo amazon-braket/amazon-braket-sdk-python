@@ -490,13 +490,6 @@ def _assert_create_job_called_with(
     job_time,
 ):
     aws_session = create_job_args["aws_session"]
-    source_dir_name = create_job_args["source_dir"].split("/")[-1]
-    tarred_source_dir_name = (
-        f"{source_dir_name.split('/')[-1]}"
-        f"{'.tar.gz' if not source_dir_name.endswith('.tar.gz') else ''}"
-    )
-    if source_dir_name in [".", ".."]:
-        tarred_source_dir_name = "source.tar.gz"
     create_job_args = defaultdict(lambda: None, **create_job_args)
     image_uri = create_job_args["image_uri"] or "Base-Image-URI"
     with freeze_time(job_time):
@@ -530,7 +523,7 @@ def _assert_create_job_called_with(
         "algorithmSpecification": {
             "scriptModeConfig": {
                 "entryPoint": create_job_args["entry_point"],
-                "s3Uri": f"{code_location}/{tarred_source_dir_name}",
+                "s3Uri": f"{code_location}/source.tar.gz",
                 "compressionType": "GZIP",
             }
         },

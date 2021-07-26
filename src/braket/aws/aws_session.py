@@ -45,9 +45,9 @@ class AwsSession(object):
         self._update_user_agent()
         self._default_bucket = default_bucket
 
-        self._iam = self.boto_session.client("iam", region_name=self.region)
-        self._s3 = self.boto_session.client("s3", region_name=self.region)
-        self._sts = self.boto_session.client("sts")
+        self._iam = None
+        self._s3 = None
+        self._sts = None
 
     @property
     def region(self):
@@ -55,7 +55,25 @@ class AwsSession(object):
 
     @property
     def account_id(self):
-        return self._sts.get_caller_identity()["Account"]
+        return self.sts.get_caller_identity()["Account"]
+
+    @property
+    def iam(self):
+        if not self._iam:
+            self._iam = self.boto_session.client("iam", region_name=self.region)
+        return self._iam
+
+    @property
+    def s3(self):
+        if not self._s3:
+            self._s3 = self.boto_session.client("s3", region_name=self.region)
+        return self._s3
+
+    @property
+    def sts(self):
+        if not self._sts:
+            self._sts = self.boto_session.client("sts", region_name=self.region)
+        return self._sts
 
     def _update_user_agent(self):
         """
@@ -160,7 +178,7 @@ class AwsSession(object):
         """
         # TODO: possibly wrap this call with a more specific error message
         # TODO: replace with Braket external role before launch
-        role = self._iam.get_role(RoleName="AmazonBraketInternalSLR")
+        role = self.iam.get_role(RoleName="AmazonBraketInternalSLR")
         return role["Role"]["Arn"]
 
     @backoff.on_exception(
@@ -221,15 +239,16 @@ class AwsSession(object):
             None
         """
         bucket, key = self.parse_s3_uri(s3_uri)
-        self._s3.upload_file(filename, bucket, key)
+        self.s3.upload_file(filename, bucket, key)
 
     def copy_s3(self, source_s3_uri: str, destination_s3_uri: str) -> None:
         """
-        Copy source from another location in s3
+        Copy object from another location in s3. Does nothing if source and
+        destination URIs are the same.
 
         Args:
-            'source_s3_uri': S3 URI pointing to the object to be copied.
-            'destination_s3_uri': S3 URI where the object will be copied to.
+            source_s3_uri (str): S3 URI pointing to the object to be copied.
+            destination_s3_uri (str): S3 URI where the object will be copied to.
         """
         source_bucket, source_key = self.parse_s3_uri(source_s3_uri)
         destination_bucket, destination_key = self.parse_s3_uri(destination_s3_uri)
@@ -237,7 +256,7 @@ class AwsSession(object):
         if (source_bucket, source_key) == (destination_bucket, destination_key):
             return
 
-        self._s3.copy(
+        self.s3.copy(
             {
                 "Bucket": source_bucket,
                 "Key": source_key,
@@ -275,12 +294,12 @@ class AwsSession(object):
             if region == "us-east-1":
                 # 'us-east-1' cannot be specified because it is the default region:
                 # https://github.com/boto/boto3/issues/125
-                self._s3.create_bucket(Bucket=bucket_name)
+                self.s3.create_bucket(Bucket=bucket_name)
             else:
-                self._s3.create_bucket(
+                self.s3.create_bucket(
                     Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
                 )
-            self._s3.put_public_access_block(
+            self.s3.put_public_access_block(
                 Bucket=bucket_name,
                 PublicAccessBlockConfiguration={
                     "BlockPublicAcls": True,
@@ -290,7 +309,7 @@ class AwsSession(object):
                 },
             )
             # TODO: make this prettier
-            self._s3.put_bucket_policy(
+            self.s3.put_bucket_policy(
                 Bucket=bucket_name,
                 Policy=f"""{{
                     "Version": "2012-10-17",

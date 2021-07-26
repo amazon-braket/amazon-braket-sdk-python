@@ -45,6 +45,8 @@ def aws_session(boto_session, account_id, role_arn):
     }
     _aws_session._iam = Mock()
     _aws_session._iam.get_role.return_value = {"Role": {"Arn": role_arn}}
+
+    _aws_session._s3 = Mock()
     return _aws_session
 
 
@@ -121,6 +123,30 @@ def test_config(boto_session):
     config = Mock()
     AwsSession(boto_session=boto_session, config=config)
     boto_session.client.assert_any_call("braket", config=config)
+
+
+def test_iam(aws_session):
+    assert aws_session.iam
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._iam = None
+    assert aws_session.iam
+    aws_session.boto_session.client.assert_called_with("iam", region_name="us-west-2")
+
+
+def test_s3(aws_session):
+    assert aws_session.s3
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._s3 = None
+    assert aws_session.s3
+    aws_session.boto_session.client.assert_called_with("s3", region_name="us-west-2")
+
+
+def test_sts(aws_session):
+    assert aws_session.sts
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._sts = None
+    assert aws_session.sts
+    aws_session.boto_session.client.assert_called_with("sts", region_name="us-west-2")
 
 
 @patch("os.path.exists")
@@ -675,9 +701,7 @@ def test_upload_to_s3(aws_session):
     s3_uri = "s3://bucket-123/key"
     bucket, key = "bucket-123", "key"
     aws_session.upload_to_s3(filename, s3_uri)
-    aws_session.boto_session.client.return_value.upload_file.assert_called_with(
-        filename, bucket, key
-    )
+    aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
 
 
 def test_copy_s3(aws_session):
@@ -686,7 +710,7 @@ def test_copy_s3(aws_session):
     source_bucket, source_key = AwsSession.parse_s3_uri(source_s3_uri)
     dest_bucket, dest_key = AwsSession.parse_s3_uri(dest_s3_uri)
     aws_session.copy_s3(source_s3_uri, dest_s3_uri)
-    aws_session.boto_session.client.return_value.copy.assert_called_with(
+    aws_session._s3.copy.assert_called_with(
         {
             "Bucket": source_bucket,
             "Key": source_key,
@@ -722,9 +746,8 @@ def test_default_bucket_given(aws_session):
         "us-east-1",
     ),
 )
-def test_create_s3_bucket_if_it_does_not_exist(aws_session, region, account_id):
+def test_create_s3_bucket_if_it_does_not_exist(aws_session, region, account_id, role_arn):
     bucket = f"amazon-braket-{region}-{account_id}"
-    aws_session._s3 = Mock()
     aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)
     kwargs = {
         "Bucket": bucket,
@@ -786,5 +809,5 @@ def test_create_s3_bucket_if_it_does_not_exist(aws_session, region, account_id):
 def test_create_s3_bucket_if_it_does_not_exist_error(aws_session, error, account_id):
     region = "test-region-0"
     bucket = f"amazon-braket-{region}-{account_id}"
-    aws_session.boto_session.client.return_value.create_bucket.side_effect = error
+    aws_session._s3.create_bucket.side_effect = error
     aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)

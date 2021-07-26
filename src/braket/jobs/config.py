@@ -67,6 +67,7 @@ class StoppingCondition:
     """Conditions denoting when the job should be forcefully stopped."""
 
     maxRuntimeInSeconds: int = 100_000
+    # TODO: remove this when change is propagated
     maximumTaskLimit: int = 5 * 24 * 60 * 60
 
 

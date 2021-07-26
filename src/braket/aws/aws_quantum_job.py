@@ -197,7 +197,7 @@ class AwsQuantumJob:
                 "checkpointConfig"
             ]["s3Uri"]
             aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri)
-        tarred_source_dir = AwsQuantumJob._process_source_dir(
+        AwsQuantumJob._process_source_dir(
             source_dir,
             aws_session,
             code_location,
@@ -209,7 +209,7 @@ class AwsQuantumJob:
             "algorithmSpecification": {
                 "scriptModeConfig": {
                     "entryPoint": entry_point,
-                    "s3Uri": f"{code_location}/{tarred_source_dir}",
+                    "s3Uri": f"{code_location}/source.tar.gz",
                     "compressionType": "GZIP",
                 }
             },
@@ -396,26 +396,20 @@ class AwsQuantumJob:
     def _process_source_dir(source_dir, aws_session, code_location):
         # TODO: check with product about copy in s3 behavior
         # TODO: validate entry_point
-        tarred_source_dir = (
-            f"{source_dir.split('/')[-1]}{'.tar.gz' if not source_dir.endswith('.tar.gz') else ''}"
-        )
-        if source_dir in [".", ".."]:
-            tarred_source_dir = "source.tar.gz"
         if source_dir.startswith("s3://"):
             if not source_dir.endswith(".tar.gz"):
                 raise ValueError(
                     f"If source_dir is an S3 URI, it must point to a tar.gz file. "
                     f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
                 )
-            aws_session.copy_s3(source_dir, f"{code_location}/{tarred_source_dir}")
+            aws_session.copy_s3(source_dir, f"{code_location}/source.tar.gz")
         else:
             with tempfile.TemporaryDirectory() as tmpdir:
                 try:
-                    with tarfile.open(f"{tmpdir}/{tarred_source_dir}", "w:gz") as tar:
+                    with tarfile.open(f"{tmpdir}/source.tar.gz", "w:gz") as tar:
                         tar.add(source_dir, arcname=os.path.basename(source_dir))
                 except FileNotFoundError:
                     raise ValueError(f"Source directory not found: {source_dir}")
                 aws_session.upload_to_s3(
-                    f"{tmpdir}/{tarred_source_dir}", f"{code_location}/{tarred_source_dir}"
+                    f"{tmpdir}/source.tar.gz", f"{code_location}/source.tar.gz"
                 )
-        return tarred_source_dir
