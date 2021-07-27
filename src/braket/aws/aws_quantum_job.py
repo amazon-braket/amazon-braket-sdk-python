@@ -121,7 +121,8 @@ class AwsQuantumJob:
             metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
                 defines the metric(s) used to evaluate the training jobs. Default = `None`.
 
-            input_data_config (Union[Any]): Information about the training data. Default = `None`.
+            input_data_config (List[InputDataConfig]): Information about the training data.
+                Default = `None`.
 
             instance_config (InstanceConfig): Configuration of the instances to be used for
                 executing the job. Default = `InstanceConfig(instanceType='ml.m5.large',
@@ -196,7 +197,7 @@ class AwsQuantumJob:
             checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
                 "checkpointConfig"
             ]["s3Uri"]
-            aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri)
+            aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri, recursive=True)
         AwsQuantumJob._process_source_dir(
             source_dir,
             aws_session,

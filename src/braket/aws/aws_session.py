@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import os.path
+import subprocess
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
@@ -55,22 +56,22 @@ class AwsSession(object):
 
     @property
     def account_id(self):
-        return self.sts.get_caller_identity()["Account"]
+        return self.sts_client.get_caller_identity()["Account"]
 
     @property
-    def iam(self):
+    def iam_client(self):
         if not self._iam:
             self._iam = self.boto_session.client("iam", region_name=self.region)
         return self._iam
 
     @property
-    def s3(self):
+    def s3_client(self):
         if not self._s3:
             self._s3 = self.boto_session.client("s3", region_name=self.region)
         return self._s3
 
     @property
-    def sts(self):
+    def sts_client(self):
         if not self._sts:
             self._sts = self.boto_session.client("sts", region_name=self.region)
         return self._sts
@@ -178,7 +179,7 @@ class AwsSession(object):
         """
         # TODO: possibly wrap this call with a more specific error message
         # TODO: replace with Braket external role before launch
-        role = self.iam.get_role(RoleName="AmazonBraketInternalSLR")
+        role = self.iam_client.get_role(RoleName="AmazonBraketInternalSLR")
         return role["Role"]["Arn"]
 
     @backoff.on_exception(
@@ -239,9 +240,9 @@ class AwsSession(object):
             None
         """
         bucket, key = self.parse_s3_uri(s3_uri)
-        self.s3.upload_file(filename, bucket, key)
+        self.s3_client.upload_file(filename, bucket, key)
 
-    def copy_s3(self, source_s3_uri: str, destination_s3_uri: str) -> None:
+    def copy_s3(self, source_s3_uri: str, destination_s3_uri: str, recursive=False) -> None:
         """
         Copy object from another location in s3. Does nothing if source and
         destination URIs are the same.
@@ -250,13 +251,20 @@ class AwsSession(object):
             source_s3_uri (str): S3 URI pointing to the object to be copied.
             destination_s3_uri (str): S3 URI where the object will be copied to.
         """
+        if source_s3_uri == destination_s3_uri:
+            return
+
+        if recursive:
+            cmd = f"aws s3 cp '{source_s3_uri}' '{destination_s3_uri}' --recursive"
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+            p.communicate()
+            return
+
+        # TODO: this isn't strictly necessary, as the above would work for individual objects too
         source_bucket, source_key = self.parse_s3_uri(source_s3_uri)
         destination_bucket, destination_key = self.parse_s3_uri(destination_s3_uri)
 
-        if (source_bucket, source_key) == (destination_bucket, destination_key):
-            return
-
-        self.s3.copy(
+        self.s3_client.copy(
             {
                 "Bucket": source_bucket,
                 "Key": source_key,
@@ -294,12 +302,12 @@ class AwsSession(object):
             if region == "us-east-1":
                 # 'us-east-1' cannot be specified because it is the default region:
                 # https://github.com/boto/boto3/issues/125
-                self.s3.create_bucket(Bucket=bucket_name)
+                self.s3_client.create_bucket(Bucket=bucket_name)
             else:
-                self.s3.create_bucket(
+                self.s3_client.create_bucket(
                     Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
                 )
-            self.s3.put_public_access_block(
+            self.s3_client.put_public_access_block(
                 Bucket=bucket_name,
                 PublicAccessBlockConfiguration={
                     "BlockPublicAcls": True,
@@ -309,7 +317,7 @@ class AwsSession(object):
                 },
             )
             # TODO: make this prettier
-            self.s3.put_bucket_policy(
+            self.s3_client.put_bucket_policy(
                 Bucket=bucket_name,
                 Policy=f"""{{
                     "Version": "2012-10-17",

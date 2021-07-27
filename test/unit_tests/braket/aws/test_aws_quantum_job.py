@@ -601,7 +601,7 @@ def test_copy_checkpoints_from_job(
     checkpoint_config = checkpoint_config or CheckpointConfig(
         s3Uri=aws_session.construct_s3_uri(aws_session.default_bucket(), job_name, "checkpoints")
     )
-    aws_session.copy_s3.assert_any_call(checkpoint_s3_uri, checkpoint_config.s3Uri)
+    aws_session.copy_s3.assert_any_call(checkpoint_s3_uri, checkpoint_config.s3Uri, recursive=True)
 
 
 def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):

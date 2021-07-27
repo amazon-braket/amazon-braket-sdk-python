@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
+import subprocess
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -126,26 +127,26 @@ def test_config(boto_session):
 
 
 def test_iam(aws_session):
-    assert aws_session.iam
+    assert aws_session.iam_client
     aws_session.boto_session.client.assert_not_called()
     aws_session._iam = None
-    assert aws_session.iam
+    assert aws_session.iam_client
     aws_session.boto_session.client.assert_called_with("iam", region_name="us-west-2")
 
 
 def test_s3(aws_session):
-    assert aws_session.s3
+    assert aws_session.s3_client
     aws_session.boto_session.client.assert_not_called()
     aws_session._s3 = None
-    assert aws_session.s3
+    assert aws_session.s3_client
     aws_session.boto_session.client.assert_called_with("s3", region_name="us-west-2")
 
 
 def test_sts(aws_session):
-    assert aws_session.sts
+    assert aws_session.sts_client
     aws_session.boto_session.client.assert_not_called()
     aws_session._sts = None
-    assert aws_session.sts
+    assert aws_session.sts_client
     aws_session.boto_session.client.assert_called_with("sts", region_name="us-west-2")
 
 
@@ -280,7 +281,7 @@ def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_f
 
     assert aws_session.get_quantum_task(arn) == return_value
     aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
-    aws_session.braket_client.get_quantum_task.call_count == 3
+    assert aws_session.braket_client.get_quantum_task.call_count == 3
 
 
 def test_get_quantum_task_fail_after_retries(
@@ -294,7 +295,7 @@ def test_get_quantum_task_fail_after_retries(
 
     with pytest.raises(ClientError):
         aws_session.get_quantum_task("some-arn")
-    aws_session.braket_client.get_quantum_task.call_count == 3
+    assert aws_session.braket_client.get_quantum_task.call_count == 3
 
 
 def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
@@ -311,7 +312,7 @@ def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
 
     with pytest.raises(ClientError):
         aws_session.get_quantum_task("some-arn")
-    aws_session.braket_client.get_quantum_task.call_count == 1
+    assert aws_session.braket_client.get_quantum_task.call_count == 1
 
 
 def test_get_job(aws_session, get_job_response):
@@ -717,6 +718,18 @@ def test_copy_s3(aws_session):
         },
         dest_bucket,
         dest_key,
+    )
+
+
+@patch("subprocess.Popen")
+def test_copy_s3_recursive(mock_popen, aws_session):
+    source_s3_uri = "s3://here/now"
+    dest_s3_uri = "s3://there/then"
+    aws_session.copy_s3(source_s3_uri, dest_s3_uri, recursive=True)
+    mock_popen.assert_called_with(
+        f"aws s3 cp '{source_s3_uri}' '{dest_s3_uri}' --recursive",
+        shell=True,
+        stdout=subprocess.PIPE,
     )
 
 
