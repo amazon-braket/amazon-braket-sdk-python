@@ -36,8 +36,28 @@ def boto_session():
 
 
 @pytest.fixture
-def aws_session(boto_session):
-    return AwsSession(boto_session=boto_session, braket_client=Mock())
+def aws_session(boto_session, account_id, role_arn):
+    _aws_session = AwsSession(boto_session=boto_session, braket_client=Mock())
+
+    _aws_session._sts = Mock()
+    _aws_session._sts.get_caller_identity.return_value = {
+        "Account": account_id,
+    }
+    _aws_session._iam = Mock()
+    _aws_session._iam.get_role.return_value = {"Role": {"Arn": role_arn}}
+
+    _aws_session._s3 = Mock()
+    return _aws_session
+
+
+@pytest.fixture
+def account_id():
+    return "000000000"
+
+
+@pytest.fixture
+def role_arn():
+    return "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
 
 
 @pytest.fixture
@@ -88,7 +108,7 @@ def throttling_response():
 
 def test_initializes_boto_client_if_required(boto_session):
     AwsSession(boto_session=boto_session)
-    boto_session.client.assert_called_with("braket", config=None)
+    boto_session.client.assert_any_call("braket", config=None)
 
 
 def test_uses_supplied_braket_client():
@@ -102,7 +122,31 @@ def test_uses_supplied_braket_client():
 def test_config(boto_session):
     config = Mock()
     AwsSession(boto_session=boto_session, config=config)
-    boto_session.client.assert_called_with("braket", config=config)
+    boto_session.client.assert_any_call("braket", config=config)
+
+
+def test_iam(aws_session):
+    assert aws_session.iam_client
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._iam = None
+    assert aws_session.iam_client
+    aws_session.boto_session.client.assert_called_with("iam", region_name="us-west-2")
+
+
+def test_s3(aws_session):
+    assert aws_session.s3_client
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._s3 = None
+    assert aws_session.s3_client
+    aws_session.boto_session.client.assert_called_with("s3", region_name="us-west-2")
+
+
+def test_sts(aws_session):
+    assert aws_session.sts_client
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._sts = None
+    assert aws_session.sts_client
+    aws_session.boto_session.client.assert_called_with("sts", region_name="us-west-2")
 
 
 @patch("os.path.exists")
@@ -236,7 +280,7 @@ def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_f
 
     assert aws_session.get_quantum_task(arn) == return_value
     aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
-    aws_session.braket_client.get_quantum_task.call_count == 3
+    assert aws_session.braket_client.get_quantum_task.call_count == 3
 
 
 def test_get_quantum_task_fail_after_retries(
@@ -250,7 +294,7 @@ def test_get_quantum_task_fail_after_retries(
 
     with pytest.raises(ClientError):
         aws_session.get_quantum_task("some-arn")
-    aws_session.braket_client.get_quantum_task.call_count == 3
+    assert aws_session.braket_client.get_quantum_task.call_count == 3
 
 
 def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
@@ -267,7 +311,7 @@ def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
 
     with pytest.raises(ClientError):
         aws_session.get_quantum_task("some-arn")
-    aws_session.braket_client.get_quantum_task.call_count == 1
+    assert aws_session.braket_client.get_quantum_task.call_count == 1
 
 
 def test_get_job(aws_session, get_job_response):
@@ -564,3 +608,206 @@ def test_search_devices_arns(aws_session):
         ],
         PaginationConfig={"MaxItems": 100},
     )
+
+
+def test_create_job(aws_session):
+    arn = "foo:bar:arn"
+    aws_session.braket_client.create_job.return_value = {"jobArn": arn}
+
+    kwargs = {
+        "jobName": "job-name",
+        "roleArn": "role-arn",
+        "algorithmSpecification": {
+            "scriptModeConfig": {
+                "entryPoint": "entry-point",
+                "s3Uri": "s3-uri",
+                "compressionType": "GZIP",
+            }
+        },
+    }
+    assert aws_session.create_job(**kwargs) == arn
+    aws_session.braket_client.create_job.assert_called_with(**kwargs)
+
+
+@pytest.mark.parametrize(
+    "uri, bucket, key",
+    [
+        (
+            "s3://bucket-name-123/key/with/multiple/dirs",
+            "bucket-name-123",
+            "key/with/multiple/dirs",
+        ),
+        (
+            "s3://bucket-name-123/key-with_one.dirs",
+            "bucket-name-123",
+            "key-with_one.dirs",
+        ),
+        pytest.param(
+            "http://bucket-name-123/key/with/multiple/dirs",
+            "bucket-name-123",
+            "key/with/multiple/dirs",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+        pytest.param(
+            "bucket-name-123/key/with/multiple/dirs",
+            "bucket-name-123",
+            "key/with/multiple/dirs",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+        pytest.param(
+            "s3://bucket-name-123/",
+            "bucket-name-123",
+            "",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+        pytest.param(
+            "s3://bucket-name-123",
+            "bucket-name-123",
+            "",
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+    ],
+)
+def test_parse_s3_uri(uri, bucket, key):
+    parsed = AwsSession.parse_s3_uri(uri)
+    assert bucket, key == parsed
+
+
+@pytest.mark.parametrize(
+    "bucket, dirs",
+    [
+        ("bucket", ("d1", "d2", "d3")),
+        ("bucket-123-braket", ("dir",)),
+        pytest.param(
+            "braket",
+            (),
+            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+        ),
+    ],
+)
+def test_construct_s3_uri(bucket, dirs):
+    parsed_bucket, parsed_key = AwsSession.parse_s3_uri(AwsSession.construct_s3_uri(bucket, *dirs))
+    assert parsed_bucket == bucket
+    assert parsed_key == "/".join(dirs)
+
+
+def test_get_execution_role(aws_session):
+    role_arn = "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
+    assert aws_session.get_execution_role() == role_arn
+
+
+def test_upload_to_s3(aws_session):
+    filename = "file.txt"
+    s3_uri = "s3://bucket-123/key"
+    bucket, key = "bucket-123", "key"
+    aws_session.upload_to_s3(filename, s3_uri)
+    aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
+
+
+def test_copy_s3(aws_session):
+    source_s3_uri = "s3://here/now"
+    dest_s3_uri = "s3://there/then"
+    source_bucket, source_key = AwsSession.parse_s3_uri(source_s3_uri)
+    dest_bucket, dest_key = AwsSession.parse_s3_uri(dest_s3_uri)
+    aws_session.copy_s3(source_s3_uri, dest_s3_uri)
+    aws_session._s3.copy.assert_called_with(
+        {
+            "Bucket": source_bucket,
+            "Key": source_key,
+        },
+        dest_bucket,
+        dest_key,
+    )
+
+
+def test_copy_identical_s3(aws_session):
+    s3_uri = "s3://bucket/key"
+    aws_session.copy_s3(s3_uri, s3_uri)
+    aws_session.boto_session.client.return_value.copy.assert_not_called()
+
+
+def test_default_bucket(aws_session, account_id):
+    region = "test-region-0"
+    aws_session.boto_session.region_name = region
+    assert aws_session.default_bucket() == f"amazon-braket-{region}-{account_id}"
+
+
+def test_default_bucket_given(aws_session):
+    default_bucket = "default_bucket"
+    aws_session._default_bucket = default_bucket
+    assert aws_session.default_bucket() == default_bucket
+    aws_session._s3.create_bucket.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "region",
+    (
+        "test-region-0",
+        "us-east-1",
+    ),
+)
+def test_create_s3_bucket_if_it_does_not_exist(aws_session, region, account_id, role_arn):
+    bucket = f"amazon-braket-{region}-{account_id}"
+    aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)
+    kwargs = {
+        "Bucket": bucket,
+        "CreateBucketConfiguration": {
+            "LocationConstraint": region,
+        },
+    }
+    if region == "us-east-1":
+        del kwargs["CreateBucketConfiguration"]
+    aws_session._s3.create_bucket.assert_called_with(**kwargs)
+    aws_session._s3.put_public_access_block.assert_called_with(
+        Bucket=bucket,
+        PublicAccessBlockConfiguration={
+            "BlockPublicAcls": True,
+            "IgnorePublicAcls": True,
+            "BlockPublicPolicy": True,
+            "RestrictPublicBuckets": True,
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    (
+        ClientError(
+            {
+                "Error": {
+                    "Code": "BucketAlreadyOwnedByYou",
+                    "Message": "Your previous request to create the named bucket succeeded "
+                    "and you already own it.",
+                }
+            },
+            "CreateBucket",
+        ),
+        ClientError(
+            {
+                "Error": {
+                    "Code": "OperationAborted",
+                    "Message": "A conflicting conditional operation is currently in progress "
+                    "against this resource. Please try again.",
+                }
+            },
+            "CreateBucket",
+        ),
+        pytest.param(
+            ClientError(
+                {
+                    "Error": {
+                        "Code": "OtherCode",
+                        "Message": "This should fail properly.",
+                    }
+                },
+                "CreateBucket",
+            ),
+            marks=pytest.mark.xfail(raises=ClientError, strict=True),
+        ),
+    ),
+)
+def test_create_s3_bucket_if_it_does_not_exist_error(aws_session, error, account_id):
+    region = "test-region-0"
+    bucket = f"amazon-braket-{region}-{account_id}"
+    aws_session._s3.create_bucket.side_effect = error
+    aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)

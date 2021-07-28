@@ -12,17 +12,40 @@
 # language governing permissions and limitations under the License.
 
 import datetime
+import os
+import tempfile
+import time
+from collections import defaultdict
+from dataclasses import asdict
 from unittest.mock import Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
 
-from braket.aws import AwsQuantumJob
+from braket.aws import AwsQuantumJob, AwsSession
+from braket.jobs.config import (
+    CheckpointConfig,
+    DataSource,
+    InputDataConfig,
+    InstanceConfig,
+    OutputDataConfig,
+    PollingConfig,
+    S3DataSource,
+    StoppingCondition,
+    VpcConfig,
+)
 
 
 @pytest.fixture
-def aws_session(job_region):
+def aws_session(quantum_job_arn, job_region):
     _aws_session = Mock()
+    _aws_session.create_job.return_value = quantum_job_arn
+    _aws_session.default_bucket.return_value = "default-bucket-name"
+    _aws_session.get_execution_role.return_value = "default-role-arn"
+    _aws_session.construct_s3_uri.side_effect = (
+        lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
+    )
+
     _braket_client_mock = Mock(meta=Mock(region_name=job_region))
     _aws_session.braket_client = _braket_client_mock
     return _aws_session
@@ -235,6 +258,298 @@ def test_state_caching(quantum_job, aws_session, generate_get_job_response, quan
     assert aws_session.get_job.call_count == 1
 
 
+@pytest.fixture
+def entry_point():
+    return "entry_point:func"
+
+
+@pytest.fixture
+def bucket():
+    return "braket-region-id"
+
+
+@pytest.fixture
+def image_uri():
+    return "Test-Image-URI"
+
+
+@pytest.fixture(params=["given_job_name", "default_job_name"])
+def job_name(request):
+    if request.param == "given_job_nameh":
+        return "test-job-name"
+
+
+@pytest.fixture
+def s3_prefix(job_name):
+    return f"{job_name}/non-default"
+
+
+@pytest.fixture(params=["local_source", "s3_source", "working_directory"])
+def source_dir(request, bucket, s3_prefix):
+    if request.param == "working_directory":
+        return "."
+    if request.param == "local_source":
+        return "test-source-dir"
+    elif request.param == "s3_source":
+        return AwsSession.construct_s3_uri(bucket, "test-source-prefix", "source.tar.gz")
+
+
+@pytest.fixture
+def code_location(bucket, s3_prefix):
+    return AwsSession.construct_s3_uri(bucket, s3_prefix, "script")
+
+
+@pytest.fixture
+def role_arn():
+    return "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
+
+
+@pytest.fixture
+def priority_access_device_arn():
+    return "arn:aws:braket:::device/qpu/test/device-name"
+
+
+@pytest.fixture
+def hyper_parameters():
+    return {
+        "param": "value",
+        "other-param": 100,
+    }
+
+
+@pytest.fixture
+def input_data_config(bucket, s3_prefix):
+    return [
+        InputDataConfig(
+            channelName="testinput",
+            dataSource=DataSource(
+                s3DataSource=S3DataSource(
+                    s3Uri=AwsSession.construct_s3_uri(bucket, s3_prefix, "input"),
+                ),
+            ),
+        ),
+    ]
+
+
+@pytest.fixture
+def instance_config():
+    return InstanceConfig(
+        instanceType="ml.m5.large",
+        instanceCount=1,
+        volumeSizeInGb=1,
+    )
+
+
+@pytest.fixture
+def stopping_condition():
+    return StoppingCondition(
+        maxRuntimeInSeconds=1200,
+    )
+
+
+@pytest.fixture
+def output_data_config(bucket, s3_prefix):
+    return OutputDataConfig(
+        s3Path=AwsSession.construct_s3_uri(bucket, s3_prefix, "output"),
+    )
+
+
+@pytest.fixture
+def checkpoint_config(bucket, s3_prefix):
+    return CheckpointConfig(
+        localPath="/opt/omega/checkpoints",
+        s3Uri=AwsSession.construct_s3_uri(bucket, s3_prefix, "checkpoints"),
+    )
+
+
+@pytest.fixture(params=["wait", "dont_wait"])
+def wait_until_complete(request):
+    return request.param == "wait"
+
+
+@pytest.fixture(params=["job_completes", "job_times_out"])
+def polling_config(request):
+    timeout = 1 if request.param == "job_completes" else 0.1
+    return PollingConfig(timeout, 0.05)
+
+
+@pytest.fixture
+def vpc_config():
+    return VpcConfig(
+        securityGroupIds=["1", "2"],
+        subnets=["3", "4"],
+    )
+
+
+@pytest.fixture
+def tags():
+    return {"tagKey": "tagValue"}
+
+
+@pytest.fixture(params=["fixtures", "defaults", "nones"])
+def create_job_args(
+    request,
+    aws_session,
+    entry_point,
+    image_uri,
+    source_dir,
+    job_name,
+    code_location,
+    role_arn,
+    wait_until_complete,
+    polling_config,
+    priority_access_device_arn,
+    hyper_parameters,
+    input_data_config,
+    instance_config,
+    stopping_condition,
+    output_data_config,
+    checkpoint_config,
+    vpc_config,
+    tags,
+):
+    if request.param == "fixtures":
+        return dict(
+            (key, value)
+            for key, value in {
+                "aws_session": aws_session,
+                "entry_point": entry_point,
+                "source_dir": source_dir,
+                "image_uri": image_uri,
+                "job_name": job_name,
+                "code_location": code_location,
+                "role_arn": role_arn,
+                "wait_until_complete": wait_until_complete,
+                "polling_config": polling_config,
+                "priority_access_device_arn": priority_access_device_arn,
+                "hyper_parameters": hyper_parameters,
+                # "metric_defintions": None,
+                "input_data_config": input_data_config,
+                "instance_config": instance_config,
+                "stopping_condition": stopping_condition,
+                "output_data_config": output_data_config,
+                "checkpoint_config": checkpoint_config,
+                "vpc_config": vpc_config,
+                "tags": tags,
+            }.items()
+            if value is not None
+        )
+    elif request.param == "defaults":
+        return {
+            "aws_session": aws_session,
+            "entry_point": entry_point,
+            "source_dir": source_dir,
+        }
+    elif request.param == "nones":
+        return defaultdict(
+            lambda: None,
+            aws_session=aws_session,
+            entry_point=entry_point,
+            source_dir=source_dir,
+        )
+
+
+def test_str(quantum_job):
+    expected = f"AwsQuantumJob('arn':'{quantum_job.arn}')"
+    assert str(quantum_job) == expected
+
+
+def test_arn(quantum_job_arn, aws_session):
+    quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
+    assert quantum_job.arn == quantum_job_arn
+
+
+@pytest.mark.xfail(raises=AttributeError)
+def test_no_arn_setter(quantum_job):
+    quantum_job.arn = 123
+
+
+@patch("time.time")
+def test_create_job(
+    mock_time,
+    aws_session,
+    source_dir,
+    create_job_args,
+    quantum_job_arn,
+    generate_get_job_response,
+):
+    mock_time.return_value = datetime.datetime.now().timestamp()
+    with tempfile.TemporaryDirectory() as tempdir:
+        os.chdir(tempdir)
+        if source_dir == "test-source-dir":
+            os.mkdir(source_dir)
+        aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
+            generate_get_job_response(status="COMPLETED")
+        ]
+        job = AwsQuantumJob.create(**create_job_args)
+        assert job == AwsQuantumJob(quantum_job_arn, aws_session)
+        _assert_create_job_called_with(create_job_args)
+        os.chdir("..")
+
+
+def _assert_create_job_called_with(
+    create_job_args,
+):
+    aws_session = create_job_args["aws_session"]
+    create_job_args = defaultdict(lambda: None, **create_job_args)
+    image_uri = create_job_args["image_uri"] or "Base-Image-URI"
+    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
+    default_bucket = aws_session.default_bucket()
+    code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
+        default_bucket, job_name, "script"
+    )
+    role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
+    priority_access_devices = [
+        arn for arn in [create_job_args["priority_access_device_arn"]] if arn
+    ]
+    hyper_parameters = create_job_args["hyper_parameters"] or {}
+    input_data_config = create_job_args["input_data_config"] or []
+    instance_config = create_job_args["instance_config"] or InstanceConfig()
+    output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
+        s3Path=aws_session.construct_s3_uri(default_bucket, job_name, "output")
+    )
+    stopping_condition = create_job_args["stopping_condition"] or StoppingCondition()
+    checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
+        s3Uri=aws_session.construct_s3_uri(default_bucket, job_name, "checkpoints")
+    )
+    vpc_config = create_job_args["vpc_config"]
+    # tags = create_job_args["tags"] or {}
+
+    test_kwargs = {
+        "jobName": job_name,
+        "roleArn": role_arn,
+        "algorithmSpecification": {
+            "scriptModeConfig": {
+                "entryPoint": create_job_args["entry_point"],
+                "s3Uri": f"{code_location}/source.tar.gz",
+                "compressionType": "GZIP",
+            }
+        },
+        "inputDataConfig": [asdict(input_channel) for input_channel in input_data_config],
+        "instanceConfig": asdict(instance_config),
+        "outputDataConfig": asdict(output_data_config),
+        "checkpointConfig": asdict(checkpoint_config),
+        "deviceConfig": {"priorityAccess": {"devices": priority_access_devices}},
+        "hyperParameters": hyper_parameters,
+        "stoppingCondition": asdict(stopping_condition),
+        # "tags": tags,
+    }
+
+    if vpc_config:
+        test_kwargs["vpcConfig"] = vpc_config
+
+    aws_session.create_job.assert_called_with(**test_kwargs)
+
+
+@patch("time.time")
+def test_generate_default_job_name(mock_time, image_uri):
+    mock_time.return_value = datetime.datetime.now().timestamp()
+    assert (
+        AwsQuantumJob._generate_default_job_name(image_uri)
+        == f"{image_uri}-{time.time() * 1000:.0f}"
+    )
+
+
 def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):
     cancellation_status = "CANCELLING"
     aws_session.cancel_job.return_value = generate_cancel_job_response(
@@ -256,3 +571,36 @@ def test_cancel_job_surfaces_exception(quantum_job, aws_session):
     }
     aws_session.cancel_job.side_effect = ClientError(exception_response, "cancel_job")
     quantum_job.cancel()
+
+
+def test_create_job_source_dir_not_found(
+    aws_session,
+    entry_point,
+):
+    fake_source_dir = "fake-source-dir"
+    with pytest.raises(ValueError) as e:
+        AwsQuantumJob.create(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            source_dir=fake_source_dir,
+        )
+
+    assert str(e.value) == f"Source directory not found: {fake_source_dir}"
+
+
+def test_create_job_source_dir_s3_but_not_tar(
+    aws_session,
+    entry_point,
+):
+    fake_source_dir = "s3://bucket/non-tar-file"
+    with pytest.raises(ValueError) as e:
+        AwsQuantumJob.create(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            source_dir=fake_source_dir,
+        )
+
+    assert str(e.value) == (
+        f"If source_dir is an S3 URI, it must point to a tar.gz file. "
+        f"Not a valid S3 URI for parameter `source_dir`: {fake_source_dir}"
+    )

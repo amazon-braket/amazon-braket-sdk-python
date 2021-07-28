@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -27,7 +27,7 @@ class AwsSession(object):
 
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
 
-    def __init__(self, boto_session=None, braket_client=None, config=None):
+    def __init__(self, boto_session=None, braket_client=None, config=None, default_bucket=None):
         """
         Args:
             boto_session: A boto3 session object.
@@ -43,6 +43,37 @@ class AwsSession(object):
         else:
             self.braket_client = self.boto_session.client("braket", config=self._config)
         self._update_user_agent()
+        self._default_bucket = default_bucket
+
+        self._iam = None
+        self._s3 = None
+        self._sts = None
+
+    @property
+    def region(self):
+        return self.boto_session.region_name
+
+    @property
+    def account_id(self):
+        return self.sts_client.get_caller_identity()["Account"]
+
+    @property
+    def iam_client(self):
+        if not self._iam:
+            self._iam = self.boto_session.client("iam", region_name=self.region)
+        return self._iam
+
+    @property
+    def s3_client(self):
+        if not self._s3:
+            self._s3 = self.boto_session.client("s3", region_name=self.region)
+        return self._s3
+
+    @property
+    def sts_client(self):
+        if not self._sts:
+            self._sts = self.boto_session.client("sts", region_name=self.region)
+        return self._sts
 
     def _update_user_agent(self):
         """
@@ -92,7 +123,6 @@ class AwsSession(object):
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         return response["quantumTaskArn"]
 
-    # TODO: Implementation suggestions, uncomment when ready with tests.
     def create_job(self, **boto3_kwargs) -> str:
         """
         Create a quantum job.
@@ -103,8 +133,8 @@ class AwsSession(object):
         Returns:
             str: The ARN of the job.
         """
-        # response = self.braket_client.create_job(**boto3_kwargs)
-        # return response["jobArn"]
+        response = self.braket_client.create_job(**boto3_kwargs)
+        return response["jobArn"]
 
     @staticmethod
     def _should_giveup(err):
@@ -135,6 +165,21 @@ class AwsSession(object):
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
+
+    def get_execution_role(self) -> str:
+        """Return the role ARN whose credentials are used to call the API.
+           Throws an exception if role doesn't exist.
+
+        Args:
+            aws_session (AwsSession): Current braket session.
+
+        Returns:
+            (str): The execution role ARN.
+        """
+        # TODO: possibly wrap this call with a more specific error message
+        # TODO: replace with Braket external role before launch
+        role = self.iam_client.get_role(RoleName="AmazonBraketInternalSLR")
+        return role["Role"]["Arn"]
 
     @backoff.on_exception(
         backoff.expo,
@@ -167,16 +212,6 @@ class AwsSession(object):
         """
         return self.braket_client.cancel_job(jobArn=arn)
 
-    def get_execution_role(self, aws_session):
-        """Return the role ARN whose credentials are used to call the API.
-           Throws an exception if role doesn't exist.
-        Args:
-            aws_session (AwsSession): Current braket session.
-
-        Returns:
-            (str): The execution role ARN.
-        """
-
     def retrieve_s3_object_body(self, s3_bucket: str, s3_object_key: str) -> str:
         """
         Retrieve the S3 object body.
@@ -191,6 +226,123 @@ class AwsSession(object):
         s3 = self.boto_session.resource("s3", config=self._config)
         obj = s3.Object(s3_bucket, s3_object_key)
         return obj.get()["Body"].read().decode("utf-8")
+
+    def upload_to_s3(self, filename: str, s3_uri: str) -> None:
+        """
+        Upload file to S3
+
+        Args:
+            filename (str): local file to be uploaded.
+            s3_uri (str): The S3 URI where the file will be uploaded.
+
+        Returns:
+            None
+        """
+        bucket, key = self.parse_s3_uri(s3_uri)
+        self.s3_client.upload_file(filename, bucket, key)
+
+    def copy_s3(self, source_s3_uri: str, destination_s3_uri: str) -> None:
+        """
+        Copy object from another location in s3. Does nothing if source and
+        destination URIs are the same.
+
+        Args:
+            source_s3_uri (str): S3 URI pointing to the object to be copied.
+            destination_s3_uri (str): S3 URI where the object will be copied to.
+        """
+        if source_s3_uri == destination_s3_uri:
+            return
+
+        source_bucket, source_key = self.parse_s3_uri(source_s3_uri)
+        destination_bucket, destination_key = self.parse_s3_uri(destination_s3_uri)
+
+        self.s3_client.copy(
+            {
+                "Bucket": source_bucket,
+                "Key": source_key,
+            },
+            destination_bucket,
+            destination_key,
+        )
+
+    def default_bucket(self):
+        if self._default_bucket:
+            return self._default_bucket
+        default_bucket = f"amazon-braket-{self.region}-{self.account_id}"
+
+        self._create_s3_bucket_if_it_does_not_exist(bucket_name=default_bucket, region=self.region)
+
+        self._default_bucket = default_bucket
+        return self._default_bucket
+
+    def _create_s3_bucket_if_it_does_not_exist(self, bucket_name, region):
+        """Creates an S3 Bucket if it does not exist.
+        Also swallows a few common exceptions that indicate that the bucket already exists or
+        that it is being created.
+
+        Args:
+            bucket_name (str): Name of the S3 bucket to be created.
+            region (str): The region in which to create the bucket.
+
+        Raises:
+            botocore.exceptions.ClientError: If S3 throws an unexpected exception during bucket
+                creation.
+                If the exception is due to the bucket already existing or
+                already being created, no exception is raised.
+        """
+        try:
+            if region == "us-east-1":
+                # 'us-east-1' cannot be specified because it is the default region:
+                # https://github.com/boto/boto3/issues/125
+                self.s3_client.create_bucket(Bucket=bucket_name)
+            else:
+                self.s3_client.create_bucket(
+                    Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region}
+                )
+            self.s3_client.put_public_access_block(
+                Bucket=bucket_name,
+                PublicAccessBlockConfiguration={
+                    "BlockPublicAcls": True,
+                    "IgnorePublicAcls": True,
+                    "BlockPublicPolicy": True,
+                    "RestrictPublicBuckets": True,
+                },
+            )
+            # TODO: make this prettier
+            self.s3_client.put_bucket_policy(
+                Bucket=bucket_name,
+                Policy=f"""{{
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {{
+                            "Effect": "Allow",
+                            "Principal": {{
+                                "AWS": [
+                                    "{self.get_execution_role()}"
+                                ]
+                            }},
+                            "Action": "s3:*",
+                            "Resource": [
+                                "arn:aws:s3:::{bucket_name}/*"
+                            ]
+                        }}
+                    ]
+                }}""",
+            )
+        except ClientError as e:
+            error_code = e.response["Error"]["Code"]
+            message = e.response["Error"]["Message"]
+
+            if error_code == "BucketAlreadyOwnedByYou":
+                pass
+            elif (
+                error_code == "OperationAborted" and "conflicting conditional operation" in message
+            ):
+                # If this bucket is already being concurrently created, we don't need to create
+                # it again.
+                pass
+            else:
+                raise
 
     def create_logs_client(self) -> "boto3.session.Session.client":
         """
@@ -254,3 +406,45 @@ class AwsSession(object):
                     continue
                 results.append(result)
         return results
+
+    # TODO: think about placement of these methods
+    @staticmethod
+    def parse_s3_uri(s3_uri: str) -> (str, str):
+        """
+        Parse S3 URI to get bucket and key
+
+        Args:
+            s3_uri (str): S3 URI.
+
+        Returns:
+            (str, str): Bucket and Key tuple.
+
+        Raises:
+            ValueError: Raises a ValueError if the provided string is not
+            a valid S3 URI.
+        """
+        try:
+            assert s3_uri.startswith("s3://")
+            bucket, key = s3_uri.split("/", 3)[2:]
+            assert key
+            return bucket, key
+        except (AssertionError, ValueError):
+            raise ValueError(f"Not a valid S3 uri: {s3_uri}")
+
+    @staticmethod
+    def construct_s3_uri(bucket: str, *dirs: str):
+        """
+        Args:
+            bucket (str): S3 URI.
+            *dirs (str): directories to be appended in the resulting S3 URI
+
+        Returns:
+            str: S3 URI
+
+        Raises:
+            ValueError: Raises a ValueError if the provided arguments are not
+            valid to generate an S3 URI
+        """
+        if not dirs:
+            raise ValueError(f"Not a valid S3 location: s3://{bucket}")
+        return f"s3://{bucket}/{'/'.join(dirs)}"

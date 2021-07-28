@@ -13,53 +13,65 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Union
+import os.path
+import tarfile
+import tempfile
+import time
+from dataclasses import asdict
+from typing import Any, Dict, List
 
 import boto3
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
     CheckpointConfig,
+    DeviceConfig,
+    InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
+    PollingConfig,
+    PriorityAccessConfig,
     StoppingCondition,
     VpcConfig,
 )
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
 # for the files, since all those metrics are retrieved from the CW.
-from braket.jobs.metrics.metrics import MetricDefinition, MetricPeriod, MetricStatistic
+from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
 
 
 class AwsQuantumJob:
     """Amazon Braket implementation of a quantum job."""
+
+    TERMINAL_STATES = ["FAILED", "COMPLETED", "CANCELLED"]
 
     @classmethod
     def create(
         cls,
         aws_session: AwsSession,
         entry_point: str,
+        source_dir: str,
         # TODO: Replace with the correct default image name.
         # This image_uri will be retrieved from `image_uris.retreive()` which will a different file
         # in the `jobs` folder and the function defined in it.
-        image_uri: str = "Base Image URI",
-        source_dir: str = None,
+        image_uri: str = "Base-Image-URI",
         # TODO: If job_name is specified by customer then we don't append timestamp to it.
-        # TODO: Else we, extract image_uri_type from image_uri for job_name and append timestamp.
+        # TODO: Else, we extract image_uri_type from image_uri for job_name and append timestamp.
         # TODO: timestamp should be in epoch or any other date format we decide on like `yyyy-mm-dd`
         job_name: str = None,
         code_location: str = None,
         role_arn: str = None,
         wait_until_complete: bool = False,
+        polling_config: PollingConfig = None,
         priority_access_device_arn: str = None,
         hyper_parameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
-        input_data_config: Union[Any] = None,
-        instance_config: InstanceConfig = InstanceConfig(),
-        stopping_condition: StoppingCondition = StoppingCondition(),
-        output_data_config: OutputDataConfig = OutputDataConfig(),
+        input_data_config: List[InputDataConfig] = None,
+        instance_config: InstanceConfig = None,
+        stopping_condition: StoppingCondition = None,
+        output_data_config: OutputDataConfig = None,
         copy_checkpoints_from_job: str = None,
-        checkpoint_config: CheckpointConfig = CheckpointConfig(),
+        checkpoint_config: CheckpointConfig = None,
         vpc_config: VpcConfig = None,
         tags: Dict[str, str] = None,
         *args,
@@ -73,14 +85,14 @@ class AwsQuantumJob:
             entry_point (str): str specifying the 'module' or 'module:method' to be executed as
                 an entry point for the job.
 
-            image_uri (str): str specifying the ECR image to use for executing the job.
-                `image_uris.retrieve()` function may be used for retrieving the ECR image uris
-                for the containers supported by Braket. Default = `<Braket base image_uri>`.
-
             source_dir (str): Path (absolute, relative or an S3 URI) to a directory with any
                 other source code dependencies aside from the entry point file. If `source_dir`
                 is an S3 URI, it must point to a tar.gz file. Structure within this directory are
-                preserved when executing on Amazon Braket. Default = `None`.
+                preserved when executing on Amazon Braket.
+
+            image_uri (str): str specifying the ECR image to use for executing the job.
+                `image_uris.retrieve()` function may be used for retrieving the ECR image uris
+                for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
             job_name (str): str representing the name with which the job will be created.
                 Default = `{image_uri_type}-{timestamp}`.
@@ -94,6 +106,10 @@ class AwsQuantumJob:
             wait_until_complete (bool): bool representing whether we should wait until the job
                 completes. This would tail the job logs as it waits. Default = `False`.
 
+            polling_config (PollingConfig): A PollingConfig specifying the timeout limit and
+                polling interval to use if wait_until_complete is true.
+                Default = `PollingConfig()`.
+
             priority_access_device_arn (str): ARN for the AWS device which should have priority
                 access for the execution of this job. Default = `None`.
 
@@ -105,7 +121,8 @@ class AwsQuantumJob:
             metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
                 defines the metric(s) used to evaluate the training jobs. Default = `None`.
 
-            input_data_config (Union[Any]): Information about the training data. Default = `None`.
+            input_data_config (List[InputDataConfig]): Information about the training data.
+                Default = `None`.
 
             instance_config (InstanceConfig): Configuration of the instances to be used for
                 executing the job. Default = `InstanceConfig(instanceType='ml.m5.large',
@@ -121,7 +138,7 @@ class AwsQuantumJob:
                 Default = `OutputDataConfig(s3Path=s3://{default_bucket_name}/jobs/{job_name}/
                 output, kmsKeyId=None)`.
 
-            copy_checkpoints_from_job (str): str specifying the job name whose checkpoint you wish
+            copy_checkpoints_from_job (str): str specifying the job arn whose checkpoint you wish
                 to use in the current job. Specifying this value will copy over the checkpoint
                 data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current job's
                 checkpoint_config s3Uri, making it available at checkpoint_config.localPath during
@@ -140,14 +157,91 @@ class AwsQuantumJob:
 
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
+
+        Raises:
+            ValueError: Raises ValueError if the parameters are not valid.
         """
-        # TODO: if entry_point file is not provided, then we raise the error.
-        # TODO: if job_name is None, then we set it to default_job_name
-        # TODO: if code_location is not provided by the customer, then we default it with the
-        # bucket_name with we get from the AwsSession object.
-        # TODO: Decide on where default_bucket_name should be defined. If bucket is not present
-        # in the customer's account then raise ValidationException.
-        # TODO: call getExecutionRole() from aws_session.py
+        job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
+        role_arn = role_arn or aws_session.get_execution_role()
+        hyper_parameters = hyper_parameters or {}
+        input_data_config = input_data_config or []
+        instance_config = instance_config or InstanceConfig()
+        stopping_condition = stopping_condition or StoppingCondition()
+        output_data_config = output_data_config or OutputDataConfig()
+        checkpoint_config = checkpoint_config or CheckpointConfig()
+        # tags = tags or {}
+        device_config = DeviceConfig(
+            priorityAccess=PriorityAccessConfig(
+                devices=[arn for arn in [priority_access_device_arn] if arn]
+            )
+        )
+        default_bucket = aws_session.default_bucket()
+        code_location = code_location or aws_session.construct_s3_uri(
+            default_bucket,
+            job_name,
+            "script",
+        )
+        if not output_data_config.s3Path:
+            output_data_config.s3Path = aws_session.construct_s3_uri(
+                default_bucket,
+                job_name,
+                "output",
+            )
+        if not checkpoint_config.s3Uri:
+            checkpoint_config.s3Uri = aws_session.construct_s3_uri(
+                default_bucket,
+                job_name,
+                "checkpoints",
+            )
+        # TODO: implement recursive copy for checkpoint directory
+        # if copy_checkpoints_from_job:
+        # checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
+        #     "checkpointConfig"
+        # ]["s3Uri"]
+        # aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri)
+        AwsQuantumJob._process_source_dir(
+            source_dir,
+            aws_session,
+            code_location,
+        )
+
+        create_job_kwargs = {
+            "jobName": job_name,
+            "roleArn": role_arn,
+            "algorithmSpecification": {
+                "scriptModeConfig": {
+                    "entryPoint": entry_point,
+                    "s3Uri": f"{code_location}/source.tar.gz",
+                    "compressionType": "GZIP",
+                }
+            },
+            "inputDataConfig": [asdict(input_channel) for input_channel in input_data_config],
+            "instanceConfig": asdict(instance_config),
+            "outputDataConfig": asdict(output_data_config),
+            "checkpointConfig": asdict(checkpoint_config),
+            "deviceConfig": asdict(device_config),
+            "hyperParameters": hyper_parameters,
+            "stoppingCondition": asdict(stopping_condition),
+            # TODO: uncomment when tags works
+            # "tags": tags,
+        }
+
+        if vpc_config:
+            create_job_kwargs["vpcConfig"] = vpc_config
+
+        job_arn = aws_session.create_job(**create_job_kwargs)
+        job = AwsQuantumJob(job_arn, aws_session)
+
+        # TODO: replace with .logs() output and consider whether we want a polling config
+        # if wait_until_complete:
+        #     polling_config = polling_config or PollingConfig()
+        #     timeout_time = time.time() + polling_config.pollTimeoutSeconds
+        #     while time.time() < timeout_time:
+        #         if job.state() in AwsQuantumJob.TERMINAL_STATES:
+        #             return job
+        #         time.sleep(polling_config.pollIntervalSeconds)
+
+        return job
 
     def __init__(
         self,
@@ -161,7 +255,7 @@ class AwsQuantumJob:
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the job.
         """
-        self._arn = arn
+        self._arn: str = arn
         if aws_session:
             if not self._is_valid_aws_session_region_for_job_arn(aws_session, arn):
                 raise ValueError(
@@ -191,6 +285,10 @@ class AwsQuantumJob:
         job_region = job_arn.split(":")[3]
         boto_session = boto3.Session(region_name=job_region)
         return AwsSession(boto_session=boto_session)
+
+    @staticmethod
+    def _generate_default_job_name(image_uri_type: str):
+        return f"{image_uri_type}-{time.time() * 1000:.0f}"
 
     @property
     def arn(self) -> str:
@@ -285,6 +383,9 @@ class AwsQuantumJob:
             extract_to (str): Location where results will be extracted.
         """
 
+    def __repr__(self) -> str:
+        return f"AwsQuantumJob('arn':'{self.arn}')"
+
     def __eq__(self, other) -> bool:
         if isinstance(other, AwsQuantumJob):
             return self.arn == other.arn
@@ -292,3 +393,25 @@ class AwsQuantumJob:
 
     def __hash__(self) -> int:
         return hash(self.arn)
+
+    @staticmethod
+    def _process_source_dir(source_dir, aws_session, code_location):
+        # TODO: check with product about copy in s3 behavior
+        # TODO: validate entry_point
+        if source_dir.startswith("s3://"):
+            if not source_dir.endswith(".tar.gz"):
+                raise ValueError(
+                    f"If source_dir is an S3 URI, it must point to a tar.gz file. "
+                    f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
+                )
+            aws_session.copy_s3(source_dir, f"{code_location}/source.tar.gz")
+        else:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                try:
+                    with tarfile.open(f"{tmpdir}/source.tar.gz", "w:gz") as tar:
+                        tar.add(source_dir, arcname=os.path.basename(source_dir))
+                except FileNotFoundError:
+                    raise ValueError(f"Source directory not found: {source_dir}")
+                aws_session.upload_to_s3(
+                    f"{tmpdir}/source.tar.gz", f"{code_location}/source.tar.gz"
+                )
