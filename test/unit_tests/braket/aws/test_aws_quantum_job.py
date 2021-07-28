@@ -483,6 +483,7 @@ def test_create_job(
         assert job == AwsQuantumJob(quantum_job_arn, aws_session)
 
         _assert_create_job_called_with(create_job_args)
+        os.chdir("..")
 
 
 def _assert_create_job_called_with(
