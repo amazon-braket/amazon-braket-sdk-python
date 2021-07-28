@@ -386,11 +386,6 @@ def tags():
     return {"tagKey": "tagValue"}
 
 
-@pytest.fixture
-def job_time():
-    return "1997-08-13 12:12:12"
-
-
 @pytest.fixture(params=["fixtures", "defaults", "nones"])
 def create_job_args(
     request,
@@ -476,21 +471,22 @@ def test_create_job(
     create_job_args,
     quantum_job_arn,
     generate_get_job_response,
-    job_time,
 ):
     mock_time.return_value = datetime.datetime.now().timestamp()
-    aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
-        generate_get_job_response(status="COMPLETED")
-    ]
-    job = AwsQuantumJob.create(**create_job_args)
-    assert job == AwsQuantumJob(quantum_job_arn, aws_session)
+    with tempfile.TemporaryDirectory() as tempdir:
+        os.chdir(tempdir)
+        os.mkdir("test-source-dir")
+        aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
+            generate_get_job_response(status="COMPLETED")
+        ]
+        job = AwsQuantumJob.create(**create_job_args)
+        assert job == AwsQuantumJob(quantum_job_arn, aws_session)
 
-    _assert_create_job_called_with(create_job_args, job_time)
+        _assert_create_job_called_with(create_job_args)
 
 
 def _assert_create_job_called_with(
     create_job_args,
-    job_time,
 ):
     aws_session = create_job_args["aws_session"]
     create_job_args = defaultdict(lambda: None, **create_job_args)
@@ -543,15 +539,6 @@ def _assert_create_job_called_with(
     aws_session.create_job.assert_called_with(**test_kwargs)
 
 
-def setup_function(test_create_job):
-    """setup any state tied to the execution of the given function.
-    Invoked for every test function in the module.
-    """
-    dirpath = tempfile.mkdtemp()
-    os.chdir(dirpath)
-    os.mkdir("test-source-dir")
-
-
 @patch("time.time")
 def test_generate_default_job_name(mock_time, image_uri):
     mock_time.return_value = datetime.datetime.now().timestamp()
@@ -559,36 +546,6 @@ def test_generate_default_job_name(mock_time, image_uri):
         AwsQuantumJob._generate_default_job_name(image_uri)
         == f"{image_uri}-{time.time() * 1000:.0f}"
     )
-
-
-def test_copy_checkpoints_from_job(
-    aws_session,
-    entry_point,
-    source_dir,
-    checkpoint_config,
-    job_name,
-    quantum_job_arn,
-    generate_get_job_response,
-):
-    other_job_arn = f"{quantum_job_arn}-other"
-    checkpoint_s3_uri = "s3://other-bucket/checkpoint/path"
-    aws_session.get_job.return_value = generate_get_job_response(
-        checkpointConfig={"s3Uri": checkpoint_s3_uri}
-    )
-    job = AwsQuantumJob.create(
-        aws_session=aws_session,
-        entry_point=entry_point,
-        source_dir=source_dir,
-        job_name=job_name,
-        checkpoint_config=checkpoint_config,
-        copy_checkpoints_from_job=other_job_arn,
-    )
-    assert job == AwsQuantumJob(quantum_job_arn, aws_session)
-    checkpoint_config = checkpoint_config or CheckpointConfig(
-        s3Uri=aws_session.construct_s3_uri(aws_session.default_bucket(), job_name, "checkpoints")
-    )
-    # TODO: validate checkpoint is copied
-    assert checkpoint_config
 
 
 def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):
