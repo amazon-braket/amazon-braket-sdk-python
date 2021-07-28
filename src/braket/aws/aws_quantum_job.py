@@ -193,11 +193,12 @@ class AwsQuantumJob:
                 job_name,
                 "checkpoints",
             )
-        if copy_checkpoints_from_job:
-            checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
-                "checkpointConfig"
-            ]["s3Uri"]
-            aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri, recursive=True)
+        # TODO: implement recursive copy for checkpoint directory
+        # if copy_checkpoints_from_job:
+        # checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
+        #     "checkpointConfig"
+        # ]["s3Uri"]
+        # aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri)
         AwsQuantumJob._process_source_dir(
             source_dir,
             aws_session,

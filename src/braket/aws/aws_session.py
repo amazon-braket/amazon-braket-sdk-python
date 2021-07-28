@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import os.path
-import subprocess
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
@@ -242,7 +241,7 @@ class AwsSession(object):
         bucket, key = self.parse_s3_uri(s3_uri)
         self.s3_client.upload_file(filename, bucket, key)
 
-    def copy_s3(self, source_s3_uri: str, destination_s3_uri: str, recursive=False) -> None:
+    def copy_s3(self, source_s3_uri: str, destination_s3_uri: str) -> None:
         """
         Copy object from another location in s3. Does nothing if source and
         destination URIs are the same.
@@ -254,13 +253,6 @@ class AwsSession(object):
         if source_s3_uri == destination_s3_uri:
             return
 
-        if recursive:
-            cmd = f"aws s3 cp '{source_s3_uri}' '{destination_s3_uri}' --recursive"
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-            p.communicate()
-            return
-
-        # TODO: this isn't strictly necessary, as the above would work for individual objects too
         source_bucket, source_key = self.parse_s3_uri(source_s3_uri)
         destination_bucket, destination_key = self.parse_s3_uri(destination_s3_uri)
 

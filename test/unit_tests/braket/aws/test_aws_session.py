@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import json
-import subprocess
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -718,18 +717,6 @@ def test_copy_s3(aws_session):
         },
         dest_bucket,
         dest_key,
-    )
-
-
-@patch("subprocess.Popen")
-def test_copy_s3_recursive(mock_popen, aws_session):
-    source_s3_uri = "s3://here/now"
-    dest_s3_uri = "s3://there/then"
-    aws_session.copy_s3(source_s3_uri, dest_s3_uri, recursive=True)
-    mock_popen.assert_called_with(
-        f"aws s3 cp '{source_s3_uri}' '{dest_s3_uri}' --recursive",
-        shell=True,
-        stdout=subprocess.PIPE,
     )
 
 
