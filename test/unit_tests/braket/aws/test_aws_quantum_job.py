@@ -468,6 +468,7 @@ def test_no_arn_setter(quantum_job):
 def test_create_job(
     mock_time,
     aws_session,
+    source_dir,
     create_job_args,
     quantum_job_arn,
     generate_get_job_response,
@@ -475,13 +476,13 @@ def test_create_job(
     mock_time.return_value = datetime.datetime.now().timestamp()
     with tempfile.TemporaryDirectory() as tempdir:
         os.chdir(tempdir)
-        os.mkdir("test-source-dir")
+        if source_dir == "test-source-dir":
+            os.mkdir(source_dir)
         aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
             generate_get_job_response(status="COMPLETED")
         ]
         job = AwsQuantumJob.create(**create_job_args)
         assert job == AwsQuantumJob(quantum_job_arn, aws_session)
-
         _assert_create_job_called_with(create_job_args)
         os.chdir("..")
 
