@@ -404,7 +404,7 @@ class AwsQuantumJob:
                     f"If source_dir is an S3 URI, it must point to a tar.gz file. "
                     f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
                 )
-            aws_session.copy_s3(source_dir, f"{code_location}/source.tar.gz")
+            aws_session.copy_s3_object(source_dir, f"{code_location}/source.tar.gz")
         else:
             with tempfile.TemporaryDirectory() as tmpdir:
                 try:

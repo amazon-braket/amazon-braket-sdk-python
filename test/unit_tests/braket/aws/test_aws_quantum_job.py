@@ -607,7 +607,6 @@ def test_create_job_source_dir_s3_but_not_tar(
 
 
 def test_copy_checkpoints(
-    # mock_process_source,
     aws_session,
     quantum_job_arn,
     entry_point,

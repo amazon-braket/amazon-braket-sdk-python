@@ -706,7 +706,7 @@ def test_upload_to_s3(aws_session):
 
 def test_copy_identical_s3(aws_session):
     s3_uri = "s3://bucket/key"
-    aws_session.copy_s3(s3_uri, s3_uri)
+    aws_session.copy_s3_object(s3_uri, s3_uri)
     aws_session.boto_session.client.return_value.copy.assert_not_called()
 
 
@@ -715,7 +715,7 @@ def test_copy_s3(aws_session):
     dest_s3_uri = "s3://there/then"
     source_bucket, source_key = AwsSession.parse_s3_uri(source_s3_uri)
     dest_bucket, dest_key = AwsSession.parse_s3_uri(dest_s3_uri)
-    aws_session.copy_s3(source_s3_uri, dest_s3_uri)
+    aws_session.copy_s3_object(source_s3_uri, dest_s3_uri)
     aws_session._s3.copy.assert_called_with(
         {
             "Bucket": source_bucket,
