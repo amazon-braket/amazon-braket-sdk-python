@@ -325,6 +325,7 @@ class AwsDevice(Device):
         session_region = aws_session.boto_session.region_name
         new_region = region or session_region
         creds = aws_session.boto_session.get_credentials()
+        client = aws_session.braket_client
         if creds.method == "explicit":
             boto_session = boto3.Session(
                 aws_access_key_id=creds.access_key,
@@ -334,7 +335,8 @@ class AwsDevice(Device):
             )
         else:
             boto_session = boto3.Session(region_name=new_region)
-        return AwsSession(boto_session=boto_session, config=config)
+        braket_client = boto_session.client('braket', endpoint_url=client._endpoint.host)
+        return AwsSession(boto_session=boto_session, braket_client=braket_client, config=config)
 
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
