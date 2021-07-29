@@ -241,7 +241,7 @@ class AwsSession(object):
         bucket, key = self.parse_s3_uri(s3_uri)
         self.s3_client.upload_file(filename, bucket, key)
 
-    def copy_s3(self, source_s3_uri: str, destination_s3_uri: str) -> None:
+    def copy_s3_object(self, source_s3_uri: str, destination_s3_uri: str) -> None:
         """
         Copy object from another location in s3. Does nothing if source and
         destination URIs are the same.
@@ -264,6 +264,62 @@ class AwsSession(object):
             destination_bucket,
             destination_key,
         )
+
+    def copy_s3_directory(self, source_s3_path: str, destination_s3_path: str) -> None:
+        """
+        Copy all objects from a specified directory in S3. Does nothing if source and
+        destination URIs are the same. Preserves nesting structure, will not overwrite
+        other files in the destination location unless they share a name with a file
+        being copied.
+
+        Args:
+            source_s3_path (str): S3 URI pointing to the directory to be copied.
+            destination_s3_path (str): S3 URI where the contents of the source_s3_path
+            directory will be copied to.
+        """
+        if source_s3_path == destination_s3_path:
+            return
+
+        source_bucket, source_prefix = AwsSession.parse_s3_uri(source_s3_path)
+        destination_bucket, destination_prefix = AwsSession.parse_s3_uri(destination_s3_path)
+
+        source_keys = self._list_keys(source_bucket, source_prefix)
+
+        for key in source_keys:
+            self.s3_client.copy(
+                {
+                    "Bucket": source_bucket,
+                    "Key": key,
+                },
+                destination_bucket,
+                key.replace(source_prefix, destination_prefix, 1),
+            )
+
+    def _list_keys(self, bucket: str, prefix: str) -> List[str]:
+        """
+        Lists keys matching prefix in bucket.
+
+        Args:
+            bucket (str): Bucket to be queried.
+            prefix (str): The S3 path prefix to be matched
+
+        Returns:
+            List[str]: A list of all keys matching the prefix in
+            the bucket.
+        """
+        list_objects = self.s3_client.list_objects_v2(
+            Bucket=bucket,
+            Prefix=prefix,
+        )
+        keys = [obj["Key"] for obj in list_objects["Contents"]]
+        while list_objects["IsTruncated"]:
+            list_objects = self.s3_client.list_objects_v2(
+                Bucket=bucket,
+                Prefix=prefix,
+                ContinuationToken=list_objects["NextContinuationToken"],
+            )
+            keys += [obj["Key"] for obj in list_objects["Contents"]]
+        return keys
 
     def default_bucket(self):
         if self._default_bucket:

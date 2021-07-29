@@ -194,11 +194,11 @@ class AwsQuantumJob:
                 "checkpoints",
             )
         # TODO: implement recursive copy for checkpoint directory
-        # if copy_checkpoints_from_job:
-        # checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
-        #     "checkpointConfig"
-        # ]["s3Uri"]
-        # aws_session.copy_s3(checkpoints_to_copy, checkpoint_config.s3Uri)
+        if copy_checkpoints_from_job:
+            checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
+                "checkpointConfig"
+            ]["s3Uri"]
+            aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
         AwsQuantumJob._process_source_dir(
             source_dir,
             aws_session,
@@ -404,7 +404,7 @@ class AwsQuantumJob:
                     f"If source_dir is an S3 URI, it must point to a tar.gz file. "
                     f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
                 )
-            aws_session.copy_s3(source_dir, f"{code_location}/source.tar.gz")
+            aws_session.copy_s3_object(source_dir, f"{code_location}/source.tar.gz")
         else:
             with tempfile.TemporaryDirectory() as tmpdir:
                 try:

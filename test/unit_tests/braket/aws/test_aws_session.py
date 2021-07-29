@@ -704,12 +704,18 @@ def test_upload_to_s3(aws_session):
     aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
 
 
+def test_copy_identical_s3(aws_session):
+    s3_uri = "s3://bucket/key"
+    aws_session.copy_s3_object(s3_uri, s3_uri)
+    aws_session.boto_session.client.return_value.copy.assert_not_called()
+
+
 def test_copy_s3(aws_session):
     source_s3_uri = "s3://here/now"
     dest_s3_uri = "s3://there/then"
     source_bucket, source_key = AwsSession.parse_s3_uri(source_s3_uri)
     dest_bucket, dest_key = AwsSession.parse_s3_uri(dest_s3_uri)
-    aws_session.copy_s3(source_s3_uri, dest_s3_uri)
+    aws_session.copy_s3_object(source_s3_uri, dest_s3_uri)
     aws_session._s3.copy.assert_called_with(
         {
             "Bucket": source_bucket,
@@ -720,10 +726,54 @@ def test_copy_s3(aws_session):
     )
 
 
-def test_copy_identical_s3(aws_session):
-    s3_uri = "s3://bucket/key"
-    aws_session.copy_s3(s3_uri, s3_uri)
+def test_copy_identical_s3_directory(aws_session):
+    s3_uri = "s3://bucket/prefix/"
+    aws_session.copy_s3_directory(s3_uri, s3_uri)
     aws_session.boto_session.client.return_value.copy.assert_not_called()
+
+
+def test_copy_s3_directory(aws_session):
+    aws_session._list_keys = Mock(return_value=[f"now/key-{i}" for i in range(5)])
+    source_s3_uri = "s3://here/now"
+    dest_s3_uri = "s3://there/then"
+    aws_session.copy_s3_directory(source_s3_uri, dest_s3_uri)
+    for i in range(5):
+        aws_session.s3_client.copy.assert_any_call(
+            {
+                "Bucket": "here",
+                "Key": f"now/key-{i}",
+            },
+            "there",
+            f"then/key-{i}",
+        )
+
+
+def test_list_keys(aws_session):
+    bucket, prefix = "bucket", "prefix"
+    aws_session.s3_client.list_objects_v2.side_effect = [
+        {
+            "IsTruncated": True,
+            "Contents": [
+                {"Key": "copy-test/copy.txt"},
+                {"Key": "copy-test/copy2.txt"},
+            ],
+            "NextContinuationToken": "next-continuation-token",
+        },
+        {
+            "IsTruncated": False,
+            "Contents": [
+                {"Key": "copy-test/nested/double-nested/double-nested.txt"},
+                {"Key": "copy-test/nested/nested.txt"},
+            ],
+        },
+    ]
+    keys = aws_session._list_keys(bucket, prefix)
+    assert keys == [
+        "copy-test/copy.txt",
+        "copy-test/copy2.txt",
+        "copy-test/nested/double-nested/double-nested.txt",
+        "copy-test/nested/nested.txt",
+    ]
 
 
 def test_default_bucket(aws_session, account_id):

@@ -275,7 +275,7 @@ def image_uri():
 
 @pytest.fixture(params=["given_job_name", "default_job_name"])
 def job_name(request):
-    if request.param == "given_job_nameh":
+    if request.param == "given_job_name":
         return "test-job-name"
 
 
@@ -604,3 +604,29 @@ def test_create_job_source_dir_s3_but_not_tar(
         f"If source_dir is an S3 URI, it must point to a tar.gz file. "
         f"Not a valid S3 URI for parameter `source_dir`: {fake_source_dir}"
     )
+
+
+def test_copy_checkpoints(
+    aws_session,
+    quantum_job_arn,
+    entry_point,
+    checkpoint_config,
+    generate_get_job_response,
+):
+    other_checkpoint_uri = "s3://amazon-braket-jobs/job-path/checkpoints"
+    aws_session.get_job.return_value = generate_get_job_response(
+        checkpointConfig={
+            "s3Uri": other_checkpoint_uri,
+        }
+    )
+    AwsQuantumJob._process_source_dir = Mock()
+    aws_session.create_job.return_value = quantum_job_arn
+    job = AwsQuantumJob.create(
+        aws_session=aws_session,
+        entry_point=entry_point,
+        source_dir="source_dir",
+        checkpoint_config=checkpoint_config,
+        copy_checkpoints_from_job="other-job-arn",
+    )
+    assert job == AwsQuantumJob(quantum_job_arn, aws_session)
+    aws_session.copy_s3_directory.assert_called_with(other_checkpoint_uri, checkpoint_config.s3Uri)
