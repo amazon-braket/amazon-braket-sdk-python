@@ -335,7 +335,9 @@ class AwsDevice(Device):
             )
         else:
             boto_session = boto3.Session(region_name=new_region)
-        braket_client = boto_session.client('braket', endpoint_url=client._endpoint.host)
+        braket_client = boto_session.client(
+            "braket", endpoint_url=client.meta.endpoint_url, config=config
+        )
         return AwsSession(boto_session=boto_session, braket_client=braket_client, config=config)
 
     def __repr__(self):
