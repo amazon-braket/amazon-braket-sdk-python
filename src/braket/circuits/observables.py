@@ -181,9 +181,16 @@ class TensorProduct(Observable):
         result of the tensor product of `ob1`, `ob2`, `ob3`, or `np.kron(np.kron(ob1.to_matrix(),
         ob2.to_matrix()), ob3.to_matrix())`.
         """
-        self._factors = tuple(observables)
-        qubit_count = sum([obs.qubit_count for obs in observables])
-        display_name = "@".join([obs.ascii_symbols[0] for obs in observables])
+        flattened_observables = list()
+        for obs in observables:
+            if isinstance(obs, TensorProduct):
+                for nested_obs in obs.factors:
+                    flattened_observables.append(nested_obs)
+            else:
+                flattened_observables.append(obs)
+        self._factors = tuple(flattened_observables)
+        qubit_count = sum([obs.qubit_count for obs in flattened_observables])
+        display_name = "@".join([obs.ascii_symbols[0] for obs in flattened_observables])
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
         self._factor_dimensions = tuple(
             len(factor.to_matrix()) for factor in reversed(self._factors)

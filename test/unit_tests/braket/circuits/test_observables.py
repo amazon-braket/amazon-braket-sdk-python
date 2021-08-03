@@ -126,6 +126,16 @@ def test_hermitian_eigenvalues(matrix, eigenvalues):
     compare_eigenvalues(Observable.Hermitian(matrix=matrix), eigenvalues)
 
 
+def test_flattened_tensor_product():
+    observable_one = Observable.Z() @ Observable.Y()
+    observable_two = Observable.X() @ Observable.H()
+    actual = Observable.TensorProduct([observable_one, observable_two])
+    expected = Observable.TensorProduct(
+        [Observable.Z(), Observable.Y(), Observable.X(), Observable.H()]
+    )
+    assert expected == actual
+
+
 @pytest.mark.parametrize(
     "matrix,basis_rotation_matrix",
     [
