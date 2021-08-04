@@ -178,18 +178,21 @@ class AwsQuantumJob:
         default_bucket = aws_session.default_bucket()
         code_location = code_location or aws_session.construct_s3_uri(
             default_bucket,
+            "jobs",
             job_name,
             "script",
         )
         if not output_data_config.s3Path:
             output_data_config.s3Path = aws_session.construct_s3_uri(
                 default_bucket,
+                "jobs",
                 job_name,
                 "output",
             )
         if not checkpoint_config.s3Uri:
             checkpoint_config.s3Uri = aws_session.construct_s3_uri(
                 default_bucket,
+                "jobs",
                 job_name,
                 "checkpoints",
             )

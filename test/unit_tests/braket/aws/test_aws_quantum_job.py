@@ -496,7 +496,7 @@ def _assert_create_job_called_with(
     job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
     code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
-        default_bucket, job_name, "script"
+        default_bucket, "jobs", job_name, "script"
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
     priority_access_devices = [
@@ -506,11 +506,11 @@ def _assert_create_job_called_with(
     input_data_config = create_job_args["input_data_config"] or []
     instance_config = create_job_args["instance_config"] or InstanceConfig()
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
-        s3Path=aws_session.construct_s3_uri(default_bucket, job_name, "output")
+        s3Path=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "output")
     )
     stopping_condition = create_job_args["stopping_condition"] or StoppingCondition()
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
-        s3Uri=aws_session.construct_s3_uri(default_bucket, job_name, "checkpoints")
+        s3Uri=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
     )
     vpc_config = create_job_args["vpc_config"]
     # tags = create_job_args["tags"] or {}
