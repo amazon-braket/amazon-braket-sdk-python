@@ -181,7 +181,7 @@ class TensorProduct(Observable):
         result of the tensor product of `ob1`, `ob2`, `ob3`, or `np.kron(np.kron(ob1.to_matrix(),
         ob2.to_matrix()), ob3.to_matrix())`.
         """
-        flattened_observables = list()
+        flattened_observables = []
         for obs in observables:
             if isinstance(obs, TensorProduct):
                 for nested_obs in obs.factors:
