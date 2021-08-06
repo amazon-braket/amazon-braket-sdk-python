@@ -238,11 +238,6 @@ def test_tensor_product_rmatmul_observable():
     assert t.ascii_symbols == tuple(["I@Z@I@X"] * 4)
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_tensor_product_rmatmul_value_error():
-    "a" @ Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
-
-
 @pytest.mark.parametrize(
     "observable,eigenvalues",
     [
