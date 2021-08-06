@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.4 (2021-08-06)
+
+### Bug Fixes and Other Changes
+
+ * Flatten Tensor Products
+
 ## v1.7.3.post0 (2021-08-05)
 
 ### Documentation Changes
