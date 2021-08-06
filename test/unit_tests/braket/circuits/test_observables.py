@@ -126,6 +126,16 @@ def test_hermitian_eigenvalues(matrix, eigenvalues):
     compare_eigenvalues(Observable.Hermitian(matrix=matrix), eigenvalues)
 
 
+def test_flattened_tensor_product():
+    observable_one = Observable.Z() @ Observable.Y()
+    observable_two = Observable.X() @ Observable.H()
+    actual = Observable.TensorProduct([observable_one, observable_two])
+    expected = Observable.TensorProduct(
+        [Observable.Z(), Observable.Y(), Observable.X(), Observable.H()]
+    )
+    assert expected == actual
+
+
 @pytest.mark.parametrize(
     "matrix,basis_rotation_matrix",
     [
@@ -226,11 +236,6 @@ def test_tensor_product_rmatmul_observable():
     assert t.to_ir() == ["i", "z", "i", "x"]
     assert t.qubit_count == 4
     assert t.ascii_symbols == tuple(["I@Z@I@X"] * 4)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_tensor_product_rmatmul_value_error():
-    "a" @ Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
 
 
 @pytest.mark.parametrize(
