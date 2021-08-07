@@ -11,11 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import codecs
 import os
-import pickle
 from typing import Any, Dict
 
+from braket.jobs.serialization import deserialize_values, serialize_values
 from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
 
 
@@ -57,7 +56,7 @@ def save_job_checkpoint(
         else f"{checkpoint_directory}/{job_name}.json"
     )
     with open(checkpoint_file_path, "w") as f:
-        serialized_data = _serialize_values(checkpoint_data or {}, data_format)
+        serialized_data = serialize_values(checkpoint_data or {}, data_format)
         persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
         f.write(persisted_data.json())
 
@@ -97,7 +96,7 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
     )
     with open(checkpoint_file_path, "r") as f:
         persisted_data = PersistedJobData.parse_raw(f.read())
-        deserialized_data = _deserialize_values(
+        deserialized_data = deserialize_values(
             persisted_data.dataDictionary, persisted_data.dataFormat
         )
         return deserialized_data
@@ -129,55 +128,6 @@ def save_job_result(
     result_directory = os.environ["OUTPUT_DIR"]
     result_path = f"{result_directory}/results.json"
     with open(result_path, "w") as f:
-        serialized_data = _serialize_values(result_data or {}, data_format)
+        serialized_data = serialize_values(result_data or {}, data_format)
         persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
         f.write(persisted_data.json())
-
-
-def _serialize_values(
-    data_dictionary: Dict[str, Any], data_format: PersistedJobDataFormat
-) -> Dict[str, Any]:
-    """
-    Serializes the `data_dictionary` values to the format specified by `data_format`.
-
-    Args:
-        data_dictionary (Dict[str, Any]): Dict whose values need to be serialized.
-        data_format (PersistedJobDataFormat): Data format to be used for serializing the
-            values. Note that for `PICKLED` data formats, the values are base64 encoded
-            after serialization (so that they represent valid UTF-8 text) and are compatible
-            with `PersistedJobData.json()`.
-
-    Returns:
-        Dict[str, Any]: Dict with same keys as `data_dictionary`, and values serialized to
-        the specified `data_format`.
-    """
-    return (
-        {
-            k: codecs.encode(pickle.dumps(v, protocol=4), "base64").decode()
-            for k, v in data_dictionary.items()
-        }
-        if data_format == PersistedJobDataFormat.PICKLED_V4
-        else data_dictionary
-    )
-
-
-def _deserialize_values(
-    data_dictionary: Dict[str, Any], data_format: PersistedJobDataFormat
-) -> Dict[str, Any]:
-    """
-    Deserializes the `data_dictionary` values from the format specified by `data_format`.
-
-    Args:
-        data_dictionary (Dict[str, Any]): Dict whose values need to be deserialized.
-        data_format (PersistedJobDataFormat): Data format that the `data_dictionary` values
-            are currently serialized with.
-
-    Returns:
-        Dict[str, Any]: Dict with same keys as `data_dictionary`, and values deserialized from
-        the specified `data_format` to plaintext.
-    """
-    return (
-        {k: pickle.loads(codecs.decode(v.encode(), "base64")) for k, v in data_dictionary.items()}
-        if data_format == PersistedJobDataFormat.PICKLED_V4
-        else data_dictionary
-    )

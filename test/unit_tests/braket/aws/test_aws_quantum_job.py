@@ -12,7 +12,9 @@
 # language governing permissions and limitations under the License.
 
 import datetime
+import json
 import os
+import tarfile
 import tempfile
 import time
 from collections import defaultdict
@@ -29,7 +31,6 @@ from braket.jobs.config import (
     InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
-    PollingConfig,
     S3DataSource,
     StoppingCondition,
     VpcConfig,
@@ -126,7 +127,7 @@ def generate_cancel_job_response():
 
 @pytest.fixture
 def quantum_job_name():
-    return "job-test-20210625121626"
+    return "job-test-20210628140446"
 
 
 @pytest.fixture
@@ -258,6 +259,136 @@ def test_state_caching(quantum_job, aws_session, generate_get_job_response, quan
     assert aws_session.get_job.call_count == 1
 
 
+@pytest.fixture()
+def result_setup(quantum_job_name):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+        file_path = "results.json"
+
+        with open(file_path, "w") as write_file:
+            write_file.write(
+                json.dumps(
+                    {
+                        "braketSchemaHeader": {
+                            "name": "braket.jobs_data.persisted_job_data",
+                            "version": "1",
+                        },
+                        "dataDictionary": {"converged": True, "energy": -0.2},
+                        "dataFormat": "plaintext",
+                    }
+                )
+            )
+
+        with tarfile.open("model.tar.gz", "w:gz") as tar:
+            tar.add(file_path, arcname=os.path.basename(file_path))
+
+        yield
+
+        result_dir = f"{os.getcwd()}/{quantum_job_name}"
+
+        if os.path.exists(result_dir):
+            os.remove(f"{result_dir}/results.json")
+            os.rmdir(f"{result_dir}/")
+
+        if os.path.isfile("model.tar.gz"):
+            os.remove("model.tar.gz")
+
+        os.chdir("..")
+
+
+def test_results_when_job_is_completed(
+    quantum_job, aws_session, generate_get_job_response, result_setup
+):
+    expected_saved_data = {"converged": True, "energy": -0.2}
+    state = "COMPLETED"
+
+    get_job_response_completed = generate_get_job_response(status=state)
+    quantum_job._aws_session.get_job.return_value = get_job_response_completed
+    actual_data = quantum_job.result()
+
+    job_metadata = quantum_job.metadata(True)
+    s3_path, job_name = job_metadata["outputDataConfig"]["s3Path"], job_metadata["jobName"]
+
+    output_bucket_uri = (
+        f"{s3_path}/BraketJob-{aws_session.account_id}-{job_name}/output/model.tar.gz"
+    )
+    quantum_job._aws_session.download_from_s3.assert_called_with(
+        s3_uri=output_bucket_uri, filename="model.tar.gz"
+    )
+    assert actual_data == expected_saved_data
+
+
+@pytest.mark.parametrize("state", ["FAILED", "CANCELLED"])
+def test_results_when_job_is_failed_or_cancelled(
+    state, quantum_job, generate_get_job_response, result_setup
+):
+    get_job_response_failed = generate_get_job_response(
+        status=state, failureReason="Validation Error"
+    )
+    quantum_job._aws_session.get_job.return_value = get_job_response_failed
+    job_metadata = quantum_job.metadata(True)
+    message = (
+        f"Error retrieving results, your job is in {state} state. "
+        f"Your job has failed due to: {job_metadata['failureReason']}"
+        if state == "FAILED"
+        else f"Error retrieving results, your job is in {state} state."
+    )
+    with pytest.raises(RuntimeError, match=message):
+        quantum_job.result()
+
+
+def test_download_result_when_job_is_running(
+    quantum_job, aws_session, generate_get_job_response, result_setup
+):
+    poll_timeout_seconds, poll_interval_seconds, state = 1, 0.5, "RUNNING"
+    get_job_response_completed = generate_get_job_response(status=state)
+    aws_session.get_job.return_value = get_job_response_completed
+    job_metadata = quantum_job.metadata(True)
+
+    with pytest.raises(
+        TimeoutError,
+        match=f"{job_metadata['jobName']}: Polling for job completion "
+        f"timed out after {poll_timeout_seconds} seconds.",
+    ):
+        quantum_job.download_result(
+            poll_timeout_seconds=poll_timeout_seconds, poll_interval_seconds=poll_interval_seconds
+        )
+
+
+def test_download_result_when_extract_path_not_provided(
+    quantum_job, generate_get_job_response, aws_session, result_setup
+):
+    state = "COMPLETED"
+    expected_saved_data = {"converged": True, "energy": -0.2}
+    get_job_response_completed = generate_get_job_response(status=state)
+    quantum_job._aws_session.get_job.return_value = get_job_response_completed
+    job_metadata = quantum_job.metadata(True)
+    job_name = job_metadata["jobName"]
+    quantum_job.download_result()
+
+    with open(f"{job_name}/results.json", "r") as file:
+        actual_data = json.loads(file.read())["dataDictionary"]
+        assert expected_saved_data == actual_data
+
+
+def test_download_result_when_extract_path_provided(
+    quantum_job, generate_get_job_response, aws_session, result_setup
+):
+    expected_saved_data = {"converged": True, "energy": -0.2}
+    state = "COMPLETED"
+    get_job_response_completed = generate_get_job_response(status=state)
+    aws_session.get_job.return_value = get_job_response_completed
+    job_metadata = quantum_job.metadata(True)
+    job_name = job_metadata["jobName"]
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        quantum_job.download_result(temp_dir)
+
+        with open(f"{temp_dir}/{job_name}/results.json", "r") as file:
+            actual_data = json.loads(file.read())["dataDictionary"]
+            assert expected_saved_data == actual_data
+
+
 @pytest.fixture
 def entry_point():
     return "entry_point:func"
@@ -367,12 +498,6 @@ def wait_until_complete(request):
     return request.param == "wait"
 
 
-@pytest.fixture(params=["job_completes", "job_times_out"])
-def polling_config(request):
-    timeout = 1 if request.param == "job_completes" else 0.1
-    return PollingConfig(timeout, 0.05)
-
-
 @pytest.fixture
 def vpc_config():
     return VpcConfig(
@@ -397,7 +522,6 @@ def create_job_args(
     code_location,
     role_arn,
     wait_until_complete,
-    polling_config,
     priority_access_device_arn,
     hyper_parameters,
     input_data_config,
@@ -420,7 +544,6 @@ def create_job_args(
                 "code_location": code_location,
                 "role_arn": role_arn,
                 "wait_until_complete": wait_until_complete,
-                "polling_config": polling_config,
                 "priority_access_device_arn": priority_access_device_arn,
                 "hyper_parameters": hyper_parameters,
                 # "metric_defintions": None,

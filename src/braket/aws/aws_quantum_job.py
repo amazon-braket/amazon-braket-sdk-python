@@ -29,21 +29,28 @@ from braket.jobs.config import (
     InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
-    PollingConfig,
     PriorityAccessConfig,
     StoppingCondition,
     VpcConfig,
 )
+from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
+from braket.jobs.serialization import deserialize_values
+from braket.jobs_data import PersistedJobData
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
 # for the files, since all those metrics are retrieved from the CW.
-from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
 
 
 class AwsQuantumJob:
     """Amazon Braket implementation of a quantum job."""
 
-    TERMINAL_STATES = ["FAILED", "COMPLETED", "CANCELLED"]
+    NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
+    RESULTS_READY_STATES = {"COMPLETED"}
+    TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
+    DEFAULT_RESULTS_POLL_TIMEOUT = 864000
+    DEFAULT_RESULTS_POLL_INTERVAL = 1
+    RESULTS_FILENAME = "results.json"
+    RESULTS_TAR_FILENAME = "model.tar.gz"
 
     @classmethod
     def create(
@@ -62,7 +69,6 @@ class AwsQuantumJob:
         code_location: str = None,
         role_arn: str = None,
         wait_until_complete: bool = False,
-        polling_config: PollingConfig = None,
         priority_access_device_arn: str = None,
         hyper_parameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
@@ -105,10 +111,6 @@ class AwsQuantumJob:
 
             wait_until_complete (bool): bool representing whether we should wait until the job
                 completes. This would tail the job logs as it waits. Default = `False`.
-
-            polling_config (PollingConfig): A PollingConfig specifying the timeout limit and
-                polling interval to use if wait_until_complete is true.
-                Default = `PollingConfig()`.
 
             priority_access_device_arn (str): ARN for the AWS device which should have priority
                 access for the execution of this job. Default = `None`.
@@ -370,21 +372,104 @@ class AwsQuantumJob:
         cancellation_response = self._aws_session.cancel_job(self._arn)
         return cancellation_response["cancellationStatus"]
 
-    def result(self) -> Dict[str, Any]:
+    def result(
+        self,
+        poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
+    ) -> Dict[str, Any]:
         """Retrieves the job result persisted using save_job_result() function.
+
+        Args:
+            poll_timeout_seconds (float): The polling timeout for `result()`. Default: 10 days.
+            poll_interval_seconds (float): The polling interval for `result()`. Default: 1 second.
 
         Returns:
             Dict[str, Any]: Dict specifying the job results.
+
+        Raises:
+            RunTimeError: if job is in FAILED or CANCELLED state.
+            TimeOutError: if job execution exceeds the polling timeout period.
         """
 
-    def download_results(self, extract_to=None) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            job_name = self.metadata(True)["jobName"]
+            self.download_result(temp_dir, poll_timeout_seconds, poll_interval_seconds)
+            with open(f"{temp_dir}/{job_name}/{AwsQuantumJob.RESULTS_FILENAME}", "r") as f:
+                persisted_data = PersistedJobData.parse_raw(f.read())
+                deserialized_data = deserialize_values(
+                    persisted_data.dataDictionary, persisted_data.dataFormat
+                )
+                return deserialized_data
+
+    def download_result(
+        self,
+        extract_to=None,
+        poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
+    ) -> None:
         """Downloads the results from the job output S3 bucket and extracts the tar.gz
         bundle to the location specified by 'extract_to'. If no location is specified,
         the results are extracted to the current directory.
 
         Args:
-            extract_to (str): Location where results will be extracted.
+            extract_to (str): Directory where the results will be extracted to. The results
+                are extracted to a folder titled with the job name within this directory.
+                Default= `Current working directory`.
+            poll_timeout_seconds: (float): The polling timeout for `download_result()`.
+                Default: 10 days.
+            poll_interval_seconds: (float): The polling interval for `download_result()`.
+                Default: 1 second.
+
+        Raises:
+            RunTimeError: if job is in FAILED or CANCELLED state.
+            TimeOutError: if job execution exceeds the polling timeout period.
         """
+
+        extract_to = extract_to or os.getcwd()
+
+        timeout_time = time.time() + poll_timeout_seconds
+        job_response = self.metadata(True)
+
+        while time.time() < timeout_time:
+            job_response = self.metadata(True)
+            job_state = self.state()
+
+            if job_state in AwsQuantumJob.NO_RESULT_TERMINAL_STATES:
+                message = (
+                    f"Error retrieving results, your job is in {job_state} state. "
+                    f"Your job has failed due to: {job_response['failureReason']}"
+                    if job_state == "FAILED"
+                    else f"Error retrieving results, your job is in {job_state} state."
+                )
+                raise RuntimeError(message)
+            elif job_state in AwsQuantumJob.RESULTS_READY_STATES:
+                output_s3_path, job_name = (
+                    job_response["outputDataConfig"]["s3Path"],
+                    job_response["jobName"],
+                )
+
+                output_bucket_uri = (
+                    f"{output_s3_path}/BraketJob-"
+                    f"{self._aws_session.account_id}-{job_name}/output/"
+                    f"{AwsQuantumJob.RESULTS_TAR_FILENAME}"
+                )
+                self._aws_session.download_from_s3(
+                    s3_uri=output_bucket_uri, filename=AwsQuantumJob.RESULTS_TAR_FILENAME
+                )
+                AwsQuantumJob._extract_tar_file(f"{extract_to}/{job_name}")
+                return
+            else:
+                time.sleep(poll_interval_seconds)
+
+        raise TimeoutError(
+            f"{job_response['jobName']}: Polling for job completion "
+            f"timed out after {poll_timeout_seconds} seconds."
+        )
+
+    @staticmethod
+    def _extract_tar_file(extract_path):
+        with tarfile.open(AwsQuantumJob.RESULTS_TAR_FILENAME, "r:gz") as tar:
+            tar.extractall(extract_path)
 
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"

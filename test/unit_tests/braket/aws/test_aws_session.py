@@ -704,6 +704,20 @@ def test_upload_to_s3(aws_session):
     aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
 
 
+def test_download_from_s3(aws_session):
+    filename = "model.tar.gz"
+    s3_uri = (
+        "s3://amazon-braket-jobs/job-path/output/"
+        "BraketJob-875981177017-job-test-20210628140446/output/model.tar.gz"
+    )
+    bucket, key = (
+        "amazon-braket-jobs",
+        "job-path/output/BraketJob-875981177017-job-test-20210628140446/output/model.tar.gz",
+    )
+    aws_session.download_from_s3(s3_uri, filename)
+    aws_session._s3.download_file.assert_called_with(bucket, key, filename)
+
+
 def test_copy_identical_s3(aws_session):
     s3_uri = "s3://bucket/key"
     aws_session.copy_s3_object(s3_uri, s3_uri)

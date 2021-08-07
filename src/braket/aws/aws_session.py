@@ -241,6 +241,20 @@ class AwsSession(object):
         bucket, key = self.parse_s3_uri(s3_uri)
         self.s3_client.upload_file(filename, bucket, key)
 
+    def download_from_s3(self, s3_uri: str, filename: str) -> None:
+        """
+         Download file from S3
+
+        Args:
+            s3_uri (str): The S3 uri from where the file will be downloaded.
+            filename (str): filename to save the file to.
+
+        Returns:
+            None
+        """
+        bucket, key = self.parse_s3_uri(s3_uri)
+        self.s3_client.download_file(bucket, key, filename)
+
     def copy_s3_object(self, source_s3_uri: str, destination_s3_uri: str) -> None:
         """
         Copy object from another location in s3. Does nothing if source and

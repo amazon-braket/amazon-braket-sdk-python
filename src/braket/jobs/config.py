@@ -46,7 +46,7 @@ class DataSource:
 
 @dataclass
 class InputDataConfig:
-    """Configuration specifying the location for the output of the job."""
+    """Configuration specifying the location for the input of the job."""
 
     # TODO: test multiple channels with the same name in integ test
     channelName: str = "input"
@@ -89,9 +89,3 @@ class PriorityAccessConfig:
 @dataclass
 class DeviceConfig:
     priorityAccess: PriorityAccessConfig = PriorityAccessConfig()
-
-
-@dataclass
-class PollingConfig:
-    pollTimeoutSeconds: float = 864000
-    pollIntervalSeconds: float = 1
