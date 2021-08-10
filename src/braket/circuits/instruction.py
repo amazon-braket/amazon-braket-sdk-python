@@ -13,14 +13,15 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Union
 
 from braket.circuits.gate import Gate
+from braket.circuits.composite_operator import CompositeOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
-InstructionOperator = Gate
+InstructionOperator = Union[Gate, CompositeOperator]
 
 
 class Instruction:
@@ -130,6 +131,18 @@ class Instruction:
             return Instruction(self._operator, target)
         else:
             return Instruction(self._operator, self._target.map(target_mapping))
+
+    def decompose(self):
+        """
+        Decomposes the instruction.
+
+        Returns:
+            Iterable[Instruction]: iterable of instructions
+        """
+        if isinstance(self._operator, CompositeOperator):
+            return self._operator.decompose(self._target)
+        else:
+            return [self]
 
     def __repr__(self):
         return f"Instruction('operator': {self._operator}, 'target': {self._target})"

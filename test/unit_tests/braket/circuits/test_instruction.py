@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import Gate, Instruction, Qubit, QubitSet
+from braket.circuits import Gate, Instruction, Qubit, QubitSet, CompositeOperator
 
 
 @pytest.fixture
@@ -133,3 +133,14 @@ def test_copy_with_target(cnot):
 @pytest.mark.xfail(raises=TypeError)
 def test_copy_with_target_and_mapping(instr):
     instr.copy(target=[10], target_mapping={0: 10})
+
+
+def test_decompose():
+    ghz_instr1 = Instruction(CompositeOperator.GHZ(3), [0, 1, 2]).decompose()
+    ghz_instr2 = Instruction(CompositeOperator.GHZ(4), [0, 1, 2, 3]).decompose()
+    qft_instr = Instruction(CompositeOperator.QFT(3), [0, 1, 2]).decompose()
+    operator = CompositeOperator.GHZ(3)
+
+    assert ghz_instr1 == operator.decompose([0, 1, 2])
+    assert ghz_instr1 != ghz_instr2
+    assert ghz_instr1 != qft_instr

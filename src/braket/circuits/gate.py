@@ -39,6 +39,10 @@ class Gate(QuantumOperator):
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`
         """
+        if len(ascii_symbols) != qubit_count:
+            msg = f"ascii_symbols, {ascii_symbols}, length must equal qubit_count, {qubit_count}"
+            raise ValueError(msg)
+
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     def to_ir(self, target: QubitSet) -> Any:

@@ -36,11 +36,6 @@ def test_none_ascii():
     QuantumOperator(qubit_count=1, ascii_symbols=None)
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_mismatch_length_ascii():
-    QuantumOperator(qubit_count=1, ascii_symbols=["foo", "bar"])
-
-
 def test_name(quantum_operator):
     expected = quantum_operator.__class__.__name__
     assert quantum_operator.name == expected

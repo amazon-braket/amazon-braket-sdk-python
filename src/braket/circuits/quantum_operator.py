@@ -35,8 +35,7 @@ class QuantumOperator(Operator):
                 correlate a symbol with that index.
 
         Raises:
-            ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`
+            ValueError: `qubit_count` is less than 1, or `ascii_symbols` are `None`
         """
 
         if qubit_count < 1:
@@ -46,9 +45,6 @@ class QuantumOperator(Operator):
         if ascii_symbols is None:
             raise ValueError("ascii_symbols must not be None")
 
-        if len(ascii_symbols) != qubit_count:
-            msg = f"ascii_symbols, {ascii_symbols}, length must equal qubit_count, {qubit_count}"
-            raise ValueError(msg)
         self._ascii_symbols = tuple(ascii_symbols)
 
     @property

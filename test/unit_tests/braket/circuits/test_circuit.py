@@ -27,6 +27,7 @@ from braket.circuits import (
     QubitSet,
     ResultType,
     circuit,
+    CompositeOperator
 )
 
 
@@ -807,3 +808,34 @@ def test_diagram(h):
 
     assert h.diagram(mock_diagram) == expected
     mock_diagram.build_diagram.assert_called_with(h)
+
+
+def test_decompose():
+    ghz_circ1 = Circuit().ghz([0, 1, 2]).decompose()
+    ghz_circ2 = Circuit().ghz([0, 1, 2, 3]).decompose()
+    qft_circ = Circuit().qft([0, 1, 2]).decompose()
+    ghz_instr1 = Instruction(CompositeOperator.GHZ(3), [0, 1, 2])
+
+    assert ghz_circ1 == Circuit(
+        ghz_instr1.decompose()
+    )
+    assert ghz_circ1 != ghz_circ2
+    assert ghz_circ1 != qft_circ
+
+
+def test_original_circuit_unchanged_after_decompose():
+    qft_circ = Circuit().qft([0, 1, 2])
+    qft_circ_decomposed = qft_circ.decompose()
+    assert qft_circ_decomposed != qft_circ
+
+
+def test_decomposition_levels():
+    qft_circ = Circuit().qft([0, 1, 2, 3], method="recursive")
+    assert qft_circ.decompose(level=1) == qft_circ.decompose()
+    assert qft_circ.decompose(level=2) == qft_circ.decompose().decompose()
+    assert qft_circ.decompose(level=0) == qft_circ.decompose().decompose().decompose().decompose()
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_decompose_negative_level():
+    Circuit().qft([0, 1, 2, 3]).decompose(level=-1)
