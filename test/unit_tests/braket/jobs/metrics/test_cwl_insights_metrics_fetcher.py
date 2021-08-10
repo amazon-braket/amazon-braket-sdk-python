@@ -49,8 +49,8 @@ EXPECTED_CALL_LIST = [
 ]
 
 
-@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetrics.get_metric_data_as_list")
-@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetrics.add_metrics_from_log_message")
+@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetricsParser.get_parsed_metrics")
+@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock
@@ -60,12 +60,12 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
         "status": "Complete",
         "results": EXAMPLE_METRICS_LOG_LINES,
     }
-    expected_result = ["Test"]
+    expected_result = {"Test": [0]}
     mock_get_metrics.return_value = expected_result
 
     fetcher = CwlInsightsMetricsFetcher(aws_session)
 
-    result = fetcher.get_all_metrics_for_job("test_job", job_start_time=1, job_end_time=2)
+    result = fetcher.get_metrics_for_job("test_job", job_start_time=1, job_end_time=2)
     logs_client_mock.get_query_results.assert_called_with(queryId="test")
     logs_client_mock.start_query.assert_called_with(
         logGroupName="/aws/braket/jobs",
@@ -87,9 +87,9 @@ def test_get_all_metrics_timeout(aws_session):
     logs_client_mock.get_query_results.return_value = {"status": "Queued"}
 
     fetcher = CwlInsightsMetricsFetcher(aws_session, 0.1, 0.2)
-    result = fetcher.get_all_metrics_for_job("test_job")
+    result = fetcher.get_metrics_for_job("test_job")
     logs_client_mock.get_query_results.assert_called()
-    assert result == []
+    assert result == {}
 
 
 @pytest.mark.xfail(raises=MetricsRetrievalError)
@@ -101,4 +101,4 @@ def test_get_all_metrics_failed(aws_session):
     logs_client_mock.get_query_results.return_value = {"status": "Failed"}
 
     fetcher = CwlInsightsMetricsFetcher(aws_session)
-    fetcher.get_all_metrics_for_job("test_job")
+    fetcher.get_metrics_for_job("test_job")

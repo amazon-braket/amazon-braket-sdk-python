@@ -13,14 +13,14 @@
 
 import time
 from logging import Logger, getLogger
-from typing import Any, Dict, List
+from typing import Dict, List, Union
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.metrics.cwl_metrics import CwlMetrics
+from braket.jobs.metrics.cwl_metrics_parser import CwlMetricsParser
+from braket.jobs.metrics.metrics import MetricStatistic, MetricType
 
 
 class CwlMetricsFetcher(object):
-
     LOG_GROUP_NAME = "/aws/braket/jobs"
 
     def __init__(
@@ -56,11 +56,11 @@ class CwlMetricsFetcher(object):
             return "Metrics -" in message
         return False
 
-    def _get_metrics_from_log_stream(
+    def _parse_metrics_from_log_stream(
         self,
         stream_name: str,
         timeout_time: float,
-        metrics: CwlMetrics,
+        parser: CwlMetricsParser,
     ) -> None:
         """
         Synchronously retrieves the algorithm metrics logged in a given job log stream.
@@ -69,7 +69,7 @@ class CwlMetricsFetcher(object):
             stream_name (str): The name of the log stream.
             timeout_time (float) : We stop getting metrics if the current time is beyond
                 the timeout time.
-            metrics (CwlMetrics) : The metrics object to add the metrics to.
+            parser (CwlMetricsParser) : The CWL metrics parser.
 
         Returns:
             None
@@ -87,7 +87,7 @@ class CwlMetricsFetcher(object):
             for event in response.get("events"):
                 message = event.get("message")
                 if self._is_metrics_message(message):
-                    metrics.add_metrics_from_log_message(event.get("timestamp"), message)
+                    parser.parse_log_message(event.get("timestamp"), message)
             next_token = response.get("nextForwardToken")
             if not next_token or next_token == previous_token:
                 return
@@ -126,25 +126,39 @@ class CwlMetricsFetcher(object):
         self._logger.warning("Timed out waiting for all metrics. Data may be incomplete.")
         return log_streams
 
-    def get_all_metrics_for_job(self, job_name: str) -> List[Dict[str, List[Any]]]:
+    def get_metrics_for_job(
+        self,
+        job_name: str,
+        metric_type: MetricType = MetricType.TIMESTAMP,
+        statistic: MetricStatistic = MetricStatistic.MAX,
+    ) -> Dict[str, List[Union[str, float, int]]]:
         """
         Synchronously retrieves all the algorithm metrics logged by a given Job.
 
         Args:
             job_name (str): The name of the Job. The name must be exact to ensure only the relevant
                 metrics are retrieved.
+            metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
+            statistic (MetricStatistic): The statistic to determine which metric value to use
+             when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
-            List[Dict[str, List[Any]]] : The list of all metrics that can be found in the
-                CloudWatch Logs results. Each item in the list can be thought of as a separate
-                table. Each table will have a set of metrics, indexed by the column name.
+            Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
+             are the column names, and the values are a list containing the values in each row.
+              For example, the table:
+                timestamp energy
+                0         0.1
+                1         0.2
+                would be represented as:
+                { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
+                values may be integers, floats, strings or None.
         """
         timeout_time = time.time() + self._poll_timeout_seconds
 
-        metrics = CwlMetrics()
+        parser = CwlMetricsParser()
 
         log_streams = self._get_log_streams_for_job(job_name, timeout_time)
         for log_stream in log_streams:
-            self._get_metrics_from_log_stream(log_stream, timeout_time, metrics)
+            self._parse_metrics_from_log_stream(log_stream, timeout_time, parser)
 
-        return metrics.get_metric_data_as_list()
+        return parser.get_parsed_metrics(metric_type, statistic)

@@ -52,8 +52,8 @@ EXPECTED_CALL_LIST = [
 ]
 
 
-@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetrics.get_metric_data_as_list")
-@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetrics.add_metrics_from_log_message")
+@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetricsParser.get_parsed_metrics")
+@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock
@@ -65,16 +65,16 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
         "events": EXAMPLE_METRICS_LOG_LINES,
         "nextForwardToken": None,
     }
-    expected_result = ["Test"]
+    expected_result = {"Test": [0]}
     mock_get_metrics.return_value = expected_result
 
     fetcher = CwlMetricsFetcher(aws_session)
-    result = fetcher.get_all_metrics_for_job("test_job")
+    result = fetcher.get_metrics_for_job("test_job")
     assert mock_add_metrics.call_args_list == EXPECTED_CALL_LIST
     assert result == expected_result
 
 
-@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetrics.add_metrics_from_log_message")
+@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_log_streams_timeout(mock_add_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock
@@ -88,12 +88,12 @@ def test_get_log_streams_timeout(mock_add_metrics, aws_session):
     }
 
     fetcher = CwlMetricsFetcher(aws_session, 0.1)
-    result = fetcher.get_all_metrics_for_job("test_job")
+    result = fetcher.get_metrics_for_job("test_job")
     mock_add_metrics.assert_not_called()
-    assert result == []
+    assert result == {}
 
 
-@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetrics.add_metrics_from_log_message")
+@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_no_streams_returned(mock_add_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock
@@ -101,14 +101,14 @@ def test_get_no_streams_returned(mock_add_metrics, aws_session):
     logs_client_mock.describe_log_streams.return_value = {}
 
     fetcher = CwlMetricsFetcher(aws_session)
-    result = fetcher.get_all_metrics_for_job("test_job")
+    result = fetcher.get_metrics_for_job("test_job")
     logs_client_mock.describe_log_streams.assert_called()
     mock_add_metrics.assert_not_called()
-    assert result == []
+    assert result == {}
 
 
-@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetrics.get_metric_data_as_list")
-@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetrics.add_metrics_from_log_message")
+@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetricsParser.get_parsed_metrics")
+@patch("braket.jobs.metrics.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_metrics_timeout(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock
@@ -117,11 +117,11 @@ def test_get_metrics_timeout(mock_add_metrics, mock_get_metrics, aws_session):
         "logStreams": [{"logStreamName": "stream name"}]
     }
     logs_client_mock.get_log_events.side_effect = get_log_events_forever
-    expected_result = ["Test"]
+    expected_result = {"Test": [0]}
     mock_get_metrics.return_value = expected_result
 
     fetcher = CwlMetricsFetcher(aws_session, 0.1)
-    result = fetcher.get_all_metrics_for_job("test_job")
+    result = fetcher.get_metrics_for_job("test_job")
     logs_client_mock.get_log_events.assert_called()
     mock_add_metrics.assert_called()
     assert result == expected_result

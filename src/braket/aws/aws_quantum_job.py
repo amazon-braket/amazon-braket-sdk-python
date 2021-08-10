@@ -33,12 +33,13 @@ from braket.jobs.config import (
     StoppingCondition,
     VpcConfig,
 )
-from braket.jobs.metrics import MetricDefinition, MetricPeriod, MetricStatistic
-from braket.jobs.serialization import deserialize_values
-from braket.jobs_data import PersistedJobData
+from braket.jobs.metrics.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
 # for the files, since all those metrics are retrieved from the CW.
+from braket.jobs.metrics.metrics import MetricDefinition, MetricStatistic, MetricType
+from braket.jobs.serialization import deserialize_values
+from braket.jobs_data import PersistedJobData
 
 
 class AwsQuantumJob:
@@ -336,29 +337,31 @@ class AwsQuantumJob:
 
     def metrics(
         self,
-        metric_names: List[str] = None,
-        period: MetricPeriod = MetricPeriod.ONE_MINUTE,
-        statistic: MetricStatistic = MetricStatistic.AVG,
-    ) -> Dict[str, Any]:
-
-        # TODO: We might have to update the method signature & associated enums based when we
-        # integrate with metric retrieval classes.
-
-        """Queries cloudwatch to retrieve the metric values for the specified metric_names
-        for the job.
-
-        Note: The function definition here is subject to change depending on our metric
-        strategy for the console.
-
+        metric_type: MetricType = MetricType.TIMESTAMP,
+        statistic: MetricStatistic = MetricStatistic.MAX,
+    ) -> Dict[str, List[Any]]:
+        """
+        Gets all the metrics data, where the keys are the column names, and the values are a list
+        containing the values in each row. For example, the table:
+           timestamp energy
+           0         0.1
+           1         0.2
+        would be represented as:
+        { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
+        values may be integers, floats, strings or None.
         Args:
-            metric_names (List[str]): Metric names to retrieve for the job.
-            period (MetricPeriod): Period over which the cloudwatch metric is aggregated.
-            statistic (MetricStatistic): Metric data aggregation to use over the specified period.
+            metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
+            statistic (MetricStatistic): The statistic to determine which metric value to use
+                when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
-            Dict[str, Any]: Dict containing the metric information represented with the keys
-                "timestamp", "metric_name" and "value".
+            Dict[str, List[Union[str, float, int]]] : The metrics data.
         """
+        fetcher = CwlInsightsMetricsFetcher(self._aws_session)
+        metadata = self.metadata(True)
+        job_name = metadata["jobName"]
+        # TODO : Add job start and job end times
+        return fetcher.get_metrics_for_job(job_name, metric_type, statistic)
 
     def cancel(self) -> str:
         """Cancels the job.

@@ -36,5 +36,13 @@ class MetricPeriod(Enum):
 class MetricStatistic(Enum):
     """Metric data aggregation to use over the specified period."""
 
-    # TODO: Check if we can extract this value directly from CloudWatch from statistics.
-    AVG: str = "Average"
+    MIN: str = "Min"
+    MAX: str = "Max"
+
+
+@unique
+class MetricType(Enum):
+    """Metric type."""
+
+    TIMESTAMP: str = "Timestamp"
+    ITERATION_NUMBER: str = "IterationNumber"

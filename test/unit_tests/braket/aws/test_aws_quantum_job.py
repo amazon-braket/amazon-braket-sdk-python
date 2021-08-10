@@ -753,3 +753,29 @@ def test_copy_checkpoints(
     )
     assert job == AwsQuantumJob(quantum_job_arn, aws_session)
     aws_session.copy_s3_directory.assert_called_with(other_checkpoint_uri, checkpoint_config.s3Uri)
+
+
+@patch(
+    "braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlInsightsMetricsFetcher.get_metrics_for_job"
+)
+def test_metrics(
+    metrics_fetcher_mock,
+    aws_session,
+    quantum_job_arn,
+    entry_point,
+    checkpoint_config,
+    generate_get_job_response,
+):
+    expected_metrics = {"Test": [1]}
+    aws_session.get_job.return_value = generate_get_job_response()
+    metrics_fetcher_mock.return_value = expected_metrics
+    AwsQuantumJob._process_source_dir = Mock()
+    aws_session.create_job.return_value = quantum_job_arn
+    job = AwsQuantumJob.create(
+        aws_session=aws_session,
+        entry_point=entry_point,
+        source_dir="source_dir",
+    )
+    metrics = job.metrics()
+    assert job == AwsQuantumJob(quantum_job_arn, aws_session)
+    assert metrics == expected_metrics
