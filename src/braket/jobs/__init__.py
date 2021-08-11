@@ -18,3 +18,8 @@ from braket.jobs.config import (  # noqa: F401
     StoppingCondition,
     VpcConfig,
 )
+from braket.jobs.data_persistence import (  # noqa: F401
+    load_job_checkpoint,
+    save_job_checkpoint,
+    save_job_result,
+)

@@ -67,8 +67,6 @@ class StoppingCondition:
     """Conditions denoting when the job should be forcefully stopped."""
 
     maxRuntimeInSeconds: int = 100_000
-    # TODO: remove this when change is propagated
-    maximumTaskLimit: int = 5 * 24 * 60 * 60
 
 
 @dataclass
@@ -77,6 +75,7 @@ class VpcConfig:
     # TODO: Ensure that length of the list for securityGroupIds is between 1 and 5
     # and for subnets between 1 and 16.
     """Configuration specifying the security groups and subnets to use for running the job."""
+
     securityGroupIds: List[str]
     subnets: List[str]
 

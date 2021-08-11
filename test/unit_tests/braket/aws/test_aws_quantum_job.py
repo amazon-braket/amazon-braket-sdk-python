@@ -391,7 +391,7 @@ def test_download_result_when_extract_path_provided(
 
 @pytest.fixture
 def entry_point():
-    return "entry_point:func"
+    return "test-source-dir.entry_point:func"
 
 
 @pytest.fixture
@@ -587,9 +587,11 @@ def test_no_arn_setter(quantum_job):
     quantum_job.arn = 123
 
 
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 @patch("time.time")
 def test_create_job(
     mock_time,
+    mock_validate_entry_point,
     aws_session,
     source_dir,
     create_job_args,
@@ -599,15 +601,16 @@ def test_create_job(
     mock_time.return_value = datetime.datetime.now().timestamp()
     with tempfile.TemporaryDirectory() as tempdir:
         os.chdir(tempdir)
-        if source_dir == "test-source-dir":
-            os.mkdir(source_dir)
+        os.mkdir("test-source-dir")
+        if source_dir == ".":
+            os.chdir("test-source-dir")
         aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
             generate_get_job_response(status="COMPLETED")
         ]
         job = AwsQuantumJob.create(**create_job_args)
         assert job == AwsQuantumJob(quantum_job_arn, aws_session)
         _assert_create_job_called_with(create_job_args)
-        os.chdir("..")
+        os.chdir("../..")
 
 
 def _assert_create_job_called_with(
@@ -696,7 +699,9 @@ def test_cancel_job_surfaces_exception(quantum_job, aws_session):
     quantum_job.cancel()
 
 
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 def test_create_job_source_dir_not_found(
+    mock_validate_entry_point,
     aws_session,
     entry_point,
 ):
@@ -711,7 +716,9 @@ def test_create_job_source_dir_not_found(
     assert str(e.value) == f"Source directory not found: {fake_source_dir}"
 
 
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 def test_create_job_source_dir_s3_but_not_tar(
+    mock_validate_entry_point,
     aws_session,
     entry_point,
 ):
@@ -729,7 +736,9 @@ def test_create_job_source_dir_s3_but_not_tar(
     )
 
 
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 def test_copy_checkpoints(
+    mock_validate_entry_point,
     aws_session,
     quantum_job_arn,
     entry_point,
@@ -755,11 +764,13 @@ def test_copy_checkpoints(
     aws_session.copy_s3_directory.assert_called_with(other_checkpoint_uri, checkpoint_config.s3Uri)
 
 
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 @patch(
     "braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlInsightsMetricsFetcher.get_metrics_for_job"
 )
 def test_metrics(
     metrics_fetcher_mock,
+    mock_validate_entry_point,
     aws_session,
     quantum_job_arn,
     entry_point,
@@ -779,3 +790,42 @@ def test_metrics(
     metrics = job.metrics()
     assert job == AwsQuantumJob(quantum_job_arn, aws_session)
     assert metrics == expected_metrics
+
+
+@pytest.mark.parametrize(
+    "entry_point",
+    (
+        "test-source-dir.entry_point:func",
+        "test-source-dir.entry_point",
+    ),
+)
+@patch("importlib.import_module")
+def test_validate_entry_point(mock_import, entry_point):
+    mock_module = Mock(function_name="exists")
+    mock_import.return_value = mock_module
+    AwsQuantumJob._validate_entry_point(entry_point)
+
+
+@patch("importlib.import_module")
+def test_validate_entry_point_invalid_entry_point(mock_import):
+    entry_point = "source_dir.entry_point:start_here_not_found"
+    error_string = (
+        "Entry function 'start_here_not_found' not found in module " "'source_dir.entry_point'."
+    )
+    file_path, function_name = entry_point.split(":")
+    mock_module = Mock(start_here="exists")
+    del mock_module.start_here_not_found
+    mock_module.__repr__ = lambda _: file_path
+    mock_import.return_value = mock_module
+
+    with pytest.raises(ValueError, match=error_string):
+        AwsQuantumJob._validate_entry_point(entry_point)
+
+
+@patch("importlib.import_module")
+def test_validate_entry_point_invalid_source_dir(mock_import):
+    entry_point = "fake_source_dir.entry_point:start_here_not_found"
+    error_string = "Entry point module not found: 'fake_source_dir.entry_point'"
+    mock_import.side_effect = ModuleNotFoundError()
+    with pytest.raises(ValueError, match=error_string):
+        AwsQuantumJob._validate_entry_point(entry_point)

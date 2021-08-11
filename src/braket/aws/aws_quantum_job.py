@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import importlib
 import os.path
 import tarfile
 import tempfile
@@ -199,12 +200,12 @@ class AwsQuantumJob:
                 job_name,
                 "checkpoints",
             )
-        # TODO: implement recursive copy for checkpoint directory
         if copy_checkpoints_from_job:
             checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
                 "checkpointConfig"
             ]["s3Uri"]
             aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
+        AwsQuantumJob._validate_entry_point(entry_point)
         AwsQuantumJob._process_source_dir(
             source_dir,
             aws_session,
@@ -488,7 +489,6 @@ class AwsQuantumJob:
     @staticmethod
     def _process_source_dir(source_dir, aws_session, code_location):
         # TODO: check with product about copy in s3 behavior
-        # TODO: validate entry_point
         if source_dir.startswith("s3://"):
             if not source_dir.endswith(".tar.gz"):
                 raise ValueError(
@@ -506,3 +506,13 @@ class AwsQuantumJob:
                 aws_session.upload_to_s3(
                     f"{tmpdir}/source.tar.gz", f"{code_location}/source.tar.gz"
                 )
+
+    @staticmethod
+    def _validate_entry_point(entry_point):
+        module, _, function_name = entry_point.partition(":")
+        try:
+            module = importlib.import_module(module)
+        except ModuleNotFoundError:
+            raise ValueError(f"Entry point module not found: '{module}'")
+        if function_name and not hasattr(module, function_name):
+            raise ValueError(f"Entry function '{function_name}' not found in module '{module}'.")
