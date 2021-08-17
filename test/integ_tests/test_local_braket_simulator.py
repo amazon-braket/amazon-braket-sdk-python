@@ -110,3 +110,16 @@ def test_result_types_all_selected(shots):
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_observable_not_in_instructions(shots):
     result_types_observable_not_in_instructions(DEVICE, {"shots": shots})
+
+
+@pytest.mark.parametrize(
+    "backend, device_name",
+    [
+        ("default", "StateVectorSimulator"),
+        ("braket_sv", "StateVectorSimulator"),
+        ("braket_dm", "DensityMatrixSimulator"),
+    ],
+)
+def test_local_simulator_device_names(backend, device_name):
+    local_simulator_device = LocalSimulator(backend)
+    assert local_simulator_device.name == device_name
