@@ -225,7 +225,7 @@ For issues with the Amazon Braket service in general, please use the [Developer 
 
 ### Feedback and Feature Requests
 
-If you have feedback or features that you'd like to see on Amazon Braket, we would love to hear from you!  
+If you have feedback or features that you would like to see on Amazon Braket, we would love to hear from you!  
 [Github issues](https://github.com/aws/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
 to engage in the conversation, and +1 issues to help drive priority. 
 
