@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.7.5 (2021-08-18)
+
+### Bug Fixes and Other Changes
+
+ * Add test for local simulator device names
+
+### Documentation Changes
+
+ * Add documentation for support
+
+### Testing and Release Infrastructure
+
+ * Update copyright notice
+
 ## v1.7.4 (2021-08-06)
 
 ### Bug Fixes and Other Changes
