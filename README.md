@@ -63,6 +63,12 @@ You can also check your version of `amazon-braket-sdk` from within Python:
 >>> braket_sdk.__version__
 ```
 
+### Updating the Amazon Braket Python SDK
+You can update the version of the amazon-braket-sdk you have installed by using the following command:
+```bash
+pip install amazon-braket-sdk --upgrade --upgrade-strategy eager
+```
+
 ## Usage
 
 ### Running a circuit on an AWS simulator
