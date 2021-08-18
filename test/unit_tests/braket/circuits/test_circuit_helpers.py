@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import Circuit
+from braket.circuits import Circuit, observables
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 
 
@@ -52,3 +52,24 @@ def test_validate_circuit_and_shots_100_result_state_vector():
 @pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_100_result_amplitude():
     validate_circuit_and_shots(Circuit().h(0).amplitude(state=["0"]), 100)
+
+
+def test_validate_circuit_and_shots_0_noncommuting():
+    validate_circuit_and_shots(
+        Circuit()
+        .h(0)
+        .expectation(observables.X() @ observables.Y(), [0, 1])
+        .expectation(observables.Y() @ observables.X(), [0, 1]),
+        0,
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_circuit_and_shots_100_noncommuting():
+    validate_circuit_and_shots(
+        Circuit()
+        .h(0)
+        .expectation(observables.X() @ observables.Y(), [0, 1])
+        .expectation(observables.Y() @ observables.X(), [0, 1]),
+        100,
+    )
