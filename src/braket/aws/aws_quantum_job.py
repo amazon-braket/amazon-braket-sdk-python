@@ -30,7 +30,6 @@ from braket.jobs.config import (
     InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
-    PriorityAccessConfig,
     StoppingCondition,
     VpcConfig,
 )
@@ -59,6 +58,7 @@ class AwsQuantumJob:
         cls,
         aws_session: AwsSession,
         entry_point: str,
+        device_arn: str,
         source_dir: str,
         # TODO: Replace with the correct default image name.
         # This image_uri will be retrieved from `image_uris.retreive()` which will a different file
@@ -71,7 +71,6 @@ class AwsQuantumJob:
         code_location: str = None,
         role_arn: str = None,
         wait_until_complete: bool = False,
-        priority_access_device_arn: str = None,
         hyper_parameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
         input_data_config: List[InputDataConfig] = None,
@@ -93,6 +92,9 @@ class AwsQuantumJob:
             entry_point (str): str specifying the 'module' or 'module:method' to be executed as
                 an entry point for the job.
 
+            device_arn (str): ARN for the AWS device which will be primarily
+                accessed for the execution of this job.
+
             source_dir (str): Path (absolute, relative or an S3 URI) to a directory with any
                 other source code dependencies aside from the entry point file. If `source_dir`
                 is an S3 URI, it must point to a tar.gz file. Structure within this directory are
@@ -113,9 +115,6 @@ class AwsQuantumJob:
 
             wait_until_complete (bool): bool representing whether we should wait until the job
                 completes. This would tail the job logs as it waits. Default = `False`.
-
-            priority_access_device_arn (str): ARN for the AWS device which should have priority
-                access for the execution of this job. Default = `None`.
 
             hyper_parameters (Dict[str, Any]): Hyperparameters that will be made accessible to
                 the job. The hyperparameters are made accessible as a Dict[str, str] to the
@@ -165,6 +164,7 @@ class AwsQuantumJob:
         Raises:
             ValueError: Raises ValueError if the parameters are not valid.
         """
+        device_config = DeviceConfig(devices=[device_arn])
         job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
         role_arn = role_arn or aws_session.get_execution_role()
         hyper_parameters = hyper_parameters or {}
@@ -174,11 +174,6 @@ class AwsQuantumJob:
         output_data_config = output_data_config or OutputDataConfig()
         checkpoint_config = checkpoint_config or CheckpointConfig()
         # tags = tags or {}
-        device_config = DeviceConfig(
-            priorityAccess=PriorityAccessConfig(
-                devices=[arn for arn in [priority_access_device_arn] if arn]
-            )
-        )
         default_bucket = aws_session.default_bucket()
         code_location = code_location or aws_session.construct_s3_uri(
             default_bucket,

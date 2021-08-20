@@ -72,7 +72,7 @@ def generate_get_job_response():
             },
             "createdAt": datetime.datetime(2021, 6, 28, 21, 4, 51),
             "deviceConfig": {
-                "priorityAccess": {"devices": ["arn:aws:braket:::device/qpu/rigetti/Aspen-9"]}
+                "devices": ["arn:aws:braket:::device/qpu/rigetti/Aspen-9"],
             },
             "hyperParameters": {
                 "foo": "bar",
@@ -436,7 +436,7 @@ def role_arn():
 
 
 @pytest.fixture
-def priority_access_device_arn():
+def device_arn():
     return "arn:aws:braket:::device/qpu/test/device-name"
 
 
@@ -522,7 +522,7 @@ def create_job_args(
     code_location,
     role_arn,
     wait_until_complete,
-    priority_access_device_arn,
+    device_arn,
     hyper_parameters,
     input_data_config,
     instance_config,
@@ -544,7 +544,7 @@ def create_job_args(
                 "code_location": code_location,
                 "role_arn": role_arn,
                 "wait_until_complete": wait_until_complete,
-                "priority_access_device_arn": priority_access_device_arn,
+                "device_arn": device_arn,
                 "hyper_parameters": hyper_parameters,
                 # "metric_defintions": None,
                 "input_data_config": input_data_config,
@@ -561,6 +561,7 @@ def create_job_args(
         return {
             "aws_session": aws_session,
             "entry_point": entry_point,
+            "device_arn": device_arn,
             "source_dir": source_dir,
         }
     elif request.param == "nones":
@@ -568,6 +569,7 @@ def create_job_args(
             lambda: None,
             aws_session=aws_session,
             entry_point=entry_point,
+            device_arn=device_arn,
             source_dir=source_dir,
         )
 
@@ -625,9 +627,7 @@ def _assert_create_job_called_with(
         default_bucket, "jobs", job_name, "script"
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
-    priority_access_devices = [
-        arn for arn in [create_job_args["priority_access_device_arn"]] if arn
-    ]
+    devices = [create_job_args["device_arn"]]
     hyper_parameters = create_job_args["hyper_parameters"] or {}
     input_data_config = create_job_args["input_data_config"] or []
     instance_config = create_job_args["instance_config"] or InstanceConfig()
@@ -655,7 +655,7 @@ def _assert_create_job_called_with(
         "instanceConfig": asdict(instance_config),
         "outputDataConfig": asdict(output_data_config),
         "checkpointConfig": asdict(checkpoint_config),
-        "deviceConfig": {"priorityAccess": {"devices": priority_access_devices}},
+        "deviceConfig": {"devices": devices},
         "hyperParameters": hyper_parameters,
         "stoppingCondition": asdict(stopping_condition),
         # "tags": tags,
@@ -704,12 +704,14 @@ def test_create_job_source_dir_not_found(
     mock_validate_entry_point,
     aws_session,
     entry_point,
+    device_arn,
 ):
     fake_source_dir = "fake-source-dir"
     with pytest.raises(ValueError) as e:
         AwsQuantumJob.create(
             aws_session=aws_session,
             entry_point=entry_point,
+            device_arn=device_arn,
             source_dir=fake_source_dir,
         )
 
@@ -721,17 +723,19 @@ def test_create_job_source_dir_s3_but_not_tar(
     mock_validate_entry_point,
     aws_session,
     entry_point,
+    device_arn,
 ):
     fake_source_dir = "s3://bucket/non-tar-file"
     with pytest.raises(ValueError) as e:
         AwsQuantumJob.create(
             aws_session=aws_session,
             entry_point=entry_point,
+            device_arn=device_arn,
             source_dir=fake_source_dir,
         )
 
     assert str(e.value) == (
-        f"If source_dir is an S3 URI, it must point to a tar.gz file. "
+        "If source_dir is an S3 URI, it must point to a tar.gz file. "
         f"Not a valid S3 URI for parameter `source_dir`: {fake_source_dir}"
     )
 
@@ -742,6 +746,7 @@ def test_copy_checkpoints(
     aws_session,
     quantum_job_arn,
     entry_point,
+    device_arn,
     checkpoint_config,
     generate_get_job_response,
 ):
@@ -756,6 +761,7 @@ def test_copy_checkpoints(
     job = AwsQuantumJob.create(
         aws_session=aws_session,
         entry_point=entry_point,
+        device_arn=device_arn,
         source_dir="source_dir",
         checkpoint_config=checkpoint_config,
         copy_checkpoints_from_job="other-job-arn",
@@ -774,6 +780,7 @@ def test_metrics(
     aws_session,
     quantum_job_arn,
     entry_point,
+    device_arn,
     checkpoint_config,
     generate_get_job_response,
 ):
@@ -785,6 +792,7 @@ def test_metrics(
     job = AwsQuantumJob.create(
         aws_session=aws_session,
         entry_point=entry_point,
+        device_arn=device_arn,
         source_dir="source_dir",
     )
     metrics = job.metrics()

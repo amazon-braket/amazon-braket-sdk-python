@@ -81,10 +81,5 @@ class VpcConfig:
 
 
 @dataclass
-class PriorityAccessConfig:
-    devices: List[str] = field(default_factory=list)
-
-
-@dataclass
 class DeviceConfig:
-    priorityAccess: PriorityAccessConfig = PriorityAccessConfig()
+    devices: List[str] = field(default_factory=list)
