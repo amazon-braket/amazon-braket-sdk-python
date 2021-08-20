@@ -25,8 +25,8 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
     Raises:
         ValueError: If circuit has no instructions; if no result types
             specified for circuit and `shots=0`. See `braket.circuit.result_types`;
-            if circuit has noncommuting observables when shots > 0;
-            or, if `StateVector` or `Amplitude` are specified as result types when `shots > 0`.
+            if circuit has observables that cannot be simultaneously measured and `shots>0`;
+            or, if `StateVector` or `Amplitude` are specified as result types when `shots>0`.
     """
     if not circuit.instructions:
         raise ValueError("Circuit must have instructions to run on a device")
@@ -35,8 +35,8 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
             "No result types specified for circuit and shots=0. See `braket.circuit.result_types`"
         )
     elif shots and circuit.result_types:
-        if circuit.has_noncommuting_observables:
-            raise ValueError("Noncommuting observables cannot be sampled simultaneously")
+        if not circuit.observables_simultaneously_measurable:
+            raise ValueError("Observables cannot be sampled simultaneously")
         for rt in circuit.result_types:
             if isinstance(rt, ResultType.StateVector) or isinstance(rt, ResultType.Amplitude):
                 raise ValueError("StateVector or Amplitude cannot be specified when shots>0")

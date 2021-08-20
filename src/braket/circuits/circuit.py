@@ -125,7 +125,7 @@ class Circuit:
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
         self._qubit_observable_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
-        self._noncommuting_observables = False
+        self._observables_simultaneously_measurable = True
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -152,8 +152,8 @@ class Circuit:
         These basis rotation instructions are added if result types are requested for
         an observable other than Pauli-Z.
 
-        This only makes sense if all observables mutually commute; if noncommuting observables
-        are attached to the circuit, this method will return an empty list.
+        This only makes sense if all observables are simultaneously measurable;
+        if not, this method will return an empty list.
         """
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
@@ -260,9 +260,8 @@ class Circuit:
 
         if result_type_to_add not in self._result_types:
             observable = Circuit._extract_observable(result_type_to_add)
-            if observable and not self._noncommuting_observables:
-                # Only check if all observables can be simultaneously diagonalized,
-                # i.e. there are no noncommuting observables
+            if observable and self._observables_simultaneously_measurable:
+                # Only check if all observables can be simultaneously measured
                 self._add_to_qubit_observable_mapping(observable, result_type_to_add.target)
             self._add_to_qubit_observable_set(result_type_to_add)
             # using dict as an ordered set, value is arbitrary
@@ -902,16 +901,17 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         return calculate_unitary(qubit_count, self.instructions)
 
     @property
-    def has_noncommuting_observables(self) -> bool:
-        """bool: Whether the circuit has noncommuting observables
+    def observables_simultaneously_measurable(self) -> bool:
+        """bool: Whether the circuit's observables are simultaneously measurable
 
-        If this is True, then the circuit can only be run for shots = 0, as noncommuting observables
-        cannot be simultaneously diagonalized for sample measurements.
+        If this is False, then the circuit can only be run when shots = 0, as sampling (shots > 0)
+        measures the circuit in the observables' shared eigenbasis.
         """
-        return self._noncommuting_observables
+        return self._observables_simultaneously_measurable
 
     def _encounter_noncommuting_observable(self):
-        self._noncommuting_observables = True
+        self._observables_simultaneously_measurable = False
+        # No longer simultaneously measurable, so no need to track
         self._qubit_observable_mapping.clear()
         self._qubit_observable_target_mapping.clear()
 
