@@ -123,8 +123,9 @@ class Circuit:
         self._moments: Moments = Moments()
         self._result_types: Dict[ResultType] = {}
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
-        self._qubit_target_mapping: Dict[int, Tuple[int]] = {}
+        self._qubit_observable_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
+        self._observables_simultaneously_measurable = True
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -150,6 +151,9 @@ class Circuit:
         """List[Instruction]: Get a list of basis rotation instructions in the circuit.
         These basis rotation instructions are added if result types are requested for
         an observable other than Pauli-Z.
+
+        This only makes sense if all observables are simultaneously measurable;
+        if not, this method will return an empty list.
         """
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
@@ -162,7 +166,7 @@ class Circuit:
                 )
             return basis_rotation_instructions
 
-        target_lists = sorted(list(set(self._qubit_target_mapping.values())))
+        target_lists = sorted(set(self._qubit_observable_target_mapping.values()))
         for target_list in target_lists:
             observable = self._qubit_observable_mapping[target_list[0]]
             basis_rotation_instructions += Circuit._observable_to_instruction(
@@ -194,7 +198,7 @@ class Circuit:
         self,
         result_type: ResultType,
         target: QubitSetInput = None,
-        target_mapping: Dict[QubitInput, QubitInput] = {},
+        target_mapping: Dict[QubitInput, QubitInput] = None,
     ) -> Circuit:
         """
         Add a requested result type to `self`, returns `self` for chaining ability.
@@ -207,7 +211,7 @@ class Circuit:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `result_type.target`. Key is the qubit in
                 `result_type.target` and the value is what the key will be changed to.
-                Default = `{}`.
+                Default = `None`.
 
 
         Note: target and target_mapping will only be applied to those requested result types with
@@ -219,9 +223,6 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
-            ValueError: If the observable specified for a qubit is different from what is
-                specified by the result types already added to the circuit. Only one observable
-                is allowed for a qubit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])
@@ -258,87 +259,73 @@ class Circuit:
             result_type_to_add = result_type.copy(target=target)
 
         if result_type_to_add not in self._result_types:
-            self._add_to_qubit_observable_mapping(result_type_to_add)
+            observable = Circuit._extract_observable(result_type_to_add)
+            if observable and self._observables_simultaneously_measurable:
+                # Only check if all observables can be simultaneously measured
+                self._add_to_qubit_observable_mapping(observable, result_type_to_add.target)
             self._add_to_qubit_observable_set(result_type_to_add)
             # using dict as an ordered set, value is arbitrary
             self._result_types[result_type_to_add] = None
         return self
 
-    def _add_to_qubit_observable_mapping(self, result_type: ResultType) -> None:
+    @staticmethod
+    def _extract_observable(result_type: ResultType) -> Optional[Observable]:
         if isinstance(result_type, ResultType.Probability):
-            observable = Observable.Z()  # computational basis
+            return Observable.Z()  # computational basis
         elif isinstance(result_type, ObservableResultType):
-            observable = result_type.observable
+            return result_type.observable
         else:
-            return
+            return None
 
-        targets = result_type.target or list(self._qubit_observable_set)
+    def _add_to_qubit_observable_mapping(
+        self, observable: Observable, observable_target: QubitSet
+    ) -> None:
+        targets = observable_target or list(self._qubit_observable_set)
         all_qubits_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
+        tensor_product_dict = (
+            Circuit._tensor_product_index_dict(observable, observable_target)
+            if isinstance(observable, TensorProduct)
+            else None
+        )
+        identity = Observable.I()
         for i in range(len(targets)):
             target = targets[i]
-            tensor_product_dict = (
-                Circuit._tensor_product_index_dict(observable)
-                if isinstance(observable, TensorProduct)
-                else None
-            )
             new_observable = tensor_product_dict[i][0] if tensor_product_dict else observable
             current_observable = all_qubits_observable or self._qubit_observable_mapping.get(target)
 
-            add_observable = Circuit._validate_observable_to_add_for_qubit(
-                current_observable, new_observable, target
+            add_observable = not current_observable or (
+                current_observable == identity and new_observable != identity
             )
+            if (
+                not add_observable
+                and current_observable != identity
+                and new_observable != identity
+                and current_observable != new_observable
+            ):
+                return self._encounter_noncommuting_observable()
 
-            if result_type.target:
+            if observable_target:
                 new_targets = (
-                    tuple(
-                        result_type.target[
-                            tensor_product_dict[i][1][0] : tensor_product_dict[i][1][1]
-                        ]
-                    )
-                    if tensor_product_dict
-                    else tuple(result_type.target)
+                    tensor_product_dict[i][1] if tensor_product_dict else tuple(observable_target)
                 )
+
                 if add_observable:
-                    self._qubit_target_mapping[target] = new_targets
+                    self._qubit_observable_target_mapping[target] = new_targets
                     self._qubit_observable_mapping[target] = new_observable
                 elif new_observable.qubit_count > 1:
-                    current_target = self._qubit_target_mapping.get(target)
+                    current_target = self._qubit_observable_target_mapping.get(target)
                     if current_target and current_target != new_targets:
-                        raise ValueError(
-                            f"Target order {current_target} of existing result type with"
-                            f" observable {current_observable} conflicts with order {targets}"
-                            " of new result type"
-                        )
+                        return self._encounter_noncommuting_observable()
 
-        if not result_type.target:
+        if not observable_target:
             if all_qubits_observable and all_qubits_observable != observable:
-                raise ValueError(
-                    f"Existing result type for observable {all_qubits_observable} for all qubits"
-                    f" conflicts with observable {observable} for new result type"
-                )
+                return self._encounter_noncommuting_observable()
             self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable
 
     @staticmethod
-    def _validate_observable_to_add_for_qubit(current_observable, new_observable, target):
-        identity = Observable.I()
-        add_observable = False
-        if not current_observable or (
-            current_observable == identity and new_observable != identity
-        ):
-            add_observable = True
-        elif (
-            current_observable != identity
-            and new_observable != identity
-            and current_observable != new_observable
-        ):
-            raise ValueError(
-                f"Observable {new_observable} specified for target {target} conflicts with"
-                + f" existing observable {current_observable} on this target."
-            )
-        return add_observable
-
-    @staticmethod
-    def _tensor_product_index_dict(observable: TensorProduct) -> Dict[int, Observable]:
+    def _tensor_product_index_dict(
+        observable: TensorProduct, observable_target: QubitSet
+    ) -> Dict[int, Tuple[Observable, Tuple[int, ...]]]:
         obj_dict = {}
         i = 0
         factors = list(observable.factors)
@@ -349,7 +336,8 @@ class Circuit:
                 if factors:
                     total += factors[0].qubit_count
             if factors:
-                obj_dict[i] = (factors[0], (total - factors[0].qubit_count, total))
+                first = total - factors[0].qubit_count
+                obj_dict[i] = (factors[0], tuple(observable_target[first:total]))
             i += 1
         return obj_dict
 
@@ -911,6 +899,21 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         qubit_count = max(qubits) + 1
 
         return calculate_unitary(qubit_count, self.instructions)
+
+    @property
+    def observables_simultaneously_measurable(self) -> bool:
+        """bool: Whether the circuit's observables are simultaneously measurable
+
+        If this is False, then the circuit can only be run when shots = 0, as sampling (shots > 0)
+        measures the circuit in the observables' shared eigenbasis.
+        """
+        return self._observables_simultaneously_measurable
+
+    def _encounter_noncommuting_observable(self):
+        self._observables_simultaneously_measurable = False
+        # No longer simultaneously measurable, so no need to track
+        self._qubit_observable_mapping.clear()
+        self._qubit_observable_target_mapping.clear()
 
     def _copy(self) -> Circuit:
         copy = Circuit().add(self.instructions)

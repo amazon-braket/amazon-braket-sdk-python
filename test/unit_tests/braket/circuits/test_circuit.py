@@ -105,58 +105,65 @@ def test_equality():
 
 def test_add_result_type_default(prob):
     circ = Circuit().add_result_type(prob)
+    assert circ.observables_simultaneously_measurable
     assert list(circ.result_types) == [prob]
 
 
 def test_add_result_type_with_mapping(prob):
     expected = [ResultType.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target_mapping={0: 10, 1: 11})
+    assert circ.observables_simultaneously_measurable
     assert list(circ.result_types) == expected
 
 
 def test_add_result_type_with_target(prob):
     expected = [ResultType.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target=[10, 11])
+    assert circ.observables_simultaneously_measurable
     assert list(circ.result_types) == expected
 
 
 def test_add_result_type_already_exists():
     expected = [ResultType.StateVector()]
     circ = Circuit(expected).add_result_type(expected[0])
+    assert circ.observables_simultaneously_measurable
     assert list(circ.result_types) == expected
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_observable_conflict_target():
     circ = Circuit().add_result_type(ResultType.Probability([0, 1]))
     circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=0))
+    assert not circ.observables_simultaneously_measurable
+    assert not circ.basis_rotation_instructions
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_observable_conflict_all():
     circ = Circuit().add_result_type(ResultType.Probability())
     circ.add_result_type(ResultType.Expectation(observable=Observable.Y()))
+    assert not circ.observables_simultaneously_measurable
+    assert not circ.basis_rotation_instructions
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_observable_conflict_all_target_then_selected_target():
     circ = Circuit().add_result_type(ResultType.Probability())
-    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[0, 1]))
+    circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[0]))
+    assert not circ.observables_simultaneously_measurable
+    assert not circ.basis_rotation_instructions
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_observable_conflict_different_selected_targets_then_all_target():
     circ = Circuit().add_result_type(ResultType.Expectation(observable=Observable.Z(), target=[0]))
     circ.add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1]))
     circ.add_result_type(ResultType.Expectation(observable=Observable.Y()))
+    assert not circ.observables_simultaneously_measurable
+    assert not circ.basis_rotation_instructions
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_observable_conflict_selected_target_then_all_target():
-    circ = Circuit().add_result_type(
-        ResultType.Expectation(observable=Observable.Y(), target=[0, 1])
-    )
+    circ = Circuit().add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1]))
     circ.add_result_type(ResultType.Probability())
+    assert not circ.observables_simultaneously_measurable
+    assert not circ.basis_rotation_instructions
 
 
 def test_add_result_type_observable_no_conflict_all_target():
@@ -165,6 +172,7 @@ def test_add_result_type_observable_no_conflict_all_target():
         ResultType.Expectation(observable=Observable.Z(), target=[0]),
     ]
     circ = Circuit(expected)
+    assert circ.observables_simultaneously_measurable
     assert circ.result_types == expected
 
 
@@ -174,6 +182,7 @@ def test_add_result_type_observable_no_conflict_target_all():
         ResultType.Probability(),
     ]
     circ = Circuit(expected)
+    assert circ.observables_simultaneously_measurable
     assert circ.result_types == expected
 
 
@@ -183,6 +192,7 @@ def test_add_result_type_observable_no_conflict_all():
         ResultType.Expectation(observable=Observable.Y()),
     ]
     circ = Circuit(expected)
+    assert circ.observables_simultaneously_measurable
     assert circ.result_types == expected
 
 
@@ -192,26 +202,37 @@ def test_add_result_type_observable_no_conflict_state_vector_obs_return_value():
         ResultType.Expectation(observable=Observable.Y()),
     ]
     circ = Circuit(expected)
+    assert circ.observables_simultaneously_measurable
     assert circ.result_types == expected
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_same_observable_wrong_target_order_tensor_product():
-    Circuit().add_result_type(
-        ResultType.Expectation(observable=Observable.Y() @ Observable.X(), target=[0, 1])
-    ).add_result_type(
-        ResultType.Variance(observable=Observable.Y() @ Observable.X(), target=[1, 0])
+    circ = (
+        Circuit()
+        .add_result_type(
+            ResultType.Expectation(observable=Observable.Y() @ Observable.X(), target=[0, 1])
+        )
+        .add_result_type(
+            ResultType.Variance(observable=Observable.Y() @ Observable.X(), target=[1, 0])
+        )
     )
+    assert not circ.observables_simultaneously_measurable
+    assert not circ.basis_rotation_instructions
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_result_type_same_observable_wrong_target_order_hermitian():
     array = np.eye(4)
-    Circuit().add_result_type(
-        ResultType.Expectation(observable=Observable.Hermitian(matrix=array), target=[0, 1])
-    ).add_result_type(
-        ResultType.Variance(observable=Observable.Hermitian(matrix=array), target=[1, 0])
+    circ = (
+        Circuit()
+        .add_result_type(
+            ResultType.Expectation(observable=Observable.Hermitian(matrix=array), target=[0, 1])
+        )
+        .add_result_type(
+            ResultType.Variance(observable=Observable.Hermitian(matrix=array), target=[1, 0])
+        )
     )
+    assert not circ.observables_simultaneously_measurable
+    assert not circ.basis_rotation_instructions
 
 
 @pytest.mark.xfail(raises=TypeError)
