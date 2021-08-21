@@ -90,7 +90,7 @@ class Instruction:
         return self._operator.to_ir([int(qubit) for qubit in self._target])
 
     def copy(
-        self, target_mapping: Dict[QubitInput, QubitInput] = {}, target: QubitSetInput = None
+        self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
     ) -> Instruction:
         """
         Return a shallow copy of the instruction.
@@ -102,7 +102,7 @@ class Instruction:
         Args:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
-                value is what the key is changed to. Default = `{}`.
+                value is what the key is changed to. Default = `None`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
                 instruction.
 
@@ -129,7 +129,7 @@ class Instruction:
         elif target is not None:
             return Instruction(self._operator, target)
         else:
-            return Instruction(self._operator, self._target.map(target_mapping))
+            return Instruction(self._operator, self._target.map(target_mapping or {}))
 
     def __repr__(self):
         return f"Instruction('operator': {self._operator}, 'target': {self._target})"

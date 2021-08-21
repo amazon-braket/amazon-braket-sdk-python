@@ -81,7 +81,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     Args:
         instructions (Iterable[Instruction], optional): Instructions to initialize self.
-            Default = [].
+            Default = None.
 
     Examples:
         >>> moments = Moments()
@@ -106,13 +106,13 @@ class Moments(Mapping[MomentsKey, Instruction]):
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(1)]))
     """
 
-    def __init__(self, instructions: Iterable[Instruction] = []):
+    def __init__(self, instructions: Iterable[Instruction] = None):
         self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
         self._max_times: Dict[Qubit, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
 
-        self.add(instructions)
+        self.add(instructions or [])
 
     @property
     def depth(self) -> int:
