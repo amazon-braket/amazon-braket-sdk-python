@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.8.0 (2021-08-23)
+
+### Features
+
+ * Calculate arbitrary observables when `shots=0`
+
+### Bug Fixes and Other Changes
+
+ * Remove immutable default args
+
 ## v1.7.5 (2021-08-18)
 
 ### Bug Fixes and Other Changes
