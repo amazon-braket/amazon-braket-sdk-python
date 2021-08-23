@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -201,6 +201,11 @@ MOCK_GATE_MODEL_SIMULATOR = {
     "deviceCapabilities": MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES.json(),
 }
 
+MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
+    "amazon-braket-us-test-1-00000000",
+    "tasks",
+)
+
 
 @pytest.fixture
 def arn():
@@ -238,6 +243,10 @@ def aws_explicit_session():
 
     _aws_session = Mock()
     _aws_session.boto_session = _boto_session
+    _aws_session._default_bucket = MOCK_DEFAULT_S3_DESTINATION_FOLDER[0]
+    _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session.account_id = "00000000"
+    _aws_session.region = "us-test-1"
     return _aws_session
 
 
@@ -252,6 +261,10 @@ def aws_session():
 
     _aws_session = Mock()
     _aws_session.boto_session = _boto_session
+    _aws_session._default_bucket = MOCK_DEFAULT_S3_DESTINATION_FOLDER[0]
+    _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session.account_id = "00000000"
+    _aws_session.region = "us-test-1"
     return _aws_session
 
 
@@ -293,8 +306,9 @@ def test_device_simulator_no_aws_session(aws_session_init, aws_session):
 @patch("boto3.Session")
 def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock()
-    AwsDevice._copy_aws_session(aws_session, RIGETTI_REGION)
+    copied_session = AwsDevice._copy_aws_session(aws_session, RIGETTI_REGION)
     boto_session_init.assert_called_with(region_name=RIGETTI_REGION)
+    assert copied_session._default_bucket is None
 
 
 @patch("boto3.Session")
@@ -307,6 +321,13 @@ def test_copy_explicit_session(boto_session_init, aws_explicit_session):
         aws_session_token="token",
         region_name=RIGETTI_REGION,
     )
+
+
+@patch("boto3.Session")
+def test_copy_session_custom_default_bucket(aws_session):
+    aws_session._default_bucket = "my-own-default"
+    copied_session = AwsDevice._copy_aws_session(aws_session)
+    assert copied_session._default_bucket == "my-own-default"
 
 
 @patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
@@ -381,12 +402,11 @@ def test_device_qpu_not_found(mock_copy_aws_session):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_no_extra(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+def test_run_no_extra(aws_quantum_task_mock, device, circuit):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
         circuit,
-        s3_destination_folder,
     )
 
 
@@ -430,6 +450,7 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
     run_and_assert(
         aws_quantum_task_mock,
         device(RIGETTI_ARN),
+        MOCK_DEFAULT_S3_DESTINATION_FOLDER,
         AwsDevice.DEFAULT_SHOTS_QPU,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
@@ -475,17 +496,31 @@ def test_run_with_positional_args_and_kwargs(
     )
 
 
+@patch.dict(
+    os.environ,
+    {"AMZN_BRAKET_OUT_S3_BUCKET": "env_bucket", "AMZN_BRAKET_TASK_RESULTS_S3_PATH": "env/path"},
+)
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_env_variables(aws_quantum_task_mock, device, circuit):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        device,
+        circuit,
+        s3_destination_folder=(
+            "env_bucket",
+            "env/path",
+        ),
+    )
+
+
 @patch("braket.aws.aws_device.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_batch_no_extra(
-    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
-):
+def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, device, circuit):
     _run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
         device,
         [circuit for _ in range(10)],
-        s3_destination_folder,
     )
 
 
@@ -522,11 +557,30 @@ def test_run_batch_with_max_parallel_and_kwargs(
     )
 
 
+@patch.dict(
+    os.environ,
+    {"AMZN_BRAKET_OUT_S3_BUCKET": "env_bucket", "AMZN_BRAKET_TASK_RESULTS_S3_PATH": "env/path"},
+)
+@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_env_variables(aws_quantum_task_mock, aws_session_mock, device, circuit):
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        [circuit for _ in range(10)],
+        s3_destination_folder=(
+            "env_bucket",
+            "env/path",
+        ),
+    )
+
+
 def _run_and_assert(
     aws_quantum_task_mock,
     device_factory,
     circuit,
-    s3_destination_folder,
+    s3_destination_folder=None,  # Treated as positional arg
     shots=None,  # Treated as positional arg
     poll_timeout_seconds=None,  # Treated as positional arg
     poll_interval_seconds=None,  # Treated as positional arg
@@ -536,6 +590,7 @@ def _run_and_assert(
     run_and_assert(
         aws_quantum_task_mock,
         device_factory("foo_bar"),
+        MOCK_DEFAULT_S3_DESTINATION_FOLDER,
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
@@ -554,7 +609,7 @@ def _run_batch_and_assert(
     aws_session_mock,
     device_factory,
     circuits,
-    s3_destination_folder,
+    s3_destination_folder=None,  # Treated as positional arg
     shots=None,  # Treated as positional arg
     max_parallel=None,  # Treated as positional arg
     max_connections=None,  # Treated as positional arg
@@ -567,6 +622,7 @@ def _run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
         device_factory("foo_bar"),
+        MOCK_DEFAULT_S3_DESTINATION_FOLDER,
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,

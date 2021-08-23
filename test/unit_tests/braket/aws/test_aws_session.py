@@ -803,6 +803,12 @@ def test_default_bucket_given(aws_session):
     aws_session._s3.create_bucket.assert_not_called()
 
 
+@patch.dict("os.environ", {"AMZN_BRAKET_OUT_S3_BUCKET": "default_bucket_env"})
+def test_default_bucket_env_variable(boto_session):
+    aws_session = AwsSession(boto_session=boto_session, braket_client=Mock())
+    assert aws_session.default_bucket() == "default_bucket_env"
+
+
 @pytest.mark.parametrize(
     "region",
     (

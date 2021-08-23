@@ -131,11 +131,12 @@ class MockS3:
 def run_and_assert(
     aws_quantum_task_mock,
     device,
+    default_s3_folder,
     default_shots,
     default_poll_timeout,
     default_poll_interval,
     circuit,
-    s3_destination_folder,
+    s3_destination_folder,  # Treated as positional arg
     shots,  # Treated as positional arg
     poll_timeout_seconds,  # Treated as positional arg
     poll_interval_seconds,  # Treated as positional arg
@@ -146,6 +147,8 @@ def run_and_assert(
     aws_quantum_task_mock.return_value = task_mock
 
     run_args = []
+    if s3_destination_folder is not None:
+        run_args.append(s3_destination_folder)
     if shots is not None:
         run_args.append(shots)
     if poll_timeout_seconds is not None:
@@ -155,13 +158,15 @@ def run_and_assert(
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
 
-    task = device.run(circuit, s3_destination_folder, *run_args, **run_kwargs)
+    task = device.run(circuit, *run_args, **run_kwargs)
     assert task == task_mock
 
     create_args, create_kwargs = _create_task_args_and_kwargs(
+        default_s3_folder,
         default_shots,
         default_poll_timeout,
         default_poll_interval,
+        s3_destination_folder,
         shots,
         poll_timeout_seconds,
         poll_interval_seconds,
@@ -170,12 +175,7 @@ def run_and_assert(
     )
 
     aws_quantum_task_mock.assert_called_with(
-        device._aws_session,
-        device.arn,
-        circuit,
-        s3_destination_folder,
-        *create_args,
-        **create_kwargs
+        device._aws_session, device.arn, circuit, *create_args, **create_kwargs
     )
 
 
@@ -183,6 +183,7 @@ def run_batch_and_assert(
     aws_quantum_task_mock,
     aws_session_mock,
     device,
+    default_s3_folder,
     default_shots,
     default_poll_timeout,
     default_poll_interval,
@@ -203,6 +204,8 @@ def run_batch_and_assert(
     aws_session_mock.return_value = new_session_mock
 
     run_args = []
+    if s3_destination_folder is not None:
+        run_args.append(s3_destination_folder)
     if shots is not None:
         run_args.append(shots)
     if max_parallel is not None:
@@ -216,13 +219,15 @@ def run_batch_and_assert(
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
 
-    batch = device.run_batch(circuits, s3_destination_folder, *run_args, **run_kwargs)
+    batch = device.run_batch(circuits, *run_args, **run_kwargs)
     assert batch.tasks == [task_mock for _ in range(len(circuits))]
 
     create_args, create_kwargs = _create_task_args_and_kwargs(
+        default_s3_folder,
         default_shots,
         default_poll_timeout,
         default_poll_interval,
+        s3_destination_folder,
         shots,
         poll_timeout_seconds,
         poll_interval_seconds,
@@ -235,26 +240,26 @@ def run_batch_and_assert(
     # aws_session_mock.call_args.kwargs syntax is newer than Python 3.7
     assert aws_session_mock.call_args[1]["config"].max_pool_connections == max_pool_connections
     aws_quantum_task_mock.assert_called_with(
-        new_session_mock,
-        device.arn,
-        circuits[0],
-        s3_destination_folder,
-        *create_args,
-        **create_kwargs
+        new_session_mock, device.arn, circuits[0], *create_args, **create_kwargs
     )
 
 
 def _create_task_args_and_kwargs(
+    default_s3_folder,
     default_shots,
     default_poll_timeout,
     default_poll_interval,
+    s3_folder,
     shots,
     poll_timeout_seconds,
     poll_interval_seconds,
     extra_args,
     extra_kwargs,
 ):
-    create_args = [shots if shots is not None else default_shots]
+    create_args = [
+        s3_folder if s3_folder is not None else default_s3_folder,
+        shots if shots is not None else default_shots,
+    ]
     create_args += extra_args if extra_args else []
     create_kwargs = extra_kwargs or {}
     create_kwargs.update(

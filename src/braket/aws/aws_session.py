@@ -43,7 +43,7 @@ class AwsSession(object):
         else:
             self.braket_client = self.boto_session.client("braket", config=self._config)
         self._update_user_agent()
-        self._default_bucket = default_bucket
+        self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
 
         self._iam = None
         self._s3 = None
@@ -336,6 +336,18 @@ class AwsSession(object):
         return keys
 
     def default_bucket(self):
+        """
+        Returns the name of the default bucket of the AWS Session. In the following order
+        of priority, it will return either the parameter `default_bucket` set during
+        initialization of the AwsSession (if not None), the bucket being used by the
+        currently running Braket Job (if evoked inside of a Braket Job), or a default value of
+        "amazon-braket-<aws account id>-<aws session region>. Except in the case of a user-
+        specified bucket name, this method will create the default bucket if it does not
+        exist.
+
+        Returns:
+            str: Name of the default bucket.
+        """
         if self._default_bucket:
             return self._default_bucket
         default_bucket = f"amazon-braket-{self.region}-{self.account_id}"
@@ -378,7 +390,7 @@ class AwsSession(object):
                     "RestrictPublicBuckets": True,
                 },
             )
-            # TODO: make this prettier
+            # TODO: make this prettier and replace with correct roles
             self.s3_client.put_bucket_policy(
                 Bucket=bucket_name,
                 Policy=f"""{{
@@ -393,6 +405,7 @@ class AwsSession(object):
                             }},
                             "Action": "s3:*",
                             "Resource": [
+                                "arn:aws:s3:::{bucket_name}",
                                 "arn:aws:s3:::{bucket_name}/*"
                             ]
                         }}

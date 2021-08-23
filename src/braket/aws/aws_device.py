@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import os
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -79,7 +80,7 @@ class AwsDevice(Device):
     def run(
         self,
         task_specification: Union[Circuit, Problem],
-        s3_destination_folder: AwsSession.S3DestinationFolder,
+        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
@@ -93,7 +94,10 @@ class AwsDevice(Device):
         Args:
             task_specification (Union[Circuit, Problem]): Specification of task
                 (circuit or annealing problem) to run on device.
-            s3_destination_folder: The S3 location to save the task's results to.
+            s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
+                save the task's results to. Default is `<default_bucket>/tasks` if evoked
+                outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
+                a Braket Job.
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
@@ -137,11 +141,15 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
+        default_s3_location = (
+            os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
+            os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
+        )
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
             task_specification,
-            s3_destination_folder,
+            s3_destination_folder or default_s3_location,
             shots if shots is not None else self._default_shots,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
@@ -152,7 +160,7 @@ class AwsDevice(Device):
     def run_batch(
         self,
         task_specifications: List[Union[Circuit, Problem]],
-        s3_destination_folder: AwsSession.S3DestinationFolder,
+        s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         max_parallel: Optional[int] = None,
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
@@ -166,7 +174,10 @@ class AwsDevice(Device):
         Args:
             task_specifications (List[Union[Circuit, Problem]]): List of  circuits
                 or annealing problems to run on device.
-            s3_destination_folder: The S3 location to save the tasks' results to.
+            s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
+                save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
+                outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
+                a Braket Job.
             shots (int, optional): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             max_parallel (int, optional): The maximum number of tasks to run on AWS in parallel.
@@ -189,11 +200,15 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
+        default_s3_location = (
+            os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
+            os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
+        )
         return AwsQuantumTaskBatch(
             AwsDevice._copy_aws_session(self._aws_session, max_connections=max_connections),
             self._arn,
             task_specifications,
-            s3_destination_folder,
+            s3_destination_folder or default_s3_location,
             shots if shots is not None else self._default_shots,
             max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
             max_workers=max_connections,
@@ -325,6 +340,9 @@ class AwsDevice(Device):
         session_region = aws_session.boto_session.region_name
         new_region = region or session_region
         creds = aws_session.boto_session.get_credentials()
+        default_bucket = aws_session._default_bucket
+        if default_bucket == f"amazon-braket-{aws_session.region}-{aws_session.account_id}":
+            default_bucket = None
         if creds.method == "explicit":
             boto_session = boto3.Session(
                 aws_access_key_id=creds.access_key,
@@ -334,7 +352,7 @@ class AwsDevice(Device):
             )
         else:
             boto_session = boto3.Session(region_name=new_region)
-        return AwsSession(boto_session=boto_session, config=config)
+        return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
 
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
