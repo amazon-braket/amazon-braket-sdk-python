@@ -349,7 +349,7 @@ class Circuit:
         self,
         instruction: Instruction,
         target: QubitSetInput = None,
-        target_mapping: Dict[QubitInput, QubitInput] = {},
+        target_mapping: Dict[QubitInput, QubitInput] = None,
     ) -> Circuit:
         """
         Add an instruction to `self`, returns `self` for chaining ability.
@@ -363,7 +363,7 @@ class Circuit:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
                 `instruction.target` and the value is what the key will be changed to.
-                Default = `{}`.
+                Default = `None`.
 
         Returns:
             Circuit: self
@@ -418,7 +418,7 @@ class Circuit:
         self,
         circuit: Circuit,
         target: QubitSetInput = None,
-        target_mapping: Dict[QubitInput, QubitInput] = {},
+        target_mapping: Dict[QubitInput, QubitInput] = None,
     ) -> Circuit:
         """
         Add a `circuit` to self, returns self for chaining ability.
@@ -431,7 +431,7 @@ class Circuit:
                 Default = `None`.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
-                to map, and the value is what to change it to. Default = `{}`.
+                to map, and the value is what to change it to. Default = `None`.
 
         Returns:
             Circuit: self
