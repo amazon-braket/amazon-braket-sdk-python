@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
+import os
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -252,11 +253,28 @@ def test_create_quantum_task(aws_session):
     kwargs = {
         "backendArn": "arn:aws:us-west-2:abc:xyz:abc",
         "cwLogGroupArn": "arn:aws:us-west-2:abc:xyz:abc",
-        "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-derebolt-1/output.json",
+        "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-bar-1/output.json",
         "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
     }
     assert aws_session.create_quantum_task(**kwargs) == arn
     aws_session.braket_client.create_quantum_task.assert_called_with(**kwargs)
+
+
+def test_create_quantum_task_with_job_token(aws_session):
+    arn = "arn:aws:braket:us-west-2:1234567890:task/task-name"
+    job_token = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    aws_session.braket_client.create_quantum_task.return_value = {"quantumTaskArn": arn}
+
+    kwargs = {
+        "backendArn": "arn:aws:us-west-2:abc:xyz:abc",
+        "cwLogGroupArn": "arn:aws:us-west-2:abc:xyz:abc",
+        "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-foo-1/output.json",
+        "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
+    }
+    with patch.dict(os.environ, {"AMZN_BRAKET_JOB_TOKEN": job_token}):
+        assert aws_session.create_quantum_task(**kwargs) == arn
+        kwargs.update({"jobToken": job_token})
+        aws_session.braket_client.create_quantum_task.assert_called_with(**kwargs)
 
 
 def test_get_quantum_task(aws_session):

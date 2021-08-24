@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import os
 import os.path
 from typing import Any, Dict, List, NamedTuple, Optional
 
@@ -120,6 +121,10 @@ class AwsSession(object):
         Returns:
             str: The ARN of the quantum task.
         """
+        # Add job token to request, if available.
+        job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
+        if job_token:
+            boto3_kwargs.update({"jobToken": job_token})
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         return response["quantumTaskArn"]
 
