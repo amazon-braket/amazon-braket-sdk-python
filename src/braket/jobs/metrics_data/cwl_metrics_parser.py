@@ -15,7 +15,7 @@ import re
 from logging import Logger, getLogger
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
-from braket.jobs.metrics.metrics import MetricStatistic, MetricType
+from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
 
 class CwlMetricsParser(object):

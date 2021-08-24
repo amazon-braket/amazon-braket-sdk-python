@@ -17,9 +17,9 @@ from logging import Logger, getLogger
 from typing import Any, Dict, List, Optional, Union
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.metrics.cwl_metrics_parser import CwlMetricsParser
-from braket.jobs.metrics.exceptions import MetricsRetrievalError
-from braket.jobs.metrics.metrics import MetricStatistic, MetricType
+from braket.jobs.metrics_data.cwl_metrics_parser import CwlMetricsParser
+from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
+from braket.jobs.metrics_data.exceptions import MetricsRetrievalError
 
 
 class CwlInsightsMetricsFetcher(object):

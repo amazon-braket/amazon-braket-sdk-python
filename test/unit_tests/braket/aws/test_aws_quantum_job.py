@@ -822,7 +822,8 @@ def test_copy_checkpoints(
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 @patch(
-    "braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlInsightsMetricsFetcher.get_metrics_for_job"
+    "braket.jobs.metrics_data.cwl_insights_metrics_fetcher."
+    "CwlInsightsMetricsFetcher.get_metrics_for_job"
 )
 def test_metrics(
     metrics_fetcher_mock,

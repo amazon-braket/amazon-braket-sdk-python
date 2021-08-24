@@ -16,8 +16,8 @@ from logging import Logger, getLogger
 from typing import Dict, List, Union
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.metrics.cwl_metrics_parser import CwlMetricsParser
-from braket.jobs.metrics.metrics import MetricStatistic, MetricType
+from braket.jobs.metrics_data.cwl_metrics_parser import CwlMetricsParser
+from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
 
 class CwlMetricsFetcher(object):

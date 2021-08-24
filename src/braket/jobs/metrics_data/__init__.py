@@ -11,12 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.jobs.metrics.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher  # noqa: F401
-from braket.jobs.metrics.cwl_metrics_fetcher import CwlMetricsFetcher  # noqa: F401
-from braket.jobs.metrics.cwl_metrics_parser import CwlMetricsParser  # noqa: F401
-from braket.jobs.metrics.exceptions import MetricsRetrievalError  # noqa: F401
-from braket.jobs.metrics.metrics import (  # noqa: F401
+from braket.jobs.metrics_data.cwl_metrics_fetcher import CwlMetricsFetcher  # noqa: F401
+from braket.jobs.metrics_data.cwl_metrics_parser import CwlMetricsParser  # noqa: F401
+from braket.jobs.metrics_data.definitions import (  # noqa: F401
     MetricDefinition,
     MetricPeriod,
     MetricStatistic,
 )
+from braket.jobs.metrics_data.exceptions import MetricsRetrievalError  # noqa: F401

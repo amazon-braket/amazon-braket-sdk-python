@@ -33,11 +33,11 @@ from braket.jobs.config import (
     StoppingCondition,
     VpcConfig,
 )
-from braket.jobs.metrics.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher
+from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
 # for the files, since all those metrics are retrieved from the CW.
-from braket.jobs.metrics.metrics import MetricDefinition, MetricStatistic, MetricType
+from braket.jobs.metrics_data.definitions import MetricDefinition, MetricStatistic, MetricType
 from braket.jobs.serialization import deserialize_values
 from braket.jobs_data import PersistedJobData
 

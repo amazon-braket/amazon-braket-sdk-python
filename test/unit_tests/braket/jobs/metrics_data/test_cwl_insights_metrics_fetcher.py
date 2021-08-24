@@ -15,7 +15,8 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
-from braket.jobs.metrics import CwlInsightsMetricsFetcher, MetricsRetrievalError
+from braket.jobs.metrics_data import MetricsRetrievalError
+from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher
 
 
 @pytest.fixture
@@ -49,8 +50,8 @@ EXPECTED_CALL_LIST = [
 ]
 
 
-@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetricsParser.get_parsed_metrics")
-@patch("braket.jobs.metrics.cwl_insights_metrics_fetcher.CwlMetricsParser.parse_log_message")
+@patch("braket.jobs.metrics_data.cwl_insights_metrics_fetcher.CwlMetricsParser.get_parsed_metrics")
+@patch("braket.jobs.metrics_data.cwl_insights_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.create_logs_client.return_value = logs_client_mock

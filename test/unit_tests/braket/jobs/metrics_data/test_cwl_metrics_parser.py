@@ -13,8 +13,8 @@
 
 import pytest
 
-from braket.jobs.metrics import CwlMetricsParser
-from braket.jobs.metrics.metrics import MetricStatistic, MetricType
+from braket.jobs.metrics_data import CwlMetricsParser
+from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
 MALFORMED_METRICS_LOG_LINES = [
     {"timestamp": "Test timestamp 0", "message": ""},
