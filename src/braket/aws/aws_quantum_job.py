@@ -59,7 +59,7 @@ class AwsQuantumJob:
         aws_session: AwsSession,
         entry_point: str,
         device_arn: str,
-        source_dir: str,
+        source_dir: str = None,
         # TODO: Replace with the correct default image name.
         # This image_uri will be retrieved from `image_uris.retreive()` which will a different file
         # in the `jobs` folder and the function defined in it.
@@ -87,7 +87,14 @@ class AwsQuantumJob:
             aws_session (AwsSession): AwsSession to connect to AWS with.
 
             entry_point (str): str specifying the 'module' or 'module:method' to be executed as
-                an entry point for the job.
+                an entry point for the job. The entry_point should be specified relative to
+                the source_dir. If source_dir is not provided then all the required modules
+                for execution of entry_point should be within the folder containing the
+                entry_point script.
+
+                For example,
+                if `entry_point = foo.bar.my_script:func`. Then all the required modules
+                should be present within the `foo` or `bar` folder.
 
             device_arn (str): ARN for the AWS device which will be primarily
                 accessed for the execution of this job.
@@ -95,7 +102,7 @@ class AwsQuantumJob:
             source_dir (str): Path (absolute, relative or an S3 URI) to a directory with any
                 other source code dependencies aside from the entry point file. If `source_dir`
                 is an S3 URI, it must point to a tar.gz file. Structure within this directory are
-                preserved when executing on Amazon Braket.
+                preserved when executing on Amazon Braket. Default = `None`.
 
             image_uri (str): str specifying the ECR image to use for executing the job.
                 `image_uris.retrieve()` function may be used for retrieving the ECR image uris
@@ -197,8 +204,9 @@ class AwsQuantumJob:
                 "checkpointConfig"
             ]["s3Uri"]
             aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
-        AwsQuantumJob._validate_entry_point(entry_point)
+
         AwsQuantumJob._process_source_dir(
+            entry_point,
             source_dir,
             aws_session,
             code_location,
@@ -479,27 +487,6 @@ class AwsQuantumJob:
         return hash(self.arn)
 
     @staticmethod
-    def _process_source_dir(source_dir, aws_session, code_location):
-        # TODO: check with product about copy in s3 behavior
-        if source_dir.startswith("s3://"):
-            if not source_dir.endswith(".tar.gz"):
-                raise ValueError(
-                    f"If source_dir is an S3 URI, it must point to a tar.gz file. "
-                    f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
-                )
-            aws_session.copy_s3_object(source_dir, f"{code_location}/source.tar.gz")
-        else:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                try:
-                    with tarfile.open(f"{tmpdir}/source.tar.gz", "w:gz") as tar:
-                        tar.add(source_dir, arcname=os.path.basename(source_dir))
-                except FileNotFoundError:
-                    raise ValueError(f"Source directory not found: {source_dir}")
-                aws_session.upload_to_s3(
-                    f"{tmpdir}/source.tar.gz", f"{code_location}/source.tar.gz"
-                )
-
-    @staticmethod
     def _validate_entry_point(entry_point):
         module, _, function_name = entry_point.partition(":")
         try:
@@ -508,3 +495,55 @@ class AwsQuantumJob:
             raise ValueError(f"Entry point module not found: '{module}'")
         if function_name and not hasattr(module, function_name):
             raise ValueError(f"Entry function '{function_name}' not found in module '{module}'.")
+
+    @staticmethod
+    def _process_source_dir(entry_point, source_dir, aws_session, code_location):
+        if source_dir:
+            if source_dir.startswith("s3://"):
+                AwsQuantumJob._process_s3_source_dir(aws_session, source_dir, code_location)
+            else:
+                AwsQuantumJob._process_local_source_dir(
+                    aws_session, entry_point, source_dir, code_location
+                )
+        else:
+            AwsQuantumJob._source_dir_not_provided(aws_session, entry_point, code_location)
+
+    @staticmethod
+    def _process_s3_source_dir(aws_session, source_dir, code_location):
+        if not source_dir.endswith(".tar.gz"):
+            raise ValueError(
+                f"If source_dir is an S3 URI, it must point to a tar.gz file. "
+                f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
+            )
+        aws_session.copy_s3_object(source_dir, f"{code_location}/source.tar.gz")
+
+    @staticmethod
+    def _process_local_source_dir(aws_session, entry_point, source_dir, code_location):
+        module, _, func = entry_point.partition(":")
+        entry_file = f"{module.replace('.', '/')}.py"
+
+        if not os.path.abspath(entry_file).startswith(os.path.abspath(source_dir)):
+            raise ValueError(
+                f"`Entrypoint`: {entry_point} should be " f"within the `source_dir`: {source_dir}"
+            )
+
+        AwsQuantumJob._validate_entry_point(entry_point)
+        AwsQuantumJob._tar_and_upload_to_code_location(aws_session, source_dir, code_location)
+
+    @staticmethod
+    def _source_dir_not_provided(aws_session, entry_point, code_location):
+        AwsQuantumJob._validate_entry_point(entry_point)
+        module, _, func = entry_point.partition(":")
+        upload_dir = module.split(".")[0]
+
+        AwsQuantumJob._tar_and_upload_to_code_location(aws_session, upload_dir, code_location)
+
+    @staticmethod
+    def _tar_and_upload_to_code_location(aws_session, source_dir, code_location):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            try:
+                with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz") as tar:
+                    tar.add(source_dir, arcname=os.path.basename(source_dir))
+            except FileNotFoundError:
+                raise ValueError(f"Source directory not found: {source_dir}")
+            aws_session.upload_to_s3(f"{temp_dir}/source.tar.gz", f"{code_location}/source.tar.gz")

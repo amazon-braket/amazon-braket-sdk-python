@@ -415,10 +415,8 @@ def s3_prefix(job_name):
     return f"{job_name}/non-default"
 
 
-@pytest.fixture(params=["local_source", "s3_source", "working_directory"])
+@pytest.fixture(params=["local_source", "s3_source"])
 def source_dir(request, bucket, s3_prefix):
-    if request.param == "working_directory":
-        return "."
     if request.param == "local_source":
         return "test-source-dir"
     elif request.param == "s3_source":
@@ -601,8 +599,8 @@ def test_create_job(
     generate_get_job_response,
 ):
     mock_time.return_value = datetime.datetime.now().timestamp()
-    with tempfile.TemporaryDirectory() as tempdir:
-        os.chdir(tempdir)
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
         os.mkdir("test-source-dir")
         if source_dir == ".":
             os.chdir("test-source-dir")
@@ -710,11 +708,10 @@ def test_create_job_source_dir_not_found(
     with pytest.raises(ValueError) as e:
         AwsQuantumJob.create(
             aws_session=aws_session,
-            entry_point=entry_point,
+            entry_point="fake-source-dir.test_script:func",
             device_arn=device_arn,
             source_dir=fake_source_dir,
         )
-
     assert str(e.value) == f"Source directory not found: {fake_source_dir}"
 
 
@@ -738,6 +735,59 @@ def test_create_job_source_dir_s3_but_not_tar(
         "If source_dir is an S3 URI, it must point to a tar.gz file. "
         f"Not a valid S3 URI for parameter `source_dir`: {fake_source_dir}"
     )
+
+
+def test_source_dir_not_in_entry_point_name(entry_point, aws_session, device_arn):
+    source_dir = "other-source-dir"
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+        os.mkdir("other-source-dir")
+        with pytest.raises(ValueError) as e:
+            AwsQuantumJob.create(
+                aws_session=aws_session,
+                entry_point=entry_point,
+                device_arn=device_arn,
+                source_dir=source_dir,
+            )
+        os.chdir("..")
+
+    assert (
+        str(e.value)
+        == f"`Entrypoint`: {entry_point} should be within the `source_dir`: {source_dir}"
+    )
+
+
+@patch("importlib.import_module")
+def test_entry_point_when_source_dir_not_provided(
+    mock_import, quantum_job, code_location, aws_session, entry_point
+):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+
+        module, _, func = entry_point.partition(":")
+        dir_data = module.split(".")
+        folder_path, file_name = "/".join(dir_data[:-1]), f"{dir_data[-1]}.py"
+
+        os.mkdir(folder_path)
+
+        with open(f"{folder_path}/__init__.py", "w") as f:
+            pass
+
+        with open(f"{folder_path}/{file_name}", "w") as f:
+            f.write("def func(): \n\tpass")
+
+        quantum_job._process_source_dir(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            code_location=code_location,
+            source_dir=None,
+        )
+
+        args_list = aws_session.upload_to_s3.call_args_list
+        assert "source.tar.gz" in args_list[0][0][0] and code_location in args_list[0][0][1]
+        aws_session.upload_to_s3.assert_called_once()
+        os.chdir("..")
 
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
