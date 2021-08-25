@@ -159,7 +159,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         return time_slices
 
-    def add(self, instructions: Iterable[Instruction], noise_index: int = 0) -> None:
+    def add(self, Union[Instruction, Iterable[Instruction]], noise_index: int = 0) -> None:
         """
         Add instructions to self.
 
