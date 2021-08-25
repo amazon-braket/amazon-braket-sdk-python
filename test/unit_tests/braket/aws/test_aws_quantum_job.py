@@ -399,9 +399,9 @@ def bucket():
     return "braket-region-id"
 
 
-@pytest.fixture
-def image_uri():
-    return "Test-Image-URI"
+@pytest.fixture(params=[None, "my_custom_uri"])
+def image_uri(request):
+    return request.param
 
 
 @pytest.fixture(params=["given_job_name", "default_job_name"])
@@ -618,8 +618,10 @@ def _assert_create_job_called_with(
 ):
     aws_session = create_job_args["aws_session"]
     create_job_args = defaultdict(lambda: None, **create_job_args)
-    image_uri = create_job_args["image_uri"] or "Base-Image-URI"
-    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
+    image_uri = create_job_args["image_uri"]
+    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(
+        image_uri or AwsQuantumJob.DEFAULT_IMAGE_NAME
+    )
     default_bucket = aws_session.default_bucket()
     code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
         default_bucket, "jobs", job_name, "script"
@@ -637,18 +639,21 @@ def _assert_create_job_called_with(
         s3Uri=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
     )
     vpc_config = create_job_args["vpc_config"]
+    algorithm_specification = {
+        "scriptModeConfig": {
+            "entryPoint": create_job_args["entry_point"],
+            "s3Uri": f"{code_location}/source.tar.gz",
+            "compressionType": "GZIP",
+        }
+    }
+    if image_uri:
+        algorithm_specification["containerImage"] = {"uri": image_uri}
     # tags = create_job_args["tags"] or {}
 
     test_kwargs = {
         "jobName": job_name,
         "roleArn": role_arn,
-        "algorithmSpecification": {
-            "scriptModeConfig": {
-                "entryPoint": create_job_args["entry_point"],
-                "s3Uri": f"{code_location}/source.tar.gz",
-                "compressionType": "GZIP",
-            }
-        },
+        "algorithmSpecification": algorithm_specification,
         "inputDataConfig": [asdict(input_channel) for input_channel in input_data_config],
         "instanceConfig": asdict(instance_config),
         "outputDataConfig": asdict(output_data_config),

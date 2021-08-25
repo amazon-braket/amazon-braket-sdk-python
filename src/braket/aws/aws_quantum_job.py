@@ -52,6 +52,7 @@ class AwsQuantumJob:
     DEFAULT_RESULTS_POLL_INTERVAL = 1
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
+    DEFAULT_IMAGE_NAME = "Base-Image-URI"
 
     @classmethod
     def create(
@@ -63,7 +64,7 @@ class AwsQuantumJob:
         # TODO: Replace with the correct default image name.
         # This image_uri will be retrieved from `image_uris.retreive()` which will a different file
         # in the `jobs` folder and the function defined in it.
-        image_uri: str = "Base-Image-URI",
+        image_uri: str = None,
         job_name: str = None,
         code_location: str = None,
         role_arn: str = None,
@@ -169,7 +170,9 @@ class AwsQuantumJob:
             ValueError: Raises ValueError if the parameters are not valid.
         """
         device_config = DeviceConfig(devices=[device_arn])
-        job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
+        job_name = job_name or AwsQuantumJob._generate_default_job_name(
+            image_uri or AwsQuantumJob.DEFAULT_IMAGE_NAME
+        )
         role_arn = role_arn or aws_session.get_execution_role()
         hyper_parameters = hyper_parameters or {}
         input_data_config = input_data_config or []
@@ -185,6 +188,15 @@ class AwsQuantumJob:
             job_name,
             "script",
         )
+        algorithm_specification = {
+            "scriptModeConfig": {
+                "entryPoint": entry_point,
+                "s3Uri": f"{code_location}/source.tar.gz",
+                "compressionType": "GZIP",
+            }
+        }
+        if image_uri:
+            algorithm_specification["containerImage"] = {"uri": image_uri}
         if not output_data_config.s3Path:
             output_data_config.s3Path = aws_session.construct_s3_uri(
                 default_bucket,
@@ -215,13 +227,7 @@ class AwsQuantumJob:
         create_job_kwargs = {
             "jobName": job_name,
             "roleArn": role_arn,
-            "algorithmSpecification": {
-                "scriptModeConfig": {
-                    "entryPoint": entry_point,
-                    "s3Uri": f"{code_location}/source.tar.gz",
-                    "compressionType": "GZIP",
-                }
-            },
+            "algorithmSpecification": algorithm_specification,
             "inputDataConfig": [asdict(input_channel) for input_channel in input_data_config],
             "instanceConfig": asdict(instance_config),
             "outputDataConfig": asdict(output_data_config),
