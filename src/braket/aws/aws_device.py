@@ -141,15 +141,15 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        default_s3_location = (
-            os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
-            os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
-        )
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
             task_specification,
-            s3_destination_folder or default_s3_location,
+            s3_destination_folder
+            or (
+                os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
+                os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
+            ),
             shots if shots is not None else self._default_shots,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
@@ -200,15 +200,15 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
-        default_s3_location = (
-            os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
-            os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
-        )
         return AwsQuantumTaskBatch(
             AwsDevice._copy_aws_session(self._aws_session, max_connections=max_connections),
             self._arn,
             task_specifications,
-            s3_destination_folder or default_s3_location,
+            s3_destination_folder
+            or (
+                os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
+                os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
+            ),
             shots if shots is not None else self._default_shots,
             max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
             max_workers=max_connections,

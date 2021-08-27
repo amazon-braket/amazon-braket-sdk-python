@@ -465,6 +465,27 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+    device = device(RIGETTI_ARN)
+    run_and_assert(
+        aws_quantum_task_mock,
+        device,
+        MOCK_DEFAULT_S3_DESTINATION_FOLDER,
+        AwsDevice.DEFAULT_SHOTS_QPU,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        circuit,
+        s3_destination_folder,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    device._aws_session.default_bucket.assert_not_called()
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_shots_poll_timeout_kwargs(
     aws_quantum_task_mock, device, circuit, s3_destination_folder
 ):
