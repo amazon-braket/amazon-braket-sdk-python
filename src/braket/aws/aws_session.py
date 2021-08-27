@@ -25,7 +25,7 @@ import braket._sdk as braket_sdk
 class AwsSession(object):
     """Manage interactions with AWS services."""
 
-    S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
+    S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", str)])
 
     def __init__(self, boto_session=None, braket_client=None, config=None):
         """

@@ -27,6 +27,7 @@ from braket.circuits import (
     QubitSet,
     ResultType,
     circuit,
+    compiler_directives,
     gates,
     noise,
 )
@@ -310,6 +311,81 @@ def test_add_circuit_with_target_and_non_continuous_qubits():
 @pytest.mark.xfail(raises=TypeError)
 def test_add_circuit_with_target_and_mapping(h):
     Circuit().add_circuit(h, target=[10], target_mapping={0: 10})
+
+
+def test_add_verbatim_box():
+    circ = Circuit().h(0).add_verbatim_box(Circuit().cnot(0, 1))
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+    )
+    assert circ == expected
+
+
+def test_add_verbatim_box_different_qubits():
+    circ = Circuit().h(1).add_verbatim_box(Circuit().h(0)).cnot(3, 4)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.H(), 1))
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+        .add_instruction(Instruction(Gate.CNot(), [3, 4]))
+    )
+    assert circ == expected
+
+
+def test_add_verbatim_box_no_preceding():
+    circ = Circuit().add_verbatim_box(Circuit().h(0)).cnot(2, 3)
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(Gate.H(), 0))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+        .add_instruction(Instruction(Gate.CNot(), [2, 3]))
+    )
+    assert circ == expected
+
+
+def test_add_verbatim_box_empty():
+    assert Circuit().add_verbatim_box(Circuit()) == Circuit()
+
+
+def test_add_verbatim_box_with_mapping(cnot):
+    circ = Circuit().add_verbatim_box(cnot, target_mapping={0: 10, 1: 11})
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+    )
+    assert circ == expected
+
+
+def test_add_verbatim_box_with_target(cnot):
+    circ = Circuit().add_verbatim_box(cnot, target=[10, 11])
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+        .add_instruction(Instruction(Gate.CNot(), [10, 11]))
+        .add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+    )
+    assert circ == expected
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_add_verbatim_box_with_target_and_mapping(h):
+    Circuit().add_verbatim_box(h, target=[10], target_mapping={0: 10})
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_add_verbatim_box_result_types():
+    Circuit().h(0).add_verbatim_box(
+        Circuit().cnot(0, 1).expectation(observable=Observable.X(), target=0)
+    )
 
 
 def test_add_with_instruction_with_default(cnot_instr):
