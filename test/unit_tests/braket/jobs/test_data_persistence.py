@@ -68,7 +68,9 @@ def test_save_job_checkpoint(
     job_name, file_suffix, data_format, checkpoint_data, expected_saved_data
 ):
     with tempfile.TemporaryDirectory() as tmp_dir:
-        with patch.dict(os.environ, {"CHECKPOINT_DIR": tmp_dir, "JOB_NAME": job_name}):
+        with patch.dict(
+            os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
+        ):
             save_job_checkpoint(checkpoint_data, file_suffix, data_format)
 
         expected_file_location = (
@@ -85,7 +87,9 @@ def test_save_job_checkpoint(
 def test_save_job_checkpoint_raises_error_empty_data(checkpoint_data):
     job_name = "foo"
     with tempfile.TemporaryDirectory() as tmp_dir:
-        with patch.dict(os.environ, {"CHECKPOINT_DIR": tmp_dir, "JOB_NAME": job_name}):
+        with patch.dict(
+            os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
+        ):
             save_job_checkpoint(checkpoint_data)
 
 
@@ -141,7 +145,9 @@ def test_load_job_checkpoint(
         with open(file_path, "w") as f:
             f.write(saved_data)
 
-        with patch.dict(os.environ, {"CHECKPOINT_DIR": tmp_dir, "JOB_NAME": job_name}):
+        with patch.dict(
+            os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
+        ):
             loaded_data = load_job_checkpoint(job_name, file_suffix)
             assert loaded_data == expected_checkpoint_data
 
@@ -155,7 +161,9 @@ def test_load_job_checkpoint_raises_error_file_not_exists():
         with open(file_path, "w") as _:
             pass
 
-        with patch.dict(os.environ, {"CHECKPOINT_DIR": tmp_dir, "JOB_NAME": job_name}):
+        with patch.dict(
+            os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
+        ):
             load_job_checkpoint(job_name, "wrong_suffix")
 
 
@@ -182,7 +190,9 @@ def test_load_job_checkpoint_raises_error_corrupted_data():
                 )
             )
 
-        with patch.dict(os.environ, {"CHECKPOINT_DIR": tmp_dir, "JOB_NAME": job_name}):
+        with patch.dict(
+            os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
+        ):
             load_job_checkpoint(job_name, file_suffix)
 
 
@@ -202,7 +212,9 @@ def test_save_and_load_job_checkpoint():
             "none_value": None,
             "nested_dict": {"a": {"b": False}},
         }
-        with patch.dict(os.environ, {"CHECKPOINT_DIR": tmp_dir, "JOB_NAME": job_name}):
+        with patch.dict(
+            os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir, "AMZN_BRAKET_JOB_NAME": job_name}
+        ):
             save_job_checkpoint(data, data_format=PersistedJobDataFormat.PICKLED_V4)
             retrieved = load_job_checkpoint(job_name)
             assert retrieved == data
@@ -246,7 +258,7 @@ def test_save_and_load_job_checkpoint():
 )
 def test_save_job_result(data_format, result_data, expected_saved_data):
     with tempfile.TemporaryDirectory() as tmp_dir:
-        with patch.dict(os.environ, {"OUTPUT_DIR": tmp_dir}):
+        with patch.dict(os.environ, {"AMZN_BRAKET_JOB_RESULTS_DIR": tmp_dir}):
             save_job_result(result_data, data_format)
 
         expected_file_location = f"{tmp_dir}/results.json"
@@ -258,5 +270,5 @@ def test_save_job_result(data_format, result_data, expected_saved_data):
 @pytest.mark.parametrize("result_data", [{}, None])
 def test_save_job_result_raises_error_empty_data(result_data):
     with tempfile.TemporaryDirectory() as tmp_dir:
-        with patch.dict(os.environ, {"CHECKPOINT_DIR": tmp_dir}):
+        with patch.dict(os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir}):
             save_job_result(result_data)

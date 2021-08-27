@@ -48,8 +48,8 @@ def save_job_checkpoint(
     """
     if not checkpoint_data:
         raise ValueError("checkpoint_data can not be empty")
-    checkpoint_directory = os.environ["CHECKPOINT_DIR"]
-    job_name = os.environ["JOB_NAME"]
+    checkpoint_directory = os.environ["AMZN_BRAKET_CHECKPOINT_DIR"]
+    job_name = os.environ["AMZN_BRAKET_JOB_NAME"]
     checkpoint_file_path = (
         f"{checkpoint_directory}/{job_name}_{checkpoint_file_suffix}.json"
         if checkpoint_file_suffix
@@ -88,7 +88,7 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
         ValueError: If the data stored in the checkpoint file can't be deserialized (possibly due to
             corruption).
     """
-    checkpoint_directory = os.environ["CHECKPOINT_DIR"]
+    checkpoint_directory = os.environ["AMZN_BRAKET_CHECKPOINT_DIR"]
     checkpoint_file_path = (
         f"{checkpoint_directory}/{job_name}_{checkpoint_file_suffix}.json"
         if checkpoint_file_suffix
@@ -125,7 +125,7 @@ def save_job_result(
     """
     if not result_data:
         raise ValueError("result_data can not be empty")
-    result_directory = os.environ["OUTPUT_DIR"]
+    result_directory = os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"]
     result_path = f"{result_directory}/results.json"
     with open(result_path, "w") as f:
         serialized_data = serialize_values(result_data or {}, data_format)
