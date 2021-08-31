@@ -548,7 +548,7 @@ class AwsQuantumJob:
     def _tar_and_upload_to_code_location(aws_session, source_dir, code_location):
         with tempfile.TemporaryDirectory() as temp_dir:
             try:
-                with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz") as tar:
+                with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz", dereference=True) as tar:
                     tar.add(source_dir, arcname=os.path.basename(source_dir))
             except FileNotFoundError:
                 raise ValueError(f"Source directory not found: {source_dir}")
