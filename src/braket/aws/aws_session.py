@@ -404,8 +404,9 @@ class AwsSession(object):
                         {{
                             "Effect": "Allow",
                             "Principal": {{
-                                "AWS": [
-                                    "{self.get_execution_role()}"
+                                "Service": [
+                                    "aqx.aws.internal",
+                                    "braket.amazonaws.com"
                                 ]
                             }},
                             "Action": "s3:*",
