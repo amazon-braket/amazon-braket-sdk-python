@@ -72,7 +72,7 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
         logGroupName="/aws/braket/jobs",
         startTime=1,
         endTime=2,
-        queryString="fields @timestamp, @message | filter @logStream like /^test_job$/"
+        queryString="fields @timestamp, @message | filter @logStream like /^test_job\\//"
         " | filter @message like /^Metrics - /",
         limit=10000,
     )

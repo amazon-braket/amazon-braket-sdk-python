@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import re
 import time
 from logging import Logger, getLogger
 from typing import Any, Dict, List, Optional, Union
@@ -167,7 +166,7 @@ class CwlInsightsMetricsFetcher(object):
         # job name needs to be specific to prevent jobs with similar names from being conflated
         query = (
             f"fields @timestamp, @message "
-            f"| filter @logStream like /^{re.escape(job_name)}$/ "
+            f"| filter @logStream like /^{job_name}\\// "
             f"| filter @message like /^Metrics - /"
         )
 
