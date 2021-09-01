@@ -150,6 +150,14 @@ def test_sts(aws_session):
     aws_session.boto_session.client.assert_called_with("sts", region_name="us-west-2")
 
 
+def test_logs(aws_session):
+    assert aws_session.sts_client
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._logs = None
+    assert aws_session.logs_client
+    aws_session.boto_session.client.assert_called()
+
+
 @patch("os.path.exists")
 @pytest.mark.parametrize(
     "metadata_file_exists, initial_user_agent",
@@ -220,13 +228,6 @@ def test_retrieve_s3_object_body_client_error(boto_session):
     )
     aws_session = AwsSession(boto_session=boto_session)
     aws_session.retrieve_s3_object_body(bucket_name, filename)
-
-
-def test_create_logs_client(boto_session):
-    config = Mock()
-    aws_session = AwsSession(boto_session=boto_session, config=config)
-    aws_session.create_logs_client()
-    boto_session.client.assert_called_with("logs", config=config)
 
 
 def test_get_device(boto_session):
@@ -899,3 +900,62 @@ def test_create_s3_bucket_if_it_does_not_exist_error(aws_session, error, account
     bucket = f"amazon-braket-{region}-{account_id}"
     aws_session._s3.create_bucket.side_effect = error
     aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)
+
+
+@pytest.mark.parametrize(
+    "limit, next_token",
+    (
+        (None, None),
+        (10, None),
+        (None, "next-token"),
+        (10, "next-token"),
+    ),
+)
+def test_describe_log_streams(aws_session, limit, next_token):
+    aws_session._logs = Mock()
+
+    log_group = "log_group"
+    log_stream_prefix = "log_stream_prefix"
+
+    describe_log_stream_args = {
+        "logGroupName": log_group,
+        "logStreamNamePrefix": log_stream_prefix,
+        "orderBy": "LogStreamName",
+    }
+
+    if limit:
+        describe_log_stream_args.update({"limit": limit})
+
+    if next_token:
+        describe_log_stream_args.update({"nextToken": next_token})
+
+    aws_session.describe_log_streams(log_group, log_stream_prefix, limit, next_token)
+
+    aws_session._logs.describe_log_streams.assert_called_with(**describe_log_stream_args)
+
+
+@pytest.mark.parametrize(
+    "next_token",
+    (None, "next-token"),
+)
+def test_get_log_events(aws_session, next_token):
+    aws_session._logs = Mock()
+
+    log_group = "log_group"
+    log_stream_name = "log_stream_name"
+    start_time = "timestamp"
+    start_from_head = True
+
+    log_events_args = {
+        "logGroupName": log_group,
+        "logStreamName": log_stream_name,
+        "startTime": start_time,
+        "startFromHead": start_from_head,
+    }
+
+    if next_token:
+        log_events_args.update({"nextToken": next_token})
+
+    aws_session.get_log_events(log_group, log_stream_name, start_time, start_from_head, next_token)
+
+    aws_session._logs.get_log_events.assert_called_with(**log_events_args)

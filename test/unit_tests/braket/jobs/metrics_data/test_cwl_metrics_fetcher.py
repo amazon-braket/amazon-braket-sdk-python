@@ -56,7 +56,7 @@ EXPECTED_CALL_LIST = [
 @patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
-    aws_session.create_logs_client.return_value = logs_client_mock
+    aws_session.logs_client = logs_client_mock
 
     logs_client_mock.describe_log_streams.return_value = {
         "logStreams": [{"logStreamName": "stream name"}, {}]
@@ -77,7 +77,7 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
 @patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_log_streams_timeout(mock_add_metrics, aws_session):
     logs_client_mock = Mock()
-    aws_session.create_logs_client.return_value = logs_client_mock
+    aws_session.logs_client = logs_client_mock
 
     logs_client_mock.describe_log_streams.return_value = {
         "logStreams": [{"logStreamName": "stream name"}],
@@ -96,7 +96,7 @@ def test_get_log_streams_timeout(mock_add_metrics, aws_session):
 @patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_no_streams_returned(mock_add_metrics, aws_session):
     logs_client_mock = Mock()
-    aws_session.create_logs_client.return_value = logs_client_mock
+    aws_session.logs_client = logs_client_mock
 
     logs_client_mock.describe_log_streams.return_value = {}
 
@@ -111,7 +111,7 @@ def test_get_no_streams_returned(mock_add_metrics, aws_session):
 @patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_metrics_timeout(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
-    aws_session.create_logs_client.return_value = logs_client_mock
+    aws_session.logs_client = logs_client_mock
 
     logs_client_mock.describe_log_streams.return_value = {
         "logStreams": [{"logStreamName": "stream name"}]

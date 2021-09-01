@@ -45,7 +45,7 @@ class CwlInsightsMetricsFetcher(object):
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
         self._logger = logger
-        self._logs_client = aws_session.create_logs_client()
+        self._logs_client = aws_session.logs_client
 
     @staticmethod
     def _get_element_from_log_line(

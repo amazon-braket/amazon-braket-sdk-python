@@ -19,11 +19,13 @@ import tarfile
 import tempfile
 import time
 from dataclasses import asdict
+from enum import Enum
 from typing import Any, Dict, List
 
 import boto3
 
 from braket.aws.aws_session import AwsSession
+from braket.jobs import logs
 from braket.jobs.config import (
     CheckpointConfig,
     DeviceConfig,
@@ -53,6 +55,12 @@ class AwsQuantumJob:
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     DEFAULT_IMAGE_NAME = "Base-Image-URI"
+    LOG_GROUP = "/aws/braket/jobs"
+
+    class LogState(Enum):
+        TAILING = "tailing"
+        JOB_COMPLETE = "job_complete"
+        COMPLETE = "complete"
 
     @classmethod
     def create(
@@ -245,14 +253,9 @@ class AwsQuantumJob:
         job_arn = aws_session.create_job(**create_job_kwargs)
         job = AwsQuantumJob(job_arn, aws_session)
 
-        # TODO: replace with .logs() output and consider whether we want a polling config
-        # if wait_until_complete:
-        #     polling_config = polling_config or PollingConfig()
-        #     timeout_time = time.time() + polling_config.pollTimeoutSeconds
-        #     while time.time() < timeout_time:
-        #         if job.state() in AwsQuantumJob.TERMINAL_STATES:
-        #             return job
-        #         time.sleep(polling_config.pollIntervalSeconds)
+        if wait_until_complete:
+            print(f"Initializing Braket Job: {job_arn}")
+            job.logs(wait=True)
 
         return job
 
@@ -308,6 +311,11 @@ class AwsQuantumJob:
         """str: The ARN (Amazon Resource Name) of the quantum job."""
         return self._arn
 
+    @property
+    def name(self) -> str:
+        """str: The name of the quantum job."""
+        return self._arn.partition("job/")[-1]
+
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum job.
 
@@ -324,8 +332,78 @@ class AwsQuantumJob:
         """
         return self.metadata(use_cached_value).get("status")
 
-    def logs(self) -> None:
-        """Prints the logs from cloudwatch to stdout"""
+    def logs(self, wait: bool = False, poll: int = 5) -> None:
+        """Display logs for a given job, optionally tailing them until job is complete.
+        If the output is a tty or a Jupyter cell, it will be color-coded
+        based on which instance the log entry is from.
+
+        Args:
+            wait (bool): Whether to keep looking for new log entries until the job completes
+                (default: False).
+
+            poll (int): The interval in seconds between polling for new log entries and job
+                completion (default: 5).
+
+        Raises:
+            exceptions.UnexpectedStatusException: If waiting and the training job fails.
+        """
+        # The loop below implements a state machine that alternates between checking the job status
+        # and reading whatever is available in the logs at this point. Note, that if we were
+        # called with wait == False, we never check the job status.
+        #
+        # If wait == TRUE and job is not completed, the initial state is TAILING
+        # If wait == FALSE, the initial state is COMPLETE (doesn't matter if the job really is
+        # complete).
+        #
+        # The state table:
+        #
+        # STATE               ACTIONS                        CONDITION             NEW STATE
+        # ----------------    ----------------               -----------------     ----------------
+        # TAILING             Read logs, Pause, Get status   Job complete          JOB_COMPLETE
+        #                                                    Else                  TAILING
+        # JOB_COMPLETE        Read logs, Pause               Any                   COMPLETE
+        # COMPLETE            Read logs, Exit                                      N/A
+        #
+        # Notes:
+        # - The JOB_COMPLETE state forces us to do an extra pause and read any items that got to
+        #   Cloudwatch after the job was marked complete.
+
+        job_already_completed = self.state() in AwsQuantumJob.TERMINAL_STATES
+        log_state = (
+            AwsQuantumJob.LogState.TAILING
+            if wait and not job_already_completed
+            else AwsQuantumJob.LogState.COMPLETE
+        )
+
+        log_group = AwsQuantumJob.LOG_GROUP
+        stream_prefix = f"{self.name}/"
+        stream_names = []  # The list of log streams
+        positions = {}  # The current position in each stream, map of stream name -> position
+        instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
+        has_streams = False
+        color_wrap = logs.ColorWrap()
+
+        while True:
+            time.sleep(poll)
+
+            has_streams = logs.flush_log_streams(
+                self._aws_session,
+                log_group,
+                stream_prefix,
+                stream_names,
+                positions,
+                instance_count,
+                has_streams,
+                color_wrap,
+            )
+
+            if log_state == AwsQuantumJob.LogState.COMPLETE:
+                break
+
+            if log_state == AwsQuantumJob.LogState.JOB_COMPLETE:
+                log_state = AwsQuantumJob.LogState.COMPLETE
+            elif self.state() in AwsQuantumJob.TERMINAL_STATES:
+                log_state = AwsQuantumJob.LogState.JOB_COMPLETE
 
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
         """Get job metadata defined in Amazon Braket.

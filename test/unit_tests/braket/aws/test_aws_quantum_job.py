@@ -582,16 +582,23 @@ def test_arn(quantum_job_arn, aws_session):
     assert quantum_job.arn == quantum_job_arn
 
 
+def test_name(quantum_job_arn, quantum_job_name, aws_session):
+    quantum_job = AwsQuantumJob(quantum_job_arn, aws_session)
+    assert quantum_job.name == quantum_job_name
+
+
 @pytest.mark.xfail(raises=AttributeError)
 def test_no_arn_setter(quantum_job):
     quantum_job.arn = 123
 
 
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob.logs")
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 @patch("time.time")
 def test_create_job(
     mock_time,
     mock_validate_entry_point,
+    mock_logs,
     aws_session,
     source_dir,
     create_job_args,
@@ -893,3 +900,174 @@ def test_validate_entry_point_invalid_source_dir(mock_import):
     mock_import.side_effect = ModuleNotFoundError()
     with pytest.raises(ValueError, match=error_string):
         AwsQuantumJob._validate_entry_point(entry_point)
+
+
+@pytest.fixture
+def log_stream_responses():
+    return (
+        ClientError(
+            {
+                "Error": {
+                    "Code": "ResourceNotFoundException",
+                    "Message": "This shouldn't get raised...",
+                }
+            },
+            "DescribeLogStreams",
+        ),
+        {"logStreams": []},
+        {"logStreams": [{"logStreamName": "stream-1"}]},
+    )
+
+
+@pytest.fixture
+def log_events_responses():
+    return (
+        {"nextForwardToken": None, "events": [{"timestamp": 1, "message": "hi there #1"}]},
+        {"nextForwardToken": None, "events": []},
+        {
+            "nextForwardToken": None,
+            "events": [
+                {"timestamp": 1, "message": "hi there #1"},
+                {"timestamp": 2, "message": "hi there #2"},
+            ],
+        },
+        {"nextForwardToken": None, "events": []},
+        {
+            "nextForwardToken": None,
+            "events": [
+                {"timestamp": 2, "message": "hi there #2"},
+                {"timestamp": 2, "message": "hi there #2a"},
+                {"timestamp": 3, "message": "hi there #3"},
+            ],
+        },
+        {"nextForwardToken": None, "events": []},
+    )
+
+
+def test_logs(
+    quantum_job,
+    generate_get_job_response,
+    log_events_responses,
+    log_stream_responses,
+    capsys,
+):
+    quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+    )
+    quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
+    quantum_job._aws_session.get_log_events.side_effect = log_events_responses
+
+    quantum_job.logs(wait=True, poll=0)
+
+    captured = capsys.readouterr()
+    assert captured.out == "\n".join(
+        (
+            "..",
+            "hi there #1",
+            "hi there #2",
+            "hi there #2a",
+            "hi there #3",
+            "",
+        )
+    )
+
+
+@patch.dict("os.environ", {"JPY_PARENT_PID": "True"})
+def test_logs_multiple_instances(
+    quantum_job,
+    generate_get_job_response,
+    log_events_responses,
+    log_stream_responses,
+    capsys,
+):
+    quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="RUNNING", instanceConfig={"instanceCount": 2}),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+    )
+    log_stream_responses[-1]["logStreams"].append({"logStreamName": "stream-2"})
+    quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
+
+    event_counts = {
+        "stream-1": 0,
+        "stream-2": 0,
+    }
+
+    def get_log_events(log_group, log_stream, start_time, start_from_head, next_token):
+        log_events_dict = {
+            "stream-1": log_events_responses,
+            "stream-2": log_events_responses,
+        }
+        log_events_dict["stream-1"] += (
+            {
+                "nextForwardToken": None,
+                "events": [],
+            },
+            {
+                "nextForwardToken": None,
+                "events": [],
+            },
+        )
+        log_events_dict["stream-2"] += (
+            {
+                "nextForwardToken": None,
+                "events": [
+                    {"timestamp": 3, "message": "hi there #3"},
+                    {"timestamp": 4, "message": "hi there #4"},
+                ],
+            },
+            {
+                "nextForwardToken": None,
+                "events": [],
+            },
+        )
+        event_counts[log_stream] += 1
+        return log_events_dict[log_stream][event_counts[log_stream]]
+
+    quantum_job._aws_session.get_log_events.side_effect = get_log_events
+
+    quantum_job.logs(wait=True, poll=0)
+
+    captured = capsys.readouterr()
+    assert captured.out == "\n".join(
+        (
+            "..",
+            "\x1b[34mhi there #1\x1b[0m",
+            "\x1b[35mhi there #1\x1b[0m",
+            "\x1b[34mhi there #2\x1b[0m",
+            "\x1b[35mhi there #2\x1b[0m",
+            "\x1b[34mhi there #2a\x1b[0m",
+            "\x1b[35mhi there #2a\x1b[0m",
+            "\x1b[34mhi there #3\x1b[0m",
+            "\x1b[35mhi there #3\x1b[0m",
+            "\x1b[35mhi there #4\x1b[0m",
+            "",
+        )
+    )
+
+
+def test_logs_error(quantum_job, generate_get_job_response, capsys):
+    quantum_job._aws_session.get_job.side_effect = (
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="RUNNING"),
+        generate_get_job_response(status="COMPLETED"),
+    )
+    quantum_job._aws_session.describe_log_streams.side_effect = (
+        ClientError(
+            {
+                "Error": {
+                    "Code": "UnknownCode",
+                    "Message": "Some error message",
+                }
+            },
+            "DescribeLogStreams",
+        ),
+    )
+
+    with pytest.raises(ClientError, match="Some error message"):
+        quantum_job.logs(wait=True, poll=1)

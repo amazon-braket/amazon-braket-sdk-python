@@ -54,7 +54,7 @@ EXPECTED_CALL_LIST = [
 @patch("braket.jobs.metrics_data.cwl_insights_metrics_fetcher.CwlMetricsParser.parse_log_message")
 def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
-    aws_session.create_logs_client.return_value = logs_client_mock
+    aws_session.logs_client = logs_client_mock
 
     logs_client_mock.start_query.return_value = {"queryId": "test"}
     logs_client_mock.get_query_results.return_value = {
@@ -82,7 +82,7 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
 
 def test_get_all_metrics_timeout(aws_session):
     logs_client_mock = Mock()
-    aws_session.create_logs_client.return_value = logs_client_mock
+    aws_session.logs_client = logs_client_mock
 
     logs_client_mock.start_query.return_value = {"queryId": "test"}
     logs_client_mock.get_query_results.return_value = {"status": "Queued"}
@@ -96,7 +96,7 @@ def test_get_all_metrics_timeout(aws_session):
 @pytest.mark.xfail(raises=MetricsRetrievalError)
 def test_get_all_metrics_failed(aws_session):
     logs_client_mock = Mock()
-    aws_session.create_logs_client.return_value = logs_client_mock
+    aws_session.logs_client = logs_client_mock
 
     logs_client_mock.start_query.return_value = {"queryId": "test"}
     logs_client_mock.get_query_results.return_value = {"status": "Failed"}

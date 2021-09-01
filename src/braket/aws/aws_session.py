@@ -49,6 +49,7 @@ class AwsSession(object):
         self._iam = None
         self._s3 = None
         self._sts = None
+        self._logs = None
 
     @property
     def region(self):
@@ -75,6 +76,12 @@ class AwsSession(object):
         if not self._sts:
             self._sts = self.boto_session.client("sts", region_name=self.region)
         return self._sts
+
+    @property
+    def logs_client(self):
+        if not self._logs:
+            self._logs = self.boto_session.client("logs", config=self._config)
+        return self._logs
 
     def _update_user_agent(self):
         """
@@ -395,7 +402,6 @@ class AwsSession(object):
                     "RestrictPublicBuckets": True,
                 },
             )
-            # TODO: make this prettier and replace with correct roles
             self.s3_client.put_bucket_policy(
                 Bucket=bucket_name,
                 Policy=f"""{{
@@ -432,15 +438,6 @@ class AwsSession(object):
                 pass
             else:
                 raise
-
-    def create_logs_client(self) -> "boto3.session.Session.client":
-        """
-        Create a CloudWatch Logs boto client.
-
-        Returns:
-            'boto3.session.Session.client': The CloudWatch Logs boto client.
-        """
-        return self.boto_session.client("logs", config=self._config)
 
     def get_device(self, arn: str) -> Dict[str, Any]:
         """
@@ -537,3 +534,73 @@ class AwsSession(object):
         if not dirs:
             raise ValueError(f"Not a valid S3 location: s3://{bucket}")
         return f"s3://{bucket}/{'/'.join(dirs)}"
+
+    def describe_log_streams(
+        self,
+        log_group: str,
+        log_stream_prefix: str,
+        limit: int = None,
+        next_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Describes CloudWatch log streams in a log group with a given prefix.
+
+        Args:
+            log_group (str): Name of the log group.
+            log_stream_prefix (str): Prefix for log streams to include.
+            limit (int, optional): Limit for number of log streams returned.
+                default is 50.
+            next_token (optional, str): The token for the next set of items to return.
+                Would have been received in a previous call.
+
+        Returns:
+            dict: Dicionary containing logStreams and nextToken
+        """
+        log_stream_args = {
+            "logGroupName": log_group,
+            "logStreamNamePrefix": log_stream_prefix,
+            "orderBy": "LogStreamName",
+        }
+
+        if limit:
+            log_stream_args.update({"limit": limit})
+
+        if next_token:
+            log_stream_args.update({"nextToken": next_token})
+
+        return self.logs_client.describe_log_streams(**log_stream_args)
+
+    def get_log_events(
+        self,
+        log_group: str,
+        log_stream: str,
+        start_time: int,
+        start_from_head: bool = True,
+        next_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Gets CloudWatch log events from a given log stream.
+
+        Args:
+            log_group (str): Name of the log group.
+            log_stream (str): Name of the log stream.
+            start_time (int): Timestamp that indicates a start time to include log events.
+            start_from_head (bool): Bool indicating to return oldest events first. default
+                is True.
+            next_token (optional, str): The token for the next set of items to return.
+                Would have been received in a previous call.
+
+        Returns:
+            dict: Dicionary containing events, nextForwardToken, and nextBackwardToken
+        """
+        log_events_args = {
+            "logGroupName": log_group,
+            "logStreamName": log_stream,
+            "startTime": start_time,
+            "startFromHead": start_from_head,
+        }
+
+        if next_token:
+            log_events_args.update({"nextToken": next_token})
+
+        return self.logs_client.get_log_events(**log_events_args)
