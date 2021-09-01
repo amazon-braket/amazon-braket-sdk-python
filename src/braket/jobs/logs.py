@@ -192,8 +192,12 @@ def flush_log_streams(
                 limit=stream_count,
             )
             # stream_names = [...] wouldn't modify the list by reference
-            stream_names.clear()
-            stream_names.extend([s["logStreamName"] for s in streams["logStreams"]])
+            new_streams = [
+                s["logStreamName"]
+                for s in streams["logStreams"]
+                if s["logStreamName"] not in stream_names
+            ]
+            stream_names.extend(new_streams)
             positions.update(
                 [(s, Position(timestamp=0, skip=0)) for s in stream_names if s not in positions]
             )
