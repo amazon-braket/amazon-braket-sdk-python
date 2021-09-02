@@ -65,13 +65,9 @@ class AwsQuantumJob:
     @classmethod
     def create(
         cls,
-        aws_session: AwsSession,
         entry_point: str,
         device_arn: str,
         source_dir: str = None,
-        # TODO: Replace with the correct default image name.
-        # This image_uri will be retrieved from `image_uris.retreive()` which will a different file
-        # in the `jobs` folder and the function defined in it.
         image_uri: str = None,
         job_name: str = None,
         code_location: str = None,
@@ -87,14 +83,13 @@ class AwsQuantumJob:
         checkpoint_config: CheckpointConfig = None,
         vpc_config: VpcConfig = None,
         tags: Dict[str, str] = None,
+        aws_session: AwsSession = None,
         *args,
         **kwargs,
     ) -> AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
-            aws_session (AwsSession): AwsSession to connect to AWS with.
-
             entry_point (str): str specifying the 'module' or 'module:method' to be executed as
                 an entry point for the job. The entry_point should be specified relative to
                 the source_dir. If source_dir is not provided then all the required modules
@@ -171,12 +166,16 @@ class AwsQuantumJob:
             tags (Dict[str, str]): Dict specifying the Key-Value pairs to tag the quantum job with.
                 Default = `None`.
 
+
+            aws_session (AwsSession): AwsSession to connect to AWS with. Default = `AwsSession()`
+
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
 
         Raises:
             ValueError: Raises ValueError if the parameters are not valid.
         """
+        aws_session = aws_session or AwsSession()
         device_config = DeviceConfig(devices=[device_arn])
         job_name = job_name or AwsQuantumJob._generate_default_job_name(
             image_uri or AwsQuantumJob.DEFAULT_IMAGE_NAME

@@ -534,7 +534,6 @@ def create_job_args(
         return dict(
             (key, value)
             for key, value in {
-                "aws_session": aws_session,
                 "entry_point": entry_point,
                 "source_dir": source_dir,
                 "image_uri": image_uri,
@@ -552,23 +551,24 @@ def create_job_args(
                 "checkpoint_config": checkpoint_config,
                 "vpc_config": vpc_config,
                 "tags": tags,
+                "aws_session": aws_session,
             }.items()
             if value is not None
         )
     elif request.param == "defaults":
         return {
-            "aws_session": aws_session,
             "entry_point": entry_point,
             "device_arn": device_arn,
             "source_dir": source_dir,
+            "aws_session": aws_session,
         }
     elif request.param == "nones":
         return defaultdict(
             lambda: None,
-            aws_session=aws_session,
             entry_point=entry_point,
             device_arn=device_arn,
             source_dir=source_dir,
+            aws_session=aws_session,
         )
 
 
@@ -719,10 +719,10 @@ def test_create_job_source_dir_not_found(
     fake_source_dir = "fake-source-dir"
     with pytest.raises(ValueError) as e:
         AwsQuantumJob.create(
-            aws_session=aws_session,
             entry_point="fake-source-dir.test_script:func",
             device_arn=device_arn,
             source_dir=fake_source_dir,
+            aws_session=aws_session,
         )
     assert str(e.value) == f"Source directory not found: {fake_source_dir}"
 
@@ -737,10 +737,10 @@ def test_create_job_source_dir_s3_but_not_tar(
     fake_source_dir = "s3://bucket/non-tar-file"
     with pytest.raises(ValueError) as e:
         AwsQuantumJob.create(
-            aws_session=aws_session,
             entry_point=entry_point,
             device_arn=device_arn,
             source_dir=fake_source_dir,
+            aws_session=aws_session,
         )
 
     assert str(e.value) == (
@@ -757,10 +757,10 @@ def test_source_dir_not_in_entry_point_name(entry_point, aws_session, device_arn
         os.mkdir("other-source-dir")
         with pytest.raises(ValueError) as e:
             AwsQuantumJob.create(
-                aws_session=aws_session,
                 entry_point=entry_point,
                 device_arn=device_arn,
                 source_dir=source_dir,
+                aws_session=aws_session,
             )
         os.chdir("..")
 
@@ -821,12 +821,12 @@ def test_copy_checkpoints(
     AwsQuantumJob._process_source_dir = Mock()
     aws_session.create_job.return_value = quantum_job_arn
     job = AwsQuantumJob.create(
-        aws_session=aws_session,
         entry_point=entry_point,
         device_arn=device_arn,
         source_dir="source_dir",
-        checkpoint_config=checkpoint_config,
         copy_checkpoints_from_job="other-job-arn",
+        checkpoint_config=checkpoint_config,
+        aws_session=aws_session,
     )
     assert job == AwsQuantumJob(quantum_job_arn, aws_session)
     aws_session.copy_s3_directory.assert_called_with(other_checkpoint_uri, checkpoint_config.s3Uri)
@@ -853,10 +853,10 @@ def test_metrics(
     AwsQuantumJob._process_source_dir = Mock()
     aws_session.create_job.return_value = quantum_job_arn
     job = AwsQuantumJob.create(
-        aws_session=aws_session,
         entry_point=entry_point,
         device_arn=device_arn,
         source_dir="source_dir",
+        aws_session=aws_session,
     )
     metrics = job.metrics()
     assert job == AwsQuantumJob(quantum_job_arn, aws_session)
