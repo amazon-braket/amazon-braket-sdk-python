@@ -617,16 +617,16 @@ class AwsQuantumJob:
     def _source_dir_not_provided(aws_session, entry_point, code_location):
         AwsQuantumJob._validate_entry_point(entry_point)
         module, _, func = entry_point.partition(":")
-        upload_dir = module.split(".")[0]
+        source = module.split(".")[0] if "." in module else f"{module}.py"
 
-        AwsQuantumJob._tar_and_upload_to_code_location(aws_session, upload_dir, code_location)
+        AwsQuantumJob._tar_and_upload_to_code_location(aws_session, source, code_location)
 
     @staticmethod
-    def _tar_and_upload_to_code_location(aws_session, source_dir, code_location):
+    def _tar_and_upload_to_code_location(aws_session, source, code_location):
         with tempfile.TemporaryDirectory() as temp_dir:
             try:
                 with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz", dereference=True) as tar:
-                    tar.add(source_dir, arcname=os.path.basename(source_dir))
+                    tar.add(source, arcname=os.path.basename(source))
             except FileNotFoundError:
-                raise ValueError(f"Source directory not found: {source_dir}")
+                raise ValueError(f"Source directory not found: {source}")
             aws_session.upload_to_s3(f"{temp_dir}/source.tar.gz", f"{code_location}/source.tar.gz")

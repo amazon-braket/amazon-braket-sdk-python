@@ -802,6 +802,36 @@ def test_entry_point_when_source_dir_not_provided(
         os.chdir("..")
 
 
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._tar_and_upload_to_code_location")
+@patch("importlib.import_module")
+def test_entry_point_when_source_dir_not_provided_current_directory(
+    mock_import, mock_tar, quantum_job, code_location, aws_session
+):
+    entry_point = "my_file:start_here"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+
+        with open("__init__.py", "w") as f:
+            pass
+
+        with open("my_file.py", "w") as f:
+            f.write("def func(): \n\tpass")
+
+        quantum_job._process_source_dir(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            code_location=code_location,
+            source_dir=None,
+        )
+
+        mock_tar.assert_called_with(
+            aws_session,
+            "my_file.py",
+            code_location,
+        )
+        os.chdir("..")
+
+
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 def test_copy_checkpoints(
     mock_validate_entry_point,
