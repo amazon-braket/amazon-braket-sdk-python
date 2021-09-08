@@ -524,7 +524,8 @@ class AwsQuantumJob:
             if job_state in AwsQuantumJob.NO_RESULT_TERMINAL_STATES:
                 message = (
                     f"Error retrieving results, your job is in {job_state} state. "
-                    f"Your job has failed due to: {job_response['failureReason']}"
+                    "Your job has failed due to: "
+                    f"{job_response.get('failureReason', 'unknown reason')}"
                     if job_state == "FAILED"
                     else f"Error retrieving results, your job is in {job_state} state."
                 )

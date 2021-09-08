@@ -318,18 +318,25 @@ def test_results_when_job_is_completed(
     assert actual_data == expected_saved_data
 
 
+@pytest.mark.parametrize(
+    "failure_reason",
+    ["Validation Error", None],
+)
 @pytest.mark.parametrize("state", ["FAILED", "CANCELLED"])
 def test_results_when_job_is_failed_or_cancelled(
-    state, quantum_job, generate_get_job_response, result_setup
+    state,
+    quantum_job,
+    generate_get_job_response,
+    result_setup,
+    failure_reason,
 ):
-    get_job_response_failed = generate_get_job_response(
-        status=state, failureReason="Validation Error"
-    )
+    get_job_response_failed = generate_get_job_response(status=state, failureReason=failure_reason)
     quantum_job._aws_session.get_job.return_value = get_job_response_failed
     job_metadata = quantum_job.metadata(True)
     message = (
         f"Error retrieving results, your job is in {state} state. "
-        f"Your job has failed due to: {job_metadata['failureReason']}"
+        "Your job has failed due to: "
+        f"{job_metadata.get('failureReason', 'unknown reason')}"
         if state == "FAILED"
         else f"Error retrieving results, your job is in {state} state."
     )
