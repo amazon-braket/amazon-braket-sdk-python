@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9.0 (2021-09-09)
+
+### Features
+
+ * Verbatim boxes
+
 ## v1.8.0 (2021-08-23)
 
 ### Features
