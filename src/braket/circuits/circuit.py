@@ -523,26 +523,26 @@ class Circuit:
             >>> widget = Circuit().h(0).h(1)
             >>> circ = Circuit().add_verbatim_box(widget)
             >>> print(list(circ.instructions))
-            [Instruction('operator': StartVerbatimBlock, 'target': QubitSet([])),
+            [Instruction('operator': StartVerbatimBox, 'target': QubitSet([])),
              Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)])),
              Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(1)])),
-             Instruction('operator': EndVerbatimBlock, 'target': QubitSet([]))]
+             Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
 
             >>> widget = Circuit().h(0).cnot(0, 1)
             >>> circ = Circuit().add_verbatim_box(widget, target_mapping={0: 10, 1: 11})
             >>> print(list(circ.instructions))
-            [Instruction('operator': StartVerbatimBlock, 'target': QubitSet([])),
+            [Instruction('operator': StartVerbatimBox, 'target': QubitSet([])),
              Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(10)])),
              Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(11)])),
-             Instruction('operator': EndVerbatimBlock, 'target': QubitSet([]))]
+             Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
 
             >>> widget = Circuit().h(0).cnot(0, 1)
             >>> circ = Circuit().add_verbatim_box(widget, target=[10, 11])
             >>> print(list(circ.instructions))
-            [Instruction('operator': StartVerbatimBlock, 'target': QubitSet([])),
+            [Instruction('operator': StartVerbatimBox, 'target': QubitSet([])),
              Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(10)])),
              Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(11)])),
-             Instruction('operator': EndVerbatimBlock, 'target': QubitSet([]))]
+             Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
         """
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
@@ -559,8 +559,7 @@ class Circuit:
             for instruction in verbatim_circuit.instructions:
                 self.add_instruction(instruction, target_mapping=target_mapping)
             self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
-
-        self._has_compiler_directives = True
+            self._has_compiler_directives = True
         return self
 
     def apply_gate_noise(

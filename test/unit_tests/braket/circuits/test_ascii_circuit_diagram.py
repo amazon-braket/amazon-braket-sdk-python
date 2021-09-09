@@ -359,6 +359,25 @@ def test_verbatim_different_qubits():
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
 
 
+def test_verbatim_qubset_qubits():
+    circ = Circuit().h(1).cnot(0, 1).cnot(1, 2).add_verbatim_box(Circuit().h(1)).cnot(2, 3)
+    expected = (
+        "T  : |0|1|2|      3      |4|     5     |6|",
+        "                                          ",
+        "q0 : ---C---StartVerbatim---EndVerbatim---",
+        "        |   |               |             ",
+        "q1 : -H-X-C-|-------------H-|-------------",
+        "          | |               |             ",
+        "q2 : -----X-|---------------|-----------C-",
+        "            |               |           | ",
+        "q3 : -------*************---***********-X-",
+        "",
+        "T  : |0|1|2|      3      |4|     5     |6|",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
 def test_ignore_non_gates():
     class Foo(Operator):
         @property

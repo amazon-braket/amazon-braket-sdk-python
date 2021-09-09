@@ -351,7 +351,9 @@ def test_add_verbatim_box_no_preceding():
 
 
 def test_add_verbatim_box_empty():
-    assert Circuit().add_verbatim_box(Circuit()) == Circuit()
+    circuit = Circuit().add_verbatim_box(Circuit())
+    assert circuit == Circuit()
+    assert not circuit.qubits_frozen
 
 
 def test_add_verbatim_box_with_mapping(cnot):
