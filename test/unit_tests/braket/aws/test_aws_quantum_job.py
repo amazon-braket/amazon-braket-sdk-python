@@ -446,7 +446,7 @@ def device_arn():
 
 
 @pytest.fixture
-def hyper_parameters():
+def hyperparameters():
     return {
         "param": "value",
         "other-param": 100,
@@ -528,7 +528,7 @@ def create_job_args(
     role_arn,
     wait_until_complete,
     device_arn,
-    hyper_parameters,
+    hyperparameters,
     input_data_config,
     instance_config,
     stopping_condition,
@@ -549,7 +549,7 @@ def create_job_args(
                 "role_arn": role_arn,
                 "wait_until_complete": wait_until_complete,
                 "device_arn": device_arn,
-                "hyper_parameters": hyper_parameters,
+                "hyperparameters": hyperparameters,
                 # "metric_defintions": None,
                 "input_data_config": input_data_config,
                 "instance_config": instance_config,
@@ -642,7 +642,7 @@ def _assert_create_job_called_with(
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
     devices = [create_job_args["device_arn"]]
-    hyper_parameters = create_job_args["hyper_parameters"] or {}
+    hyperparameters = create_job_args["hyperparameters"] or {}
     input_data_config = create_job_args["input_data_config"] or []
     instance_config = create_job_args["instance_config"] or InstanceConfig()
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
@@ -673,7 +673,7 @@ def _assert_create_job_called_with(
         "outputDataConfig": asdict(output_data_config),
         "checkpointConfig": asdict(checkpoint_config),
         "deviceConfig": {"devices": devices},
-        "hyperParameters": hyper_parameters,
+        "hyperParameters": hyperparameters,
         "stoppingCondition": asdict(stopping_condition),
         # "tags": tags,
     }

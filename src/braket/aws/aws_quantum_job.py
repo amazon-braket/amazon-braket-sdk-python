@@ -73,7 +73,7 @@ class AwsQuantumJob:
         code_location: str = None,
         role_arn: str = None,
         wait_until_complete: bool = False,
-        hyper_parameters: Dict[str, Any] = None,
+        hyperparameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
         input_data_config: List[InputDataConfig] = None,
         instance_config: InstanceConfig = None,
@@ -124,7 +124,7 @@ class AwsQuantumJob:
             wait_until_complete (bool): bool representing whether we should wait until the job
                 completes. This would tail the job logs as it waits. Default = `False`.
 
-            hyper_parameters (Dict[str, Any]): Hyperparameters that will be made accessible to
+            hyperparameters (Dict[str, Any]): Hyperparameters that will be made accessible to
                 the job. The hyperparameters are made accessible as a Dict[str, str] to the
                 job. For convenience, this accepts other types for keys and values, but
                 `str()` will be called to convert them before being passed on. Default = `None`.
@@ -181,7 +181,7 @@ class AwsQuantumJob:
             image_uri or AwsQuantumJob.DEFAULT_IMAGE_NAME
         )
         role_arn = role_arn or aws_session.get_execution_role()
-        hyper_parameters = hyper_parameters or {}
+        hyperparameters = hyperparameters or {}
         input_data_config = input_data_config or []
         instance_config = instance_config or InstanceConfig()
         stopping_condition = stopping_condition or StoppingCondition()
@@ -240,7 +240,7 @@ class AwsQuantumJob:
             "outputDataConfig": asdict(output_data_config),
             "checkpointConfig": asdict(checkpoint_config),
             "deviceConfig": asdict(device_config),
-            "hyperParameters": hyper_parameters,
+            "hyperParameters": hyperparameters,
             "stoppingCondition": asdict(stopping_condition),
             # TODO: uncomment when tags works
             # "tags": tags,
