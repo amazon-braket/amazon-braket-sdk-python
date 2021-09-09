@@ -33,7 +33,7 @@ def test_empty_operator():
 
 @pytest.mark.xfail(raises=ValueError)
 def test_non_matching_qubit_set_and_qubit_count():
-    Instruction(Gate.CNot, target=[0, 0])
+    Instruction(Gate.CNot(), target=[0, 0])
 
 
 def test_init_with_qubits():

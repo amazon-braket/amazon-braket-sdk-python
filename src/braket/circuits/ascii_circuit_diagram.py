@@ -14,6 +14,7 @@
 from typing import List, Tuple, Union
 
 from braket.circuits.circuit_diagram import CircuitDiagram
+from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
@@ -104,10 +105,14 @@ class AsciiCircuitDiagram(CircuitDiagram):
         groupings = []
         for item in items:
             # Can only print Gate and Noise operators for instructions at the moment
-            if isinstance(item, Instruction) and not isinstance(item.operator, (Gate, Noise)):
+            if isinstance(item, Instruction) and not isinstance(
+                item.operator, (Gate, Noise, CompilerDirective)
+            ):
                 continue
 
-            if isinstance(item, ResultType) and not item.target:
+            if (isinstance(item, ResultType) and not item.target) or (
+                isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
+            ):
                 qubit_range = circuit_qubits
             else:
                 qubit_range = QubitSet(range(min(item.target), max(item.target) + 1))
@@ -129,7 +134,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
         return groupings
 
     @staticmethod
-    def _categorize_result_types(result_types: List[ResultType]) -> Tuple[List[ResultType]]:
+    def _categorize_result_types(
+        result_types: List[ResultType],
+    ) -> Tuple[List[str], List[ResultType]]:
         """
         Categorize result types into result types with target and those without.
 
@@ -147,7 +154,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 target_result_types.append(result_type)
             else:
                 additional_result_types.extend(result_type.ascii_symbols)
-        return (additional_result_types, target_result_types)
+        return additional_result_types, target_result_types
 
     @staticmethod
     def _ascii_diagram_column_set(
@@ -216,16 +223,20 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 target_qubits = circuit_qubits
                 qubits = circuit_qubits
                 ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
+            elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
+                target_qubits = circuit_qubits
+                qubits = circuit_qubits
+                ascii_symbol = item.ascii_symbols[0]
+                marker = "*" * len(ascii_symbol)
+                num_after = len(circuit_qubits) - 1
+                after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
+                ascii_symbols = [ascii_symbol] + after
             else:
                 target_qubits = item.target
                 qubits = circuit_qubits.intersection(
                     set(range(min(item.target), max(item.target) + 1))
                 )
-                ascii_symbols = (
-                    item.operator.ascii_symbols
-                    if isinstance(item, Instruction)
-                    else item.ascii_symbols
-                )
+                ascii_symbols = item.ascii_symbols
 
             for qubit in qubits:
                 # Determine if the qubit is part of the item or in the middle of a
