@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import importlib
 import os.path
+import re
 import tarfile
 import tempfile
 import time
@@ -54,7 +55,6 @@ class AwsQuantumJob:
     DEFAULT_RESULTS_POLL_INTERVAL = 1
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
-    DEFAULT_IMAGE_NAME = "Base-Image-URI"
     LOG_GROUP = "/aws/braket/jobs"
 
     class LogState(Enum):
@@ -174,9 +174,7 @@ class AwsQuantumJob:
         """
         aws_session = aws_session or AwsSession()
         device_config = DeviceConfig(devices=[device_arn])
-        job_name = job_name or AwsQuantumJob._generate_default_job_name(
-            image_uri or AwsQuantumJob.DEFAULT_IMAGE_NAME
-        )
+        job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
         role_arn = role_arn or aws_session.get_execution_role()
         hyperparameters = hyperparameters or {}
         input_data_config = input_data_config or []
@@ -299,8 +297,16 @@ class AwsQuantumJob:
         return AwsSession(boto_session=boto_session)
 
     @staticmethod
-    def _generate_default_job_name(image_uri_type: str):
-        return f"{image_uri_type}-{time.time() * 1000:.0f}"
+    def _generate_default_job_name(image_uri: str):
+        if not image_uri:
+            job_type = "-default"
+        else:
+            job_type_match = re.search("/(.*)-jobs:", image_uri) or re.search(
+                "/([^:/]*)", image_uri
+            )
+            job_type = f"-{job_type_match.groups()[0]}" if job_type_match else ""
+
+        return f"braket-job{job_type}-{time.time() * 1000:.0f}"
 
     @property
     def arn(self) -> str:

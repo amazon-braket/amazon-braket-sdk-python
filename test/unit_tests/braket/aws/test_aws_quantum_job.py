@@ -406,7 +406,14 @@ def bucket():
     return "braket-region-id"
 
 
-@pytest.fixture(params=[None, "my_custom_uri"])
+@pytest.fixture(
+    params=[
+        None,
+        "aws.location/custom-jobs:tag.1.2.3",
+        "other.uri/custom-name:tag",
+        "other-custom-format.com",
+    ]
+)
 def image_uri(request):
     return request.param
 
@@ -633,9 +640,7 @@ def _assert_create_job_called_with(
     aws_session = create_job_args["aws_session"]
     create_job_args = defaultdict(lambda: None, **create_job_args)
     image_uri = create_job_args["image_uri"]
-    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(
-        image_uri or AwsQuantumJob.DEFAULT_IMAGE_NAME
-    )
+    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
     code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
         default_bucket, "jobs", job_name, "script"
@@ -686,10 +691,17 @@ def _assert_create_job_called_with(
 
 @patch("time.time")
 def test_generate_default_job_name(mock_time, image_uri):
+    job_type = "-custom-name"
+    if not image_uri:
+        job_type = "-default"
+    elif "custom-jobs" in image_uri:
+        job_type = "-custom"
+    elif "other-custom-format" in image_uri:
+        job_type = ""
     mock_time.return_value = datetime.datetime.now().timestamp()
     assert (
         AwsQuantumJob._generate_default_job_name(image_uri)
-        == f"{image_uri}-{time.time() * 1000:.0f}"
+        == f"braket-job{job_type}-{time.time() * 1000:.0f}"
     )
 
 
