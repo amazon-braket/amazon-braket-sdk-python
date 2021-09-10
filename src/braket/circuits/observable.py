@@ -30,6 +30,10 @@ class Observable(QuantumOperator):
     """
 
     def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
+        if ascii_symbols is not None and len(ascii_symbols) != qubit_count:
+            msg = f"ascii_symbols, {ascii_symbols}, length must equal qubit_count, {qubit_count}"
+            raise ValueError(msg)
+
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     def to_ir(self) -> List[Union[str, List[List[List[float]]]]]:
