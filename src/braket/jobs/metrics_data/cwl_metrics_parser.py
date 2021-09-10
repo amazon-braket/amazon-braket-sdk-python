@@ -46,7 +46,9 @@ class CwlMetricsParser(object):
 
         Args:
             current_value (Optional[Union[str, float, int]]): The current value.
+
             new_value: (Union[str, float, int]) The new value.
+
             statistic (MetricStatistic): The statistic to determine which value to use.
 
         Returns:
@@ -89,6 +91,7 @@ class CwlMetricsParser(object):
 
         Args:
             timestamp (str): A formatted string representing the timestamp for any found metrics.
+
             message (str): A log line from CloudWatch Logs.
         """
         if not message:
@@ -174,14 +177,16 @@ class CwlMetricsParser(object):
         """
         Gets all the metrics data, where the keys are the column names, and the values are a list
         containing the values in each row. For example, the table:
-           timestamp energy
-           0         0.1
-           1         0.2
+            timestamp energy
+              0         0.1
+              1         0.2
         would be represented as:
         { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
         values may be integers, floats, strings or None.
+
         Args:
             metric_type (MetricType): The type of metrics to get.
+
             statistic (MetricStatistic): The statistic to determine which metric value to use
              when there is a conflict.
 

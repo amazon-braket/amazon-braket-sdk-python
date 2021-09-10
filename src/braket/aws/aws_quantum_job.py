@@ -90,15 +90,13 @@ class AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
-            entry_point (str): str specifying the 'module' or 'module:method' to be executed as
+            entry_point (str): str specifying the `module` or `module:method` to be executed as
                 an entry point for the job. The entry_point should be specified relative to
                 the source_dir. If source_dir is not provided then all the required modules
                 for execution of entry_point should be within the folder containing the
                 entry_point script.
-
-                For example,
-                if `entry_point = foo.bar.my_script:func`. Then all the required modules
-                should be present within the `foo` or `bar` folder.
+                For example, if `entry_point = foo.bar.my_script:func`, then all the
+                required modules should be present within the `foo` or `bar` folder.
 
             device_arn (str): ARN for the AWS device which will be primarily
                 accessed for the execution of this job.
@@ -106,68 +104,67 @@ class AwsQuantumJob:
             source_dir (str): Path (absolute, relative or an S3 URI) to a directory with any
                 other source code dependencies aside from the entry point file. If `source_dir`
                 is an S3 URI, it must point to a tar.gz file. Structure within this directory are
-                preserved when executing on Amazon Braket. Default = `None`.
+                preserved when executing on Amazon Braket. Default: None.
 
             image_uri (str): str specifying the ECR image to use for executing the job.
                 `image_uris.retrieve()` function may be used for retrieving the ECR image uris
-                for the containers supported by Braket. Default = `<Braket base image_uri>`.
+                for the containers supported by Braket. Default: Base Image URI.
 
             job_name (str): str representing the name with which the job will be created.
-                Default = `{image_uri_type}-{timestamp}`.
+                Default: f'{image_uri_type}-{timestamp}'.
 
             code_location (str): The S3 prefix URI where custom code will be uploaded.
-                Default = `'s3://{default_bucket_name}/jobs/{job_name}/source'`.
+                Default: f's3://{default_bucket_name}/jobs/{job_name}/source'.
 
             role_arn (str): str representing the IAM role arn to be used for executing the
-                script. Default = `IAM role returned by get_execution_role()`.
+                script. Default: IAM role returned by get_execution_role().
 
             wait_until_complete (bool): bool representing whether we should wait until the job
-                completes. This would tail the job logs as it waits. Default = `False`.
+                completes. This would tail the job logs as it waits. Default: False.
 
             hyperparameters (Dict[str, Any]): Hyperparameters that will be made accessible to
                 the job. The hyperparameters are made accessible as a Dict[str, str] to the
                 job. For convenience, this accepts other types for keys and values, but
-                `str()` will be called to convert them before being passed on. Default = `None`.
+                `str()` will be called to convert them before being passed on. Default: None.
 
             metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
-                defines the metric(s) used to evaluate the training jobs. Default = `None`.
+                defines the metric(s) used to evaluate the training jobs. Default: None.
 
             input_data_config (List[InputDataConfig]): Information about the training data.
-                Default = `None`.
+                Default: None.
 
             instance_config (InstanceConfig): Configuration of the instances to be used for
-                executing the job. Default = `InstanceConfig(instanceType='ml.m5.large',
-                instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None)`.
+                executing the job. Default: InstanceConfig(instanceType='ml.m5.large',
+                instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
 
             stopping_condition (StoppingCondition): Conditions denoting when the job should be
                 forcefully stopped.
-                Default = `StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60,
-                maxTaskLimit=100,000)`.
+                Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60,
+                maxTaskLimit=100,000).
 
             output_data_config (OutputDataConfig): Configuration specifying the location for
                 the output of the job.
-                Default = `OutputDataConfig(s3Path=s3://{default_bucket_name}/jobs/{job_name}/
-                output, kmsKeyId=None)`.
+                Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/
+                output', kmsKeyId=None).
 
             copy_checkpoints_from_job (str): str specifying the job arn whose checkpoint you wish
                 to use in the current job. Specifying this value will copy over the checkpoint
                 data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current job's
                 checkpoint_config s3Uri, making it available at checkpoint_config.localPath during
-                the job execution.
+                the job execution. Default: None
 
             checkpoint_config (CheckpointConfig): Configuration specifying the location where
                 checkpoint data would be stored.
-                Default = `CheckpointConfig(localPath='/opt/jobs/checkpoints',
-                s3Uri=None)`.
+                Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
+                s3Uri=None).
 
             vpc_config (VpcConfig): Configuration specifying the security groups and subnets
-                to use for running the job. Default = `None`.
+                to use for running the job. Default: None.
 
             tags (Dict[str, str]): Dict specifying the Key-Value pairs to tag the quantum job with.
-                Default = `None`.
+                Default: None.
 
-
-            aws_session (AwsSession): AwsSession to connect to AWS with. Default = `AwsSession()`
+            aws_session (AwsSession): AwsSession to connect to AWS with. Default: AwsSession()
 
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
@@ -326,6 +323,7 @@ class AwsQuantumJob:
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetJob` operation.
+
         See Also:
             `metadata()`
         """
@@ -424,19 +422,20 @@ class AwsQuantumJob:
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
     ) -> Dict[str, List[Any]]:
-        """
-        Gets all the metrics data, where the keys are the column names, and the values are a list
+        """Gets all the metrics data, where the keys are the column names, and the values are a list
         containing the values in each row. For example, the table:
-           timestamp energy
-           0         0.1
-           1         0.2
+            timestamp energy
+              0         0.1
+              1         0.2
         would be represented as:
         { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
         values may be integers, floats, strings or None.
+
         Args:
-            metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
+            metric_type (MetricType): The type of metrics to get. Default: MetricType.TIMESTAMP.
+
             statistic (MetricStatistic): The statistic to determine which metric value to use
-                when there is a conflict. Default is MetricStatistic.MAX.
+                when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data.
@@ -468,14 +467,15 @@ class AwsQuantumJob:
 
         Args:
             poll_timeout_seconds (float): The polling timeout for `result()`. Default: 10 days.
+
             poll_interval_seconds (float): The polling interval for `result()`. Default: 1 second.
 
         Returns:
             Dict[str, Any]: Dict specifying the job results.
 
         Raises:
-            RunTimeError: if job is in FAILED or CANCELLED state.
-            TimeOutError: if job execution exceeds the polling timeout period.
+            RuntimeError: if job is in FAILED or CANCELLED state.
+            TimeoutError: if job execution exceeds the polling timeout period.
         """
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -495,21 +495,23 @@ class AwsQuantumJob:
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
         """Downloads the results from the job output S3 bucket and extracts the tar.gz
-        bundle to the location specified by 'extract_to'. If no location is specified,
+        bundle to the location specified by `extract_to`. If no location is specified,
         the results are extracted to the current directory.
 
         Args:
             extract_to (str): Directory where the results will be extracted to. The results
                 are extracted to a folder titled with the job name within this directory.
                 Default= `Current working directory`.
+
             poll_timeout_seconds: (float): The polling timeout for `download_result()`.
                 Default: 10 days.
+
             poll_interval_seconds: (float): The polling interval for `download_result()`.
                 Default: 1 second.
 
         Raises:
-            RunTimeError: if job is in FAILED or CANCELLED state.
-            TimeOutError: if job execution exceeds the polling timeout period.
+            RuntimeError: if job is in FAILED or CANCELLED state.
+            TimeoutError: if job execution exceeds the polling timeout period.
         """
 
         extract_to = extract_to or os.getcwd()

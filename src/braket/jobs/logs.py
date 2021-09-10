@@ -36,14 +36,16 @@ class ColorWrap(object):
 
     def __init__(self, force=False):
         """Initialize the class.
+
         Args:
             force (bool): If True, render colorizes output no matter where the
-                output is (default: False).
+                output is. Default: False.
         """
         self.colorize = force or sys.stdout.isatty() or os.environ.get("JPY_PARENT_PID", None)
 
     def __call__(self, index, s):
         """Print the output, colorized or not, depending on the environment.
+
         Args:
             index (int): The instance number.
             s (str): The string to print.
@@ -67,6 +69,7 @@ def multi_stream_iter(aws_session, log_group, streams, positions):
     """Iterate over the available events coming from a set of log streams.
     Log streams are in a single log group interleaving the events from each stream
     so they're yielded in timestamp order.
+
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
 
@@ -77,6 +80,7 @@ def multi_stream_iter(aws_session, log_group, streams, positions):
 
         positions: (list of Positions): A list of pairs of (timestamp, skip) which represents
             the last record read from each stream.
+
     Yields:
         A tuple of (stream number, cloudwatch log event).
     """
@@ -103,6 +107,7 @@ def multi_stream_iter(aws_session, log_group, streams, positions):
 def log_stream(aws_session, log_group, stream_name, start_time=0, skip=0):
     """A generator for log items in a single stream.
     This will yield all the items that are available at the current moment.
+
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
 
@@ -110,12 +115,13 @@ def log_stream(aws_session, log_group, stream_name, start_time=0, skip=0):
 
         stream_name (str): The name of the specific stream.
 
-        start_time (int): The time stamp value to start reading the logs from (default: 0).
+        start_time (int): The time stamp value to start reading the logs from. Default: 0.
 
-        skip (int): The number of log entries to skip at the start (default: 0). This is for
-            when there are multiple entries at the same timestamp.
+        skip (int): The number of log entries to skip at the start. Default: 0 (This is for
+            when there are multiple entries at the same timestamp.)
+
     Yields:
-       dict: A CloudWatch log event with the following key-value pairs:
+       Dict: A CloudWatch log event with the following key-value pairs:
            'timestamp' (int): The time of the event.
            'message' (str): The log event data.
            'ingestionTime' (int): The time the event was ingested.
@@ -156,26 +162,21 @@ def flush_log_streams(
     color_wrap: ColorWrap,
 ):
     """Flush log streams to stdout.
+
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
-
         log_group (str): The name of the log group.
-
         stream_prefix (str): The prefix for log streams to flush.
-
-        stream_names (list of str): A list of the log stream names. The position of the stream in
+        stream_names (List[str]): A list of the log stream names. The position of the stream in
             this list is the stream number. If incomplete, the function will check for remaining
             streams and mutate this list to add stream names when available, up to the
             `stream_count` limit.
-
         positions: (dict of Positions): A dict mapping stream numbers to pairs of (timestamp, skip)
             which represents the last record read from each stream. The function will update this
             list after being called to represent the new last record read from each stream.
         stream_count (int): The number of streams expected.
-
         has_streams (bool): Whether the function has already been called once all streams have
             been found. This value is possibly updated and returned at the end of execution.
-
         color_wrap (ColorWrap): an instance of ColorWrap to potentially color-wrap print statements
             from different streams.
 
