@@ -82,7 +82,6 @@ class AwsQuantumJob:
         copy_checkpoints_from_job: str = None,
         checkpoint_config: CheckpointConfig = None,
         vpc_config: VpcConfig = None,
-        tags: Dict[str, str] = None,
         aws_session: AwsSession = None,
         *args,
         **kwargs,
@@ -161,9 +160,6 @@ class AwsQuantumJob:
             vpc_config (VpcConfig): Configuration specifying the security groups and subnets
                 to use for running the job. Default: None.
 
-            tags (Dict[str, str]): Dict specifying the Key-Value pairs to tag the quantum job with.
-                Default: None.
-
             aws_session (AwsSession): AwsSession to connect to AWS with. Default: AwsSession()
 
         Returns:
@@ -182,7 +178,6 @@ class AwsQuantumJob:
         stopping_condition = stopping_condition or StoppingCondition()
         output_data_config = output_data_config or OutputDataConfig()
         checkpoint_config = checkpoint_config or CheckpointConfig()
-        # tags = tags or {}
         default_bucket = aws_session.default_bucket()
         code_location = code_location or aws_session.construct_s3_uri(
             default_bucket,
@@ -237,8 +232,6 @@ class AwsQuantumJob:
             "deviceConfig": asdict(device_config),
             "hyperParameters": hyperparameters,
             "stoppingCondition": asdict(stopping_condition),
-            # TODO: uncomment when tags works
-            # "tags": tags,
         }
 
         if vpc_config:

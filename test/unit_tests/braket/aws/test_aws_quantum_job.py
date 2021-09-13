@@ -518,11 +518,6 @@ def vpc_config():
     )
 
 
-@pytest.fixture
-def tags():
-    return {"tagKey": "tagValue"}
-
-
 @pytest.fixture(params=["fixtures", "defaults", "nones"])
 def create_job_args(
     request,
@@ -542,7 +537,6 @@ def create_job_args(
     output_data_config,
     checkpoint_config,
     vpc_config,
-    tags,
 ):
     if request.param == "fixtures":
         return dict(
@@ -564,7 +558,6 @@ def create_job_args(
                 "output_data_config": output_data_config,
                 "checkpoint_config": checkpoint_config,
                 "vpc_config": vpc_config,
-                "tags": tags,
                 "aws_session": aws_session,
             }.items()
             if value is not None
@@ -667,7 +660,6 @@ def _assert_create_job_called_with(
     }
     if image_uri:
         algorithm_specification["containerImage"] = {"uri": image_uri}
-    # tags = create_job_args["tags"] or {}
 
     test_kwargs = {
         "jobName": job_name,
@@ -680,7 +672,6 @@ def _assert_create_job_called_with(
         "deviceConfig": {"devices": devices},
         "hyperParameters": hyperparameters,
         "stoppingCondition": asdict(stopping_condition),
-        # "tags": tags,
     }
 
     if vpc_config:
