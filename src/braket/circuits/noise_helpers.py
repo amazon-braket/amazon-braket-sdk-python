@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -33,9 +33,9 @@ def no_noise_applied_warning(noise_applied: bool):
     "Helper function to give a warning is noise is not applied"
     if noise_applied is False:
         warnings.warn(
-            "Noise is not applied to any gate, as there is no eligible gate \
-in the circuit with the input criteria or there is no multi-qubit gate to apply the multi-qubit \
-noise."
+            "Noise is not applied to any gate, as there is no eligible gate in the circuit"
+            " with the input criteria or there is no multi-qubit gate to apply"
+            " the multi-qubit noise."
         )
 
 
@@ -62,10 +62,16 @@ def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
 
     if noise.qubit_count > 1:
         for g in target_gates:
-            if g != Gate.Unitary and g().qubit_count != noise.qubit_count:
+            fixed_qubit_count = g.fixed_qubit_count()
+            if fixed_qubit_count is NotImplemented:
                 raise ValueError(
-                    "The target_targets must be gates that have the same number of \
-qubits as defined by the multi-qubit noise channel."
+                    f"Target gate {g} can be instantiated on a variable number of qubits,"
+                    " but noise can only target gates with fixed qubit counts."
+                )
+            if fixed_qubit_count != noise.qubit_count:
+                raise ValueError(
+                    f"Target gate {g} acts on {fixed_qubit_count} qubits,"
+                    f" but {noise} acts on {noise.qubit_count} qubits."
                 )
 
 

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -21,6 +21,9 @@ from gate_model_device_testing_utils import (
     result_types_bell_pair_full_probability_testing,
     result_types_bell_pair_marginal_probability_testing,
     result_types_hermitian_testing,
+    result_types_noncommuting_all,
+    result_types_noncommuting_flipped_targets_testing,
+    result_types_noncommuting_testing,
     result_types_nonzero_shots_bell_pair_testing,
     result_types_observable_not_in_instructions,
     result_types_tensor_hermitian_hermitian_testing,
@@ -152,6 +155,28 @@ def test_result_types_all_selected(simulator_arn, shots, aws_session, s3_destina
     result_types_all_selected_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_result_types_noncommuting(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    result_types_noncommuting_testing(device, {"s3_destination_folder": s3_destination_folder})
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_result_types_noncommuting_flipped_targets(
+    simulator_arn, aws_session, s3_destination_folder
+):
+    device = AwsDevice(simulator_arn, aws_session)
+    result_types_noncommuting_flipped_targets_testing(
+        device, {"s3_destination_folder": s3_destination_folder}
+    )
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_result_types_noncommuting_all(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    result_types_noncommuting_all(device, {"s3_destination_folder": s3_destination_folder})
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import numpy as np
 import pytest
 
 from braket.circuits import Qubit
@@ -32,9 +33,9 @@ def test_index_non_int(qubit_arg):
     Qubit(qubit_arg)
 
 
-def test_index_gte_zero():
-    Qubit(0)
-    Qubit(5)
+@pytest.mark.parametrize("qubit_index", (0, 5, np.int64(5)))
+def test_index_gte_zero(qubit_index):
+    Qubit(qubit_index)
 
 
 def test_str(qubit):

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -23,7 +23,7 @@ from braket.circuits.noise_helpers import apply_noise_to_gates, apply_noise_to_m
 from braket.circuits.qubit_set import QubitSet
 
 invalid_data_noise_type = [Gate.X(), None, 1.5]
-invalid_data_target_gates_type = [([-1, "foo"]), ([1.5, None, -1]), "X", ([Gate.X, "CNot"])]
+invalid_data_target_gates_type = [[-1, "foo"], [1.5, None, -1], "X", [Gate.X, "CNot"]]
 invalid_data_target_qubits_value = [-1]
 invalid_data_target_qubits_type = [1.5, "foo", ["foo", 1]]
 invalid_data_target_unitary_value = [np.array([[0, 0], [1, 0]])]
@@ -33,6 +33,11 @@ invalid_data_target_unitary_type = [[[0, 1], [1, 0]]]
 @pytest.fixture
 def circuit_2qubit():
     return Circuit().x(0).y(1).x(0).x(1).cnot(0, 1)
+
+
+@pytest.fixture
+def circuit_2qubit_parametrized():
+    return Circuit().x(0).y(1).x(0).rx(1, np.pi).xy(0, 1, np.pi / 2)
 
 
 @pytest.fixture
@@ -178,6 +183,12 @@ def test_apply_readout_noise_invalid_target_qubits_type(
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_apply_gate_noise_fixed_qubit_count_not_implemented(noise_2qubit):
+    circ = Circuit().unitary([0, 1], matrix=np.eye(4))
+    circ.apply_gate_noise(noise_2qubit, target_gates=Gate.Unitary)
+
+
+@pytest.mark.xfail(raises=ValueError)
 def test_apply_gate_noise_mismatch_qubit_count_with_target_gates(noise_2qubit):
     circ = Circuit().cswap(0, 1, 2)
     circ.apply_gate_noise(noise_2qubit, target_gates=Gate.CSwap)
@@ -217,7 +228,29 @@ def test_apply_gate_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit):
     assert circ == expected
 
 
-def test_apply_gate_noise_1QubitNoise2_1(circuit_2qubit, noise_2qubit):
+def test_apply_gate_noise_1QubitNoise_parametrized(circuit_2qubit_parametrized, noise_1qubit):
+    circ = circuit_2qubit_parametrized.apply_gate_noise(
+        noise_1qubit,
+        target_gates=[Gate.X, Gate.Rx],
+        target_qubits=[0, 1],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(noise_1qubit, 0))
+        .add_instruction(Instruction(Gate.Rx(np.pi), 1))
+        .add_instruction(Instruction(noise_1qubit, 1))
+        .add_instruction(Instruction(Gate.XY(np.pi / 2), [0, 1]))
+    )
+
+    assert circ == expected
+
+
+def test_apply_gate_noise_2QubitNoise(circuit_2qubit, noise_2qubit):
     circ = circuit_2qubit.apply_gate_noise(
         noise_2qubit,
         target_gates=[Gate.CNot],
@@ -231,6 +264,26 @@ def test_apply_gate_noise_1QubitNoise2_1(circuit_2qubit, noise_2qubit):
         .add_instruction(Instruction(Gate.X(), 0))
         .add_instruction(Instruction(Gate.X(), 1))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
+        .add_instruction(Instruction(noise_2qubit, [0, 1]))
+    )
+
+    assert circ == expected
+
+
+def test_apply_gate_noise_2QubitNoise2_parametrized(circuit_2qubit_parametrized, noise_2qubit):
+    circ = circuit_2qubit_parametrized.apply_gate_noise(
+        noise_2qubit,
+        target_gates=[Gate.XY],
+        target_qubits=[0, 1],
+    )
+
+    expected = (
+        Circuit()
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Y(), 1))
+        .add_instruction(Instruction(Gate.X(), 0))
+        .add_instruction(Instruction(Gate.Rx(np.pi), 1))
+        .add_instruction(Instruction(Gate.XY(np.pi / 2), [0, 1]))
         .add_instruction(Instruction(noise_2qubit, [0, 1]))
     )
 
@@ -516,7 +569,7 @@ def test_noise_not_applied_1QubitNoise_1(circuit_2qubit, noise_2qubit):
     assert circ == expected
 
 
-def test_apply_multipe_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_1qubit_2):
+def test_apply_multiple_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_1qubit_2):
     circ = circuit_2qubit.apply_gate_noise(noise_1qubit).apply_readout_noise(
         noise_1qubit_2,
         target_qubits=[0, 1],
@@ -542,7 +595,7 @@ def test_apply_multipe_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_1
     assert circ == expected
 
 
-def test_apply_multipe_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit, noise_1qubit_2):
+def test_apply_multiple_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit, noise_1qubit_2):
     circ = circuit_2qubit.apply_gate_noise(noise_1qubit, target_gates=[Gate.X],).apply_gate_noise(
         noise_1qubit_2,
         target_qubits=[0],
