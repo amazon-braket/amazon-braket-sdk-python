@@ -53,6 +53,7 @@ setup(
             "tox",
         ]
     },
+    include_package_data=True,
     url="https://github.com/aws/amazon-braket-sdk-python",
     author="Amazon Web Services",
     description=(

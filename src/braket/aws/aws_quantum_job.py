@@ -106,8 +106,8 @@ class AwsQuantumJob:
                 preserved when executing on Amazon Braket. Default: None.
 
             image_uri (str): str specifying the ECR image to use for executing the job.
-                `image_uris.retrieve()` function may be used for retrieving the ECR image uris
-                for the containers supported by Braket. Default: Base Image URI.
+                `image_uris.retrieve_image()` function may be used for retrieving the ECR image uris
+                for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
             job_name (str): str representing the name with which the job will be created.
                 Default: f'{image_uri_type}-{timestamp}'.

@@ -11,23 +11,97 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-# TODO: This function is defined based on the defintiion in the design doc,
-# and is subject to change.
+import json
+import os
+from enum import Enum
+from typing import Dict
 
 
-def retrieve(framework="base", framework_version="1.8", py_version="3.7"):
+class Framework(str, Enum):
+    """Supported Frameworks for pre-built containers"""
+
+    BASE = "BASE"
+    PL_TENSORFLOW = "PL_TENSORFLOW"
+    PL_PYTORCH = "PL_PYTORCH"
+
+
+def retrieve_image(framework: Framework, region: str):
     """Retrieves the ECR URI for the Docker image matching the given arguments.
 
     Args:
-        framework (str): The name of the framework or algorithm.
-        framework_version (str): The framework or algorithm version. This is required if there is
-            more than one supported version for the given framework or algorithm.
-        py_version (str, optional): [description]. The Python version. This is required if there is
-            more than one supported Python version for the given framework version.
+        framework (str): The name of the framework.
+        region (str): The AWS region for the docker image.
 
     Returns:
-        str: the ECR URI for the corresponding SageMaker Docker image.
+        str: The ECR URI for the corresponding Amazon Braket Docker image.
 
     Raises:
-        ValueError: If the combination of arguments specified is not supported.
+        ValueError: If any of the supplied values are invalid or the combination of inputs
+            specified is not supported.
     """
+    # Validate framework
+    framework = Framework(framework)
+    config = _config_for_framework(framework)
+    framework_version = max(version for version in config["versions"])
+    version_config = _extract_config_for_version(config, framework_version)
+    registry = _registry_for_region(version_config, region)
+    tag = f"{version_config['repository']}:{framework_version}-cpu-py37-ubuntu18.04"
+    return f"{registry}.dkr.ecr.{region}.amazonaws.com/{tag}"
+
+
+def _config_for_framework(framework: Framework) -> Dict[str, str]:
+    """Loads the JSON config for the given framework.
+
+    Args:
+        framework (Framework): The framework whose config needs to be loaded.
+
+    Returns:
+        Dict[str, str]: Dict containing the configuration for the specified framework.
+    """
+    fname = os.path.join(os.path.dirname(__file__), "image_uri_config", f"{framework.lower()}.json")
+    with open(fname) as f:
+        return json.load(f)
+
+
+def _registry_for_region(config: Dict[str, str], region: str) -> str:
+    """Retrieves the registry for the specified region from the configuration.
+
+    Args:
+        config (Dict[str, str]): Dict containing the framework configuration.
+        region (str): str representing the region for which the registry needs to be retrieved.
+
+    Returns:
+        str: str specifying the registry for the supplied region.
+
+    Raises:
+        ValueError: If the supplied region is invalid or not supported.
+    """
+    registry_config = config["registries"]
+    if region not in registry_config:
+        raise ValueError(
+            f"Unsupported region: {region}. You may need to upgrade your SDK version for newer "
+            f"regions. Supported region(s): {list(registry_config.keys())}"
+        )
+    return registry_config[region]
+
+
+def _extract_config_for_version(config: Dict[str, str], framework_version: str) -> Dict[str, str]:
+    """Loads the configuration for the specified framework version.
+
+    Args:
+        config (Dict[str, str]): The configuration for a specific framework.
+        framework_version (str): The version to extract configuration for.
+
+    Returns:
+        Dict[str, str]: Dict containing the version specific configuration.
+
+    Raises:
+        ValueError: If the specified framework version is invalid or not supported.
+    """
+    if framework_version in config.get("versions", {}):
+        return config["versions"][framework_version]
+    raise ValueError(
+        f"Unsupported version: {framework_version}. "
+        "You may need to upgrade your SDK version for newer versions. "
+        f"Supported version(s): {list(config['versions'].keys())}."
+    )

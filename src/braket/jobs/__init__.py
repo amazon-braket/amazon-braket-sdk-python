@@ -23,3 +23,4 @@ from braket.jobs.data_persistence import (  # noqa: F401
     save_job_checkpoint,
     save_job_result,
 )
+from braket.jobs.image_uris import Framework, retrieve_image  # noqa: F401
