@@ -493,7 +493,14 @@ class AwsSession(object):
                 results.append(result)
         return results
 
-    # TODO: think about placement of these methods
+    @staticmethod
+    def is_s3_uri(string: str):
+        try:
+            AwsSession.parse_s3_uri(string)
+        except ValueError:
+            return False
+        return True
+
     @staticmethod
     def parse_s3_uri(s3_uri: str) -> (str, str):
         """
@@ -512,7 +519,7 @@ class AwsSession(object):
         try:
             assert s3_uri.startswith("s3://")
             bucket, key = s3_uri.split("/", 3)[2:]
-            assert key
+            assert bucket and key
             return bucket, key
         except (AssertionError, ValueError):
             raise ValueError(f"Not a valid S3 uri: {s3_uri}")

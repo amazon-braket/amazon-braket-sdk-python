@@ -13,14 +13,15 @@
 
 from __future__ import annotations
 
-import importlib
-import os.path
+import importlib.util
 import re
+import sys
 import tarfile
 import tempfile
 import time
 from dataclasses import asdict
 from enum import Enum
+from pathlib import Path
 from typing import Any, Dict, List
 
 import boto3
@@ -65,9 +66,9 @@ class AwsQuantumJob:
     @classmethod
     def create(
         cls,
-        entry_point: str,
         device_arn: str,
-        source_dir: str = None,
+        source_module: str,
+        entry_point: str = None,
         image_uri: str = None,
         job_name: str = None,
         code_location: str = None,
@@ -89,21 +90,20 @@ class AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
-            entry_point (str): str specifying the `module` or `module:method` to be executed as
-                an entry point for the job. The entry_point should be specified relative to
-                the source_dir. If source_dir is not provided then all the required modules
-                for execution of entry_point should be within the folder containing the
-                entry_point script.
-                For example, if `entry_point = foo.bar.my_script:func`, then all the
-                required modules should be present within the `foo` or `bar` folder.
-
             device_arn (str): ARN for the AWS device which will be primarily
                 accessed for the execution of this job.
 
-            source_dir (str): Path (absolute, relative or an S3 URI) to a directory with any
-                other source code dependencies aside from the entry point file. If `source_dir`
-                is an S3 URI, it must point to a tar.gz file. Structure within this directory are
-                preserved when executing on Amazon Braket. Default: None.
+            source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
+                tarred and uploaded. If `source_module` is an S3 URI, it must point to a
+                tar.gz file. Otherwise, source_module may be a file or directory.
+
+            entry_point (str): a str specifying the entry point of the job, relative to
+                the source module. The entry point must be in the format
+                `importable.module` or `importable.module:callable`. The importable module may
+                be explicitly given or implicitly given, relative to the source module. For
+                example, `source_module.submodule:start_here` indicates the `start_here`
+                function contained in `module.submodule`. If source_module is an S3 URI,
+                entry point must be given. Default: source_module's name
 
             image_uri (str): str specifying the ECR image to use for executing the job.
                 `image_uris.retrieve_image()` function may be used for retrieving the ECR image uris
@@ -185,6 +185,15 @@ class AwsQuantumJob:
             job_name,
             "script",
         )
+        if AwsSession.is_s3_uri(source_module):
+            AwsQuantumJob._process_s3_source_module(
+                source_module, entry_point, aws_session, code_location
+            )
+        else:
+            # if entry point is None, it will be set to default here
+            entry_point = AwsQuantumJob._process_local_source_module(
+                source_module, entry_point, aws_session, code_location
+            )
         algorithm_specification = {
             "scriptModeConfig": {
                 "entryPoint": entry_point,
@@ -213,13 +222,6 @@ class AwsQuantumJob:
                 "checkpointConfig"
             ]["s3Uri"]
             aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
-
-        AwsQuantumJob._process_source_dir(
-            entry_point,
-            source_dir,
-            aws_session,
-            code_location,
-        )
 
         create_job_kwargs = {
             "jobName": job_name,
@@ -513,7 +515,7 @@ class AwsQuantumJob:
             TimeoutError: if job execution exceeds the polling timeout period.
         """
 
-        extract_to = extract_to or os.getcwd()
+        extract_to = extract_to or Path.cwd()
 
         timeout_time = time.time() + poll_timeout_seconds
         job_response = self.metadata(True)
@@ -572,63 +574,48 @@ class AwsQuantumJob:
         return hash(self.arn)
 
     @staticmethod
-    def _validate_entry_point(entry_point):
-        module, _, function_name = entry_point.partition(":")
+    def _process_s3_source_module(source_module, entry_point, aws_session, code_location):
+        if entry_point is None:
+            raise ValueError("If source_module is an S3 URI, entry_point must be provided.")
+        if not source_module.lower().endswith(".tar.gz"):
+            raise ValueError(
+                "If source_module is an S3 URI, it must point to a tar.gz file. "
+                f"Not a valid S3 URI for parameter `source_module`: {source_module}"
+            )
+        aws_session.copy_s3_object(source_module, f"{code_location}/source.tar.gz")
+
+    @staticmethod
+    def _process_local_source_module(source_module, entry_point, aws_session, code_location):
         try:
-            module = importlib.import_module(module)
-        except ModuleNotFoundError:
-            raise ValueError(f"Entry point module not found: '{module}'")
-        if function_name and not hasattr(module, function_name):
-            raise ValueError(f"Entry function '{function_name}' not found in module '{module}'.")
+            # raises FileNotFoundError if not found
+            abs_path_source_module = Path(source_module).resolve(strict=True)
+        except FileNotFoundError:
+            raise ValueError(f"Source module not found: {source_module}")
+
+        entry_point = entry_point or abs_path_source_module.stem
+        AwsQuantumJob._validate_entry_point(abs_path_source_module, entry_point)
+        AwsQuantumJob._tar_and_upload_to_code_location(
+            abs_path_source_module, aws_session, code_location
+        )
+        return entry_point
 
     @staticmethod
-    def _process_source_dir(entry_point, source_dir, aws_session, code_location):
-        if source_dir:
-            if source_dir.startswith("s3://"):
-                AwsQuantumJob._process_s3_source_dir(aws_session, source_dir, code_location)
-            else:
-                AwsQuantumJob._process_local_source_dir(
-                    aws_session, entry_point, source_dir, code_location
-                )
-        else:
-            AwsQuantumJob._source_dir_not_provided(aws_session, entry_point, code_location)
+    def _validate_entry_point(source_module_path, entry_point):
+        importable, _, _method = entry_point.partition(":")
+        sys.path.append(str(source_module_path.parent))
+        try:
+            # second argument allows relative imports
+            module = importlib.util.find_spec(importable, source_module_path.stem)
+            assert module is not None
+        # if entry point is nested (ie contains '.'), parent modules are imported
+        except (ModuleNotFoundError, AssertionError):
+            raise ValueError(f"Entry point module not found: {importable}")
+        finally:
+            sys.path.pop()
 
     @staticmethod
-    def _process_s3_source_dir(aws_session, source_dir, code_location):
-        if not source_dir.endswith(".tar.gz"):
-            raise ValueError(
-                f"If source_dir is an S3 URI, it must point to a tar.gz file. "
-                f"Not a valid S3 URI for parameter `source_dir`: {source_dir}"
-            )
-        aws_session.copy_s3_object(source_dir, f"{code_location}/source.tar.gz")
-
-    @staticmethod
-    def _process_local_source_dir(aws_session, entry_point, source_dir, code_location):
-        module, _, func = entry_point.partition(":")
-        entry_file = f"{module.replace('.', '/')}.py"
-
-        if not os.path.abspath(entry_file).startswith(os.path.abspath(source_dir)):
-            raise ValueError(
-                f"`Entrypoint`: {entry_point} should be " f"within the `source_dir`: {source_dir}"
-            )
-
-        AwsQuantumJob._validate_entry_point(entry_point)
-        AwsQuantumJob._tar_and_upload_to_code_location(aws_session, source_dir, code_location)
-
-    @staticmethod
-    def _source_dir_not_provided(aws_session, entry_point, code_location):
-        AwsQuantumJob._validate_entry_point(entry_point)
-        module, _, func = entry_point.partition(":")
-        source = module.split(".")[0] if "." in module else f"{module}.py"
-
-        AwsQuantumJob._tar_and_upload_to_code_location(aws_session, source, code_location)
-
-    @staticmethod
-    def _tar_and_upload_to_code_location(aws_session, source, code_location):
+    def _tar_and_upload_to_code_location(source_module_path, aws_session, code_location):
         with tempfile.TemporaryDirectory() as temp_dir:
-            try:
-                with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz", dereference=True) as tar:
-                    tar.add(source, arcname=os.path.basename(source))
-            except FileNotFoundError:
-                raise ValueError(f"Source directory not found: {source}")
+            with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz", dereference=True) as tar:
+                tar.add(source_module_path, arcname=source_module_path.name)
             aws_session.upload_to_s3(f"{temp_dir}/source.tar.gz", f"{code_location}/source.tar.gz")

@@ -19,6 +19,7 @@ import tempfile
 import time
 from collections import defaultdict
 from dataclasses import asdict
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -430,9 +431,9 @@ def s3_prefix(job_name):
 
 
 @pytest.fixture(params=["local_source", "s3_source"])
-def source_dir(request, bucket, s3_prefix):
+def source_module(request, bucket, s3_prefix):
     if request.param == "local_source":
-        return "test-source-dir"
+        return "test-source-module"
     elif request.param == "s3_source":
         return AwsSession.construct_s3_uri(bucket, "test-source-prefix", "source.tar.gz")
 
@@ -524,7 +525,7 @@ def create_job_args(
     aws_session,
     entry_point,
     image_uri,
-    source_dir,
+    source_module,
     job_name,
     code_location,
     role_arn,
@@ -542,14 +543,14 @@ def create_job_args(
         return dict(
             (key, value)
             for key, value in {
+                "device_arn": device_arn,
+                "source_module": source_module,
                 "entry_point": entry_point,
-                "source_dir": source_dir,
                 "image_uri": image_uri,
                 "job_name": job_name,
                 "code_location": code_location,
                 "role_arn": role_arn,
                 "wait_until_complete": wait_until_complete,
-                "device_arn": device_arn,
                 "hyperparameters": hyperparameters,
                 # "metric_defintions": None,
                 "input_data_config": input_data_config,
@@ -564,17 +565,15 @@ def create_job_args(
         )
     elif request.param == "defaults":
         return {
-            "entry_point": entry_point,
             "device_arn": device_arn,
-            "source_dir": source_dir,
+            "source_module": source_module,
             "aws_session": aws_session,
         }
     elif request.param == "nones":
         return defaultdict(
             lambda: None,
-            entry_point=entry_point,
             device_arn=device_arn,
-            source_dir=source_dir,
+            source_module=source_module,
             aws_session=aws_session,
         )
 
@@ -600,23 +599,28 @@ def test_no_arn_setter(quantum_job):
 
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob.logs")
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._process_local_source_module")
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._process_s3_source_module")
 @patch("time.time")
 def test_create_job(
     mock_time,
-    mock_validate_entry_point,
+    mock_process_s3_source,
+    mock_process_local_source,
     mock_logs,
     aws_session,
-    source_dir,
+    source_module,
     create_job_args,
     quantum_job_arn,
     generate_get_job_response,
 ):
     mock_time.return_value = datetime.datetime.now().timestamp()
+    mock_process_local_source.side_effect = (
+        lambda source, entry_point, _a, _c: entry_point or Path(source).stem
+    )
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
         os.mkdir("test-source-dir")
-        if source_dir == ".":
+        if source_module == ".":
             os.chdir("test-source-dir")
         aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
             generate_get_job_response(status="COMPLETED")
@@ -651,9 +655,13 @@ def _assert_create_job_called_with(
         s3Uri=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
     )
     vpc_config = create_job_args["vpc_config"]
+    entry_point = create_job_args["entry_point"]
+    source_module = create_job_args["source_module"]
+    if not AwsSession.is_s3_uri(source_module):
+        entry_point = entry_point or Path(source_module).stem
     algorithm_specification = {
         "scriptModeConfig": {
-            "entryPoint": create_job_args["entry_point"],
+            "entryPoint": entry_point,
             "s3Uri": f"{code_location}/source.tar.gz",
             "compressionType": "GZIP",
         }
@@ -719,127 +727,150 @@ def test_cancel_job_surfaces_exception(quantum_job, aws_session):
     quantum_job.cancel()
 
 
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
-def test_create_job_source_dir_not_found(
-    mock_validate_entry_point,
-    aws_session,
-    entry_point,
-    device_arn,
-):
-    fake_source_dir = "fake-source-dir"
-    with pytest.raises(ValueError) as e:
-        AwsQuantumJob.create(
-            entry_point="fake-source-dir.test_script:func",
-            device_arn=device_arn,
-            source_dir=fake_source_dir,
-            aws_session=aws_session,
-        )
-    assert str(e.value) == f"Source directory not found: {fake_source_dir}"
-
-
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
-def test_create_job_source_dir_s3_but_not_tar(
-    mock_validate_entry_point,
-    aws_session,
-    entry_point,
-    device_arn,
-):
-    fake_source_dir = "s3://bucket/non-tar-file"
-    with pytest.raises(ValueError) as e:
-        AwsQuantumJob.create(
-            entry_point=entry_point,
-            device_arn=device_arn,
-            source_dir=fake_source_dir,
-            aws_session=aws_session,
-        )
-
-    assert str(e.value) == (
-        "If source_dir is an S3 URI, it must point to a tar.gz file. "
-        f"Not a valid S3 URI for parameter `source_dir`: {fake_source_dir}"
+@pytest.mark.parametrize(
+    "source_module",
+    (
+        "s3://bucket/source_module.tar.gz",
+        "s3://bucket/SOURCE_MODULE.TAR.GZ",
+    ),
+)
+def test_process_s3_source_module(source_module, aws_session):
+    AwsQuantumJob._process_s3_source_module(
+        source_module, "entry_point", aws_session, "code_location"
     )
+    aws_session.copy_s3_object.assert_called_with(source_module, "code_location/source.tar.gz")
 
 
-def test_source_dir_not_in_entry_point_name(entry_point, aws_session, device_arn):
-    source_dir = "other-source-dir"
-
-    with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
-        os.mkdir("other-source-dir")
-        with pytest.raises(ValueError) as e:
-            AwsQuantumJob.create(
-                entry_point=entry_point,
-                device_arn=device_arn,
-                source_dir=source_dir,
-                aws_session=aws_session,
-            )
-        os.chdir("..")
-
-    assert (
-        str(e.value)
-        == f"`Entrypoint`: {entry_point} should be within the `source_dir`: {source_dir}"
+def test_process_s3_source_module_not_tar_gz(aws_session):
+    must_be_tar_gz = (
+        "If source_module is an S3 URI, it must point to a tar.gz file. "
+        "Not a valid S3 URI for parameter `source_module`: s3://bucket/source_module"
     )
-
-
-@patch("importlib.import_module")
-def test_entry_point_when_source_dir_not_provided(
-    mock_import, quantum_job, code_location, aws_session, entry_point
-):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
-
-        module, _, func = entry_point.partition(":")
-        dir_data = module.split(".")
-        folder_path, file_name = "/".join(dir_data[:-1]), f"{dir_data[-1]}.py"
-
-        os.mkdir(folder_path)
-
-        with open(f"{folder_path}/__init__.py", "w") as f:
-            pass
-
-        with open(f"{folder_path}/{file_name}", "w") as f:
-            f.write("def func(): \n\tpass")
-
-        quantum_job._process_source_dir(
-            aws_session=aws_session,
-            entry_point=entry_point,
-            code_location=code_location,
-            source_dir=None,
+    with pytest.raises(ValueError, match=must_be_tar_gz):
+        AwsQuantumJob._process_s3_source_module(
+            "s3://bucket/source_module", "entry_point", aws_session, "code_location"
         )
 
-        args_list = aws_session.upload_to_s3.call_args_list
-        assert "source.tar.gz" in args_list[0][0][0] and code_location in args_list[0][0][1]
-        aws_session.upload_to_s3.assert_called_once()
-        os.chdir("..")
+
+def test_process_s3_source_module_no_entry_point(aws_session):
+    entry_point_required = "If source_module is an S3 URI, entry_point must be provided."
+    with pytest.raises(ValueError, match=entry_point_required):
+        AwsQuantumJob._process_s3_source_module(
+            "s3://bucket/source_module", None, aws_session, "code_location"
+        )
 
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._tar_and_upload_to_code_location")
-@patch("importlib.import_module")
-def test_entry_point_when_source_dir_not_provided_current_directory(
-    mock_import, mock_tar, quantum_job, code_location, aws_session
-):
-    entry_point = "my_file:start_here"
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
+def test_process_local_source_module(validate_mock, tar_and_upload_mock, aws_session):
     with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
+        source_module = Path(temp_dir, "source_module")
+        source_module.touch()
 
-        with open("__init__.py", "w") as f:
-            pass
-
-        with open("my_file.py", "w") as f:
-            f.write("def func(): \n\tpass")
-
-        quantum_job._process_source_dir(
-            aws_session=aws_session,
-            entry_point=entry_point,
-            code_location=code_location,
-            source_dir=None,
+        AwsQuantumJob._process_local_source_module(
+            str(source_module), "entry_point", aws_session, "code_location"
         )
 
-        mock_tar.assert_called_with(
-            aws_session,
-            "my_file.py",
-            code_location,
+        source_module_abs_path = Path(temp_dir, "source_module").resolve()
+        validate_mock.assert_called_with(source_module_abs_path, "entry_point")
+        tar_and_upload_mock.assert_called_with(source_module_abs_path, aws_session, "code_location")
+
+
+def test_process_local_source_module_not_found(aws_session):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        source_module = str(Path(temp_dir, "source_module").as_posix())
+        source_module_not_found = f"Source module not found: {source_module}"
+        with pytest.raises(ValueError, match=source_module_not_found):
+            AwsQuantumJob._process_local_source_module(
+                source_module, "entry_point", aws_session, "code_location"
+            )
+
+
+def test_validate_entry_point_default_file():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        source_module_path = Path(temp_dir, "source_module.py")
+        source_module_path.touch()
+        # import source_module
+        AwsQuantumJob._validate_entry_point(source_module_path, "source_module")
+        # from source_module import func
+        AwsQuantumJob._validate_entry_point(source_module_path, "source_module:func")
+        # import .
+        AwsQuantumJob._validate_entry_point(source_module_path, ".")
+        # from . import func
+        AwsQuantumJob._validate_entry_point(source_module_path, ".:func")
+
+
+def test_validate_entry_point_default_directory():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        source_module_path = Path(temp_dir, "source_module")
+        source_module_path.mkdir()
+        # import source_module
+        AwsQuantumJob._validate_entry_point(source_module_path, "source_module")
+        # from source_module import func
+        AwsQuantumJob._validate_entry_point(source_module_path, "source_module:func")
+        # import .
+        AwsQuantumJob._validate_entry_point(source_module_path, ".")
+        # from . import func
+        AwsQuantumJob._validate_entry_point(source_module_path, ".:func")
+
+
+def test_validate_entry_point_submodule_file():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        source_module_path = Path(temp_dir, "source_module")
+        source_module_path.mkdir()
+        Path(source_module_path, "submodule.py").touch()
+        # from source_module import submodule
+        AwsQuantumJob._validate_entry_point(source_module_path, "source_module.submodule")
+        # from source_module.submodule import func
+        AwsQuantumJob._validate_entry_point(source_module_path, "source_module.submodule:func")
+        # from . import submodule
+        AwsQuantumJob._validate_entry_point(source_module_path, ".submodule")
+        # from .submodule import func
+        AwsQuantumJob._validate_entry_point(source_module_path, ".submodule:func")
+
+
+def test_validate_entry_point_submodule_init():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        source_module_path = Path(temp_dir, "source_module")
+        source_module_path.mkdir()
+        Path(source_module_path, "submodule.py").touch()
+        with open(str(Path(source_module_path, "__init__.py")), "w") as f:
+            f.write("from . import submodule as renamed")
+        # from source_module import renamed
+        AwsQuantumJob._validate_entry_point(source_module_path, "source_module:renamed")
+        # from . import renamed
+        AwsQuantumJob._validate_entry_point(source_module_path, ".:renamed")
+
+
+def test_validate_entry_point_source_module_not_found():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        source_module_path = Path(temp_dir, "source_module")
+        source_module_path.mkdir()
+        Path(source_module_path, "submodule.py").touch()
+
+        # catches ModuleNotFoundError
+        module_not_found = "Entry point module not found: fake_source_module.submodule"
+        with pytest.raises(ValueError, match=module_not_found):
+            AwsQuantumJob._validate_entry_point(source_module_path, "fake_source_module.submodule")
+
+        # catches AssertionError for module is not None
+        submodule_not_found = "Entry point module not found: source_module.fake_submodule"
+        with pytest.raises(ValueError, match=submodule_not_found):
+            AwsQuantumJob._validate_entry_point(source_module_path, "source_module.fake_submodule")
+
+
+@patch("tarfile.TarFile.add")
+def test_tar_and_upload_to_code_location(mock_tar_add, aws_session):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        source_module_path = Path(temp_dir, "source_module")
+        source_module_path.mkdir()
+        AwsQuantumJob._tar_and_upload_to_code_location(
+            source_module_path, aws_session, "code_location"
         )
-        os.chdir("..")
+        mock_tar_add.assert_called_with(source_module_path, arcname="source_module")
+        local, s3 = aws_session.upload_to_s3.call_args_list[0][0]
+        assert local.endswith("source.tar.gz")
+        assert s3 == "code_location/source.tar.gz"
 
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
@@ -858,12 +889,12 @@ def test_copy_checkpoints(
             "s3Uri": other_checkpoint_uri,
         }
     )
-    AwsQuantumJob._process_source_dir = Mock()
+    AwsQuantumJob._process_local_source_module = Mock()
     aws_session.create_job.return_value = quantum_job_arn
     job = AwsQuantumJob.create(
-        entry_point=entry_point,
         device_arn=device_arn,
-        source_dir="source_dir",
+        source_module="source_module",
+        entry_point=entry_point,
         copy_checkpoints_from_job="other-job-arn",
         checkpoint_config=checkpoint_config,
         aws_session=aws_session,
@@ -890,56 +921,17 @@ def test_metrics(
     expected_metrics = {"Test": [1]}
     aws_session.get_job.return_value = generate_get_job_response()
     metrics_fetcher_mock.return_value = expected_metrics
-    AwsQuantumJob._process_source_dir = Mock()
+    AwsQuantumJob._process_local_source_module = Mock()
     aws_session.create_job.return_value = quantum_job_arn
     job = AwsQuantumJob.create(
-        entry_point=entry_point,
         device_arn=device_arn,
-        source_dir="source_dir",
+        source_module="source_module",
+        entry_point=entry_point,
         aws_session=aws_session,
     )
     metrics = job.metrics()
     assert job == AwsQuantumJob(quantum_job_arn, aws_session)
     assert metrics == expected_metrics
-
-
-@pytest.mark.parametrize(
-    "entry_point",
-    (
-        "test-source-dir.entry_point:func",
-        "test-source-dir.entry_point",
-    ),
-)
-@patch("importlib.import_module")
-def test_validate_entry_point(mock_import, entry_point):
-    mock_module = Mock(function_name="exists")
-    mock_import.return_value = mock_module
-    AwsQuantumJob._validate_entry_point(entry_point)
-
-
-@patch("importlib.import_module")
-def test_validate_entry_point_invalid_entry_point(mock_import):
-    entry_point = "source_dir.entry_point:start_here_not_found"
-    error_string = (
-        "Entry function 'start_here_not_found' not found in module " "'source_dir.entry_point'."
-    )
-    file_path, function_name = entry_point.split(":")
-    mock_module = Mock(start_here="exists")
-    del mock_module.start_here_not_found
-    mock_module.__repr__ = lambda _: file_path
-    mock_import.return_value = mock_module
-
-    with pytest.raises(ValueError, match=error_string):
-        AwsQuantumJob._validate_entry_point(entry_point)
-
-
-@patch("importlib.import_module")
-def test_validate_entry_point_invalid_source_dir(mock_import):
-    entry_point = "fake_source_dir.entry_point:start_here_not_found"
-    error_string = "Entry point module not found: 'fake_source_dir.entry_point'"
-    mock_import.side_effect = ModuleNotFoundError()
-    with pytest.raises(ValueError, match=error_string):
-        AwsQuantumJob._validate_entry_point(entry_point)
 
 
 @pytest.fixture

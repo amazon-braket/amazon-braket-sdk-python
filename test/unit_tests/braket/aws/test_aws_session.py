@@ -649,6 +649,22 @@ def test_create_job(aws_session):
 
 
 @pytest.mark.parametrize(
+    "string, valid",
+    (
+        ("s3://bucket/key", True),
+        ("s3://bucket/", False),
+        ("s3://bucket", False),
+        ("s3://////", False),
+        ("http://bucket/key", False),
+        ("bucket/key", False),
+        # TODO: add other s3 uri formats once they are supported
+    ),
+)
+def test_is_s3_uri(string, valid):
+    assert AwsSession.is_s3_uri(string) == valid
+
+
+@pytest.mark.parametrize(
     "uri, bucket, key",
     [
         (
