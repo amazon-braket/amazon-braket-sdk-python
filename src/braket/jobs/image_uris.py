@@ -43,7 +43,7 @@ def retrieve_image(framework: Framework, region: str):
     framework = Framework(framework)
     config = _config_for_framework(framework)
     framework_version = max(version for version in config["versions"])
-    version_config = _extract_config_for_version(config, framework_version)
+    version_config = config["versions"][framework_version]
     registry = _registry_for_region(version_config, region)
     tag = f"{version_config['repository']}:{framework_version}-cpu-py37-ubuntu18.04"
     return f"{registry}.dkr.ecr.{region}.amazonaws.com/{tag}"
@@ -83,25 +83,3 @@ def _registry_for_region(config: Dict[str, str], region: str) -> str:
             f"regions. Supported region(s): {list(registry_config.keys())}"
         )
     return registry_config[region]
-
-
-def _extract_config_for_version(config: Dict[str, str], framework_version: str) -> Dict[str, str]:
-    """Loads the configuration for the specified framework version.
-
-    Args:
-        config (Dict[str, str]): The configuration for a specific framework.
-        framework_version (str): The version to extract configuration for.
-
-    Returns:
-        Dict[str, str]: Dict containing the version specific configuration.
-
-    Raises:
-        ValueError: If the specified framework version is invalid or not supported.
-    """
-    if framework_version in config.get("versions", {}):
-        return config["versions"][framework_version]
-    raise ValueError(
-        f"Unsupported version: {framework_version}. "
-        "You may need to upgrade your SDK version for newer versions. "
-        f"Supported version(s): {list(config['versions'].keys())}."
-    )
