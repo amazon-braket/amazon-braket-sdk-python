@@ -58,7 +58,7 @@ def account_id():
 
 @pytest.fixture
 def role_arn():
-    return "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
+    return "arn:aws:iam::0000000000:role/AmazonBraketJobsPreviewRole"
 
 
 @pytest.fixture
@@ -727,8 +727,9 @@ def test_construct_s3_uri(bucket, dirs):
 
 
 def test_get_execution_role(aws_session):
-    role_arn = "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
+    role_arn = "arn:aws:iam::0000000000:role/AmazonBraketJobsPreviewRole"
     assert aws_session.get_execution_role() == role_arn
+    aws_session._iam.get_role.assert_called_with(RoleName="AmazonBraketJobsPreviewRole")
 
 
 def test_upload_to_s3(aws_session):

@@ -190,7 +190,7 @@ class AwsSession(object):
         """
         # TODO: possibly wrap this call with a more specific error message
         # TODO: replace with Braket external role before launch
-        role = self.iam_client.get_role(RoleName="AmazonBraketInternalSLR")
+        role = self.iam_client.get_role(RoleName="AmazonBraketJobsPreviewRole")
         return role["Role"]["Arn"]
 
     @backoff.on_exception(
