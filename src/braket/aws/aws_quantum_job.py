@@ -168,6 +168,16 @@ class AwsQuantumJob:
         Raises:
             ValueError: Raises ValueError if the parameters are not valid.
         """
+        input_datatype_map = {
+            "input_data_config": (input_data_config, List[InputDataConfig]),
+            "instance_config": (instance_config, InstanceConfig),
+            "stopping_condition": (stopping_condition, StoppingCondition),
+            "output_data_config": (output_data_config, OutputDataConfig),
+            "checkpoint_config": (checkpoint_config, CheckpointConfig),
+            "vpc_config": (vpc_config, VpcConfig),
+        }
+
+        AwsQuantumJob._validate_input(input_datatype_map)
         aws_session = aws_session or AwsSession()
         device_config = DeviceConfig(devices=[device_arn])
         job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
@@ -237,7 +247,7 @@ class AwsQuantumJob:
         }
 
         if vpc_config:
-            create_job_kwargs["vpcConfig"] = vpc_config
+            create_job_kwargs["vpcConfig"] = asdict(vpc_config)
 
         job_arn = aws_session.create_job(**create_job_kwargs)
         job = AwsQuantumJob(job_arn, aws_session)
@@ -619,3 +629,29 @@ class AwsQuantumJob:
             with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz", dereference=True) as tar:
                 tar.add(source_module_path, arcname=source_module_path.name)
             aws_session.upload_to_s3(f"{temp_dir}/source.tar.gz", f"{code_location}/source.tar.gz")
+
+    @staticmethod
+    def _validate_input(dict_arr):
+        for parameter_name, value_tuple in dict_arr.items():
+            user_input, expected_datatype = value_tuple
+
+            if user_input:
+                AwsQuantumJob._validate_config_parameters(
+                    user_input, parameter_name, expected_datatype
+                )
+
+    @staticmethod
+    def _validate_config_parameters(user_input, parameter_name, expected_datatype):
+        list_parameters = {"input_data_config": InputDataConfig}
+
+        is_correct_data_type = (
+            isinstance(user_input[0], list_parameters.get(parameter_name))
+            if parameter_name in list_parameters
+            else isinstance(user_input, expected_datatype)
+        )
+
+        if not is_correct_data_type:
+            raise ValueError(
+                f"'{parameter_name}' should be of '{expected_datatype}' "
+                f"but user provided {type(user_input)}."
+            )

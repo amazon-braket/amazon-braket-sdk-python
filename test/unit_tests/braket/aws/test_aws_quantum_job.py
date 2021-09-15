@@ -40,7 +40,7 @@ from braket.jobs.config import (
 
 @pytest.fixture
 def aws_session(quantum_job_arn, job_region):
-    _aws_session = Mock()
+    _aws_session = Mock(spec=AwsSession)
     _aws_session.create_job.return_value = quantum_job_arn
     _aws_session.default_bucket.return_value = "default-bucket-name"
     _aws_session.get_execution_role.return_value = "default-role-arn"
@@ -602,7 +602,9 @@ def test_no_arn_setter(quantum_job):
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._process_local_source_module")
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._process_s3_source_module")
 @patch("time.time")
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_input")
 def test_create_job(
+    mock_validate_input,
     mock_time,
     mock_process_s3_source,
     mock_process_local_source,
@@ -683,7 +685,7 @@ def _assert_create_job_called_with(
     }
 
     if vpc_config:
-        test_kwargs["vpcConfig"] = vpc_config
+        test_kwargs["vpcConfig"] = asdict(vpc_config)
 
     aws_session.create_job.assert_called_with(**test_kwargs)
 
@@ -874,7 +876,9 @@ def test_tar_and_upload_to_code_location(mock_tar_add, aws_session):
 
 
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_input")
 def test_copy_checkpoints(
+    mock_validate_input,
     mock_validate_entry_point,
     aws_session,
     quantum_job_arn,
@@ -908,7 +912,9 @@ def test_copy_checkpoints(
     "braket.jobs.metrics_data.cwl_insights_metrics_fetcher."
     "CwlInsightsMetricsFetcher.get_metrics_for_job"
 )
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_input")
 def test_metrics(
+    mock_validate_input,
     metrics_fetcher_mock,
     mock_validate_entry_point,
     aws_session,
@@ -1103,3 +1109,98 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
 
     with pytest.raises(ClientError, match="Some error message"):
         quantum_job.logs(wait=True, poll=1)
+
+
+def test_invalid_input_parameters(entry_point, aws_session):
+    error_message = (
+        "'vpc_config' should be of '<class 'braket.jobs.config.VpcConfig'>' "
+        "but user provided <class 'int'>."
+    )
+    with pytest.raises(ValueError, match=error_message):
+        AwsQuantumJob.create(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            source_module="alpha_test_job",
+            input_data_config=[
+                InputDataConfig(
+                    channelName="csvinput",
+                    dataSource=DataSource(
+                        s3DataSource=S3DataSource(
+                            s3Uri="s3://some-uri",
+                        ),
+                    ),
+                ),
+            ],
+            hyper_parameters={
+                "param-1": "first parameter",
+                "param-2": "second param",
+            },
+            instance_config=InstanceConfig(
+                instanceCount=5,
+            ),
+            vpc_config=2,
+        )
+
+
+@patch("importlib.import_module")
+def test_all_valid_parameters_provided_for_create_job(
+    mock_import, aws_session, device_arn, quantum_job, code_location, entry_point, source_module
+):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+
+        module, _, func = entry_point.partition(":")
+        dir_data = module.split(".")
+        folder_path, file_name = "/".join(dir_data[:-1]), f"{dir_data[-1]}.py"
+
+        os.mkdir(folder_path)
+
+        with open(f"{folder_path}/__init__.py", "w") as f:
+            pass
+
+        with open(f"{folder_path}/{file_name}", "w") as f:
+            f.write("def func(): \n\tpass")
+
+        AwsQuantumJob.create(
+            aws_session=aws_session,
+            entry_point=entry_point,
+            code_location=code_location,
+            source_module=source_module,
+            device_arn=device_arn,
+            input_data_config=[
+                InputDataConfig(
+                    channelName="csvinput",
+                    dataSource=DataSource(
+                        s3DataSource=S3DataSource(
+                            s3Uri="s3://some-uri",
+                        ),
+                    ),
+                ),
+            ],
+        )
+
+        aws_session.upload_to_s3.call_count = 2
+        os.chdir("..")
+
+
+def test_input_validation_with_invalid_list_parameters():
+    error_message = (
+        "'input_data_config' should be of "
+        "'typing.List\\[braket.jobs.config.InputDataConfig]\\' but user provided <class 'list'>."
+    )
+
+    with pytest.raises(ValueError, match=error_message):
+        AwsQuantumJob.create(
+            entry_point="some_dir.some_file:some_func",
+            device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            source_module="alpha_test_job",
+            input_data_config=["abc"],
+            hyper_parameters={
+                "param-1": "first parameter",
+                "param-2": "second param",
+            },
+            instance_config=InstanceConfig(
+                instanceCount=5,
+            ),
+        )
