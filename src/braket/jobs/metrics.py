@@ -29,7 +29,7 @@ def log_metric(
 
       value (Union[float, int]) : The value of the metric.
 
-      timestamp (Optional[float]) : The timestamp of the metric, specified as the time in seconds
+      timestamp (Optional[float]) : The time the metric data was received, expressed as the number of seconds 
          since the epoch. Default: Current system time.
 
       iteration_number (Optional[int]) : The iteration number of the metric.
