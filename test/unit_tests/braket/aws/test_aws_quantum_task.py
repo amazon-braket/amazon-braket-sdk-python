@@ -146,6 +146,10 @@ def test_state(quantum_task):
     _mock_metadata(quantum_task._aws_session, state_2)
     assert quantum_task.state(use_cached_value=True) == state_1
 
+    state_3 = "FAILED"
+    _mock_metadata(quantum_task._aws_session, state_3)
+    assert quantum_task.state() == state_3
+
 
 def test_cancel(quantum_task):
     future = quantum_task.async_result()
