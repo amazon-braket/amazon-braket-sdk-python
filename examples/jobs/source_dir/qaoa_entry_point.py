@@ -117,7 +117,6 @@ def start_here():
         log_metric(
             metric_name="Cost",
             value=cost_before,
-            timestamp=t1,
             iteration_number=iteration,
         )
 
@@ -138,7 +137,6 @@ def start_here():
     log_metric(
         metric_name="Cost",
         value=final_cost,
-        timestamp=time.time(),
         iteration_number=num_iterations,
     )
 
