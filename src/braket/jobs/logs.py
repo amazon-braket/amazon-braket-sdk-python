@@ -44,7 +44,7 @@ class ColorWrap(object):
         self.colorize = force or sys.stdout.isatty() or os.environ.get("JPY_PARENT_PID", None)
 
     def __call__(self, index, s):
-        """Print the string, colorized or not, depending on the environment.
+        """Prints the string, colorized or not, depending on the environment.
 
         Args:
             index (int): The instance number.
@@ -56,7 +56,7 @@ class ColorWrap(object):
             print(s)
 
     def _color_wrap(self, index, s):
-        """Print the string in a color determined by the index.
+        """Prints the string in a color determined by the index.
         
         Args:
             index (int): The instance number.
@@ -71,7 +71,7 @@ Position = collections.namedtuple("Position", ["timestamp", "skip"])
 
 
 def multi_stream_iter(aws_session, log_group, streams, positions):
-    """Iterate over the available events coming from a set of log streams.
+    """Iterates over the available events coming from a set of log streams.
     Log streams are in a single log group interleaving the events from each stream,
     so they yield in timestamp order.
 
@@ -166,7 +166,7 @@ def flush_log_streams(
     has_streams: bool,
     color_wrap: ColorWrap,
 ):
-    """Flush log streams to stdout.
+    """Flushes log streams to stdout.
 
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
