@@ -219,6 +219,8 @@ def test_connector_for_composite_operator():
         "",
         "T  : |0|  1  |",
     )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
 
 def test_verbatim_1q_no_preceding():
     circ = Circuit().add_verbatim_box(Circuit().h(0))
