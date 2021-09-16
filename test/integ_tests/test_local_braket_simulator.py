@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -20,6 +20,9 @@ from gate_model_device_testing_utils import (
     result_types_bell_pair_full_probability_testing,
     result_types_bell_pair_marginal_probability_testing,
     result_types_hermitian_testing,
+    result_types_noncommuting_all,
+    result_types_noncommuting_flipped_targets_testing,
+    result_types_noncommuting_testing,
     result_types_nonzero_shots_bell_pair_testing,
     result_types_observable_not_in_instructions,
     result_types_tensor_hermitian_hermitian_testing,
@@ -107,6 +110,31 @@ def test_result_types_all_selected(shots):
     result_types_all_selected_testing(DEVICE, {"shots": shots})
 
 
+def test_result_types_noncommuting():
+    result_types_noncommuting_testing(DEVICE, {})
+
+
+def test_result_types_noncommuting_flipped_targets():
+    result_types_noncommuting_flipped_targets_testing(DEVICE, {})
+
+
+def test_result_types_noncommuting_all():
+    result_types_noncommuting_all(DEVICE, {})
+
+
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_observable_not_in_instructions(shots):
     result_types_observable_not_in_instructions(DEVICE, {"shots": shots})
+
+
+@pytest.mark.parametrize(
+    "backend, device_name",
+    [
+        ("default", "StateVectorSimulator"),
+        ("braket_sv", "StateVectorSimulator"),
+        ("braket_dm", "DensityMatrixSimulator"),
+    ],
+)
+def test_local_simulator_device_names(backend, device_name):
+    local_simulator_device = LocalSimulator(backend)
+    assert local_simulator_device.name == device_name

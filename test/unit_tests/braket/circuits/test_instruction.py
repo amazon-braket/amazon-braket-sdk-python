@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -33,7 +33,7 @@ def test_empty_operator():
 
 @pytest.mark.xfail(raises=ValueError)
 def test_non_matching_qubit_set_and_qubit_count():
-    Instruction(Gate.CNot, target=[0, 0])
+    Instruction(Gate.CNot(), target=[0, 0])
 
 
 def test_init_with_qubits():

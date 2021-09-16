@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -17,13 +17,43 @@ import pytest
 from braket.circuits import Operator, QuantumOperator
 
 
+class _DummyQuantumOperator(QuantumOperator):
+    @staticmethod
+    def fixed_qubit_count():
+        return 2
+
+
 @pytest.fixture
-def quantum_operator():
-    return QuantumOperator(qubit_count=1, ascii_symbols=["foo"])
+def ascii_symbols():
+    return ["foo"]
+
+
+@pytest.fixture
+def quantum_operator(ascii_symbols):
+    return QuantumOperator(qubit_count=1, ascii_symbols=ascii_symbols)
 
 
 def test_is_operator(quantum_operator):
     assert isinstance(quantum_operator, Operator)
+
+
+def test_ascii_symbols(quantum_operator, ascii_symbols):
+    assert quantum_operator.ascii_symbols == tuple(ascii_symbols)
+
+
+def test_fixed_qubit_count_implemented():
+    operator = _DummyQuantumOperator(qubit_count=None, ascii_symbols=["foo", "bar"])
+    assert operator.qubit_count == _DummyQuantumOperator.fixed_qubit_count()
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_qubit_count_fixed_qubit_count_unequal():
+    _DummyQuantumOperator(qubit_count=1, ascii_symbols=["foo", "bar"])
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_qubit_count_not_int():
+    QuantumOperator(qubit_count="hello", ascii_symbols=[])
 
 
 @pytest.mark.xfail(raises=ValueError)

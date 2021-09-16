@@ -1,5 +1,83 @@
 # Changelog
 
+## v1.9.0 (2021-09-09)
+
+### Features
+
+ * Verbatim boxes
+
+## v1.8.0 (2021-08-23)
+
+### Features
+
+ * Calculate arbitrary observables when `shots=0`
+
+### Bug Fixes and Other Changes
+
+ * Remove immutable default args
+
+## v1.7.5 (2021-08-18)
+
+### Bug Fixes and Other Changes
+
+ * Add test for local simulator device names
+
+### Documentation Changes
+
+ * Add documentation for support
+
+### Testing and Release Infrastructure
+
+ * Update copyright notice
+
+## v1.7.4 (2021-08-06)
+
+### Bug Fixes and Other Changes
+
+ * Flatten Tensor Products
+
+## v1.7.3.post0 (2021-08-05)
+
+### Documentation Changes
+
+ * Modify README.md to include update instructions
+
+## v1.7.3 (2021-07-22)
+
+### Bug Fixes and Other Changes
+
+ * Add json schema validation for dwave device schemas.
+
+## v1.7.2 (2021-07-14)
+
+### Bug Fixes and Other Changes
+
+ * add json validation for device schema in unit tests
+
+## v1.7.1 (2021-07-02)
+
+### Bug Fixes and Other Changes
+
+ * Result Type syntax in IR
+ * Update test_circuit.py
+
+## v1.7.0 (2021-06-25)
+
+### Features
+
+ * code Circuit.as_unitary()
+
+### Bug Fixes and Other Changes
+
+ * allow integral number types that aren't type int
+
+## v1.6.5 (2021-06-23)
+
+### Bug Fixes and Other Changes
+
+ * Get qubit count without instantiating op
+ * Require qubit indices to be integers
+
 ## v1.6.4 (2021-06-10)
 
 ### Bug Fixes and Other Changes

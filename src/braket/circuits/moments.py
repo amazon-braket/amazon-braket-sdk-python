@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -26,6 +26,7 @@ from typing import (
     ValuesView,
 )
 
+from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
 from braket.circuits.qubit import Qubit
@@ -40,6 +41,7 @@ class MomentType(str, Enum):
     GATE_NOISE: a gate-based noise channel
     INITIALIZATION_NOISE: a initialization noise channel
     READOUT_NOISE: a readout noise channel
+    COMPILER_DIRECTIVE: an instruction to the compiler, external to the quantum program itself
     """
 
     GATE = "gate"
@@ -47,18 +49,18 @@ class MomentType(str, Enum):
     GATE_NOISE = "gate_noise"
     INITIALIZATION_NOISE = "initialization_noise"
     READOUT_NOISE = "readout_noise"
+    COMPILER_DIRECTIVE = "compiler_directive"
 
 
 class MomentsKey(NamedTuple):
     """Key of the Moments mapping.
     Args:
-     time: moment
-     qubits: qubit set
-     moment_type: can be GATE, NOISE, or GATE_NOISE which is associated with gates;
-        and READOUT_NOISE or INITIALIZATION_NOISE.
-     noise_index: the number of noise channels at the same moment. For gates, this is the
-        number of gate_noise channels associated with that gate. For all other noise
-        types, noise_index starts from 0; but for gate noise, it starts from 1.
+        time: moment
+        qubits: qubit set
+        moment_type: The type of the moment
+        noise_index: the number of noise channels at the same moment. For gates, this is the
+            number of gate_noise channels associated with that gate. For all other noise
+            types, noise_index starts from 0; but for gate noise, it starts from 1.
     """
 
     time: int
@@ -81,7 +83,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     Args:
         instructions (Iterable[Instruction], optional): Instructions to initialize self.
-            Default = [].
+            Default = None.
 
     Examples:
         >>> moments = Moments()
@@ -106,13 +108,14 @@ class Moments(Mapping[MomentsKey, Instruction]):
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(1)]))
     """
 
-    def __init__(self, instructions: Iterable[Instruction] = []):
+    def __init__(self, instructions: Iterable[Instruction] = None):
         self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
         self._max_times: Dict[Qubit, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
+        self._time_all_qubits = -1
 
-        self.add(instructions)
+        self.add(instructions or [])
 
     @property
     def depth(self) -> int:
@@ -171,23 +174,32 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._add(instruction, noise_index)
 
     def _add(self, instruction: Instruction, noise_index: int = 0) -> None:
-
-        if isinstance(instruction.operator, Noise):
+        operator = instruction.operator
+        if isinstance(operator, CompilerDirective):
+            time = self._update_qubit_times(self._qubits)
+            self._moments[MomentsKey(time, None, MomentType.COMPILER_DIRECTIVE, 0)] = instruction
+            self._depth = time + 1
+            self._time_all_qubits = time
+        elif isinstance(operator, Noise):
             self.add_noise(instruction)
-
         else:
             qubit_range = instruction.target
-            time = max([self._max_time_for_qubit(qubit) for qubit in qubit_range]) + 1
-
-            # Mark all qubits in qubit_range with max_time
-            for qubit in qubit_range:
-                self._max_times[qubit] = max(time, self._max_time_for_qubit(qubit))
-
+            time = self._update_qubit_times(qubit_range)
             self._moments[
                 MomentsKey(time, instruction.target, MomentType.GATE, noise_index)
             ] = instruction
             self._qubits.update(instruction.target)
             self._depth = max(self._depth, time + 1)
+
+    def _update_qubit_times(self, qubits):
+        qubit_max_times = [self._max_time_for_qubit(qubit) for qubit in qubits] + [
+            self._time_all_qubits
+        ]
+        time = max(qubit_max_times) + 1
+        # Update time for all specified qubits
+        for qubit in qubits:
+            self._max_times[qubit] = time
+        return time
 
     def add_noise(
         self, instruction: Instruction, input_type: str = "noise", noise_index: int = 0
@@ -244,6 +256,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self._moments = sorted_moment
 
     def _max_time_for_qubit(self, qubit: Qubit) -> int:
+        # -1 if qubit is unoccupied because the first instruction will have an index of 0
         return self._max_times.get(qubit, -1)
 
     #
@@ -290,7 +303,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     def __eq__(self, other):
         if isinstance(other, Moments):
-            return (self._moments) == (other._moments)
+            return self._moments == other._moments
         return NotImplemented
 
     def __ne__(self, other):

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -15,4 +15,4 @@
    Version number (major.minor.patch[-label])
 """
 
-__version__ = "1.6.5.dev0"
+__version__ = "1.9.1.dev0"

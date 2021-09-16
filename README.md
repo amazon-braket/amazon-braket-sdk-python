@@ -63,6 +63,12 @@ You can also check your version of `amazon-braket-sdk` from within Python:
 >>> braket_sdk.__version__
 ```
 
+### Updating the Amazon Braket Python SDK
+You can update the version of the amazon-braket-sdk you have installed by using the following command:
+```bash
+pip install amazon-braket-sdk --upgrade --upgrade-strategy eager
+```
+
 ## Usage
 
 ### Running a circuit on an AWS simulator
@@ -208,6 +214,20 @@ As with unit tests, you can also pass in various pytest arguments:
 ```bash
 tox -e integ-tests -- your-arguments
 ```
+
+## Support
+
+### Issues and Bug Reports
+
+If you encounter bugs or face issues while using the SDK, please let us know by posting 
+the issue on our [Github issue tracker](https://github.com/aws/amazon-braket-sdk-python/issues/).  
+For issues with the Amazon Braket service in general, please use the [Developer Forum](https://forums.aws.amazon.com/forum.jspa?forumID=370).
+
+### Feedback and Feature Requests
+
+If you have feedback or features that you would like to see on Amazon Braket, we would love to hear from you!  
+[Github issues](https://github.com/aws/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
+to engage in the conversation, and +1 issues to help drive priority. 
 
 ## License
 This project is licensed under the Apache-2.0 License.
