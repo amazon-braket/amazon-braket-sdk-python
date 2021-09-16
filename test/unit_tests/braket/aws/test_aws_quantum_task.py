@@ -39,6 +39,16 @@ from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 
+IONQ_ARN = "device/qpu/ionq"
+RIGETTI_ARN = "device/qpu/rigetti"
+SIMULATOR_ARN = "device/quantum-simulator"
+
+DEVICE_PARAMETERS = [
+    (IONQ_ARN, IonqDeviceParameters),
+    (RIGETTI_ARN, RigettiDeviceParameters),
+    (SIMULATOR_ARN, GateModelSimulatorDeviceParameters),
+]
+
 
 @pytest.fixture
 def aws_session():
@@ -338,23 +348,14 @@ def test_create_invalid_task_specification(aws_session, arn):
     AwsQuantumTask.create(aws_session, arn, "foo", S3_TARGET, 1000)
 
 
-@pytest.mark.parametrize(
-    "device_arn,device_parameters_class",
-    [
-        ("device/qpu/ionq", IonqDeviceParameters),
-        ("device/qpu/rigetti", RigettiDeviceParameters),
-        ("device/quantum-simulator", GateModelSimulatorDeviceParameters),
-    ],
-)
+@pytest.mark.parametrize("device_arn,device_parameters_class", DEVICE_PARAMETERS)
 def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_session, circuit):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
     shots = 53
 
     task = AwsQuantumTask.create(aws_session, device_arn, circuit, S3_TARGET, shots)
-    assert task == AwsQuantumTask(
-        mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
-    )
+    assert task == AwsQuantumTask(mocked_task_arn, aws_session)
 
     _assert_create_quantum_task_called_with(
         aws_session,
@@ -371,10 +372,7 @@ def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_sessio
 
 
 @pytest.mark.parametrize(
-    "device_arn,device_parameters_class",
-    [
-        ("device/qpu/rigetti", RigettiDeviceParameters),
-    ],
+    "device_arn,device_parameters_class", [(RIGETTI_ARN, RigettiDeviceParameters)]
 )
 def test_from_circuit_with_disabled_rewiring(
     device_arn, device_parameters_class, aws_session, circuit
@@ -386,9 +384,7 @@ def test_from_circuit_with_disabled_rewiring(
     task = AwsQuantumTask.create(
         aws_session, device_arn, circuit, S3_TARGET, shots, disable_qubit_rewiring=True
     )
-    assert task == AwsQuantumTask(
-        mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
-    )
+    assert task == AwsQuantumTask(mocked_task_arn, aws_session)
 
     _assert_create_quantum_task_called_with(
         aws_session,
@@ -402,6 +398,46 @@ def test_from_circuit_with_disabled_rewiring(
             )
         ),
     )
+
+
+@pytest.mark.parametrize(
+    "device_arn,device_parameters_class", [(RIGETTI_ARN, RigettiDeviceParameters)]
+)
+def test_from_circuit_with_verbatim(device_arn, device_parameters_class, aws_session):
+    circ = Circuit().add_verbatim_box(Circuit().h(0))
+    mocked_task_arn = "task-arn-1"
+    aws_session.create_quantum_task.return_value = mocked_task_arn
+    shots = 1337
+
+    task = AwsQuantumTask.create(
+        aws_session,
+        device_arn,
+        circ,
+        S3_TARGET,
+        shots,
+        disable_qubit_rewiring=True,
+    )
+    assert task == AwsQuantumTask(mocked_task_arn, aws_session)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        device_arn,
+        circ,
+        S3_TARGET,
+        shots,
+        device_parameters_class(
+            paradigmParameters=GateModelParameters(
+                qubitCount=circ.qubit_count, disableQubitRewiring=True
+            )
+        ),
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_from_circuit_with_verbatim_qubit_rewiring_not_disabled(aws_session):
+    circ = Circuit().add_verbatim_box(Circuit().h(0))
+    shots = 57
+    AwsQuantumTask.create(aws_session, RIGETTI_ARN, circ, S3_TARGET, shots)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -661,9 +697,7 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
         1000,
         device_parameters=device_parameters,
     )
-    assert task == AwsQuantumTask(
-        mocked_task_arn, aws_session, AnnealingQuantumTaskResult.from_string
-    )
+    assert task == AwsQuantumTask(mocked_task_arn, aws_session)
     annealing_parameters = _create_annealing_device_params(device_parameters, device_arn=arn)
     validate(
         json.loads(annealing_parameters.json(exclude_none=True)), annealing_parameters.schema()
@@ -678,14 +712,7 @@ def test_from_annealing(device_parameters, aws_session, arn, problem):
     )
 
 
-@pytest.mark.parametrize(
-    "device_arn,device_parameters_class",
-    [
-        ("device/qpu/ionq", IonqDeviceParameters),
-        ("device/qpu/rigetti", RigettiDeviceParameters),
-        ("device/quantum-simulator", GateModelSimulatorDeviceParameters),
-    ],
-)
+@pytest.mark.parametrize("device_arn,device_parameters_class", DEVICE_PARAMETERS)
 def test_create_with_tags(device_arn, device_parameters_class, aws_session, circuit):
     mocked_task_arn = "task-arn-tags"
     aws_session.create_quantum_task.return_value = mocked_task_arn
@@ -693,9 +720,7 @@ def test_create_with_tags(device_arn, device_parameters_class, aws_session, circ
     tags = {"state": "washington"}
 
     task = AwsQuantumTask.create(aws_session, device_arn, circuit, S3_TARGET, shots, tags=tags)
-    assert task == AwsQuantumTask(
-        mocked_task_arn, aws_session, GateModelQuantumTaskResult.from_string
-    )
+    assert task == AwsQuantumTask(mocked_task_arn, aws_session)
     _assert_create_quantum_task_called_with(
         aws_session,
         device_arn,
@@ -729,7 +754,7 @@ def test_aws_session_for_task_arn(mock_session):
 
 
 def _init_and_add_to_list(aws_session, arn, task_list):
-    task_list.append(AwsQuantumTask(arn, aws_session, GateModelQuantumTaskResult.from_string))
+    task_list.append(AwsQuantumTask(arn, aws_session))
 
 
 def _assert_create_quantum_task_called_with(

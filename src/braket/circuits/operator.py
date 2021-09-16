@@ -20,7 +20,7 @@ class Operator(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        """str: The operator name."""
+        """str: The name of the operator."""
 
     @abstractmethod
     def to_ir(self, *args, **kwargs):

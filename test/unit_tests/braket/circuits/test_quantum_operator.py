@@ -24,12 +24,21 @@ class _DummyQuantumOperator(QuantumOperator):
 
 
 @pytest.fixture
-def quantum_operator():
-    return QuantumOperator(qubit_count=1, ascii_symbols=["foo"])
+def ascii_symbols():
+    return ["foo"]
+
+
+@pytest.fixture
+def quantum_operator(ascii_symbols):
+    return QuantumOperator(qubit_count=1, ascii_symbols=ascii_symbols)
 
 
 def test_is_operator(quantum_operator):
     assert isinstance(quantum_operator, Operator)
+
+
+def test_ascii_symbols(quantum_operator, ascii_symbols):
+    assert quantum_operator.ascii_symbols == tuple(ascii_symbols)
 
 
 def test_fixed_qubit_count_implemented():

@@ -13,14 +13,15 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Tuple
 
-from braket.circuits.gate import Gate
+from braket.circuits.operator import Operator
+from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
-InstructionOperator = Gate
+InstructionOperator = Operator
 
 
 class Instruction:
@@ -28,7 +29,7 @@ class Instruction:
     An instruction is a quantum directive that describes the task to perform on a quantum device.
     """
 
-    def __init__(self, operator: InstructionOperator, target: QubitSetInput):
+    def __init__(self, operator: InstructionOperator, target: QubitSetInput = None):
         """
         InstructionOperator includes objects of type `Gate` only.
 
@@ -56,16 +57,14 @@ class Instruction:
         """
         if not operator:
             raise ValueError("Operator cannot be empty")
-        self._operator = operator
-        self._target = QubitSet(target)
-        if (
-            hasattr(self._operator, "qubit_count")
-            and len(self._target) != self._operator.qubit_count
-        ):
+        target_set = QubitSet(target)
+        if isinstance(operator, QuantumOperator) and len(target_set) != operator.qubit_count:
             raise ValueError(
-                f"Operator qubit count {self._operator.qubit_count} must be "
-                f"equal to size of target qubit set {self._target}"
+                f"Operator qubit count {operator.qubit_count} must be equal to"
+                f" size of target qubit set {target_set}"
             )
+        self._operator = operator
+        self._target = target_set
 
     @property
     def operator(self) -> InstructionOperator:
@@ -88,6 +87,11 @@ class Instruction:
         If the operator is passed in a request, this method is called before it is passed.
         """
         return self._operator.to_ir([int(qubit) for qubit in self._target])
+
+    @property
+    def ascii_symbols(self) -> Tuple[str, ...]:
+        """Tuple[str, ...]: Returns the ascii symbols for the instruction's operator."""
+        return self._operator.ascii_symbols
 
     def copy(
         self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
