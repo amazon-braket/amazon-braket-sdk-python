@@ -25,14 +25,14 @@ def serialize_values(
     Serializes the `data_dictionary` values to the format specified by `data_format`.
 
     Args:
-        data_dictionary (Dict[str, Any]): Dict whose values need to be serialized.
-        data_format (PersistedJobDataFormat): Data format to be used for serializing the
+        data_dictionary (Dict[str, Any]): Dict whose values are to be serialized.
+        data_format (PersistedJobDataFormat): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
-            after serialization (so that they represent valid UTF-8 text) and are compatible
+            after serialization, so that they represent valid UTF-8 text and are compatible
             with `PersistedJobData.json()`.
 
     Returns:
-        Dict[str, Any]: Dict with same keys as `data_dictionary`, and values serialized to
+        Dict[str, Any]: Dict with same keys as `data_dictionary` and values serialized to
         the specified `data_format`.
     """
     return (
@@ -52,12 +52,12 @@ def deserialize_values(
     Deserializes the `data_dictionary` values from the format specified by `data_format`.
 
     Args:
-        data_dictionary (Dict[str, Any]): Dict whose values need to be deserialized.
-        data_format (PersistedJobDataFormat): Data format that the `data_dictionary` values
+        data_dictionary (Dict[str, Any]): Dict whose values are to be deserialized.
+        data_format (PersistedJobDataFormat): The data format that the `data_dictionary` values
             are currently serialized with.
 
     Returns:
-        Dict[str, Any]: Dict with same keys as `data_dictionary`, and values deserialized from
+        Dict[str, Any]: Dict with same keys as `data_dictionary` and values deserialized from
         the specified `data_format` to plaintext.
     """
     return (
