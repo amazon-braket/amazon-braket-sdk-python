@@ -85,7 +85,15 @@ def test_invalid_data_ascii_symbols(qubit_count, ascii_symbols):
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("qubit_count, ascii_symbols", invalid_data_ascii_symbols_length)
 def test_invalid_data_ascii_symbols_length(qubit_count, ascii_symbols):
-    Noise(qubit_count, ascii_symbols)
+    class foo(Noise):
+        def __init__(self):
+            super().__init__(qubit_count=None, ascii_symbols=ascii_symbols)
+
+        @staticmethod
+        def fixed_qubit_count() -> int:
+            return qubit_count
+
+    foo()
 
 
 @pytest.mark.xfail(raises=ValueError)
