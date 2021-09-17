@@ -13,12 +13,12 @@ from braket.jobs.metrics import log_metric
 import source_dir.qaoa_utils as qaoa_utils  # isort:skip
 
 
-def init_pl_device(device_arn, num_nodes, max_parallel):
+def init_pl_device(device_arn, num_nodes, shots, max_parallel):
     return qml.device(
         "braket.aws.qubit",
         device_arn=device_arn,
         wires=num_nodes,
-        shots=1000,
+        shots=shots,
         # Set s3_destination_folder=None to output task results to a default folder
         s3_destination_folder=None,
         parallel=True,
@@ -48,6 +48,8 @@ def start_here():
     seed = int(hyperparams["seed"])
     max_parallel = int(hyperparams["max_parallel"])
     num_iterations = int(hyperparams["num_iterations"])
+    stepsize = float(hyperparams["stepsize"])
+    shots = int(hyperparams["shots"])
     pl_interface = hyperparams["interface"]
     if "copy_checkpoints_from_job" in hyperparams:
         copy_checkpoints_from_job = hyperparams["copy_checkpoints_from_job"].split("/", 2)[-1]
@@ -77,7 +79,7 @@ def start_here():
             qml.Hadamard(wires=i)
         qml.layer(qaoa_layer, p, params[0], params[1])
 
-    dev = init_pl_device(device_arn, num_nodes, max_parallel)
+    dev = init_pl_device(device_arn, num_nodes, shots, max_parallel)
 
     np.random.seed(seed)
     cost_function = qml.ExpvalCost(circuit, cost_h, dev, optimize=True, interface=pl_interface)
@@ -95,7 +97,7 @@ def start_here():
         start_iteration = 0
         params = interface.initialize_params(0.01 * np.random.uniform(size=[2, p]))
 
-    optimizer = interface.get_sgd_optimizer(params)
+    optimizer = interface.get_sgd_optimizer(stepsize, params)
     print("Optimization start")
 
     for iteration in range(start_iteration, num_iterations):
