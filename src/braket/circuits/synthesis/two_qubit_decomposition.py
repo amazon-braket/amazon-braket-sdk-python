@@ -22,9 +22,6 @@ from typing import Tuple, Sequence
 import matplotlib
 import matplotlib.pyplot as plt
 
-matplotlib.rcParams["text.usetex"] = True
-from mpl_toolkits import mplot3d
-
 # Braket
 import braket.circuits as braket_circ
 from braket.circuits import Circuit
@@ -32,7 +29,7 @@ from braket.circuits.gates import X, Y, Z, CNot
 from braket.circuits.synthesis.invariants import makhlin_invariants, gamma_invariants
 from braket.circuits.synthesis.one_qubit_decomposition import OneQubitDecomposition
 from braket.circuits.synthesis.constants import magic_basis, kak_so4_transform_matrix
-from braket.circuits.synthesis.predicates import is_unitary, commute
+from braket.circuits.synthesis.predicates import is_unitary
 from braket.circuits.synthesis.util import (
     rx,
     ry,
@@ -42,11 +39,14 @@ from braket.circuits.synthesis.util import (
     diagonalize_two_matrices_with_hermitian_products,
 )
 
+matplotlib.rcParams["text.usetex"] = True
+
+# Constants
 x = X().to_matrix()
 y = Y().to_matrix()
 z = Z().to_matrix()
 cnot = CNot().to_matrix()
-I = np.eye(2)
+I2d = np.eye(2)
 cnot_re = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=np.complex128)
 
 
@@ -100,7 +100,7 @@ class TwoQubitDecomposition:
             g, u1, u2 = decompose_one_qubit_product(U, atol=self.atol, rtol=self.rtol)
 
             self.phase = g
-            self.su2 = [u1, u2, I, I]
+            self.su2 = [u1, u2, I2d, I2d]
             self.canonical_vector = np.array([0, 0, 0])
 
             self.cnot_circuit_phase = 0.0
@@ -241,7 +241,6 @@ def build_cnot_circuit(
 
     if kak.num_cnots() == 1:
         cnot_decomp = TwoQubitDecomposition(cnot, atol=kak.atol, rtol=kak.rtol)
-        phase = kak.phase / cnot_decomp.phase
         u1 = kak.su2[0] @ cnot_decomp.su2[0].conj().T
         u2 = kak.su2[1] @ cnot_decomp.su2[1].conj().T
         u3 = cnot_decomp.su2[2].conj().T @ kak.su2[2]
@@ -316,7 +315,7 @@ def build_cnot_circuit(
 
         psi = np.arctan2(psi_num, psi_denom)
 
-        m = su @ np.kron(I, rz(psi)) @ cnot
+        m = su @ np.kron(I2d, rz(psi)) @ cnot
         gamma_m = gamma_invariants(m)
         r_m = np.angle(np.roots(gamma_m))
         r_m = np.sort(r_m[r_m > 0])

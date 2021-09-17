@@ -11,18 +11,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import math
 import numpy as np
 from scipy.linalg import expm
 import pytest
 import random
 
-from sympy import Poly, Matrix, Symbol
+from sympy import Matrix, Symbol
 
 import braket.circuits.synthesis.util as util
 from braket.circuits.gates import X, Y, Z, H, S, CNot, CZ
 
-I = np.eye(2)
+I2d = np.eye(2)
 x = X().to_matrix()
 y = Y().to_matrix()
 z = Z().to_matrix()
@@ -142,15 +141,15 @@ def test_to_su(unitary_test_cases):
         (matrix_3d, diag_matrix_3d),
         (diag_matrix_3d, matrix_3d),
         (partial_rank_3d, partial_rank_diag_3d),
-        (I, x),
-        (I, y),
-        (y, I),
+        (I2d, x),
+        (I2d, y),
+        (y, I2d),
         (x, np.zeros_like(x)),
         (np.zeros_like(y), y),
         (cz, swap),
         (swap, cz),
-        (np.kron(z, I), cnot),
-        (np.kron(I, x), cnot),
+        (np.kron(z, I2d), cnot),
+        (np.kron(I2d, x), cnot),
     ],
 )
 def test_d_c_h_m(d_c_h_m_test_1, d_c_h_m_test_2):
@@ -176,7 +175,7 @@ def test_d_c_h_m(d_c_h_m_test_1, d_c_h_m_test_2):
 @pytest.mark.xfail
 def test_d_c_h_m_edge_cases(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2):
 
-    p = util.diagonalize_commuting_hermitian_matrices(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2)
+    util.diagonalize_commuting_hermitian_matrices(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2)
 
 
 # Test diagonalize_two_matrices_with_hermitian_products function
@@ -189,16 +188,16 @@ def test_d_c_h_m_edge_cases(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2):
         (matrix_3d, diag_matrix_3d),
         (diag_matrix_3d, matrix_3d),
         (partial_rank_3d, partial_rank_diag_3d),
-        (I, x),
-        (I, y),
-        (y, I),
+        (I2d, x),
+        (I2d, y),
+        (y, I2d),
         (x, np.zeros_like(x)),
         (np.zeros_like(y), y),
         (z, z),
         (cz, swap),
         (swap, cz),
-        (np.kron(z, I), cnot),
-        (np.kron(I, x), cnot),
+        (np.kron(z, I2d), cnot),
+        (np.kron(I2d, x), cnot),
     ],
 )
 def test_d_t_m_w_h_p(d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2):
@@ -256,6 +255,6 @@ def test_characteristic_polynomial(char_poly_test):
     [1, 1.5, "random_matrix", np.random.rand(2, 3), np.random.rand(5, 10), np.random.rand(1, 100)],
 )
 @pytest.mark.xfail
-def test_characteristic_polynomial(char_poly_test):
+def test_characteristic_polynomial_edge_case(char_poly_test):
 
     char_poly = util.char_poly(char_poly_test)

@@ -15,14 +15,10 @@ import numpy as np
 import braket.circuits as braket_circ
 
 from braket.circuits.synthesis.util import to_su
-from braket.circuits.synthesis.predicates import is_unitary, eq_up_to_phase
+from braket.circuits.synthesis.predicates import is_unitary
 from braket.circuits import Circuit
 from braket.circuits.gates import X, Y, Z, Rx, Ry, Rz
 from braket.circuits.instruction import Instruction
-
-from scipy.linalg import expm
-
-import time
 
 y = Y().to_matrix()
 z = Z().to_matrix()
@@ -165,10 +161,10 @@ class OneQubitDecomposition:
         repr_str = (
             "OneQubitDecomposition(\n"
             + f"  global phase: {self.phase},\n"
-            + f"  ZYZ decomposition:\n"
+            + "  ZYZ decomposition:\n"
             + "    ------Rz--Ry--Rz------\n"
             + f"    euler angles: {self.euler_angles('zyz')})\n"
-            + f"  Axis-angle decomposition:\n"
+            + "  Axis-angle decomposition:\n"
             + "    SU(2) = exp(-0.5j * theta * (xX + yY + zZ))\n"
             + f"    canonical vector (x, y, z): {self.canonical_vector},\n"
             + f"    theta: {self.rotation_angle},\n"

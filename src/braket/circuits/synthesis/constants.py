@@ -14,12 +14,6 @@
 import numpy as np
 from braket.circuits.gates import X, Y, Z
 
-# Pauli matrices
-x = X().to_matrix()
-y = Y().to_matrix()
-z = Z().to_matrix()
-I = np.eye(2)
-
 kak_so4_transform_matrix = np.array([[1, 1, -1, 1], [1, 1, 1, -1], [1, -1, -1, -1], [1, -1, 1, 1]])
 
 magic_basis = np.sqrt(0.5) * np.array(
