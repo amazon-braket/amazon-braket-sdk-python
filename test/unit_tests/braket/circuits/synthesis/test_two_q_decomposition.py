@@ -215,4 +215,4 @@ def test_kak_three_product_gate(unitary_test_cases):
 )
 @pytest.mark.xfail
 def test_kak_decomposition_edge_cases(nonunitary_test_cases):
-    KAK = kak.TwoQubitDecomposition(nonunitary_test_cases)
+    kak.TwoQubitDecomposition(nonunitary_test_cases)

@@ -32,10 +32,8 @@ from braket.circuits.synthesis.constants import magic_basis, kak_so4_transform_m
 from braket.circuits.synthesis.predicates import is_unitary
 from braket.circuits.synthesis.util import (
     rx,
-    ry,
     rz,
     to_su,
-    char_poly,
     diagonalize_two_matrices_with_hermitian_products,
 )
 
@@ -208,7 +206,6 @@ def two_qubit_decompose(
         U (np.ndarray): the unitary to decompose.
         atol (float): absolute tolerance parameter.
         rtol (float): relative tolerance parameter.
-          
     """
 
     return TwoQubitDecomposition(U, atol=atol, rtol=rtol)
@@ -332,8 +329,6 @@ def build_cnot_circuit(
 
         w_decomp = TwoQubitDecomposition(w)
         m_decomp = TwoQubitDecomposition(m)
-
-        phase = initial_phase * m_decomp.phase / w_decomp.phase
 
         u1 = m_decomp.su2[0] @ w_decomp.su2[0].conj().T
         u2 = m_decomp.su2[1] @ w_decomp.su2[1].conj().T

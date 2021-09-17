@@ -257,4 +257,4 @@ def test_characteristic_polynomial(char_poly_test):
 @pytest.mark.xfail
 def test_characteristic_polynomial_edge_case(char_poly_test):
 
-    char_poly = util.char_poly(char_poly_test)
+    util.char_poly(char_poly_test)
