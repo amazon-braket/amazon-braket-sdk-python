@@ -71,8 +71,8 @@ class CwlMetricsParser(object):
 
         Returns:
             Dict[str, Union[str, float, int]]: The set of metrics found by the RegEx. The result
-            will be in the format {<metric name> : <value>}. This implies that multiple metrics
-            with the same name will be deduped to the last instance of that metric.
+            is in the format {<metric name> : <value>}. This implies that multiple metrics
+            with the same name are deduped to the last instance of that metric.
         """
         metrics = {}
         for match in all_matches:
@@ -86,7 +86,7 @@ class CwlMetricsParser(object):
 
     def parse_log_message(self, timestamp: str, message: str) -> None:
         """
-        Parses a line from CloudWatch Logs adds all the metrics that have been logged
+        Parses a line from CloudWatch Logs, adding all the metrics that have been logged
         on that line. The timestamp is also added to match the corresponding values.
 
         Args:
@@ -109,8 +109,8 @@ class CwlMetricsParser(object):
     ) -> Tuple[Dict[str, List[Union[str, float, int]]], Dict[int, int]]:
         """
         Parses the metrics to find all the metrics that have the pivot column. The values of
-        the pivot column are assigned a row index (so that all metrics with the same pivot value
-        will be stored in the same row).
+        the pivot column are assigned a row index, so that all metrics with the same pivot value
+        are stored in the same row.
         Args:
             pivot (str): The name of the pivot column. Must be TIMESTAMP or ITERATION_NUMBER.
 
@@ -140,9 +140,9 @@ class CwlMetricsParser(object):
     ) -> Dict[str, List[Union[str, float, int]]]:
         """
         Gets the metric data for a given pivot column name. Metrics without the pivot column
-        will not be included in the results. Metrics that have the same value in the pivot column
-        will be returned in the same row. If the a metric has multiple values for the pivot value,
-        the statistic will be used to determine which value will be returned.
+        are not included in the results. Metrics that have the same value in the pivot column
+        are returned in the same row. If the a metric has multiple values for the pivot value,
+        the statistic is used to determine which value is returned.
         For example, for the metrics:
         "iteration_number" : 0, "metricA" : 2, "metricB" : 1,
         "iteration_number" : 0, "metricA" : 1,
@@ -175,7 +175,7 @@ class CwlMetricsParser(object):
         self, metric_type: MetricType, statistic: MetricStatistic
     ) -> Dict[str, List[Union[str, float, int]]]:
         """
-        Gets all the metrics data, where the keys are the column names, and the values are a list
+        Gets all the metrics data, where the keys are the column names and the values are a list
         containing the values in each row. For example, the table:
             timestamp energy
               0         0.1

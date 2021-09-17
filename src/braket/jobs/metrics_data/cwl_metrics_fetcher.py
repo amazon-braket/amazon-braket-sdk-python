@@ -50,7 +50,7 @@ class CwlMetricsFetcher(object):
             message (str): The message to check.
 
         Returns:
-            True if the given message is designated as containing Metrics, False otherwise.
+            True if the given message is designated as containing Metrics; False otherwise.
         """
         if message:
             return "Metrics -" in message
@@ -101,10 +101,10 @@ class CwlMetricsFetcher(object):
 
         Args:
             job_name (str): The name of the job.
-            timeout_time (float) : We stop getting metrics if the current time is beyond
+            timeout_time (float) : Metrics cease getting streamed if the current time exceeds
                 the timeout time.
         Returns:
-            List[str] : a list of log stream names for the given job.
+            List[str] : A list of log stream names for the given job.
         """
         kwargs = {
             "logGroupName": self.LOG_GROUP_NAME,
@@ -144,7 +144,7 @@ class CwlMetricsFetcher(object):
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
-             are the column names, and the values are a list containing the values in each row.
+             are the column names and the values are a list containing the values in each row.
               For example, the table:
                 timestamp energy
                 0         0.1
