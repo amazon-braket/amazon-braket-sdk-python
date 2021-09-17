@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -17,6 +17,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVa
 
 import numpy as np
 
+from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -123,8 +124,10 @@ class Circuit:
         self._moments: Moments = Moments()
         self._result_types: Dict[ResultType] = {}
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
-        self._qubit_target_mapping: Dict[int, Tuple[int]] = {}
+        self._qubit_observable_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
+        self._observables_simultaneously_measurable = True
+        self._has_compiler_directives = False
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -150,6 +153,9 @@ class Circuit:
         """List[Instruction]: Get a list of basis rotation instructions in the circuit.
         These basis rotation instructions are added if result types are requested for
         an observable other than Pauli-Z.
+
+        This only makes sense if all observables are simultaneously measurable;
+        if not, this method will return an empty list.
         """
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
@@ -162,7 +168,7 @@ class Circuit:
                 )
             return basis_rotation_instructions
 
-        target_lists = sorted(list(set(self._qubit_target_mapping.values())))
+        target_lists = sorted(set(self._qubit_observable_target_mapping.values()))
         for target_list in target_lists:
             observable = self._qubit_observable_mapping[target_list[0]]
             basis_rotation_instructions += Circuit._observable_to_instruction(
@@ -194,7 +200,7 @@ class Circuit:
         self,
         result_type: ResultType,
         target: QubitSetInput = None,
-        target_mapping: Dict[QubitInput, QubitInput] = {},
+        target_mapping: Dict[QubitInput, QubitInput] = None,
     ) -> Circuit:
         """
         Add a requested result type to `self`, returns `self` for chaining ability.
@@ -207,7 +213,7 @@ class Circuit:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `result_type.target`. Key is the qubit in
                 `result_type.target` and the value is what the key will be changed to.
-                Default = `{}`.
+                Default = `None`.
 
 
         Note: target and target_mapping will only be applied to those requested result types with
@@ -219,9 +225,6 @@ class Circuit:
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
-            ValueError: If the observable specified for a qubit is different from what is
-                specified by the result types already added to the circuit. Only one observable
-                is allowed for a qubit.
 
         Examples:
             >>> result_type = ResultType.Probability(target=[0, 1])
@@ -258,87 +261,73 @@ class Circuit:
             result_type_to_add = result_type.copy(target=target)
 
         if result_type_to_add not in self._result_types:
-            self._add_to_qubit_observable_mapping(result_type_to_add)
+            observable = Circuit._extract_observable(result_type_to_add)
+            if observable and self._observables_simultaneously_measurable:
+                # Only check if all observables can be simultaneously measured
+                self._add_to_qubit_observable_mapping(observable, result_type_to_add.target)
             self._add_to_qubit_observable_set(result_type_to_add)
             # using dict as an ordered set, value is arbitrary
             self._result_types[result_type_to_add] = None
         return self
 
-    def _add_to_qubit_observable_mapping(self, result_type: ResultType) -> None:
+    @staticmethod
+    def _extract_observable(result_type: ResultType) -> Optional[Observable]:
         if isinstance(result_type, ResultType.Probability):
-            observable = Observable.Z()  # computational basis
+            return Observable.Z()  # computational basis
         elif isinstance(result_type, ObservableResultType):
-            observable = result_type.observable
+            return result_type.observable
         else:
-            return
+            return None
 
-        targets = result_type.target or list(self._qubit_observable_set)
+    def _add_to_qubit_observable_mapping(
+        self, observable: Observable, observable_target: QubitSet
+    ) -> None:
+        targets = observable_target or list(self._qubit_observable_set)
         all_qubits_observable = self._qubit_observable_mapping.get(Circuit._ALL_QUBITS)
+        tensor_product_dict = (
+            Circuit._tensor_product_index_dict(observable, observable_target)
+            if isinstance(observable, TensorProduct)
+            else None
+        )
+        identity = Observable.I()
         for i in range(len(targets)):
             target = targets[i]
-            tensor_product_dict = (
-                Circuit._tensor_product_index_dict(observable)
-                if isinstance(observable, TensorProduct)
-                else None
-            )
             new_observable = tensor_product_dict[i][0] if tensor_product_dict else observable
             current_observable = all_qubits_observable or self._qubit_observable_mapping.get(target)
 
-            add_observable = Circuit._validate_observable_to_add_for_qubit(
-                current_observable, new_observable, target
+            add_observable = not current_observable or (
+                current_observable == identity and new_observable != identity
             )
+            if (
+                not add_observable
+                and current_observable != identity
+                and new_observable != identity
+                and current_observable != new_observable
+            ):
+                return self._encounter_noncommuting_observable()
 
-            if result_type.target:
+            if observable_target:
                 new_targets = (
-                    tuple(
-                        result_type.target[
-                            tensor_product_dict[i][1][0] : tensor_product_dict[i][1][1]
-                        ]
-                    )
-                    if tensor_product_dict
-                    else tuple(result_type.target)
+                    tensor_product_dict[i][1] if tensor_product_dict else tuple(observable_target)
                 )
+
                 if add_observable:
-                    self._qubit_target_mapping[target] = new_targets
+                    self._qubit_observable_target_mapping[target] = new_targets
                     self._qubit_observable_mapping[target] = new_observable
                 elif new_observable.qubit_count > 1:
-                    current_target = self._qubit_target_mapping.get(target)
+                    current_target = self._qubit_observable_target_mapping.get(target)
                     if current_target and current_target != new_targets:
-                        raise ValueError(
-                            f"Target order {current_target} of existing result type with"
-                            f" observable {current_observable} conflicts with order {targets}"
-                            " of new result type"
-                        )
+                        return self._encounter_noncommuting_observable()
 
-        if not result_type.target:
+        if not observable_target:
             if all_qubits_observable and all_qubits_observable != observable:
-                raise ValueError(
-                    f"Existing result type for observable {all_qubits_observable} for all qubits"
-                    f" conflicts with observable {observable} for new result type"
-                )
+                return self._encounter_noncommuting_observable()
             self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable
 
     @staticmethod
-    def _validate_observable_to_add_for_qubit(current_observable, new_observable, target):
-        identity = Observable.I()
-        add_observable = False
-        if not current_observable or (
-            current_observable == identity and new_observable != identity
-        ):
-            add_observable = True
-        elif (
-            current_observable != identity
-            and new_observable != identity
-            and current_observable != new_observable
-        ):
-            raise ValueError(
-                f"Observable {new_observable} specified for target {target} conflicts with"
-                + f" existing observable {current_observable} on this target."
-            )
-        return add_observable
-
-    @staticmethod
-    def _tensor_product_index_dict(observable: TensorProduct) -> Dict[int, Observable]:
+    def _tensor_product_index_dict(
+        observable: TensorProduct, observable_target: QubitSet
+    ) -> Dict[int, Tuple[Observable, Tuple[int, ...]]]:
         obj_dict = {}
         i = 0
         factors = list(observable.factors)
@@ -349,7 +338,8 @@ class Circuit:
                 if factors:
                     total += factors[0].qubit_count
             if factors:
-                obj_dict[i] = (factors[0], (total - factors[0].qubit_count, total))
+                first = total - factors[0].qubit_count
+                obj_dict[i] = (factors[0], tuple(observable_target[first:total]))
             i += 1
         return obj_dict
 
@@ -361,7 +351,7 @@ class Circuit:
         self,
         instruction: Instruction,
         target: QubitSetInput = None,
-        target_mapping: Dict[QubitInput, QubitInput] = {},
+        target_mapping: Dict[QubitInput, QubitInput] = None,
     ) -> Circuit:
         """
         Add an instruction to `self`, returns `self` for chaining ability.
@@ -375,7 +365,7 @@ class Circuit:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
                 `instruction.target` and the value is what the key will be changed to.
-                Default = `{}`.
+                Default = `None`.
 
         Returns:
             Circuit: self
@@ -430,7 +420,7 @@ class Circuit:
         self,
         circuit: Circuit,
         target: QubitSetInput = None,
-        target_mapping: Dict[QubitInput, QubitInput] = {},
+        target_mapping: Dict[QubitInput, QubitInput] = None,
     ) -> Circuit:
         """
         Add a `circuit` to self, returns self for chaining ability.
@@ -443,7 +433,7 @@ class Circuit:
                 Default = `None`.
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
-                to map, and the value is what to change it to. Default = `{}`.
+                to map, and the value is what to change it to. Default = `None`.
 
         Returns:
             Circuit: self
@@ -463,25 +453,28 @@ class Circuit:
             equivalent to an existing requested result type will not be added.
 
         Examples:
-            >>> widget = Circuit().h(0).cnot([0, 1])
+            >>> widget = Circuit().h(0).cnot(0, 1)
             >>> circ = Circuit().add_circuit(widget)
-            >>> print(circ.instructions[0])
+            >>> instructions = list(circ.instructions)
+            >>> print(instructions[0])
             Instruction('operator': 'H', 'target': QubitSet(Qubit(0),))
-            >>> print(circ.instructions[1])
+            >>> print(instructions[1])
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(0), Qubit(1)))
 
-            >>> widget = Circuit().h(0).cnot([0, 1])
+            >>> widget = Circuit().h(0).cnot(0, 1)
             >>> circ = Circuit().add_circuit(widget, target_mapping={0: 10, 1: 11})
-            >>> print(circ.instructions[0])
+            >>> instructions = list(circ.instructions)
+            >>> print(instructions[0])
             Instruction('operator': 'H', 'target': QubitSet(Qubit(10),))
-            >>> print(circ.instructions[1])
+            >>> print(instructions[1])
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(10), Qubit(11)))
 
-            >>> widget = Circuit().h(0).cnot([0, 1])
+            >>> widget = Circuit().h(0).cnot(0, 1)
             >>> circ = Circuit().add_circuit(widget, target=[10, 11])
-            >>> print(circ.instructions[0])
+            >>> instructions = list(circ.instructions)
+            >>> print(instructions[0])
             Instruction('operator': 'H', 'target': QubitSet(Qubit(10),))
-            >>> print(circ.instructions[1])
+            >>> print(instructions[1])
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(10), Qubit(11)))
         """
         if target_mapping and target is not None:
@@ -497,6 +490,76 @@ class Circuit:
         for result_type in circuit.result_types:
             self.add_result_type(result_type, target_mapping=target_mapping)
 
+        return self
+
+    def add_verbatim_box(
+        self,
+        verbatim_circuit: Circuit,
+        target: QubitSetInput = None,
+        target_mapping: Dict[QubitInput, QubitInput] = None,
+    ) -> Circuit:
+        """
+        Add a verbatim `circuit` to self, that is, ensures that `circuit` is not modified in any way
+        by the compiler.
+
+        Args:
+            verbatim_circuit (Circuit): Circuit to add into self.
+            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
+                supplied circuit. This is a macro over `target_mapping`; `target` is converted to
+                a `target_mapping` by zipping together a sorted `circuit.qubits` and `target`.
+                Default = `None`.
+            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+                qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
+                to map, and the value is what to change it to. Default = `None`.
+
+        Returns:
+            Circuit: self
+
+        Raises:
+            TypeError: If both `target_mapping` and `target` are supplied.
+            ValueError: If `circuit` has result types attached
+
+        Examples:
+            >>> widget = Circuit().h(0).h(1)
+            >>> circ = Circuit().add_verbatim_box(widget)
+            >>> print(list(circ.instructions))
+            [Instruction('operator': StartVerbatimBox, 'target': QubitSet([])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(0)])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(1)])),
+             Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
+
+            >>> widget = Circuit().h(0).cnot(0, 1)
+            >>> circ = Circuit().add_verbatim_box(widget, target_mapping={0: 10, 1: 11})
+            >>> print(list(circ.instructions))
+            [Instruction('operator': StartVerbatimBox, 'target': QubitSet([])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(10)])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(11)])),
+             Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
+
+            >>> widget = Circuit().h(0).cnot(0, 1)
+            >>> circ = Circuit().add_verbatim_box(widget, target=[10, 11])
+            >>> print(list(circ.instructions))
+            [Instruction('operator': StartVerbatimBox, 'target': QubitSet([])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(10)])),
+             Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(11)])),
+             Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
+        """
+        if target_mapping and target is not None:
+            raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
+        elif target is not None:
+            keys = sorted(verbatim_circuit.qubits)
+            values = target
+            target_mapping = dict(zip(keys, values))
+
+        if verbatim_circuit.result_types:
+            raise ValueError("Verbatim subcircuit is not measured and cannot have result types")
+
+        if verbatim_circuit.instructions:
+            self.add_instruction(Instruction(compiler_directives.StartVerbatimBox()))
+            for instruction in verbatim_circuit.instructions:
+                self.add_instruction(instruction, target_mapping=target_mapping)
+            self.add_instruction(Instruction(compiler_directives.EndVerbatimBox()))
+            self._has_compiler_directives = True
         return self
 
     def apply_gate_noise(
@@ -690,8 +753,8 @@ class Circuit:
         """
         if (len(self.qubits) == 0) and (target_qubits is None):
             raise IndexError(
-                "target_qubits must be provided in order to apply the initialization noise \
-to an empty circuit."
+                "target_qubits must be provided in order to"
+                " apply the initialization noise to an empty circuit."
             )
 
         target_qubits = check_noise_target_qubits(self, target_qubits)
@@ -703,8 +766,9 @@ to an empty circuit."
                 raise TypeError("Noise must be an instance of the Noise class")
             if noise_channel.qubit_count > 1 and noise_channel.qubit_count != len(target_qubits):
                 raise ValueError(
-                    "target_qubits needs to be provided for this multi-qubit noise channel, and \
-the number of qubits in target_qubits must be the same as defined by the multi-qubit noise channel."
+                    "target_qubits needs to be provided for this multi-qubit noise channel,"
+                    " and the number of qubits in target_qubits must be the same as defined by"
+                    " the multi-qubit noise channel."
                 )
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
@@ -758,8 +822,8 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         """
         if (len(self.qubits) == 0) and (target_qubits is None):
             raise IndexError(
-                "target_qubits must be provided in order to apply the readout noise \
-to an empty circuit."
+                "target_qubits must be provided in order to"
+                " apply the readout noise to an empty circuit."
             )
 
         if target_qubits is None:
@@ -780,8 +844,9 @@ to an empty circuit."
                 raise TypeError("Noise must be an instance of the Noise class")
             if noise_channel.qubit_count > 1 and noise_channel.qubit_count != len(target_qubits):
                 raise ValueError(
-                    "target_qubits needs to be provided for this multi-qubit noise channel, and \
-the number of qubits in target_qubits must be the same as defined by the multi-qubit noise channel."
+                    "target_qubits needs to be provided for this multi-qubit noise channel,"
+                    " and the number of qubits in target_qubits must be the same as defined by"
+                    " the multi-qubit noise channel."
                 )
 
         return apply_noise_to_moments(self, noise, target_qubits, "readout")
@@ -911,6 +976,31 @@ the number of qubits in target_qubits must be the same as defined by the multi-q
         qubit_count = max(qubits) + 1
 
         return calculate_unitary(qubit_count, self.instructions)
+
+    @property
+    def qubits_frozen(self) -> bool:
+        """bool: Whether the circuit's qubits are frozen, that is, cannot be remapped.
+
+        This may happen because the circuit contains compiler directives preventing compilation
+        of a part of the circuit, which consequently means that none of the other qubits can be
+        rewired either for the program to still make sense.
+        """
+        return self._has_compiler_directives
+
+    @property
+    def observables_simultaneously_measurable(self) -> bool:
+        """bool: Whether the circuit's observables are simultaneously measurable
+
+        If this is False, then the circuit can only be run when shots = 0, as sampling (shots > 0)
+        measures the circuit in the observables' shared eigenbasis.
+        """
+        return self._observables_simultaneously_measurable
+
+    def _encounter_noncommuting_observable(self):
+        self._observables_simultaneously_measurable = False
+        # No longer simultaneously measurable, so no need to track
+        self._qubit_observable_mapping.clear()
+        self._qubit_observable_target_mapping.clear()
 
     def _copy(self) -> Circuit:
         copy = Circuit().add(self.instructions)

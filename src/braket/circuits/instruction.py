@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -13,14 +13,15 @@
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Tuple
 
-from braket.circuits.gate import Gate
+from braket.circuits.operator import Operator
+from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
-InstructionOperator = Gate
+InstructionOperator = Operator
 
 
 class Instruction:
@@ -28,7 +29,7 @@ class Instruction:
     An instruction is a quantum directive that describes the task to perform on a quantum device.
     """
 
-    def __init__(self, operator: InstructionOperator, target: QubitSetInput):
+    def __init__(self, operator: InstructionOperator, target: QubitSetInput = None):
         """
         InstructionOperator includes objects of type `Gate` only.
 
@@ -56,16 +57,14 @@ class Instruction:
         """
         if not operator:
             raise ValueError("Operator cannot be empty")
-        self._operator = operator
-        self._target = QubitSet(target)
-        if (
-            hasattr(self._operator, "qubit_count")
-            and len(self._target) != self._operator.qubit_count
-        ):
+        target_set = QubitSet(target)
+        if isinstance(operator, QuantumOperator) and len(target_set) != operator.qubit_count:
             raise ValueError(
-                f"Operator qubit count {self._operator.qubit_count} must be "
-                f"equal to size of target qubit set {self._target}"
+                f"Operator qubit count {operator.qubit_count} must be equal to"
+                f" size of target qubit set {target_set}"
             )
+        self._operator = operator
+        self._target = target_set
 
     @property
     def operator(self) -> InstructionOperator:
@@ -89,8 +88,13 @@ class Instruction:
         """
         return self._operator.to_ir([int(qubit) for qubit in self._target])
 
+    @property
+    def ascii_symbols(self) -> Tuple[str, ...]:
+        """Tuple[str, ...]: Returns the ascii symbols for the instruction's operator."""
+        return self._operator.ascii_symbols
+
     def copy(
-        self, target_mapping: Dict[QubitInput, QubitInput] = {}, target: QubitSetInput = None
+        self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
     ) -> Instruction:
         """
         Return a shallow copy of the instruction.
@@ -102,7 +106,7 @@ class Instruction:
         Args:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
-                value is what the key is changed to. Default = `{}`.
+                value is what the key is changed to. Default = `None`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
                 instruction.
 
@@ -129,7 +133,7 @@ class Instruction:
         elif target is not None:
             return Instruction(self._operator, target)
         else:
-            return Instruction(self._operator, self._target.map(target_mapping))
+            return Instruction(self._operator, self._target.map(target_mapping or {}))
 
     def __repr__(self):
         return f"Instruction('operator': {self._operator}, 'target': {self._target})"

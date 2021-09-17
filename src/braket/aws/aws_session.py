@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -25,7 +25,7 @@ import braket._sdk as braket_sdk
 class AwsSession(object):
     """Manage interactions with AWS services."""
 
-    S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", int)])
+    S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", str)])
 
     def __init__(self, boto_session=None, braket_client=None, config=None):
         """

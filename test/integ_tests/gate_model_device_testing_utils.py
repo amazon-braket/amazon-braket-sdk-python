@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -214,7 +214,7 @@ def get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, s
         .expectation(obs, obs_targets)
     )
     if shots:
-        circuit.add_result_type(ResultType.Sample(obs, obs_targets))
+        circuit.sample(obs, obs_targets)
     return circuit
 
 
@@ -423,6 +423,77 @@ def result_types_tensor_y_hermitian_testing(device: Device, run_kwargs: Dict[str
     assert_variance_expectation_sample_result(
         result, shots, expected_var, expected_mean, expected_eigs
     )
+
+
+def result_types_noncommuting_testing(device: Device, run_kwargs: Dict[str, Any]):
+    shots = 0
+    theta = 0.432
+    phi = 0.123
+    varphi = -0.543
+    array = np.array(
+        [
+            [-6, 2 + 1j, -3, -5 + 2j],
+            [2 - 1j, 0, 2 - 1j, -5 + 4j],
+            [-3, 2 + 1j, 0, -4 + 3j],
+            [-5 - 2j, -5 - 4j, -4 - 3j, -6],
+        ]
+    )
+    obs1 = Observable.X() @ Observable.Y()
+    obs1_targets = [0, 2]
+    obs2 = Observable.Z() @ Observable.Z()
+    obs2_targets = [0, 2]
+    obs3 = Observable.Y() @ Observable.Hermitian(array)
+    obs3_targets = [0, 1, 2]
+    circuit = (
+        get_result_types_three_qubit_circuit(theta, phi, varphi, obs1, obs1_targets, shots)
+        .expectation(obs2, obs2_targets)
+        .expectation(obs3, obs3_targets)
+    )
+    result = device.run(circuit, **run_kwargs).result()
+
+    expected_mean1 = np.sin(theta) * np.sin(phi) * np.sin(varphi)
+    expected_var1 = (
+        8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
+        - np.cos(2 * (theta - phi))
+        - np.cos(2 * (theta + phi))
+        + 2 * np.cos(2 * theta)
+        + 2 * np.cos(2 * phi)
+        + 14
+    ) / 16
+
+    expected_mean2 = 0.849694136476246
+    expected_mean3 = 1.4499810303182408
+    assert np.allclose(result.values[0], expected_var1)
+    assert np.allclose(result.values[1], expected_mean1)
+    assert np.allclose(result.values[2], expected_mean2)
+    assert np.allclose(result.values[3], expected_mean3)
+
+
+def result_types_noncommuting_flipped_targets_testing(device: Device, run_kwargs: Dict[str, Any]):
+    circuit = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
+        .expectation(observable=Observable.H() @ Observable.X(), target=[1, 0])
+    )
+    result = device.run(circuit, shots=0, **run_kwargs).result()
+    assert np.allclose(result.values[0], np.sqrt(2) / 2)
+    assert np.allclose(result.values[1], np.sqrt(2) / 2)
+
+
+def result_types_noncommuting_all(device: Device, run_kwargs: Dict[str, Any]):
+    array = np.array([[1, 2j], [-2j, 0]])
+    circuit = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(observable=Observable.Hermitian(array))
+        .expectation(observable=Observable.X())
+    )
+    result = device.run(circuit, shots=0, **run_kwargs).result()
+    assert np.allclose(result.values[0], [0.5, 0.5])
+    assert np.allclose(result.values[1], [0, 0])
 
 
 def multithreaded_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
