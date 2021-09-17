@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from braket.jobs import load_job_checkpoint, save_job_checkpoint, save_job_result
 from braket.jobs.metrics import log_metric
 
-import source_dir.qaoa_utils as qaoa_utils  # isort:skip
+import qaoa_source.qaoa_utils as qaoa_utils  # isort:skip
 
 
 def init_pl_device(device_arn, num_nodes, shots, max_parallel):
