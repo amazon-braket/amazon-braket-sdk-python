@@ -269,7 +269,6 @@ def build_cnot_circuit(
 
         cnot_decomp = TwoQubitDecomposition(cnot_re @ np.kron(rz(theta[0]), rx(theta[1])) @ cnot_re)
 
-        phase = kak.phase / cnot_decomp.phase
         u1 = kak.su2[0] @ cnot_decomp.su2[0].conj().T
         u2 = kak.su2[1] @ cnot_decomp.su2[1].conj().T
         u3 = rz(theta[0])
@@ -298,7 +297,6 @@ def build_cnot_circuit(
 
         # U(4) -> SU(4)
         su = to_su(kak.U)
-        initial_phase = np.linalg.det(kak.U) ** (0.25)
 
         # Find the gamma invariants defined in
         # https://arxiv.org/pdf/quant-ph/0308033.pdf
