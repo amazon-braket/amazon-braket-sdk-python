@@ -151,8 +151,8 @@ class CwlInsightsMetricsFetcher(object):
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
-             are the column names, and the values are a list containing the values in each row.
-              For example, the table:
+             are the column names and the values are a list containing the values in each row.
+             For example, the table:
                 timestamp energy
                 0         0.1
                 1         0.2

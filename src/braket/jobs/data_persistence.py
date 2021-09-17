@@ -24,22 +24,22 @@ def save_job_checkpoint(
     data_format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ) -> None:
     """
-    Saves the specified `checkpoint_data` to the local output directory (specified by the container
-    environment variable `CHECKPOINT_DIR`) with the filename
+    Saves the specified `checkpoint_data` to the local output directory, specified by the container
+    environment variable `CHECKPOINT_DIR`, with the filename
     `f"{job_name}(_{checkpoint_file_suffix}).json"`. The `job_name` refers to the name of the
-    current job, and is retrieved from the container environment variable `JOB_NAME`. The
+    current job and is retrieved from the container environment variable `JOB_NAME`. The
     `checkpoint_data` values are serialized to the specified `data_format`.
 
-    Note: This function is only applicable for use inside the job container for storing
-    the checkpoints.
+    Note: This function for storing the checkpoints is only available for use inside 
+          the job container.
 
     Args:
-        checkpoint_data (Dict[str, Any]): Dict specifying the checkpoint data to be persisted.
-        checkpoint_file_suffix (str): str specifying the file suffix to be used for
+        checkpoint_data (Dict[str, Any]): Dict that specifies the checkpoint data to be persisted.
+        checkpoint_file_suffix (str): str that specifies the file suffix to be used for
             the checkpoint filename. The resulting filename
-            `f"{job_name}(_{checkpoint_file_suffix}).json"` will be used for saving the checkpoint
-            file. Default: ""
-        data_format (PersistedJobDataFormat): Data format to be used for serializing the
+            `f"{job_name}(_{checkpoint_file_suffix}).json"` is used to save the checkpoints.
+             Default: ""
+        data_format (PersistedJobDataFormat): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization. Default: PersistedJobDataFormat.PLAINTEXT
 
@@ -63,24 +63,24 @@ def save_job_checkpoint(
 
 def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict[str, Any]:
     """
-    Loads the job checkpoint data stored for the job with name 'job_name', with the checkpoint
-    file ending with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
+    Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
+    file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
     checkpoint data you expect to be available in the file path specified by the `CHECKPOINT_DIR`
     container environment variable.
 
-    Note: This function is only applicable for use inside the job container for loading job
-    checkpoints.
+    Note: This function for loading job checkpoints is only available for use inside 
+          the job container.
 
     Args:
-        job_name (str): str specifying the name of the job whose checkpoints
-            need to be loaded.
-        checkpoint_file_suffix (str): str specifying the file suffix to be used for
-            locating the checkpoint file to load. The resulting file name
-            `f"{job_name}(_{checkpoint_file_suffix}).json"` will be used for locating the
+        job_name (str): str that specifies the name of the job whose checkpoints
+            are to be loaded.
+        checkpoint_file_suffix (str): str specifying the file suffix that is used to 
+            locate the checkpoint file to load. The resulting file name
+            `f"{job_name}(_{checkpoint_file_suffix}).json"` is used to locate the
             checkpoint file. Default: ""
 
     Returns:
-        Dict[str, Any]: Dict containing the checkpoint data persisted in the checkpoint file.
+        Dict[str, Any]: Dict that contains the checkpoint data persisted in the checkpoint file.
 
     Raises:
         FileNotFoundError: If the file `f"{job_name}(_{checkpoint_file_suffix})"` could not be found
@@ -107,16 +107,16 @@ def save_job_result(
     data_format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ) -> None:
     """
-    Saves the `result_data` to the local output directory (specified by the container
-    environment variable `OUTPUT_DIR`) with the filename 'results.json'. The `result_data`
+    Saves the `result_data` to the local output directory that is specified by the container
+    environment variable `OUTPUT_DIR`, with the filename 'results.json'. The `result_data`
     values are serialized to the specified `data_format`.
 
-    Note: This function is only applicable for use inside the job container for storing
-    the results.
+    Note: This function for storing the results is only available for use inside 
+          the job container.
 
     Args:
-        result_data (Dict[str, Any]): Dict specifying the result data to be persisted.
-        data_format (PersistedJobDataFormat): Data format to be used for serializing the
+        result_data (Dict[str, Any]): Dict that specifies the result data to be persisted.
+        data_format (PersistedJobDataFormat): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization. Default: PersistedJobDataFormat.PLAINTEXT.
 

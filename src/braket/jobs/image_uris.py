@@ -26,11 +26,11 @@ class Framework(str, Enum):
 
 
 def retrieve_image(framework: Framework, region: str):
-    """Retrieves the ECR URI for the Docker image matching the given arguments.
+    """Retrieves the ECR URI for the Docker image matching the specified arguments.
 
     Args:
         framework (str): The name of the framework.
-        region (str): The AWS region for the docker image.
+        region (str): The AWS region for the Docker image.
 
     Returns:
         str: The ECR URI for the corresponding Amazon Braket Docker image.
@@ -56,7 +56,7 @@ def _config_for_framework(framework: Framework) -> Dict[str, str]:
         framework (Framework): The framework whose config needs to be loaded.
 
     Returns:
-        Dict[str, str]: Dict containing the configuration for the specified framework.
+        Dict[str, str]: Dict that contains the configuration for the specified framework.
     """
     fname = os.path.join(os.path.dirname(__file__), "image_uri_config", f"{framework.lower()}.json")
     with open(fname) as f:
@@ -68,10 +68,10 @@ def _registry_for_region(config: Dict[str, str], region: str) -> str:
 
     Args:
         config (Dict[str, str]): Dict containing the framework configuration.
-        region (str): str representing the region for which the registry needs to be retrieved.
+        region (str): str that specifies the region for which the registry is retrieved.
 
     Returns:
-        str: str specifying the registry for the supplied region.
+        str: str that specifies the registry for the supplied region.
 
     Raises:
         ValueError: If the supplied region is invalid or not supported.

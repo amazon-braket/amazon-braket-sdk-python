@@ -26,8 +26,8 @@ from botocore.exceptions import ClientError
 
 
 class ColorWrap(object):
-    """A callable that will print text in a different color depending on the instance.
-    Up to 5 if standard output is a terminal or a Jupyter notebook cell.
+    """A callable that prints text in a different color depending on the instance.
+    Up to 5 if the standard output is a terminal or a Jupyter notebook cell.
     """
 
     # For what color each number represents, see
@@ -38,13 +38,13 @@ class ColorWrap(object):
         """Initialize the class.
 
         Args:
-            force (bool): If True, render colorizes output no matter where the
+            force (bool): If True, the render output is colorized wherever the
                 output is. Default: False.
         """
         self.colorize = force or sys.stdout.isatty() or os.environ.get("JPY_PARENT_PID", None)
 
     def __call__(self, index, s):
-        """Print the output, colorized or not, depending on the environment.
+        """Prints the string, colorized or not, depending on the environment.
 
         Args:
             index (int): The instance number.
@@ -56,7 +56,12 @@ class ColorWrap(object):
             print(s)
 
     def _color_wrap(self, index, s):
-        """Placeholder docstring"""
+        """Prints the string in a color determined by the index.
+        
+        Args:
+            index (int): The instance number.
+            s (str): The string to print (color-wrapped).
+        """
         print(f"\x1b[{self._stream_colors[index % len(self._stream_colors)]}m{s}\x1b[0m")
 
 
@@ -66,19 +71,19 @@ Position = collections.namedtuple("Position", ["timestamp", "skip"])
 
 
 def multi_stream_iter(aws_session, log_group, streams, positions):
-    """Iterate over the available events coming from a set of log streams.
-    Log streams are in a single log group interleaving the events from each stream
-    so they're yielded in timestamp order.
+    """Iterates over the available events coming from a set of log streams.
+    Log streams are in a single log group interleaving the events from each stream,
+    so they yield in timestamp order.
 
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
 
         log_group (str): The name of the log group.
 
-        streams (list of str): A list of the log stream names. The position of the stream in
-            this list is the stream number.
+        streams (list of str): A list of the log stream names. The the stream number is 
+            the position of the stream in this list.
 
-        positions: (list of Positions): A list of pairs of (timestamp, skip) which represents
+        positions: (list of Positions): A list of (timestamp, skip) pairs which represent
             the last record read from each stream.
 
     Yields:
@@ -106,7 +111,7 @@ def multi_stream_iter(aws_session, log_group, streams, positions):
 
 def log_stream(aws_session, log_group, stream_name, start_time=0, skip=0):
     """A generator for log items in a single stream.
-    This will yield all the items that are available at the current moment.
+    This yields all the items that are available at the current moment.
 
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
@@ -161,7 +166,7 @@ def flush_log_streams(
     has_streams: bool,
     color_wrap: ColorWrap,
 ):
-    """Flush log streams to stdout.
+    """Flushes log streams to stdout.
 
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
@@ -171,13 +176,13 @@ def flush_log_streams(
             this list is the stream number. If incomplete, the function will check for remaining
             streams and mutate this list to add stream names when available, up to the
             `stream_count` limit.
-        positions: (dict of Positions): A dict mapping stream numbers to pairs of (timestamp, skip)
-            which represents the last record read from each stream. The function will update this
+        positions: (dict of Positions): A dict mapping stream numbers to (timestamp, skip) pairs
+            which represent the last record read from each stream. The function will update this
             list after being called to represent the new last record read from each stream.
         stream_count (int): The number of streams expected.
         has_streams (bool): Whether the function has already been called once all streams have
             been found. This value is possibly updated and returned at the end of execution.
-        color_wrap (ColorWrap): an instance of ColorWrap to potentially color-wrap print statements
+        color_wrap (ColorWrap): An instance of ColorWrap to potentially color-wrap print statements
             from different streams.
 
     Yields:
@@ -192,7 +197,7 @@ def flush_log_streams(
                 stream_prefix,
                 limit=stream_count,
             )
-            # stream_names = [...] wouldn't modify the list by reference
+            # stream_names = [...] wouldn't modify the list by reference.
             new_streams = [
                 s["logStreamName"]
                 for s in streams["logStreams"]
@@ -204,7 +209,7 @@ def flush_log_streams(
             )
         except ClientError as e:
             # On the very first training job run on an account, there's no log group until
-            # the container starts logging, so ignore any errors thrown about that
+            # the container starts logging, so ignore any errors thrown about that until logging begins.
             err = e.response.get("Error", {})
             if err.get("Code") != "ResourceNotFoundException":
                 raise

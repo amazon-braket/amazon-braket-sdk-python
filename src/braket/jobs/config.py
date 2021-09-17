@@ -17,7 +17,7 @@ from typing import List, Optional
 
 @dataclass
 class CheckpointConfig:
-    """Configuration specifying the location where checkpoint data would be stored."""
+    """Configuration that specifies the location where checkpoint data is stored."""
 
     localPath: str = "/opt/jobs/checkpoints"
     s3Uri: Optional[str] = None
@@ -25,7 +25,7 @@ class CheckpointConfig:
 
 @dataclass
 class InstanceConfig:
-    """Configuration of the instances to be used for executing the job."""
+    """Configuration of the instances used to execute the job."""
 
     instanceType: str = "ml.m5.large"
     instanceCount: int = 1
@@ -46,7 +46,7 @@ class DataSource:
 
 @dataclass
 class InputDataConfig:
-    """Configuration specifying the location for the input of the job."""
+    """Configuration that specifies the location for the input of the job."""
 
     # TODO: test multiple channels with the same name in integ test
     channelName: str = "input"
@@ -56,7 +56,7 @@ class InputDataConfig:
 
 @dataclass
 class OutputDataConfig:
-    """Configuration specifying the location for the output of the job."""
+    """Configuration that specifies the location for the output of the job."""
 
     s3Path: Optional[str] = None
     kmsKeyId = None
@@ -64,7 +64,7 @@ class OutputDataConfig:
 
 @dataclass
 class StoppingCondition:
-    """Conditions denoting when the job should be forcefully stopped."""
+    """Conditions that spedifits when the job should be forcefully stopped."""
 
     maxRuntimeInSeconds: int = 100_000
 
@@ -74,7 +74,7 @@ class VpcConfig:
     # TODO: Add securityGroupIds and subnets default values here.
     # TODO: Ensure that length of the list for securityGroupIds is between 1 and 5
     # and for subnets between 1 and 16.
-    """Configuration specifying the security groups and subnets to use for running the job."""
+    """Configuration that specifies the security groups and subnets to use for running the job."""
 
     securityGroupIds: List[str]
     subnets: List[str]
