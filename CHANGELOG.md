@@ -1,5 +1,53 @@
 # Changelog
 
+## v1.9.0 (2021-09-09)
+
+### Features
+
+ * Verbatim boxes
+
+## v1.8.0 (2021-08-23)
+
+### Features
+
+ * Calculate arbitrary observables when `shots=0`
+
+### Bug Fixes and Other Changes
+
+ * Remove immutable default args
+
+## v1.7.5 (2021-08-18)
+
+### Bug Fixes and Other Changes
+
+ * Add test for local simulator device names
+
+### Documentation Changes
+
+ * Add documentation for support
+
+### Testing and Release Infrastructure
+
+ * Update copyright notice
+
+## v1.7.4 (2021-08-06)
+
+### Bug Fixes and Other Changes
+
+ * Flatten Tensor Products
+
+## v1.7.3.post0 (2021-08-05)
+
+### Documentation Changes
+
+ * Modify README.md to include update instructions
+
+## v1.7.3 (2021-07-22)
+
+### Bug Fixes and Other Changes
+
+ * Add json schema validation for dwave device schemas.
+
 ## v1.7.2 (2021-07-14)
 
 ### Bug Fixes and Other Changes
