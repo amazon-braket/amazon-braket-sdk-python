@@ -90,7 +90,8 @@ three_cnot_test = [
 
 @pytest.mark.parametrize(
     "unitary_test_cases",
-    [np.kron(x, z), np.kron(x, y), np.kron(y, z), np.kron(x, I2d), np.kron(h, x)] + product_gate_test,
+    [np.kron(x, z), np.kron(x, y), np.kron(y, z), np.kron(x, I2d), np.kron(h, x)]
+    + product_gate_test,
 )
 def test_decompose_one_qubit_product(unitary_test_cases):
     phase, u1, u2 = kak.decompose_one_qubit_product(unitary_test_cases)
