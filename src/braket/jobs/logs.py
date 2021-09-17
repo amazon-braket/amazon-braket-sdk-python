@@ -57,7 +57,7 @@ class ColorWrap(object):
 
     def _color_wrap(self, index, s):
         """Prints the string in a color determined by the index.
-        
+
         Args:
             index (int): The instance number.
             s (str): The string to print (color-wrapped).
@@ -80,7 +80,7 @@ def multi_stream_iter(aws_session, log_group, streams, positions):
 
         log_group (str): The name of the log group.
 
-        streams (list of str): A list of the log stream names. The the stream number is 
+        streams (list of str): A list of the log stream names. The the stream number is
             the position of the stream in this list.
 
         positions: (list of Positions): A list of (timestamp, skip) pairs which represent
@@ -208,8 +208,9 @@ def flush_log_streams(
                 [(s, Position(timestamp=0, skip=0)) for s in stream_names if s not in positions]
             )
         except ClientError as e:
-            # On the very first training job run on an account, there's no log group until
-            # the container starts logging, so ignore any errors thrown about that until logging begins.
+            # On the very first training job run on an account, there's no
+            # log group until the container starts logging, so ignore any
+            # errors thrown about that until logging begins.
             err = e.response.get("Error", {})
             if err.get("Code") != "ResourceNotFoundException":
                 raise

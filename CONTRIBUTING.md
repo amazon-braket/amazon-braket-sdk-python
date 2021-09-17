@@ -60,7 +60,7 @@ Before sending us a pull request, please ensure that:
 ### Run the Unit Tests
 
 1. Install tox using `pip install tox`
-1. Install coverage using `pip install .[test]`
+1. Install coverage using `pip install '.[test]'`
 1. cd into the amazon-braket-sdk-python folder: `cd amazon-braket-sdk-python` or `cd /environment/amazon-braket-sdk-python`
 1. Run the following tox command and verify that all unit tests pass: `tox -e unit-tests`
 

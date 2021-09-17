@@ -30,7 +30,7 @@ def save_job_checkpoint(
     current job and is retrieved from the container environment variable `JOB_NAME`. The
     `checkpoint_data` values are serialized to the specified `data_format`.
 
-    Note: This function for storing the checkpoints is only available for use inside 
+    Note: This function for storing the checkpoints is only available for use inside
           the job container.
 
     Args:
@@ -68,13 +68,13 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
     checkpoint data you expect to be available in the file path specified by the `CHECKPOINT_DIR`
     container environment variable.
 
-    Note: This function for loading job checkpoints is only available for use inside 
+    Note: This function for loading job checkpoints is only available for use inside
           the job container.
 
     Args:
         job_name (str): str that specifies the name of the job whose checkpoints
             are to be loaded.
-        checkpoint_file_suffix (str): str specifying the file suffix that is used to 
+        checkpoint_file_suffix (str): str specifying the file suffix that is used to
             locate the checkpoint file to load. The resulting file name
             `f"{job_name}(_{checkpoint_file_suffix}).json"` is used to locate the
             checkpoint file. Default: ""
@@ -111,7 +111,7 @@ def save_job_result(
     environment variable `OUTPUT_DIR`, with the filename 'results.json'. The `result_data`
     values are serialized to the specified `data_format`.
 
-    Note: This function for storing the results is only available for use inside 
+    Note: This function for storing the results is only available for use inside
           the job container.
 
     Args:
