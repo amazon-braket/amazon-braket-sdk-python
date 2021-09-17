@@ -1017,7 +1017,7 @@ class Circuit:
         """
         return self._copy()
 
-    def decompose(self, level: int=1) -> Circuit:
+    def decompose(self, level: int = 1) -> Circuit:
         """
         Call a decomposition pass across the circuit.
 

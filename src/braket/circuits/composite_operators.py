@@ -50,8 +50,10 @@ class GHZ(CompositeOperator):
             ValueError: If number of qubits in `target` does not equal `qubit_count`.
         """
         if len(target) != self.qubit_count:
-            raise ValueError(f"Operator qubit count {self.qubit_count} must be "
-                             f"equal to size of target qubit set {target}")
+            raise ValueError(
+                f"Operator qubit count {self.qubit_count} must be "
+                f"equal to size of target qubit set {target}"
+            )
 
         instructions = [Instruction(Gate.H(), target=target[0])]
         for i in range(0, len(target) - 1):
@@ -117,8 +119,10 @@ class QFT(CompositeOperator):
         """
 
         if len(target) != self.qubit_count:
-            raise ValueError(f"Operator qubit count {self.qubit_count} must be "
-                             f"equal to size of target qubit set {target}")
+            raise ValueError(
+                f"Operator qubit count {self.qubit_count} must be "
+                f"equal to size of target qubit set {target}"
+            )
 
         instructions = []
 
@@ -139,10 +143,16 @@ class QFT(CompositeOperator):
                 # Then apply the controlled rotations, with weights (angles) defined by the distance to the control qubit.
                 for k, qubit in enumerate(target[1:]):
                     instructions.append(
-                        Instruction(Gate.CPhaseShift(2 * math.pi / (2 ** (k + 2))), target=[qubit, target[0]]))
+                        Instruction(
+                            Gate.CPhaseShift(2 * math.pi / (2 ** (k + 2))),
+                            target=[qubit, target[0]],
+                        )
+                    )
 
                 # Now apply the above gates recursively to the rest of the qubits
-                instructions.append(Instruction(CompositeOperator.mQFT(len(target[1:])), target=target[1:]))
+                instructions.append(
+                    Instruction(CompositeOperator.mQFT(len(target[1:])), target=target[1:])
+                )
 
         elif self._method == "default":
             for k in range(num_qubits):
@@ -153,7 +163,9 @@ class QFT(CompositeOperator):
                 # Start on the qubit after qubit k, and iterate until the end.  When num_qubits==1, this loop does not run.
                 for j in range(1, num_qubits - k):
                     angle = 2 * math.pi / (2 ** (j + 1))
-                    instructions.append(Instruction(Gate.CPhaseShift(angle), target=[target[k + j], target[k]]))
+                    instructions.append(
+                        Instruction(Gate.CPhaseShift(angle), target=[target[k + j], target[k]])
+                    )
 
         # Then add SWAP gates to reverse the order of the qubits:
         for i in range(math.floor(num_qubits / 2)):
@@ -212,8 +224,10 @@ class mQFT(CompositeOperator):
         """
 
         if len(target) != self.qubit_count:
-            raise ValueError(f"Operator qubit count {self.qubit_count} must be "
-                             f"equal to size of target qubit set {target}")
+            raise ValueError(
+                f"Operator qubit count {self.qubit_count} must be "
+                f"equal to size of target qubit set {target}"
+            )
 
         instructions = []
 
@@ -229,10 +243,15 @@ class mQFT(CompositeOperator):
             # Then apply the controlled rotations, with weights (angles) defined by the distance to the control qubit.
             for k, qubit in enumerate(target[1:]):
                 instructions.append(
-                    Instruction(Gate.CPhaseShift(2 * math.pi / (2 ** (k + 2))), target=[qubit, target[0]]))
+                    Instruction(
+                        Gate.CPhaseShift(2 * math.pi / (2 ** (k + 2))), target=[qubit, target[0]]
+                    )
+                )
 
             # Now apply the above gates recursively to the rest of the qubits
-            instructions.append(Instruction(CompositeOperator.mQFT(len(target[1:])), target=target[1:]))
+            instructions.append(
+                Instruction(CompositeOperator.mQFT(len(target[1:])), target=target[1:])
+            )
 
         return instructions
 
@@ -286,8 +305,10 @@ class iQFT(CompositeOperator):
         """
 
         if len(target) != self.qubit_count:
-            raise ValueError(f"Operator qubit count {self.qubit_count} must be "
-                             f"equal to size of target qubit set {target}")
+            raise ValueError(
+                f"Operator qubit count {self.qubit_count} must be "
+                f"equal to size of target qubit set {target}"
+            )
 
         instructions = []
 
@@ -307,7 +328,9 @@ class iQFT(CompositeOperator):
             # When num_qubits==1, this loop does not run.
             for j in reversed(range(1, num_qubits - k)):
                 angle = -2 * math.pi / (2 ** (j + 1))
-                instructions.append(Instruction(Gate.CPhaseShift(angle), target=[target[k + j], target[k]]))
+                instructions.append(
+                    Instruction(Gate.CPhaseShift(angle), target=[target[k + j], target[k]])
+                )
 
             # Then add a Hadamard gate
             instructions.append(Instruction(Gate.H(), target=[target[k]]))
@@ -353,17 +376,23 @@ class QPE(CompositeOperator):
             unitary.
     """
 
-    def __init__(self, precision_qubit_count: int, query_qubit_count: int, matrix: np.ndarray, control=True):
+    def __init__(
+        self, precision_qubit_count: int, query_qubit_count: int, matrix: np.ndarray, control=True
+    ):
         Gate.Unitary(matrix)
         self._matrix = np.array(matrix, dtype=complex)
 
         if len(matrix) != 2 ** query_qubit_count:
-            raise ValueError(f"dim of matrix {self._matrix} must match the number of query qubits {query_qubit_count}")
+            raise ValueError(
+                f"dim of matrix {self._matrix} must match the number of query qubits {query_qubit_count}"
+            )
 
         self._condense = control
         self._precision_qubit_count = precision_qubit_count
         self._query_qubit_count = query_qubit_count
-        super().__init__(qubit_count=precision_qubit_count + query_qubit_count, ascii_symbols=["QPE"])
+        super().__init__(
+            qubit_count=precision_qubit_count + query_qubit_count, ascii_symbols=["QPE"]
+        )
 
     def to_ir(self, target: QubitSet):
         return [instr.to_ir() for instr in self.decompose(target)]
@@ -397,11 +426,15 @@ class QPE(CompositeOperator):
         """
 
         if len(target) != self.qubit_count:
-            raise ValueError(f"Operator qubit count {self.qubit_count} must be "
-                             f"equal to size of target qubit set {target}")
+            raise ValueError(
+                f"Operator qubit count {self.qubit_count} must be "
+                f"equal to size of target qubit set {target}"
+            )
 
-        precision_qubits = target[:self._precision_qubit_count]
-        query_qubits = target[self._precision_qubit_count:self._precision_qubit_count + self._query_qubit_count]
+        precision_qubits = target[: self._precision_qubit_count]
+        query_qubits = target[
+            self._precision_qubit_count : self._precision_qubit_count + self._query_qubit_count
+        ]
 
         # Apply Hadamard across precision qubits
         instructions = [Instruction(Gate.H(), target=qubit) for qubit in precision_qubits]
@@ -418,16 +451,22 @@ class QPE(CompositeOperator):
                 CUexp = self._controlled_unitary(Uexp)
 
                 # Apply the controlled unitary C-(U^{2^k})
-                instructions.append(Instruction(Gate.Unitary(CUexp), target=[qubit] + list(query_qubits)))
+                instructions.append(
+                    Instruction(Gate.Unitary(CUexp), target=[qubit] + list(query_qubits))
+                )
 
             # Alternative 2: One can instead apply controlled-unitary (2**power) times to get C-U^{2^power}
             else:
                 for _ in range(2 ** power):
                     CU = self._controlled_unitary(self._matrix)
-                    instructions.append(Instruction(Gate.Unitary(CU), target=[qubit] + list(query_qubits)))
+                    instructions.append(
+                        Instruction(Gate.Unitary(CU), target=[qubit] + list(query_qubits))
+                    )
 
         # Apply inverse qft to the precision_qubits
-        instructions.append(Instruction(CompositeOperator.iQFT(len(precision_qubits)), precision_qubits))
+        instructions.append(
+            Instruction(CompositeOperator.iQFT(len(precision_qubits)), precision_qubits)
+        )
 
         return instructions
 
@@ -456,10 +495,14 @@ class QPE(CompositeOperator):
             >>> circ = Circuit().qpe(QubitSet([0, 1, 2]), QubitSet([4]), np.array([[0, 1], [1, 0]]))
         """
         if 2 ** len(targets2) != matrix.shape[0]:
-            raise ValueError("Dimensions of the supplied unitary are incompatible with the query qubits")
+            raise ValueError(
+                "Dimensions of the supplied unitary are incompatible with the query qubits"
+            )
 
-        return Instruction(CompositeOperator.QPE(len(targets1), len(targets2), matrix, control),
-                           target=targets1 + targets2)
+        return Instruction(
+            CompositeOperator.QPE(len(targets1), len(targets2), matrix, control),
+            target=targets1 + targets2,
+        )
 
 
 CompositeOperator.register_composite_operator(QPE)

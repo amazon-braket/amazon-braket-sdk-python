@@ -1315,9 +1315,7 @@ def test_decompose():
     qft_circ = Circuit().qft([0, 1, 2]).decompose()
     ghz_instr1 = Instruction(CompositeOperator.GHZ(3), [0, 1, 2])
 
-    assert ghz_circ1 == Circuit(
-        ghz_instr1.decompose()
-    )
+    assert ghz_circ1 == Circuit(ghz_instr1.decompose())
     assert ghz_circ1 != ghz_circ2
     assert ghz_circ1 != qft_circ
 

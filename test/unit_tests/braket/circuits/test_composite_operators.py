@@ -24,46 +24,61 @@ def two_dimensional_matrix_valid_input(i=3):
     return matrix
 
 
-@pytest.mark.parametrize("operator,subroutine_name,subroutine_inputs,targets", [
-    (CompositeOperator.GHZ(3), "ghz", [[0, 1, 2]], [0, 1, 2]),
-    (CompositeOperator.QFT(3, "default"), "qft", [[0, 1, 2], "default"], [0, 1, 2]),
-    (CompositeOperator.QFT(3, "recursive"), "qft", [[0, 1, 2], "recursive"], [0, 1, 2]),
-    (CompositeOperator.mQFT(3), "mqft", [[0, 1, 2]], [0, 1, 2]),
-    (CompositeOperator.iQFT(3), "iqft", [[0, 1, 2]], [0, 1, 2]),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), "qpe",
-     [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input(), True], list(range(6))),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), "qpe",
-     [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input(), False], list(range(6))),
-])
+@pytest.mark.parametrize(
+    "operator,subroutine_name,subroutine_inputs,targets",
+    [
+        (CompositeOperator.GHZ(3), "ghz", [[0, 1, 2]], [0, 1, 2]),
+        (CompositeOperator.QFT(3, "default"), "qft", [[0, 1, 2], "default"], [0, 1, 2]),
+        (CompositeOperator.QFT(3, "recursive"), "qft", [[0, 1, 2], "recursive"], [0, 1, 2]),
+        (CompositeOperator.mQFT(3), "mqft", [[0, 1, 2]], [0, 1, 2]),
+        (CompositeOperator.iQFT(3), "iqft", [[0, 1, 2]], [0, 1, 2]),
+        (
+            CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True),
+            "qpe",
+            [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input(), True],
+            list(range(6)),
+        ),
+        (
+            CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False),
+            "qpe",
+            [[0, 1, 2], [3, 4, 5], two_dimensional_matrix_valid_input(), False],
+            list(range(6)),
+        ),
+    ],
+)
 def test_composite_operator_subroutine(operator, subroutine_name, subroutine_inputs, targets):
     subroutine = getattr(Circuit(), subroutine_name)
-    assert subroutine(*subroutine_inputs) == Circuit(
-        Instruction(operator, targets)
-    )
+    assert subroutine(*subroutine_inputs) == Circuit(Instruction(operator, targets))
 
 
-@pytest.mark.parametrize("operator, targets", [
-    (CompositeOperator.GHZ(3), [0, 1, 2]),
-    (CompositeOperator.QFT(3, "default"), [0, 1, 2]),
-    (CompositeOperator.QFT(3, "recursive"), [0, 1, 2]),
-    (CompositeOperator.mQFT(3), [0, 1, 2]),
-    (CompositeOperator.iQFT(3), [0, 1, 2]),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), list(range(6))),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), list(range(6))),
-])
+@pytest.mark.parametrize(
+    "operator, targets",
+    [
+        (CompositeOperator.GHZ(3), [0, 1, 2]),
+        (CompositeOperator.QFT(3, "default"), [0, 1, 2]),
+        (CompositeOperator.QFT(3, "recursive"), [0, 1, 2]),
+        (CompositeOperator.mQFT(3), [0, 1, 2]),
+        (CompositeOperator.iQFT(3), [0, 1, 2]),
+        (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), list(range(6))),
+        (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), list(range(6))),
+    ],
+)
 def test_to_ir(operator, targets):
     assert operator.to_ir(targets) == [instr.to_ir() for instr in operator.decompose(targets)]
 
 
-@pytest.mark.parametrize("operator,ascii_symbols,qubit_count", [
-    (CompositeOperator.GHZ(3), ["GHZ"], 3),
-    (CompositeOperator.QFT(3, "default"), ["QFT"], 3),
-    (CompositeOperator.QFT(3, "recursive"), ["QFT"], 3),
-    (CompositeOperator.mQFT(3), ["mQFT"], 3),
-    (CompositeOperator.iQFT(3), ["iQFT"], 3),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), ["QPE"], 6),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), ["QPE"], 6),
-])
+@pytest.mark.parametrize(
+    "operator,ascii_symbols,qubit_count",
+    [
+        (CompositeOperator.GHZ(3), ["GHZ"], 3),
+        (CompositeOperator.QFT(3, "default"), ["QFT"], 3),
+        (CompositeOperator.QFT(3, "recursive"), ["QFT"], 3),
+        (CompositeOperator.mQFT(3), ["mQFT"], 3),
+        (CompositeOperator.iQFT(3), ["iQFT"], 3),
+        (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), ["QPE"], 6),
+        (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), ["QPE"], 6),
+    ],
+)
 def test_constructor_properties(operator, ascii_symbols, qubit_count):
     assert list(operator.ascii_symbols) == ascii_symbols
     assert operator.qubit_count == qubit_count
@@ -146,11 +161,9 @@ def test_iqft_decompose():
 
 
 def controlled_unitary(control, target_qubits, unitary):
-    p0 = np.array([[1., 0.],
-                   [0., 0.]])
+    p0 = np.array([[1.0, 0.0], [0.0, 0.0]])
 
-    p1 = np.array([[0., 0.],
-                   [0., 1.]])
+    p1 = np.array([[0.0, 0.0], [0.0, 1.0]])
 
     circ = Circuit()
     id_matrix = np.eye(len(unitary))
@@ -175,7 +188,10 @@ def test_qpe_control_decompose():
 
     qpe_circ.add(Circuit().iqft(precision_qubits))
 
-    assert Circuit(CompositeOperator.QPE(3, 3, matrix).decompose(precision_qubits + query_qubits)) == qpe_circ
+    assert (
+        Circuit(CompositeOperator.QPE(3, 3, matrix).decompose(precision_qubits + query_qubits))
+        == qpe_circ
+    )
 
 
 def test_qpe_no_control_decompose():
@@ -190,8 +206,14 @@ def test_qpe_no_control_decompose():
 
     qpe_circ.add(Circuit().iqft(precision_qubits))
 
-    assert Circuit(CompositeOperator.QPE(3, 3, matrix, control=False).decompose(precision_qubits + query_qubits)) \
-           == qpe_circ
+    assert (
+        Circuit(
+            CompositeOperator.QPE(3, 3, matrix, control=False).decompose(
+                precision_qubits + query_qubits
+            )
+        )
+        == qpe_circ
+    )
 
 
 def test_qpe_qubit_count():
@@ -217,14 +239,17 @@ def test_qpe_unitary_invalid_matrix(matrix):
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("operator, target", [
-    (CompositeOperator.GHZ(3), [0, 1]),
-    (CompositeOperator.QFT(3, "default"), [0, 1]),
-    (CompositeOperator.QFT(3, "recursive"), [0, 1]),
-    (CompositeOperator.mQFT(3), [0, 1]),
-    (CompositeOperator.iQFT(3), [0, 1]),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), list(range(5))),
-    (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), list(range(5))),
-])
+@pytest.mark.parametrize(
+    "operator, target",
+    [
+        (CompositeOperator.GHZ(3), [0, 1]),
+        (CompositeOperator.QFT(3, "default"), [0, 1]),
+        (CompositeOperator.QFT(3, "recursive"), [0, 1]),
+        (CompositeOperator.mQFT(3), [0, 1]),
+        (CompositeOperator.iQFT(3), [0, 1]),
+        (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), True), list(range(5))),
+        (CompositeOperator.QPE(3, 3, two_dimensional_matrix_valid_input(), False), list(range(5))),
+    ],
+)
 def test_decompose_with_mismatched_target(operator, target):
     operator.decompose(target)

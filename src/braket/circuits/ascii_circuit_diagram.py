@@ -242,8 +242,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
                     if isinstance(item, Instruction)
                     else item.ascii_symbols
                 )
-            if hasattr(item, 'operator') and isinstance(item.operator, CompositeOperator):
-                spacing = max(1, len(item.operator.ascii_symbols[0])-2)
+            if hasattr(item, "operator") and isinstance(item.operator, CompositeOperator):
+                spacing = max(1, len(item.operator.ascii_symbols[0]) - 2)
                 for qubit in qubits:
                     # Determine if the qubit is part of the item or in the middle of a
                     # multi qubit item.
@@ -252,7 +252,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                             index for index, q in enumerate(target_qubits) if q == qubit
                         ][0]
                         if qubit != min(target_qubits):
-                            half_1 = " " * int((spacing - 1)/2)
+                            half_1 = " " * int((spacing - 1) / 2)
                             half_2 = " " * (spacing - len(half_1) - 1)
                             symbols[qubit] = "|" + half_1 + "*" + half_2 + "|"
                         else:

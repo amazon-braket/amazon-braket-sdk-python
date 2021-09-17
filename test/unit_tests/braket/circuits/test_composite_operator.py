@@ -50,7 +50,9 @@ def test_decompose_return_empty_list_by_default(composite_operator):
 
 
 def test_str(composite_operator):
-    expected = "{}('qubit_count': {})".format(composite_operator.name, composite_operator.qubit_count)
+    expected = "{}('qubit_count': {})".format(
+        composite_operator.name, composite_operator.qubit_count
+    )
     assert str(composite_operator) == expected
 
 
