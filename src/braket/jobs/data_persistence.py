@@ -47,7 +47,7 @@ def save_job_checkpoint(
         ValueError: If the supplied `checkpoint_data` is `None` or empty.
     """
     if not checkpoint_data:
-        raise ValueError("checkpoint_data can not be empty")
+        raise ValueError("The checkpoint_data argument cannot be empty.")
     checkpoint_directory = os.environ["AMZN_BRAKET_CHECKPOINT_DIR"]
     job_name = os.environ["AMZN_BRAKET_JOB_NAME"]
     checkpoint_file_path = (
@@ -124,7 +124,7 @@ def save_job_result(
         ValueError: If the supplied `result_data` is `None` or empty.
     """
     if not result_data:
-        raise ValueError("result_data can not be empty")
+        raise ValueError("The result_data argument cannot be empty.")
     result_directory = os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"]
     result_path = f"{result_directory}/results.json"
     with open(result_path, "w") as f:
