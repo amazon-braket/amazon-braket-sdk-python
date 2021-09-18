@@ -444,7 +444,7 @@ def odo_decomposition(
     return (QL.T, theta, QR.T)
 
 
-def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None: # noqa: C901
+def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None:  # noqa: C901
     """
     Move the canonical vector to the Weyl chamber.
 
