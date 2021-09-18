@@ -444,87 +444,7 @@ def odo_decomposition(
     return (QL.T, theta, QR.T)
 
 
-def _weyl_chamber_shift(ind: int, direction: int, kak: TwoQubitDecomposition):
-    """
-    Shift a component preserves the canonical vector equivalent class.
-
-    Args:
-        ind (int): the index of the component to shift by 0.5pi.
-        direction (int): the direction to shift
-    """
-
-    prefix = [x, y, z]
-    kak.canonical_vector[ind] += 0.5 * np.pi * direction
-    kak.su2[0] = kak.su2[0] @ prefix[ind]
-    kak.su2[1] = kak.su2[1] @ prefix[ind]
-    kak.phase *= -1j * direction
-
-
-def _weyl_chamber_reverse(ind1: int, ind2: int, kak: TwoQubitDecomposition):
-    """
-    Reverse two components preserves the canonical vector equivalent class.
-
-    Args:
-        ind1 (int): the 1st index to revert.
-        ind2 (int): the 2nd index of revert.
-    """
-
-    prefix = [z, y, x]
-    kak.canonical_vector[ind1] *= -1
-    kak.canonical_vector[ind2] *= -1
-    kak.su2[0] = kak.su2[0] @ prefix[ind1 + ind2 - 1]
-    kak.su2[2] = prefix[ind1 + ind2 - 1] @ kak.su2[2]
-
-
-def _weyl_chamber_swap(ind1: int, ind2: int, kak: TwoQubitDecomposition):
-    """
-    Swap two components preserves the canonical vector equivalent class.
-
-    Args:
-        ind1 (int): the 1st index to swap.
-        ind2 (int): the 2nd index of swap.
-    """
-
-    prefix = [z, y, x]
-    kak.canonical_vector[ind1], kak.canonical_vector[ind2] = (
-        kak.canonical_vector[ind2],
-        kak.canonical_vector[ind1],
-    )
-    kak.su2[0] = kak.su2[0] @ expm(-0.25j * np.pi * prefix[ind1 + ind2 - 1])
-    kak.su2[1] = kak.su2[1] @ expm(-0.25j * np.pi * prefix[ind1 + ind2 - 1])
-    kak.su2[2] = expm(0.25j * np.pi * prefix[ind1 + ind2 - 1]) @ kak.su2[2]
-    kak.su2[3] = expm(0.25j * np.pi * prefix[ind1 + ind2 - 1]) @ kak.su2[3]
-
-
-def _weyl_chamber_move_within_0_half_pi(ind: int, kak: TwoQubitDecomposition):
-    """
-    Keep shifting util the vector is within [0, 0.5pi).
-
-    Args:
-        ind (int): the index to move.
-    """
-
-    while kak.canonical_vector[ind] >= np.pi * 0.5:
-        _weyl_chamber_shift(ind, -1, kak)
-    while kak.canonical_vector[ind] < 0:
-        _weyl_chamber_shift(ind, 1, kak)
-
-
-def _weyl_chamber_descent_order(kak: TwoQubitDecomposition):
-    """
-    Permute the indices so that the vector strengths are in descent order.
-    """
-
-    max_ind = list(kak.canonical_vector).index(max(kak.canonical_vector))
-
-    if max_ind != 0:
-        _weyl_chamber_swap(0, max_ind, kak)
-
-    if kak.canonical_vector[1] < kak.canonical_vector[2]:
-        _weyl_chamber_swap(1, 2, kak)
-
-
-def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None:
+def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None: # noqa: C901
     """
     Move the canonical vector to the Weyl chamber.
 
@@ -536,22 +456,97 @@ def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None:
         kak (TwoQubitDecomposition): The two qubit decomposition to canonicalize.
     """
 
-    _weyl_chamber_move_within_0_half_pi(0, kak)
-    _weyl_chamber_move_within_0_half_pi(1, kak)
-    _weyl_chamber_move_within_0_half_pi(2, kak)
+    def shift(ind: int, direction: int):
+        """
+        Shift a component preserves the canonical vector equivalent class.
 
-    _weyl_chamber_descent_order(kak)
+        Args:
+            ind (int): the index of the component to shift by 0.5pi.
+            direction (int): the direction to shift
+        """
+
+        prefix = [x, y, z]
+        kak.canonical_vector[ind] += 0.5 * np.pi * direction
+        kak.su2[0] = kak.su2[0] @ prefix[ind]
+        kak.su2[1] = kak.su2[1] @ prefix[ind]
+        kak.phase *= -1j * direction
+
+    def reverse(ind1: int, ind2: int):
+        """
+        Reverse two components preserves the canonical vector equivalent class.
+
+        Args:
+            ind1 (int): the 1st index to revert.
+            ind2 (int): the 2nd index of revert.
+        """
+
+        prefix = [z, y, x]
+        kak.canonical_vector[ind1] *= -1
+        kak.canonical_vector[ind2] *= -1
+        kak.su2[0] = kak.su2[0] @ prefix[ind1 + ind2 - 1]
+        kak.su2[2] = prefix[ind1 + ind2 - 1] @ kak.su2[2]
+
+    def swap(ind1: int, ind2: int):
+        """
+        Swap two components preserves the canonical vector equivalent class.
+
+        Args:
+            ind1 (int): the 1st index to swap.
+            ind2 (int): the 2nd index of swap.
+        """
+
+        prefix = [z, y, x]
+        kak.canonical_vector[ind1], kak.canonical_vector[ind2] = (
+            kak.canonical_vector[ind2],
+            kak.canonical_vector[ind1],
+        )
+        kak.su2[0] = kak.su2[0] @ expm(-0.25j * np.pi * prefix[ind1 + ind2 - 1])
+        kak.su2[1] = kak.su2[1] @ expm(-0.25j * np.pi * prefix[ind1 + ind2 - 1])
+        kak.su2[2] = expm(0.25j * np.pi * prefix[ind1 + ind2 - 1]) @ kak.su2[2]
+        kak.su2[3] = expm(0.25j * np.pi * prefix[ind1 + ind2 - 1]) @ kak.su2[3]
+
+    def move_within_0_half_pi(ind: int):
+        """
+        Keep shifting util the vector is within [0, 0.5pi).
+
+        Args:
+            ind (int): the index to move.
+        """
+
+        while kak.canonical_vector[ind] >= np.pi * 0.5:
+            shift(ind, -1)
+        while kak.canonical_vector[ind] < 0:
+            shift(ind, 1)
+
+    def descent_order():
+        """
+        Permute the indices so that the vector strengths are in descent order.
+        """
+
+        max_ind = list(kak.canonical_vector).index(max(kak.canonical_vector))
+
+        if max_ind != 0:
+            swap(0, max_ind)
+
+        if kak.canonical_vector[1] < kak.canonical_vector[2]:
+            swap(1, 2)
+
+    move_within_0_half_pi(0)
+    move_within_0_half_pi(1)
+    move_within_0_half_pi(2)
+
+    descent_order()
 
     if kak.canonical_vector[0] + kak.canonical_vector[1] > np.pi * 0.5:
-        _weyl_chamber_swap(0, 1, kak)
-        _weyl_chamber_reverse(0, 1, kak)
-        _weyl_chamber_shift(0, 1, kak)
-        _weyl_chamber_shift(1, 1, kak)
-        _weyl_chamber_descent_order(kak)
+        swap(0, 1)
+        reverse(0, 1)
+        shift(0, 1)
+        shift(1, 1)
+        descent_order()
 
     if np.isclose(kak.canonical_vector[2], [0]) and kak.canonical_vector[0] > np.pi * 0.25:
-        _weyl_chamber_reverse(0, 2, kak)
-        _weyl_chamber_shift(0, 1, kak)
+        reverse(0, 2)
+        shift(0, 1)
 
 
 def _plot_canonical_vector(vector):
