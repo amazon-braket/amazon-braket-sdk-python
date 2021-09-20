@@ -11,7 +11,7 @@ class QAOAInterface(ABC):
     @classmethod
     @abstractmethod
     # Returns the gradient descent optimizer to use, based on the ML framework.
-    def get_sgd_optimizer(cls, params, stepsize=0.1):
+    def get_sgd_optimizer(cls, stepsize, params):
         pass
 
     @classmethod
@@ -51,7 +51,7 @@ class AutogradInterface(QAOAInterface):
         return np_array
 
     @classmethod
-    def get_sgd_optimizer(cls, params, stepsize=0.1):
+    def get_sgd_optimizer(cls, stepsize, params):
         return qml.GradientDescentOptimizer(stepsize=stepsize)
 
     @classmethod
@@ -76,7 +76,7 @@ class TensorFlowInterface(QAOAInterface):
         return tf.Variable(np_array, dtype=tf.float64)
 
     @classmethod
-    def get_sgd_optimizer(cls, params, stepsize=0.1):
+    def get_sgd_optimizer(cls, stepsize, params):
         return tf.keras.optimizers.SGD(learning_rate=stepsize)
 
     @classmethod
@@ -115,7 +115,7 @@ class PyTorchInterface(QAOAInterface):
         return torch.tensor(np_array, requires_grad=True)
 
     @classmethod
-    def get_sgd_optimizer(cls, params, stepsize=0.1):
+    def get_sgd_optimizer(cls, stepsize, params):
         return torch.optim.SGD([params], lr=stepsize)
 
     @classmethod
