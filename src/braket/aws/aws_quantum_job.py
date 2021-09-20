@@ -138,8 +138,7 @@ class AwsQuantumJob:
 
             stopping_condition (StoppingCondition): The maximum length of time, in seconds, 
                 and the maximum number of tasks that a job can run before being forcefully stopped.
-                Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60,
-                maxTaskLimit=100,000).
+                Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
 
             output_data_config (OutputDataConfig): Specifies the location for the output of the job.
                 Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/
