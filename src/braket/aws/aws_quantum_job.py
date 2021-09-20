@@ -53,7 +53,7 @@ class AwsQuantumJob:
     RESULTS_READY_STATES = {"COMPLETED"}
     TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
     DEFAULT_RESULTS_POLL_TIMEOUT = 864000
-    DEFAULT_RESULTS_POLL_INTERVAL = 1
+    DEFAULT_RESULTS_POLL_INTERVAL = 5
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
@@ -340,17 +340,17 @@ class AwsQuantumJob:
         """
         return self.metadata(use_cached_value).get("status")
 
-    def logs(self, wait: bool = False, poll: int = 5) -> None:
+    def logs(self, wait: bool = False, poll_interval_seconds: int = 5) -> None:
         """Display logs for a given job, optionally tailing them until job is complete.
         If the output is a tty or a Jupyter cell, it will be color-coded
         based on which instance the log entry is from.
 
         Args:
             wait (bool): Whether to keep looking for new log entries until the job completes
-                (default: False).
+                Default: False.
 
-            poll (int): The interval in seconds between polling for new log entries and job
-                completion (default: 5).
+            poll_interval_seconds (int): The interval in seconds between polling for new log
+                entries and job completion. Default: 5.
 
         Raises:
             exceptions.UnexpectedStatusException: If waiting and the training job fails.
@@ -392,7 +392,7 @@ class AwsQuantumJob:
         color_wrap = logs.ColorWrap()
 
         while True:
-            time.sleep(poll)
+            time.sleep(poll_interval_seconds)
 
             has_streams = logs.flush_log_streams(
                 self._aws_session,
@@ -479,7 +479,7 @@ class AwsQuantumJob:
         Args:
             poll_timeout_seconds (float): The polling timeout for `result()`. Default: 10 days.
 
-            poll_interval_seconds (float): The polling interval for `result()`. Default: 1 second.
+            poll_interval_seconds (float): The polling interval for `result()`. Default: 5 seconds.
 
         Returns:
             Dict[str, Any]: Dict specifying the job results.
@@ -518,7 +518,7 @@ class AwsQuantumJob:
                 Default: 10 days.
 
             poll_interval_seconds: (float): The polling interval for `download_result()`.
-                Default: 1 second.
+                Default: 5 seconds.
 
         Raises:
             RuntimeError: if job is in FAILED or CANCELLED state.

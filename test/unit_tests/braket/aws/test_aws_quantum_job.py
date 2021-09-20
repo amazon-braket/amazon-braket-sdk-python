@@ -998,7 +998,7 @@ def test_logs(
     quantum_job._aws_session.describe_log_streams.side_effect = log_stream_responses
     quantum_job._aws_session.get_log_events.side_effect = log_events_responses
 
-    quantum_job.logs(wait=True, poll=0)
+    quantum_job.logs(wait=True, poll_interval_seconds=0)
 
     captured = capsys.readouterr()
     assert captured.out == "\n".join(
@@ -1069,7 +1069,7 @@ def test_logs_multiple_instances(
 
     quantum_job._aws_session.get_log_events.side_effect = get_log_events
 
-    quantum_job.logs(wait=True, poll=0)
+    quantum_job.logs(wait=True, poll_interval_seconds=0)
 
     captured = capsys.readouterr()
     assert captured.out == "\n".join(
@@ -1108,7 +1108,7 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
     )
 
     with pytest.raises(ClientError, match="Some error message"):
-        quantum_job.logs(wait=True, poll=1)
+        quantum_job.logs(wait=True, poll_interval_seconds=1)
 
 
 def test_invalid_input_parameters(entry_point, aws_session):
