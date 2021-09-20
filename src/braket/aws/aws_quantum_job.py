@@ -90,41 +90,41 @@ class AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
-            device_arn (str): ARN for the AWS device which will be primarily
+            device_arn (str): ARN for the AWS device which is primarily
                 accessed for the execution of this job.
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
                 tar.gz file. Otherwise, source_module may be a file or directory.
 
-            entry_point (str): a str specifying the entry point of the job, relative to
+            entry_point (str): A str that specifies the entry point of the job, relative to
                 the source module. The entry point must be in the format
                 `importable.module` or `importable.module:callable`. The importable module may
-                be explicitly given or implicitly given, relative to the source module. For
+                be explicitly or implicitly given relative to the source module. For
                 example, `source_module.submodule:start_here` indicates the `start_here`
                 function contained in `module.submodule`. If source_module is an S3 URI,
-                entry point must be given. Default: source_module's name
+                 the entry point must be given. Default: source_module's name
 
-            image_uri (str): str specifying the ECR image to use for executing the job.
-                `image_uris.retrieve_image()` function may be used for retrieving the ECR image uris
+            image_uri (str): A str that specifies the ECR image to use for executing the job.
+                `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
                 for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
-            job_name (str): str representing the name with which the job will be created.
+            job_name (str): A str that specifies the name with which the job is created.
                 Default: f'{image_uri_type}-{timestamp}'.
 
-            code_location (str): The S3 prefix URI where custom code will be uploaded.
+            code_location (str): The S3 prefix URI where custom code is uploaded.
                 Default: f's3://{default_bucket_name}/jobs/{job_name}/source'.
 
-            role_arn (str): str representing the IAM role arn to be used for executing the
+            role_arn (str): A str providing the IAM role ARN used to execute the
                 script. Default: IAM role returned by get_execution_role().
 
-            wait_until_complete (bool): bool representing whether we should wait until the job
-                completes. This would tail the job logs as it waits. Default: False.
+            wait_until_complete (bool): `True` if we should wait until the job completes.
+                This would tail the job logs as it waits. Otherwise `False`. Default: `False`.
 
-            hyperparameters (Dict[str, Any]): Hyperparameters that will be made accessible to
-                the job. The hyperparameters are made accessible as a Dict[str, str] to the
-                job. For convenience, this accepts other types for keys and values, but
-                `str()` will be called to convert them before being passed on. Default: None.
+            hyperparameters (Dict[str, Any]): Hyperparameters accessible to the job.
+                The hyperparameters are made accessible as a Dict[str, str] to the job.
+                For convenience, this accepts other types for keys and values, but `str()` 
+                is called to convert them before being passed on. Default: None.
 
             metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
                 defines the metric(s) used to evaluate the training jobs. Default: None.
@@ -132,35 +132,33 @@ class AwsQuantumJob:
             input_data_config (List[InputDataConfig]): Information about the training data.
                 Default: None.
 
-            instance_config (InstanceConfig): Configuration of the instances to be used for
-                executing the job. Default: InstanceConfig(instanceType='ml.m5.large',
+            instance_config (InstanceConfig): Configuration of the instances to be used 
+                to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
                 instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
 
-            stopping_condition (StoppingCondition): Conditions denoting when the job should be
-                forcefully stopped.
-                Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60,
-                maxTaskLimit=100,000).
+            stopping_condition (StoppingCondition): The maximum length of time, in seconds, 
+                and the maximum number of tasks that a job can run before being forcefully stopped.
+                Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
 
-            output_data_config (OutputDataConfig): Configuration specifying the location for
-                the output of the job.
+            output_data_config (OutputDataConfig): Specifies the location for the output of the job.
                 Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/
                 output', kmsKeyId=None).
 
-            copy_checkpoints_from_job (str): str specifying the job arn whose checkpoint you wish
+            copy_checkpoints_from_job (str): A str that specifies the job ARN whose checkpoint you want
                 to use in the current job. Specifying this value will copy over the checkpoint
                 data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current job's
                 checkpoint_config s3Uri, making it available at checkpoint_config.localPath during
                 the job execution. Default: None
 
-            checkpoint_config (CheckpointConfig): Configuration specifying the location where
-                checkpoint data would be stored.
+            checkpoint_config (CheckpointConfig): Configuration that specifies the location where
+                checkpoint data is stored.
                 Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
                 s3Uri=None).
 
-            vpc_config (VpcConfig): Configuration specifying the security groups and subnets
+            vpc_config (VpcConfig): Configuration that specifies the security groups and subnets
                 to use for running the job. Default: None.
 
-            aws_session (AwsSession): AwsSession to connect to AWS with. Default: AwsSession()
+            aws_session (AwsSession): AwsSession for connecting to AWS Services. Default: AwsSession()
 
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
@@ -274,7 +272,7 @@ class AwsQuantumJob:
         if aws_session:
             if not self._is_valid_aws_session_region_for_job_arn(aws_session, arn):
                 raise ValueError(
-                    "The aws session region does not match the region for the supplied arn"
+                    "The aws session region does not match the region for the supplied arn."
                 )
             self._aws_session = aws_session
         else:
@@ -283,7 +281,7 @@ class AwsQuantumJob:
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
-        """bool: bool indicating whether the aws_session region matches the job_arn region"""
+        """bool: `True` when the aws_session region matches the job_arn region; otherwise `False`."""
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.braket_client.meta.region_name
 
@@ -342,15 +340,16 @@ class AwsQuantumJob:
 
     def logs(self, wait: bool = False, poll_interval_seconds: int = 5) -> None:
         """Display logs for a given job, optionally tailing them until job is complete.
+
         If the output is a tty or a Jupyter cell, it will be color-coded
         based on which instance the log entry is from.
 
         Args:
-            wait (bool): Whether to keep looking for new log entries until the job completes
-                Default: False.
+            wait (bool): `True` to keep looking for new log entries until the job completes; 
+                otherwise `False`. Default: `False`.
 
-            poll_interval_seconds (int): The interval in seconds between polling for new log
-                entries and job completion. Default: 5.
+            poll_interval_seconds (int): The interval of time, in seconds, between polling for new log entries and job
+                completion (default: 5).
 
         Raises:
             exceptions.UnexpectedStatusException: If waiting and the training job fails.
@@ -414,15 +413,15 @@ class AwsQuantumJob:
                 log_state = AwsQuantumJob.LogState.JOB_COMPLETE
 
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
-        """Get job metadata defined in Amazon Braket.
+        """Gets the job metadata defined in Amazon Braket.
 
         Args:
             use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
-                value from the Amazon Braket `GetJob` operation, if it exists; if not,
-                `GetJob` will be called to retrieve the metadata. If `False`, always calls
+                from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
+                `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
         Returns:
-            Dict[str, Any]: Dict specifying the job metadata defined in Amazon Braket.
+            Dict[str, Any]: Dict that specifies the job metadata defined in Amazon Braket.
         """
         if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_job(self._arn)
@@ -461,7 +460,7 @@ class AwsQuantumJob:
         """Cancels the job.
 
         Returns:
-            str: Representing the status of the job.
+            str: Indicates the status of the job.
 
         Raises:
             ClientError: If there are errors invoking the CancelJob API.
@@ -477,15 +476,16 @@ class AwsQuantumJob:
         """Retrieves the job result persisted using save_job_result() function.
 
         Args:
-            poll_timeout_seconds (float): The polling timeout for `result()`. Default: 10 days.
+            poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`. Default: 10 days.
 
-            poll_interval_seconds (float): The polling interval for `result()`. Default: 5 seconds.
+            poll_interval_seconds (float): The polling interval, in seconds, for `result()`. Default: 5 seconds.
+
 
         Returns:
             Dict[str, Any]: Dict specifying the job results.
 
         Raises:
-            RuntimeError: if job is in FAILED or CANCELLED state.
+            RuntimeError: if job is in a FAILED or CANCELLED state.
             TimeoutError: if job execution exceeds the polling timeout period.
         """
 
@@ -510,18 +510,18 @@ class AwsQuantumJob:
         the results are extracted to the current directory.
 
         Args:
-            extract_to (str): Directory where the results will be extracted to. The results
+            extract_to (str): The directory to which the results are extracted. The results
                 are extracted to a folder titled with the job name within this directory.
                 Default= `Current working directory`.
 
-            poll_timeout_seconds: (float): The polling timeout for `download_result()`.
+            poll_timeout_seconds: (float): The polling timeout, in seconds, for `download_result()`.
                 Default: 10 days.
 
-            poll_interval_seconds: (float): The polling interval for `download_result()`.
+            poll_interval_seconds: (float): The polling interval, in seconds, for `download_result()`.
                 Default: 5 seconds.
 
         Raises:
-            RuntimeError: if job is in FAILED or CANCELLED state.
+            RuntimeError: if job is in a FAILED or CANCELLED state.
             TimeoutError: if job execution exceeds the polling timeout period.
         """
 
@@ -619,7 +619,7 @@ class AwsQuantumJob:
             assert module is not None
         # if entry point is nested (ie contains '.'), parent modules are imported
         except (ModuleNotFoundError, AssertionError):
-            raise ValueError(f"Entry point module not found: {importable}")
+            raise ValueError(f"Entry point module was not found: {importable}")
         finally:
             sys.path.pop()
 
