@@ -99,11 +99,10 @@ class AwsQuantumJob:
 
             entry_point (str): A str that specifies the entry point of the job, relative to
                 the source module. The entry point must be in the format
-                `importable.module` or `importable.module:callable`. The importable module may
-                be explicitly or implicitly given relative to the source module. For
-                example, `source_module.submodule:start_here` indicates the `start_here`
-                function contained in `module.submodule`. If source_module is an S3 URI,
-                 the entry point must be given. Default: source_module's name
+                `importable.module` or `importable.module:callable`. For example,
+                `source_module.submodule:start_here` indicates the `start_here` function
+                contained in `source_module.submodule`. If source_module is an S3 URI,
+                entry point must be given. Default: source_module's nam
 
             image_uri (str): A str that specifies the ECR image to use for executing the job.
                 `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
@@ -112,8 +111,8 @@ class AwsQuantumJob:
             job_name (str): A str that specifies the name with which the job is created.
                 Default: f'{image_uri_type}-{timestamp}'.
 
-            code_location (str): The S3 prefix URI where custom code is uploaded.
-                Default: f's3://{default_bucket_name}/jobs/{job_name}/source'.
+            code_location (str): The S3 prefix URI where custom code will be uploaded.
+                Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
             role_arn (str): A str providing the IAM role ARN used to execute the
                 script. Default: IAM role returned by get_execution_role().
