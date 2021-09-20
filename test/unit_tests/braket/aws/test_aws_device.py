@@ -549,19 +549,12 @@ def test_run_with_positional_args_and_kwargs(
 
 @patch.dict(
     os.environ,
-    {"AMZN_BRAKET_OUT_S3_BUCKET": "env_bucket", "AMZN_BRAKET_TASK_RESULTS_S3_PATH": "env/path"},
+    {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
 )
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_env_variables(aws_quantum_task_mock, device, circuit):
-    _run_and_assert(
-        aws_quantum_task_mock,
-        device,
-        circuit,
-        s3_destination_folder=(
-            "env_bucket",
-            "env/path",
-        ),
-    )
+    device("foo:bar").run(circuit)
+    assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 
 
 @patch("braket.aws.aws_device.AwsSession")
@@ -610,21 +603,12 @@ def test_run_batch_with_max_parallel_and_kwargs(
 
 @patch.dict(
     os.environ,
-    {"AMZN_BRAKET_OUT_S3_BUCKET": "env_bucket", "AMZN_BRAKET_TASK_RESULTS_S3_PATH": "env/path"},
+    {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
 )
-@patch("braket.aws.aws_device.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_batch_env_variables(aws_quantum_task_mock, aws_session_mock, device, circuit):
-    _run_batch_and_assert(
-        aws_quantum_task_mock,
-        aws_session_mock,
-        device,
-        [circuit for _ in range(10)],
-        s3_destination_folder=(
-            "env_bucket",
-            "env/path",
-        ),
-    )
+def test_run_batch_env_variables(aws_quantum_task_mock, device, circuit):
+    device("foo:bar").run_batch([circuit])
+    assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 
 
 def _run_and_assert(
