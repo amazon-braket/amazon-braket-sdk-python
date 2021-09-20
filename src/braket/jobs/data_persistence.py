@@ -70,7 +70,7 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
     container environment variable.
 
     Note: This function for loading job checkpoints is only for use inside the job container 
-          as it writes data to directories and references env variables set in the containers..
+          as it writes data to directories and references env variables set in the containers.
 
 
     Args:
