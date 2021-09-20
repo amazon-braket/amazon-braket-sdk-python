@@ -66,7 +66,7 @@ class OutputDataConfig:
 class StoppingCondition:
     """Conditions that spedifits when the job should be forcefully stopped."""
 
-    maxRuntimeInSeconds: int = 100_000
+    maxRuntimeInSeconds: int = 5 * 24 * 60 * 60
 
 
 @dataclass

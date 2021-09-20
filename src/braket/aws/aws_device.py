@@ -147,9 +147,11 @@ class AwsDevice(Device):
             task_specification,
             s3_destination_folder
             or (
-                os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
-                os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
-            ),
+                AwsSession.parse_s3_uri(os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_URI"))
+                if "AMZN_BRAKET_TASK_RESULTS_S3_URI" in os.environ
+                else None
+            )
+            or (self._aws_session.default_bucket(), "tasks"),
             shots if shots is not None else self._default_shots,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
@@ -206,9 +208,11 @@ class AwsDevice(Device):
             task_specifications,
             s3_destination_folder
             or (
-                os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET") or self._aws_session.default_bucket(),
-                os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_PATH") or "tasks",
-            ),
+                AwsSession.parse_s3_uri(os.environ.get("AMZN_BRAKET_TASK_RESULTS_S3_URI"))
+                if "AMZN_BRAKET_TASK_RESULTS_S3_URI" in os.environ
+                else None
+            )
+            or (self._aws_session.default_bucket(), "tasks"),
             shots if shots is not None else self._default_shots,
             max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
             max_workers=max_connections,
