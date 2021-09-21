@@ -122,7 +122,7 @@ class AwsQuantumJob:
 
             hyperparameters (Dict[str, Any]): Hyperparameters accessible to the job.
                 The hyperparameters are made accessible as a Dict[str, str] to the job.
-                For convenience, this accepts other types for keys and values, but `str()` 
+                For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
             metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
@@ -131,11 +131,11 @@ class AwsQuantumJob:
             input_data_config (List[InputDataConfig]): Information about the training data.
                 Default: None.
 
-            instance_config (InstanceConfig): Configuration of the instances to be used 
+            instance_config (InstanceConfig): Configuration of the instances to be used
                 to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
                 instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
 
-            stopping_condition (StoppingCondition): The maximum length of time, in seconds, 
+            stopping_condition (StoppingCondition): The maximum length of time, in seconds,
                 and the maximum number of tasks that a job can run before being forcefully stopped.
                 Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
 
@@ -143,8 +143,8 @@ class AwsQuantumJob:
                 Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/
                 output', kmsKeyId=None).
 
-            copy_checkpoints_from_job (str): A str that specifies the job ARN whose checkpoint you want
-                to use in the current job. Specifying this value will copy over the checkpoint
+            copy_checkpoints_from_job (str): A str that specifies the job ARN whose checkpoint you
+                want to use in the current job. Specifying this value will copy over the checkpoint
                 data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current job's
                 checkpoint_config s3Uri, making it available at checkpoint_config.localPath during
                 the job execution. Default: None
@@ -157,7 +157,8 @@ class AwsQuantumJob:
             vpc_config (VpcConfig): Configuration that specifies the security groups and subnets
                 to use for running the job. Default: None.
 
-            aws_session (AwsSession): AwsSession for connecting to AWS Services. Default: AwsSession()
+            aws_session (AwsSession): AwsSession for connecting to AWS Services.
+                Default: AwsSession()
 
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
@@ -280,7 +281,9 @@ class AwsQuantumJob:
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
-        """bool: `True` when the aws_session region matches the job_arn region; otherwise `False`."""
+        """
+        bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
+        """
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.braket_client.meta.region_name
 
@@ -344,11 +347,11 @@ class AwsQuantumJob:
         based on which instance the log entry is from.
 
         Args:
-            wait (bool): `True` to keep looking for new log entries until the job completes; 
+            wait (bool): `True` to keep looking for new log entries until the job completes;
                 otherwise `False`. Default: `False`.
 
-            poll_interval_seconds (int): The interval of time, in seconds, between polling for new log entries and job
-                completion (default: 5).
+            poll_interval_seconds (int): The interval of time, in seconds, between polling for
+                new log entries and job completion (default: 5).
 
         Raises:
             exceptions.UnexpectedStatusException: If waiting and the training job fails.
@@ -475,9 +478,11 @@ class AwsQuantumJob:
         """Retrieves the job result persisted using save_job_result() function.
 
         Args:
-            poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`. Default: 10 days.
+            poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
+                Default: 10 days.
 
-            poll_interval_seconds (float): The polling interval, in seconds, for `result()`. Default: 5 seconds.
+            poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
+                Default: 5 seconds.
 
 
         Returns:
@@ -516,8 +521,8 @@ class AwsQuantumJob:
             poll_timeout_seconds: (float): The polling timeout, in seconds, for `download_result()`.
                 Default: 10 days.
 
-            poll_interval_seconds: (float): The polling interval, in seconds, for `download_result()`.
-                Default: 5 seconds.
+            poll_interval_seconds: (float): The polling interval, in seconds, for
+                `download_result()`.Default: 5 seconds.
 
         Raises:
             RuntimeError: if job is in a FAILED or CANCELLED state.

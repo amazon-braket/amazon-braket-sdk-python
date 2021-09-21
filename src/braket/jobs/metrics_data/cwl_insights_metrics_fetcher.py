@@ -37,8 +37,8 @@ class CwlInsightsMetricsFetcher(object):
             aws_session (AwsSession): AwsSession to connect to AWS with.
             poll_timeout_seconds (float): The polling timeout for retrieving the metrics,
                 in seconds. Default: 10 seconds.
-            poll_interval_seconds (float): The interval of time, in seconds, between polling for results.
-                Default: 1 second.
+            poll_interval_seconds (float): The interval of time, in seconds, between polling
+                for results. Default: 1 second.
             logger (Logger): Logger object with which to write logs, such as task statuses
                 while waiting for a task to be in a terminal state. Default is `getLogger(__name__)`
         """

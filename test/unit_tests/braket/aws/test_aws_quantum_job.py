@@ -851,12 +851,12 @@ def test_validate_entry_point_source_module_not_found():
         Path(source_module_path, "submodule.py").touch()
 
         # catches ModuleNotFoundError
-        module_not_found = "Entry point module not found: fake_source_module.submodule"
+        module_not_found = "Entry point module was not found: fake_source_module.submodule"
         with pytest.raises(ValueError, match=module_not_found):
             AwsQuantumJob._validate_entry_point(source_module_path, "fake_source_module.submodule")
 
         # catches AssertionError for module is not None
-        submodule_not_found = "Entry point module not found: source_module.fake_submodule"
+        submodule_not_found = "Entry point module was not found: source_module.fake_submodule"
         with pytest.raises(ValueError, match=submodule_not_found):
             AwsQuantumJob._validate_entry_point(source_module_path, "source_module.fake_submodule")
 
