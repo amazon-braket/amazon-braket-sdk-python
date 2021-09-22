@@ -37,8 +37,15 @@ def boto_session():
 
 
 @pytest.fixture
-def aws_session(boto_session, account_id, role_arn):
-    _aws_session = AwsSession(boto_session=boto_session, braket_client=Mock())
+def braket_client():
+    _braket_client = Mock()
+    _braket_client.meta.region_name = "us-west-2"
+    return _braket_client
+
+
+@pytest.fixture
+def aws_session(boto_session, braket_client, account_id, role_arn):
+    _aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
 
     _aws_session._sts = Mock()
     _aws_session._sts.get_caller_identity.return_value = {
@@ -116,6 +123,7 @@ def test_uses_supplied_braket_client():
     boto_session = Mock()
     boto_session.region_name = "foobar"
     braket_client = Mock()
+    braket_client.meta.region_name = "foobar"
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
     assert aws_session.braket_client == braket_client
 
@@ -124,6 +132,41 @@ def test_config(boto_session):
     config = Mock()
     AwsSession(boto_session=boto_session, config=config)
     boto_session.client.assert_any_call("braket", config=config)
+
+
+def test_region():
+    boto_region = "boto-region"
+    braket_region = "braket-region"
+
+    boto_session = Mock()
+    boto_session.region_name = boto_region
+    braket_client = Mock()
+    braket_client.meta.region_name = braket_region
+
+    assert (
+        AwsSession(
+            boto_session=boto_session,
+        ).region
+        == boto_region
+    )
+
+    assert (
+        AwsSession(
+            braket_client=braket_client,
+        ).region
+        == braket_region
+    )
+
+    regions_must_match = (
+        "Boto Session region and Braket Client region must match and currently "
+        "they do not: Boto Session region is 'boto-region', but "
+        "Braket Client region is 'braket-region'."
+    )
+    with pytest.raises(ValueError, match=regions_must_match):
+        AwsSession(
+            boto_session=boto_session,
+            braket_client=braket_client,
+        )
 
 
 def test_iam(aws_session):
@@ -155,7 +198,7 @@ def test_logs(aws_session):
     aws_session.boto_session.client.assert_not_called()
     aws_session._logs = None
     assert aws_session.logs_client
-    aws_session.boto_session.client.assert_called()
+    aws_session.boto_session.client.assert_called_with("logs", region_name="us-west-2")
 
 
 @patch("os.path.exists")
@@ -174,6 +217,7 @@ def test_populates_user_agent(os_path_exists_mock, metadata_file_exists, initial
     boto_session = Mock()
     boto_session.region_name = "foobar"
     braket_client = Mock()
+    braket_client.meta.region_name = "foobar"
     braket_client._client_config.user_agent = initial_user_agent
     nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
     os_path_exists_mock.return_value = metadata_file_exists
@@ -230,8 +274,7 @@ def test_retrieve_s3_object_body_client_error(boto_session):
     aws_session.retrieve_s3_object_body(bucket_name, filename)
 
 
-def test_get_device(boto_session):
-    braket_client = Mock()
+def test_get_device(boto_session, braket_client):
     return_val = {"deviceArn": "arn1", "deviceName": "name1"}
     braket_client.get_device.return_value = return_val
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
@@ -840,8 +883,8 @@ def test_default_bucket_given(aws_session):
 
 
 @patch.dict("os.environ", {"AMZN_BRAKET_OUT_S3_BUCKET": "default_bucket_env"})
-def test_default_bucket_env_variable(boto_session):
-    aws_session = AwsSession(boto_session=boto_session, braket_client=Mock())
+def test_default_bucket_env_variable(boto_session, braket_client):
+    aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
     assert aws_session.default_bucket() == "default_bucket_env"
 
 

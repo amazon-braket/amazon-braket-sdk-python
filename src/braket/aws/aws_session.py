@@ -35,14 +35,28 @@ class AwsSession(object):
             braket_client: A boto3 Braket client.
             config: A botocore Config object.
         """
+        if (
+            boto_session
+            and braket_client
+            and boto_session.region_name != braket_client.meta.region_name
+        ):
+            raise ValueError(
+                "Boto Session region and Braket Client region must match and currently "
+                f"they do not: Boto Session region is '{boto_session.region_name}', but "
+                f"Braket Client region is '{braket_client.meta.region_name}'."
+            )
 
-        self.boto_session = boto_session or boto3.Session()
         self._config = config
 
         if braket_client:
+            self.boto_session = boto_session or boto3.Session(
+                region_name=braket_client.meta.region_name
+            )
             self.braket_client = braket_client
         else:
+            self.boto_session = boto_session or boto3.Session()
             self.braket_client = self.boto_session.client("braket", config=self._config)
+
         self._update_user_agent()
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
 
@@ -80,7 +94,7 @@ class AwsSession(object):
     @property
     def logs_client(self):
         if not self._logs:
-            self._logs = self.boto_session.client("logs", config=self._config)
+            self._logs = self.boto_session.client("logs", region_name=self.region)
         return self._logs
 
     def _update_user_agent(self):
