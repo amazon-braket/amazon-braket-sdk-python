@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9.1 (2021-09-24)
+
+### Bug Fixes and Other Changes
+
+ * Have tasks that are failed output the failure reason from tas…
+
 ## v1.9.0 (2021-09-09)
 
 ### Features
