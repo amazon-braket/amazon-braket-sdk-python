@@ -23,7 +23,7 @@ def rx(theta):
     Unitary for 1-qubit X rotations.
 
     Args:
-        theta (float): the rotation angle.
+        float: the rotation angle.
     """
 
     # faster than expm(-0.5j * theta * x)
@@ -40,7 +40,7 @@ def ry(theta):
     Unitary for 1-qubit Y rotations.
 
     Args:
-        theta (float): the rotation angle.
+        float: the rotation angle.
     """
     return np.array(
         [[np.cos(0.5 * theta), -np.sin(0.5 * theta)], [np.sin(0.5 * theta), np.cos(0.5 * theta)]]
@@ -52,7 +52,7 @@ def rz(theta):
     Unitary for 1-qubit Z rotations.
 
     Args:
-        theta (float): the rotation angle.
+        float: the rotation angle.
     """
     return np.array([[np.exp(-0.5j * theta), 0], [0, np.exp(0.5j * theta)]])
 
@@ -202,7 +202,6 @@ def diagonalize_two_matrices_with_hermitian_products(
     Reference:
     1. C. Eckart and G. Young, A princial axis transformation for
     non-hermitian matrices, Bull. Amer. Math. Soc. 45, 118-121 (1939).
-
 
     Args:
         Ca (np.ndarray): An input complex matrix
