@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -18,8 +18,8 @@ from scipy.linalg import expm
 
 from braket.circuits.gates import X, Y, Z, H, S, T
 import braket.circuits.synthesis.one_qubit_decomposition as decomp1q
-from braket.circuits.synthesis.predicates import eq_up_to_phase
-from braket.circuits.synthesis.util import to_su
+from braket.circuits.quantum_operator_helpers import eq_up_to_phase
+from braket.circuits.synthesis.util import u_to_su
 
 x = X().to_matrix()
 y = Y().to_matrix()
@@ -52,7 +52,7 @@ def test_one_qubit_decomposition(unitary_test_cases):
     test_decomp = decomp1q.OneQubitDecomposition(unitary_test_cases)
 
     # Test global phase
-    assert np.allclose(test_decomp.phase * to_su(unitary_test_cases), unitary_test_cases)
+    assert np.allclose(test_decomp.phase * u_to_su(unitary_test_cases), unitary_test_cases)
 
     # Test zyz decomposition
     circ1 = test_decomp.build_circuit(method="zxz")

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -29,11 +29,11 @@ from braket.circuits.gates import X, Y, Z, CNot
 from braket.circuits.synthesis.invariants import makhlin_invariants, gamma_invariants
 from braket.circuits.synthesis.one_qubit_decomposition import OneQubitDecomposition
 from braket.circuits.synthesis.constants import magic_basis, kak_so4_transform_matrix
-from braket.circuits.synthesis.predicates import is_unitary
+from braket.circuits.quantum_operator_helpers import is_unitary
 from braket.circuits.synthesis.util import (
     rx,
     rz,
-    to_su,
+    u_to_su,
     diagonalize_two_matrices_with_hermitian_products,
 )
 
@@ -296,7 +296,7 @@ def build_cnot_circuit(
     if kak.num_cnots() == 3:
 
         # U(4) -> SU(4)
-        su = to_su(kak.U)
+        su = u_to_su(kak.U)
 
         # Find the gamma invariants defined in
         # https://arxiv.org/pdf/quant-ph/0308033.pdf
@@ -394,8 +394,8 @@ def decompose_one_qubit_product(
     u1 = U[np.ix_(u1_set(i), u1_set(j))]
     u2 = U[np.ix_(u2_set(i), u2_set(j))]
 
-    u1 = to_su(u1)
-    u2 = to_su(u2)
+    u1 = u_to_su(u1)
+    u2 = u_to_su(u2)
 
     phase = U[i, j] / (u1[i // 2, j // 2] * u2[i % 2, j % 2])
 

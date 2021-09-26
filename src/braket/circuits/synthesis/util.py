@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -15,7 +15,7 @@ import numpy as np
 from scipy.linalg import block_diag
 from typing import Tuple
 
-from braket.circuits.synthesis.predicates import is_diag, is_hermitian, commute
+from braket.circuits.quantum_operator_helpers import is_diag, is_hermitian, commute
 
 
 def rx(theta):
@@ -57,7 +57,7 @@ def rz(theta):
     return np.array([[np.exp(-0.5j * theta), 0], [0, np.exp(0.5j * theta)]])
 
 
-def to_su(u: np.ndarray) -> np.ndarray:
+def u_to_su(u: np.ndarray) -> np.ndarray:
     """
     Given a unitary in U(N), return the
     unitary in SU(N).
@@ -66,7 +66,7 @@ def to_su(u: np.ndarray) -> np.ndarray:
         u (np.ndarray): The unitary in U(N).
 
     Returns:
-        su (np.ndarray): The unitary in SU(N)
+        np.ndarray: The unitary in SU(N)
     """
 
     return u * np.linalg.det(u) ** (-1 / np.shape(u)[0])

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -14,8 +14,8 @@
 import numpy as np
 import braket.circuits as braket_circ
 
-from braket.circuits.synthesis.util import to_su
-from braket.circuits.synthesis.predicates import is_unitary
+from braket.circuits.synthesis.util import u_to_su
+from braket.circuits.quantum_operator_helpers import is_unitary
 from braket.circuits import Circuit
 from braket.circuits.gates import X, Y, Z, Rx, Ry, Rz
 from braket.circuits.instruction import Instruction
@@ -53,7 +53,7 @@ class OneQubitDecomposition:
         is_unitary(U, atol=self.atol, rtol=self.rtol, raise_exception=True)
 
         self.U = U
-        su = to_su(self.U)
+        su = u_to_su(self.U)
         self.phase = np.linalg.det(U) ** 0.5
 
         # Calculate zyz Euler angles.

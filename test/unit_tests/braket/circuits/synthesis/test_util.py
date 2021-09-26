@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -123,12 +123,12 @@ def test_r_gates(theta):
     assert np.allclose(rz_result, expm(-0.5j * theta * z))
 
 
-# Test to_su
+# Test u_to_su
 
 
 @pytest.mark.parametrize("unitary_test_cases", unitary_test + dim8_test + dim16_test)
-def test_to_su(unitary_test_cases):
-    su = util.to_su(unitary_test_cases)
+def test_u_to_su(unitary_test_cases):
+    su = util.u_to_su(unitary_test_cases)
     assert np.isclose(np.linalg.det(su), 1)
 
 
