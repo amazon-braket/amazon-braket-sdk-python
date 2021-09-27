@@ -444,6 +444,12 @@ class AwsSession(object):
 
             if error_code == "BucketAlreadyOwnedByYou":
                 pass
+            elif error_code == "BucketAlreadyExists":
+                raise ValueError(
+                    f"Provided default bucket '{bucket_name}' already exists "
+                    f"for another account. Please supply alternative "
+                    f"bucket name via AwsSession constructor `AwsSession()`."
+                ) from None
             elif (
                 error_code == "OperationAborted" and "conflicting conditional operation" in message
             ):

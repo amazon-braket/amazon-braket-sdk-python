@@ -962,6 +962,19 @@ def test_create_s3_bucket_if_it_does_not_exist_error(aws_session, error, account
     aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)
 
 
+@pytest.mark.xfail(raises=ValueError)
+def test_bucket_already_exists_for_another_account(aws_session):
+    exception_response = {
+        "Error": {
+            "Code": "BucketAlreadyExists",
+            "Message": "This should fail properly.",
+        }
+    }
+    bucket_name, region = "some-bucket-123", "test-region"
+    aws_session._s3.create_bucket.side_effect = ClientError(exception_response, "CreateBucket")
+    aws_session._create_s3_bucket_if_it_does_not_exist(bucket_name, region)
+
+
 @pytest.mark.parametrize(
     "limit, next_token",
     (
