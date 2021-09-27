@@ -125,7 +125,7 @@ def test_qft_recursive_decompose():
     assert Circuit(CompositeOperator.QFT(1, method="recursive").decompose([0])) == qftcirc2
 
 
-@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.xfail(raises=ValueError)
 def test_qft_nonexistant_method():
     CompositeOperator.QFT(3, method="foo")
 
@@ -160,22 +160,6 @@ def test_iqft_decompose():
     assert Circuit(CompositeOperator.iQFT(3).decompose(targets)) == iqftcirc
 
 
-def controlled_unitary(control, target_qubits, unitary):
-    p0 = np.array([[1.0, 0.0], [0.0, 0.0]])
-
-    p1 = np.array([[0.0, 0.0], [0.0, 1.0]])
-
-    circ = Circuit()
-    id_matrix = np.eye(len(unitary))
-    controlled_matrix = np.kron(p0, id_matrix) + np.kron(p1, unitary)
-
-    targets = [control] + target_qubits
-
-    circ.unitary(matrix=controlled_matrix, targets=targets)
-
-    return circ
-
-
 def test_qpe_control_decompose():
     precision_qubits = [0, 1, 2]
     query_qubits = [3, 4, 5]
@@ -184,7 +168,18 @@ def test_qpe_control_decompose():
 
     for ii, qubit in enumerate(reversed(precision_qubits)):
         Uexp = np.linalg.matrix_power(matrix, 2 ** ii)
-        qpe_circ.add_circuit(controlled_unitary(qubit, query_qubits, Uexp))
+        p0 = np.array([[1.0, 0.0], [0.0, 0.0]])
+
+        p1 = np.array([[0.0, 0.0], [0.0, 1.0]])
+
+        circ = Circuit()
+        id_matrix = np.eye(len(Uexp))
+        controlled_matrix = np.kron(p0, id_matrix) + np.kron(p1, Uexp)
+
+        targets = [qubit] + query_qubits
+
+        circ.unitary(matrix=controlled_matrix, targets=targets)
+        qpe_circ.add_circuit(circ)
 
     qpe_circ.add(Circuit().iqft(precision_qubits))
 
@@ -202,7 +197,18 @@ def test_qpe_no_control_decompose():
 
     for ii, qubit in enumerate(reversed(precision_qubits)):
         for _ in range(2 ** ii):
-            qpe_circ.add_circuit(controlled_unitary(qubit, query_qubits, matrix))
+            p0 = np.array([[1.0, 0.0], [0.0, 0.0]])
+
+            p1 = np.array([[0.0, 0.0], [0.0, 1.0]])
+
+            circ = Circuit()
+            id_matrix = np.eye(len(matrix))
+            controlled_matrix = np.kron(p0, id_matrix) + np.kron(p1, matrix)
+
+            targets = [qubit] + query_qubits
+
+            circ.unitary(matrix=controlled_matrix, targets=targets)
+            qpe_circ.add_circuit(circ)
 
     qpe_circ.add(Circuit().iqft(precision_qubits))
 

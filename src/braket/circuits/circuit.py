@@ -1021,8 +1021,16 @@ class Circuit:
         """
         Call a decomposition pass across the circuit.
 
+        Args:
+            level (int, optional): Number of decomposition passes to call. 'level=0' is treated as calling
+            decomposition passes until circuit is fully decomposed.
+
         Returns:
             Circuit: Circuit decomposed by one level.
+
+        Examples:
+            >>> circ = Circuit().qpe([0, 1, 2], [4], np.array([[0, 1], [1, 0]]))
+            >>> circ.decompose(level = 1)
         """
         if level < 0:
             raise ValueError(f"level {level} must be non-negative.")
@@ -1041,7 +1049,7 @@ class Circuit:
 
         return circ
 
-    def _contains_composite_operator(self):
+    def _contains_composite_operator(self) -> bool:
         for instr in self.instructions:
             if isinstance(instr.operator, CompositeOperator):
                 return True

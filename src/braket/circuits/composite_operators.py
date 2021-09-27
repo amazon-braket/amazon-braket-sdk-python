@@ -9,16 +9,12 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.qubit_set import QubitSet
 
 
-class QFT_Method(Enum):
+class QFTMethod(Enum):
     DEFAULT = "default"
     RECURSIVE = "recursive"
 
     def __str__(self):
         return self.value
-
-    @staticmethod
-    def values():
-        return list(map(str, QFT_Method))
 
 
 class GHZ(CompositeOperator):
@@ -92,12 +88,9 @@ class QFT(CompositeOperator):
                          or recursive approach (method="recursive").
     """
 
-    def __init__(self, qubit_count: int, method=QFT_Method.DEFAULT):
+    def __init__(self, qubit_count: int, method=QFTMethod.DEFAULT):
 
-        if str(method) not in QFT_Method.values():
-            raise TypeError("method must either be 'default' or 'recursive'.")
-
-        self._method = str(method)
+        self._method = str(QFTMethod(method))
         super().__init__(qubit_count=qubit_count, ascii_symbols=["QFT"])
 
     def to_ir(self, target: QubitSet):
@@ -185,7 +178,7 @@ class QFT(CompositeOperator):
             Instruction: QFT instruction.
 
         Examples:
-            >>> circ = Circuit().mqft([0, 1, 2])
+            >>> circ = Circuit().qft([0, 1, 2])
         """
         return Instruction(CompositeOperator.QFT(len(targets), method), target=targets)
 
@@ -472,12 +465,12 @@ class QPE(CompositeOperator):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def qpe(targets1: QubitSet, targets2: QubitSet, matrix: np.ndarray, control=True):
+    def qpe(precision: QubitSet, query: QubitSet, matrix: np.ndarray, control=True):
         """Registers this function into the circuit class.
 
         Args:
-            targets1 (QubitSet): Qubits defining the precision register.
-            targets2 (QubitSet): Qubits defining the query register.
+            precision (QubitSet): Qubits defining the precision register.
+            query (QubitSet): Qubits defining the query register.
             matrix: Unitary matrix whose eigenvalues we wish to estimate
             control: Optional boolean flag for controlled unitaries,
                          with C-(U^{2^k}) by default (default is True),
@@ -494,14 +487,14 @@ class QPE(CompositeOperator):
         Examples:
             >>> circ = Circuit().qpe(QubitSet([0, 1, 2]), QubitSet([4]), np.array([[0, 1], [1, 0]]))
         """
-        if 2 ** len(targets2) != matrix.shape[0]:
+        if 2 ** len(query) != matrix.shape[0]:
             raise ValueError(
                 "Dimensions of the supplied unitary are incompatible with the query qubits"
             )
 
         return Instruction(
-            CompositeOperator.QPE(len(targets1), len(targets2), matrix, control),
-            target=targets1 + targets2,
+            CompositeOperator.QPE(len(precision), len(query), matrix, control),
+            target=precision + query,
         )
 
 

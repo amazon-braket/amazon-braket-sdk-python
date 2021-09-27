@@ -1,7 +1,8 @@
-from typing import Any, Sequence
+from typing import Any, Sequence, Iterable
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
+from braket.circuits.instruction import Instruction
 
 
 class CompositeOperator(QuantumOperator):
@@ -14,7 +15,7 @@ class CompositeOperator(QuantumOperator):
         """
         Args:
             qubit_count (int): Number of qubits this composite operator interacts with.
-            ascii_symbols (str): ASCII string symbols for the composite operator. These are used
+            ascii_symbols (Sequence[str]): ASCII string symbols for the composite operator. These are used
                 when printing a diagram of circuits.
 
         Raises:
@@ -36,7 +37,7 @@ class CompositeOperator(QuantumOperator):
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
-    def decompose(self, target: QubitSet):
+    def decompose(self, target: QubitSet) -> Iterable[Instruction]:
         """
         Decomposes by one level and returns the composite operator's corresponding iterable
         of instructions.

@@ -15,7 +15,6 @@ from __future__ import annotations
 from typing import Dict, Tuple
 
 from braket.circuits.gate import Gate
-from braket.circuits.composite_operator import CompositeOperator
 from braket.circuits.operator import Operator
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
@@ -143,7 +142,7 @@ class Instruction:
         Returns:
             Iterable[Instruction]: iterable of instructions
         """
-        if isinstance(self._operator, CompositeOperator):
+        if hasattr(self._operator, 'decompose') and callable(self._operator.decompose):
             return self._operator.decompose(self._target)
         else:
             return [self]
