@@ -397,6 +397,57 @@ def test_download_result_when_extract_path_provided(
             assert expected_saved_data == actual_data
 
 
+def test_empty_dict_returned_when_result_not_saved(
+    quantum_job, generate_get_job_response, aws_session
+):
+    state = "COMPLETED"
+    get_job_response_completed = generate_get_job_response(status=state)
+    aws_session.get_job.return_value = get_job_response_completed
+
+    exception_response = {
+        "Error": {
+            "Code": "404",
+            "Message": "Not Found",
+        }
+    }
+    quantum_job._aws_session.download_from_s3 = Mock(
+        side_effect=ClientError(exception_response, "HeadObject")
+    )
+    assert quantum_job.result() == {}
+
+
+def test_results_raises_error_for_non_404_errors(
+    quantum_job, generate_get_job_response, aws_session
+):
+    state = "COMPLETED"
+    get_job_response_completed = generate_get_job_response(status=state)
+    aws_session.get_job.return_value = get_job_response_completed
+
+    error = "An error occurred \\(402\\) when calling the SomeObject operation: Something"
+
+    exception_response = {
+        "Error": {
+            "Code": "402",
+            "Message": "Something",
+        }
+    }
+    quantum_job._aws_session.download_from_s3 = Mock(
+        side_effect=ClientError(exception_response, "SomeObject")
+    )
+    with pytest.raises(ClientError, match=error):
+        quantum_job.result()
+
+
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob.download_result")
+def test_results_json_file_not_in_tar(
+    result_download, quantum_job, aws_session, generate_get_job_response
+):
+    state = "COMPLETED"
+    get_job_response_completed = generate_get_job_response(status=state)
+    quantum_job._aws_session.get_job.return_value = get_job_response_completed
+    assert quantum_job.result() == {}
+
+
 @pytest.fixture
 def entry_point():
     return "test-source-dir.entry_point:func"

@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import boto3
+from botocore.exceptions import ClientError
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs import logs
@@ -495,13 +496,27 @@ class AwsQuantumJob:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             job_name = self.metadata(True)["jobName"]
-            self.download_result(temp_dir, poll_timeout_seconds, poll_interval_seconds)
+
+            try:
+                self.download_result(temp_dir, poll_timeout_seconds, poll_interval_seconds)
+            except ClientError as e:
+                if e.response["Error"]["Code"] == "404":
+                    return {}
+                else:
+                    raise e
+            return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name)
+
+    @staticmethod
+    def _read_and_deserialize_results(temp_dir, job_name):
+        try:
             with open(f"{temp_dir}/{job_name}/{AwsQuantumJob.RESULTS_FILENAME}", "r") as f:
                 persisted_data = PersistedJobData.parse_raw(f.read())
                 deserialized_data = deserialize_values(
                     persisted_data.dataDictionary, persisted_data.dataFormat
                 )
                 return deserialized_data
+        except FileNotFoundError:
+            return {}
 
     def download_result(
         self,
