@@ -13,6 +13,7 @@
 
 import os
 import os.path
+import re
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
@@ -537,8 +538,13 @@ class AwsSession(object):
             a valid S3 URI.
         """
         try:
-            assert s3_uri.startswith("s3://")
-            bucket, key = s3_uri.split("/", 3)[2:]
+            # Object URL e.g. https://my-bucket.s3.us-west-2.amazonaws.com/my/key
+            # S3 URI e.g. s3://my-bucket/my/key
+            s3_uri_match = re.match("^https://([^./]+).[sS]3.[^/]+/(.*)$", s3_uri) or re.match(
+                "^[sS]3://([^./]+)/(.*)$", s3_uri
+            )
+            assert s3_uri_match
+            bucket, key = s3_uri_match.groups()
             assert bucket and key
             return bucket, key
         except (AssertionError, ValueError):

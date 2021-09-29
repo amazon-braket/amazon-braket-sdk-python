@@ -709,7 +709,7 @@ def test_is_s3_uri(string, valid):
 
 @pytest.mark.parametrize(
     "uri, bucket, key",
-    [
+    (
         (
             "s3://bucket-name-123/key/with/multiple/dirs",
             "bucket-name-123",
@@ -720,35 +720,35 @@ def test_is_s3_uri(string, valid):
             "bucket-name-123",
             "key-with_one.dirs",
         ),
-        pytest.param(
-            "http://bucket-name-123/key/with/multiple/dirs",
+        (
+            "https://bucket-name-123.s3.us-west-2.amazonaws.com/key/with/dirs",
             "bucket-name-123",
-            "key/with/multiple/dirs",
-            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+            "key/with/dirs",
         ),
-        pytest.param(
-            "bucket-name-123/key/with/multiple/dirs",
+        (
+            "https://bucket-name-123.S3.us-west-2.amazonaws.com/key/with/dirs",
             "bucket-name-123",
-            "key/with/multiple/dirs",
-            marks=pytest.mark.xfail(raises=ValueError, strict=True),
+            "key/with/dirs",
         ),
-        pytest.param(
-            "s3://bucket-name-123/",
-            "bucket-name-123",
-            "",
-            marks=pytest.mark.xfail(raises=ValueError, strict=True),
-        ),
-        pytest.param(
-            "s3://bucket-name-123",
-            "bucket-name-123",
-            "",
-            marks=pytest.mark.xfail(raises=ValueError, strict=True),
-        ),
-    ],
+    ),
 )
 def test_parse_s3_uri(uri, bucket, key):
-    parsed = AwsSession.parse_s3_uri(uri)
-    assert bucket, key == parsed
+    assert bucket, key == AwsSession.parse_s3_uri(uri)
+
+
+@pytest.mark.parametrize(
+    "uri",
+    (
+        "s3://bucket.name-123/key-with_one.dirs",
+        "http://bucket-name-123/key/with/multiple/dirs",
+        "bucket-name-123/key/with/multiple/dirs",
+        "s3://bucket-name-123/",
+        "s3://bucket-name-123",
+    ),
+)
+def test_parse_s3_uri_invalid(uri):
+    with pytest.raises(ValueError, match=f"Not a valid S3 uri: {uri}"):
+        AwsSession.parse_s3_uri(uri)
 
 
 @pytest.mark.parametrize(
