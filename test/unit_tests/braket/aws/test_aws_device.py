@@ -68,7 +68,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
 )
 
 
-def test_mock_regetti_schema_1():
+def test_mock_rigetti_schema_1():
     validate(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1, RigettiDeviceCapabilities.schema())
 
 
@@ -115,7 +115,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_2 = RigettiDeviceCapabilities.parse_obj(
 )
 
 
-def test_mock_regetti_schema_2():
+def test_mock_rigetti_schema_2():
     validate(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_2, RigettiDeviceCapabilities.schema())
 
 
