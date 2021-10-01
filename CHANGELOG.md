@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9.3 (2021-10-01)
+
+### Bug Fixes and Other Changes
+
+ * rigetti typo
+
 ## v1.9.2 (2021-09-30)
 
 ## v1.9.1 (2021-09-24)
