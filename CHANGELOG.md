@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9.4 (2021-10-04)
+
+### Bug Fixes and Other Changes
+
+ * fixed a spelling nit
+
 ## v1.9.3 (2021-10-01)
 
 ### Bug Fixes and Other Changes
