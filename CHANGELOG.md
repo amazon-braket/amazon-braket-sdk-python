@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9.5 (2021-10-05)
+
+### Bug Fixes and Other Changes
+
+ * Pin Coverage 5.5
+
 ## v1.9.4 (2021-10-04)
 
 ### Bug Fixes and Other Changes
