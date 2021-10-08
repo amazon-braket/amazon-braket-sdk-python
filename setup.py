@@ -31,6 +31,7 @@ setup(
         "backoff",
         "boltons",
         "boto3",
+        "coverage==5.5",
         "nest-asyncio",
         "networkx",
         "numpy",
