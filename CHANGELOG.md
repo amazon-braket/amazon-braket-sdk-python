@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.9.5 (2021-10-05)
+
+### Bug Fixes and Other Changes
+
+ * Pin Coverage 5.5
+
+## v1.9.4 (2021-10-04)
+
+### Bug Fixes and Other Changes
+
+ * fixed a spelling nit
+
+## v1.9.3 (2021-10-01)
+
+### Bug Fixes and Other Changes
+
+ * rigetti typo
+
+## v1.9.2 (2021-09-30)
+
 ## v1.9.1 (2021-09-24)
 
 ### Bug Fixes and Other Changes
