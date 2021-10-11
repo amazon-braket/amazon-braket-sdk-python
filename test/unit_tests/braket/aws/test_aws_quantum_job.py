@@ -416,6 +416,28 @@ def test_empty_dict_returned_when_result_not_saved(
     assert quantum_job.result() == {}
 
 
+def test_results_not_in_s3_for_download(quantum_job, generate_get_job_response, aws_session):
+    state = "COMPLETED"
+    get_job_response_completed = generate_get_job_response(status=state)
+    aws_session.get_job.return_value = get_job_response_completed
+    job_metadata = quantum_job.metadata(True)
+    output_s3_path = job_metadata["outputDataConfig"]["s3Path"]
+
+    error_message = f"Error retrieving results, could not find results at '{output_s3_path}"
+
+    exception_response = {
+        "Error": {
+            "Code": "404",
+            "Message": "Not Found",
+        }
+    }
+    quantum_job._aws_session.download_from_s3 = Mock(
+        side_effect=ClientError(exception_response, "HeadObject")
+    )
+    with pytest.raises(ClientError, match=error_message):
+        quantum_job.download_result()
+
+
 def test_results_raises_error_for_non_404_errors(
     quantum_job, generate_get_job_response, aws_session
 ):

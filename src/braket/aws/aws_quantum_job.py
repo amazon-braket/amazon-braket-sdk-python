@@ -573,9 +573,7 @@ class AwsQuantumJob:
                     f"{self._aws_session.account_id}-{job_name}/output/"
                     f"{AwsQuantumJob.RESULTS_TAR_FILENAME}"
                 )
-                self._aws_session.download_from_s3(
-                    s3_uri=output_bucket_uri, filename=AwsQuantumJob.RESULTS_TAR_FILENAME
-                )
+                AwsQuantumJob._attempt_results_download(self, output_bucket_uri, output_s3_path)
                 AwsQuantumJob._extract_tar_file(f"{extract_to}/{job_name}")
                 return
             else:
@@ -585,6 +583,24 @@ class AwsQuantumJob:
             f"{job_response['jobName']}: Polling for job completion "
             f"timed out after {poll_timeout_seconds} seconds."
         )
+
+    def _attempt_results_download(self, output_bucket_uri, output_s3_path):
+        try:
+            self._aws_session.download_from_s3(
+                s3_uri=output_bucket_uri, filename=AwsQuantumJob.RESULTS_TAR_FILENAME
+            )
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                exception_response = {
+                    "Error": {
+                        "Code": "404",
+                        "Message": f"Error retrieving results, "
+                        f"could not find results at '{output_s3_path}'",
+                    }
+                }
+                raise ClientError(exception_response, "HeadObject") from e
+            else:
+                raise e
 
     @staticmethod
     def _extract_tar_file(extract_path):
