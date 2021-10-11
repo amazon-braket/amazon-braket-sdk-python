@@ -1159,7 +1159,7 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
     )
 
     with pytest.raises(ClientError, match="Some error message"):
-        quantum_job.logs(wait=True, poll_interval_seconds=1)
+        quantum_job.logs(wait=True, poll_interval_seconds=0)
 
 
 def test_invalid_input_parameters(entry_point, aws_session):
