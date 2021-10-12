@@ -196,11 +196,21 @@ def test_sts(aws_session):
 
 
 def test_logs(aws_session):
-    assert aws_session.sts_client
+    aws_session._logs = Mock()
+    assert aws_session.logs_client
     aws_session.boto_session.client.assert_not_called()
     aws_session._logs = None
     assert aws_session.logs_client
     aws_session.boto_session.client.assert_called_with("logs", region_name="us-west-2")
+
+
+def test_ecr(aws_session):
+    aws_session._ecr = Mock()
+    assert aws_session.ecr_client
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._ecr = None
+    assert aws_session.ecr_client
+    aws_session.boto_session.client.assert_called_with("ecr", region_name="us-west-2")
 
 
 @patch("os.path.exists")

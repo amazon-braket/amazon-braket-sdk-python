@@ -66,6 +66,7 @@ class AwsSession(object):
         self._s3 = None
         self._sts = None
         self._logs = None
+        self._ecr = None
 
     @property
     def region(self):
@@ -98,6 +99,12 @@ class AwsSession(object):
         if not self._logs:
             self._logs = self.boto_session.client("logs", region_name=self.region)
         return self._logs
+
+    @property
+    def ecr_client(self):
+        if not self._ecr:
+            self._ecr = self.boto_session.client("ecr", region_name=self.region)
+        return self._ecr
 
     def _update_user_agent(self):
         """

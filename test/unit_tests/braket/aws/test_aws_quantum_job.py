@@ -698,13 +698,12 @@ def test_create_job(
         ]
         job = AwsQuantumJob.create(**create_job_args)
         assert job == AwsQuantumJob(quantum_job_arn, aws_session)
-        _assert_create_job_called_with(create_job_args)
+        test_kwargs = _translate_creation_args(create_job_args)
+        aws_session.create_job.assert_called_with(**test_kwargs)
         os.chdir("../..")
 
 
-def _assert_create_job_called_with(
-    create_job_args,
-):
+def _translate_creation_args(create_job_args):
     aws_session = create_job_args["aws_session"]
     create_job_args = defaultdict(lambda: None, **create_job_args)
     image_uri = create_job_args["image_uri"]
@@ -756,7 +755,7 @@ def _assert_create_job_called_with(
     if vpc_config:
         test_kwargs["vpcConfig"] = asdict(vpc_config)
 
-    aws_session.create_job.assert_called_with(**test_kwargs)
+    return test_kwargs
 
 
 @patch("time.time")

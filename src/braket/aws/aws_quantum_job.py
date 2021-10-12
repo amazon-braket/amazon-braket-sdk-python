@@ -43,18 +43,17 @@ from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMet
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
 # for the files, since all those metrics are retrieved from the CW.
 from braket.jobs.metrics_data.definitions import MetricDefinition, MetricStatistic, MetricType
+from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.serialization import deserialize_values
 from braket.jobs_data import PersistedJobData
 
 
-class AwsQuantumJob:
+class AwsQuantumJob(QuantumJob):
     """Amazon Braket implementation of a quantum job."""
 
     NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
     RESULTS_READY_STATES = {"COMPLETED"}
     TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
-    DEFAULT_RESULTS_POLL_TIMEOUT = 864000
-    DEFAULT_RESULTS_POLL_INTERVAL = 5
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
@@ -87,7 +86,7 @@ class AwsQuantumJob:
         aws_session: AwsSession = None,
         *args,
         **kwargs,
-    ) -> AwsQuantumJob:
+    ) -> QuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
@@ -478,8 +477,8 @@ class AwsQuantumJob:
 
     def result(
         self,
-        poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> Dict[str, Any]:
         """Retrieves the job result persisted using save_job_result() function.
 
@@ -526,8 +525,8 @@ class AwsQuantumJob:
     def download_result(
         self,
         extract_to=None,
-        poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
         """Downloads the results from the job output S3 bucket and extracts the tar.gz
         bundle to the location specified by `extract_to`. If no location is specified,
