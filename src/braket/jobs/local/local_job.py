@@ -29,8 +29,8 @@ from braket.jobs.config import (
 from braket.jobs.image_uris import Framework, retrieve_image
 from braket.jobs.local.local_job_container import _LocalJobContainer
 from braket.jobs.local.local_job_container_setup import setup_container
-from braket.jobs.metrics_data.cwl_metrics_parser import CwlMetricsParser
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
+from braket.jobs.metrics_data.log_metrics_parser import LogMetricsParser
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import prepare_quantum_job
 from braket.jobs.serialization import deserialize_values
@@ -275,7 +275,7 @@ class LocalQuantumJob(QuantumJob):
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data.
         """
-        parser = CwlMetricsParser()
+        parser = LogMetricsParser()
         current_time = str(time.time())
         for line in self.run_log.splitlines():
             if line.startswith("Metrics -"):

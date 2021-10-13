@@ -16,10 +16,6 @@ import json
 import os
 import tarfile
 import tempfile
-import time
-from collections import defaultdict
-from dataclasses import asdict
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -588,63 +584,26 @@ def vpc_config():
     )
 
 
-@pytest.fixture(params=["fixtures", "defaults", "nones"])
-def create_job_args(
-    request,
-    aws_session,
-    entry_point,
-    image_uri,
-    source_module,
-    job_name,
-    code_location,
-    role_arn,
-    wait_until_complete,
-    device_arn,
-    hyperparameters,
-    input_data,
-    instance_config,
-    stopping_condition,
-    output_data_config,
-    checkpoint_config,
-    vpc_config,
-):
-    if request.param == "fixtures":
-        return dict(
-            (key, value)
-            for key, value in {
-                "device_arn": device_arn,
-                "source_module": source_module,
-                "entry_point": entry_point,
-                "image_uri": image_uri,
-                "job_name": job_name,
-                "code_location": code_location,
-                "role_arn": role_arn,
-                "wait_until_complete": wait_until_complete,
-                "hyperparameters": hyperparameters,
-                # "metric_defintions": None,
-                "input_data": input_data,
-                "instance_config": instance_config,
-                "stopping_condition": stopping_condition,
-                "output_data_config": output_data_config,
-                "checkpoint_config": checkpoint_config,
-                "vpc_config": vpc_config,
-                "aws_session": aws_session,
-            }.items()
-            if value is not None
-        )
-    elif request.param == "defaults":
-        return {
-            "device_arn": device_arn,
-            "source_module": source_module,
-            "aws_session": aws_session,
-        }
-    elif request.param == "nones":
-        return defaultdict(
-            lambda: None,
-            device_arn=device_arn,
-            source_module=source_module,
-            aws_session=aws_session,
-        )
+@pytest.fixture
+def prepare_job_args(aws_session):
+    return {
+        "device_arn": Mock(),
+        "source_module": Mock(),
+        "entry_point": Mock(),
+        "image_uri": Mock(),
+        "job_name": Mock(),
+        "code_location": Mock(),
+        "role_arn": Mock(),
+        "hyperparameters": Mock(),
+        "input_data_config": Mock(),
+        "instance_config": Mock(),
+        "stopping_condition": Mock(),
+        "output_data_config": Mock(),
+        "copy_checkpoints_from_job": Mock(),
+        "checkpoint_config": Mock(),
+        "vpc_config": Mock(),
+        "aws_session": aws_session,
+    }
 
 
 def test_str(quantum_job):
@@ -667,111 +626,27 @@ def test_no_arn_setter(quantum_job):
     quantum_job.arn = 123
 
 
+@pytest.mark.parametrize("wait_until_complete", [True, False])
 @patch("braket.aws.aws_quantum_job.AwsQuantumJob.logs")
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._process_local_source_module")
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._process_s3_source_module")
-@patch("time.time")
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_input")
+@patch("braket.aws.aws_quantum_job.prepare_quantum_job")
 def test_create_job(
-    mock_validate_input,
-    mock_time,
-    mock_process_s3_source,
-    mock_process_local_source,
+    mock_prepare_quantum_job,
     mock_logs,
     aws_session,
-    source_module,
-    create_job_args,
+    prepare_job_args,
     quantum_job_arn,
-    generate_get_job_response,
+    wait_until_complete,
 ):
-    mock_time.return_value = datetime.datetime.now().timestamp()
-    mock_process_local_source.side_effect = (
-        lambda source, entry_point, _a, _c: entry_point or Path(source).stem
-    )
-    with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
-        os.mkdir("test-source-dir")
-        if source_module == ".":
-            os.chdir("test-source-dir")
-        aws_session.get_job.side_effect = [generate_get_job_response(status="RUNNING")] * 5 + [
-            generate_get_job_response(status="COMPLETED")
-        ]
-        job = AwsQuantumJob.create(**create_job_args)
-        assert job == AwsQuantumJob(quantum_job_arn, aws_session)
-        test_kwargs = _translate_creation_args(create_job_args)
-        aws_session.create_job.assert_called_with(**test_kwargs)
-        os.chdir("../..")
-
-
-def _translate_creation_args(create_job_args):
-    aws_session = create_job_args["aws_session"]
-    create_job_args = defaultdict(lambda: None, **create_job_args)
-    image_uri = create_job_args["image_uri"]
-    job_name = create_job_args["job_name"] or AwsQuantumJob._generate_default_job_name(image_uri)
-    default_bucket = aws_session.default_bucket()
-    code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
-        default_bucket, "jobs", job_name, "script"
-    )
-    role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
-    devices = [create_job_args["device_arn"]]
-    hyperparameters = create_job_args["hyperparameters"] or {}
-    input_data = create_job_args["input_data"] or {}
-    instance_config = create_job_args["instance_config"] or InstanceConfig()
-    output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
-        s3Path=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "output")
-    )
-    stopping_condition = create_job_args["stopping_condition"] or StoppingCondition()
-    checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
-        s3Uri=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
-    )
-    vpc_config = create_job_args["vpc_config"]
-    entry_point = create_job_args["entry_point"]
-    source_module = create_job_args["source_module"]
-    if not AwsSession.is_s3_uri(source_module):
-        entry_point = entry_point or Path(source_module).stem
-    algorithm_specification = {
-        "scriptModeConfig": {
-            "entryPoint": entry_point,
-            "s3Uri": f"{code_location}/source.tar.gz",
-            "compressionType": "GZIP",
-        }
-    }
-    if image_uri:
-        algorithm_specification["containerImage"] = {"uri": image_uri}
-
-    test_kwargs = {
-        "jobName": job_name,
-        "roleArn": role_arn,
-        "algorithmSpecification": algorithm_specification,
-        "inputDataConfig": AwsQuantumJob._process_input_data(input_data, job_name, aws_session),
-        "instanceConfig": asdict(instance_config),
-        "outputDataConfig": asdict(output_data_config),
-        "checkpointConfig": asdict(checkpoint_config),
-        "deviceConfig": {"devices": devices},
-        "hyperParameters": hyperparameters,
-        "stoppingCondition": asdict(stopping_condition),
-    }
-
-    if vpc_config:
-        test_kwargs["vpcConfig"] = asdict(vpc_config)
-
-    return test_kwargs
-
-
-@patch("time.time")
-def test_generate_default_job_name(mock_time, image_uri):
-    job_type = "-custom-name"
-    if not image_uri:
-        job_type = "-default"
-    elif "custom-jobs" in image_uri:
-        job_type = "-custom"
-    elif "other-custom-format" in image_uri:
-        job_type = ""
-    mock_time.return_value = datetime.datetime.now().timestamp()
-    assert (
-        AwsQuantumJob._generate_default_job_name(image_uri)
-        == f"braket-job{job_type}-{time.time() * 1000:.0f}"
-    )
+    test_response_args = {"testArgs": "MyTestArg"}
+    mock_prepare_quantum_job.return_value = test_response_args
+    job = AwsQuantumJob.create(wait_until_complete=wait_until_complete, **prepare_job_args)
+    mock_prepare_quantum_job.assert_called_with(**prepare_job_args)
+    aws_session.create_job.assert_called_with(**test_response_args)
+    if wait_until_complete:
+        mock_logs.assert_called_once()
+    else:
+        mock_logs.assert_not_called()
+    assert job.arn == quantum_job_arn
 
 
 def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):
@@ -797,214 +672,17 @@ def test_cancel_job_surfaces_exception(quantum_job, aws_session):
     quantum_job.cancel()
 
 
-@pytest.mark.parametrize(
-    "source_module",
-    (
-        "s3://bucket/source_module.tar.gz",
-        "s3://bucket/SOURCE_MODULE.TAR.GZ",
-    ),
-)
-def test_process_s3_source_module(source_module, aws_session):
-    AwsQuantumJob._process_s3_source_module(
-        source_module, "entry_point", aws_session, "code_location"
-    )
-    aws_session.copy_s3_object.assert_called_with(source_module, "code_location/source.tar.gz")
-
-
-def test_process_s3_source_module_not_tar_gz(aws_session):
-    must_be_tar_gz = (
-        "If source_module is an S3 URI, it must point to a tar.gz file. "
-        "Not a valid S3 URI for parameter `source_module`: s3://bucket/source_module"
-    )
-    with pytest.raises(ValueError, match=must_be_tar_gz):
-        AwsQuantumJob._process_s3_source_module(
-            "s3://bucket/source_module", "entry_point", aws_session, "code_location"
-        )
-
-
-def test_process_s3_source_module_no_entry_point(aws_session):
-    entry_point_required = "If source_module is an S3 URI, entry_point must be provided."
-    with pytest.raises(ValueError, match=entry_point_required):
-        AwsQuantumJob._process_s3_source_module(
-            "s3://bucket/source_module", None, aws_session, "code_location"
-        )
-
-
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._tar_and_upload_to_code_location")
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
-def test_process_local_source_module(validate_mock, tar_and_upload_mock, aws_session):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module = Path(temp_dir, "source_module")
-        source_module.touch()
-
-        AwsQuantumJob._process_local_source_module(
-            str(source_module), "entry_point", aws_session, "code_location"
-        )
-
-        source_module_abs_path = Path(temp_dir, "source_module").resolve()
-        validate_mock.assert_called_with(source_module_abs_path, "entry_point")
-        tar_and_upload_mock.assert_called_with(source_module_abs_path, aws_session, "code_location")
-
-
-def test_process_local_source_module_not_found(aws_session):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module = str(Path(temp_dir, "source_module").as_posix())
-        source_module_not_found = f"Source module not found: {source_module}"
-        with pytest.raises(ValueError, match=source_module_not_found):
-            AwsQuantumJob._process_local_source_module(
-                source_module, "entry_point", aws_session, "code_location"
-            )
-
-
-def test_validate_entry_point_default_file():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module_path = Path(temp_dir, "source_module.py")
-        source_module_path.touch()
-        # import source_module
-        AwsQuantumJob._validate_entry_point(source_module_path, "source_module")
-        # from source_module import func
-        AwsQuantumJob._validate_entry_point(source_module_path, "source_module:func")
-        # import .
-        AwsQuantumJob._validate_entry_point(source_module_path, ".")
-        # from . import func
-        AwsQuantumJob._validate_entry_point(source_module_path, ".:func")
-
-
-def test_validate_entry_point_default_directory():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module_path = Path(temp_dir, "source_module")
-        source_module_path.mkdir()
-        # import source_module
-        AwsQuantumJob._validate_entry_point(source_module_path, "source_module")
-        # from source_module import func
-        AwsQuantumJob._validate_entry_point(source_module_path, "source_module:func")
-        # import .
-        AwsQuantumJob._validate_entry_point(source_module_path, ".")
-        # from . import func
-        AwsQuantumJob._validate_entry_point(source_module_path, ".:func")
-
-
-def test_validate_entry_point_submodule_file():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module_path = Path(temp_dir, "source_module")
-        source_module_path.mkdir()
-        Path(source_module_path, "submodule.py").touch()
-        # from source_module import submodule
-        AwsQuantumJob._validate_entry_point(source_module_path, "source_module.submodule")
-        # from source_module.submodule import func
-        AwsQuantumJob._validate_entry_point(source_module_path, "source_module.submodule:func")
-        # from . import submodule
-        AwsQuantumJob._validate_entry_point(source_module_path, ".submodule")
-        # from .submodule import func
-        AwsQuantumJob._validate_entry_point(source_module_path, ".submodule:func")
-
-
-def test_validate_entry_point_submodule_init():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module_path = Path(temp_dir, "source_module")
-        source_module_path.mkdir()
-        Path(source_module_path, "submodule.py").touch()
-        with open(str(Path(source_module_path, "__init__.py")), "w") as f:
-            f.write("from . import submodule as renamed")
-        # from source_module import renamed
-        AwsQuantumJob._validate_entry_point(source_module_path, "source_module:renamed")
-        # from . import renamed
-        AwsQuantumJob._validate_entry_point(source_module_path, ".:renamed")
-
-
-def test_validate_entry_point_source_module_not_found():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module_path = Path(temp_dir, "source_module")
-        source_module_path.mkdir()
-        Path(source_module_path, "submodule.py").touch()
-
-        # catches ModuleNotFoundError
-        module_not_found = "Entry point module was not found: fake_source_module.submodule"
-        with pytest.raises(ValueError, match=module_not_found):
-            AwsQuantumJob._validate_entry_point(source_module_path, "fake_source_module.submodule")
-
-        # catches AssertionError for module is not None
-        submodule_not_found = "Entry point module was not found: source_module.fake_submodule"
-        with pytest.raises(ValueError, match=submodule_not_found):
-            AwsQuantumJob._validate_entry_point(source_module_path, "source_module.fake_submodule")
-
-
-@patch("tarfile.TarFile.add")
-def test_tar_and_upload_to_code_location(mock_tar_add, aws_session):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        source_module_path = Path(temp_dir, "source_module")
-        source_module_path.mkdir()
-        AwsQuantumJob._tar_and_upload_to_code_location(
-            source_module_path, aws_session, "code_location"
-        )
-        mock_tar_add.assert_called_with(source_module_path, arcname="source_module")
-        local, s3 = aws_session.upload_to_s3.call_args_list[0][0]
-        assert local.endswith("source.tar.gz")
-        assert s3 == "code_location/source.tar.gz"
-
-
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_input")
-def test_copy_checkpoints(
-    mock_validate_input,
-    mock_validate_entry_point,
-    aws_session,
-    quantum_job_arn,
-    entry_point,
-    device_arn,
-    checkpoint_config,
-    generate_get_job_response,
-):
-    other_checkpoint_uri = "s3://amazon-braket-jobs/job-path/checkpoints"
-    aws_session.get_job.return_value = generate_get_job_response(
-        checkpointConfig={
-            "s3Uri": other_checkpoint_uri,
-        }
-    )
-    AwsQuantumJob._process_local_source_module = Mock()
-    aws_session.create_job.return_value = quantum_job_arn
-    job = AwsQuantumJob.create(
-        device_arn=device_arn,
-        source_module="source_module",
-        entry_point=entry_point,
-        copy_checkpoints_from_job="other-job-arn",
-        checkpoint_config=checkpoint_config,
-        aws_session=aws_session,
-    )
-    assert job == AwsQuantumJob(quantum_job_arn, aws_session)
-    aws_session.copy_s3_directory.assert_called_with(other_checkpoint_uri, checkpoint_config.s3Uri)
-
-
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_entry_point")
 @patch(
     "braket.jobs.metrics_data.cwl_insights_metrics_fetcher."
     "CwlInsightsMetricsFetcher.get_metrics_for_job"
 )
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob._validate_input")
-def test_metrics(
-    mock_validate_input,
-    metrics_fetcher_mock,
-    mock_validate_entry_point,
-    aws_session,
-    quantum_job_arn,
-    entry_point,
-    device_arn,
-    checkpoint_config,
-    generate_get_job_response,
-):
+def test_metrics(metrics_fetcher_mock, quantum_job, aws_session, generate_get_job_response):
+    get_job_response_running = generate_get_job_response(status="RUNNING")
+    aws_session.get_job.return_value = get_job_response_running
+
     expected_metrics = {"Test": [1]}
-    aws_session.get_job.return_value = generate_get_job_response()
     metrics_fetcher_mock.return_value = expected_metrics
-    AwsQuantumJob._process_local_source_module = Mock()
-    aws_session.create_job.return_value = quantum_job_arn
-    job = AwsQuantumJob.create(
-        device_arn=device_arn,
-        source_module="source_module",
-        entry_point=entry_point,
-        aws_session=aws_session,
-    )
-    metrics = job.metrics()
-    assert job == AwsQuantumJob(quantum_job_arn, aws_session)
+    metrics = quantum_job.metrics()
     assert metrics == expected_metrics
 
 
@@ -1177,164 +855,3 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
 
     with pytest.raises(ClientError, match="Some error message"):
         quantum_job.logs(wait=True, poll_interval_seconds=0)
-
-
-def test_invalid_input_parameters(entry_point, aws_session):
-    error_message = (
-        "'vpc_config' should be of '<class 'braket.jobs.config.VpcConfig'>' "
-        "but user provided <class 'int'>."
-    )
-    with pytest.raises(ValueError, match=error_message):
-        AwsQuantumJob.create(
-            aws_session=aws_session,
-            entry_point=entry_point,
-            device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            source_module="alpha_test_job",
-            hyper_parameters={
-                "param-1": "first parameter",
-                "param-2": "second param",
-            },
-            instance_config=InstanceConfig(
-                instanceCount=5,
-            ),
-            vpc_config=2,
-        )
-
-
-@patch("importlib.util.find_spec")
-def test_all_valid_parameters_provided_for_create_job(
-    mock_import,
-    aws_session,
-    device_arn,
-    quantum_job,
-    code_location,
-    entry_point,
-    source_module,
-    input_data,
-):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
-
-        module, _, func = entry_point.partition(":")
-        dir_data = module.split(".")
-        folder_path, file_name = "/".join(dir_data[:-1]), f"{dir_data[-1]}.py"
-
-        Path(folder_path).mkdir()
-        Path(folder_path, "__init__.py").touch()
-
-        with open(f"{folder_path}/{file_name}", "w") as f:
-            f.write("def func(): \n\tpass")
-
-        AwsQuantumJob.create(
-            aws_session=aws_session,
-            entry_point=entry_point,
-            code_location=code_location,
-            source_module=source_module,
-            device_arn=device_arn,
-        )
-
-        os.chdir("..")
-
-
-@pytest.mark.parametrize(
-    "input_data, input_data_configs",
-    (
-        (
-            "local/prefix",
-            [
-                {
-                    "channelName": "input",
-                    "dataSource": {
-                        "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
-                            "s3Uri": "s3://default-bucket-name/jobs/job-name/data/input/prefix",
-                        },
-                    },
-                }
-            ],
-        ),
-        (
-            "s3://my-bucket/my/prefix-",
-            [
-                {
-                    "channelName": "input",
-                    "dataSource": {
-                        "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
-                            "s3Uri": "s3://my-bucket/my/prefix-",
-                        },
-                    },
-                }
-            ],
-        ),
-        (
-            S3DataSourceConfig(
-                "s3://my-bucket/my/manifest.json",
-                distribution=S3DataSourceConfig.DistributionType.SHARDED_BY_S3_KEY,
-                content_type="text/csv",
-                s3_data_type=S3DataSourceConfig.S3DataType.MANIFEST_FILE,
-            ),
-            [
-                {
-                    "channelName": "input",
-                    "dataSource": {
-                        "s3DataSource": {
-                            "s3DataDistributionType": "SHARDED_BY_S3_KEY",
-                            "s3DataType": "MANIFEST_FILE",
-                            "s3Uri": "s3://my-bucket/my/manifest.json",
-                        },
-                    },
-                    "contentType": "text/csv",
-                }
-            ],
-        ),
-        (
-            {
-                "local-input": "local/prefix",
-                "s3-input": "s3://my-bucket/my/prefix-",
-                "config-input": S3DataSourceConfig(
-                    "s3://my-bucket/my/manifest.json",
-                ),
-            },
-            [
-                {
-                    "channelName": "local-input",
-                    "dataSource": {
-                        "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
-                            "s3Uri": "s3://default-bucket-name/jobs/job-name/data/input/prefix",
-                        },
-                    },
-                },
-                {
-                    "channelName": "s3-input",
-                    "dataSource": {
-                        "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
-                            "s3Uri": "s3://my-bucket/my/prefix-",
-                        },
-                    },
-                },
-                {
-                    "channelName": "config-input",
-                    "dataSource": {
-                        "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
-                            "s3Uri": "s3://my-bucket/my/manifest.json",
-                        },
-                    },
-                },
-            ],
-        ),
-    ),
-)
-def test_process_input_data(aws_session, input_data, input_data_configs):
-    job_name = "job-name"
-    assert (
-        AwsQuantumJob._process_input_data(input_data, job_name, aws_session) == input_data_configs
-    )

@@ -13,13 +13,9 @@
 
 from __future__ import annotations
 
-import importlib.util
-import re
-import sys
 import tarfile
 import tempfile
 import time
-from dataclasses import asdict
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Union
@@ -31,7 +27,6 @@ from braket.aws.aws_session import AwsSession
 from braket.jobs import logs
 from braket.jobs.config import (
     CheckpointConfig,
-    DeviceConfig,
     InstanceConfig,
     OutputDataConfig,
     S3DataSourceConfig,
@@ -44,6 +39,7 @@ from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMet
 # for the files, since all those metrics are retrieved from the CW.
 from braket.jobs.metrics_data.definitions import MetricDefinition, MetricStatistic, MetricType
 from braket.jobs.quantum_job import QuantumJob
+from braket.jobs.quantum_job_creation import prepare_quantum_job
 from braket.jobs.serialization import deserialize_values
 from braket.jobs_data import PersistedJobData
 
@@ -86,7 +82,7 @@ class AwsQuantumJob(QuantumJob):
         aws_session: AwsSession = None,
         *args,
         **kwargs,
-    ) -> QuantumJob:
+    ) -> AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
@@ -171,86 +167,24 @@ class AwsQuantumJob(QuantumJob):
         Raises:
             ValueError: Raises ValueError if the parameters are not valid.
         """
-        input_datatype_map = {
-            "instance_config": (instance_config, InstanceConfig),
-            "stopping_condition": (stopping_condition, StoppingCondition),
-            "output_data_config": (output_data_config, OutputDataConfig),
-            "checkpoint_config": (checkpoint_config, CheckpointConfig),
-            "vpc_config": (vpc_config, VpcConfig),
-        }
-
-        AwsQuantumJob._validate_input(input_datatype_map)
-        aws_session = aws_session or AwsSession()
-        device_config = DeviceConfig(devices=[device_arn])
-        job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
-        role_arn = role_arn or aws_session.get_execution_role()
-        hyperparameters = hyperparameters or {}
-        input_data = input_data or {}
-        default_bucket = aws_session.default_bucket()
-        input_data_list = AwsQuantumJob._process_input_data(input_data, job_name, aws_session)
-        instance_config = instance_config or InstanceConfig()
-        stopping_condition = stopping_condition or StoppingCondition()
-        output_data_config = output_data_config or OutputDataConfig()
-        checkpoint_config = checkpoint_config or CheckpointConfig()
-        code_location = code_location or aws_session.construct_s3_uri(
-            default_bucket,
-            "jobs",
-            job_name,
-            "script",
+        create_job_kwargs = prepare_quantum_job(
+            device_arn=device_arn,
+            source_module=source_module,
+            entry_point=entry_point,
+            image_uri=image_uri,
+            job_name=job_name,
+            code_location=code_location,
+            role_arn=role_arn,
+            hyperparameters=hyperparameters,
+            input_data_config=input_data_config,
+            instance_config=instance_config,
+            stopping_condition=stopping_condition,
+            output_data_config=output_data_config,
+            copy_checkpoints_from_job=copy_checkpoints_from_job,
+            checkpoint_config=checkpoint_config,
+            vpc_config=vpc_config,
+            aws_session=aws_session,
         )
-        if AwsSession.is_s3_uri(source_module):
-            AwsQuantumJob._process_s3_source_module(
-                source_module, entry_point, aws_session, code_location
-            )
-        else:
-            # if entry point is None, it will be set to default here
-            entry_point = AwsQuantumJob._process_local_source_module(
-                source_module, entry_point, aws_session, code_location
-            )
-        algorithm_specification = {
-            "scriptModeConfig": {
-                "entryPoint": entry_point,
-                "s3Uri": f"{code_location}/source.tar.gz",
-                "compressionType": "GZIP",
-            }
-        }
-        if image_uri:
-            algorithm_specification["containerImage"] = {"uri": image_uri}
-        if not output_data_config.s3Path:
-            output_data_config.s3Path = aws_session.construct_s3_uri(
-                default_bucket,
-                "jobs",
-                job_name,
-                "output",
-            )
-        if not checkpoint_config.s3Uri:
-            checkpoint_config.s3Uri = aws_session.construct_s3_uri(
-                default_bucket,
-                "jobs",
-                job_name,
-                "checkpoints",
-            )
-        if copy_checkpoints_from_job:
-            checkpoints_to_copy = aws_session.get_job(copy_checkpoints_from_job)[
-                "checkpointConfig"
-            ]["s3Uri"]
-            aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
-
-        create_job_kwargs = {
-            "jobName": job_name,
-            "roleArn": role_arn,
-            "algorithmSpecification": algorithm_specification,
-            "inputDataConfig": input_data_list,
-            "instanceConfig": asdict(instance_config),
-            "outputDataConfig": asdict(output_data_config),
-            "checkpointConfig": asdict(checkpoint_config),
-            "deviceConfig": asdict(device_config),
-            "hyperParameters": hyperparameters,
-            "stoppingCondition": asdict(stopping_condition),
-        }
-
-        if vpc_config:
-            create_job_kwargs["vpcConfig"] = asdict(vpc_config)
 
         job_arn = aws_session.create_job(**create_job_kwargs)
         job = AwsQuantumJob(job_arn, aws_session)
@@ -305,18 +239,6 @@ class AwsQuantumJob(QuantumJob):
         job_region = job_arn.split(":")[3]
         boto_session = boto3.Session(region_name=job_region)
         return AwsSession(boto_session=boto_session)
-
-    @staticmethod
-    def _generate_default_job_name(image_uri: str):
-        if not image_uri:
-            job_type = "-default"
-        else:
-            job_type_match = re.search("/(.*)-jobs:", image_uri) or re.search(
-                "/([^:/]*)", image_uri
-            )
-            job_type = f"-{job_type_match.groups()[0]}" if job_type_match else ""
-
-        return f"braket-job{job_type}-{time.time() * 1000:.0f}"
 
     @property
     def arn(self) -> str:
@@ -621,95 +543,3 @@ class AwsQuantumJob(QuantumJob):
 
     def __hash__(self) -> int:
         return hash(self.arn)
-
-    @staticmethod
-    def _process_s3_source_module(source_module, entry_point, aws_session, code_location):
-        if entry_point is None:
-            raise ValueError("If source_module is an S3 URI, entry_point must be provided.")
-        if not source_module.lower().endswith(".tar.gz"):
-            raise ValueError(
-                "If source_module is an S3 URI, it must point to a tar.gz file. "
-                f"Not a valid S3 URI for parameter `source_module`: {source_module}"
-            )
-        aws_session.copy_s3_object(source_module, f"{code_location}/source.tar.gz")
-
-    @staticmethod
-    def _process_local_source_module(source_module, entry_point, aws_session, code_location):
-        try:
-            # raises FileNotFoundError if not found
-            abs_path_source_module = Path(source_module).resolve(strict=True)
-        except FileNotFoundError:
-            raise ValueError(f"Source module not found: {source_module}")
-
-        entry_point = entry_point or abs_path_source_module.stem
-        AwsQuantumJob._validate_entry_point(abs_path_source_module, entry_point)
-        AwsQuantumJob._tar_and_upload_to_code_location(
-            abs_path_source_module, aws_session, code_location
-        )
-        return entry_point
-
-    @staticmethod
-    def _validate_entry_point(source_module_path, entry_point):
-        importable, _, _method = entry_point.partition(":")
-        sys.path.append(str(source_module_path.parent))
-        try:
-            # second argument allows relative imports
-            module = importlib.util.find_spec(importable, source_module_path.stem)
-            assert module is not None
-        # if entry point is nested (ie contains '.'), parent modules are imported
-        except (ModuleNotFoundError, AssertionError):
-            raise ValueError(f"Entry point module was not found: {importable}")
-        finally:
-            sys.path.pop()
-
-    @staticmethod
-    def _tar_and_upload_to_code_location(source_module_path, aws_session, code_location):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with tarfile.open(f"{temp_dir}/source.tar.gz", "w:gz", dereference=True) as tar:
-                tar.add(source_module_path, arcname=source_module_path.name)
-            aws_session.upload_to_s3(f"{temp_dir}/source.tar.gz", f"{code_location}/source.tar.gz")
-
-    @staticmethod
-    def _validate_input(dict_arr):
-        for parameter_name, value_tuple in dict_arr.items():
-            user_input, expected_datatype = value_tuple
-
-            if user_input and not isinstance(user_input, expected_datatype):
-                raise ValueError(
-                    f"'{parameter_name}' should be of '{expected_datatype}' "
-                    f"but user provided {type(user_input)}."
-                )
-
-    @staticmethod
-    def _process_input_data(input_data, job_name, aws_session):
-        if not isinstance(input_data, dict):
-            input_data = {"input": input_data}
-        for channel_name, data in input_data.items():
-            if not isinstance(data, S3DataSourceConfig):
-                input_data[channel_name] = AwsQuantumJob._process_channel(
-                    data, job_name, aws_session
-                )
-        return AwsQuantumJob._convert_input_to_config(input_data)
-
-    @staticmethod
-    def _process_channel(location, job_name, aws_session, channel_name="input"):
-        if AwsSession.is_s3_uri(location):
-            return S3DataSourceConfig(location)
-        else:
-            # local prefix "path/to/prefix" will be mapped to
-            # s3://bucket/jobs/job-name/data/input/prefix
-            location_name = Path(location).name
-            s3_prefix = AwsSession.construct_s3_uri(
-                aws_session.default_bucket(), "jobs", job_name, "data", channel_name, location_name
-            )
-            return S3DataSourceConfig.from_local_data(location, s3_prefix, aws_session=aws_session)
-
-    @staticmethod
-    def _convert_input_to_config(input_data):
-        return [
-            {
-                "channelName": channel_name,
-                **data_config.config,
-            }
-            for channel_name, data_config in input_data.items()
-        ]

@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.jobs.metrics_data import CwlMetricsParser
+from braket.jobs.metrics_data import LogMetricsParser
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
 MALFORMED_METRICS_LOG_LINES = [
@@ -158,7 +158,7 @@ ITERATION_NUMBER_MAX_RESULTS = {
     ],
 )
 def test_get_all_metrics_complete_results(log_events, metric_type, metric_stat, metrics_results):
-    parser = CwlMetricsParser()
+    parser = LogMetricsParser()
     for log_event in log_events:
         parser.parse_log_message(log_event.get("timestamp"), log_event.get("message"))
     assert parser.get_parsed_metrics(metric_type, metric_stat) == metrics_results

@@ -52,8 +52,8 @@ EXPECTED_CALL_LIST = [
 ]
 
 
-@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.get_parsed_metrics")
-@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
+@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.LogMetricsParser.get_parsed_metrics")
+@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.LogMetricsParser.parse_log_message")
 def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.logs_client = logs_client_mock
@@ -74,7 +74,7 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
     assert result == expected_result
 
 
-@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
+@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.LogMetricsParser.parse_log_message")
 def test_get_log_streams_timeout(mock_add_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.logs_client = logs_client_mock
@@ -93,7 +93,7 @@ def test_get_log_streams_timeout(mock_add_metrics, aws_session):
     assert result == {}
 
 
-@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
+@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.LogMetricsParser.parse_log_message")
 def test_get_no_streams_returned(mock_add_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.logs_client = logs_client_mock
@@ -107,8 +107,8 @@ def test_get_no_streams_returned(mock_add_metrics, aws_session):
     assert result == {}
 
 
-@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.get_parsed_metrics")
-@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.CwlMetricsParser.parse_log_message")
+@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.LogMetricsParser.get_parsed_metrics")
+@patch("braket.jobs.metrics_data.cwl_metrics_fetcher.LogMetricsParser.parse_log_message")
 def test_get_metrics_timeout(mock_add_metrics, mock_get_metrics, aws_session):
     logs_client_mock = Mock()
     aws_session.logs_client = logs_client_mock

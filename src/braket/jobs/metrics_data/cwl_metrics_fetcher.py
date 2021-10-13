@@ -16,8 +16,8 @@ from logging import Logger, getLogger
 from typing import Dict, List, Union
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.metrics_data.cwl_metrics_parser import CwlMetricsParser
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
+from braket.jobs.metrics_data.log_metrics_parser import LogMetricsParser
 
 
 class CwlMetricsFetcher(object):
@@ -60,7 +60,7 @@ class CwlMetricsFetcher(object):
         self,
         stream_name: str,
         timeout_time: float,
-        parser: CwlMetricsParser,
+        parser: LogMetricsParser,
     ) -> None:
         """
         Synchronously retrieves the algorithm metrics logged in a given job log stream.
@@ -69,7 +69,7 @@ class CwlMetricsFetcher(object):
             stream_name (str): The name of the log stream.
             timeout_time (float) : We stop getting metrics if the current time is beyond
                 the timeout time.
-            parser (CwlMetricsParser) : The CWL metrics parser.
+            parser (LogMetricsParser) : The CWL metrics parser.
 
         Returns:
             None
@@ -155,7 +155,7 @@ class CwlMetricsFetcher(object):
         """
         timeout_time = time.time() + self._poll_timeout_seconds
 
-        parser = CwlMetricsParser()
+        parser = LogMetricsParser()
 
         log_streams = self._get_log_streams_for_job(job_name, timeout_time)
         for log_stream in log_streams:

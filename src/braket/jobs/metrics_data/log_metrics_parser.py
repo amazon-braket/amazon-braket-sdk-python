@@ -18,9 +18,9 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
 
-class CwlMetricsParser(object):
+class LogMetricsParser(object):
     """
-    This class is used to parse metrics from CloudWatchLogs log lines, and return them in a more
+    This class is used to parse metrics from log lines, and return them in a more
     convenient format.
     """
 
@@ -86,13 +86,13 @@ class CwlMetricsParser(object):
 
     def parse_log_message(self, timestamp: str, message: str) -> None:
         """
-        Parses a line from CloudWatch Logs, adding all the metrics that have been logged
+        Parses a line from logs, adding all the metrics that have been logged
         on that line. The timestamp is also added to match the corresponding values.
 
         Args:
             timestamp (str): A formatted string representing the timestamp for any found metrics.
 
-            message (str): A log line from CloudWatch Logs.
+            message (str): A log line from a log.
         """
         if not message:
             return
