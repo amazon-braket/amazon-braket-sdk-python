@@ -176,7 +176,7 @@ class AwsQuantumJob(QuantumJob):
             code_location=code_location,
             role_arn=role_arn,
             hyperparameters=hyperparameters,
-            input_data_config=input_data_config,
+            input_data=input_data,
             instance_config=instance_config,
             stopping_condition=stopping_condition,
             output_data_config=output_data_config,

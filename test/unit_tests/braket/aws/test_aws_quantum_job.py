@@ -16,6 +16,7 @@ import json
 import os
 import tarfile
 import tempfile
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -528,18 +529,6 @@ def hyperparameters():
     }
 
 
-@pytest.fixture(params=["dict", "local"])
-def input_data(request, bucket, s3_prefix):
-    if request.param == "dict":
-        return {
-            "s3_input": f"s3://{bucket}/{s3_prefix}",
-            "local_input": "local/prefix",
-            "config_input": S3DataSourceConfig(f"s3://{bucket}/config/prefix"),
-        }
-    elif request.param == "local":
-        return "local/prefix"
-
-
 @pytest.fixture
 def instance_config():
     return InstanceConfig(
@@ -595,7 +584,7 @@ def prepare_job_args(aws_session):
         "code_location": Mock(),
         "role_arn": Mock(),
         "hyperparameters": Mock(),
-        "input_data_config": Mock(),
+        "input_data": Mock(),
         "instance_config": Mock(),
         "stopping_condition": Mock(),
         "output_data_config": Mock(),
@@ -855,3 +844,4 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
 
     with pytest.raises(ClientError, match="Some error message"):
         quantum_job.logs(wait=True, poll_interval_seconds=0)
+

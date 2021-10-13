@@ -15,14 +15,14 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
     CheckpointConfig,
-    InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
+    S3DataSourceConfig,
     StoppingCondition,
     VpcConfig,
 )
@@ -51,7 +51,7 @@ class LocalQuantumJob(QuantumJob):
         code_location: str = None,
         role_arn: str = None,
         hyperparameters: Dict[str, Any] = None,
-        input_data_config: List[InputDataConfig] = None,
+        input_data: Union[str, Dict, S3DataSourceConfig] = None,
         instance_config: InstanceConfig = None,
         stopping_condition: StoppingCondition = None,
         output_data_config: OutputDataConfig = None,
@@ -98,8 +98,13 @@ class LocalQuantumJob(QuantumJob):
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data_config (List[InputDataConfig]): Information about the training data.
-                Default: None.
+            input_data (Union[str, S3DataSourceConfig, dict]): Information about the training
+                data. Dictionary maps channel names to local paths or S3 URIs. Contents found
+                at any local paths will be uploaded to S3 at
+                f's3://{default_bucket_name}/jobs/{job_name}/input/{channel_name}. If a local
+                path, S3 URI, or S3DataSourceConfig is provided, it will be given a default
+                channel name "input".
+                Default: {}.
 
             instance_config (InstanceConfig): Configuration of the instances to be used
                 to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
@@ -142,7 +147,7 @@ class LocalQuantumJob(QuantumJob):
             code_location=code_location,
             role_arn=role_arn,
             hyperparameters=hyperparameters,
-            input_data_config=input_data_config,
+            input_data=input_data,
             instance_config=instance_config,
             stopping_condition=stopping_condition,
             output_data_config=output_data_config,

@@ -24,16 +24,15 @@ import pytest
 from braket.aws import AwsSession
 from braket.jobs.config import (
     CheckpointConfig,
-    DataSource,
-    InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
-    S3DataSource,
+    S3DataSourceConfig,
     StoppingCondition,
     VpcConfig,
 )
 from braket.jobs.quantum_job_creation import (
     _generate_default_job_name,
+    _process_input_data,
     _process_local_source_module,
     _process_s3_source_module,
     _tar_and_upload_to_code_location,
@@ -87,7 +86,7 @@ def s3_prefix(job_name):
 
 
 @pytest.fixture(params=["local_source", "s3_source"])
-def source_module(request, bucket, s3_prefix):
+def source_module(request, bucket):
     if request.param == "local_source":
         return "test-source-module"
     elif request.param == "s3_source":
@@ -117,18 +116,16 @@ def hyperparameters():
     }
 
 
-@pytest.fixture
-def input_data_config(bucket, s3_prefix):
-    return [
-        InputDataConfig(
-            channelName="testinput",
-            dataSource=DataSource(
-                s3DataSource=S3DataSource(
-                    s3Uri=AwsSession.construct_s3_uri(bucket, s3_prefix, "input"),
-                ),
-            ),
-        ),
-    ]
+@pytest.fixture(params=["dict", "local"])
+def input_data(request, bucket):
+    if request.param == "dict":
+        return {
+            "s3_input": f"s3://{bucket}/data/prefix",
+            "local_input": "local/prefix",
+            "config_input": S3DataSourceConfig(f"s3://{bucket}/config/prefix"),
+        }
+    elif request.param == "local":
+        return "local/prefix"
 
 
 @pytest.fixture
@@ -238,7 +235,7 @@ def create_job_args(
     role_arn,
     device_arn,
     hyperparameters,
-    input_data_config,
+    input_data,
     instance_config,
     stopping_condition,
     output_data_config,
@@ -257,7 +254,7 @@ def create_job_args(
                 "code_location": code_location,
                 "role_arn": role_arn,
                 "hyperparameters": hyperparameters,
-                "input_data_config": input_data_config,
+                "input_data": input_data,
                 "instance_config": instance_config,
                 "stopping_condition": stopping_condition,
                 "output_data_config": output_data_config,
@@ -299,6 +296,7 @@ def test_create_job(
 ):
     mock_path.return_value.resolve.return_value.parent = "parent_dir"
     mock_path.return_value.resolve.return_value.stem = source_module
+    mock_path.return_value.name = "file_name"
     mock_time.return_value = datetime.datetime.now().timestamp()
     expected_kwargs = _translate_creation_args(create_job_args)
     result_kwargs = prepare_quantum_job(**create_job_args)
@@ -317,7 +315,7 @@ def _translate_creation_args(create_job_args):
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
     devices = [create_job_args["device_arn"]]
     hyperparameters = create_job_args["hyperparameters"] or {}
-    input_data_config = create_job_args["input_data_config"] or []
+    input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
         s3Path=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "output")
@@ -345,7 +343,7 @@ def _translate_creation_args(create_job_args):
         "jobName": job_name,
         "roleArn": role_arn,
         "algorithmSpecification": algorithm_specification,
-        "inputDataConfig": [asdict(input_channel) for input_channel in input_data_config],
+        "inputDataConfig": _process_input_data(input_data, job_name, aws_session),
         "instanceConfig": asdict(instance_config),
         "outputDataConfig": asdict(output_data_config),
         "checkpointConfig": asdict(checkpoint_config),
@@ -541,6 +539,7 @@ def test_copy_checkpoints(
     aws_session.copy_s3_directory.assert_called_with(other_checkpoint_uri, checkpoint_config.s3Uri)
 
 
+
 def test_invalid_input_parameters(entry_point, aws_session):
     error_message = (
         "'vpc_config' should be of '<class 'braket.jobs.config.VpcConfig'>' "
@@ -552,16 +551,6 @@ def test_invalid_input_parameters(entry_point, aws_session):
             entry_point=entry_point,
             device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             source_module="alpha_test_job",
-            input_data_config=[
-                InputDataConfig(
-                    channelName="csvinput",
-                    dataSource=DataSource(
-                        s3DataSource=S3DataSource(
-                            s3Uri="s3://some-uri",
-                        ),
-                    ),
-                ),
-            ],
             hyperparameters={
                 "param-1": "first parameter",
                 "param-2": "second param",
@@ -573,23 +562,103 @@ def test_invalid_input_parameters(entry_point, aws_session):
         )
 
 
-def test_input_validation_with_invalid_list_parameters():
-    error_message = (
-        "'input_data_config' should be of "
-        "'typing.List\\[braket.jobs.config.InputDataConfig]\\' but user provided <class 'list'>."
-    )
-
-    with pytest.raises(ValueError, match=error_message):
-        prepare_quantum_job(
-            entry_point="some_dir.some_file:some_func",
-            device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            source_module="alpha_test_job",
-            input_data_config=["abc"],
-            hyperparameters={
-                "param-1": "first parameter",
-                "param-2": "second param",
-            },
-            instance_config=InstanceConfig(
-                instanceCount=5,
+@pytest.mark.parametrize(
+    "input_data, input_data_configs",
+    (
+        (
+            "local/prefix",
+            [
+                {
+                    "channelName": "input",
+                    "dataSource": {
+                        "s3DataSource": {
+                            "s3DataDistributionType": "FULLY_REPLICATED",
+                            "s3DataType": "S3_PREFIX",
+                            "s3Uri": "s3://default-bucket-name/jobs/job-name/data/input/prefix",
+                        },
+                    },
+                }
+            ],
+        ),
+        (
+            "s3://my-bucket/my/prefix-",
+            [
+                {
+                    "channelName": "input",
+                    "dataSource": {
+                        "s3DataSource": {
+                            "s3DataDistributionType": "FULLY_REPLICATED",
+                            "s3DataType": "S3_PREFIX",
+                            "s3Uri": "s3://my-bucket/my/prefix-",
+                        },
+                    },
+                }
+            ],
+        ),
+        (
+            S3DataSourceConfig(
+                "s3://my-bucket/my/manifest.json",
+                distribution=S3DataSourceConfig.DistributionType.SHARDED_BY_S3_KEY,
+                content_type="text/csv",
+                s3_data_type=S3DataSourceConfig.S3DataType.MANIFEST_FILE,
             ),
-        )
+            [
+                {
+                    "channelName": "input",
+                    "dataSource": {
+                        "s3DataSource": {
+                            "s3DataDistributionType": "SHARDED_BY_S3_KEY",
+                            "s3DataType": "MANIFEST_FILE",
+                            "s3Uri": "s3://my-bucket/my/manifest.json",
+                        },
+                    },
+                    "contentType": "text/csv",
+                }
+            ],
+        ),
+        (
+            {
+                "local-input": "local/prefix",
+                "s3-input": "s3://my-bucket/my/prefix-",
+                "config-input": S3DataSourceConfig(
+                    "s3://my-bucket/my/manifest.json",
+                ),
+            },
+            [
+                {
+                    "channelName": "local-input",
+                    "dataSource": {
+                        "s3DataSource": {
+                            "s3DataDistributionType": "FULLY_REPLICATED",
+                            "s3DataType": "S3_PREFIX",
+                            "s3Uri": "s3://default-bucket-name/jobs/job-name/data/input/prefix",
+                        },
+                    },
+                },
+                {
+                    "channelName": "s3-input",
+                    "dataSource": {
+                        "s3DataSource": {
+                            "s3DataDistributionType": "FULLY_REPLICATED",
+                            "s3DataType": "S3_PREFIX",
+                            "s3Uri": "s3://my-bucket/my/prefix-",
+                        },
+                    },
+                },
+                {
+                    "channelName": "config-input",
+                    "dataSource": {
+                        "s3DataSource": {
+                            "s3DataDistributionType": "FULLY_REPLICATED",
+                            "s3DataType": "S3_PREFIX",
+                            "s3Uri": "s3://my-bucket/my/manifest.json",
+                        },
+                    },
+                },
+            ],
+        ),
+    ),
+)
+def test_process_input_data(aws_session, input_data, input_data_configs):
+    job_name = "job-name"
+    assert _process_input_data(input_data, job_name, aws_session) == input_data_configs
