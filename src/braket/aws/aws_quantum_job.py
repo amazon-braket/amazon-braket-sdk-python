@@ -22,7 +22,7 @@ import time
 from dataclasses import asdict
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 import boto3
 from botocore.exceptions import ClientError
@@ -32,9 +32,9 @@ from braket.jobs import logs
 from braket.jobs.config import (
     CheckpointConfig,
     DeviceConfig,
-    InputDataConfig,
     InstanceConfig,
     OutputDataConfig,
+    S3DataSourceConfig,
     StoppingCondition,
     VpcConfig,
 )
@@ -77,7 +77,7 @@ class AwsQuantumJob:
         wait_until_complete: bool = False,
         hyperparameters: Dict[str, Any] = None,
         metric_definitions: List[MetricDefinition] = None,
-        input_data_config: List[InputDataConfig] = None,
+        input_data: Union[str, Dict, S3DataSourceConfig] = None,
         instance_config: InstanceConfig = None,
         stopping_condition: StoppingCondition = None,
         output_data_config: OutputDataConfig = None,
@@ -129,8 +129,13 @@ class AwsQuantumJob:
             metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
                 defines the metric(s) used to evaluate the training jobs. Default: None.
 
-            input_data_config (List[InputDataConfig]): Information about the training data.
-                Default: None.
+            input_data (Union[str, S3DataSourceConfig, dict]): Information about the training
+                data. Dictionary maps channel names to local paths or S3 URIs. Contents found
+                at any local paths will be uploaded to S3 at
+                f's3://{default_bucket_name}/jobs/{job_name}/input/{channel_name}. If a local
+                path, S3 URI, or S3DataSourceConfig is provided, it will be given a default
+                channel name "input".
+                Default: {}.
 
             instance_config (InstanceConfig): Configuration of the instances to be used
                 to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
@@ -168,7 +173,6 @@ class AwsQuantumJob:
             ValueError: Raises ValueError if the parameters are not valid.
         """
         input_datatype_map = {
-            "input_data_config": (input_data_config, List[InputDataConfig]),
             "instance_config": (instance_config, InstanceConfig),
             "stopping_condition": (stopping_condition, StoppingCondition),
             "output_data_config": (output_data_config, OutputDataConfig),
@@ -182,12 +186,13 @@ class AwsQuantumJob:
         job_name = job_name or AwsQuantumJob._generate_default_job_name(image_uri)
         role_arn = role_arn or aws_session.get_execution_role()
         hyperparameters = hyperparameters or {}
-        input_data_config = input_data_config or []
+        input_data = input_data or {}
+        default_bucket = aws_session.default_bucket()
+        input_data_list = AwsQuantumJob._process_input_data(input_data, job_name, aws_session)
         instance_config = instance_config or InstanceConfig()
         stopping_condition = stopping_condition or StoppingCondition()
         output_data_config = output_data_config or OutputDataConfig()
         checkpoint_config = checkpoint_config or CheckpointConfig()
-        default_bucket = aws_session.default_bucket()
         code_location = code_location or aws_session.construct_s3_uri(
             default_bucket,
             "jobs",
@@ -236,7 +241,7 @@ class AwsQuantumJob:
             "jobName": job_name,
             "roleArn": role_arn,
             "algorithmSpecification": algorithm_specification,
-            "inputDataConfig": [asdict(input_channel) for input_channel in input_data_config],
+            "inputDataConfig": input_data_list,
             "instanceConfig": asdict(instance_config),
             "outputDataConfig": asdict(output_data_config),
             "checkpointConfig": asdict(checkpoint_config),
@@ -670,23 +675,42 @@ class AwsQuantumJob:
         for parameter_name, value_tuple in dict_arr.items():
             user_input, expected_datatype = value_tuple
 
-            if user_input:
-                AwsQuantumJob._validate_config_parameters(
-                    user_input, parameter_name, expected_datatype
+            if user_input and not isinstance(user_input, expected_datatype):
+                raise ValueError(
+                    f"'{parameter_name}' should be of '{expected_datatype}' "
+                    f"but user provided {type(user_input)}."
                 )
 
     @staticmethod
-    def _validate_config_parameters(user_input, parameter_name, expected_datatype):
-        list_parameters = {"input_data_config": InputDataConfig}
+    def _process_input_data(input_data, job_name, aws_session):
+        if not isinstance(input_data, dict):
+            input_data = {"input": input_data}
+        for channel_name, data in input_data.items():
+            if not isinstance(data, S3DataSourceConfig):
+                input_data[channel_name] = AwsQuantumJob._process_channel(
+                    data, job_name, aws_session
+                )
+        return AwsQuantumJob._convert_input_to_config(input_data)
 
-        is_correct_data_type = (
-            isinstance(user_input[0], list_parameters.get(parameter_name))
-            if parameter_name in list_parameters
-            else isinstance(user_input, expected_datatype)
-        )
-
-        if not is_correct_data_type:
-            raise ValueError(
-                f"'{parameter_name}' should be of '{expected_datatype}' "
-                f"but user provided {type(user_input)}."
+    @staticmethod
+    def _process_channel(location, job_name, aws_session, channel_name="input"):
+        if AwsSession.is_s3_uri(location):
+            return S3DataSourceConfig(location)
+        else:
+            # local prefix "path/to/prefix" will be mapped to
+            # s3://bucket/jobs/job-name/data/input/prefix
+            location_name = Path(location).name
+            s3_prefix = AwsSession.construct_s3_uri(
+                aws_session.default_bucket(), "jobs", job_name, "data", channel_name, location_name
             )
+            return S3DataSourceConfig.from_local_data(location, s3_prefix, aws_session=aws_session)
+
+    @staticmethod
+    def _convert_input_to_config(input_data):
+        return [
+            {
+                "channelName": channel_name,
+                **data_config.config,
+            }
+            for channel_name, data_config in input_data.items()
+        ]

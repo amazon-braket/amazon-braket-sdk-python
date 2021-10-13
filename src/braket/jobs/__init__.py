@@ -15,6 +15,7 @@ from braket.jobs.config import (  # noqa: F401
     CheckpointConfig,
     InstanceConfig,
     OutputDataConfig,
+    S3DataSourceConfig,
     StoppingCondition,
     VpcConfig,
 )

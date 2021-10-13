@@ -13,6 +13,8 @@
 
 import json
 import os
+import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -781,6 +783,38 @@ def test_upload_to_s3(aws_session):
     bucket, key = "bucket-123", "key"
     aws_session.upload_to_s3(filename, s3_uri)
     aws_session._s3.upload_file.assert_called_with(filename, bucket, key)
+
+
+def test_upload_local_data(aws_session):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+
+        Path("input-dir", "pref-dir", "sub-pref-dir").mkdir(parents=True)
+        Path("input-dir", "not-pref-dir").mkdir()
+
+        # these should all get uploaded
+        Path("input-dir", "pref-dir", "sub-pref-dir", "very-nested.txt").touch()
+        Path("input-dir", "pref-dir", "nested.txt").touch()
+        Path("input-dir", "pref.txt").touch()
+        Path("input-dir", "pref-and-more.txt").touch()
+
+        # these should not
+        Path("input-dir", "false-pref.txt").touch()
+        Path("input-dir", "not-pref-dir", "pref-fake.txt").touch()
+
+        aws_session.upload_to_s3 = Mock()
+        aws_session.upload_local_data("input-dir/pref", "s3://bucket/pref")
+        call_args = {args for args, kwargs in aws_session.upload_to_s3.call_args_list}
+        assert call_args == {
+            (
+                str(Path("input-dir", "pref-dir", "sub-pref-dir", "very-nested.txt")),
+                "s3://bucket/pref-dir/sub-pref-dir/very-nested.txt",
+            ),
+            (str(Path("input-dir", "pref-dir", "nested.txt")), "s3://bucket/pref-dir/nested.txt"),
+            (str(Path("input-dir", "pref.txt")), "s3://bucket/pref.txt"),
+            (str(Path("input-dir", "pref-and-more.txt")), "s3://bucket/pref-and-more.txt"),
+        }
+        os.chdir("..")
 
 
 def test_download_from_s3(aws_session):

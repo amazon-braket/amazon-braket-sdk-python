@@ -10,10 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import itertools
 import os
 import os.path
 import re
+from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
@@ -267,6 +268,39 @@ class AwsSession(object):
         """
         bucket, key = self.parse_s3_uri(s3_uri)
         self.s3_client.upload_file(filename, bucket, key)
+
+    def upload_local_data(self, local_prefix: str, s3_prefix: str):
+        """
+        Upload local data matching a prefix to a corresponding location in S3
+
+        Args:
+            local_prefix (str): a prefix designating files to be uploaded to S3. All files
+                beginning with local_prefix will be uploaded.
+            s3_prefix (str): the corresponding S3 prefix that will replace the local prefix
+                when the data is uploaded. This will be an S3 URI and should include the bucket
+                (i.e. 's3://my-bucket/my/prefix-')
+
+        For example, local_prefix = "input", s3_prefix = "s3://my-bucket/dir/input" will upload:
+            * 'input.csv' to 's3://my-bucket/dir/input.csv'
+            * 'input-2.csv' to 's3://my-bucket/dir/input-2.csv'
+            * 'input/data.txt' to 's3://my-bucket/dir/input/data.txt'
+            * 'input-dir/data.csv' to 's3://my-bucket/dir/input-dir/data.csv'
+            but will not upload:
+            * 'my-input.csv'
+            * 'my-dir/input.csv'
+        To match all files within the directory "input" and upload them into
+            "s3://my-bucket/input", provide local_prefix = "input/" and
+            s3_prefix = "s3://my-bucket/input/"
+        """
+        for file in itertools.chain(
+            # files that match the prefix
+            Path().glob(f"{local_prefix}*"),
+            # files inside of directories that match the prefix
+            Path().glob(f"{local_prefix}*/**/*"),
+        ):
+            if file.is_file():
+                s3_uri = str(file.as_posix()).replace(local_prefix, s3_prefix)
+                self.upload_to_s3(str(file), s3_uri)
 
     def download_from_s3(self, s3_uri: str, filename: str) -> None:
         """
