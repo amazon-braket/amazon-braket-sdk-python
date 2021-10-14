@@ -105,7 +105,7 @@ invalid_unitary_matrices = [
     (np.array([1])),
     (np.array([0, 1, 2])),
     (np.array([[0, 1], [1, 2], [3, 4]])),
-    (np.array([[0, 1, 2], [2, 3]])),
+    (np.array([[0, 1, 2], [2, 3]], dtype=object)),
     (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])),
     (np.array([[0, 1], [1, 1]])),
 ]
