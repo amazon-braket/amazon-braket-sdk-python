@@ -16,7 +16,6 @@ import json
 import os
 import tarfile
 import tempfile
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -27,7 +26,6 @@ from braket.jobs.config import (
     CheckpointConfig,
     InstanceConfig,
     OutputDataConfig,
-    S3DataSourceConfig,
     StoppingCondition,
     VpcConfig,
 )
@@ -661,12 +659,39 @@ def test_cancel_job_surfaces_exception(quantum_job, aws_session):
     quantum_job.cancel()
 
 
+@pytest.mark.parametrize(
+    "generate_get_job_response_kwargs",
+    [
+        {
+            "status": "RUNNING",
+        },
+        {
+            "status": "COMPLETED",
+        },
+        {
+            "status": "COMPLETED",
+            "startedAt": datetime.datetime(2021, 1, 1, 1, 0, 0, 0),
+        },
+        {"status": "COMPLETED", "endedAt": datetime.datetime(2021, 1, 1, 1, 0, 0, 0)},
+        {
+            "status": "COMPLETED",
+            "startedAt": datetime.datetime(2021, 1, 1, 1, 0, 0, 0),
+            "endedAt": datetime.datetime(2021, 1, 1, 1, 0, 0, 0),
+        },
+    ],
+)
 @patch(
     "braket.jobs.metrics_data.cwl_insights_metrics_fetcher."
     "CwlInsightsMetricsFetcher.get_metrics_for_job"
 )
-def test_metrics(metrics_fetcher_mock, quantum_job, aws_session, generate_get_job_response):
-    get_job_response_running = generate_get_job_response(status="RUNNING")
+def test_metrics(
+    metrics_fetcher_mock,
+    quantum_job,
+    aws_session,
+    generate_get_job_response,
+    generate_get_job_response_kwargs,
+):
+    get_job_response_running = generate_get_job_response(**generate_get_job_response_kwargs)
     aws_session.get_job.return_value = get_job_response_running
 
     expected_metrics = {"Test": [1]}
@@ -844,4 +869,3 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
 
     with pytest.raises(ClientError, match="Some error message"):
         quantum_job.logs(wait=True, poll_interval_seconds=0)
-

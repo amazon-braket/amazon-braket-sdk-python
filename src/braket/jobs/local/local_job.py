@@ -18,14 +18,7 @@ import time
 from typing import Any, Dict, List, Union
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs.config import (
-    CheckpointConfig,
-    InstanceConfig,
-    OutputDataConfig,
-    S3DataSourceConfig,
-    StoppingCondition,
-    VpcConfig,
-)
+from braket.jobs.config import CheckpointConfig, OutputDataConfig, S3DataSourceConfig
 from braket.jobs.image_uris import Framework, retrieve_image
 from braket.jobs.local.local_job_container import _LocalJobContainer
 from braket.jobs.local.local_job_container_setup import setup_container
@@ -52,12 +45,8 @@ class LocalQuantumJob(QuantumJob):
         role_arn: str = None,
         hyperparameters: Dict[str, Any] = None,
         input_data: Union[str, Dict, S3DataSourceConfig] = None,
-        instance_config: InstanceConfig = None,
-        stopping_condition: StoppingCondition = None,
         output_data_config: OutputDataConfig = None,
-        copy_checkpoints_from_job: str = None,
         checkpoint_config: CheckpointConfig = None,
-        vpc_config: VpcConfig = None,
         aws_session: AwsSession = None,
         *args,
         **kwargs,
@@ -78,7 +67,7 @@ class LocalQuantumJob(QuantumJob):
                 `importable.module` or `importable.module:callable`. For example,
                 `source_module.submodule:start_here` indicates the `start_here` function
                 contained in `source_module.submodule`. If source_module is an S3 URI,
-                entry point must be given. Default: source_module's nam
+                entry point must be given. Default: source_module's name
 
             image_uri (str): A str that specifies the ECR image to use for executing the job.
                 `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
@@ -106,31 +95,14 @@ class LocalQuantumJob(QuantumJob):
                 channel name "input".
                 Default: {}.
 
-            instance_config (InstanceConfig): Configuration of the instances to be used
-                to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
-                instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
-
-            stopping_condition (StoppingCondition): The maximum length of time, in seconds,
-                and the maximum number of tasks that a job can run before being forcefully stopped.
-                Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
-
             output_data_config (OutputDataConfig): Specifies the location for the output of the job.
                 Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/
                 output', kmsKeyId=None).
-
-            copy_checkpoints_from_job (str): A str that specifies the job ARN whose checkpoint you
-                want to use in the current job. Specifying this value will copy over the checkpoint
-                data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current job's
-                checkpoint_config s3Uri, making it available at checkpoint_config.localPath during
-                the job execution. Default: None
 
             checkpoint_config (CheckpointConfig): Configuration that specifies the location where
                 checkpoint data is stored.
                 Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
                 s3Uri=None).
-
-            vpc_config (VpcConfig): Configuration that specifies the security groups and subnets
-                to use for running the job. Default: None.
 
             aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
@@ -148,12 +120,8 @@ class LocalQuantumJob(QuantumJob):
             role_arn=role_arn,
             hyperparameters=hyperparameters,
             input_data=input_data,
-            instance_config=instance_config,
-            stopping_condition=stopping_condition,
             output_data_config=output_data_config,
-            copy_checkpoints_from_job=copy_checkpoints_from_job,
             checkpoint_config=checkpoint_config,
-            vpc_config=vpc_config,
             aws_session=aws_session,
         )
 

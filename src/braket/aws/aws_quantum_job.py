@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import math
 import tarfile
 import tempfile
 import time
@@ -167,6 +168,8 @@ class AwsQuantumJob(QuantumJob):
         Raises:
             ValueError: Raises ValueError if the parameters are not valid.
         """
+        aws_session = aws_session or AwsSession()
+
         create_job_kwargs = prepare_quantum_job(
             device_arn=device_arn,
             source_module=source_module,
@@ -382,8 +385,13 @@ class AwsQuantumJob(QuantumJob):
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
         job_name = metadata["jobName"]
-        # TODO : Add job start and job end times
-        return fetcher.get_metrics_for_job(job_name, metric_type, statistic)
+        job_start = None
+        job_end = None
+        if "startedAt" in metadata:
+            job_start = int(metadata["startedAt"].timestamp())
+        if self.state() in AwsQuantumJob.TERMINAL_STATES and "endedAt" in metadata:
+            job_end = int(math.ceil(metadata["endedAt"].timestamp()))
+        return fetcher.get_metrics_for_job(job_name, metric_type, statistic, job_start, job_end)
 
     def cancel(self) -> str:
         """Cancels the job.

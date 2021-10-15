@@ -539,7 +539,6 @@ def test_copy_checkpoints(
     aws_session.copy_s3_directory.assert_called_with(other_checkpoint_uri, checkpoint_config.s3Uri)
 
 
-
 def test_invalid_input_parameters(entry_point, aws_session):
     error_message = (
         "'vpc_config' should be of '<class 'braket.jobs.config.VpcConfig'>' "
