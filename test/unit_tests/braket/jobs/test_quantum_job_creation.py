@@ -46,9 +46,9 @@ def aws_session():
     _aws_session = Mock(spec=AwsSession)
     _aws_session.default_bucket.return_value = "default-bucket-name"
     _aws_session.get_execution_role.return_value = "default-role-arn"
-    _aws_session.construct_s3_uri.side_effect = (
-        lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
-    )
+    # _aws_session.construct_s3_uri.side_effect = (
+    #     lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
+    # )
     return _aws_session
 
 
@@ -309,7 +309,7 @@ def _translate_creation_args(create_job_args):
     image_uri = create_job_args["image_uri"]
     job_name = create_job_args["job_name"] or _generate_default_job_name(image_uri)
     default_bucket = aws_session.default_bucket()
-    code_location = create_job_args["code_location"] or aws_session.construct_s3_uri(
+    code_location = create_job_args["code_location"] or AwsSession.construct_s3_uri(
         default_bucket, "jobs", job_name, "script"
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
@@ -318,11 +318,11 @@ def _translate_creation_args(create_job_args):
     input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
-        s3Path=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "output")
+        s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "output")
     )
     stopping_condition = create_job_args["stopping_condition"] or StoppingCondition()
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
-        s3Uri=aws_session.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
+        s3Uri=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
     )
     vpc_config = create_job_args["vpc_config"]
     entry_point = create_job_args["entry_point"]
@@ -511,7 +511,7 @@ def test_tar_and_upload_to_code_location(mock_tar_add, aws_session):
 
 @patch("braket.jobs.quantum_job_creation._process_local_source_module")
 @patch("braket.jobs.quantum_job_creation._validate_entry_point")
-@patch("braket.jobs.quantum_job_creation._validate_input")
+@patch("braket.jobs.quantum_job_creation._validate_params")
 def test_copy_checkpoints(
     mock_validate_input,
     mock_validate_entry_point,
@@ -630,7 +630,8 @@ def test_invalid_input_parameters(entry_point, aws_session):
                         "s3DataSource": {
                             "s3DataDistributionType": "FULLY_REPLICATED",
                             "s3DataType": "S3_PREFIX",
-                            "s3Uri": "s3://default-bucket-name/jobs/job-name/data/input/prefix",
+                            "s3Uri": "s3://default-bucket-name/jobs/job-name/"
+                            "data/local-input/prefix",
                         },
                     },
                 },

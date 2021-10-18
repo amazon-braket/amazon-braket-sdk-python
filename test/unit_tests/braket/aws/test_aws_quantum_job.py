@@ -22,13 +22,6 @@ import pytest
 from botocore.exceptions import ClientError
 
 from braket.aws import AwsQuantumJob, AwsSession
-from braket.jobs.config import (
-    CheckpointConfig,
-    InstanceConfig,
-    OutputDataConfig,
-    StoppingCondition,
-    VpcConfig,
-)
 
 
 @pytest.fixture
@@ -517,58 +510,6 @@ def role_arn():
 @pytest.fixture
 def device_arn():
     return "arn:aws:braket:::device/qpu/test/device-name"
-
-
-@pytest.fixture
-def hyperparameters():
-    return {
-        "param": "value",
-        "other-param": 100,
-    }
-
-
-@pytest.fixture
-def instance_config():
-    return InstanceConfig(
-        instanceType="ml.m5.large",
-        instanceCount=1,
-        volumeSizeInGb=1,
-    )
-
-
-@pytest.fixture
-def stopping_condition():
-    return StoppingCondition(
-        maxRuntimeInSeconds=1200,
-    )
-
-
-@pytest.fixture
-def output_data_config(bucket, s3_prefix):
-    return OutputDataConfig(
-        s3Path=AwsSession.construct_s3_uri(bucket, s3_prefix, "output"),
-    )
-
-
-@pytest.fixture
-def checkpoint_config(bucket, s3_prefix):
-    return CheckpointConfig(
-        localPath="/opt/omega/checkpoints",
-        s3Uri=AwsSession.construct_s3_uri(bucket, s3_prefix, "checkpoints"),
-    )
-
-
-@pytest.fixture(params=["wait", "dont_wait"])
-def wait_until_complete(request):
-    return request.param == "wait"
-
-
-@pytest.fixture
-def vpc_config():
-    return VpcConfig(
-        securityGroupIds=["1", "2"],
-        subnets=["3", "4"],
-    )
 
 
 @pytest.fixture

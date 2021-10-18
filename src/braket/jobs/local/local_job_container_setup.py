@@ -12,11 +12,10 @@
 # language governing permissions and limitations under the License.
 
 import json
-import os
 import tempfile
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Iterable
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.local.local_job_container import _LocalJobContainer
@@ -49,7 +48,7 @@ def setup_container(
     run_environment_variables.update(_get_env_default_vars(aws_session, **creation_kwargs))
     if _copy_hyperparameters(container, **creation_kwargs):
         run_environment_variables.update(_get_env_hyperparameters())
-    if _copy_input_data_list(container, aws_session, logger, **creation_kwargs):
+    if _copy_input_data_list(container, aws_session, **creation_kwargs):
         run_environment_variables.update(_get_env_input_data())
     return run_environment_variables
 
@@ -137,7 +136,7 @@ def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[st
         to the running container.
     """
     job_name = creation_kwargs["jobName"]
-    bucket, location = aws_session.parse_s3_uri(creation_kwargs["outputDataConfig"]["s3Path"])
+    bucket, location = AwsSession.parse_s3_uri(creation_kwargs["outputDataConfig"]["s3Path"])
     return {
         "AWS_DEFAULT_REGION": aws_session.region,
         "AMZN_BRAKET_JOB_NAME": job_name,
@@ -146,11 +145,11 @@ def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[st
         "AMZN_BRAKET_CHECKPOINT_DIR": creation_kwargs["checkpointConfig"]["localPath"],
         "AMZN_BRAKET_OUT_S3_BUCKET": bucket,
         "AMZN_BRAKET_TASK_RESULTS_S3_URI": f"s3://{bucket}/jobs/{job_name}/tasks",
-        "AMZN_BRAKET_JOB_RESULTS_S3_PATH": f"{location}/{job_name}/output",
+        "AMZN_BRAKET_JOB_RESULTS_S3_PATH": str(Path(location, job_name, "output").as_posix()),
     }
 
 
-def _get_env_hyperparameters():
+def _get_env_hyperparameters() -> Dict[str, str]:
     """Gets the env variable for hyperparameters. This should only be added if the customer has
     provided hyperpameters to the job.
 
@@ -163,7 +162,7 @@ def _get_env_hyperparameters():
     }
 
 
-def _get_env_input_data():
+def _get_env_input_data() -> Dict[str, str]:
     """Gets the env variable for input data. This should only be added if the customer has
     provided input data to the job.
 
@@ -191,63 +190,67 @@ def _copy_hyperparameters(container: _LocalJobContainer, **creation_kwargs) -> b
         return False
     hyperparameters = creation_kwargs["hyperParameters"]
     with tempfile.TemporaryDirectory() as temp_dir:
-        file_path = os.path.join(temp_dir, "hyperparameters.json")
+        file_path = Path(temp_dir, "hyperparameters.json")
         with open(file_path, "w") as write_file:
             json.dump(hyperparameters, write_file)
-        container.copy_to(file_path, "/opt/ml/input/config/hyperparameters.json")
+        container.copy_to(str(file_path), "/opt/ml/input/config/hyperparameters.json")
     return True
 
 
 def _download_input_data(
     aws_session: AwsSession,
-    s3_client: Any,
     download_dir: str,
     input_data: Dict[str, Any],
-    logger: Logger,
-) -> bool:
+) -> None:
     """Downloads input data for a job.
 
     Args:
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
-        s3_client (Any): A boto3 s3 client.
         download_dir (str): The directory path to download to.
         input_data (Dict[str, Any]): One of the input data in the boto3 input parameters for
-         running a Braket Job. We currently only support input data that are non-compressed
-          files in S3.
-        logger (Logger): Logger object with which to write logs. Default is `getLogger(__name__)`
-
-    Returns:
-        (bool): True if the input data was downloaded successfully.
+            running a Braket Job.
     """
-    if input_data["compressionType"] != "NONE":
-        logger.warning(f"Not able to handle compression in input data. Skipping {input_data}")
-        return False
-    data_source = input_data["dataSource"]
-    if "s3DataSource" not in data_source:
-        logger.warning(f"Only able to handle S3 data source. Skipping {data_source}")
-        return False
+    # If s3 prefix is the full name of a directory and all keys are inside
+    # that directory, the contents of said directory will be copied into a
+    # directory with the same name as the channel. This behavior is the same
+    # whether or not s3 prefix ends with a "/". Moreover, if s3 prefix ends
+    # with a "/", this is certainly the behavior to expect, since it can only
+    # match a directory.
+    # If s3 prefix matches any files exactly, or matches as a prefix of any
+    # files or directories, then all files and directories matching s3 prefix
+    # will be copied into a directory with the same name as the channel.
+    channel_name = input_data["channelName"]
     s3_uri_prefix = input_data["dataSource"]["s3DataSource"]["s3Uri"]
-    bucket, prefix = aws_session.parse_s3_uri(s3_uri_prefix)
+    bucket, prefix = AwsSession.parse_s3_uri(s3_uri_prefix)
+    s3_keys = aws_session.list_keys(bucket, prefix)
+    top_level = prefix if _is_dir(prefix, s3_keys) else str(Path(prefix).parent)
     found_item = False
-    has_more = True
-    while has_more:
-        kwargs = dict(Bucket=bucket, Prefix=prefix)
-        list_objects = s3_client.list_objects_v2(**kwargs)
-        for obj in list_objects["Contents"]:
-            s3_key = obj["Key"]
-            download_path = os.path.join(download_dir, s3_key)
-            download_dir = os.path.dirname(download_path)
-            Path(download_dir).mkdir(parents=True, exist_ok=True)
-            s3_client.download_file(bucket, s3_key, download_path)
+    try:
+        Path(download_dir, channel_name).mkdir()
+    except FileExistsError:
+        raise ValueError(f"Duplicate channel names not allowed for input data: {channel_name}")
+    for s3_key in s3_keys:
+        relative_key = Path(s3_key).relative_to(top_level)
+        download_path = Path(download_dir, channel_name, relative_key)
+        if not s3_key.endswith("/"):
+            download_path.parent.mkdir(parents=True, exist_ok=True)
+            aws_session.download_from_s3(
+                AwsSession.construct_s3_uri(bucket, s3_key), str(download_path)
+            )
             found_item = True
-        has_more = list_objects["IsTruncated"] and "NextContinuationToken" in list_objects
-        if has_more:
-            kwargs.update(ContinuationToken=list_objects["NextContinuationToken"])
-    return found_item
+    if not found_item:
+        raise RuntimeError(f"No data found for channel '{channel_name}'")
+
+
+def _is_dir(prefix: str, keys: Iterable[str]) -> bool:
+    """determine whether the prefix refers to a directory"""
+    if prefix.endswith("/"):
+        return True
+    return all(key.startswith(f"{prefix}/") for key in keys)
 
 
 def _copy_input_data_list(
-    container: _LocalJobContainer, aws_session: AwsSession, logger: Logger, **creation_kwargs
+    container: _LocalJobContainer, aws_session: AwsSession, **creation_kwargs
 ) -> bool:
     """If the input data list is not empty, this function will download the input files and
     store them in the container.
@@ -255,7 +258,6 @@ def _copy_input_data_list(
     Args:
         container(_LocalJobContainer): The container to save input data to.
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
-        logger (Logger): Logger object with which to write logs. Default is `getLogger(__name__)`
         **creation_kwargs: Keyword arguments for the boto3 Amazon Braket `CreateJob` operation.
 
     Returns:
@@ -265,14 +267,8 @@ def _copy_input_data_list(
         return False
 
     input_data_list = creation_kwargs["inputDataConfig"]
-    s3_client = aws_session.s3_client
     with tempfile.TemporaryDirectory() as temp_dir:
-        found_copy = False
         for input_data in input_data_list:
-            if _download_input_data(aws_session, s3_client, temp_dir, input_data, logger):
-                found_copy = True
-        if found_copy:
-            dir_contents = os.listdir(temp_dir)
-            for dir_item in dir_contents:
-                container.copy_to(os.path.join(temp_dir, dir_item), "/opt/ml/input/data/")
-        return found_copy
+            _download_input_data(aws_session, temp_dir, input_data)
+        container.copy_to(temp_dir, "/opt/ml/input/data/")
+    return bool(input_data_list)

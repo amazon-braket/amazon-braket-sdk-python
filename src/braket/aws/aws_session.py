@@ -365,7 +365,7 @@ class AwsSession(object):
         source_bucket, source_prefix = AwsSession.parse_s3_uri(source_s3_path)
         destination_bucket, destination_prefix = AwsSession.parse_s3_uri(destination_s3_path)
 
-        source_keys = self._list_keys(source_bucket, source_prefix)
+        source_keys = self.list_keys(source_bucket, source_prefix)
 
         for key in source_keys:
             self.s3_client.copy(
@@ -377,7 +377,7 @@ class AwsSession(object):
                 key.replace(source_prefix, destination_prefix, 1),
             )
 
-    def _list_keys(self, bucket: str, prefix: str) -> List[str]:
+    def list_keys(self, bucket: str, prefix: str) -> List[str]:
         """
         Lists keys matching prefix in bucket.
 

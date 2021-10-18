@@ -14,8 +14,6 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from braket.aws.aws_session import AwsSession
-
 
 @dataclass
 class CheckpointConfig:
@@ -113,16 +111,3 @@ class S3DataSourceConfig:
 
         if content_type is not None:
             self.config["contentType"] = content_type
-
-    @classmethod
-    def from_local_data(
-        cls,
-        local_prefix,
-        s3_prefix,
-        distribution=DistributionType.FULLY_REPLICATED,
-        content_type=None,
-        aws_session=None,
-    ):
-        aws_session = aws_session or AwsSession()
-        aws_session.upload_local_data(local_prefix, s3_prefix)
-        return cls(s3_prefix, distribution, content_type)

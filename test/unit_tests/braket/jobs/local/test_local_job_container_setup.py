@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import os
+from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
@@ -26,6 +27,15 @@ def aws_session():
     _aws_session.boto_session.get_credentials.return_value.secret_key = "Test Secret Key"
     _aws_session.boto_session.get_credentials.return_value.token = None
     _aws_session.region = "Test Region"
+    _aws_session.list_keys.side_effect = lambda bucket, prefix: [
+        key
+        for key in [
+            "input-dir/",
+            "input-dir/file-1.txt",
+            "input-dir/file-2.txt",
+        ]
+        if key.startswith(prefix)
+    ]
     return _aws_session
 
 
@@ -89,63 +99,30 @@ def expected_envs():
 @pytest.fixture
 def input_data_config():
     return [
-        # This is a valid data source.
+        # s3 prefix is a single file
         {
-            "compressionType": "NONE",
-            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input_location/b/f.txt"}},
+            "channelName": "single-file",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input-dir/file-1.txt"}},
         },
-        # This is a another valid data source.
+        # s3 prefix is a directory no slash
         {
-            "compressionType": "NONE",
-            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input_location/c/f2.txt"}},
+            "channelName": "directory-no-slash",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input-dir"}},
         },
-        # This is a GZipped data source. Not supported.
+        # s3 prefix is a directory with slash
         {
-            "compressionType": "GZIP",
-            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input_location/b/f3.txt"}},
+            "channelName": "directory-slash",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input-dir/"}},
         },
-        # This is a local data source. Not supported.
+        # s3 prefix is a prefix for a directory
         {
-            "compressionType": "NONE",
-            "dataSource": {
-                "fileSystemDataSource": {
-                    "directoryPath": "/some/temp/dir",
-                    "fileSystemAccessMode": "RO",
-                    "fileSystemId": "SystemId",
-                    "fileSystemType": "type",
-                }
-            },
+            "channelName": "directory-prefix",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input"}},
         },
-    ]
-
-
-@pytest.fixture
-def input_s3_list_results():
-    return [
+        # s3 prefix is a prefix for multiple files
         {
-            "Contents": [
-                {
-                    "Key": "test_key",
-                }
-            ],
-            "IsTruncated": True,
-            "NextContinuationToken": "ContToken",
-        },
-        {
-            "Contents": [
-                {
-                    "Key": "test_key2",
-                }
-            ],
-            "IsTruncated": False,
-        },
-        {
-            "Contents": [
-                {
-                    "Key": "test_key3",
-                }
-            ],
-            "IsTruncated": False,
+            "channelName": "files-prefix",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/input-dir/file"}},
         },
     ]
 
@@ -192,71 +169,52 @@ def test_hyperparameters(tempfile, json, container, aws_session, creation_kwargs
         )
 
 
-@patch("braket.jobs.local.local_job_container_setup.Path")
-@patch("os.listdir")
-@patch("tempfile.TemporaryDirectory")
-def test_inputs(
-    mock_tempfile,
-    mock_listdir,
-    mock_path,
-    container,
-    aws_session,
-    creation_kwargs,
-    expected_envs,
-    input_data_config,
-    input_s3_list_results,
-):
-    with patch("builtins.open", mock_open()):
-        mock_tempfile.return_value.__enter__.return_value = "temporaryDir"
-        mock_listdir.return_value = ["input_file0.txt", "input_file1.txt"]
-        creation_kwargs["inputDataConfig"] = input_data_config
-        expected_envs["AMZN_BRAKET_INPUT_DIR"] = "/opt/braket/input/data"
-        aws_session.parse_s3_uri.return_value = ["test_bucket", "test_location"]
-        aws_session.s3_client.list_objects_v2.side_effect = input_s3_list_results
-        envs = setup_container(container, aws_session, **creation_kwargs)
-        assert envs == expected_envs
-        container.makedir.assert_any_call("/opt/ml/model")
-        container.makedir.assert_any_call(expected_envs["AMZN_BRAKET_CHECKPOINT_DIR"])
-        assert container.makedir.call_count == 2
-        container.copy_to.assert_any_call(
-            os.path.join("temporaryDir", "input_file0.txt"), "/opt/ml/input/data/"
-        )
-        container.copy_to.assert_any_call(
-            os.path.join("temporaryDir", "input_file1.txt"), "/opt/ml/input/data/"
-        )
-        assert container.copy_to.call_count == 2
-        aws_session.parse_s3_uri.assert_any_call("s3://test_bucket/test_location/")
-        aws_session.parse_s3_uri.assert_any_call("s3://input_bucket/input_location/b/f.txt")
-        aws_session.parse_s3_uri.assert_any_call("s3://input_bucket/input_location/c/f2.txt")
-        assert aws_session.parse_s3_uri.call_count == 3
+def test_input(container, aws_session, creation_kwargs, input_data_config):
+    creation_kwargs.update({"inputDataConfig": input_data_config})
+    setup_container(container, aws_session, **creation_kwargs)
+    download_locations = [call[0][1] for call in aws_session.download_from_s3.call_args_list]
+    expected_downloads = [
+        Path("single-file", "file-1.txt"),
+        Path("directory-no-slash", "file-1.txt"),
+        Path("directory-no-slash", "file-2.txt"),
+        Path("directory-slash", "file-1.txt"),
+        Path("directory-slash", "file-2.txt"),
+        Path("directory-prefix", "input-dir", "file-1.txt"),
+        Path("directory-prefix", "input-dir", "file-2.txt"),
+        Path("files-prefix", "file-1.txt"),
+        Path("files-prefix", "file-2.txt"),
+    ]
+
+    for download, expected_download in zip(download_locations, expected_downloads):
+        assert download.endswith(str(expected_download))
 
 
-@patch("os.listdir")
-@patch("tempfile.TemporaryDirectory")
-def test_not_supported_inputs(
-    mock_tempfile, mock_listdir, container, aws_session, creation_kwargs, expected_envs
-):
-    with patch("builtins.open", mock_open()):
-        mock_tempfile.return_value.__enter__.return_value = "temporaryDir"
-        mock_listdir.return_value = []
-        creation_kwargs["inputDataConfig"] = []
-        aws_session.parse_s3_uri.return_value = ["test_bucket", "test_location"]
-        aws_session.s3_client.list_objects_v2.return_value = {
-            "Contents": [
-                {
-                    "Key": "test_key",
-                }
-            ],
-            "IsTruncated": False,
+def test_duplicate_input(container, aws_session, creation_kwargs, input_data_config):
+    input_data_config.append(
+        {
+            # this is a duplicate channel
+            "channelName": "single-file",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/irrelevant"}},
         }
-        envs = setup_container(container, aws_session, **creation_kwargs)
-        assert envs == expected_envs
-        container.makedir.assert_any_call("/opt/ml/model")
-        container.makedir.assert_any_call(expected_envs["AMZN_BRAKET_CHECKPOINT_DIR"])
-        assert container.makedir.call_count == 2
-        assert container.copy_to.call_count == 0
-        aws_session.parse_s3_uri.assert_any_call("s3://test_bucket/test_location/")
-        assert aws_session.parse_s3_uri.call_count == 1
+    )
+    creation_kwargs.update({"inputDataConfig": input_data_config})
+    dupes_not_allowed = "Duplicate channel names not allowed for input data: single-file"
+    with pytest.raises(ValueError, match=dupes_not_allowed):
+        setup_container(container, aws_session, **creation_kwargs)
+
+
+def test_no_data_input(container, aws_session, creation_kwargs, input_data_config):
+    input_data_config.append(
+        {
+            # this channel won't match any data
+            "channelName": "no-data",
+            "dataSource": {"s3DataSource": {"s3Uri": "s3://input_bucket/irrelevant"}},
+        }
+    )
+    creation_kwargs.update({"inputDataConfig": input_data_config})
+    no_data_found = "No data found for channel 'no-data'"
+    with pytest.raises(RuntimeError, match=no_data_found):
+        setup_container(container, aws_session, **creation_kwargs)
 
 
 def test_temporary_credentials(container, aws_session, creation_kwargs, expected_envs):

@@ -11,10 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 import base64
-import os
 import re
 import subprocess
 from logging import Logger, getLogger
+from pathlib import Path
 from typing import Dict, List
 
 from braket.aws.aws_session import AwsSession
@@ -178,7 +178,7 @@ class _LocalJobContainer(object):
         Raises:
             subprocess.CalledProcessError: If unable to copy.
         """
-        dirname = os.path.dirname(destination)
+        dirname = str(Path(destination).parent)
         try:
             subprocess.check_output(
                 ["docker", "exec", self._container_name, "mkdir", "-p", dirname]

@@ -870,7 +870,7 @@ def test_copy_identical_s3_directory(aws_session):
 
 
 def test_copy_s3_directory(aws_session):
-    aws_session._list_keys = Mock(return_value=[f"now/key-{i}" for i in range(5)])
+    aws_session.list_keys = Mock(return_value=[f"now/key-{i}" for i in range(5)])
     source_s3_uri = "s3://here/now"
     dest_s3_uri = "s3://there/then"
     aws_session.copy_s3_directory(source_s3_uri, dest_s3_uri)
@@ -904,7 +904,7 @@ def test_list_keys(aws_session):
             ],
         },
     ]
-    keys = aws_session._list_keys(bucket, prefix)
+    keys = aws_session.list_keys(bucket, prefix)
     assert keys == [
         "copy-test/copy.txt",
         "copy-test/copy2.txt",

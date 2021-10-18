@@ -62,7 +62,7 @@ class QuantumJob(ABC):
                 new log entries and job completion (default: 5).
 
         Raises:
-            exceptions.UnexpectedStatusException: If waiting and the training job fails.
+            RuntimeError: If waiting and the job fails.
         """
         # The loop below implements a state machine that alternates between checking the job status
         # and reading whatever is available in the logs at this point. Note, that if we were

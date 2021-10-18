@@ -79,8 +79,8 @@ class LocalQuantumJob(QuantumJob):
             code_location (str): The S3 prefix URI where custom code will be uploaded.
                 Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
-            role_arn (str): A str providing the IAM role ARN used to execute the
-                script. Default: IAM role returned by get_execution_role().
+            role_arn (str): This field is currently not used for local jobs. Local jobs will use
+                the current role's credentials. This may be subject to change.
 
             hyperparameters (Dict[str, Any]): Hyperparameters accessible to the job.
                 The hyperparameters are made accessible as a Dict[str, str] to the job.
