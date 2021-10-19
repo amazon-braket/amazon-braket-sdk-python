@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.2 (2021-07-14)
+
+### Bug Fixes and Other Changes
+
+ * add json validation for device schema in unit tests
+
 ## v1.7.1 (2021-07-02)
 
 ### Bug Fixes and Other Changes
