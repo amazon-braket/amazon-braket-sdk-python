@@ -15,7 +15,7 @@ import numpy as np
 import braket.circuits as braket_circ
 
 from braket.circuits.synthesis.util import to_su
-from braket.circuits.synthesis.predicates import is_unitary, eq_up_to_phase
+from braket.circuits.quantum_operator_helpers import is_unitary, eq_up_to_phase
 from braket.circuits import Circuit
 from braket.circuits.gates import X, Y, Z, Rx, Ry, Rz
 from braket.circuits.instruction import Instruction

@@ -14,7 +14,7 @@
 import numpy as np
 
 from braket.circuits.synthesis.constants import magic_basis
-from braket.circuits.synthesis.predicates import is_unitary
+from braket.circuits.quantum_operator_helpers import is_unitary
 from braket.circuits.synthesis.util import char_poly, to_su
 from braket.circuits.gates import Y
 

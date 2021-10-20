@@ -18,7 +18,7 @@ from scipy.linalg import expm
 
 from braket.circuits.gates import X, Y, Z, H, S, T
 import braket.circuits.synthesis.one_qubit_decomposition as decomp1q
-from braket.circuits.synthesis.predicates import eq_up_to_phase
+from braket.circuits.quantum_operator_helpers import eq_up_to_phase
 from braket.circuits.synthesis.util import to_su
 
 x = X().to_matrix()
