@@ -158,6 +158,9 @@ class TwoQubitDecomposition:
 
     @property
     def unitary(self):
+        """
+        The unitary matrix of this decomposition.
+        """
         return self.U
 
     def pretty_print(self) -> None:
@@ -182,6 +185,10 @@ class TwoQubitDecomposition:
         print(kak_str)
 
     def plot_canonical_vector(self):
+        """
+        Plot the canonical KAK vector of the decomposition.
+        """
+
         _plot_canonical_vector(self.canonical_vector)
 
     def count_num_cnots(self):
