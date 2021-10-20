@@ -11,17 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import numpy as np
-from braket.circuits.gates import X, Y, Z
-
-# Pauli matrices
-x = X().to_matrix()
-y = Y().to_matrix()
-z = Z().to_matrix()
-I = np.eye(2)
-
-kak_so4_transform_matrix = np.array([[1, 1, -1, 1], [1, 1, 1, -1], [1, -1, -1, -1], [1, -1, 1, 1]])
-
-magic_basis = np.sqrt(0.5) * np.array(
-    [[1, 0, 0, 1j], [0, 1j, 1, 0], [0, 1j, -1, 0], [1, 0, 0, -1j]]
-)
+def MCRy(angles, control_bit = 0, reverse=False):
+    """
+    Multiplexed Ry gate.

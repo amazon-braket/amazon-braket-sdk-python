@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -24,6 +24,9 @@ def rx(theta):
 
     Args:
         theta (float): the rotation angle.
+
+    Returns:
+        np.ndarray: The unitary of rx gate.
     """
 
     # faster than expm(-0.5j * theta * x)
@@ -41,6 +44,9 @@ def ry(theta):
 
     Args:
         theta (float): the rotation angle.
+
+    Returns:
+        np.ndarray: The unitary of ry gate.
     """
     return np.array(
         [[np.cos(0.5 * theta), -np.sin(0.5 * theta)], [np.sin(0.5 * theta), np.cos(0.5 * theta)]]
@@ -53,6 +59,9 @@ def rz(theta):
 
     Args:
         theta (float): the rotation angle.
+
+    Returns:
+        np.ndarray: The unitary of rz gate.
     """
     return np.array([[np.exp(-0.5j * theta), 0], [0, np.exp(0.5j * theta)]])
 
