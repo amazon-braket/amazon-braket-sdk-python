@@ -32,7 +32,7 @@ from braket.circuits.gates import X, Y, Z, CNot
 from braket.circuits.synthesis.invariants import makhlin_invariants, gamma_invariants
 from braket.circuits.synthesis.one_qubit_decomposition import OneQubitDecomposition
 from braket.circuits.synthesis.constants import magic_basis, kak_so4_transform_matrix
-from braket.circuits.synthesis.predicates import is_unitary, commute
+from braket.circuits.quantum_operator_helpers import is_unitary, commute
 from braket.circuits.synthesis.util import (
     rx,
     ry,

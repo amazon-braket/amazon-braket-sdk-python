@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -37,7 +37,7 @@ invalid_dimension_matrices = [
     (np.array([1])),
     (np.array([0, 1, 2])),
     (np.array([[0, 1], [1, 2], [3, 4]])),
-    (np.array([[0, 1, 2], [2, 3]])),
+    (np.array([[0, 1, 2], [2, 3]], dtype=object)),
     (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])),
 ]
 

@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -100,7 +100,9 @@ class AwsQuantumTask(QuantumTask):
                 without any rewiring downstream, if this is supported by the device.
                 Only applies to digital, gate-based circuits (as opposed to annealing problems).
                 If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
-                Default: ``False``.
+                If the circuit has frozen qubits (``circuit.has_frozen_qubits==True``), then this
+                must be True, or running will throw an exception.
+                Default: False
 
             tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
                 An example would be:
@@ -253,9 +255,13 @@ class AwsQuantumTask(QuantumTask):
         return self._status(use_cached_value)
 
     def _status(self, use_cached_value=False):
-        status = self.metadata(use_cached_value).get("status")
+        metadata = self.metadata(use_cached_value)
+        status = metadata.get("status")
         if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
-            self._logger.warning(f"Task is in terminal state {status} and no result is available")
+            self._logger.warning(f"Task is in terminal state {status} and no result is available.")
+            if status == "FAILED":
+                failure_reason = metadata.get("failureReason", "unknown")
+                self._logger.warning(f"Task failure reason is: {failure_reason}.")
         return status
 
     def _update_status_if_nonterminal(self):
@@ -417,6 +423,10 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
+    if circuit.qubits_frozen and not disable_qubit_rewiring:
+        raise ValueError(
+            "disable_qubit_rewiring must be True to run circuit with compiler directives"
+        )
 
     # TODO: Update this to use `deviceCapabilities` from Amazon Braket's GetDevice operation
     # in order to decide what parameters to build.

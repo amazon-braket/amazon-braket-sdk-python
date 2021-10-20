@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -68,7 +68,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
 )
 
 
-def test_mock_regetti_schema_1():
+def test_mock_rigetti_schema_1():
     validate(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1, RigettiDeviceCapabilities.schema())
 
 
@@ -115,7 +115,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_2 = RigettiDeviceCapabilities.parse_obj(
 )
 
 
-def test_mock_regetti_schema_2():
+def test_mock_rigetti_schema_2():
     validate(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_2, RigettiDeviceCapabilities.schema())
 
 

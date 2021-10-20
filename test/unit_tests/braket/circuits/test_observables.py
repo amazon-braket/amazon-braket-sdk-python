@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -39,7 +39,7 @@ invalid_hermitian_matrices = [
     (np.array([1])),
     (np.array([0, 1, 2])),
     (np.array([[0, 1], [1, 2], [3, 4]])),
-    (np.array([[0, 1, 2], [2, 3]])),
+    (np.array([[0, 1, 2], [2, 3]], dtype=object)),
     (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])),
     (Gate.T().to_matrix()),
 ]
@@ -124,6 +124,16 @@ def test_hermitian_to_ir():
 )
 def test_hermitian_eigenvalues(matrix, eigenvalues):
     compare_eigenvalues(Observable.Hermitian(matrix=matrix), eigenvalues)
+
+
+def test_flattened_tensor_product():
+    observable_one = Observable.Z() @ Observable.Y()
+    observable_two = Observable.X() @ Observable.H()
+    actual = Observable.TensorProduct([observable_one, observable_two])
+    expected = Observable.TensorProduct(
+        [Observable.Z(), Observable.Y(), Observable.X(), Observable.H()]
+    )
+    assert expected == actual
 
 
 @pytest.mark.parametrize(
@@ -226,11 +236,6 @@ def test_tensor_product_rmatmul_observable():
     assert t.to_ir() == ["i", "z", "i", "x"]
     assert t.qubit_count == 4
     assert t.ascii_symbols == tuple(["I@Z@I@X"] * 4)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_tensor_product_rmatmul_value_error():
-    "a" @ Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
 
 
 @pytest.mark.parametrize(

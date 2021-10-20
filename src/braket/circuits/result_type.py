@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -69,7 +69,9 @@ class ResultType:
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
-    def copy(self, target_mapping: Dict[QubitInput, QubitInput] = {}, target: QubitSetInput = None):
+    def copy(
+        self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
+    ):
         """
         Return a shallow copy of the result type.
 
@@ -80,7 +82,7 @@ class ResultType:
         Args:
             target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
-                value is what the key is changed to. Default = `{}`.
+                value is what the key is changed to. Default = `None`.
             target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
                 instruction.
 
@@ -108,9 +110,8 @@ class ResultType:
         elif target is not None:
             if hasattr(copy, "target"):
                 copy.target = target
-        else:
-            if hasattr(copy, "target"):
-                copy.target = self._target.map(target_mapping)
+        elif hasattr(copy, "target"):
+            copy.target = self._target.map(target_mapping or {})
         return copy
 
     @classmethod

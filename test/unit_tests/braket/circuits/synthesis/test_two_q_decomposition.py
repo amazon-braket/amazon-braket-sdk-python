@@ -17,7 +17,7 @@ from scipy.linalg import expm
 import pytest
 import random
 
-import braket.circuits.synthesis.predicates as predicates
+import braket.circuits.quantum_operator_helpers as predicates
 import braket.circuits.synthesis.two_qubit_decomposition as kak
 from braket.circuits.gates import X, Y, Z, H, S, CNot, CZ
 

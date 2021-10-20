@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -33,9 +33,9 @@ def no_noise_applied_warning(noise_applied: bool):
     "Helper function to give a warning is noise is not applied"
     if noise_applied is False:
         warnings.warn(
-            "Noise is not applied to any gate, as there is no eligible gate \
-in the circuit with the input criteria or there is no multi-qubit gate to apply the multi-qubit \
-noise."
+            "Noise is not applied to any gate, as there is no eligible gate in the circuit"
+            " with the input criteria or there is no multi-qubit gate to apply"
+            " the multi-qubit noise."
         )
 
 

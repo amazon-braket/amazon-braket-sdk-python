@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -31,16 +31,18 @@ setup(
         "backoff",
         "boltons",
         "boto3",
+        "coverage==5.5",
         "nest-asyncio",
         "networkx",
         "numpy",
+        "scipy",
     ],
     extras_require={
         "test": [
             "black",
             "flake8",
             "isort",
-            "jsonschema",
+            "jsonschema==3.2.0",
             "pre-commit",
             "pylint",
             "pytest",

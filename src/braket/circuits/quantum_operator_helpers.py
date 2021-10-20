@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -39,7 +39,9 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
         raise ValueError(f"`matrix` dimension {matrix.shape[0]} is not a positive power of 2")
 
 
-def is_hermitian(matrix: np.array) -> bool:
+def is_hermitian(
+    matrix: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
+        ) -> bool:
     r"""
     Whether matrix is Hermitian
 
@@ -51,11 +53,44 @@ def is_hermitian(matrix: np.array) -> bool:
 
     Args:
         matrix (np.ndarray): matrix to verify
+        atol (np.dtype): absolute tolerance parameter.
+        rtol (np.dtype): relative tolerance parameter.
+        raise_exception (bool): if raise an exception
+        when condition is not met.
 
     Returns:
-        bool: If matrix is Hermitian
+        is_hermitian (bool): If matrix is Hermitian
     """
-    return np.allclose(matrix, matrix.conj().T)
+    is_hermitian = np.allclose(matrix, matrix.conj().T, atol=atol, rtol=rtol)
+
+    if raise_exception and not is_hermitian:
+        raise ValueError(f"{matrix} is not Hermitian.")
+
+    return is_hermitian
+
+
+def is_diag(
+    matrix: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
+) -> bool:
+    """
+    Whether matrix is diagonal
+
+    Args:
+        matrix (np.ndarray): matrix to check.
+        atol (np.dtype): absolute tolerance parameter.
+        rtol (np.dtype): relative tolerance parameter.
+        raise_exception (bool): if raise an exception
+        when condition is not met.
+
+    Returns:
+        is_diag (bool): True if U is diagonal and False otherwise.
+    """
+    is_diag = np.allclose(matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol)
+
+    if raise_exception and not is_diag:
+        raise ValueError(f"{matrix} is not diagonal.")
+
+    return is_diag
 
 
 def is_square_matrix(matrix: np.array) -> bool:
@@ -71,7 +106,9 @@ def is_square_matrix(matrix: np.array) -> bool:
     return len(matrix.shape) == 2 and matrix.shape[0] == matrix.shape[1]
 
 
-def is_unitary(matrix: np.array) -> bool:
+def is_unitary(
+    matrix: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
+        ) -> bool:
     r"""
     Whether matrix is unitary
 
@@ -84,14 +121,25 @@ def is_unitary(matrix: np.array) -> bool:
 
     Args:
         matrix (np.ndarray): matrix to verify
+        atol (np.dtype): absolute tolerance parameter.
+        rtol (np.dtype): relative tolerance parameter.
+        raise_exception (bool): if raise an exception
+        when condition is not met.
 
     Returns:
-        bool: If matrix is unitary
+        is_unitary (bool): If matrix is unitary
     """
-    return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
+    is_unitary = np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()), atol=atol, rtol=rtol)
+
+    if raise_exception and not is_unitary:
+        raise ValueError(f"{matrix} is not unitary.")
+
+    return is_unitary
 
 
-def is_cptp(matrices: Iterable[np.array]) -> bool:
+def is_cptp(
+    matrices: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
+        ) -> bool:
     """
     Whether a transformation defined by these matrics as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for
@@ -100,12 +148,80 @@ def is_cptp(matrices: Iterable[np.array]) -> bool:
 
     Args:
         matrices (Iterable[np.array]): List of matrices representing Kraus operators.
+        atol (np.dtype): absolute tolerance parameter.
+        rtol (np.dtype): relative tolerance parameter.
+        raise_exception (bool): if raise an exception
+        when condition is not met.
 
     Returns:
-        bool: If the matrices define a CPTP map.
+        is_cptp (bool): If the matrices define a CPTP map.
     """
     E = sum([np.dot(matrix.T.conjugate(), matrix) for matrix in matrices])
-    return np.allclose(E, np.eye(*E.shape))
+    is_cptp = np.allclose(E, np.eye(*E.shape), atol=atol, rtol=rtol)
+
+    if raise_exception and not is_cptp:
+        raise ValueError(f"The input Kraus operators does not form a CPTP map.")
+
+    return is_cptp
+
+
+def commute(
+    M1: np.ndarray,
+    M2: np.ndarray,
+    atol: float = 1e-8,
+    rtol: float = 1e-5,
+    raise_exception: bool = False,
+) -> bool:
+    """
+    Find out if matrix a, b commute.
+
+    Args:
+        M1 (np.ndarray): first matrix to check.
+        M2 (np.ndarray): second matrix to check.
+        atol (np.dtype): absolute tolerance parameter.
+        rtol (np.dtype): relative tolerance parameter.
+        raise_exception (bool): if raise an exception
+        when condition is not met.
+
+    Returns:
+        pred (bool): True if M1, M2 commute and False otherwise.
+    """
+
+    commute = np.allclose(M1 @ M2 - M2 @ M1, 0, atol=atol, rtol=rtol)
+
+    if raise_exception and not commute:
+        raise ValueError(f"{M1}, {M2} do not commute.")
+
+    return commute
+
+
+def eq_up_to_phase(
+    U1, U2, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
+) -> bool:
+    """
+    Find out if U1 and U2 are equivalent up to a global phase.
+
+    Args:
+        U1 (np.ndarray): first 2x2 matrix to compare.
+        U2 (np.ndarray): second 2x2 matrix to compare.
+        atol (np.dtype): absolute tolerance parameter.
+        rtol (np.dtype): relative tolerance parameter.
+        raise_exception (bool): if raise an exception
+        when condition is not met.
+
+    Returns:
+        eq (bool): True if U1 and U2 are equal up to a global phase.
+    """
+
+    i, j = np.unravel_index(np.argmax(abs(U1), axis=None), U1.shape)
+    phase = U2[i, j] / U1[i, j]
+
+    eq = np.allclose(U1 * phase, U2, atol=atol, rtol=rtol)
+
+    if raise_exception and not eq:
+        raise ValueError(f"{U1} and {U2} are not equal up to a phase")
+
+    return eq
 
 
 @lru_cache()
@@ -116,8 +232,7 @@ def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
 
     Args:
         num_qubits (int): the number of qubits the operator acts on
-
-    Returns:
+Returns:
         np.ndarray: the eigenvalues of a Pauli product operator of the given size
     """
     if num_qubits == 1:
