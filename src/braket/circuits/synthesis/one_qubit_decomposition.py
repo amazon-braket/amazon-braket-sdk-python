@@ -1,4 +1,4 @@
-# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -14,11 +14,15 @@
 import numpy as np
 import braket.circuits as braket_circ
 
-from braket.circuits.synthesis.util import u_to_su
-from braket.circuits.quantum_operator_helpers import is_unitary
+from braket.circuits.synthesis.util import to_su
+from braket.circuits.synthesis.predicates import is_unitary, eq_up_to_phase
 from braket.circuits import Circuit
 from braket.circuits.gates import X, Y, Z, Rx, Ry, Rz
 from braket.circuits.instruction import Instruction
+
+from scipy.linalg import expm
+
+import time
 
 y = Y().to_matrix()
 z = Z().to_matrix()
@@ -53,7 +57,7 @@ class OneQubitDecomposition:
         is_unitary(U, atol=self.atol, rtol=self.rtol, raise_exception=True)
 
         self.U = U
-        su = u_to_su(self.U)
+        su = to_su(self.U)
         self.phase = np.linalg.det(U) ** 0.5
 
         # Calculate zyz Euler angles.
@@ -161,10 +165,10 @@ class OneQubitDecomposition:
         repr_str = (
             "OneQubitDecomposition(\n"
             + f"  global phase: {self.phase},\n"
-            + "  ZYZ decomposition:\n"
+            + f"  ZYZ decomposition:\n"
             + "    ------Rz--Ry--Rz------\n"
             + f"    euler angles: {self.euler_angles('zyz')})\n"
-            + "  Axis-angle decomposition:\n"
+            + f"  Axis-angle decomposition:\n"
             + "    SU(2) = exp(-0.5j * theta * (xX + yY + zZ))\n"
             + f"    canonical vector (x, y, z): {self.canonical_vector},\n"
             + f"    theta: {self.rotation_angle},\n"

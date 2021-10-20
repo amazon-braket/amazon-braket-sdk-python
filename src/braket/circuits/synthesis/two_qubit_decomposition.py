@@ -1,4 +1,4 @@
-# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -22,6 +22,9 @@ from typing import Tuple, Sequence
 import matplotlib
 import matplotlib.pyplot as plt
 
+matplotlib.rcParams["text.usetex"] = True
+from mpl_toolkits import mplot3d
+
 # Braket
 import braket.circuits as braket_circ
 from braket.circuits import Circuit
@@ -29,22 +32,21 @@ from braket.circuits.gates import X, Y, Z, CNot
 from braket.circuits.synthesis.invariants import makhlin_invariants, gamma_invariants
 from braket.circuits.synthesis.one_qubit_decomposition import OneQubitDecomposition
 from braket.circuits.synthesis.constants import magic_basis, kak_so4_transform_matrix
-from braket.circuits.quantum_operator_helpers import is_unitary
+from braket.circuits.synthesis.predicates import is_unitary, commute
 from braket.circuits.synthesis.util import (
     rx,
+    ry,
     rz,
-    u_to_su,
+    to_su,
+    char_poly,
     diagonalize_two_matrices_with_hermitian_products,
 )
 
-matplotlib.rcParams["text.usetex"] = True
-
-# Constants
 x = X().to_matrix()
 y = Y().to_matrix()
 z = Z().to_matrix()
 cnot = CNot().to_matrix()
-I2d = np.eye(2)
+I = np.eye(2)
 cnot_re = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=np.complex128)
 
 
@@ -70,7 +72,7 @@ class TwoQubitDecomposition:
         self.build(U)
         _move_to_weyl_chamber(self)
 
-    def build(self, U: np.ndarray):
+    def build(self, U: np.ndarray, validate_input: bool = True):
         """
         Cartan's KAK decomposition of a 4x4 unitary matrix U:
         U = (u1 ⊗ u2) · exp(i(a·XX + b·YY+c·ZZ))·(u3 ⊗ u4)
@@ -83,11 +85,13 @@ class TwoQubitDecomposition:
 
         Args:
             U (np.ndarray): input 4x4 unitary matrix to decompose.
+            validate_input (bool): if check input.
             atol (float): absolute tolerance parameter.
             rtol (float): relative tolerance parameter.
         """
 
-        is_unitary(U, raise_exception=True)
+        if validate_input:
+            is_unitary(U, raise_exception=True)
 
         if np.allclose(
             makhlin_invariants(U, atol=self.atol, rtol=self.rtol),
@@ -98,7 +102,7 @@ class TwoQubitDecomposition:
             g, u1, u2 = decompose_one_qubit_product(U, atol=self.atol, rtol=self.rtol)
 
             self.phase = g
-            self.su2 = [u1, u2, I2d, I2d]
+            self.su2 = [u1, u2, I, I]
             self.canonical_vector = np.array([0, 0, 0])
 
             self.cnot_circuit_phase = 0.0
@@ -206,6 +210,7 @@ def two_qubit_decompose(
         U (np.ndarray): the unitary to decompose.
         atol (float): absolute tolerance parameter.
         rtol (float): relative tolerance parameter.
+          
     """
 
     return TwoQubitDecomposition(U, atol=atol, rtol=rtol)
@@ -238,6 +243,7 @@ def build_cnot_circuit(
 
     if kak.num_cnots() == 1:
         cnot_decomp = TwoQubitDecomposition(cnot, atol=kak.atol, rtol=kak.rtol)
+        phase = kak.phase / cnot_decomp.phase
         u1 = kak.su2[0] @ cnot_decomp.su2[0].conj().T
         u2 = kak.su2[1] @ cnot_decomp.su2[1].conj().T
         u3 = cnot_decomp.su2[2].conj().T @ kak.su2[2]
@@ -269,6 +275,7 @@ def build_cnot_circuit(
 
         cnot_decomp = TwoQubitDecomposition(cnot_re @ np.kron(rz(theta[0]), rx(theta[1])) @ cnot_re)
 
+        phase = kak.phase / cnot_decomp.phase
         u1 = kak.su2[0] @ cnot_decomp.su2[0].conj().T
         u2 = kak.su2[1] @ cnot_decomp.su2[1].conj().T
         u3 = rz(theta[0])
@@ -296,7 +303,8 @@ def build_cnot_circuit(
     if kak.num_cnots() == 3:
 
         # U(4) -> SU(4)
-        su = u_to_su(kak.U)
+        su = to_su(kak.U)
+        initial_phase = np.linalg.det(kak.U) ** (0.25)
 
         # Find the gamma invariants defined in
         # https://arxiv.org/pdf/quant-ph/0308033.pdf
@@ -310,7 +318,7 @@ def build_cnot_circuit(
 
         psi = np.arctan2(psi_num, psi_denom)
 
-        m = su @ np.kron(I2d, rz(psi)) @ cnot
+        m = su @ np.kron(I, rz(psi)) @ cnot
         gamma_m = gamma_invariants(m)
         r_m = np.angle(np.roots(gamma_m))
         r_m = np.sort(r_m[r_m > 0])
@@ -327,6 +335,8 @@ def build_cnot_circuit(
 
         w_decomp = TwoQubitDecomposition(w)
         m_decomp = TwoQubitDecomposition(m)
+
+        phase = initial_phase * m_decomp.phase / w_decomp.phase
 
         u1 = m_decomp.su2[0] @ w_decomp.su2[0].conj().T
         u2 = m_decomp.su2[1] @ w_decomp.su2[1].conj().T
@@ -394,8 +404,8 @@ def decompose_one_qubit_product(
     u1 = U[np.ix_(u1_set(i), u1_set(j))]
     u2 = U[np.ix_(u2_set(i), u2_set(j))]
 
-    u1 = u_to_su(u1)
-    u2 = u_to_su(u2)
+    u1 = to_su(u1)
+    u2 = to_su(u2)
 
     phase = U[i, j] / (u1[i // 2, j // 2] * u2[i % 2, j % 2])
 
@@ -444,7 +454,7 @@ def odo_decomposition(
     return (QL.T, theta, QR.T)
 
 
-def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None:  # noqa: C901
+def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None:
     """
     Move the canonical vector to the Weyl chamber.
 

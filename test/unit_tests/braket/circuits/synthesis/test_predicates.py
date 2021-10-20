@@ -1,4 +1,4 @@
-# Copyright 2019-2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -11,7 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import math
 import numpy as np
+from scipy.linalg import expm
 import pytest
 import random
 
@@ -84,7 +86,6 @@ three_cnot_test = [
 unitary_test = simple_u_test + product_gate_test + one_cnot_test + two_cnot_test + three_cnot_test
 
 unitary_test_with_phase = [u * np.exp(2 * np.pi * random.random()) for u in unitary_test]
-
 
 # Test is_diag function
 @pytest.mark.parametrize(

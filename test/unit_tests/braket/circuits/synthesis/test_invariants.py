@@ -23,26 +23,24 @@ cy = CY().to_matrix()
 iswap = ISwap().to_matrix()
 swap = Swap().to_matrix()
 
-
-@pytest.mark.parametrize(
-    "unitary_test_cases, expected",
-    [(cnot, (0, 0, 1)), (cz, (0, 0, 1)), (cy, (0, 0, 1)), (iswap, (0, 0, -1)), (swap, (-1, 0, -3))],
-)
+@pytest.mark.parametrize("unitary_test_cases, expected", 
+        [(cnot, (0, 0, 1)),
+         (cz, (0, 0, 1)),
+         (cy, (0, 0, 1)),
+         (iswap, (0, 0, -1)),
+         (swap, (-1, 0, -3))
+             ])
 def test_makhlin(unitary_test_cases, expected):
     m_inv = inv.makhlin_invariants(unitary_test_cases)
     assert np.allclose(m_inv, expected)
 
-
-@pytest.mark.parametrize(
-    "unitary_test_cases, expected",
-    [
-        (cnot, [1, 0, 2, 0, 1]),
-        (cz, [1, 0, 2, 0, 1]),
-        (cy, [1, 0, 2, 0, 1]),
-        (iswap, [1, 0, -2, 0, 1]),
-        (swap, [1, 4j, -6, -4j, 1]),
-    ],
-)
-def test_gamma(unitary_test_cases, expected):
+@pytest.mark.parametrize("unitary_test_cases, expected", 
+        [(cnot, [1, 0, 2, 0, 1]),
+         (cz, [1, 0, 2, 0, 1]),
+         (cy, [1, 0, 2, 0, 1]),
+         (iswap, [1, 0, -2, 0, 1]),
+         (swap, [1, 4j, -6, -4j, 1])
+             ])
+def test_makhlin(unitary_test_cases, expected):
     m_inv = inv.gamma_invariants(unitary_test_cases)
     assert np.allclose(m_inv, expected)

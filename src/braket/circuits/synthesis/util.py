@@ -1,4 +1,4 @@
-# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -13,9 +13,9 @@
 
 import numpy as np
 from scipy.linalg import block_diag
-from typing import Tuple
+from typing import List, Tuple, Union
 
-from braket.circuits.quantum_operator_helpers import is_diag, is_hermitian, commute
+from braket.circuits.synthesis.predicates import is_diag, is_hermitian, commute, is_unitary
 
 
 def rx(theta):
@@ -23,7 +23,10 @@ def rx(theta):
     Unitary for 1-qubit X rotations.
 
     Args:
-        float: the rotation angle.
+        theta (float): the rotation angle.
+
+    Returns:
+        np.ndarray: The unitary of rx gate.
     """
 
     # faster than expm(-0.5j * theta * x)
@@ -40,7 +43,10 @@ def ry(theta):
     Unitary for 1-qubit Y rotations.
 
     Args:
-        float: the rotation angle.
+        theta (float): the rotation angle.
+
+    Returns:
+        np.ndarray: The unitary of ry gate.
     """
     return np.array(
         [[np.cos(0.5 * theta), -np.sin(0.5 * theta)], [np.sin(0.5 * theta), np.cos(0.5 * theta)]]
@@ -52,12 +58,15 @@ def rz(theta):
     Unitary for 1-qubit Z rotations.
 
     Args:
-        float: the rotation angle.
+        theta (float): the rotation angle.
+
+    Returns:
+        np.ndarray: The unitary of rz gate.
     """
     return np.array([[np.exp(-0.5j * theta), 0], [0, np.exp(0.5j * theta)]])
 
 
-def u_to_su(u: np.ndarray) -> np.ndarray:
+def to_su(u: np.ndarray) -> np.ndarray:
     """
     Given a unitary in U(N), return the
     unitary in SU(N).
@@ -66,7 +75,7 @@ def u_to_su(u: np.ndarray) -> np.ndarray:
         u (np.ndarray): The unitary in U(N).
 
     Returns:
-        np.ndarray: The unitary in SU(N)
+        su (np.ndarray): The unitary in SU(N)
     """
 
     return u * np.linalg.det(u) ** (-1 / np.shape(u)[0])
@@ -75,7 +84,7 @@ def u_to_su(u: np.ndarray) -> np.ndarray:
 def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
     """
     Calculate the characteristic polynomial of a square matrix M
-    based on the recursive Faddeev-LeVerrier algorithm.
+    based on the recursive Faddeev Leverrier algorithm.
 
     Args:
         M (np.ndarray): The input matrix.
@@ -202,6 +211,7 @@ def diagonalize_two_matrices_with_hermitian_products(
     Reference:
     1. C. Eckart and G. Young, A princial axis transformation for
     non-hermitian matrices, Bull. Amer. Math. Soc. 45, 118-121 (1939).
+
 
     Args:
         Ca (np.ndarray): An input complex matrix

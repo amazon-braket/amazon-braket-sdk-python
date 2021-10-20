@@ -1,4 +1,4 @@
-# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"). You
 # may not use this file except in compliance with the License. A copy of
@@ -14,8 +14,8 @@
 import numpy as np
 
 from braket.circuits.synthesis.constants import magic_basis
-from braket.circuits.quantum_operator_helpers import is_unitary
-from braket.circuits.synthesis.util import char_poly, u_to_su
+from braket.circuits.synthesis.predicates import is_unitary
+from braket.circuits.synthesis.util import char_poly, to_su
 from braket.circuits.gates import Y
 
 # Pauli Y
@@ -35,7 +35,7 @@ def makhlin_invariants(
         rtol (float): relative tolerance of loss.
 
     Returns:
-        makhlin_invariants (Tuple[float, float, float]): the calculated Makhlin invariants.
+        makhlin_invariants (np.dtype): the calculated Makhlin invariants.
     """
 
     if validate_input:
@@ -77,12 +77,12 @@ def gamma_invariants(
         rtol (float): relative tolerance of loss.
 
     Returns:
-        gamma_invariants (np.ndarray): the calculated gamma invariants.
+        gamma_invariants (np.dtype): the calculated gamma invariants.
     """
     if validate_input:
         is_unitary(U, atol=atol, rtol=rtol)
 
-    U = u_to_su(U)
+    U = to_su(U)
 
     gamma = U @ np.kron(y, y) @ U.T @ np.kron(y, y)
     gamma_invariants = char_poly(gamma)
