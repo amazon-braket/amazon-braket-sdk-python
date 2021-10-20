@@ -16,7 +16,7 @@ import numpy as np
 from scipy.linalg import expm
 
 # Typing
-from typing import Tuple, Sequence
+from typing import Tuple, Sequence, Union
 
 # Plotting
 import matplotlib
@@ -26,8 +26,9 @@ matplotlib.rcParams["text.usetex"] = True
 from mpl_toolkits import mplot3d
 
 # Braket
-import braket.circuits as braket_circ
+from braket.circuits.qubit_set import QubitSet
 from braket.circuits import Circuit
+
 from braket.circuits.gates import X, Y, Z, CNot
 from braket.circuits.synthesis.invariants import makhlin_invariants, gamma_invariants
 from braket.circuits.synthesis.one_qubit_decomposition import OneQubitDecomposition
@@ -49,6 +50,15 @@ cnot = CNot().to_matrix()
 I = np.eye(2)
 cnot_re = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=np.complex128)
 
+"""
+Gamma invariants for unitaries requiring 0, 1, 2 CNOTs to synthesize.
+"""
+
+_ZERO_CNOT_GAMMA_INV1 = (1, 4, 6, 4, 1)
+_ZERO_CNOT_GAMMA_INV2 = (1, -4, 6, -4, 1)
+_ONE_CNOT_GAMMA_INV = (1, 0, 2, 0, 1)
+_TWO_CNOT_GAMMA_INV = (0, 0, 0, 0, 0)
+
 
 class TwoQubitDecomposition:
     """
@@ -68,6 +78,7 @@ class TwoQubitDecomposition:
         self.atol = atol
         self.rtol = rtol
         self.U = U
+        self.num_cnots = self.count_num_cnots()
 
         self.build(U)
         _move_to_weyl_chamber(self)
@@ -127,10 +138,6 @@ class TwoQubitDecomposition:
         self.su2 = [u1, u2, u3, u4]
         self.canonical_vector = kak_4vector[1:]
 
-    def unitary(self):
-
-        return self.U
-
     def __repr__(self):
 
         str_u = []
@@ -149,7 +156,18 @@ class TwoQubitDecomposition:
         )
         return kak_str
 
-    def pretty_print(self):
+    @property
+    def unitary(self):
+        """
+        The unitary matrix of this decomposition.
+        """
+        return self.U
+
+    def pretty_print(self) -> None:
+        """
+        Helper function for printing detailed information of the
+        decomposition.
+        """
 
         str_u = []
         for i in range(4):
@@ -167,9 +185,13 @@ class TwoQubitDecomposition:
         print(kak_str)
 
     def plot_canonical_vector(self):
+        """
+        Plot the canonical KAK vector of the decomposition.
+        """
+
         _plot_canonical_vector(self.canonical_vector)
 
-    def num_cnots(self):
+    def count_num_cnots(self):
         """
         Find the number of CNOTs required to
         synthesize self.U.
@@ -180,74 +202,72 @@ class TwoQubitDecomposition:
 
         gamma_inv = gamma_invariants(self.U, atol=self.atol, rtol=self.rtol)
 
-        if np.allclose(gamma_inv, (1, 4, 6, 4, 1), atol=self.atol, rtol=self.rtol) or np.allclose(
-            gamma_inv, (1, -4, 6, -4, 1), atol=self.atol, rtol=self.rtol
-        ):
+        if np.allclose(
+            gamma_inv, _ZERO_CNOT_GAMMA_INV1, atol=self.atol, rtol=self.rtol
+        ) or np.allclose(gamma_inv, _ZERO_CNOT_GAMMA_INV2, atol=self.atol, rtol=self.rtol):
             return 0
 
-        if np.allclose(gamma_inv, (1, 0, 2, 0, 1), atol=self.atol, rtol=self.rtol):
+        if np.allclose(gamma_inv, _ONE_CNOT_GAMMA_INV, atol=self.atol, rtol=self.rtol):
             return 1
 
-        if np.allclose(np.imag(gamma_inv), [0] * 5, atol=self.atol, rtol=self.rtol):
+        if np.allclose(np.imag(gamma_inv), _TWO_CNOT_GAMMA_INV, atol=self.atol, rtol=self.rtol):
             return 2
 
         else:
             return 3
 
-    def build_circuit(self, qubits: str = [0, 1]):
+    def build_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]):
+        """
+        Build the synthesized circuit.
 
-        return build_cnot_circuit(self, qubits=qubits)
+        Args:
+            qubits (Union[QubitSet, Sequence[int]]): The qubit set to build the circuit on.
+        """
 
+        return self.build_cnot_circuit(qubits=qubits)
 
-def two_qubit_decompose(
-    U: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5
-) -> TwoQubitDecomposition:
-    is_unitary(U, raise_exception=True)
-    """
-    Decompose a 2-qubit unitary.
+    def build_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+        """
+        Given a TwoQubitDecomposition, construct a CNOT based
+        Circuit.
 
-    Args:
-        U (np.ndarray): the unitary to decompose.
-        atol (float): absolute tolerance parameter.
-        rtol (float): relative tolerance parameter.
-          
-    """
+        Args:
+            qubits (Union[QubitSet, Sequence[int]]): Input qubits.
 
-    return TwoQubitDecomposition(U, atol=atol, rtol=rtol)
+        Returns:
+            circ (Circuit): Constructed circuit based on the input
+            decomposition.
+        """
 
+        if self.num_cnots == 0:
+            return self._build_zero_cnot_circuit(qubits)
 
-def build_cnot_circuit(
-    kak: TwoQubitDecomposition, qubits: Sequence = [0, 1]
-) -> braket_circ.Circuit:
-    """
-    Given a TwoQubitDecomposition, construct a CNOT based
-    Circuit.
+        elif self.num_cnots == 1:
+            return self._build_one_cnot_circuit(qubits)
 
-    Args:
-        kak (TwoQubitDecomposition): Input decomposition.
+        elif self.num_cnots == 2:
+            return self._build_two_cnot_circuit(qubits)
 
-    Returns:
-        circ (braket_circ.Circuit): Constructed circuit based on the input
-        decomposition.
-    """
+        elif self.num_cnots == 3:
+            return self._build_three_cnot_circuit(qubits)
 
-    circ = Circuit()
-
-    if kak.num_cnots() == 0:
-        phase, u1, u2 = decompose_one_qubit_product(kak.unitary())
+    def _build_zero_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+        circ = Circuit()
+        phase, u1, u2 = decompose_one_qubit_product(self.unitary)
         circ_u1 = OneQubitDecomposition(u1).build_circuit(qubit=qubits[1])
         circ_u2 = OneQubitDecomposition(u2).build_circuit(qubit=qubits[0])
         circ.add_circuit(circ_u1).add_circuit(circ_u2)
 
         return circ
 
-    if kak.num_cnots() == 1:
-        cnot_decomp = TwoQubitDecomposition(cnot, atol=kak.atol, rtol=kak.rtol)
-        phase = kak.phase / cnot_decomp.phase
-        u1 = kak.su2[0] @ cnot_decomp.su2[0].conj().T
-        u2 = kak.su2[1] @ cnot_decomp.su2[1].conj().T
-        u3 = cnot_decomp.su2[2].conj().T @ kak.su2[2]
-        u4 = cnot_decomp.su2[3].conj().T @ kak.su2[3]
+    def _build_one_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+        circ = Circuit()
+        cnot_decomp = TwoQubitDecomposition(cnot, atol=self.atol, rtol=self.rtol)
+        phase = self.phase / cnot_decomp.phase
+        u1 = self.su2[0] @ cnot_decomp.su2[0].conj().T
+        u2 = self.su2[1] @ cnot_decomp.su2[1].conj().T
+        u3 = cnot_decomp.su2[2].conj().T @ self.su2[2]
+        u4 = cnot_decomp.su2[3].conj().T @ self.su2[3]
 
         circ_list = []
 
@@ -263,8 +283,9 @@ def build_cnot_circuit(
 
         return circ
 
-    if kak.num_cnots() == 2:
-        gamma_inv = gamma_invariants(kak.unitary())
+    def _build_two_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+        circ = Circuit()
+        gamma_inv = gamma_invariants(self.unitary)
 
         r = np.angle(np.roots(gamma_inv))
         r = np.sort(r[r > 0])
@@ -275,13 +296,13 @@ def build_cnot_circuit(
 
         cnot_decomp = TwoQubitDecomposition(cnot_re @ np.kron(rz(theta[0]), rx(theta[1])) @ cnot_re)
 
-        phase = kak.phase / cnot_decomp.phase
-        u1 = kak.su2[0] @ cnot_decomp.su2[0].conj().T
-        u2 = kak.su2[1] @ cnot_decomp.su2[1].conj().T
+        phase = self.phase / cnot_decomp.phase
+        u1 = self.su2[0] @ cnot_decomp.su2[0].conj().T
+        u2 = self.su2[1] @ cnot_decomp.su2[1].conj().T
         u3 = rz(theta[0])
         u4 = rx(theta[1])
-        u5 = cnot_decomp.su2[2].conj().T @ kak.su2[2]
-        u6 = cnot_decomp.su2[3].conj().T @ kak.su2[3]
+        u5 = cnot_decomp.su2[2].conj().T @ self.su2[2]
+        u6 = cnot_decomp.su2[3].conj().T @ self.su2[3]
 
         circ_list = []
 
@@ -300,11 +321,11 @@ def build_cnot_circuit(
 
         return circ
 
-    if kak.num_cnots() == 3:
-
+    def _build_three_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+        circ = Circuit()
         # U(4) -> SU(4)
-        su = to_su(kak.U)
-        initial_phase = np.linalg.det(kak.U) ** (0.25)
+        su = to_su(self.U)
+        initial_phase = np.linalg.det(self.U) ** (0.25)
 
         # Find the gamma invariants defined in
         # https://arxiv.org/pdf/quant-ph/0308033.pdf
@@ -364,6 +385,23 @@ def build_cnot_circuit(
         circ.add_circuit(circ_list[6])
 
         return circ
+
+
+def two_qubit_decompose(
+    U: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5
+) -> TwoQubitDecomposition:
+    is_unitary(U, raise_exception=True)
+    """
+    Decompose a 2-qubit unitary.
+
+    Args:
+        U (np.ndarray): the unitary to decompose.
+        atol (float): absolute tolerance parameter.
+        rtol (float): relative tolerance parameter.
+          
+    """
+
+    return TwoQubitDecomposition(U, atol=atol, rtol=rtol)
 
 
 def decompose_one_qubit_product(

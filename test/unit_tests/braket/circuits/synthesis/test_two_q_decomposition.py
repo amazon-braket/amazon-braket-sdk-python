@@ -17,6 +17,7 @@ from scipy.linalg import expm
 import pytest
 import random
 
+from braket.circuits.qubit_set import QubitSet
 import braket.circuits.quantum_operator_helpers as predicates
 import braket.circuits.synthesis.two_qubit_decomposition as kak
 from braket.circuits.gates import X, Y, Z, H, S, CNot, CZ
@@ -159,47 +160,47 @@ def test_kak_decomposition(unitary_test_cases):
     )
 
     assert np.allclose(result, unitary_test_cases)
-    assert np.allclose(KAK.unitary(), unitary_test_cases)
+    assert np.allclose(KAK.unitary, unitary_test_cases)
 
 
 @pytest.mark.parametrize("unitary_test_cases", product_gate_test)
 def test_kak_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit()
+    circ = KAK.build_circuit(QubitSet([0, 1]))
 
-    assert KAK.num_cnots() == 0
-    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+    assert KAK.num_cnots == 0
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
 
 
 @pytest.mark.parametrize("unitary_test_cases", one_cnot_test)
 def test_kak_one_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit()
+    circ = KAK.build_circuit(QubitSet([0, 1]))
 
-    assert KAK.num_cnots() == 1
-    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+    assert KAK.num_cnots == 1
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
 
 
 @pytest.mark.parametrize("unitary_test_cases", two_cnot_test)
 def test_kak_two_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit()
+    circ = KAK.build_circuit(QubitSet([0, 1]))
 
-    assert KAK.num_cnots() == 2
-    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+    assert KAK.num_cnots == 2
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
 
 
 @pytest.mark.parametrize("unitary_test_cases", three_cnot_test)
 def test_kak_three_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit()
+    circ = KAK.build_circuit(QubitSet([0, 1]))
 
-    assert KAK.num_cnots() == 3
-    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary(), atol=KAK.atol, rtol=KAK.rtol)
+    assert KAK.num_cnots == 3
+    assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
 
 
 @pytest.mark.parametrize(
