@@ -497,17 +497,12 @@ class AwsQuantumJob(QuantumJob):
                 )
                 raise RuntimeError(message)
             elif job_state in AwsQuantumJob.RESULTS_READY_STATES:
-                output_s3_path, job_name = (
-                    job_response["outputDataConfig"]["s3Path"],
-                    job_response["jobName"],
-                )
-
-                output_bucket_uri = (
-                    f"{output_s3_path}/BraketJob-"
-                    f"{self._aws_session.account_id}-{job_name}/output/"
-                    f"{AwsQuantumJob.RESULTS_TAR_FILENAME}"
-                )
-                AwsQuantumJob._attempt_results_download(self, output_bucket_uri, output_s3_path)
+                output_s3_path = job_response["outputDataConfig"]["s3Path"]
+                job_name = job_response["jobName"]
+                out_bucket, out_prefix = AwsSession.parse_s3_uri(output_s3_path)
+                output_s3_key = self._aws_session.list_keys(out_bucket, f"{out_prefix}/")[0]
+                output_s3_uri = AwsSession.construct_s3_uri(out_bucket, output_s3_key)
+                AwsQuantumJob._attempt_results_download(self, output_s3_uri, output_s3_path)
                 AwsQuantumJob._extract_tar_file(f"{extract_to}/{job_name}")
                 return
             else:

@@ -33,6 +33,7 @@ def aws_session(quantum_job_arn, job_region):
     _aws_session.construct_s3_uri.side_effect = (
         lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
     )
+    _aws_session.list_keys.return_value = ["job-path/output/some/path/to/model.tar.gz"]
 
     _braket_client_mock = Mock(meta=Mock(region_name=job_region))
     _aws_session.braket_client = _braket_client_mock
@@ -294,11 +295,9 @@ def test_results_when_job_is_completed(
     actual_data = quantum_job.result()
 
     job_metadata = quantum_job.metadata(True)
-    s3_path, job_name = job_metadata["outputDataConfig"]["s3Path"], job_metadata["jobName"]
+    s3_path = job_metadata["outputDataConfig"]["s3Path"]
 
-    output_bucket_uri = (
-        f"{s3_path}/BraketJob-{aws_session.account_id}-{job_name}/output/model.tar.gz"
-    )
+    output_bucket_uri = f"{s3_path}/some/path/to/model.tar.gz"
     quantum_job._aws_session.download_from_s3.assert_called_with(
         s3_uri=output_bucket_uri, filename="model.tar.gz"
     )
