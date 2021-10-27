@@ -81,8 +81,6 @@ class AwsQuantumJob(QuantumJob):
         checkpoint_config: CheckpointConfig = None,
         vpc_config: VpcConfig = None,
         aws_session: AwsSession = None,
-        *args,
-        **kwargs,
     ) -> AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 

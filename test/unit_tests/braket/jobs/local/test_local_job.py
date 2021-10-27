@@ -110,16 +110,12 @@ def test_create(
             entry_point=Mock(),
             image_uri=Mock(),
             job_name=Mock(),
-            code_locatio=Mock(),
+            code_location=Mock(),
             role_arn=Mock(),
             hyperparameters=Mock(),
-            input_data_config=Mock(),
-            instance_config=Mock(),
-            stopping_condition=Mock(),
+            input_data=Mock(),
             output_data_config=Mock(),
-            copy_checkpoints_from_job=Mock(),
             checkpoint_config=Mock(),
-            vpc_config=Mock(),
             aws_session=aws_session,
         )
         assert job.name == "Test-Job-Name"
@@ -138,6 +134,16 @@ def test_create(
         }
         mock_setup.assert_called_with(mock_container_open, aws_session, **creation_kwargs)
         mock_container_open.run_local_job.assert_called_with(test_envs)
+
+
+def test_create_invalid_arg():
+    unexpected_kwarg = "create\\(\\) got an unexpected keyword argument 'wait_until_complete'"
+    with pytest.raises(TypeError, match=unexpected_kwarg):
+        LocalQuantumJob.create(
+            device_arn="device",
+            source_module="source",
+            wait_until_complete=True,
+        )
 
 
 @patch("os.path.isdir")
@@ -166,16 +172,12 @@ def test_create_existing_job(mock_dir, mock_prepare_job, aws_session):
         entry_point=Mock(),
         image_uri=Mock(),
         job_name=Mock(),
-        code_locatio=Mock(),
+        code_location=Mock(),
         role_arn=Mock(),
         hyperparameters=Mock(),
-        input_data_config=Mock(),
-        instance_config=Mock(),
-        stopping_condition=Mock(),
+        input_data=Mock(),
         output_data_config=Mock(),
-        copy_checkpoints_from_job=Mock(),
         checkpoint_config=Mock(),
-        vpc_config=Mock(),
         aws_session=aws_session,
     )
 

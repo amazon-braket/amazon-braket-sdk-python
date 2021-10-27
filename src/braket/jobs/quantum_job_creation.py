@@ -20,7 +20,7 @@ import tempfile
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, Union, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (

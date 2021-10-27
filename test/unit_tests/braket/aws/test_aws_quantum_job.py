@@ -576,6 +576,16 @@ def test_create_job(
     assert job.arn == quantum_job_arn
 
 
+def test_create_fake_arg():
+    unexpected_kwarg = "create\\(\\) got an unexpected keyword argument 'fake_arg'"
+    with pytest.raises(TypeError, match=unexpected_kwarg):
+        AwsQuantumJob.create(
+            device_arn="device",
+            source_module="source",
+            fake_arg="fake_value",
+        )
+
+
 def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):
     cancellation_status = "CANCELLING"
     aws_session.cancel_job.return_value = generate_cancel_job_response(

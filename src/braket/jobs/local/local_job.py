@@ -48,8 +48,6 @@ class LocalQuantumJob(QuantumJob):
         output_data_config: OutputDataConfig = None,
         checkpoint_config: CheckpointConfig = None,
         aws_session: AwsSession = None,
-        *args,
-        **kwargs,
     ) -> LocalQuantumJob:
         """Creates and runs job by setting up and running the customer script in a local
          docker container.
