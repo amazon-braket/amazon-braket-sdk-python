@@ -111,7 +111,7 @@ class OneQubitDecomposition:
 
         Raises:
             NotImplementedError: if the decomposition method is not
-            implemented.
+                implemented.
         """
 
         if axes == "zyz":

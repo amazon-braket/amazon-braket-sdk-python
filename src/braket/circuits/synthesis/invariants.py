@@ -77,7 +77,7 @@ def gamma_invariants(
         rtol (float): relative tolerance of loss.
 
     Returns:
-        gamma_invariants (np.dtype): the calculated gamma invariants.
+        np.ndarray: the calculated gamma invariants.
     """
     if validate_input:
         is_unitary(U, atol=atol, rtol=rtol)

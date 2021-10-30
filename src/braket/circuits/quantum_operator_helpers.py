@@ -55,11 +55,11 @@ def is_hermitian(
         matrix (np.ndarray): matrix to verify
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
-        is_hermitian (bool): If matrix is Hermitian
+        bool: If matrix is Hermitian
     """
     is_hermitian = np.allclose(matrix, matrix.conj().T, atol=atol, rtol=rtol)
 
@@ -79,11 +79,11 @@ def is_diag(
         matrix (np.ndarray): matrix to check.
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
-        is_diag (bool): True if U is diagonal and False otherwise.
+        bool: If U is diagonal
     """
     is_diag = np.allclose(matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol)
 
@@ -210,7 +210,7 @@ def eq_up_to_phase(
         when condition is not met.
 
     Returns:
-        eq (bool): True if U1 and U2 are equal up to a global phase.
+        bool: If U1 and U2 are equal up to a global phase
     """
 
     i, j = np.unravel_index(np.argmax(abs(U1), axis=None), U1.shape)
