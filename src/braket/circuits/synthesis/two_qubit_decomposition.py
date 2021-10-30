@@ -44,7 +44,7 @@ x = X().to_matrix()
 y = Y().to_matrix()
 z = Z().to_matrix()
 cnot = CNot().to_matrix()
-I = np.eye(2)
+I = np.eye(2)  # noqa: E741
 cnot_re = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]], dtype=np.complex128)
 
 """
@@ -320,7 +320,6 @@ class TwoQubitDecomposition:
         circ = Circuit()
         # U(4) -> SU(4)
         su = to_su(self.U)
-        initial_phase = np.linalg.det(self.U) ** (0.25)
 
         # Find the gamma invariants defined in
         # https://arxiv.org/pdf/quant-ph/0308033.pdf
@@ -391,7 +390,7 @@ def two_qubit_decompose(
         U (np.ndarray): the unitary to decompose.
         atol (float): absolute tolerance parameter.
         rtol (float): relative tolerance parameter.
-          
+
     """
 
     return TwoQubitDecomposition(U, atol=atol, rtol=rtol)
