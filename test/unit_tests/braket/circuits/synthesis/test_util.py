@@ -16,8 +16,6 @@ import numpy as np
 from scipy.linalg import expm
 import pytest
 
-from sympy import Poly, Matrix, Symbol
-
 import braket.circuits.synthesis.util as util
 from braket.circuits.gates import X, Y, Z, H, S, CNot, CZ
 
