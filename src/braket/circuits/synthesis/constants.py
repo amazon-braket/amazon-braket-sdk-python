@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import numpy as np
-from braket.circuits.gates import X, Y, Z
 
 kak_so4_transform_matrix = np.array([[1, 1, -1, 1], [1, 1, 1, -1], [1, -1, -1, -1], [1, -1, 1, 1]])
 
