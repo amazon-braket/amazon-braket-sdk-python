@@ -41,7 +41,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
 
 def is_hermitian(
     matrix: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
-        ) -> bool:
+) -> bool:
     r"""
     Whether matrix is Hermitian
 
@@ -85,7 +85,9 @@ def is_diag(
     Returns:
         bool: If U is diagonal
     """
-    is_diag = np.allclose(matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol)
+    is_diag = np.allclose(
+        matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol
+    )
 
     if raise_exception and not is_diag:
         raise ValueError(f"{matrix} is not diagonal.")
@@ -108,7 +110,7 @@ def is_square_matrix(matrix: np.array) -> bool:
 
 def is_unitary(
     matrix: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
-        ) -> bool:
+) -> bool:
     r"""
     Whether matrix is unitary
 
@@ -139,7 +141,7 @@ def is_unitary(
 
 def is_cptp(
     matrices: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
-        ) -> bool:
+) -> bool:
     """
     Whether a transformation defined by these matrics as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for
@@ -227,13 +229,13 @@ def eq_up_to_phase(
 @lru_cache()
 def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
     """
-    Get the eigenvalues of Pauli operators and their tensor products as
-    an immutable Numpy array.
+        Get the eigenvalues of Pauli operators and their tensor products as
+        an immutable Numpy array.
 
-    Args:
-        num_qubits (int): the number of qubits the operator acts on
-Returns:
-        np.ndarray: the eigenvalues of a Pauli product operator of the given size
+        Args:
+            num_qubits (int): the number of qubits the operator acts on
+    Returns:
+            np.ndarray: the eigenvalues of a Pauli product operator of the given size
     """
     if num_qubits == 1:
         eigs = np.array([1, -1])
