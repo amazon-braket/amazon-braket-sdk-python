@@ -56,7 +56,7 @@ def is_hermitian(
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
         raise_exception (bool): if raise an exception
-        when condition is not met.
+            when condition is not met.
 
     Returns:
         bool: If matrix is Hermitian
