@@ -59,7 +59,7 @@ def is_hermitian(
         when condition is not met.
 
     Returns:
-        is_hermitian (bool): If matrix is Hermitian
+        bool: If matrix is Hermitian
     """
     is_hermitian = np.allclose(matrix, matrix.conj().T, atol=atol, rtol=rtol)
 
