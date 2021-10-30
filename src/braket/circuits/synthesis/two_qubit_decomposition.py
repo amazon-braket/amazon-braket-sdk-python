@@ -86,7 +86,7 @@ class TwoQubitDecomposition:
     def build(self, U: np.ndarray, validate_input: bool = True):
         """
         Cartan's KAK decomposition of a 4x4 unitary matrix U:
-        U = (u1 ⊗ u2) · exp(i(a·XX + b·YY+c·ZZ))·(u3 ⊗ u4)
+        U = (u_1 \otimes u_2) \cdot exp(i(a\cdot XX + b\cdot YY + c\cdot ZZ))\cdot(u_3 \otimes u_4)
 
         References:
             1. Byron Drury, Peter J. Love, Constructive Quantum Shannon
