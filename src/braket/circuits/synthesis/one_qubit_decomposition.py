@@ -36,10 +36,10 @@ class OneQubitDecomposition:
         U (np.ndarray): the unitary matrix to decompose.
 
     Attributes:
-        phase (np.dtype): the global phase.
+        phase (float): the global phase.
         canonical_vector (np.ndarray): the axis about which the rotation is
             performed.
-        rotation_angle (np.dtype): the amplitude of the rotation.
+        rotation_angle (float): the amplitude of the rotation.
         quaternion (np.ndarray): the quaternion representation
             of the rotation.
         rotation_matrix (np.ndarray): the matrix representation
