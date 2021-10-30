@@ -79,8 +79,8 @@ def is_diag(
         matrix (np.ndarray): matrix to check.
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
         is_diag (bool): True if U is diagonal and False otherwise.
