@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from functools import lru_cache
-from typing import Iterable
+from typing import Iterable  # noqa F401
 
 import numpy as np
 
@@ -162,7 +162,7 @@ def is_cptp(
     is_cptp = np.allclose(E, np.eye(*E.shape), atol=atol, rtol=rtol)
 
     if raise_exception and not is_cptp:
-        raise ValueError(f"The input Kraus operators does not form a CPTP map.")
+        raise ValueError("The input Kraus operators does not form a CPTP map.")
 
     return is_cptp
 
