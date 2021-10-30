@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import math
 import numpy as np
 from scipy.linalg import expm
 import pytest
@@ -30,7 +29,7 @@ s = S().to_matrix()
 cnot = CNot().to_matrix()
 cz = CZ().to_matrix()
 
-I = np.array([[1, 0], [0, 1]], dtype=np.complex128)
+I = np.array([[1, 0], [0, 1]], dtype=np.complex128)  # noqa E741
 
 iswap_d = np.array(
     [[1, 0, 0, 0], [0, 0, -1j, 0], [0, -1j, 0, 0], [0, 0, 0, 1]], dtype=np.complex128
@@ -218,4 +217,4 @@ def test_kak_three_product_gate(unitary_test_cases):
 )
 @pytest.mark.xfail
 def test_kak_decomposition_edge_cases(nonunitary_test_cases):
-    KAK = kak.TwoQubitDecomposition(unitary_test_cases)
+    kak.TwoQubitDecomposition(nonunitary_test_cases)

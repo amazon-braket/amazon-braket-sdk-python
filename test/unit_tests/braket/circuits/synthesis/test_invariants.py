@@ -43,6 +43,6 @@ def test_makhlin(unitary_test_cases, expected):
         (swap, [1, 4j, -6, -4j, 1]),
     ],
 )
-def test_makhlin(unitary_test_cases, expected):
+def test_gamma(unitary_test_cases, expected):
     m_inv = inv.gamma_invariants(unitary_test_cases)
     assert np.allclose(m_inv, expected)

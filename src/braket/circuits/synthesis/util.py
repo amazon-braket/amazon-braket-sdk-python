@@ -13,9 +13,9 @@
 
 import numpy as np
 from scipy.linalg import block_diag
-from typing import List, Tuple, Union
+from typing import Tuple
 
-from braket.circuits.quantum_operator_helpers import is_diag, is_hermitian, commute, is_unitary
+from braket.circuits.quantum_operator_helpers import is_diag, is_hermitian, commute
 
 
 def rx(theta):

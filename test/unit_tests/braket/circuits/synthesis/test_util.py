@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import math
 import numpy as np
 from scipy.linalg import expm
 import pytest
@@ -19,7 +18,7 @@ import pytest
 import braket.circuits.synthesis.util as util
 from braket.circuits.gates import X, Y, Z, H, S, CNot, CZ
 
-I = np.eye(2)
+I = np.eye(2)  # noqa: E741
 x = X().to_matrix()
 y = Y().to_matrix()
 z = Z().to_matrix()
@@ -179,8 +178,7 @@ def test_d_c_h_m(d_c_h_m_test_1, d_c_h_m_test_2):
 )
 @pytest.mark.xfail
 def test_d_c_h_m_edge_cases(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2):
-
-    p = util.diagonalize_commuting_hermitian_matrices(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2)
+    util.diagonalize_commuting_hermitian_matrices(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2)
 
 
 # Test diagonalize_two_matrices_with_hermitian_products function
@@ -279,5 +277,5 @@ def test_characteristic_polynomial(char_poly_test, result):
     [1, 1.5, "random_matrix", [0.1, 0.2]],
 )
 @pytest.mark.xfail
-def test_characteristic_polynomial(char_poly_test):
-    char_poly = util.char_poly(char_poly_test)
+def test_characteristic_polynomial_fail(char_poly_test):
+    util.char_poly(char_poly_test)
