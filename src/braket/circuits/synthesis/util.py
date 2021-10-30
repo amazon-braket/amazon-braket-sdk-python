@@ -202,9 +202,8 @@ def diagonalize_two_matrices_with_hermitian_products(
 ) -> Tuple[np.ndarray]:
     """
     Given two complex matrices Ca, Cb and the promise that
-    (1) Ca times the transpose conjugate of Cb and (2) the transpose conjugate
-    of Ca times Cb are Hermitian. Calculate the matrices U and V that
-    simultaneous diagonlize Ca and Cb.
+    Ca * Cb.conj().T and Ca.conj().T * Cab are Hermitian.
+    Calculate the matrices U and V that simultaneous diagonlize Ca and Cb.
 
     Reference:
     1. C. Eckart and G. Young, A princial axis transformation for
