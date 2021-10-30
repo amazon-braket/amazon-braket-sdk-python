@@ -95,10 +95,8 @@ def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
     """
 
     if validate_input:
-        try:
-            dim1, dim2 = np.shape(M)
-        except ValueError:
-            print("The input has to be a 2d numpy array.")
+        if len(np.shape(M)) != 2:
+            raise ValueError("The input has to be a 2d numpy array.")
 
         if M.shape[0] != M.shape[1]:
             raise ValueError("The input has to be a square matrix.")
