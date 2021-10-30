@@ -59,7 +59,7 @@ def is_hermitian(
             when condition is not met.
 
     Returns:
-        bool: If matrix is Hermitian
+        is_hermitian (bool): If matrix is Hermitian
     """
     is_hermitian = np.allclose(matrix, matrix.conj().T, atol=atol, rtol=rtol)
 
@@ -83,7 +83,7 @@ def is_diag(
             when condition is not met.
 
     Returns:
-        bool: If U is diagonal
+        is_diag (bool): If U is diagonal
     """
     is_diag = np.allclose(
         matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol
@@ -186,7 +186,7 @@ def commute(
         when condition is not met.
 
     Returns:
-        pred (bool): True if M1, M2 commute and False otherwise.
+        commute (bool): True if M1, M2 commute and False otherwise.
     """
 
     commute = np.allclose(M1 @ M2 - M2 @ M1, 0, atol=atol, rtol=rtol)
@@ -212,14 +212,14 @@ def eq_up_to_phase(
         when condition is not met.
 
     Returns:
-        bool: If U1 and U2 are equal up to a global phase
+        eq (bool): If U1 and U2 are equal up to a global phase
     """
 
     i, j = np.unravel_index(np.argmax(abs(U1), axis=None), U1.shape)
     phase = U2[i, j] / U1[i, j]
 
     eq = np.allclose(U1 * phase, U2, atol=atol, rtol=rtol)
-
+    
     if raise_exception and not eq:
         raise ValueError(f"{U1} and {U2} are not equal up to a phase")
 
