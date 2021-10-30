@@ -36,6 +36,7 @@ setup(
         "networkx",
         "numpy",
         "scipy",
+        "matplotlib",
     ],
     extras_require={
         "test": [
