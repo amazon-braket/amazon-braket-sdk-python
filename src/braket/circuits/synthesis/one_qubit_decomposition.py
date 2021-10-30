@@ -54,15 +54,12 @@ class OneQubitDecomposition:
 
         self.U = U
         su = to_su(self.U)
-        self.phase = np.linalg.det(U) ** 0.5
+        self.phase = complex(np.linalg.det(U)) ** 0.5
 
         # Calculate zyz Euler angles.
         weight_matrix = np.array([[1, 1], [-1, 1]])
 
         r1 = 2 * np.arctan2(abs(su[1, 0]), abs(su[0, 0]))
-
-        if r1 < 0:
-            r1 += 2 * np.pi
 
         r0r2 = np.angle(su[1, :])
 

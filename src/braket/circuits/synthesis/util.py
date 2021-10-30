@@ -78,7 +78,7 @@ def to_su(u: np.ndarray) -> np.ndarray:
         su (np.ndarray): The unitary in SU(N)
     """
 
-    return u * np.linalg.det(u) ** (-1 / np.shape(u)[0])
+    return u * complex(np.linalg.det(u)) ** (-1 / np.shape(u)[0])
 
 
 def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
@@ -147,13 +147,11 @@ def diagonalize_commuting_hermitian_matrices(
         if Ha.shape != Hb.shape:
             raise ValueError("The two matrices dimensions do not match.")
 
-        try:
-            dim1, dim2 = np.shape(Ha)
-        except ValueError:
-            print("The input has to be a 2d numpy array.")
+        if len(np.shape(Ha)) != 2:
+            raise ValueError("The input has to be a 2d numpy array.")
 
-        if not dim1 * dim2:
-            raise ValueError("Matrices to diagonalized cannot be empty.")
+        if Ha.shape[0] != Ha.shape[1]:
+            raise ValueError("The input has to be a square matrix.")
 
         commute(Ha, Hb, atol=atol, rtol=rtol, raise_exception=True)
         is_hermitian(Ha, atol=atol, rtol=rtol)
@@ -230,17 +228,6 @@ def diagonalize_two_matrices_with_hermitian_products(
     # Input validation
 
     if validate_input:
-        if np.shape(Ca) != np.shape(Cb):
-            raise ValueError("Matrices to diagonalize need to have the same dimension.")
-
-        try:
-            dim1, dim2 = np.shape(Ca)
-        except ValueError:
-            print("The input has to be a 2d numpy array.")
-
-        if not dim1 * dim2:
-            raise ValueError("Matrices to diagonalized cannot be empty.")
-
         a_bconj = np.dot(Ca, Cb.conj().T)
         aconj_b = np.dot(Ca.conj().T, Cb)
 

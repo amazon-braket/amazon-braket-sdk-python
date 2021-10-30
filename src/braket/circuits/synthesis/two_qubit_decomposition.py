@@ -160,7 +160,7 @@ class TwoQubitDecomposition:
         """
         return self.U
 
-    def pretty_print(self) -> None:
+    def pretty_print(self) -> str:
         """
         Helper function for printing detailed information of the
         decomposition.
@@ -180,6 +180,7 @@ class TwoQubitDecomposition:
             + f"  u4: {str_u[3]}\n)"
         )
         print(kak_str)
+        return kak_str
 
     def plot_canonical_vector(self):
         """
@@ -552,7 +553,6 @@ def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None:  # noqa C901
         Args:
             ind (int): the index to move.
         """
-
         while kak.canonical_vector[ind] >= np.pi * 0.5:
             shift(ind, -1)
         while kak.canonical_vector[ind] < 0:
