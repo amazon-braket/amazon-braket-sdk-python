@@ -210,7 +210,7 @@ def eq_up_to_phase(
         when condition is not met.
 
     Returns:
-        eq (bool): True if U1 and U2 are equal up to a global phase.
+        bool: If U1 and U2 are equal up to a global phase
     """
 
     i, j = np.unravel_index(np.argmax(abs(U1), axis=None), U1.shape)
