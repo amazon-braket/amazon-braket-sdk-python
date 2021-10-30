@@ -83,7 +83,7 @@ def is_diag(
             when condition is not met.
 
     Returns:
-        is_diag (bool): True if U is diagonal and False otherwise.
+        bool: If U is diagonal
     """
     is_diag = np.allclose(matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol)
 
