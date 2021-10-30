@@ -13,7 +13,6 @@
 
 import numpy as np
 import pytest
-import random
 from scipy.linalg import expm
 
 from braket.circuits.gates import X, Y, Z, H, S, T
@@ -43,8 +42,10 @@ def u(a, b, c):
     "unitary_test_cases",
     [x, y, z, h, s, t]
     + [
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random())
-        for _ in range(1000)
+        u(0.12, 0.36, 0.71),
+        u(-0.96, 2.74, -4.18),
+        u(1.24, 4.12, 2.45),
+        u(0.0, 0.1, -0.01),
     ],
 )
 def test_one_qubit_decomposition(unitary_test_cases):
@@ -55,11 +56,11 @@ def test_one_qubit_decomposition(unitary_test_cases):
     assert np.allclose(test_decomp.phase * to_su(unitary_test_cases), unitary_test_cases)
 
     # Test zyz decomposition
-    circ1 = test_decomp.build_circuit(method="zxz")
+    circ1 = test_decomp.to_circuit(method="zxz")
     assert eq_up_to_phase(circ1.as_unitary(), unitary_test_cases)
 
     # Test zxz decomposition
-    circ2 = test_decomp.build_circuit(method="zyz")
+    circ2 = test_decomp.to_circuit(method="zyz")
     assert eq_up_to_phase(circ2.as_unitary(), unitary_test_cases)
 
     # Test quaternion

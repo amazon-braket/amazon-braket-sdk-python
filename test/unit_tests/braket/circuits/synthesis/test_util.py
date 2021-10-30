@@ -68,13 +68,6 @@ def u(a, b, c):
     )
 
 
-def random_kron_u():
-    return np.kron(
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
-    )
-
-
 simple_u_test = [
     u(0.12, 0.36, 0.71),
     u(-0.96, 2.74, -4.18),

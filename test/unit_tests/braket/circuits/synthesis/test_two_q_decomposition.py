@@ -15,7 +15,6 @@ import math
 import numpy as np
 from scipy.linalg import expm
 import pytest
-import random
 
 from braket.circuits.qubit_set import QubitSet
 import braket.circuits.quantum_operator_helpers as predicates
@@ -67,24 +66,27 @@ def u(a, b, c):
     )
 
 
-def random_kron_u():
-    return np.kron(
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
-    )
+product_gate_test = [
+    np.kron(u(0.14, 0.52, -2.14), u(0.24, 0.05, 1.0)),
+    np.kron(u(1.83, 2.18, 0.88), u(0.33, -1.35, 3.14)),
+    np.kron(u(-0.14, 3.02, -1.55), u(0.61, 1.89, 0.99)),
+]
 
-
-product_gate_test = [random_kron_u() for _ in range(10)]
-
-one_cnot_test = [random_kron_u() @ cnot @ random_kron_u() for _ in range(10)]
+one_cnot_test = [p1 @ cnot @ p2 for p1 in product_gate_test for p2 in product_gate_test]
 
 two_cnot_test = [
-    random_kron_u() @ cnot @ random_kron_u() @ cnot @ random_kron_u() for _ in range(10)
+    p1 @ cnot @ p2 @ cnot @ p3
+    for p1 in product_gate_test
+    for p2 in product_gate_test
+    for p3 in product_gate_test
 ]
 
 three_cnot_test = [
-    random_kron_u() @ cnot @ random_kron_u() @ cnot_re @ random_kron_u() @ cnot @ random_kron_u()
-    for _ in range(10)
+    p1 @ cnot @ p2 @ cnot_re @ p3 @ cnot @ p4
+    for p1 in product_gate_test
+    for p2 in product_gate_test
+    for p3 in product_gate_test
+    for p4 in product_gate_test
 ]
 
 # Test decompose_one_qubit_product
@@ -167,7 +169,7 @@ def test_kak_decomposition(unitary_test_cases):
 def test_kak_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 0
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
@@ -177,7 +179,7 @@ def test_kak_product_gate(unitary_test_cases):
 def test_kak_one_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 1
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
@@ -187,7 +189,7 @@ def test_kak_one_product_gate(unitary_test_cases):
 def test_kak_two_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 2
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
@@ -197,7 +199,7 @@ def test_kak_two_product_gate(unitary_test_cases):
 def test_kak_three_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 3
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
