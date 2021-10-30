@@ -33,7 +33,6 @@ from braket.circuits.synthesis.constants import magic_basis, kak_so4_transform_m
 from braket.circuits.quantum_operator_helpers import is_unitary
 from braket.circuits.synthesis.util import (
     rx,
-    ry,
     rz,
     to_su,
     diagonalize_two_matrices_with_hermitian_products,

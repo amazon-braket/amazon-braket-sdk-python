@@ -164,7 +164,7 @@ class OneQubitDecomposition:
         repr_str = (
             "OneQubitDecomposition(\n"
             + f"  global phase: {self.phase},\n"
-            + f"  ZYZ decomposition:\n"
+            + "  ZYZ decomposition:\n"
             + "    ------Rz--Ry--Rz------\n"
             + f"    euler angles: {self.euler_angles('zyz')})\n"
             + "  Axis-angle decomposition:\n"
