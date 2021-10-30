@@ -37,7 +37,7 @@ class OneQubitDecomposition:
 
     Attributes:
         phase (np.dtype): the global phase.
-        canonical_vector (np.ndarray): the axis w.r.t. which the rotation is
+        canonical_vector (np.ndarray): the axis about which the rotation is
             performed.
         rotation_angle (np.dtype): the amplitude of the rotation.
         quaternion (np.ndarray): the quaternion representation
@@ -180,7 +180,7 @@ class OneQubitDecomposition:
         )
         return repr_str
 
-    def build_circuit(self, qubit: int = 0, method: str = "zyz") -> braket_circ.Circuit:
+    def to_circuit(self, qubit: int = 0, method: str = "zyz") -> braket_circ.Circuit:
         """
         Build the Braket circuit for the input unitary.
 
