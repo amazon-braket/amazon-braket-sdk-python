@@ -219,7 +219,7 @@ def eq_up_to_phase(
     phase = U2[i, j] / U1[i, j]
 
     eq = np.allclose(U1 * phase, U2, atol=atol, rtol=rtol)
-    
+
     if raise_exception and not eq:
         raise ValueError(f"{U1} and {U2} are not equal up to a phase")
 
