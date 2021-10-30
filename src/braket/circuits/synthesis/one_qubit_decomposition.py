@@ -157,6 +157,9 @@ class OneQubitDecomposition:
         of 1-qubit gates.
 
         SU(2) = exp(-0.5j * theta * (xX + yY + zZ))
+
+        Calculated using the Quarternion representation.
+        See https://en.wikipedia.org/wiki/Quaternion
         """
         return 2 * np.arccos(self._quat[0])
 
