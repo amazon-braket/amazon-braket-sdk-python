@@ -15,7 +15,6 @@ import math
 import numpy as np
 from scipy.linalg import expm
 import pytest
-import random
 
 from sympy import Poly, Matrix, Symbol
 
@@ -79,41 +78,55 @@ def random_kron_u():
 
 
 simple_u_test = [
-    u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random())
-    for _ in range(10)
+    u(0.12, 0.36, 0.71),
+    u(-0.96, 2.74, -4.18),
+    u(1.24, 4.12, 2.45),
+    u(0.0, 0.1, -0.01),
 ]
 
-product_gate_test = [random_kron_u() for _ in range(10)]
+product_gate_test = [
+    np.kron(u(0.14, 0.52, -2.14), u(0.24, 0.05, 1.0)),
+    np.kron(u(1.83, 2.18, 0.88), u(0.33, -1.35, 3.14)),
+    np.kron(u(-0.14, 3.02, -1.55), u(0.61, 1.89, 0.99)),
+]
 
-one_cnot_test = [random_kron_u() @ cnot @ random_kron_u() for _ in range(10)]
+one_cnot_test = [p1 @ cnot @ p2 for p1 in product_gate_test for p2 in product_gate_test]
 
 two_cnot_test = [
-    random_kron_u() @ cnot @ random_kron_u() @ cnot @ random_kron_u() for _ in range(10)
+    p1 @ cnot @ p2 @ cnot @ p3
+    for p1 in product_gate_test
+    for p2 in product_gate_test
+    for p3 in product_gate_test
 ]
 
 three_cnot_test = [
-    random_kron_u() @ cnot @ random_kron_u() @ cnot_re @ random_kron_u() @ cnot @ random_kron_u()
-    for _ in range(10)
+    p1 @ cnot @ p2 @ cnot_re @ p3 @ cnot @ p4
+    for p1 in product_gate_test
+    for p2 in product_gate_test
+    for p3 in product_gate_test
+    for p4 in product_gate_test
 ]
 
 unitary_test = simple_u_test + product_gate_test + one_cnot_test + two_cnot_test + three_cnot_test
 
-unitary_test_with_phase = [u * np.exp(2 * np.pi * random.random()) for u in unitary_test]
+unitary_test_with_phase = [u * np.exp(2 * np.pi * 0.58) for u in unitary_test]
 
 dim8_test = [
     np.kron(
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
-        random_kron_u(),
+        u(2 * np.pi * 0.28, 2 * np.pi * 1.41, 2 * np.pi * 0.85),
+        p,
     )
-    for _ in range(5)
+    for p in product_gate_test
 ]
 
-dim16_test = [np.kron(random_kron_u(), random_kron_u()) for _ in range(5)]
+dim16_test = [np.kron(p1, p2) for p1 in product_gate_test for p2 in product_gate_test]
 
 # Test rx, ry, rz
 
 
-@pytest.mark.parametrize("theta", [2 * np.pi * random.random() for _ in range(10)])
+@pytest.mark.parametrize(
+    "theta", [2 * np.pi * 0.2, 2 * np.pi * 0.48, 2 * np.pi * 0.96, 2 * np.pi * (-1.2)]
+)
 def test_r_gates(theta):
     rx_result = util.rx(theta)
     ry_result = util.ry(theta)
@@ -232,30 +245,48 @@ def test_d_t_m_w_h_p_edge_cases(d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2):
 
 
 # Test characteristic polynomial
+rand_2_matrices = [
+    (np.array([[0.99075591, 0.50094016], [0.84589721, 0.53871472]]), [1.0, -1.52947062, 0.1099909]),
+    (
+        np.array([[0.18361679, 0.74752576], [0.98807338, 0.35065077]]),
+        [1.0, -0.53426756, -0.67422493],
+    ),
+]
 
-rand_2_matrices = [np.random.rand(2, 2) for _ in range(5)]
-rand_3_matrices = [np.random.rand(3, 3) for _ in range(5)]
+rand_3_matrices = [
+    (
+        np.array(
+            [
+                [0.92388307, 0.134172, 0.29094152],
+                [0.51649275, 0.83797745, 0.70229967],
+                [0.04661202, 0.00263746, 0.76393976],
+            ]
+        ),
+        [1.0, -2.52580027, 2.03543595, -0.5302099],
+    ),
+    (
+        np.array(
+            [
+                [0.53127718, 0.29017192, 0.93471071],
+                [0.14653856, 0.35800881, 0.93947677],
+                [0.61501518, 0.25281797, 0.06926795],
+            ]
+        ),
+        [1.0, -0.95855394, -0.60309833, 0.1194751],
+    ),
+]
 
 
-@pytest.mark.parametrize("char_poly_test", (rand_2_matrices + rand_3_matrices))
-def test_characteristic_polynomial(char_poly_test):
-
+@pytest.mark.parametrize("char_poly_test, result", (rand_2_matrices + rand_3_matrices))
+def test_characteristic_polynomial(char_poly_test, result):
     char_poly = util.char_poly(char_poly_test)
-
-    symp_matrix = Matrix(char_poly_test)
-    a = Symbol("a")
-    poly = symp_matrix.charpoly(a)
-
-    symp_result = np.array(poly.all_coeffs()).astype(np.float128)
-
-    assert np.allclose(char_poly, symp_result)
+    assert np.allclose(char_poly, result)
 
 
 @pytest.mark.parametrize(
     "char_poly_test",
-    [1, 1.5, "random_matrix", np.random.rand(2, 3), np.random.rand(5, 10), np.random.rand(1, 100)],
+    [1, 1.5, "random_matrix", [0.1, 0.2]],
 )
 @pytest.mark.xfail
 def test_characteristic_polynomial(char_poly_test):
-
     char_poly = util.char_poly(char_poly_test)
