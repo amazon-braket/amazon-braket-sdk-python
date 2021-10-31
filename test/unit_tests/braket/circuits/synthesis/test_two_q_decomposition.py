@@ -255,7 +255,7 @@ TwoQubitDecomposition(
 def test_misc(xx_test_case, rep, pretty_rep):
 
     test_decomp = kak.TwoQubitDecomposition(xx_test_case)
-    # test_decomp.plot_canonical_vector()
+    test_decomp.plot_canonical_vector()
 
     # Test two_qubit_decompose function
     assert kak.two_qubit_decompose(xx_test_case).__repr__() == test_decomp.__repr__()
