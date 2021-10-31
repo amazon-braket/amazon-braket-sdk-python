@@ -276,8 +276,8 @@ def test_characteristic_polynomial(char_poly_test, result):
 
 @pytest.mark.xfail
 @pytest.mark.parametrize("char_poly_test", [np.ones((1, 2))])
-def test_characteristic_polynomial_fail(char_poly_test):
-    char_poly = util.char_poly(char_poly_test)
+def test_characteristic_polynomial_fail1(char_poly_test):
+    util.char_poly(char_poly_test)
 
 
 @pytest.mark.xfail
@@ -285,5 +285,5 @@ def test_characteristic_polynomial_fail(char_poly_test):
     "char_poly_test",
     [1, 1.5, "random_matrix", [0.1, 0.2]],
 )
-def test_characteristic_polynomial_fail(char_poly_test):
+def test_characteristic_polynomial_fail2(char_poly_test):
     util.char_poly(char_poly_test)
