@@ -174,6 +174,7 @@ def test_d_c_h_m(d_c_h_m_test_1, d_c_h_m_test_2):
         (np.array([[[0], [1]]]), x),
         (x, z),
         (matrix_3d, x),
+        ([1, 2], [3, 4, 5]),
     ],
 )
 @pytest.mark.xfail
@@ -273,10 +274,16 @@ def test_characteristic_polynomial(char_poly_test, result):
     assert np.allclose(char_poly, result)
 
 
+@pytest.mark.xfail
+@pytest.mark.parametrize("char_poly_test", [np.ones((1, 2))])
+def test_characteristic_polynomial_fail(char_poly_test):
+    char_poly = util.char_poly(char_poly_test)
+
+
+@pytest.mark.xfail
 @pytest.mark.parametrize(
     "char_poly_test",
     [1, 1.5, "random_matrix", [0.1, 0.2]],
 )
-@pytest.mark.xfail
 def test_characteristic_polynomial_fail(char_poly_test):
     util.char_poly(char_poly_test)
