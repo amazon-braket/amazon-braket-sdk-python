@@ -125,8 +125,8 @@ def is_unitary(
         matrix (np.ndarray): matrix to verify
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
         is_unitary (bool): If matrix is unitary
