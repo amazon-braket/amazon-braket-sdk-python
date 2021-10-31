@@ -46,7 +46,7 @@ def u(a, b, c):
         u(-0.96, 2.74, -4.18),
         u(1.24, 4.12, 2.45),
         u(0.0, 0.1, -0.01),
-        u(0.0, 0.0000001, -0.000001),
+        u(0.00000001, 0, 0),
     ],
 )
 def test_one_qubit_decomposition(unitary_test_cases):

@@ -18,6 +18,8 @@ import pytest
 
 from braket.circuits.quantum_operator_helpers import (
     get_pauli_eigenvalues,
+    eq_up_to_phase,
+    is_diag,
     is_cptp,
     is_hermitian,
     is_square_matrix,
@@ -32,6 +34,11 @@ valid_CPTP_matrices = [
     np.array([[0, 1], [1, 0]]) / np.sqrt(2),
 ]
 
+valid_diag_matrices = [
+    np.array([[1, 0], [0, 1]]),
+    np.array([[1, 0], [0, 2]]),
+]
+
 invalid_dimension_matrices = [
     (np.array([[1]])),
     (np.array([1])),
@@ -42,6 +49,8 @@ invalid_dimension_matrices = [
 ]
 
 invalid_unitary_matrices_false = [(np.array([[0, 1], [1, 1]])), (np.array([[1, 2], [3, 4]]))]
+
+invalid_diag_matrices_false = [(np.array([[0, 1], [1, 1]])), (np.array([[1, 2], [3, 4]]))]
 
 invalid_hermitian_matrices_false = [(np.array([[1, 0], [0, 1j]])), (np.array([[1, 2], [3, 4]]))]
 
@@ -58,6 +67,21 @@ def test_verify_quantum_operator_matrix_dimensions():
 
 def test_is_unitary_true():
     assert is_unitary(valid_unitary_hermitian_matrix)
+
+
+@pytest.mark.parametrize("matrix", valid_diag_matrices)
+def test_is_diag_true(matrix):
+    assert is_diag(matrix)
+
+
+@pytest.mark.parametrize("matrix1, matrix2", 
+    [
+        (np.array([[1, 2], [3, 4]]), np.array([[1, 2], [3, 4]])),
+        (np.array([[1, 2], [3, 4]]), np.exp(0.5 * np.pi * 1j) * np.array([[1, 2], [3, 4]])),
+    ]
+        )
+def test_eq_up_to_phase_true(matrix1, matrix2):
+    assert eq_up_to_phase(matrix1, matrix2)
 
 
 def test_is_hermitian_true():
@@ -83,6 +107,38 @@ def test_is_unitary_false(matrix):
     assert not is_unitary(matrix)
 
 
+@pytest.mark.parametrize("matrix", invalid_diag_matrices_false)
+def test_is_diag_false(matrix):
+    assert not is_diag(matrix)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("matrix", invalid_diag_matrices_false)
+def test_is_diag_false_raise_exception(matrix):
+    is_diag(matrix, raise_exception=True)
+
+
+@pytest.mark.parametrize("matrix1, matrix2", 
+    [
+        (np.array([[1, 2], [3, 4]]), np.array([[2, 2], [3, 4]])),
+        (np.array([[1, 2], [3, 4]]), np.exp(0.5 * np.pi * 1j) * np.array([[2, 2], [3, 4]])),
+    ]
+        )
+def test_eq_up_to_phase_false(matrix1, matrix2):
+    assert not eq_up_to_phase(matrix1, matrix2)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("matrix1, matrix2", 
+    [
+        (np.array([[1, 2], [3, 4]]), np.array([[2, 2], [3, 4]])),
+        (np.array([[1, 2], [3, 4]]), np.exp(0.5 * np.pi * 1j) * np.array([[2, 2], [3, 4]])),
+    ]
+        )
+def test_eq_up_to_phase_false(matrix1, matrix2):
+    eq_up_to_phase(matrix1, matrix2, raise_exception=True)
+
+
 @pytest.mark.parametrize("matrix", invalid_hermitian_matrices_false)
 def test_is_hermitian_false(matrix):
     assert not is_hermitian(matrix)
@@ -90,6 +146,12 @@ def test_is_hermitian_false(matrix):
 
 def test_is_cptp_false():
     assert not is_cptp(invalid_CPTP_matrices_false)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("matrix", [invalid_CPTP_matrices_false])
+def test_is_cptp_false_raise_exception(matrix):
+    is_cptp(matrix, raise_exception=True)
 
 
 @pytest.mark.xfail(raises=Exception)
