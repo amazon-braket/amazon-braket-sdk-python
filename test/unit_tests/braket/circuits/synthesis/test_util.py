@@ -174,7 +174,8 @@ def test_d_c_h_m(d_c_h_m_test_1, d_c_h_m_test_2):
         (np.array([[[0], [1]]]), x),
         (x, z),
         (matrix_3d, x),
-        ([1, 2], [3, 4, 5]),
+        (np.array([1, 2]), np.array([3, 4, 5])),
+        (np.array([1, 2, 3]), np.array([3, 4, 5])),
     ],
 )
 @pytest.mark.xfail
