@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from functools import lru_cache
-from typing import Iterable
+from typing import Iterable  # noqa F401
 
 import numpy as np
 
@@ -41,7 +41,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
 
 def is_hermitian(
     matrix: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
-        ) -> bool:
+) -> bool:
     r"""
     Whether matrix is Hermitian
 
@@ -55,8 +55,8 @@ def is_hermitian(
         matrix (np.ndarray): matrix to verify
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
         is_hermitian (bool): If matrix is Hermitian
@@ -79,13 +79,15 @@ def is_diag(
         matrix (np.ndarray): matrix to check.
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
-        is_diag (bool): True if U is diagonal and False otherwise.
+        is_diag (bool): If U is diagonal
     """
-    is_diag = np.allclose(matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol)
+    is_diag = np.allclose(
+        matrix - np.diag(np.diagonal(matrix)), np.zeros_like(matrix), atol=atol, rtol=rtol
+    )
 
     if raise_exception and not is_diag:
         raise ValueError(f"{matrix} is not diagonal.")
@@ -108,7 +110,7 @@ def is_square_matrix(matrix: np.array) -> bool:
 
 def is_unitary(
     matrix: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
-        ) -> bool:
+) -> bool:
     r"""
     Whether matrix is unitary
 
@@ -123,8 +125,8 @@ def is_unitary(
         matrix (np.ndarray): matrix to verify
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
         is_unitary (bool): If matrix is unitary
@@ -139,7 +141,7 @@ def is_unitary(
 
 def is_cptp(
     matrices: np.ndarray, atol: float = 1e-8, rtol: float = 1e-5, raise_exception: bool = False
-        ) -> bool:
+) -> bool:
     """
     Whether a transformation defined by these matrics as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for
@@ -160,7 +162,7 @@ def is_cptp(
     is_cptp = np.allclose(E, np.eye(*E.shape), atol=atol, rtol=rtol)
 
     if raise_exception and not is_cptp:
-        raise ValueError(f"The input Kraus operators does not form a CPTP map.")
+        raise ValueError("The input Kraus operators does not form a CPTP map.")
 
     return is_cptp
 
@@ -184,7 +186,7 @@ def commute(
         when condition is not met.
 
     Returns:
-        pred (bool): True if M1, M2 commute and False otherwise.
+        commute (bool): True if M1, M2 commute and False otherwise.
     """
 
     commute = np.allclose(M1 @ M2 - M2 @ M1, 0, atol=atol, rtol=rtol)
@@ -210,7 +212,7 @@ def eq_up_to_phase(
         when condition is not met.
 
     Returns:
-        eq (bool): True if U1 and U2 are equal up to a global phase.
+        eq (bool): If U1 and U2 are equal up to a global phase
     """
 
     i, j = np.unravel_index(np.argmax(abs(U1), axis=None), U1.shape)
@@ -227,13 +229,13 @@ def eq_up_to_phase(
 @lru_cache()
 def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
     """
-    Get the eigenvalues of Pauli operators and their tensor products as
-    an immutable Numpy array.
+        Get the eigenvalues of Pauli operators and their tensor products as
+        an immutable Numpy array.
 
-    Args:
-        num_qubits (int): the number of qubits the operator acts on
-Returns:
-        np.ndarray: the eigenvalues of a Pauli product operator of the given size
+        Args:
+            num_qubits (int): the number of qubits the operator acts on
+    Returns:
+            np.ndarray: the eigenvalues of a Pauli product operator of the given size
     """
     if num_qubits == 1:
         eigs = np.array([1, -1])

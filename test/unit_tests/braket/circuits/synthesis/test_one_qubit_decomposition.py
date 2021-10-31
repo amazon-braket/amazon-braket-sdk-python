@@ -13,7 +13,6 @@
 
 import numpy as np
 import pytest
-import random
 from scipy.linalg import expm
 
 from braket.circuits.gates import X, Y, Z, H, S, T
@@ -43,8 +42,11 @@ def u(a, b, c):
     "unitary_test_cases",
     [x, y, z, h, s, t]
     + [
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random())
-        for _ in range(1000)
+        u(0.12, 0.36, 0.71),
+        u(-0.96, 2.74, -4.18),
+        u(1.24, 4.12, 2.45),
+        u(0.0, 0.1, -0.01),
+        u(0.00000001, 0, 0),
     ],
 )
 def test_one_qubit_decomposition(unitary_test_cases):
@@ -55,11 +57,11 @@ def test_one_qubit_decomposition(unitary_test_cases):
     assert np.allclose(test_decomp.phase * to_su(unitary_test_cases), unitary_test_cases)
 
     # Test zyz decomposition
-    circ1 = test_decomp.build_circuit(method="zxz")
+    circ1 = test_decomp.to_circuit(method="zxz")
     assert eq_up_to_phase(circ1.as_unitary(), unitary_test_cases)
 
     # Test zxz decomposition
-    circ2 = test_decomp.build_circuit(method="zyz")
+    circ2 = test_decomp.to_circuit(method="zyz")
     assert eq_up_to_phase(circ2.as_unitary(), unitary_test_cases)
 
     # Test quaternion
@@ -76,3 +78,46 @@ def test_one_qubit_decomposition(unitary_test_cases):
         atol=1e-6,
         rtol=1e-4,
     )
+
+
+x_repr = """
+OneQubitDecomposition(
+  global phase: (6.123233995736766e-17+1j),
+  ZYZ decomposition:
+    ------Rz--Ry--Rz------
+    euler angles: [4.71238898 3.14159265 1.57079633])
+  Axis-angle decomposition:
+    SU(2) = exp(-0.5j * theta * (xX + yY + zZ))
+    canonical vector (x, y, z): [ 1.000000e+00 -6.123234e-17 -0.000000e+00],
+    theta: 3.141592653589793,
+    quaternion representation: [ 0.000000e+00  1.000000e+00 -6.123234e-17 -0.000000e+00]
+)""".strip()
+
+
+@pytest.mark.parametrize("u, u_repr, u_angle", [(x, x_repr, np.pi)])
+def test_one_qubit_decomposition_misc(u, u_repr, u_angle):
+    test_decomp = decomp1q.OneQubitDecomposition(u)
+    assert test_decomp.__repr__().strip() == u_repr
+    assert test_decomp.rotation_angle == u_angle
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize("random_test_cases", [np.eye(4)])
+def test_one_qubit_decomposition_fail1(random_test_cases):
+    decomp1q.OneQubitDecomposition(random_test_cases)
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+@pytest.mark.parametrize(
+    "unitary_test_cases",
+    [x, y, z, h, s, t]
+    + [
+        u(0.12, 0.36, 0.71),
+        u(-0.96, 2.74, -4.18),
+        u(1.24, 4.12, 2.45),
+        u(0.0, 0.1, -0.01),
+    ],
+)
+def test_one_qubit_decomposition_fail2(unitary_test_cases):
+    test_decomp = decomp1q.OneQubitDecomposition(unitary_test_cases)
+    test_decomp.euler_angles("zzz")

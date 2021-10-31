@@ -11,17 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import math
+import io
+import sys
 import numpy as np
 from scipy.linalg import expm
 import pytest
-import random
 
 from braket.circuits.qubit_set import QubitSet
 import braket.circuits.quantum_operator_helpers as predicates
 import braket.circuits.synthesis.two_qubit_decomposition as kak
 from braket.circuits.gates import X, Y, Z, H, S, CNot, CZ
-
 
 x = X().to_matrix()
 y = Y().to_matrix()
@@ -31,7 +30,7 @@ s = S().to_matrix()
 cnot = CNot().to_matrix()
 cz = CZ().to_matrix()
 
-I = np.array([[1, 0], [0, 1]], dtype=np.complex128)
+I = np.array([[1, 0], [0, 1]], dtype=np.complex128)  # noqa E741
 
 iswap_d = np.array(
     [[1, 0, 0, 0], [0, 0, -1j, 0], [0, -1j, 0, 0], [0, 0, 0, 1]], dtype=np.complex128
@@ -67,24 +66,28 @@ def u(a, b, c):
     )
 
 
-def random_kron_u():
-    return np.kron(
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
-        u(2 * np.pi * random.random(), 2 * np.pi * random.random(), 2 * np.pi * random.random()),
-    )
+product_gate_test = [
+    np.kron(u(0.14, 0.52, -2.14), u(0.24, 0.05, 1.0)),
+    np.kron(u(1.83, 2.18, 0.88), u(0.33, -1.35, 3.14)),
+    np.kron(u(-0.14, 3.02, -1.55), u(0.61, 1.89, 0.99)),
+    np.kron(u(6.14, 2.02, 3.55), u(-4.61, -2.89, 2.99)),
+]
 
-
-product_gate_test = [random_kron_u() for _ in range(10)]
-
-one_cnot_test = [random_kron_u() @ cnot @ random_kron_u() for _ in range(10)]
+one_cnot_test = [p1 @ cnot @ p2 for p1 in product_gate_test for p2 in product_gate_test]
 
 two_cnot_test = [
-    random_kron_u() @ cnot @ random_kron_u() @ cnot @ random_kron_u() for _ in range(10)
+    p1 @ cnot @ p2 @ cnot @ p3
+    for p1 in product_gate_test
+    for p2 in product_gate_test
+    for p3 in product_gate_test
 ]
 
 three_cnot_test = [
-    random_kron_u() @ cnot @ random_kron_u() @ cnot_re @ random_kron_u() @ cnot @ random_kron_u()
-    for _ in range(10)
+    p1 @ cnot @ p2 @ cnot_re @ p3 @ cnot @ p4
+    for p1 in product_gate_test
+    for p2 in product_gate_test
+    for p3 in product_gate_test
+    for p4 in product_gate_test
 ]
 
 # Test decompose_one_qubit_product
@@ -162,12 +165,24 @@ def test_kak_decomposition(unitary_test_cases):
     assert np.allclose(result, unitary_test_cases)
     assert np.allclose(KAK.unitary, unitary_test_cases)
 
+    # Test to cover all branches of _move_to_weyl_chamber
+    # Test the KAK vector is indeed in the Weyl chamber
+    for i in range(3):
+        KAK.canonical_vector[i] += 0.5 * np.pi
+    kak._move_to_weyl_chamber(KAK)
+    assert np.allclose(KAK.unitary, unitary_test_cases)
+    assert KAK.canonical_vector[0] < 0.5 * np.pi
+    assert KAK.canonical_vector[1] <= KAK.canonical_vector[0]
+    assert KAK.canonical_vector[2] <= KAK.canonical_vector[1]
+    assert KAK.canonical_vector[0] + KAK.canonical_vector[1] <= 0.5 * np.pi
+    assert (KAK.canonical_vector[2] != 0) or (KAK.canonical_vector[0] <= 0.25 * np.pi)
+
 
 @pytest.mark.parametrize("unitary_test_cases", product_gate_test)
 def test_kak_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 0
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
@@ -177,7 +192,7 @@ def test_kak_product_gate(unitary_test_cases):
 def test_kak_one_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 1
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
@@ -187,7 +202,7 @@ def test_kak_one_product_gate(unitary_test_cases):
 def test_kak_two_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 2
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
@@ -197,10 +212,63 @@ def test_kak_two_product_gate(unitary_test_cases):
 def test_kak_three_product_gate(unitary_test_cases):
 
     KAK = kak.TwoQubitDecomposition(unitary_test_cases, atol=1e-6, rtol=1e-4)
-    circ = KAK.build_circuit(QubitSet([0, 1]))
+    circ = KAK.to_circuit(QubitSet([0, 1]))
 
     assert KAK.num_cnots == 3
     assert predicates.eq_up_to_phase(circ.as_unitary(), KAK.unitary, atol=KAK.atol, rtol=KAK.rtol)
+
+
+xx_repr = """
+TwoQubitDecomposition(
+  U = (u1 ⊗ u2) · exp(i(v0·XX + v1·YY+v2·ZZ))·(u3 ⊗ u4)
+  global phase: (-1+1.2246467991473532e-16j),
+  canonical vector v: [0 0 0],
+  u1: [[0.000000e+00+0.j 6.123234e-17-1.j]
+      [6.123234e-17-1.j 0.000000e+00+0.j]],
+  u2: [[0.000000e+00+0.j 6.123234e-17-1.j]
+      [6.123234e-17-1.j 0.000000e+00+0.j]],
+  u3: [[1. 0.]
+      [0. 1.]],
+  u4: [[1. 0.]
+      [0. 1.]]
+)
+""".strip()
+
+xx_pretty = """
+TwoQubitDecomposition(
+  U = (u1 ⊗ u2) · exp(i(v0·XX + v1·YY+v2·ZZ))·(u3 ⊗ u4)
+  global phase: -1.+1.225e-16j,
+  canonical vector: [0 0 0],
+  u1: [[0.000e+00+0.j 6.123e-17-1.j]
+      [6.123e-17-1.j 0.000e+00+0.j]],
+  u2: [[0.000e+00+0.j 6.123e-17-1.j]
+      [6.123e-17-1.j 0.000e+00+0.j]],
+  u3: [[1. 0.]
+      [0. 1.]],
+  u4: [[1. 0.]
+      [0. 1.]]
+)
+""".strip()
+
+
+@pytest.mark.parametrize("xx_test_case, rep, pretty_rep", [(np.kron(x, x), xx_repr, xx_pretty)])
+def test_misc(xx_test_case, rep, pretty_rep):
+
+    test_decomp = kak.TwoQubitDecomposition(xx_test_case)
+    test_decomp.plot_canonical_vector()
+
+    # Test two_qubit_decompose function
+    assert kak.two_qubit_decompose(xx_test_case).__repr__() == test_decomp.__repr__()
+
+    # Test rep
+    assert test_decomp.__repr__().strip() == rep
+
+    # Test pretty_print
+    capturedOutput = io.StringIO()
+    sys.stdout = capturedOutput
+    assert test_decomp.pretty_print().strip() == pretty_rep
+    sys.stdout = sys.__stdout__
+    assert capturedOutput.getvalue().strip() == pretty_rep
 
 
 @pytest.mark.parametrize(
@@ -216,4 +284,4 @@ def test_kak_three_product_gate(unitary_test_cases):
 )
 @pytest.mark.xfail
 def test_kak_decomposition_edge_cases(nonunitary_test_cases):
-    KAK = kak.TwoQubitDecomposition(unitary_test_cases)
+    kak.TwoQubitDecomposition(nonunitary_test_cases)

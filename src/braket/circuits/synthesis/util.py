@@ -13,9 +13,9 @@
 
 import numpy as np
 from scipy.linalg import block_diag
-from typing import List, Tuple, Union
+from typing import Tuple
 
-from braket.circuits.quantum_operator_helpers import is_diag, is_hermitian, commute, is_unitary
+from braket.circuits.quantum_operator_helpers import is_diag, is_hermitian, commute
 
 
 def rx(theta):
@@ -78,7 +78,7 @@ def to_su(u: np.ndarray) -> np.ndarray:
         su (np.ndarray): The unitary in SU(N)
     """
 
-    return u * np.linalg.det(u) ** (-1 / np.shape(u)[0])
+    return u * complex(np.linalg.det(u)) ** (-1 / np.shape(u)[0])
 
 
 def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
@@ -95,10 +95,8 @@ def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
     """
 
     if validate_input:
-        try:
-            dim1, dim2 = np.shape(M)
-        except ValueError:
-            print("The input has to be a 2d numpy array.")
+        if len(np.shape(M)) != 2:
+            raise ValueError("The input has to be a 2d numpy array.")
 
         if M.shape[0] != M.shape[1]:
             raise ValueError("The input has to be a square matrix.")
@@ -149,13 +147,11 @@ def diagonalize_commuting_hermitian_matrices(
         if Ha.shape != Hb.shape:
             raise ValueError("The two matrices dimensions do not match.")
 
-        try:
-            dim1, dim2 = np.shape(Ha)
-        except ValueError:
-            print("The input has to be a 2d numpy array.")
+        if len(np.shape(Ha)) != 2:
+            raise ValueError("The input has to be a 2d numpy array.")
 
-        if not dim1 * dim2:
-            raise ValueError("Matrices to diagonalized cannot be empty.")
+        if Ha.shape[0] != Ha.shape[1]:
+            raise ValueError("The input has to be a square matrix.")
 
         commute(Ha, Hb, atol=atol, rtol=rtol, raise_exception=True)
         is_hermitian(Ha, atol=atol, rtol=rtol)
@@ -204,9 +200,8 @@ def diagonalize_two_matrices_with_hermitian_products(
 ) -> Tuple[np.ndarray]:
     """
     Given two complex matrices Ca, Cb and the promise that
-    (1) Ca times the transpose conjugate of Cb and (2) the transpose conjugate
-    of Ca times Cb are Hermitian. Calculate the matrices U and V that
-    simultaneous diagonlize Ca and Cb.
+    Ca * Cb.conj().T and Ca.conj().T * Cab are Hermitian.
+    Calculate the matrices U and V that simultaneous diagonlize Ca and Cb.
 
     Reference:
     1. C. Eckart and G. Young, A princial axis transformation for
@@ -233,17 +228,6 @@ def diagonalize_two_matrices_with_hermitian_products(
     # Input validation
 
     if validate_input:
-        if np.shape(Ca) != np.shape(Cb):
-            raise ValueError("Matrices to diagonalize need to have the same dimension.")
-
-        try:
-            dim1, dim2 = np.shape(Ca)
-        except ValueError:
-            print("The input has to be a 2d numpy array.")
-
-        if not dim1 * dim2:
-            raise ValueError("Matrices to diagonalized cannot be empty.")
-
         a_bconj = np.dot(Ca, Cb.conj().T)
         aconj_b = np.dot(Ca.conj().T, Cb)
 

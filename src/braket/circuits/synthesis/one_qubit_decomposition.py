@@ -15,14 +15,10 @@ import numpy as np
 import braket.circuits as braket_circ
 
 from braket.circuits.synthesis.util import to_su
-from braket.circuits.quantum_operator_helpers import is_unitary, eq_up_to_phase
+from braket.circuits.quantum_operator_helpers import is_unitary
 from braket.circuits import Circuit
 from braket.circuits.gates import X, Y, Z, Rx, Ry, Rz
 from braket.circuits.instruction import Instruction
-
-from scipy.linalg import expm
-
-import time
 
 y = Y().to_matrix()
 z = Z().to_matrix()
@@ -36,10 +32,10 @@ class OneQubitDecomposition:
         U (np.ndarray): the unitary matrix to decompose.
 
     Attributes:
-        phase (np.dtype): the global phase.
-        canonical_vector (np.ndarray): the axis w.r.t. which the rotation is
+        phase (float): the global phase.
+        canonical_vector (np.ndarray): the axis about which the rotation is
             performed.
-        rotation_angle (np.dtype): the amplitude of the rotation.
+        rotation_angle (float): the amplitude of the rotation.
         quaternion (np.ndarray): the quaternion representation
             of the rotation.
         rotation_matrix (np.ndarray): the matrix representation
@@ -58,15 +54,12 @@ class OneQubitDecomposition:
 
         self.U = U
         su = to_su(self.U)
-        self.phase = np.linalg.det(U) ** 0.5
+        self.phase = complex(np.linalg.det(U)) ** 0.5
 
         # Calculate zyz Euler angles.
         weight_matrix = np.array([[1, 1], [-1, 1]])
 
         r1 = 2 * np.arctan2(abs(su[1, 0]), abs(su[0, 0]))
-
-        if r1 < 0:
-            r1 += 2 * np.pi
 
         r0r2 = np.angle(su[1, :])
 
@@ -111,7 +104,7 @@ class OneQubitDecomposition:
 
         Raises:
             NotImplementedError: if the decomposition method is not
-            implemented.
+                implemented.
         """
 
         if axes == "zyz":
@@ -157,6 +150,9 @@ class OneQubitDecomposition:
         of 1-qubit gates.
 
         SU(2) = exp(-0.5j * theta * (xX + yY + zZ))
+
+        Calculated using the Quarternion representation.
+        See https://en.wikipedia.org/wiki/Quaternion
         """
         return 2 * np.arccos(self._quat[0])
 
@@ -165,10 +161,10 @@ class OneQubitDecomposition:
         repr_str = (
             "OneQubitDecomposition(\n"
             + f"  global phase: {self.phase},\n"
-            + f"  ZYZ decomposition:\n"
+            + "  ZYZ decomposition:\n"
             + "    ------Rz--Ry--Rz------\n"
             + f"    euler angles: {self.euler_angles('zyz')})\n"
-            + f"  Axis-angle decomposition:\n"
+            + "  Axis-angle decomposition:\n"
             + "    SU(2) = exp(-0.5j * theta * (xX + yY + zZ))\n"
             + f"    canonical vector (x, y, z): {self.canonical_vector},\n"
             + f"    theta: {self.rotation_angle},\n"
@@ -177,7 +173,7 @@ class OneQubitDecomposition:
         )
         return repr_str
 
-    def build_circuit(self, qubit: int = 0, method: str = "zyz") -> braket_circ.Circuit:
+    def to_circuit(self, qubit: int = 0, method: str = "zyz") -> braket_circ.Circuit:
         """
         Build the Braket circuit for the input unitary.
 
