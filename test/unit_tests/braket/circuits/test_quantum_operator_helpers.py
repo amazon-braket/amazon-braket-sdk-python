@@ -138,7 +138,7 @@ def test_eq_up_to_phase_false(matrix1, matrix2):
         (np.array([[1, 2], [3, 4]]), np.exp(0.5 * np.pi * 1j) * np.array([[2, 2], [3, 4]])),
     ],
 )
-def test_eq_up_to_phase_false(matrix1, matrix2):
+def test_eq_up_to_phase_false_raise_exception(matrix1, matrix2):
     eq_up_to_phase(matrix1, matrix2, raise_exception=True)
 
 
