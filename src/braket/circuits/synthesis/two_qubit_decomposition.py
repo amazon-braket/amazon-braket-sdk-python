@@ -597,7 +597,7 @@ def _plot_canonical_vector(vector):
         vector (np.ndarray): The vector to plot.
     """
 
-    fig = plt.figure()
+    # fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection="3d")
 
     ax.view_init(-140, -180)
@@ -658,5 +658,4 @@ def _plot_canonical_vector(vector):
     ax.set_xlim(0.15, np.pi / 4 - 0.1)
     ax.set_zlim(-0.3, np.pi / 4 + 0.2)
     ax.set_ylim(-0.1, np.pi / 4 + 0.1)
-
-    fig.tight_layout(pad=0.9)
+    # fig.tight_layout(pad=0.9)
