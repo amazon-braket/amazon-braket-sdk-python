@@ -188,6 +188,7 @@ def test_d_c_h_m_edge_cases(d_c_h_m_edge_test_1, d_c_h_m_edge_test_2):
     "d_t_m_w_h_p_test_1, d_t_m_w_h_p_test_2",
     [
         (empty_2d, ry30),
+        (ry30, empty_2d),
         (matrix_3d, diag_matrix_3d),
         (diag_matrix_3d, matrix_3d),
         (partial_rank_3d, partial_rank_diag_3d),

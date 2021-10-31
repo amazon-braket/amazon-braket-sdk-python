@@ -37,7 +37,6 @@ setup(
         "numpy",
         "scipy",
         "matplotlib",
-        "ipython",
     ],
     extras_require={
         "test": [
