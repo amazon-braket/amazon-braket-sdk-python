@@ -120,7 +120,7 @@ def test_create(
         )
         assert job.name == "Test-Job-Name"
         assert job.arn == "local:job/Test-Job-Name"
-        assert job.state() == "COMPLETE"
+        assert job.state() == "COMPLETED"
         assert job.run_log == run_log
         assert job.metadata() is None
         assert job.cancel() is None

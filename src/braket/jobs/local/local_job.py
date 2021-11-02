@@ -188,7 +188,7 @@ class LocalQuantumJob(QuantumJob):
 
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum job."""
-        return "COMPLETE"
+        return "COMPLETED"
 
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
         """When running the quantum job in local mode, the metadata is not available."""
