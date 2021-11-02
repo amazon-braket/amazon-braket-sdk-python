@@ -827,6 +827,41 @@ def test_upload_local_data(aws_session):
         os.chdir("..")
 
 
+def test_upload_local_data_absolute(aws_session):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        Path(temp_dir, "input-dir", "pref-dir", "sub-pref-dir").mkdir(parents=True)
+        Path(temp_dir, "input-dir", "not-pref-dir").mkdir()
+
+        # these should all get uploaded
+        Path(temp_dir, "input-dir", "pref-dir", "sub-pref-dir", "very-nested.txt").touch()
+        Path(temp_dir, "input-dir", "pref-dir", "nested.txt").touch()
+        Path(temp_dir, "input-dir", "pref.txt").touch()
+        Path(temp_dir, "input-dir", "pref-and-more.txt").touch()
+
+        # these should not
+        Path(temp_dir, "input-dir", "false-pref.txt").touch()
+        Path(temp_dir, "input-dir", "not-pref-dir", "pref-fake.txt").touch()
+
+        aws_session.upload_to_s3 = Mock()
+        aws_session.upload_local_data(str(Path(temp_dir, "input-dir", "pref")), "s3://bucket/pref")
+        call_args = {args for args, kwargs in aws_session.upload_to_s3.call_args_list}
+        assert call_args == {
+            (
+                str(Path(temp_dir, "input-dir", "pref-dir", "sub-pref-dir", "very-nested.txt")),
+                "s3://bucket/pref-dir/sub-pref-dir/very-nested.txt",
+            ),
+            (
+                str(Path(temp_dir, "input-dir", "pref-dir", "nested.txt")),
+                "s3://bucket/pref-dir/nested.txt",
+            ),
+            (str(Path(temp_dir, "input-dir", "pref.txt")), "s3://bucket/pref.txt"),
+            (
+                str(Path(temp_dir, "input-dir", "pref-and-more.txt")),
+                "s3://bucket/pref-and-more.txt",
+            ),
+        }
+
+
 def test_download_from_s3(aws_session):
     filename = "model.tar.gz"
     s3_uri = (

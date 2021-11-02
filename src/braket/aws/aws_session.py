@@ -299,14 +299,21 @@ class AwsSession(object):
             "s3://my-bucket/input", provide local_prefix = "input/" and
             s3_prefix = "s3://my-bucket/input/"
         """
+        # support absolute paths
+        if Path(local_prefix).is_absolute():
+            base_dir = Path(Path(local_prefix).anchor)
+            relative_prefix = str(Path(local_prefix).relative_to(base_dir))
+        else:
+            base_dir = Path()
+            relative_prefix = str(local_prefix)
         for file in itertools.chain(
             # files that match the prefix
-            Path().glob(f"{local_prefix}*"),
+            base_dir.glob(f"{relative_prefix}*"),
             # files inside of directories that match the prefix
-            Path().glob(f"{local_prefix}*/**/*"),
+            base_dir.glob(f"{relative_prefix}*/**/*"),
         ):
             if file.is_file():
-                s3_uri = str(file.as_posix()).replace(local_prefix, s3_prefix)
+                s3_uri = str(file.as_posix()).replace(str(Path(local_prefix).as_posix()), s3_prefix)
                 self.upload_to_s3(str(file), s3_uri)
 
     def download_from_s3(self, s3_uri: str, filename: str) -> None:
