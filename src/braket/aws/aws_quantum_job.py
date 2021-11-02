@@ -126,7 +126,7 @@ class AwsQuantumJob(QuantumJob):
             input_data (Union[str, S3DataSourceConfig, dict]): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
-                f's3://{default_bucket_name}/jobs/{job_name}/input/{channel_name}. If a local
+                f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
                 path, S3 URI, or S3DataSourceConfig is provided, it will be given a default
                 channel name "input".
                 Default: {}.
