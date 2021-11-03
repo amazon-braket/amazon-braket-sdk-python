@@ -111,7 +111,9 @@ class TwoQubitDecomposition:
             return
 
         magic_u = magic_basis.conj().T @ U @ magic_basis
-        ql, theta, qr = odo_decomposition(magic_u, atol=self.atol, rtol=self.rtol, validate_input=False)
+        ql, theta, qr = odo_decomposition(
+            magic_u, atol=self.atol, rtol=self.rtol, validate_input=False
+        )
 
         kak_4vector = 0.25 * kak_so4_transform_matrix.T @ theta
 
