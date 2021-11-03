@@ -74,7 +74,7 @@ class TwoQubitDecomposition:
         self.build(U)
         _move_to_weyl_chamber(self)
 
-    def build(self, U: np.ndarray, validate_input: bool = True):
+    def build(self, U: np.ndarray):
         """
         Cartan's KAK decomposition of a 4x4 unitary matrix U:
         U = (u_1 otimes u_2) cdot exp(i(a cdot XX + b cdot YY + c cdot ZZ)) cdot(u_3 otimes u_4)
@@ -92,11 +92,10 @@ class TwoQubitDecomposition:
             rtol (float): relative tolerance parameter.
         """
 
-        if validate_input:
-            is_unitary(U, raise_exception=True)
+        is_unitary(U, raise_exception=True)
 
         if np.allclose(
-            makhlin_invariants(U, atol=self.atol, rtol=self.rtol),
+            makhlin_invariants(U, atol=self.atol, rtol=self.rtol, validate_input=False),
             (1, 0, 3),
             atol=self.atol,
             rtol=self.rtol,
@@ -112,7 +111,7 @@ class TwoQubitDecomposition:
             return
 
         magic_u = magic_basis.conj().T @ U @ magic_basis
-        ql, theta, qr = odo_decomposition(magic_u, atol=self.atol, rtol=self.rtol)
+        ql, theta, qr = odo_decomposition(magic_u, atol=self.atol, rtol=self.rtol, validate_input=False)
 
         kak_4vector = 0.25 * kak_so4_transform_matrix.T @ theta
 
@@ -185,7 +184,7 @@ class TwoQubitDecomposition:
             num_cnots (int): The number of CNOTs required.
         """
 
-        gamma_inv = gamma_invariants(self.U, atol=self.atol, rtol=self.rtol)
+        gamma_inv = gamma_invariants(self.U, atol=self.atol, rtol=self.rtol, validate_input=False)
 
         if np.allclose(
             gamma_inv, _ZERO_CNOT_GAMMA_INV1, atol=self.atol, rtol=self.rtol
@@ -225,27 +224,27 @@ class TwoQubitDecomposition:
         """
 
         if self.num_cnots == 0:
-            return self._build_zero_cnot_circuit(qubits)
+            return self._to_zero_cnot_circuit(qubits)
 
         elif self.num_cnots == 1:
-            return self._build_one_cnot_circuit(qubits)
+            return self._to_one_cnot_circuit(qubits)
 
         elif self.num_cnots == 2:
-            return self._build_two_cnot_circuit(qubits)
+            return self._to_two_cnot_circuit(qubits)
 
         elif self.num_cnots == 3:
-            return self._build_three_cnot_circuit(qubits)
+            return self._to_three_cnot_circuit(qubits)
 
-    def _build_zero_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+    def _to_zero_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
         circ = Circuit()
-        phase, u1, u2 = decompose_one_qubit_product(self.unitary)
+        phase, u1, u2 = decompose_one_qubit_product(self.unitary, validate_input=False)
         circ_u1 = OneQubitDecomposition(u1).to_circuit(qubit=qubits[1])
         circ_u2 = OneQubitDecomposition(u2).to_circuit(qubit=qubits[0])
         circ.add_circuit(circ_u1).add_circuit(circ_u2)
 
         return circ
 
-    def _build_one_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+    def _to_one_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
         circ = Circuit()
         cnot_decomp = TwoQubitDecomposition(cnot, atol=self.atol, rtol=self.rtol)
         u1 = self.su2[0] @ cnot_decomp.su2[0].conj().T
@@ -267,7 +266,7 @@ class TwoQubitDecomposition:
 
         return circ
 
-    def _build_two_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+    def _to_two_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
         circ = Circuit()
         gamma_inv = gamma_invariants(self.unitary)
 
@@ -304,7 +303,7 @@ class TwoQubitDecomposition:
 
         return circ
 
-    def _build_three_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
+    def _to_three_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
         circ = Circuit()
         # U(4) -> SU(4)
         su = to_su(self.U)

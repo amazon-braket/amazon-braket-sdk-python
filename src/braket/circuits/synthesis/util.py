@@ -251,7 +251,7 @@ def diagonalize_two_matrices_with_hermitian_products(
     rank = np.count_nonzero(~np.isclose(sa, 0))
     if rank == Ca.shape[0]:
         P = diagonalize_commuting_hermitian_matrices(
-            np.diag(sa), block_diag_cb, atol=atol, rtol=rtol
+            np.diag(sa), block_diag_cb, atol=atol, rtol=rtol, validate_input=validate_input
         )
 
         return P.conj().T @ ua.conj().T, vah.conj().T @ P
@@ -263,7 +263,7 @@ def diagonalize_two_matrices_with_hermitian_products(
 
         # block_nonzero_ca and block_nonzero_cb commute
         P = diagonalize_commuting_hermitian_matrices(
-            block_nonzero_ca, block_nonzero_cb, atol=atol, rtol=rtol
+            block_nonzero_ca, block_nonzero_cb, atol=atol, rtol=rtol, validate_input=validate_input
         )
 
         uh, _, vhh = np.linalg.svd(block_zero_cb)

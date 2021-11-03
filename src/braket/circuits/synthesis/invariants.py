@@ -85,6 +85,6 @@ def gamma_invariants(
     U = to_su(U)
 
     gamma = U @ np.kron(y, y) @ U.T @ np.kron(y, y)
-    gamma_invariants = char_poly(gamma)
+    gamma_invariants = char_poly(gamma, validate_input=validate_input)
 
     return gamma_invariants
