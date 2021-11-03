@@ -284,3 +284,12 @@ def test_misc(xx_test_case, rep, pretty_rep):
 @pytest.mark.xfail
 def test_kak_decomposition_edge_cases(nonunitary_test_cases):
     kak.TwoQubitDecomposition(nonunitary_test_cases)
+
+
+@pytest.mark.parametrize("xx_test_case", [np.kron(x, x)])
+@pytest.mark.xfail
+def test_num_cnots(xx_test_case):
+
+    test_decomp = kak.TwoQubitDecomposition(xx_test_case)
+    test_decomp.num_cnots = 4
+    test_decomp.to_circuit()

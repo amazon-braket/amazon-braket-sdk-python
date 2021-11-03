@@ -237,6 +237,9 @@ class TwoQubitDecomposition:
         elif self.num_cnots == 3:
             return self._to_three_cnot_circuit(qubits)
 
+        else:
+            raise ValueError("Number of CNOTs should between 0 and 3.")
+
     def _to_zero_cnot_circuit(self, qubits: Union[QubitSet, Sequence[int]] = [0, 1]) -> Circuit:
         circ = Circuit()
         phase, u1, u2 = decompose_one_qubit_product(self.unitary, validate_input=False)
