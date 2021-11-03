@@ -18,10 +18,6 @@ from scipy.linalg import expm
 # Typing
 from typing import Tuple, Sequence, Union
 
-# Plotting
-import matplotlib
-import matplotlib.pyplot as plt
-
 # Braket
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits import Circuit
@@ -37,8 +33,6 @@ from braket.circuits.synthesis.util import (
     to_su,
     diagonalize_two_matrices_with_hermitian_products,
 )
-
-matplotlib.rcParams["text.usetex"] = True
 
 x = X().to_matrix()
 y = Y().to_matrix()
@@ -181,13 +175,6 @@ class TwoQubitDecomposition:
         )
         print(kak_str)
         return kak_str
-
-    def plot_canonical_vector(self):
-        """
-        Plot the canonical KAK vector of the decomposition.
-        """
-
-        _plot_canonical_vector(self.canonical_vector)
 
     def count_num_cnots(self):
         """
@@ -587,75 +574,3 @@ def _move_to_weyl_chamber(kak: TwoQubitDecomposition) -> None:  # noqa C901
     if np.isclose(kak.canonical_vector[2], [0]) and kak.canonical_vector[0] > np.pi * 0.25:
         reverse(0, 2)
         shift(0, 1)
-
-
-def _plot_canonical_vector(vector):
-    """
-    Plot the canonical vector in the Weyl chamber.
-
-    Args:
-        vector (np.ndarray): The vector to plot.
-    """
-
-    fig = plt.figure(figsize=(10, 10))
-    ax = plt.axes(projection="3d")
-
-    ax.view_init(-140, -180)
-
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_zticks([])
-    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-    ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 0.0))
-
-    ax.w_xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-    ax.w_yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-    ax.w_zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-
-    cnot_coord = (0.25 * np.pi, 0, 0)
-    I_coord = (0, 0, 0)
-    iswap_coord = (0.25 * np.pi, 0.25 * np.pi, 0)
-    swap_coord = (0.25 * np.pi, 0.25 * np.pi, 0.25 * np.pi)
-    swap_d_coord = (0.25 * np.pi, 0.25 * np.pi, -0.25 * np.pi)
-
-    cnot_text_coord = (0.25 * np.pi + 0.03, -0.03, 0)
-    I_text_coord = (0, -0.03, 0)
-    iswap_text_coord = (0.25 * np.pi, 0.25 * np.pi + 0.26, 0)
-    swap_text_coord = (0.25 * np.pi + 0.05, 0.25 * np.pi + 0.26, 0.25 * np.pi)
-    swap_d_text_coord = (0.25 * np.pi, 0.25 * np.pi + 0.26, -0.25 * np.pi)
-
-    ax.text(*cnot_text_coord, r"CNOT$(\frac{\pi}{4}, 0, 0)$", fontsize=17)
-    ax.text(*I_text_coord, r"I$(0, 0, 0)$", fontsize=20)
-    ax.text(*iswap_text_coord, r"iSWAP$(\frac{\pi}{4}, \frac{\pi}{4}, 0)$", fontsize=17)
-    ax.text(*swap_text_coord, r"SWAP$(\frac{\pi}{4}, \frac{\pi}{4}, \frac{\pi}{4})$", fontsize=17)
-    ax.text(
-        *swap_d_text_coord,
-        r"SWAP$^\dagger(\frac{\pi}{4}, \frac{\pi}{4}, -\frac{\pi}{4})$",
-        fontsize=17,
-    )
-
-    tedra_front = [
-        zip(cnot_coord, swap_coord),
-        zip(swap_coord, swap_d_coord),
-        zip(I_coord, cnot_coord),
-        zip(swap_coord, I_coord),
-        zip(swap_d_coord, I_coord),
-        zip(iswap_coord, I_coord),
-    ]
-    tedra_back = [zip(swap_d_coord, cnot_coord), zip(iswap_coord, cnot_coord)]
-
-    for line in tedra_back:
-        ax.plot(*line, color="black", ls="dashed")
-
-    ax.scatter(*vector, marker="o", color="red", s=32)
-    vec_text_coord = [vector[0] - 0.02, vector[1] - 0.02, vector[2]]
-    ax.text(*vec_text_coord, r"Your unitary", fontsize=20, color="red")
-
-    for line in tedra_front:
-        ax.plot(*line, color="black")
-
-    ax.set_xlim(0.15, np.pi / 4 - 0.1)
-    ax.set_zlim(-0.3, np.pi / 4 + 0.2)
-    ax.set_ylim(-0.1, np.pi / 4 + 0.1)
-    fig.tight_layout(pad=0.9)
