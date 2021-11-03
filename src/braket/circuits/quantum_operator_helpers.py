@@ -59,7 +59,7 @@ def is_hermitian(
             when condition is not met.
 
     Returns:
-        is_hermitian (bool): If matrix is Hermitian
+        bool: If matrix is Hermitian
     """
     is_hermitian = np.allclose(matrix, matrix.conj().T, atol=atol, rtol=rtol)
 
@@ -129,7 +129,7 @@ def is_unitary(
             when condition is not met.
 
     Returns:
-        is_unitary (bool): If matrix is unitary
+        bool: If matrix is unitary
     """
     is_unitary = np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()), atol=atol, rtol=rtol)
 
@@ -152,11 +152,11 @@ def is_cptp(
         matrices (Iterable[np.array]): List of matrices representing Kraus operators.
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
-        is_cptp (bool): If the matrices define a CPTP map.
+        bool: If the matrices define a CPTP map
     """
     E = sum([np.dot(matrix.T.conjugate(), matrix) for matrix in matrices])
     is_cptp = np.allclose(E, np.eye(*E.shape), atol=atol, rtol=rtol)
@@ -182,8 +182,8 @@ def commute(
         M2 (np.ndarray): second matrix to check.
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
         commute (bool): True if M1, M2 commute and False otherwise.
@@ -208,8 +208,8 @@ def eq_up_to_phase(
         U2 (np.ndarray): second 2x2 matrix to compare.
         atol (np.dtype): absolute tolerance parameter.
         rtol (np.dtype): relative tolerance parameter.
-        raise_exception (bool): if raise an exception
-        when condition is not met.
+        raise_exception (bool): if True, raise an exception
+            when condition is not met.
 
     Returns:
         eq (bool): If U1 and U2 are equal up to a global phase

@@ -75,7 +75,7 @@ def to_su(u: np.ndarray) -> np.ndarray:
         u (np.ndarray): The unitary in U(N).
 
     Returns:
-        su (np.ndarray): The unitary in SU(N)
+        np.ndarray: The unitary in SU(N)
     """
 
     return u * complex(np.linalg.det(u)) ** (-1 / np.shape(u)[0])
@@ -84,14 +84,14 @@ def to_su(u: np.ndarray) -> np.ndarray:
 def char_poly(M: np.ndarray, validate_input: bool = True) -> np.ndarray:
     """
     Calculate the characteristic polynomial of a square matrix M
-    based on the recursive Faddeev Leverrier algorithm.
+    based on the recursive Faddeev-LeVerrier algorithm.
 
     Args:
         M (np.ndarray): The input matrix.
         validate_input (bool): if validate input.
 
     Returns:
-        char_poly (np.ndarray): the charateristics polynomial.
+        np.ndarray: the characteristic polynomial of the matrix.
     """
 
     if validate_input:
