@@ -202,6 +202,7 @@ After you create a profile, use the following command to set the `AWS_PROFILE` s
 ```bash
 export AWS_PROFILE=YOUR_PROFILE_NAME
 ```
+To run the integration tests for local jobs, you need to have Docker installed and running. To install Docker follow these instructions: [Install Docker](https://docs.docker.com/get-docker/)
 
 Run the tests:
 
