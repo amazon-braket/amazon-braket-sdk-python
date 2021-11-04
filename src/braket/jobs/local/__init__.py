@@ -12,4 +12,3 @@
 # language governing permissions and limitations under the License.
 
 from braket.jobs.local.local_job import LocalQuantumJob  # noqa: F401
-from braket.jobs.local.local_job_container import _LocalJobContainer  # noqa: F401
