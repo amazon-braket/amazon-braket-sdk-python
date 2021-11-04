@@ -16,8 +16,6 @@ import re
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from braket.aws.aws_quantum_job import AwsQuantumJob
 
 # TODO: Add LocalQuantumJob for create once completely implemented.
@@ -57,15 +55,9 @@ def test_failed_quantum_job(aws_session, capsys):
     )
     assert keys == [f"jobs/{job_name}/script/source.tar.gz"]
 
-    # try fetching results for failed job.
-    message = (
-        "Error retrieving results, your job is in FAILED state. "
-        "Your job has failed due to: AlgorithmError: "
-        'ExecuteUserScriptError:\nExitCode 1\nErrorMessage ""\nCommand '
-        '"/usr/local/bin/python3.7 braket_container.py --test_case failed"'
-    )
-    with pytest.raises(RuntimeError, match=message):
-        job.result()
+    # no results saved
+    # TODO: uncomment this line once PR #119 is merged
+    # assert job.result() == {}
 
     job.logs()
     log_data, errors = capsys.readouterr()
@@ -111,7 +103,7 @@ def test_completed_quantum_job(aws_session, capsys):
     re.match(pattern=pattern, string=job.arn)
 
     # check job is in completed state.
-    assert job.state() in AwsQuantumJob.RESULTS_READY_STATES
+    assert job.state() == "COMPLETED"
 
     # Check whether the respective folder with files are created for script,
     # output, tasks and checkpoints.

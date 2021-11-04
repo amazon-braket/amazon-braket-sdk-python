@@ -48,9 +48,7 @@ from braket.jobs_data import PersistedJobData
 class AwsQuantumJob(QuantumJob):
     """Amazon Braket implementation of a quantum job."""
 
-    NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
-    RESULTS_READY_STATES = {"COMPLETED"}
-    TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
+    TERMINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
@@ -485,16 +483,7 @@ class AwsQuantumJob(QuantumJob):
             job_response = self.metadata(True)
             job_state = self.state()
 
-            if job_state in AwsQuantumJob.NO_RESULT_TERMINAL_STATES:
-                message = (
-                    f"Error retrieving results, your job is in {job_state} state. "
-                    "Your job has failed due to: "
-                    f"{job_response.get('failureReason', 'unknown reason')}"
-                    if job_state == "FAILED"
-                    else f"Error retrieving results, your job is in {job_state} state."
-                )
-                raise RuntimeError(message)
-            elif job_state in AwsQuantumJob.RESULTS_READY_STATES:
+            if job_state in AwsQuantumJob.TERMINAL_STATES:
                 output_s3_path = job_response["outputDataConfig"]["s3Path"]
                 job_name = job_response["jobName"]
                 out_bucket, out_prefix = AwsSession.parse_s3_uri(output_s3_path)

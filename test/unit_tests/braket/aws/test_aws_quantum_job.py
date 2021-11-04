@@ -284,11 +284,11 @@ def result_setup(quantum_job_name):
         os.chdir("..")
 
 
+@pytest.mark.parametrize("state", AwsQuantumJob.TERMINAL_STATES)
 def test_results_when_job_is_completed(
-    quantum_job, aws_session, generate_get_job_response, result_setup
+    quantum_job, aws_session, generate_get_job_response, result_setup, state
 ):
     expected_saved_data = {"converged": True, "energy": -0.2}
-    state = "COMPLETED"
 
     get_job_response_completed = generate_get_job_response(status=state)
     quantum_job._aws_session.get_job.return_value = get_job_response_completed
@@ -302,32 +302,6 @@ def test_results_when_job_is_completed(
         s3_uri=output_bucket_uri, filename="model.tar.gz"
     )
     assert actual_data == expected_saved_data
-
-
-@pytest.mark.parametrize(
-    "failure_reason",
-    ["Validation Error", None],
-)
-@pytest.mark.parametrize("state", ["FAILED", "CANCELLED"])
-def test_results_when_job_is_failed_or_cancelled(
-    state,
-    quantum_job,
-    generate_get_job_response,
-    result_setup,
-    failure_reason,
-):
-    get_job_response_failed = generate_get_job_response(status=state, failureReason=failure_reason)
-    quantum_job._aws_session.get_job.return_value = get_job_response_failed
-    job_metadata = quantum_job.metadata(True)
-    message = (
-        f"Error retrieving results, your job is in {state} state. "
-        "Your job has failed due to: "
-        f"{job_metadata.get('failureReason', 'unknown reason')}"
-        if state == "FAILED"
-        else f"Error retrieving results, your job is in {state} state."
-    )
-    with pytest.raises(RuntimeError, match=message):
-        quantum_job.result()
 
 
 def test_download_result_when_job_is_running(
