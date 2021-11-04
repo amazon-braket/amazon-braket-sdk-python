@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 import json
 import os.path
 import re
@@ -155,6 +156,7 @@ def test_completed_quantum_job(aws_session, capsys):
 
     # Check downloaded results exists in the file system after the call.
     downloaded_result = f"{job_name}/{AwsQuantumJob.RESULTS_FILENAME}"
+    current_dir = Path.cwd()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
@@ -165,7 +167,7 @@ def test_completed_quantum_job(aws_session, capsys):
 
         # Check results match the expectations.
         assert job.result() == {"converged": True, "energy": -0.2}
-        os.chdir("..")
+        os.chdir(current_dir)
 
     # Check the logs and validate it contains required output.
     job.logs(wait=True)
