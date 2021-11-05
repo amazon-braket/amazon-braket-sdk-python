@@ -105,7 +105,7 @@ def test_create(
         mock_setup.return_value = test_envs
 
         job = LocalQuantumJob.create(
-            device_arn=Mock(),
+            device=Mock(),
             source_module=Mock(),
             entry_point=Mock(),
             image_uri=Mock(),
@@ -140,7 +140,7 @@ def test_create_invalid_arg():
     unexpected_kwarg = "create\\(\\) got an unexpected keyword argument 'wait_until_complete'"
     with pytest.raises(TypeError, match=unexpected_kwarg):
         LocalQuantumJob.create(
-            device_arn="device",
+            device="device",
             source_module="source",
             wait_until_complete=True,
         )
@@ -156,7 +156,6 @@ def test_read_runlog_file(mock_dir):
         assert job.run_log == "Test Log"
 
 
-@pytest.mark.xfail(raises=ValueError)
 @patch("braket.jobs.local.local_job.prepare_quantum_job")
 @patch("os.path.isdir")
 def test_create_existing_job(mock_dir, mock_prepare_job, aws_session):
@@ -166,43 +165,51 @@ def test_create_existing_job(mock_dir, mock_prepare_job, aws_session):
         "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
         "checkpointConfig": {"localPath": "test/local/path/"},
     }
-    LocalQuantumJob.create(
-        device_arn=Mock(),
-        source_module=Mock(),
-        entry_point=Mock(),
-        image_uri=Mock(),
-        job_name=Mock(),
-        code_location=Mock(),
-        role_arn=Mock(),
-        hyperparameters=Mock(),
-        input_data=Mock(),
-        output_data_config=Mock(),
-        checkpoint_config=Mock(),
-        aws_session=aws_session,
+    dir_already_exists = (
+        "A local directory called Test-Job-Name already exists. Please use a different job name."
     )
+    with pytest.raises(ValueError, match=dir_already_exists):
+        LocalQuantumJob.create(
+            device=Mock(),
+            source_module=Mock(),
+            entry_point=Mock(),
+            image_uri=Mock(),
+            job_name=Mock(),
+            code_location=Mock(),
+            role_arn=Mock(),
+            hyperparameters=Mock(),
+            input_data=Mock(),
+            output_data_config=Mock(),
+            checkpoint_config=Mock(),
+            aws_session=aws_session,
+        )
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_invalid_arn():
-    LocalQuantumJob("Invalid-Arn")
+    invalid_arn = "Arn Invalid-Arn is not a valid local job arn"
+    with pytest.raises(ValueError, match=invalid_arn):
+        LocalQuantumJob("Invalid-Arn")
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_missing_job_dir():
-    LocalQuantumJob("local:job/Missing-Dir")
+    missing_dir = "Unable to find local job results for Missing-Dir"
+    with pytest.raises(ValueError, match=missing_dir):
+        LocalQuantumJob("local:job/Missing-Dir")
 
 
-@pytest.mark.xfail(raises=ValueError)
 @patch("os.path.isdir")
 def test_missing_runlog_file(mock_dir):
     mock_dir.return_value = True
     job = LocalQuantumJob("local:job/Fake-Dir")
-    job.run_log
+    no_file = "Unable to find logs in the local job directory Fake-Dir."
+    with pytest.raises(ValueError, match=no_file):
+        job.run_log
 
 
-@pytest.mark.xfail(raises=ValueError)
 @patch("os.path.isdir")
 def test_missing_results_file(mock_dir):
     mock_dir.return_value = True
     job = LocalQuantumJob("local:job/Fake-Dir")
-    job.result()
+    no_results = "Unable to find results in the local job directory Fake-Dir."
+    with pytest.raises(ValueError, match=no_results):
+        job.result()

@@ -486,7 +486,7 @@ def device_arn():
 @pytest.fixture
 def prepare_job_args(aws_session):
     return {
-        "device_arn": Mock(),
+        "device": Mock(),
         "source_module": Mock(),
         "entry_point": Mock(),
         "image_uri": Mock(),
@@ -551,7 +551,7 @@ def test_create_fake_arg():
     unexpected_kwarg = "create\\(\\) got an unexpected keyword argument 'fake_arg'"
     with pytest.raises(TypeError, match=unexpected_kwarg):
         AwsQuantumJob.create(
-            device_arn="device",
+            device="device",
             source_module="source",
             fake_arg="fake_value",
         )

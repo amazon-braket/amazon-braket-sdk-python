@@ -100,7 +100,7 @@ def role_arn():
 
 
 @pytest.fixture
-def device_arn():
+def device():
     return "arn:aws:braket:::device/qpu/test/device-name"
 
 
@@ -217,7 +217,7 @@ def create_job_args(
     job_name,
     code_location,
     role_arn,
-    device_arn,
+    device,
     hyperparameters,
     input_data,
     instance_config,
@@ -229,7 +229,7 @@ def create_job_args(
         return dict(
             (key, value)
             for key, value in {
-                "device_arn": device_arn,
+                "device": device,
                 "source_module": source_module,
                 "entry_point": entry_point,
                 "image_uri": image_uri,
@@ -248,7 +248,7 @@ def create_job_args(
         )
     elif request.param == "defaults":
         return {
-            "device_arn": device_arn,
+            "device": device,
             "source_module": source_module,
             "entry_point": entry_point,
             "aws_session": aws_session,
@@ -256,7 +256,7 @@ def create_job_args(
     elif request.param == "nones":
         return defaultdict(
             lambda: None,
-            device_arn=device_arn,
+            device=device,
             source_module=source_module,
             entry_point=entry_point,
             aws_session=aws_session,
@@ -295,7 +295,7 @@ def _translate_creation_args(create_job_args):
         default_bucket, "jobs", job_name, "script"
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
-    device = create_job_args["device_arn"]
+    device = create_job_args["device"]
     hyperparameters = create_job_args["hyperparameters"] or {}
     input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
@@ -496,7 +496,7 @@ def test_copy_checkpoints(
     mock_process_local_source,
     aws_session,
     entry_point,
-    device_arn,
+    device,
     checkpoint_config,
     generate_get_job_response,
 ):
@@ -507,7 +507,7 @@ def test_copy_checkpoints(
         }
     )
     prepare_quantum_job(
-        device_arn=device_arn,
+        device=device,
         source_module="source_module",
         entry_point=entry_point,
         copy_checkpoints_from_job="other-job-arn",
@@ -526,7 +526,7 @@ def test_invalid_input_parameters(entry_point, aws_session):
         prepare_quantum_job(
             aws_session=aws_session,
             entry_point=entry_point,
-            device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
             source_module="alpha_test_job",
             hyperparameters={
                 "param-1": "first parameter",

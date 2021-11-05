@@ -34,7 +34,7 @@ from braket.jobs.config import (
 
 
 def prepare_quantum_job(
-    device_arn: str,
+    device: str,
     source_module: str,
     entry_point: str = None,
     image_uri: str = None,
@@ -53,7 +53,7 @@ def prepare_quantum_job(
     """Creates a job by invoking the Braket CreateJob API.
 
     Args:
-        device_arn (str): ARN for the AWS device which is primarily
+        device (str): ARN for the AWS device which is primarily
             accessed for the execution of this job.
 
         source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
@@ -134,7 +134,7 @@ def prepare_quantum_job(
 
     _validate_params(param_datatype_map)
     aws_session = aws_session or AwsSession()
-    device_config = DeviceConfig(device_arn)
+    device_config = DeviceConfig(device)
     job_name = job_name or _generate_default_job_name(image_uri)
     role_arn = role_arn or aws_session.get_execution_role()
     hyperparameters = hyperparameters or {}

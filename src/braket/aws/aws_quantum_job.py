@@ -60,7 +60,7 @@ class AwsQuantumJob(QuantumJob):
     @classmethod
     def create(
         cls,
-        device_arn: str,
+        device: str,
         source_module: str,
         entry_point: str = None,
         image_uri: str = None,
@@ -81,7 +81,7 @@ class AwsQuantumJob(QuantumJob):
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
-            device_arn (str): ARN for the AWS device which is primarily
+            device (str): ARN for the AWS device which is primarily
                 accessed for the execution of this job.
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
@@ -162,7 +162,7 @@ class AwsQuantumJob(QuantumJob):
         aws_session = aws_session or AwsSession()
 
         create_job_kwargs = prepare_quantum_job(
-            device_arn=device_arn,
+            device=device,
             source_module=source_module,
             entry_point=entry_point,
             image_uri=image_uri,
