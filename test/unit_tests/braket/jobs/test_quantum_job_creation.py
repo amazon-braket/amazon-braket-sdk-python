@@ -28,7 +28,6 @@ from braket.jobs.config import (
     OutputDataConfig,
     S3DataSourceConfig,
     StoppingCondition,
-    VpcConfig,
 )
 from braket.jobs.quantum_job_creation import (
     _generate_default_job_name,
@@ -46,9 +45,6 @@ def aws_session():
     _aws_session = Mock(spec=AwsSession)
     _aws_session.default_bucket.return_value = "default-bucket-name"
     _aws_session.get_execution_role.return_value = "default-role-arn"
-    # _aws_session.construct_s3_uri.side_effect = (
-    #     lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
-    # )
     return _aws_session
 
 
@@ -132,7 +128,6 @@ def input_data(request, bucket):
 def instance_config():
     return InstanceConfig(
         instanceType="ml.m5.large",
-        instanceCount=1,
         volumeSizeInGb=1,
     )
 
@@ -156,14 +151,6 @@ def checkpoint_config(bucket, s3_prefix):
     return CheckpointConfig(
         localPath="/opt/omega/checkpoints",
         s3Uri=AwsSession.construct_s3_uri(bucket, s3_prefix, "checkpoints"),
-    )
-
-
-@pytest.fixture
-def vpc_config():
-    return VpcConfig(
-        securityGroupIds=["1", "2"],
-        subnets=["3", "4"],
     )
 
 
@@ -195,17 +182,14 @@ def generate_get_job_response():
             "inputDataConfig": [
                 {
                     "channelName": "training_input",
-                    "compressionType": "NONE",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataType": "S3_PREFIX",
                             "s3Uri": "s3://amazon-braket-jobs/job-path/input",
                         }
                     },
                 }
             ],
             "instanceConfig": {
-                "instanceCount": 1,
                 "instanceType": "ml.m5.large",
                 "volumeSizeInGb": 1,
             },
@@ -240,7 +224,6 @@ def create_job_args(
     stopping_condition,
     output_data_config,
     checkpoint_config,
-    vpc_config,
 ):
     if request.param == "fixtures":
         return dict(
@@ -259,7 +242,6 @@ def create_job_args(
                 "stopping_condition": stopping_condition,
                 "output_data_config": output_data_config,
                 "checkpoint_config": checkpoint_config,
-                "vpc_config": vpc_config,
                 "aws_session": aws_session,
             }.items()
             if value is not None
@@ -313,7 +295,7 @@ def _translate_creation_args(create_job_args):
         default_bucket, "jobs", job_name, "script"
     )
     role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
-    devices = [create_job_args["device_arn"]]
+    device = create_job_args["device_arn"]
     hyperparameters = create_job_args["hyperparameters"] or {}
     input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
@@ -324,7 +306,6 @@ def _translate_creation_args(create_job_args):
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(
         s3Uri=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "checkpoints")
     )
-    vpc_config = create_job_args["vpc_config"]
     entry_point = create_job_args["entry_point"]
     source_module = create_job_args["source_module"]
     if not AwsSession.is_s3_uri(source_module):
@@ -347,13 +328,10 @@ def _translate_creation_args(create_job_args):
         "instanceConfig": asdict(instance_config),
         "outputDataConfig": asdict(output_data_config),
         "checkpointConfig": asdict(checkpoint_config),
-        "deviceConfig": {"devices": devices},
+        "deviceConfig": {"device": device},
         "hyperParameters": hyperparameters,
         "stoppingCondition": asdict(stopping_condition),
     }
-
-    if vpc_config:
-        test_kwargs["vpcConfig"] = asdict(vpc_config)
 
     return test_kwargs
 
@@ -541,7 +519,7 @@ def test_copy_checkpoints(
 
 def test_invalid_input_parameters(entry_point, aws_session):
     error_message = (
-        "'vpc_config' should be of '<class 'braket.jobs.config.VpcConfig'>' "
+        "'instance_config' should be of '<class 'braket.jobs.config.InstanceConfig'>' "
         "but user provided <class 'int'>."
     )
     with pytest.raises(ValueError, match=error_message):
@@ -554,10 +532,7 @@ def test_invalid_input_parameters(entry_point, aws_session):
                 "param-1": "first parameter",
                 "param-2": "second param",
             },
-            instance_config=InstanceConfig(
-                instanceCount=5,
-            ),
-            vpc_config=2,
+            instance_config=2,
         )
 
 
@@ -571,8 +546,6 @@ def test_invalid_input_parameters(entry_point, aws_session):
                     "channelName": "input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
                             "s3Uri": "s3://default-bucket-name/jobs/job-name/data/input/prefix",
                         },
                     },
@@ -586,8 +559,6 @@ def test_invalid_input_parameters(entry_point, aws_session):
                     "channelName": "input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
                             "s3Uri": "s3://my-bucket/my/prefix-",
                         },
                     },
@@ -597,17 +568,13 @@ def test_invalid_input_parameters(entry_point, aws_session):
         (
             S3DataSourceConfig(
                 "s3://my-bucket/my/manifest.json",
-                distribution=S3DataSourceConfig.DistributionType.SHARDED_BY_S3_KEY,
                 content_type="text/csv",
-                s3_data_type=S3DataSourceConfig.S3DataType.MANIFEST_FILE,
             ),
             [
                 {
                     "channelName": "input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataDistributionType": "SHARDED_BY_S3_KEY",
-                            "s3DataType": "MANIFEST_FILE",
                             "s3Uri": "s3://my-bucket/my/manifest.json",
                         },
                     },
@@ -628,8 +595,6 @@ def test_invalid_input_parameters(entry_point, aws_session):
                     "channelName": "local-input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
                             "s3Uri": "s3://default-bucket-name/jobs/job-name/"
                             "data/local-input/prefix",
                         },
@@ -639,8 +604,6 @@ def test_invalid_input_parameters(entry_point, aws_session):
                     "channelName": "s3-input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
                             "s3Uri": "s3://my-bucket/my/prefix-",
                         },
                     },
@@ -649,8 +612,6 @@ def test_invalid_input_parameters(entry_point, aws_session):
                     "channelName": "config-input",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataDistributionType": "FULLY_REPLICATED",
-                            "s3DataType": "S3_PREFIX",
                             "s3Uri": "s3://my-bucket/my/manifest.json",
                         },
                     },

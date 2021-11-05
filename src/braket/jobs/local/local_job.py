@@ -100,7 +100,7 @@ class LocalQuantumJob(QuantumJob):
             checkpoint_config (CheckpointConfig): Configuration that specifies the location where
                 checkpoint data is stored.
                 Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
-                s3Uri=None).
+                s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints').
 
             aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()

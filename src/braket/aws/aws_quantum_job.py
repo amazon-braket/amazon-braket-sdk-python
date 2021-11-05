@@ -32,7 +32,6 @@ from braket.jobs.config import (
     OutputDataConfig,
     S3DataSourceConfig,
     StoppingCondition,
-    VpcConfig,
 )
 from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher
 
@@ -77,7 +76,6 @@ class AwsQuantumJob(QuantumJob):
         output_data_config: OutputDataConfig = None,
         copy_checkpoints_from_job: str = None,
         checkpoint_config: CheckpointConfig = None,
-        vpc_config: VpcConfig = None,
         aws_session: AwsSession = None,
     ) -> AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
@@ -150,10 +148,7 @@ class AwsQuantumJob(QuantumJob):
             checkpoint_config (CheckpointConfig): Configuration that specifies the location where
                 checkpoint data is stored.
                 Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
-                s3Uri=None).
-
-            vpc_config (VpcConfig): Configuration that specifies the security groups and subnets
-                to use for running the job. Default: None.
+                s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints').
 
             aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
@@ -181,7 +176,6 @@ class AwsQuantumJob(QuantumJob):
             output_data_config=output_data_config,
             copy_checkpoints_from_job=copy_checkpoints_from_job,
             checkpoint_config=checkpoint_config,
-            vpc_config=vpc_config,
             aws_session=aws_session,
         )
 
@@ -314,7 +308,7 @@ class AwsQuantumJob(QuantumJob):
         stream_prefix = f"{self.name}/"
         stream_names = []  # The list of log streams
         positions = {}  # The current position in each stream, map of stream name -> position
-        instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
+        instance_count = 1  # currently only support a single instance
         has_streams = False
         color_wrap = logs.ColorWrap()
 

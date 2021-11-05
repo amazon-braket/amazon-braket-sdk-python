@@ -68,10 +68,8 @@ def generate_get_job_response():
             "inputDataConfig": [
                 {
                     "channelName": "training_input",
-                    "compressionType": "NONE",
                     "dataSource": {
                         "s3DataSource": {
-                            "s3DataType": "S3_PREFIX",
                             "s3Uri": "s3://amazon-braket-jobs/job-path/input",
                         }
                     },
@@ -502,7 +500,6 @@ def prepare_job_args(aws_session):
         "output_data_config": Mock(),
         "copy_checkpoints_from_job": Mock(),
         "checkpoint_config": Mock(),
-        "vpc_config": Mock(),
         "aws_session": aws_session,
     }
 

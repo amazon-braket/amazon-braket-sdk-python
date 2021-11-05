@@ -20,7 +20,7 @@ import tempfile
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
@@ -30,7 +30,6 @@ from braket.jobs.config import (
     OutputDataConfig,
     S3DataSourceConfig,
     StoppingCondition,
-    VpcConfig,
 )
 
 
@@ -49,7 +48,6 @@ def prepare_quantum_job(
     output_data_config: OutputDataConfig = None,
     copy_checkpoints_from_job: str = None,
     checkpoint_config: CheckpointConfig = None,
-    vpc_config: VpcConfig = None,
     aws_session: AwsSession = None,
 ):
     """Creates a job by invoking the Braket CreateJob API.
@@ -116,10 +114,7 @@ def prepare_quantum_job(
         checkpoint_config (CheckpointConfig): Configuration that specifies the location where
             checkpoint data is stored.
             Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
-            s3Uri=None).
-
-        vpc_config (VpcConfig): Configuration that specifies the security groups and subnets
-            to use for running the job. Default: None.
+            s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints').
 
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
             Default: AwsSession()
@@ -135,12 +130,11 @@ def prepare_quantum_job(
         "stopping_condition": (stopping_condition, StoppingCondition),
         "output_data_config": (output_data_config, OutputDataConfig),
         "checkpoint_config": (checkpoint_config, CheckpointConfig),
-        "vpc_config": (vpc_config, VpcConfig),
     }
 
     _validate_params(param_datatype_map)
     aws_session = aws_session or AwsSession()
-    device_config = DeviceConfig(devices=[device_arn])
+    device_config = DeviceConfig(device_arn)
     job_name = job_name or _generate_default_job_name(image_uri)
     role_arn = role_arn or aws_session.get_execution_role()
     hyperparameters = hyperparameters or {}
@@ -206,17 +200,14 @@ def prepare_quantum_job(
         "stoppingCondition": asdict(stopping_condition),
     }
 
-    if vpc_config:
-        create_job_kwargs["vpcConfig"] = asdict(vpc_config)
-
     return create_job_kwargs
 
 
-def _generate_default_job_name(image_uri: str) -> str:
+def _generate_default_job_name(image_uri: Optional[str]) -> str:
     """
     Generate default job name using the image uri and a timestamp
     Args:
-        image_uri (str): URI for the image container.
+        image_uri (str, optional): URI for the image container.
 
     Returns:
         str: Job name.
