@@ -82,7 +82,7 @@ def generate_get_job_response():
             },
             "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
             "jobName": "job-test-20210628140446",
-            "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path"},
+            "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/data"},
             "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
             "status": "RUNNING",
             "stoppingCondition": {"maxRuntimeInSeconds": 1200},

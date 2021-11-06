@@ -195,7 +195,7 @@ def generate_get_job_response():
             },
             "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
             "jobName": "job-test-20210628140446",
-            "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/output"},
+            "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/data"},
             "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
             "status": "RUNNING",
             "stoppingCondition": {"maxRuntimeInSeconds": 1200},
@@ -300,7 +300,7 @@ def _translate_creation_args(create_job_args):
     input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
-        s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "output")
+        s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "data")
     )
     stopping_condition = create_job_args["stopping_condition"] or StoppingCondition()
     checkpoint_config = create_job_args["checkpoint_config"] or CheckpointConfig(

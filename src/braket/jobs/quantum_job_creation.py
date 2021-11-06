@@ -102,8 +102,8 @@ def prepare_quantum_job(
             Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
 
         output_data_config (OutputDataConfig): Specifies the location for the output of the job.
-            Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/
-            output', kmsKeyId=None).
+            Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
+            kmsKeyId=None).
 
         copy_checkpoints_from_job (str): A str that specifies the job ARN whose checkpoint you
             want to use in the current job. Specifying this value will copy over the checkpoint
@@ -172,7 +172,7 @@ def prepare_quantum_job(
             default_bucket,
             "jobs",
             job_name,
-            "output",
+            "data",
         )
     if not checkpoint_config.s3Uri:
         checkpoint_config.s3Uri = AwsSession.construct_s3_uri(

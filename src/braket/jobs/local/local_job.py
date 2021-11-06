@@ -94,8 +94,8 @@ class LocalQuantumJob(QuantumJob):
                 Default: {}.
 
             output_data_config (OutputDataConfig): Specifies the location for the output of the job.
-                Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/
-                output', kmsKeyId=None).
+                Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
+                kmsKeyId=None).
 
             checkpoint_config (CheckpointConfig): Configuration that specifies the location where
                 checkpoint data is stored.
