@@ -33,7 +33,7 @@ def aws_session(quantum_job_arn, job_region):
     _aws_session.construct_s3_uri.side_effect = (
         lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
     )
-    _aws_session.list_keys.return_value = ["job-path/output/some/path/to/model.tar.gz"]
+    _aws_session.list_keys.return_value = ["job-path/output/model.tar.gz"]
 
     _braket_client_mock = Mock(meta=Mock(region_name=job_region))
     _aws_session.braket_client = _braket_client_mock
@@ -82,7 +82,7 @@ def generate_get_job_response():
             },
             "jobArn": "arn:aws:braket:us-west-2:875981177017:job/job-test-20210628140446",
             "jobName": "job-test-20210628140446",
-            "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path/output"},
+            "outputDataConfig": {"s3Path": "s3://amazon-braket-jobs/job-path"},
             "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
             "status": "RUNNING",
             "stoppingCondition": {"maxRuntimeInSeconds": 1200},
@@ -295,7 +295,7 @@ def test_results_when_job_is_completed(
     job_metadata = quantum_job.metadata(True)
     s3_path = job_metadata["outputDataConfig"]["s3Path"]
 
-    output_bucket_uri = f"{s3_path}/some/path/to/model.tar.gz"
+    output_bucket_uri = f"{s3_path}/output/model.tar.gz"
     quantum_job._aws_session.download_from_s3.assert_called_with(
         s3_uri=output_bucket_uri, filename="model.tar.gz"
     )

@@ -479,12 +479,9 @@ class AwsQuantumJob(QuantumJob):
 
             if job_state in AwsQuantumJob.TERMINAL_STATES:
                 output_s3_path = job_response["outputDataConfig"]["s3Path"]
-                job_name = job_response["jobName"]
-                out_bucket, out_prefix = AwsSession.parse_s3_uri(output_s3_path)
-                output_s3_key = self._aws_session.list_keys(out_bucket, f"{out_prefix}/")[0]
-                output_s3_uri = AwsSession.construct_s3_uri(out_bucket, output_s3_key)
+                output_s3_uri = f"{output_s3_path}/output/model.tar.gz"
                 AwsQuantumJob._attempt_results_download(self, output_s3_uri, output_s3_path)
-                AwsQuantumJob._extract_tar_file(f"{extract_to}/{job_name}")
+                AwsQuantumJob._extract_tar_file(f"{extract_to}/{self.name}")
                 return
             else:
                 time.sleep(poll_interval_seconds)
