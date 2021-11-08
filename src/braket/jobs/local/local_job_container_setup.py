@@ -140,7 +140,7 @@ def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[st
     return {
         "AWS_DEFAULT_REGION": aws_session.region,
         "AMZN_BRAKET_JOB_NAME": job_name,
-        "AMZN_BRAKET_DEVICE_ARN": creation_kwargs["deviceConfig"]["device"][0],
+        "AMZN_BRAKET_DEVICE_ARN": creation_kwargs["deviceConfig"]["device"],
         "AMZN_BRAKET_JOB_RESULTS_DIR": "/opt/braket/model",
         "AMZN_BRAKET_CHECKPOINT_DIR": creation_kwargs["checkpointConfig"]["localPath"],
         "AMZN_BRAKET_OUT_S3_BUCKET": bucket,
