@@ -59,7 +59,7 @@ def creation_kwargs():
             "s3Uri": "s3://amazon-braket-jobs/job-path/checkpoints",
         },
         "outputDataConfig": {"s3Path": "s3://test_bucket/test_location/"},
-        "deviceConfig": {"devices": ["test device ARN"]},
+        "deviceConfig": {"device": "test device ARN"},
         "jobName": "Test-Job-Name",
         "roleArn": "arn:aws:iam::875981177017:role/AmazonBraketJobRole",
     }
