@@ -13,7 +13,6 @@
 
 from braket.jobs.metrics_data.cwl_metrics_fetcher import CwlMetricsFetcher  # noqa: F401
 from braket.jobs.metrics_data.definitions import (  # noqa: F401
-    MetricDefinition,
     MetricPeriod,
     MetricStatistic,
 )

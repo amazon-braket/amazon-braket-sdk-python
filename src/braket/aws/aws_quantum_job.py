@@ -37,7 +37,7 @@ from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMet
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
 # for the files, since all those metrics are retrieved from the CW.
-from braket.jobs.metrics_data.definitions import MetricDefinition, MetricStatistic, MetricType
+from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import prepare_quantum_job
 from braket.jobs.serialization import deserialize_values
@@ -69,7 +69,6 @@ class AwsQuantumJob(QuantumJob):
         role_arn: str = None,
         wait_until_complete: bool = False,
         hyperparameters: Dict[str, Any] = None,
-        metric_definitions: List[MetricDefinition] = None,
         input_data: Union[str, Dict, S3DataSourceConfig] = None,
         instance_config: InstanceConfig = None,
         stopping_condition: StoppingCondition = None,
@@ -115,9 +114,6 @@ class AwsQuantumJob(QuantumJob):
                 The hyperparameters are made accessible as a Dict[str, str] to the job.
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
-
-            metric_definitions (List[MetricDefinition]): A list of MetricDefinitions that
-                defines the metric(s) used to evaluate the training jobs. Default: None.
 
             input_data (Union[str, S3DataSourceConfig, dict]): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
