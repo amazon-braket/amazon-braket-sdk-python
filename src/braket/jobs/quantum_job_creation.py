@@ -49,6 +49,7 @@ def prepare_quantum_job(
     copy_checkpoints_from_job: str = None,
     checkpoint_config: CheckpointConfig = None,
     aws_session: AwsSession = None,
+    tags: Dict[str, str] = None,
 ):
     """Creates a job by invoking the Braket CreateJob API.
 
@@ -118,6 +119,9 @@ def prepare_quantum_job(
 
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
             Default: AwsSession()
+
+        tags (Dict[str, str]): Dict specifying the key-value pairs for tagging this job.
+            Default: None.
 
     Returns:
         AwsQuantumJob: Job tracking the execution on Amazon Braket.
@@ -198,6 +202,7 @@ def prepare_quantum_job(
         "deviceConfig": asdict(device_config),
         "hyperParameters": hyperparameters,
         "stoppingCondition": asdict(stopping_condition),
+        "tags": tags,
     }
 
     return create_job_kwargs

@@ -501,6 +501,7 @@ def prepare_job_args(aws_session):
         "copy_checkpoints_from_job": Mock(),
         "checkpoint_config": Mock(),
         "aws_session": aws_session,
+        "tags": Mock(),
     }
 
 

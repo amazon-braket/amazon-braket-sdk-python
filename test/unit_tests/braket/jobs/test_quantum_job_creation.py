@@ -58,6 +58,11 @@ def bucket():
     return "braket-region-id"
 
 
+@pytest.fixture
+def tags():
+    return {"tag-key": "tag-value"}
+
+
 @pytest.fixture(
     params=[
         None,
@@ -224,6 +229,7 @@ def create_job_args(
     stopping_condition,
     output_data_config,
     checkpoint_config,
+    tags,
 ):
     if request.param == "fixtures":
         return dict(
@@ -243,6 +249,7 @@ def create_job_args(
                 "output_data_config": output_data_config,
                 "checkpoint_config": checkpoint_config,
                 "aws_session": aws_session,
+                "tags": tags,
             }.items()
             if value is not None
         )
@@ -319,6 +326,7 @@ def _translate_creation_args(create_job_args):
     }
     if image_uri:
         algorithm_specification["containerImage"] = {"uri": image_uri}
+    tags = create_job_args.get("tags")
 
     test_kwargs = {
         "jobName": job_name,
@@ -331,6 +339,7 @@ def _translate_creation_args(create_job_args):
         "deviceConfig": {"device": device},
         "hyperParameters": hyperparameters,
         "stoppingCondition": asdict(stopping_condition),
+        "tags": tags,
     }
 
     return test_kwargs

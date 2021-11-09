@@ -76,6 +76,7 @@ class AwsQuantumJob(QuantumJob):
         copy_checkpoints_from_job: str = None,
         checkpoint_config: CheckpointConfig = None,
         aws_session: AwsSession = None,
+        tags: Dict[str, str] = None,
     ) -> AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
@@ -149,6 +150,9 @@ class AwsQuantumJob(QuantumJob):
             aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
 
+            tags (Dict[str, str]): Dict specifying the key-value pairs for tagging this job.
+                Default: None.
+
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
 
@@ -173,6 +177,7 @@ class AwsQuantumJob(QuantumJob):
             copy_checkpoints_from_job=copy_checkpoints_from_job,
             checkpoint_config=checkpoint_config,
             aws_session=aws_session,
+            tags=tags,
         )
 
         job_arn = aws_session.create_job(**create_job_kwargs)
