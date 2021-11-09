@@ -19,6 +19,7 @@ from typing import List, Optional, Union
 
 import boto3
 from botocore.config import Config
+from botocore.errorfactory import ClientError
 from networkx import Graph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
@@ -229,13 +230,16 @@ class AwsDevice(Device):
         self._populate_properties(self._aws_session)
 
     def _get_session_and_initialize(self, session):
-        current_region = session.boto_session.region_name
+        current_region = session.region
         try:
             self._populate_properties(session)
             return session
-        except Exception:
-            if "qpu" not in self._arn:
-                raise ValueError(f"Simulator {self._arn} not found in {current_region}")
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                if "qpu" not in self._arn:
+                    raise ValueError(f"Simulator {self._arn} not found in {current_region}")
+            else:
+                raise e
         # Search remaining regions for QPU
         for region in frozenset(AwsDevice.REGIONS) - {current_region}:
             region_session = AwsDevice._copy_aws_session(session, region)

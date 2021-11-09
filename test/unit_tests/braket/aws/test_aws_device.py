@@ -14,6 +14,7 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
+from botocore.exceptions import ClientError
 from common_test_utils import (
     DWAVE_ARN,
     IONQ_ARN,
@@ -366,7 +367,17 @@ def test_copy_session_custom_default_bucket(aws_session):
     "get_device_side_effect",
     [
         [MOCK_GATE_MODEL_QPU_1],
-        [ValueError(), MOCK_GATE_MODEL_QPU_1],
+        [
+            ClientError(
+                {
+                    "Error": {
+                        "Code": "ResourceNotFoundException",
+                    }
+                },
+                "getDevice",
+            ),
+            MOCK_GATE_MODEL_QPU_1,
+        ],
     ],
 )
 def test_device_qpu_no_aws_session(
@@ -375,7 +386,14 @@ def test_device_qpu_no_aws_session(
     arn = RIGETTI_ARN
     mock_session = Mock()
     mock_session.get_device.side_effect = get_device_side_effect
-    aws_session.get_device.side_effect = ValueError()
+    aws_session.get_device.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "ResourceNotFoundException",
+            }
+        },
+        "getDevice",
+    )
     aws_session_init.return_value = aws_session
     mock_copy_aws_session.return_value = mock_session
     device = AwsDevice(arn)
@@ -415,20 +433,72 @@ def test_repr(arn):
     assert repr(device) == expected
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_device_simulator_not_found():
     mock_session = Mock()
-    mock_session.get_device.side_effect = ValueError()
-    AwsDevice("arn:aws:braket:::device/simulator/a/b", mock_session)
+    mock_session.region = "test-region-1"
+    mock_session.get_device.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "ResourceNotFoundException",
+                "Message": (
+                    "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/tn1' "
+                    "not found in us-west-1. You can find a list of all supported device "
+                    "ARNs and the regions in which they are available in the documentation: "
+                    "https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html"
+                ),
+            }
+        },
+        "getDevice",
+    )
+    simulator_not_found = (
+        "Simulator arn:aws:braket:::device/simulator/a/b not found in " "test-region-1"
+    )
+    with pytest.raises(ValueError, match=simulator_not_found):
+        AwsDevice("arn:aws:braket:::device/simulator/a/b", mock_session)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
 def test_device_qpu_not_found(mock_copy_aws_session):
     mock_session = Mock()
-    mock_session.get_device.side_effect = ValueError()
+    mock_session.get_device.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "ResourceNotFoundException",
+                "Message": (
+                    "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/tn1' "
+                    "not found in us-west-1. You can find a list of all supported device "
+                    "ARNs and the regions in which they are available in the documentation: "
+                    "https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html"
+                ),
+            }
+        },
+        "getDevice",
+    )
     mock_copy_aws_session.return_value = mock_session
-    AwsDevice("arn:aws:braket:::device/qpu/a/b", mock_session)
+    qpu_not_found = "QPU arn:aws:braket:::device/qpu/a/b not found"
+    with pytest.raises(ValueError, match=qpu_not_found):
+        AwsDevice("arn:aws:braket:::device/qpu/a/b", mock_session)
+
+
+@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
+def test_device_non_qpu_region_error(mock_copy_aws_session):
+    mock_session = Mock()
+    mock_session.get_device.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "ExpiredTokenError",
+                "Message": ("Some other error that isn't ResourceNotFoundException"),
+            }
+        },
+        "getDevice",
+    )
+    mock_copy_aws_session.return_value = mock_session
+    expired_token = (
+        "An error occurred \\(ExpiredTokenError\\) when calling the getDevice operation: "
+        "Some other error that isn't ResourceNotFoundException"
+    )
+    with pytest.raises(ClientError, match=expired_token):
+        AwsDevice("arn:aws:braket:::device/qpu/a/b", mock_session)
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
