@@ -93,7 +93,7 @@ class AwsQuantumJob(QuantumJob):
                 `importable.module` or `importable.module:callable`. For example,
                 `source_module.submodule:start_here` indicates the `start_here` function
                 contained in `source_module.submodule`. If source_module is an S3 URI,
-                entry point must be given. Default: source_module's nam
+                entry point must be given. Default: source_module's name
 
             image_uri (str): A str that specifies the ECR image to use for executing the job.
                 `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
@@ -151,7 +151,7 @@ class AwsQuantumJob(QuantumJob):
                 Default: AwsSession()
 
             tags (Dict[str, str]): Dict specifying the key-value pairs for tagging this job.
-                Default: None.
+                Default: {}.
 
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
