@@ -143,6 +143,7 @@ def prepare_quantum_job(
     role_arn = role_arn or aws_session.get_execution_role()
     hyperparameters = hyperparameters or {}
     input_data = input_data or {}
+    tags = tags or {}
     default_bucket = aws_session.default_bucket()
     input_data_list = _process_input_data(input_data, job_name, aws_session)
     instance_config = instance_config or InstanceConfig()

@@ -326,7 +326,7 @@ def _translate_creation_args(create_job_args):
     }
     if image_uri:
         algorithm_specification["containerImage"] = {"uri": image_uri}
-    tags = create_job_args.get("tags")
+    tags = create_job_args.get("tags", {})
 
     test_kwargs = {
         "jobName": job_name,
