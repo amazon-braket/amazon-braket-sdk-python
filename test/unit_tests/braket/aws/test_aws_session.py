@@ -707,12 +707,17 @@ def test_create_job(aws_session):
     "string, valid",
     (
         ("s3://bucket/key", True),
+        ("S3://bucket/key", True),
+        ("https://bucket-name-123.s3.us-west-2.amazonaws.com/key/with/dirs", True),
+        ("https://bucket-name-123.S3.us-west-2.amazonaws.com/key/with/dirs", True),
+        ("https://bucket-name-123.S3.us-west-2.amazonaws.com/", False),
+        ("https://bucket-name-123.S3.us-west-2.amazonaws.com", False),
+        ("https://S3.us-west-2.amazonaws.com", False),
         ("s3://bucket/", False),
         ("s3://bucket", False),
         ("s3://////", False),
         ("http://bucket/key", False),
         ("bucket/key", False),
-        # TODO: add other s3 uri formats once they are supported
     ),
 )
 def test_is_s3_uri(string, valid):
