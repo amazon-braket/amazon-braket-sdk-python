@@ -474,7 +474,6 @@ class AwsSession(object):
                             "Effect": "Allow",
                             "Principal": {{
                                 "Service": [
-                                    "aqx.aws.internal",
                                     "braket.amazonaws.com"
                                 ]
                             }},
