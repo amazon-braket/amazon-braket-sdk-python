@@ -61,6 +61,27 @@ def aws_session(boto_session, braket_client, account_id, role_arn):
 
 
 @pytest.fixture
+def aws_explicit_session():
+    _boto_session = Mock()
+    _boto_session.region_name = "us-test-1"
+
+    creds = Mock()
+    creds.access_key = "access key"
+    creds.secret_key = "secret key"
+    creds.token = "token"
+    creds.method = "explicit"
+    _boto_session.get_credentials.return_value = creds
+
+    _aws_session = Mock()
+    _aws_session.boto_session = _boto_session
+    _aws_session._default_bucket = "amazon-braket-us-test-1-00000000"
+    _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session.account_id = "00000000"
+    _aws_session.region = "us-test-1"
+    return _aws_session
+
+
+@pytest.fixture
 def account_id():
     return "000000000"
 
@@ -1110,3 +1131,30 @@ def test_get_log_events(aws_session, next_token):
     aws_session.get_log_events(log_group, log_stream_name, start_time, start_from_head, next_token)
 
     aws_session._logs.get_log_events.assert_called_with(**log_events_args)
+
+
+@patch("boto3.Session")
+def test_copy_session(boto_session_init, aws_session):
+    boto_session_init.return_value = Mock()
+    copied_session = AwsSession.copy_session(aws_session, "us-west-2")
+    boto_session_init.assert_called_with(region_name="us-west-2")
+    assert copied_session._default_bucket is None
+
+
+@patch("boto3.Session")
+def test_copy_explicit_session(boto_session_init, aws_explicit_session):
+    boto_session_init.return_value = Mock()
+    AwsSession.copy_session(aws_explicit_session, "us-west-2")
+    boto_session_init.assert_called_with(
+        aws_access_key_id="access key",
+        aws_secret_access_key="secret key",
+        aws_session_token="token",
+        region_name="us-west-2",
+    )
+
+
+@patch("boto3.Session")
+def test_copy_session_custom_default_bucket(aws_session):
+    aws_session._default_bucket = "my-own-default"
+    copied_session = AwsSession.copy_session(aws_session)
+    assert copied_session._default_bucket == "my-own-default"

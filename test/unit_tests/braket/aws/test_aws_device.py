@@ -27,7 +27,7 @@ from common_test_utils import (
 )
 from jsonschema import validate
 
-from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask, AwsSession
+from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.circuits import Circuit
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
@@ -261,27 +261,6 @@ def boto_session():
 
 
 @pytest.fixture
-def aws_explicit_session():
-    _boto_session = Mock()
-    _boto_session.region_name = RIGETTI_REGION
-
-    creds = Mock()
-    creds.access_key = "access key"
-    creds.secret_key = "secret key"
-    creds.token = "token"
-    creds.method = "explicit"
-    _boto_session.get_credentials.return_value = creds
-
-    _aws_session = Mock()
-    _aws_session.boto_session = _boto_session
-    _aws_session._default_bucket = MOCK_DEFAULT_S3_DESTINATION_FOLDER[0]
-    _aws_session.default_bucket.return_value = _aws_session._default_bucket
-    _aws_session.account_id = "00000000"
-    _aws_session.region = "us-test-1"
-    return _aws_session
-
-
-@pytest.fixture
 def aws_session():
     _boto_session = Mock()
     _boto_session.region_name = RIGETTI_REGION
@@ -332,33 +311,6 @@ def test_device_simulator_no_aws_session(aws_session_init, aws_session):
     device = AwsDevice(arn)
     _assert_device_fields(device, MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES, MOCK_GATE_MODEL_SIMULATOR)
     aws_session.get_device.assert_called_with(arn)
-
-
-@patch("boto3.Session")
-def test_copy_session(boto_session_init, aws_session):
-    boto_session_init.return_value = Mock()
-    copied_session = AwsSession.copy_session(aws_session, RIGETTI_REGION)
-    boto_session_init.assert_called_with(region_name=RIGETTI_REGION)
-    assert copied_session._default_bucket is None
-
-
-@patch("boto3.Session")
-def test_copy_explicit_session(boto_session_init, aws_explicit_session):
-    boto_session_init.return_value = Mock()
-    AwsSession.copy_session(aws_explicit_session, RIGETTI_REGION)
-    boto_session_init.assert_called_with(
-        aws_access_key_id="access key",
-        aws_secret_access_key="secret key",
-        aws_session_token="token",
-        region_name=RIGETTI_REGION,
-    )
-
-
-@patch("boto3.Session")
-def test_copy_session_custom_default_bucket(aws_session):
-    aws_session._default_bucket = "my-own-default"
-    copied_session = AwsSession.copy_session(aws_session)
-    assert copied_session._default_bucket == "my-own-default"
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")

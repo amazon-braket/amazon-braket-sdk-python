@@ -64,6 +64,7 @@ class AwsSession(object):
             self.braket_client = self.boto_session.client("braket", config=self._config)
 
         self._update_user_agent()
+        self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
 
         self._s3 = None
@@ -698,9 +699,7 @@ class AwsSession(object):
         session_region = self.boto_session.region_name
         new_region = region or session_region
         creds = self.boto_session.get_credentials()
-        default_bucket = self._default_bucket
-        if default_bucket == f"amazon-braket-{self.region}-{self.account_id}":
-            default_bucket = None
+        default_bucket = self._default_bucket if self._custom_default_bucket else None
         if creds.method == "explicit":
             boto_session = boto3.Session(
                 aws_access_key_id=creds.access_key,
