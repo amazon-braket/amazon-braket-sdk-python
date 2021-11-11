@@ -171,14 +171,6 @@ def test_region():
         )
 
 
-def test_iam(aws_session):
-    assert aws_session.iam_client
-    aws_session.boto_session.client.assert_not_called()
-    aws_session._iam = None
-    assert aws_session.iam_client
-    aws_session.boto_session.client.assert_called_with("iam", region_name="us-west-2")
-
-
 def test_s3(aws_session):
     assert aws_session.s3_client
     aws_session.boto_session.client.assert_not_called()
@@ -786,10 +778,12 @@ def test_construct_s3_uri(bucket, dirs):
     assert parsed_key == "/".join(dirs)
 
 
-def test_get_execution_role(aws_session):
-    role_arn = "arn:aws:iam::0000000000:role/AmazonBraketJobsPreviewRole"
-    assert aws_session.get_execution_role() == role_arn
-    aws_session._iam.get_role.assert_called_with(RoleName="AmazonBraketJobsPreviewRole")
+def test_get_service_linked_role_arn(aws_session, account_id):
+    role_arn = (
+        f"arn:aws:iam::{account_id}:role/aws-service-role"
+        f"/braket.amazonaws.com/AWSServiceRoleForAmazonBraket"
+    )
+    assert aws_session.get_service_linked_role_arn() == role_arn
 
 
 def test_upload_to_s3(aws_session):

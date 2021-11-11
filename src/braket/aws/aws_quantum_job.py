@@ -106,7 +106,7 @@ class AwsQuantumJob(QuantumJob):
                 Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
             role_arn (str): A str providing the IAM role ARN used to execute the
-                script. Default: IAM role returned by get_execution_role().
+                script. Default: Amazon Braket Service-linked role.
 
             wait_until_complete (bool): `True` if we should wait until the job completes.
                 This would tail the job logs as it waits. Otherwise `False`. Default: `False`.

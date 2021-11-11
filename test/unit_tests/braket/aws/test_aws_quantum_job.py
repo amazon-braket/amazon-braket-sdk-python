@@ -29,7 +29,7 @@ def aws_session(quantum_job_arn, job_region):
     _aws_session = Mock(spec=AwsSession)
     _aws_session.create_job.return_value = quantum_job_arn
     _aws_session.default_bucket.return_value = "default-bucket-name"
-    _aws_session.get_execution_role.return_value = "default-role-arn"
+    _aws_session.get_service_linked_role_arn.return_value = "service-linked-role-arn"
     _aws_session.construct_s3_uri.side_effect = (
         lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
     )

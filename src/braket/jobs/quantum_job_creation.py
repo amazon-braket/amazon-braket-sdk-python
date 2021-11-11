@@ -79,7 +79,7 @@ def prepare_quantum_job(
             Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
         role_arn (str): A str providing the IAM role ARN used to execute the
-            script. Default: IAM role returned by get_execution_role().
+            script. Default: Amazon Braket Service-linked role.
 
         hyperparameters (Dict[str, Any]): Hyperparameters accessible to the job.
             The hyperparameters are made accessible as a Dict[str, str] to the job.
@@ -140,7 +140,7 @@ def prepare_quantum_job(
     aws_session = aws_session or AwsSession()
     device_config = DeviceConfig(device)
     job_name = job_name or _generate_default_job_name(image_uri)
-    role_arn = role_arn or aws_session.get_execution_role()
+    role_arn = role_arn or aws_session.get_service_linked_role_arn()
     hyperparameters = hyperparameters or {}
     input_data = input_data or {}
     tags = tags or {}

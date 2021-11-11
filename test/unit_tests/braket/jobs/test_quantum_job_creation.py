@@ -44,7 +44,7 @@ from braket.jobs.quantum_job_creation import (
 def aws_session():
     _aws_session = Mock(spec=AwsSession)
     _aws_session.default_bucket.return_value = "default-bucket-name"
-    _aws_session.get_execution_role.return_value = "default-role-arn"
+    _aws_session.get_service_linked_role_arn.return_value = "service-linked-role-arn"
     return _aws_session
 
 
@@ -101,7 +101,7 @@ def code_location(bucket, s3_prefix):
 
 @pytest.fixture
 def role_arn():
-    return "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
+    return "arn:aws:iam::0000000000:role/AmazonBraketJobRole"
 
 
 @pytest.fixture
@@ -301,7 +301,7 @@ def _translate_creation_args(create_job_args):
     code_location = create_job_args["code_location"] or AwsSession.construct_s3_uri(
         default_bucket, "jobs", job_name, "script"
     )
-    role_arn = create_job_args["role_arn"] or aws_session.get_execution_role()
+    role_arn = create_job_args["role_arn"] or aws_session.get_service_linked_role_arn()
     device = create_job_args["device"]
     hyperparameters = create_job_args["hyperparameters"] or {}
     input_data = create_job_args["input_data"] or {}

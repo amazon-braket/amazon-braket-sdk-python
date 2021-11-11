@@ -66,7 +66,6 @@ class AwsSession(object):
         self._update_user_agent()
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
 
-        self._iam = None
         self._s3 = None
         self._sts = None
         self._logs = None
@@ -79,12 +78,6 @@ class AwsSession(object):
     @property
     def account_id(self):
         return self.sts_client.get_caller_identity()["Account"]
-
-    @property
-    def iam_client(self):
-        if not self._iam:
-            self._iam = self.boto_session.client("iam", region_name=self.region)
-        return self._iam
 
     @property
     def s3_client(self):
@@ -205,20 +198,16 @@ class AwsSession(object):
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
 
-    def get_execution_role(self) -> str:
-        """Return the role ARN whose credentials are used to call the API.
-           Throws an exception if role doesn't exist.
-
-        Args:
-            aws_session (AwsSession): Current braket session.
+    def get_service_linked_role_arn(self) -> str:
+        """Returns the role ARN for the Amazon Braket Service-linked role.
 
         Returns:
-            (str): The execution role ARN.
+            str: Amazon Braket Service-linked role ARN.
         """
-        # TODO: possibly wrap this call with a more specific error message
-        # TODO: replace with Braket external role before launch
-        role = self.iam_client.get_role(RoleName="AmazonBraketJobsPreviewRole")
-        return role["Role"]["Arn"]
+        return (
+            f"arn:aws:iam::{self.account_id}:role/aws-service-role/"
+            f"braket.amazonaws.com/AWSServiceRoleForAmazonBraket"
+        )
 
     @backoff.on_exception(
         backoff.expo,
