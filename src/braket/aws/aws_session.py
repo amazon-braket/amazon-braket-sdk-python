@@ -10,6 +10,9 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
+from __future__ import annotations
+
 import itertools
 import os
 import os.path
@@ -19,6 +22,7 @@ from typing import Any, Dict, List, NamedTuple, Optional
 
 import backoff
 import boto3
+from botocore.config import Config
 from botocore.exceptions import ClientError
 
 import braket._schemas as braket_schemas
@@ -684,3 +688,37 @@ class AwsSession(object):
             log_events_args.update({"nextToken": next_token})
 
         return self.logs_client.get_log_events(**log_events_args)
+
+    def copy_session(
+        self,
+        region: Optional[str] = None,
+        max_connections: Optional[int] = None,
+    ) -> AwsSession:
+        """
+        Creates a new AwsSession based on the region.
+
+        Args:
+            region (str): Name of the region. Default = `None`.
+            max_connections (int): The maximum number of connections in the
+            Boto3 connection pool. Default = `None`.
+
+        Returns:
+            AwsSession: based on the region and boto config parameters.
+        """
+        config = Config(max_pool_connections=max_connections) if max_connections else None
+        session_region = self.boto_session.region_name
+        new_region = region or session_region
+        creds = self.boto_session.get_credentials()
+        default_bucket = self._default_bucket
+        if default_bucket == f"amazon-braket-{self.region}-{self.account_id}":
+            default_bucket = None
+        if creds.method == "explicit":
+            boto_session = boto3.Session(
+                aws_access_key_id=creds.access_key,
+                aws_secret_access_key=creds.secret_key,
+                aws_session_token=creds.token,
+                region_name=new_region,
+            )
+        else:
+            boto_session = boto3.Session(region_name=new_region)
+        return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)

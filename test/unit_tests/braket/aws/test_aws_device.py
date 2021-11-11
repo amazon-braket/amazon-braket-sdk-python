@@ -27,7 +27,7 @@ from common_test_utils import (
 )
 from jsonschema import validate
 
-from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
+from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask, AwsSession
 from braket.circuits import Circuit
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
@@ -337,7 +337,7 @@ def test_device_simulator_no_aws_session(aws_session_init, aws_session):
 @patch("boto3.Session")
 def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock()
-    copied_session = AwsDevice._copy_aws_session(aws_session, RIGETTI_REGION)
+    copied_session = AwsSession.copy_session(aws_session, RIGETTI_REGION)
     boto_session_init.assert_called_with(region_name=RIGETTI_REGION)
     assert copied_session._default_bucket is None
 
@@ -345,7 +345,7 @@ def test_copy_session(boto_session_init, aws_session):
 @patch("boto3.Session")
 def test_copy_explicit_session(boto_session_init, aws_explicit_session):
     boto_session_init.return_value = Mock()
-    AwsDevice._copy_aws_session(aws_explicit_session, RIGETTI_REGION)
+    AwsSession.copy_session(aws_explicit_session, RIGETTI_REGION)
     boto_session_init.assert_called_with(
         aws_access_key_id="access key",
         aws_secret_access_key="secret key",
@@ -357,11 +357,11 @@ def test_copy_explicit_session(boto_session_init, aws_explicit_session):
 @patch("boto3.Session")
 def test_copy_session_custom_default_bucket(aws_session):
     aws_session._default_bucket = "my-own-default"
-    copied_session = AwsDevice._copy_aws_session(aws_session)
+    copied_session = AwsSession.copy_session(aws_session)
     assert copied_session._default_bucket == "my-own-default"
 
 
-@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
+@patch("braket.aws.aws_device.AwsSession.copy_session")
 @patch("braket.aws.aws_device.AwsSession")
 @pytest.mark.parametrize(
     "get_device_side_effect",
@@ -381,7 +381,7 @@ def test_copy_session_custom_default_bucket(aws_session):
     ],
 )
 def test_device_qpu_no_aws_session(
-    aws_session_init, mock_copy_aws_session, get_device_side_effect, aws_session
+    aws_session_init, mock_copy_session, get_device_side_effect, aws_session
 ):
     arn = RIGETTI_ARN
     mock_session = Mock()
@@ -395,7 +395,7 @@ def test_device_qpu_no_aws_session(
         "getDevice",
     )
     aws_session_init.return_value = aws_session
-    mock_copy_aws_session.return_value = mock_session
+    mock_copy_session.return_value = mock_session
     device = AwsDevice(arn)
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_1, MOCK_GATE_MODEL_QPU_1)
 
@@ -457,8 +457,8 @@ def test_device_simulator_not_found():
         AwsDevice("arn:aws:braket:::device/simulator/a/b", mock_session)
 
 
-@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
-def test_device_qpu_not_found(mock_copy_aws_session):
+@patch("braket.aws.aws_device.AwsSession.copy_session")
+def test_device_qpu_not_found(mock_copy_session):
     mock_session = Mock()
     mock_session.get_device.side_effect = ClientError(
         {
@@ -474,14 +474,14 @@ def test_device_qpu_not_found(mock_copy_aws_session):
         },
         "getDevice",
     )
-    mock_copy_aws_session.return_value = mock_session
+    mock_copy_session.return_value = mock_session
     qpu_not_found = "QPU arn:aws:braket:::device/qpu/a/b not found"
     with pytest.raises(ValueError, match=qpu_not_found):
         AwsDevice("arn:aws:braket:::device/qpu/a/b", mock_session)
 
 
-@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
-def test_device_non_qpu_region_error(mock_copy_aws_session):
+@patch("braket.aws.aws_device.AwsSession.copy_session")
+def test_device_non_qpu_region_error(mock_copy_session):
     mock_session = Mock()
     mock_session.get_device.side_effect = ClientError(
         {
@@ -492,7 +492,7 @@ def test_device_non_qpu_region_error(mock_copy_aws_session):
         },
         "getDevice",
     )
-    mock_copy_aws_session.return_value = mock_session
+    mock_copy_session.return_value = mock_session
     expired_token = (
         "An error occurred \\(ExpiredTokenError\\) when calling the getDevice operation: "
         "Some other error that isn't ResourceNotFoundException"
@@ -627,7 +627,7 @@ def test_run_env_variables(aws_quantum_task_mock, device, circuit):
     assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 
 
-@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, device, circuit):
     _run_batch_and_assert(
@@ -638,7 +638,7 @@ def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, device, cir
     )
 
 
-@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_shots(
     aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
@@ -653,7 +653,7 @@ def test_run_batch_with_shots(
     )
 
 
-@patch("braket.aws.aws_device.AwsSession")
+@patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_max_parallel_and_kwargs(
     aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
@@ -753,8 +753,8 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
         assert device.topology_graph.edges == device._construct_topology_graph().edges
 
 
-@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
-def test_get_devices(mock_copy_aws_session, aws_session):
+@patch("braket.aws.aws_device.AwsSession.copy_session")
+def test_get_devices(mock_copy_session, aws_session):
     aws_session.search_devices.side_effect = [
         # us-west-1
         [
@@ -810,7 +810,7 @@ def test_get_devices(mock_copy_aws_session, aws_session):
         MOCK_GATE_MODEL_QPU_2,
         ValueError("should not be reachable"),
     ]
-    mock_copy_aws_session.return_value = session_for_region
+    mock_copy_session.return_value = session_for_region
     # Search order: us-east-1, us-west-1, us-west-2
     results = AwsDevice.get_devices(
         arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN],
@@ -821,8 +821,8 @@ def test_get_devices(mock_copy_aws_session, aws_session):
     assert [result.name for result in results] == ["Advantage_system1.1", "Blah", "SV1"]
 
 
-@patch("braket.aws.aws_device.AwsDevice._copy_aws_session")
-def test_get_devices_simulators_only(mock_copy_aws_session, aws_session):
+@patch("braket.aws.aws_device.AwsSession.copy_session")
+def test_get_devices_simulators_only(mock_copy_session, aws_session):
     aws_session.search_devices.side_effect = [
         [
             {
@@ -842,7 +842,7 @@ def test_get_devices_simulators_only(mock_copy_aws_session, aws_session):
     session_for_region = Mock()
     session_for_region.search_devices.side_effect = ValueError("should not be reachable")
     session_for_region.get_device.side_effect = ValueError("should not be reachable")
-    mock_copy_aws_session.return_value = session_for_region
+    mock_copy_session.return_value = session_for_region
     results = AwsDevice.get_devices(
         arns=[SV1_ARN, TN1_ARN],
         types=["SIMULATOR"],

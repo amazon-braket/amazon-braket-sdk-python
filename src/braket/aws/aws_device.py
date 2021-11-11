@@ -17,8 +17,6 @@ import os
 from enum import Enum
 from typing import List, Optional, Union
 
-import boto3
-from botocore.config import Config
 from botocore.errorfactory import ClientError
 from networkx import Graph, complete_graph, from_edgelist
 
@@ -204,7 +202,7 @@ class AwsDevice(Device):
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
         return AwsQuantumTaskBatch(
-            AwsDevice._copy_aws_session(self._aws_session, max_connections=max_connections),
+            AwsSession.copy_session(self._aws_session, max_connections=max_connections),
             self._arn,
             task_specifications,
             s3_destination_folder
@@ -242,7 +240,7 @@ class AwsDevice(Device):
                 raise e
         # Search remaining regions for QPU
         for region in frozenset(AwsDevice.REGIONS) - {current_region}:
-            region_session = AwsDevice._copy_aws_session(session, region)
+            region_session = AwsSession.copy_session(session, region)
             try:
                 self._populate_properties(region_session)
                 return region_session
@@ -338,30 +336,6 @@ class AwsDevice(Device):
     def _default_max_parallel(self):
         return AwsDevice.DEFAULT_MAX_PARALLEL
 
-    @staticmethod
-    def _copy_aws_session(
-        aws_session: AwsSession,
-        region: Optional[str] = None,
-        max_connections: Optional[int] = None,
-    ) -> AwsSession:
-        config = Config(max_pool_connections=max_connections) if max_connections else None
-        session_region = aws_session.boto_session.region_name
-        new_region = region or session_region
-        creds = aws_session.boto_session.get_credentials()
-        default_bucket = aws_session._default_bucket
-        if default_bucket == f"amazon-braket-{aws_session.region}-{aws_session.account_id}":
-            default_bucket = None
-        if creds.method == "explicit":
-            boto_session = boto3.Session(
-                aws_access_key_id=creds.access_key,
-                aws_secret_access_key=creds.secret_key,
-                aws_session_token=creds.token,
-                region_name=new_region,
-            )
-        else:
-            boto_session = boto3.Session(region_name=new_region)
-        return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
-
     def __repr__(self):
         return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
 
@@ -423,7 +397,7 @@ class AwsDevice(Device):
             session_for_region = (
                 aws_session
                 if region == session_region
-                else AwsDevice._copy_aws_session(aws_session, region)
+                else AwsSession.copy_session(aws_session, region)
             )
             # Simulators are only instantiated in the same region as the AWS session
             types_for_region = sorted(
