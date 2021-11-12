@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.9.5.post0 (2021-11-04)
+
+### Testing and Release Infrastructure
+
+ * Pin docutils<0.18 in doc requirements
+
 ## v1.9.5 (2021-10-05)
 
 ### Bug Fixes and Other Changes
