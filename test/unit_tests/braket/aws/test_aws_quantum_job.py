@@ -13,6 +13,7 @@
 
 import datetime
 import json
+import logging
 import os
 import tarfile
 import tempfile
@@ -33,7 +34,14 @@ def aws_session(quantum_job_arn, job_region):
     _aws_session.construct_s3_uri.side_effect = (
         lambda bucket, *dirs: f"s3://{bucket}/{'/'.join(dirs)}"
     )
+
+    def fake_copy_session(region):
+        _aws_session.region = region
+        return _aws_session
+
+    _aws_session.copy_session.side_effect = fake_copy_session
     _aws_session.list_keys.return_value = ["job-path/output/model.tar.gz"]
+    _aws_session.region = "us-test-1"
 
     _braket_client_mock = Mock(meta=Mock(region_name=job_region))
     _aws_session.braket_client = _braket_client_mock
@@ -469,11 +477,6 @@ def source_module(request, bucket, s3_prefix):
 
 
 @pytest.fixture
-def code_location(bucket, s3_prefix):
-    return AwsSession.construct_s3_uri(bucket, s3_prefix, "script")
-
-
-@pytest.fixture
 def role_arn():
     return "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
 
@@ -791,3 +794,117 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
 
     with pytest.raises(ClientError, match="Some error message"):
         quantum_job.logs(wait=True, poll_interval_seconds=0)
+
+
+def test_initialize_session_for_valid_device(device_arn, aws_session, caplog):
+    first_region = aws_session.region
+    logger = logging.getLogger(__name__)
+
+    aws_session.get_device.side_effect = [
+        ClientError(
+            {
+                "Error": {
+                    "Code": "ResourceNotFoundException",
+                }
+            },
+            "getDevice",
+        ),
+        ClientError(
+            {
+                "Error": {
+                    "Code": "ResourceNotFoundException",
+                }
+            },
+            "getDevice",
+        ),
+        device_arn,
+    ]
+
+    caplog.set_level(logging.INFO)
+    AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+
+    assert f"Changed session region from '{first_region}' to '{aws_session.region}'" in caplog.text
+
+
+def test_initialize_session_for_invalid_device(aws_session, device_arn):
+    logger = logging.getLogger(__name__)
+    aws_session.get_device.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "ResourceNotFoundException",
+            }
+        },
+        "getDevice",
+    )
+
+    device_not_found = "QPU 'arn:aws:braket:::device/qpu/test/device-name' not found."
+    with pytest.raises(ValueError, match=device_not_found):
+        AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+
+
+def test_no_region_routing_simulator(aws_session):
+    logger = logging.getLogger(__name__)
+
+    aws_session.get_device.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "ResourceNotFoundException",
+            }
+        },
+        "getDevice",
+    )
+
+    device_arn = "arn:aws:braket:::device/simulator/test/device-name"
+    device_not_found = f"Simulator '{device_arn}' not found in 'us-test-1'"
+    with pytest.raises(ValueError, match=device_not_found):
+        AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+
+
+def test_exception_in_credentials_session_region(device_arn, aws_session):
+    logger = logging.getLogger(__name__)
+
+    aws_session.get_device.side_effect = ClientError(
+        {
+            "Error": {
+                "Code": "SomeOtherErrorMessage",
+            }
+        },
+        "getDevice",
+    )
+
+    error_message = (
+        "An error occurred \\(SomeOtherErrorMessage\\) "
+        "when calling the getDevice operation: Unknown"
+    )
+    with pytest.raises(ClientError, match=error_message):
+        AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+
+
+def test_exceptions_in_all_device_regions(device_arn, aws_session):
+    logger = logging.getLogger(__name__)
+
+    aws_session.get_device.side_effect = [
+        ClientError(
+            {
+                "Error": {
+                    "Code": "ResourceNotFoundException",
+                }
+            },
+            "getDevice",
+        ),
+        ClientError(
+            {
+                "Error": {
+                    "Code": "SomeOtherErrorMessage",
+                }
+            },
+            "getDevice",
+        ),
+    ]
+
+    error_message = (
+        "An error occurred \\(SomeOtherErrorMessage\\) "
+        "when calling the getDevice operation: Unknown"
+    )
+    with pytest.raises(ClientError, match=error_message):
+        AwsQuantumJob._initialize_session(aws_session, device_arn, logger)

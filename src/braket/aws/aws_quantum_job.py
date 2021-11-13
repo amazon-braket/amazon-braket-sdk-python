@@ -18,12 +18,14 @@ import tarfile
 import tempfile
 import time
 from enum import Enum
+from logging import Logger, getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
 import boto3
 from botocore.exceptions import ClientError
 
+from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 from braket.jobs import logs
 from braket.jobs.config import (
@@ -77,6 +79,7 @@ class AwsQuantumJob(QuantumJob):
         checkpoint_config: CheckpointConfig = None,
         aws_session: AwsSession = None,
         tags: Dict[str, str] = None,
+        logger: Logger = getLogger(__name__),
     ) -> AwsQuantumJob:
         """Creates a job by invoking the Braket CreateJob API.
 
@@ -153,13 +156,16 @@ class AwsQuantumJob(QuantumJob):
             tags (Dict[str, str]): Dict specifying the key-value pairs for tagging this job.
                 Default: {}.
 
+            logger (Logger): Logger object with which to write logs, such as task statuses
+                while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
+
         Returns:
             AwsQuantumJob: Job tracking the execution on Amazon Braket.
 
         Raises:
             ValueError: Raises ValueError if the parameters are not valid.
         """
-        aws_session = aws_session or AwsSession()
+        aws_session = AwsQuantumJob._initialize_session(aws_session, device, logger)
 
         create_job_kwargs = prepare_quantum_job(
             device=device,
@@ -189,11 +195,7 @@ class AwsQuantumJob(QuantumJob):
 
         return job
 
-    def __init__(
-        self,
-        arn: str,
-        aws_session: AwsSession = None,
-    ):
+    def __init__(self, arn: str, aws_session: AwsSession = None):
         """
         Args:
             arn (str): The ARN of the job.
@@ -525,3 +527,35 @@ class AwsQuantumJob(QuantumJob):
 
     def __hash__(self) -> int:
         return hash(self.arn)
+
+    @staticmethod
+    def _initialize_session(session_value, device, logger):
+        aws_session = session_value or AwsSession()
+        current_region = aws_session.region
+
+        try:
+            aws_session.get_device(device)
+            return aws_session
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "ResourceNotFoundException":
+                if "qpu" not in device:
+                    raise ValueError(f"Simulator '{device}' not found in '{current_region}'")
+            else:
+                raise e
+
+        return AwsQuantumJob._find_device_session(aws_session, device, current_region, logger)
+
+    @staticmethod
+    def _find_device_session(aws_session, device, original_region, logger):
+        for region in frozenset(AwsDevice.REGIONS) - {original_region}:
+            device_session = aws_session.copy_session(region=region)
+            try:
+                device_session.get_device(device)
+                logger.info(
+                    f"Changed session region from '{original_region}' to '{device_session.region}'"
+                )
+                return device_session
+            except ClientError as e:
+                if e.response["Error"]["Code"] != "ResourceNotFoundException":
+                    raise e
+        raise ValueError(f"QPU '{device}' not found.")

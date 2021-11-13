@@ -273,8 +273,9 @@ def aws_session():
     _aws_session.boto_session = _boto_session
     _aws_session._default_bucket = MOCK_DEFAULT_S3_DESTINATION_FOLDER[0]
     _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session._custom_default_bucket = False
     _aws_session.account_id = "00000000"
-    _aws_session.region = "us-test-1"
+    _aws_session.region = RIGETTI_REGION
     return _aws_session
 
 
@@ -403,7 +404,7 @@ def test_device_simulator_not_found():
         "getDevice",
     )
     simulator_not_found = (
-        "Simulator arn:aws:braket:::device/simulator/a/b not found in " "test-region-1"
+        "Simulator 'arn:aws:braket:::device/simulator/a/b' not found in 'test-region-1'"
     )
     with pytest.raises(ValueError, match=simulator_not_found):
         AwsDevice("arn:aws:braket:::device/simulator/a/b", mock_session)
@@ -427,7 +428,7 @@ def test_device_qpu_not_found(mock_copy_session):
         "getDevice",
     )
     mock_copy_session.return_value = mock_session
-    qpu_not_found = "QPU arn:aws:braket:::device/qpu/a/b not found"
+    qpu_not_found = "QPU 'arn:aws:braket:::device/qpu/a/b' not found"
     with pytest.raises(ValueError, match=qpu_not_found):
         AwsDevice("arn:aws:braket:::device/qpu/a/b", mock_session)
 

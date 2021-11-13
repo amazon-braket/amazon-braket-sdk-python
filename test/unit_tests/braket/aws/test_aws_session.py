@@ -76,6 +76,7 @@ def aws_explicit_session():
     _aws_session.boto_session = _boto_session
     _aws_session._default_bucket = "amazon-braket-us-test-1-00000000"
     _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session._custom_default_bucket = False
     _aws_session.account_id = "00000000"
     _aws_session.region = "us-test-1"
     return _aws_session
@@ -142,7 +143,7 @@ def test_initializes_boto_client_if_required(boto_session):
     boto_session.client.assert_any_call("braket", config=None)
 
 
-def test_uses_supplied_braket_client():
+def test_user_supplied_braket_client():
     boto_session = Mock()
     boto_session.region_name = "foobar"
     braket_client = Mock()
@@ -1154,7 +1155,9 @@ def test_copy_explicit_session(boto_session_init, aws_explicit_session):
 
 
 @patch("boto3.Session")
-def test_copy_session_custom_default_bucket(aws_session):
+def test_copy_session_custom_default_bucket(mock_boto, aws_session):
+    mock_boto.return_value.region_name = "us-test-1"
     aws_session._default_bucket = "my-own-default"
+    aws_session._custom_default_bucket = True
     copied_session = AwsSession.copy_session(aws_session)
     assert copied_session._default_bucket == "my-own-default"

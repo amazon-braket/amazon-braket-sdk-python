@@ -235,7 +235,7 @@ class AwsDevice(Device):
         except ClientError as e:
             if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 if "qpu" not in self._arn:
-                    raise ValueError(f"Simulator {self._arn} not found in {current_region}")
+                    raise ValueError(f"Simulator '{self._arn}' not found in '{current_region}'")
             else:
                 raise e
         # Search remaining regions for QPU
@@ -246,7 +246,7 @@ class AwsDevice(Device):
                 return region_session
             except Exception:
                 pass
-        raise ValueError(f"QPU {self._arn} not found")
+        raise ValueError(f"QPU '{self._arn}' not found")
 
     def _populate_properties(self, session):
         metadata = session.get_device(self._arn)
