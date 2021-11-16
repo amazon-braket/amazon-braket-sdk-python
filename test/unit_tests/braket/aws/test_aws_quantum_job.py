@@ -68,7 +68,7 @@ def generate_get_job_response():
             },
             "createdAt": datetime.datetime(2021, 6, 28, 21, 4, 51),
             "deviceConfig": {
-                "device": "arn:aws:braket:::device/qpu/rigetti/Aspen-9",
+                "device": "arn:aws:braket:::device/qpu/rigetti/Aspen-10",
             },
             "hyperParameters": {
                 "foo": "bar",

@@ -74,7 +74,7 @@ def test_mock_rigetti_schema_1():
 
 
 MOCK_GATE_MODEL_QPU_1 = {
-    "deviceName": "Aspen-9",
+    "deviceName": "Aspen-10",
     "deviceType": "QPU",
     "providerName": "provider1",
     "deviceStatus": "OFFLINE",
