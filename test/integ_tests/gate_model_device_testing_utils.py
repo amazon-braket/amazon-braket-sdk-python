@@ -71,15 +71,19 @@ def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict
 
 
 def result_types_zero_shots_bell_pair_testing(
-    device: Device, include_state_vector: bool, run_kwargs: Dict[str, Any]
+    device: Device,
+    include_state_vector: bool,
+    run_kwargs: Dict[str, Any],
+    include_amplitude: bool = True,
 ):
     circuit = (
         Circuit()
         .h(0)
         .cnot(0, 1)
         .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        .amplitude(["01", "10", "00", "11"])
     )
+    if include_amplitude:
+        circuit.amplitude(["01", "10", "00", "11"])
     if include_state_vector:
         circuit.state_vector()
     result = device.run(circuit, **run_kwargs).result()
@@ -95,12 +99,13 @@ def result_types_zero_shots_bell_pair_testing(
             result.get_value_by_result_type(ResultType.StateVector()),
             np.array([1, 0, 0, 1]) / np.sqrt(2),
         )
-    assert result.get_value_by_result_type(ResultType.Amplitude(["01", "10", "00", "11"])) == {
-        "01": 0j,
-        "10": 0j,
-        "00": (1 / np.sqrt(2)),
-        "11": (1 / np.sqrt(2)),
-    }
+    if include_amplitude:
+        assert result.get_value_by_result_type(ResultType.Amplitude(["01", "10", "00", "11"])) == {
+            "01": 0j,
+            "10": 0j,
+            "00": (1 / np.sqrt(2)),
+            "11": (1 / np.sqrt(2)),
+        }
 
 
 def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: Dict[str, Any]):

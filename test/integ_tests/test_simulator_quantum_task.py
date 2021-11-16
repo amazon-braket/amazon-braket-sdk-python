@@ -39,8 +39,9 @@ from braket.aws import AwsDevice
 
 SHOTS = 8000
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
-SIMULATOR_ARNS = [SV1_ARN]
-ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0)]
+DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
+SIMULATOR_ARNS = [SV1_ARN, DM1_ARN]
+ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0), (DM1_ARN, SHOTS), (DM1_ARN, 0)]
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
@@ -57,11 +58,18 @@ def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     qubit_ordering_testing(device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder})
 
 
-@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_result_types_no_shots(simulator_arn, aws_session, s3_destination_folder):
+@pytest.mark.parametrize(
+    "simulator_arn, include_amplitude", list(zip(SIMULATOR_ARNS, [True, False]))
+)
+def test_result_types_no_shots(
+    simulator_arn, include_amplitude, aws_session, s3_destination_folder
+):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_zero_shots_bell_pair_testing(
-        device, False, {"shots": 0, "s3_destination_folder": s3_destination_folder}
+        device,
+        False,
+        {"shots": 0, "s3_destination_folder": s3_destination_folder},
+        include_amplitude,
     )
 
 
