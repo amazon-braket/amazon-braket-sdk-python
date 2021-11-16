@@ -122,7 +122,7 @@ def _get_env_additional_lib() -> Dict[str, str]:
         to the running container.
     """
     return {
-        "AMZN_BRAKET_IMAGE_SETUP_SCRIPT": "s3://braket-external-assets-preview-us-west-2/"
+        "AMZN_BRAKET_IMAGE_SETUP_SCRIPT": "s3://amazon-braket-external-assets-preview-us-west-2/"
         "HybridJobsAccess/scripts/setup-container.sh",
     }
 
