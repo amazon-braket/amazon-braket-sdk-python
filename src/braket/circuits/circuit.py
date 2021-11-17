@@ -980,6 +980,9 @@ class Circuit:
 
         return calculate_unitary(qubit_count, self.instructions)
 
+    def adjoint(self):
+        return Circuit([instr ** -1 for instr in reversed(self.instructions)])
+
     @property
     def qubits_frozen(self) -> bool:
         """bool: Whether the circuit's qubits are frozen, that is, cannot be remapped.
