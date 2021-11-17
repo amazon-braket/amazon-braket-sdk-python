@@ -911,9 +911,6 @@ class Circuit:
 
         return self
 
-    def __add__(self, other):
-        return self.add(other)
-
     def diagram(self, circuit_diagram_class=AsciiCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.
@@ -981,7 +978,12 @@ class Circuit:
         return calculate_unitary(qubit_count, self.instructions)
 
     def adjoint(self):
-        return Circuit([instr ** -1 for instr in reversed(self.instructions)])
+        return Circuit(
+            [
+                instr ** -1 if isinstance(instr.operator, Gate) else instr
+                for instr in reversed(self.instructions)
+            ]
+        )
 
     @property
     def qubits_frozen(self) -> bool:

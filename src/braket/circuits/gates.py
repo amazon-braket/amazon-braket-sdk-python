@@ -1515,7 +1515,7 @@ class CCNot(Gate):
         return 3
 
     def __call__(
-            self, control1: QubitInput, control2: QubitInput, target: QubitInput
+        self, control1: QubitInput, control2: QubitInput, target: QubitInput
     ) -> Instruction:
         return Instruction(self, target=[control1, control2, target])
 
@@ -1573,7 +1573,7 @@ class CSwap(Gate):
         return 3
 
     def __call__(
-            self, control: QubitInput, target1: QubitInput, target2: QubitInput
+        self, control: QubitInput, target1: QubitInput, target2: QubitInput
     ) -> Instruction:
         return Instruction(self, target=[control, target1, target2])
 
@@ -1594,7 +1594,6 @@ class CSwap(Gate):
             >>> circ = Circuit().cswap(0, 1, 2)
         """
         return CSwap()(control, target1, target2)
-
 
 
 Gate.register_gate(CSwap)
