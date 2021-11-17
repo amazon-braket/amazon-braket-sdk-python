@@ -911,6 +911,9 @@ class Circuit:
 
         return self
 
+    def __add__(self, other):
+        return self.add(other)
+
     def diagram(self, circuit_diagram_class=AsciiCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.
