@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Dict, Tuple
 
+from braket.circuits.gate import Gate
 from braket.circuits.operator import Operator
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
@@ -142,3 +143,12 @@ class Instruction:
         if isinstance(other, Instruction):
             return (self._operator, self._target) == (other._operator, other._target)
         return NotImplemented
+
+    def __pow__(self, power: int):
+        if not isinstance(self._operator, Gate):
+            raise TypeError("Only gate instructions can be exponentiated")
+        if not isinstance(power, int):
+            raise ValueError("Exponent must be integer")
+        if power < 0:
+            return [Instruction(self._operator.adjoint(), self._target) for _ in range(-power)]
+        return [self.copy() for _ in range(power)]

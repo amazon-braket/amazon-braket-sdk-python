@@ -53,6 +53,9 @@ class AngledGate(Gate):
         """
         return self._angle
 
+    def adjoint(self) -> Gate:
+        return self.__class__(-self._angle)
+
     def __eq__(self, other):
         if isinstance(other, AngledGate):
             return self.name == other.name and math.isclose(self.angle, other.angle)

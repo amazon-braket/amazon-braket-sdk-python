@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Any, Optional, Sequence
 
 from braket.circuits.quantum_operator import QuantumOperator
@@ -40,6 +42,9 @@ class Gate(QuantumOperator):
                 `ascii_symbols` length != `qubit_count`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+    def adjoint(self) -> Gate:
+        raise ValueError(f"Adjoint not supported for gate {self.name}")
 
     def to_ir(self, target: QubitSet) -> Any:
         """Returns IR object of quantum operator and target

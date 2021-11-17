@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Iterable
+from typing import Iterable, Union
 
 import numpy as np
 
@@ -51,12 +51,18 @@ class H(Gate):
     def to_matrix(self) -> np.ndarray:
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -91,12 +97,17 @@ class I(Gate):  # noqa: E742, E261
     def to_matrix(self) -> np.ndarray:
         return np.eye(2, dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        if len(target) > 1:
+            return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -131,12 +142,18 @@ class X(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -171,12 +188,18 @@ class Y(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -211,12 +234,18 @@ class Z(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -249,15 +278,20 @@ class S(Gate):
         return ir.S.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
-
         return np.array([[1.0, 0.0], [0.0, 1.0j]], dtype=complex)
+
+    def adjoint(self) -> Gate:
+        return Si()
 
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -292,12 +326,18 @@ class Si(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1, 0], [0, -1j]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return S()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -332,12 +372,18 @@ class T(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * np.pi / 4)]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return Ti()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -372,12 +418,18 @@ class Ti(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(-1j * np.pi / 4)]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return T()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -412,12 +464,18 @@ class V(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]], dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return Vi()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -452,12 +510,18 @@ class Vi(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array(([[0.5 - 0.5j, 0.5 + 0.5j], [0.5 + 0.5j, 0.5 - 0.5j]]), dtype=complex)
 
+    def adjoint(self) -> Gate:
+        return V()
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -505,8 +569,11 @@ class Rx(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -551,8 +618,11 @@ class Ry(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -597,8 +667,11 @@ class Rz(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -643,8 +716,11 @@ class PhaseShift(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def __call__(self, target: QubitSetInput) -> Iterable[Instruction]:
-        return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+    def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in target_set]
+        return Instruction(self, target=target)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -694,6 +770,9 @@ class CNot(Gate):
     def fixed_qubit_count() -> int:
         return 2
 
+    def adjoint(self) -> Gate:
+        return self
+
     def __call__(self, control: QubitInput, target: QubitInput) -> Instruction:
         return Instruction(self, target=[control, target])
 
@@ -737,6 +816,9 @@ class Swap(Gate):
             ],
             dtype=complex,
         )
+
+    def adjoint(self) -> Gate:
+        return self
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -785,6 +867,9 @@ class ISwap(Gate):
             ],
             dtype=complex,
         )
+
+    def adjoint(self) -> Gate:
+        return PSwap(3 * np.pi / 2)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1140,6 +1225,9 @@ class CY(Gate):
             dtype=complex,
         )
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
@@ -1179,6 +1267,9 @@ class CZ(Gate):
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([complex(1.0), 1.0, 1.0, -1.0])
+
+    def adjoint(self) -> Gate:
+        return self
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1416,6 +1507,9 @@ class CCNot(Gate):
             dtype=complex,
         )
 
+    def adjoint(self) -> Gate:
+        return self
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 3
@@ -1470,6 +1564,9 @@ class CSwap(Gate):
             ],
             dtype=complex,
         )
+
+    def adjoint(self) -> Gate:
+        return self
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1535,6 +1632,9 @@ class Unitary(Gate):
             targets=[qubit for qubit in target],
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
+
+    def adjoint(self) -> Gate:
+        return Unitary(self._matrix.conj().T, display_name=self.ascii_symbols[0] + "†")
 
     def __eq__(self, other):
         if isinstance(other, Unitary):
