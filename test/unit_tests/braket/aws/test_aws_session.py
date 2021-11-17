@@ -14,11 +14,14 @@
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
+import boto3
 import pytest
 from botocore.exceptions import ClientError
+from botocore.stub import Stubber
 
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
@@ -46,15 +49,13 @@ def braket_client():
 
 
 @pytest.fixture
-def aws_session(boto_session, braket_client, account_id, role_arn):
+def aws_session(boto_session, braket_client, account_id):
     _aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
 
     _aws_session._sts = Mock()
     _aws_session._sts.get_caller_identity.return_value = {
         "Account": account_id,
     }
-    _aws_session._iam = Mock()
-    _aws_session._iam.get_role.return_value = {"Role": {"Arn": role_arn}}
 
     _aws_session._s3 = Mock()
     return _aws_session
@@ -88,8 +89,13 @@ def account_id():
 
 
 @pytest.fixture
-def role_arn():
-    return "arn:aws:iam::0000000000:role/AmazonBraketJobsPreviewRole"
+def job_role_name():
+    return "AmazonBraketJobsRole-134534514345"
+
+
+@pytest.fixture
+def job_role_arn(job_role_name):
+    return f"arn:aws:iam::0000000000:role/{job_role_name}"
 
 
 @pytest.fixture
@@ -191,6 +197,15 @@ def test_region():
             boto_session=boto_session,
             braket_client=braket_client,
         )
+
+
+def test_iam(aws_session):
+    aws_session._iam = Mock()
+    assert aws_session.iam_client
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._iam = None
+    assert aws_session.iam_client
+    aws_session.boto_session.client.assert_called_with("iam", region_name="us-west-2")
 
 
 def test_s3(aws_session):
@@ -800,12 +815,85 @@ def test_construct_s3_uri(bucket, dirs):
     assert parsed_key == "/".join(dirs)
 
 
-def test_get_service_linked_role_arn(aws_session, account_id):
-    role_arn = (
-        f"arn:aws:iam::{account_id}:role/aws-service-role"
-        f"/braket.amazonaws.com/AWSServiceRoleForAmazonBraket"
-    )
-    assert aws_session.get_service_linked_role_arn() == role_arn
+def test_get_default_jobs_role(aws_session, job_role_arn, job_role_name):
+    iam_client = boto3.client("iam")
+    with Stubber(iam_client) as stub:
+        stub.add_response(
+            "list_roles",
+            {
+                "Roles": [
+                    {
+                        "Arn": "arn:aws:iam::0000000000:role/nonJobsRole",
+                        "RoleName": "nonJobsRole",
+                        "Path": "/",
+                        "RoleId": "nonJobsRole-213453451345-431513",
+                        "CreateDate": time.time(),
+                    }
+                ]
+                * 100,
+                "IsTruncated": True,
+                "Marker": "resp-marker",
+            },
+        )
+        stub.add_response(
+            "list_roles",
+            {
+                "Roles": [
+                    {
+                        "Arn": job_role_arn,
+                        "RoleName": job_role_name,
+                        "Path": "/",
+                        "RoleId": f"{job_role_name}-213453451345-431513",
+                        "CreateDate": time.time(),
+                    }
+                ],
+                "IsTruncated": False,
+            },
+            {"Marker": "resp-marker"},
+        )
+        aws_session._iam = iam_client
+        assert aws_session.get_default_jobs_role() == job_role_arn
+
+
+def test_get_default_jobs_role_not_found(aws_session, job_role_arn, job_role_name):
+    iam_client = boto3.client("iam")
+    with Stubber(iam_client) as stub:
+        stub.add_response(
+            "list_roles",
+            {
+                "Roles": [
+                    {
+                        "Arn": "arn:aws:iam::0000000000:role/nonJobsRole",
+                        "RoleName": "nonJobsRole",
+                        "Path": "/",
+                        "RoleId": "nonJobsRole-213453451345-431513",
+                        "CreateDate": time.time(),
+                    }
+                ]
+                * 100,
+                "IsTruncated": True,
+                "Marker": "resp-marker",
+            },
+        )
+        stub.add_response(
+            "list_roles",
+            {
+                "Roles": [
+                    {
+                        "Arn": "arn:aws:iam::0000000000:role/nonJobsRole2",
+                        "RoleName": "nonJobsRole2",
+                        "Path": "/",
+                        "RoleId": "nonJobsRole2-213453451345-431513",
+                        "CreateDate": time.time(),
+                    }
+                ],
+                "IsTruncated": False,
+            },
+            {"Marker": "resp-marker"},
+        )
+        aws_session._iam = iam_client
+        with pytest.raises(RuntimeError):
+            aws_session.get_default_jobs_role()
 
 
 def test_upload_to_s3(aws_session):
@@ -995,7 +1083,7 @@ def test_default_bucket_env_variable(boto_session, braket_client):
         "us-east-1",
     ),
 )
-def test_create_s3_bucket_if_it_does_not_exist(aws_session, region, account_id, role_arn):
+def test_create_s3_bucket_if_it_does_not_exist(aws_session, region, account_id):
     bucket = f"amazon-braket-{region}-{account_id}"
     aws_session._create_s3_bucket_if_it_does_not_exist(bucket, region)
     kwargs = {

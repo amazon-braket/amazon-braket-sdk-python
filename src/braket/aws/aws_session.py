@@ -67,6 +67,7 @@ class AwsSession(object):
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
 
+        self._iam = None
         self._s3 = None
         self._sts = None
         self._logs = None
@@ -79,6 +80,12 @@ class AwsSession(object):
     @property
     def account_id(self):
         return self.sts_client.get_caller_identity()["Account"]
+
+    @property
+    def iam_client(self):
+        if not self._iam:
+            self._iam = self.boto_session.client("iam", region_name=self.region)
+        return self._iam
 
     @property
     def s3_client(self):
@@ -199,15 +206,26 @@ class AwsSession(object):
         """
         return self.braket_client.get_quantum_task(quantumTaskArn=arn)
 
-    def get_service_linked_role_arn(self) -> str:
-        """Returns the role ARN for the Amazon Braket Service-linked role.
+    def get_default_jobs_role(self) -> str:
+        """
+        Returns the role ARN for the default jobs role created in the Amazon Braket Console.
+        It will pick the first role it finds with the `RoleName` prefix `AmazonBraketJobsRole`.
 
         Returns:
-            str: Amazon Braket Service-linked role ARN.
+            (str): The ARN for the default IAM role for jobs execution created in the Amazon
+            Braket console.
+
+        Raises:
+            RuntimeError: If no roles can be found with the prefix `AmazonBraketJobsRole`.
         """
-        return (
-            f"arn:aws:iam::{self.account_id}:role/aws-service-role/"
-            f"braket.amazonaws.com/AWSServiceRoleForAmazonBraket"
+        roles_paginator = self.iam_client.get_paginator("list_roles")
+        for page in roles_paginator.paginate():
+            for role in page.get("Roles", []):
+                if role["RoleName"].startswith("AmazonBraketJobsRole"):
+                    return role["Arn"]
+        raise RuntimeError(
+            "No default jobs roles found. Please create a role using the "
+            "Amazon Braket console or supply a custom role."
         )
 
     @backoff.on_exception(
