@@ -138,10 +138,9 @@ class Circuit:
         return self._moments.depth
 
     @property
-    def instructions(self) -> Iterable[Instruction]:
-        """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
-
-        return self._moments.values()
+    def instructions(self) -> List[Instruction]:
+        """List[Instruction]: Get an `iterable` of instructions in the circuit."""
+        return list(self._moments.values())
 
     @property
     def result_types(self) -> List[ResultType]:
@@ -1034,10 +1033,10 @@ class Circuit:
 
     def __repr__(self) -> str:
         if not self.result_types:
-            return f"Circuit('instructions': {list(self.instructions)})"
+            return f"Circuit('instructions': {self.instructions})"
         else:
             return (
-                f"Circuit('instructions': {list(self.instructions)}"
+                f"Circuit('instructions': {self.instructions}"
                 + f", 'result_types': {self.result_types})"
             )
 
@@ -1051,6 +1050,9 @@ class Circuit:
                 and self.result_types == other.result_types
             )
         return NotImplemented
+
+    def __getitem__(self, item):
+        return self.instructions[item]
 
 
 def subroutine(register=False):
