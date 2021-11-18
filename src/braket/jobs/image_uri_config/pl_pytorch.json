@@ -6,7 +6,7 @@
           "us-west-1": "292282985366",
           "us-west-2": "292282985366"
       },
-      "repository": "pytorch-jobs"
+      "repository": "amazon-braket-pytorch-jobs"
     }
   }
 }

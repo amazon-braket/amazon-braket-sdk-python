@@ -221,7 +221,9 @@ def _generate_default_job_name(image_uri: Optional[str]) -> str:
     if not image_uri:
         job_type = "-default"
     else:
-        job_type_match = re.search("/(.*)-jobs:", image_uri) or re.search("/([^:/]*)", image_uri)
+        job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
+            "/amazon-braket-([^:/]*)", image_uri
+        )
         job_type = f"-{job_type_match.groups()[0]}" if job_type_match else ""
 
     return f"braket-job{job_type}-{time.time() * 1000:.0f}"

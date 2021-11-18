@@ -66,8 +66,9 @@ def tags():
 @pytest.fixture(
     params=[
         None,
-        "aws.location/custom-jobs:tag.1.2.3",
-        "other.uri/custom-name:tag",
+        "aws.location/amazon-braket-custom-jobs:tag.1.2.3",
+        "other.uri/amazon-braket-custom-name:tag",
+        "other.uri/custom-non-managed:tag",
         "other-custom-format.com",
     ]
 )
@@ -347,13 +348,14 @@ def _translate_creation_args(create_job_args):
 
 @patch("time.time")
 def test_generate_default_job_name(mock_time, image_uri):
-    job_type = "-custom-name"
-    if not image_uri:
-        job_type = "-default"
-    elif "custom-jobs" in image_uri:
-        job_type = "-custom"
-    elif "other-custom-format" in image_uri:
-        job_type = ""
+    job_type_mapping = {
+        None: "-default",
+        "aws.location/amazon-braket-custom-jobs:tag.1.2.3": "-custom",
+        "other.uri/amazon-braket-custom-name:tag": "-custom-name",
+        "other.uri/custom-non-managed:tag": "",
+        "other-custom-format.com": "",
+    }
+    job_type = job_type_mapping[image_uri]
     mock_time.return_value = datetime.datetime.now().timestamp()
     assert _generate_default_job_name(image_uri) == f"braket-job{job_type}-{time.time() * 1000:.0f}"
 
