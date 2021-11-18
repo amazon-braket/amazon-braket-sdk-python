@@ -90,7 +90,7 @@ def account_id():
 
 @pytest.fixture
 def job_role_name():
-    return "AmazonBraketJobsRole-134534514345"
+    return "AmazonBraketJobsExecutionRole-134534514345"
 
 
 @pytest.fixture
