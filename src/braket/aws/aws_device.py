@@ -244,8 +244,9 @@ class AwsDevice(Device):
             try:
                 self._populate_properties(region_session)
                 return region_session
-            except Exception:
-                pass
+            except ClientError as e:
+                if e.response["Error"]["Code"] != "ResourceNotFoundException":
+                    raise e
         raise ValueError(f"QPU '{self._arn}' not found")
 
     def _populate_properties(self, session):

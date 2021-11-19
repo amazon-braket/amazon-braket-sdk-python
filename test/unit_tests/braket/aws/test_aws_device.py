@@ -434,6 +434,44 @@ def test_device_qpu_not_found(mock_copy_session):
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")
+def test_device_qpu_exception(mock_copy_session):
+    mock_session = Mock()
+    mock_session.get_device.side_effect = (
+        ClientError(
+            {
+                "Error": {
+                    "Code": "ResourceNotFoundException",
+                    "Message": (
+                        "Braket device 'arn:aws:braket:::device/quantum-simulator/amazon/tn1' "
+                        "not found in us-west-1. You can find a list of all supported device "
+                        "ARNs and the regions in which they are available in the documentation: "
+                        "https://docs.aws.amazon.com/braket/latest/developerguide/braket-"
+                        "devices.html"
+                    ),
+                }
+            },
+            "getDevice",
+        ),
+        ClientError(
+            {
+                "Error": {
+                    "Code": "OtherException",
+                    "Message": "Some other message",
+                }
+            },
+            "getDevice",
+        ),
+    )
+    mock_copy_session.return_value = mock_session
+    qpu_exception = (
+        "An error occurred \\(OtherException\\) when calling the "
+        "getDevice operation: Some other message"
+    )
+    with pytest.raises(ClientError, match=qpu_exception):
+        AwsDevice("arn:aws:braket:::device/qpu/a/b", mock_session)
+
+
+@patch("braket.aws.aws_device.AwsSession.copy_session")
 def test_device_non_qpu_region_error(mock_copy_session):
     mock_session = Mock()
     mock_session.get_device.side_effect = ClientError(
