@@ -39,7 +39,6 @@ def qsd_decompose(U: np.ndarray,
         
         if (dim & (dim-1) != 0) or dim == 0:
             raise ValueError("Input matrix does not have valid dimension.")
-        
 
     u, cs, vdh = cossin(U, p= dim // 2, q= dim // 2)
 
@@ -84,7 +83,3 @@ class QuantumShannonDecomposition:
     def build(self, U: np.ndarray):
 
         is_unitary(U, raise_exception=True)
-
-        
-
-
