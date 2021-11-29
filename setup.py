@@ -39,6 +39,7 @@ setup(
     extras_require={
         "test": [
             "black",
+            "botocore",
             "flake8",
             "isort",
             "jsonschema==3.2.0",
@@ -54,6 +55,7 @@ setup(
             "tox",
         ]
     },
+    include_package_data=True,
     url="https://github.com/aws/amazon-braket-sdk-python",
     author="Amazon Web Services",
     description=(
