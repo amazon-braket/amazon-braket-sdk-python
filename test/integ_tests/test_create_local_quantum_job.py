@@ -21,10 +21,6 @@ import pytest
 
 from braket.jobs.local import LocalQuantumJob
 
-# TODO: Remove 'Getting setup script from "f"s3://braket-external-
-#  assets-preview-{aws_session.region}"' from logs in tests.
-# TODO: Remove string conversion of absolute_source_module once we accept Path.
-
 
 def test_completed_local_job(aws_session, capsys):
     """Asserts the job is completed with the respective files and folders for logs,
@@ -87,7 +83,6 @@ def test_completed_local_job(aws_session, capsys):
             with open(file_name, "r") as f:
                 assert json.loads(f.read()) == expected_data
 
-        # TODO: Need to add success message to the logs that job was successful.
         # Capture logs
         assert Path(f"{job_name}/log.txt").exists()
         job.logs()
@@ -95,11 +90,6 @@ def test_completed_local_job(aws_session, capsys):
 
         logs_to_validate = [
             "Beginning Setup",
-            "Getting setup script from  "
-            f"s3://braket-external-assets-preview-{aws_session.region}"
-            f"/HybridJobsAccess/scripts/setup-container.sh",
-            "Successfully built amazon-braket-schemas",
-            "Successfully built amazon-braket-sdk",
             "Running Code As Process",
             "Test job started!!!!!",
             "Test job completed!!!!!",
@@ -134,8 +124,6 @@ def test_failed_local_job(aws_session, capsys):
         pattern = f"^local:job/{job_name}$"
         re.match(pattern=pattern, string=job.arn)
 
-        # TODO: Check if we can change job state to FAILED if job fails due to any error in future.
-        assert job.state() == "COMPLETED"
         assert Path(job_name).is_dir()
 
         # Check no files are populated in checkpoints folder.
@@ -146,22 +134,14 @@ def test_failed_local_job(aws_session, capsys):
         with pytest.raises(ValueError, match=error_message):
             job.result()
 
-        # TODO: Need to add failure message to the logs that job was unsuccessful.
-        #  Uncomment when changes made in implementation.
         assert Path(f"{job_name}/log.txt").exists()
         job.logs()
         log_data, errors = capsys.readouterr()
 
         logs_to_validate = [
             "Beginning Setup",
-            "Getting setup script from  "
-            f"s3://braket-external-assets-preview-{aws_session.region}"
-            f"/HybridJobsAccess/scripts/setup-container.sh",
-            "Successfully built amazon-braket-schemas",
-            "Successfully built amazon-braket-sdk",
             "Running Code As Process",
             "Test job started!!!!!",
-            # "Test job failed!!!!!",
             "Code Run Finished",
         ]
 

@@ -19,11 +19,6 @@ from pathlib import Path
 
 from braket.aws.aws_quantum_job import AwsQuantumJob
 
-# TODO: Add LocalQuantumJob for create once completely implemented.
-# TODO: Add validation for metrics once implemented.
-# TODO: Remove 'Getting setup script from "f"s3://braket-external-
-#  assets-preview-{aws_session.region}"' from logs in tests.
-
 
 def test_failed_quantum_job(aws_session, capsys):
     """Asserts the job is failed with the output, checkpoints,
@@ -57,8 +52,7 @@ def test_failed_quantum_job(aws_session, capsys):
     assert keys == [f"jobs/{job_name}/script/source.tar.gz"]
 
     # no results saved
-    # TODO: uncomment this line once PR #119 is merged
-    # assert job.result() == {}
+    assert job.result() == {}
 
     job.logs()
     log_data, errors = capsys.readouterr()
@@ -66,21 +60,19 @@ def test_failed_quantum_job(aws_session, capsys):
     logs_to_validate = [
         "Invoking script with the following command:",
         "/usr/local/bin/python3.7 braket_container.py",
-        "Getting setup script from  "
-        f"s3://braket-external-assets-preview-{aws_session.region}"
-        f"/HybridJobsAccess/scripts/setup-container.sh",
-        "Successfully built amazon-braket-schemas",
-        "Successfully built amazon-braket-sdk",
         "Running Code As Process",
         "Test job started!!!!!",
         "AssertionError",
         "Code Run Finished",
         '"user_entry_point": "braket_container.py"',
-        "Reporting training FAILURE",
     ]
 
     for data in logs_to_validate:
         assert data in log_data
+
+    assert job.metadata()["failureReason"] == (
+        "AlgorithmError: Job at job_test_script:start_here exited with exit code: 1"
+    )
 
 
 def test_completed_quantum_job(aws_session, capsys):
@@ -115,7 +107,7 @@ def test_completed_quantum_job(aws_session, capsys):
     )
     for expected_key in [
         f"jobs/{job_name}/script/source.tar.gz",
-        f"jobs/{job_name}/output/.*/model.tar.gz",
+        f"jobs/{job_name}/data/output/model.tar.gz",
         f"jobs/{job_name}/tasks/[^/]*/results.json",
         f"jobs/{job_name}/checkpoints/{job_name}_plain_data.json",
         f"jobs/{job_name}/checkpoints/{job_name}.json",
@@ -176,11 +168,6 @@ def test_completed_quantum_job(aws_session, capsys):
     logs_to_validate = [
         "Invoking script with the following command:",
         "/usr/local/bin/python3.7 braket_container.py",
-        "Getting setup script from  "
-        f"s3://braket-external-assets-preview-{aws_session.region}"
-        f"/HybridJobsAccess/scripts/setup-container.sh",
-        "Successfully built amazon-braket-schemas",
-        "Successfully built amazon-braket-sdk",
         "Running Code As Process",
         "Test job started!!!!!",
         "Test job completed!!!!!",
