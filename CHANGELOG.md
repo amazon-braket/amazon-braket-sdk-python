@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.10.0 (2021-11-29)
+
+### Features
+
+ * Add support for jobs
+
+### Bug Fixes and Other Changes
+
+ * Skip jobs integration tests
+
 ## v1.9.5.post0 (2021-11-04)
 
 ### Testing and Release Infrastructure
