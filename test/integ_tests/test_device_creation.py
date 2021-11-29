@@ -16,7 +16,7 @@ import pytest
 from braket.aws import AwsDevice
 
 DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
-RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-8"
+RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 
