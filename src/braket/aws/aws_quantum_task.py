@@ -391,7 +391,7 @@ class AwsQuantumTask(QuantumTask):
     def __eq__(self, other) -> bool:
         if isinstance(other, AwsQuantumTask):
             return self.id == other.id
-        return NotImplemented
+        return False
 
     def __hash__(self) -> int:
         return hash(self.id)
