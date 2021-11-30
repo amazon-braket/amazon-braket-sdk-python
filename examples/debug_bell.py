@@ -23,15 +23,11 @@ logger.setLevel(logging.DEBUG)  # print to sys.stdout all log messages with leve
 
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
 
-# Use the S3 bucket you created during onboarding
-s3_folder = ("amazon-braket-Your-Bucket-Name", "folder-name")
-
 bell = Circuit().h(0).cnot(0, 1)
 # pass in logger to device.run, enabling debugging logs to print to console
 logger.info(
     device.run(
         bell,
-        s3_folder,
         shots=100,
         poll_timeout_seconds=120,
         poll_interval_seconds=0.25,
