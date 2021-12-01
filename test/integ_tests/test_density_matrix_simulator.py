@@ -1,6 +1,5 @@
 import math
 
-import numpy as np
 import pytest
 from gate_model_device_testing_utils import get_tol
 
