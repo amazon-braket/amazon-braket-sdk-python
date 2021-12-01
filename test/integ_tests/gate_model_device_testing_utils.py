@@ -12,12 +12,13 @@
 # language governing permissions and limitations under the License.
 
 import concurrent.futures
+import math
 from typing import Any, Dict
 
 import numpy as np
 
 from braket.aws import AwsDevice
-from braket.circuits import Circuit, Observable, ResultType
+from braket.circuits import Circuit, Gate, Instruction, Observable, ResultType
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 from braket.devices import Device
 from braket.tasks import GateModelQuantumTaskResult
@@ -566,3 +567,32 @@ def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
         assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
         assert len(result.measurements) == shots
     assert [task.result() for task in batch.tasks] == results
+
+
+def many_layers(n_qubits: int, n_layers: int) -> Circuit:
+    """
+    Function to return circuit with many layers.
+
+    :param int n_qubits: number of qubits
+    :param int n_layers: number of layers
+    :return: Constructed easy circuit
+    :rtype: Circuit
+    """
+    qubits = range(n_qubits)
+    circuit = Circuit()  # instantiate circuit object
+    for q in range(n_qubits):
+        circuit.h(q)
+    for layer in range(n_layers):
+        if (layer + 1) % 100 != 0:
+            for qubit in range(len(qubits)):
+                angle = np.random.uniform(0, 2 * math.pi)
+                gate = np.random.choice(
+                    [Gate.Rx(angle), Gate.Ry(angle), Gate.Rz(angle), Gate.H()], 1, replace=True
+                )[0]
+                circuit.add_instruction(Instruction(gate, qubit))
+        else:
+            for q in range(0, n_qubits, 2):
+                circuit.cnot(q, q + 1)
+            for q in range(1, n_qubits - 1, 2):
+                circuit.cnot(q, q + 1)
+    return circuit
