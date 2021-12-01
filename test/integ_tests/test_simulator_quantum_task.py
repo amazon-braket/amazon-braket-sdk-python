@@ -11,9 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import math
+
 import pytest
 from gate_model_device_testing_utils import (
     batch_bell_pair_testing,
+    get_tol,
+    many_layers,
     multithreaded_bell_pair_testing,
     no_result_types_bell_pair_testing,
     qubit_ordering_testing,
@@ -39,8 +43,9 @@ from braket.aws import AwsDevice
 
 SHOTS = 8000
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
-SIMULATOR_ARNS = [SV1_ARN]
-ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0)]
+DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
+SIMULATOR_ARNS = [SV1_ARN, DM1_ARN]
+ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0), (DM1_ARN, SHOTS), (DM1_ARN, 0)]
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
@@ -57,11 +62,18 @@ def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     qubit_ordering_testing(device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder})
 
 
-@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_result_types_no_shots(simulator_arn, aws_session, s3_destination_folder):
+@pytest.mark.parametrize(
+    "simulator_arn, include_amplitude", list(zip(SIMULATOR_ARNS, [True, False]))
+)
+def test_result_types_no_shots(
+    simulator_arn, include_amplitude, aws_session, s3_destination_folder
+):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_zero_shots_bell_pair_testing(
-        device, False, {"shots": 0, "s3_destination_folder": s3_destination_folder}
+        device,
+        False,
+        {"shots": 0, "s3_destination_folder": s3_destination_folder},
+        include_amplitude,
     )
 
 
@@ -203,3 +215,21 @@ def test_batch_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     batch_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+@pytest.mark.parametrize("num_layers", [50, 100, 500, 1000])
+def test_many_layers(simulator_arn, num_layers, aws_session, s3_destination_folder):
+    num_qubits = 10
+    circuit = many_layers(num_qubits, num_layers)
+    device = AwsDevice(simulator_arn, aws_session)
+
+    tol = get_tol(SHOTS)
+    result = device.run(circuit, shots=SHOTS, s3_destination_folder=s3_destination_folder).result()
+    probabilities = result.measurement_probabilities
+    probability_sum = 0
+    for bitstring in probabilities:
+        assert probabilities[bitstring] >= 0
+        probability_sum += probabilities[bitstring]
+    assert math.isclose(probability_sum, 1, rel_tol=tol["rtol"], abs_tol=tol["atol"])
+    assert len(result.measurements) == SHOTS
