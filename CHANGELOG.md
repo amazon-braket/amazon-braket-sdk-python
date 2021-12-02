@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.11.0 (2021-12-02)
+
+### Features
+
+ * Adding integration tests for DM1
+
 ## v1.10.0 (2021-11-29)
 
 ### Features
