@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, time
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -25,7 +26,7 @@ from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
-from braket.device_schema import DeviceCapabilities, GateModelQpuParadigmProperties
+from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
 from braket.schema_common import BraketSchemaBase
@@ -273,6 +274,79 @@ class AwsDevice(Device):
     def arn(self) -> str:
         """str: Return the ARN of the device"""
         return self._arn
+
+    @property
+    def is_available(self) -> bool:
+        """bool: Return if the device is currently available"""
+        if self.status != "ONLINE":
+            return False
+
+        current_datetime_utc = datetime.utcnow()
+        for execution_window in self.properties.service.executionWindows:
+            weekday = current_datetime_utc.weekday()
+            current_time_utc = current_datetime_utc.time()
+
+            if (
+                execution_window.windowEndHour < execution_window.windowStartHour
+                and current_time_utc < execution_window.windowEndHour
+            ):
+                weekday = weekday - 1
+                if weekday == -1:
+                    weekday = 6
+
+            matched_day = execution_window.executionDay == ExecutionDay.EVERYDAY
+            matched_day = matched_day or execution_window.executionDay == ExecutionDay.EVERYDAY
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.WEEKDAYS and weekday < 5
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.WEEKENDS and weekday > 4
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.MONDAY and weekday == 0
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.TUESDAY and weekday == 1
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.WEDNESDAY and weekday == 2
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.THURSDAY and weekday == 3
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.FRIDAY and weekday == 4
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.SATURDAY and weekday == 5
+            )
+            matched_day = matched_day or (
+                execution_window.executionDay == ExecutionDay.SUNDAY and weekday == 6
+            )
+
+            matched_time = execution_window.windowStartHour == time(
+                0, 0
+            ) and execution_window.windowEndHour == time(23, 59, 59)
+
+            matched_time = matched_time or (
+                execution_window.windowStartHour < execution_window.windowEndHour
+                and (
+                    current_time_utc >= execution_window.windowStartHour
+                    and current_time_utc <= execution_window.windowEndHour
+                )
+            )
+
+            matched_time = matched_time or (
+                execution_window.windowEndHour < execution_window.windowStartHour
+                and (
+                    current_time_utc >= execution_window.windowStartHour
+                    or current_time_utc <= execution_window.windowEndHour
+                )
+            )
+
+            return matched_day and matched_time
+
+        return False
 
     @property
     # TODO: Add a link to the boto3 docs
