@@ -436,7 +436,6 @@ class Circuit:
 
         if self._check_for_params(instruction):
             self._parameterized = True
-            print(instruction.operator.parameter)
             self._parameters.add(instruction.operator.parameter)
         self._moments.add(instructions_to_add)
 
