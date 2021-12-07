@@ -12,8 +12,9 @@
 # language governing permissions and limitations under the License.
 
 import math
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.gate import Gate
 
 
@@ -22,10 +23,15 @@ class AngledGate(Gate):
     Class `AngledGate` represents a quantum gate that operates on N qubits and an angle.
     """
 
-    def __init__(self, angle: float, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
+    def __init__(
+        self,
+        angle: Union[FreeParameter, float],
+        qubit_count: Optional[int],
+        ascii_symbols: Sequence[str],
+    ):
         """
         Args:
-            angle (float): The angle of the gate in radians.
+            angle (Union[FreeParameter, float]): The angle of the gate in radians.
             qubit_count (int, optional): The number of qubits that this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -41,21 +47,31 @@ class AngledGate(Gate):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         if angle is None:
             raise ValueError("angle must not be None")
-        self._angle = float(angle)  # explicit casting in case angle is e.g. np.float32
+        if isinstance(angle, FreeParameter):
+            self._angle = angle
+            self._parameterized = True
+            self._parameter = angle
+        else:
+            self._angle = float(angle)  # explicit casting in case angle is e.g. np.float32
+            self._parameterized = False
+            self._parameter = None
 
     @property
-    def angle(self) -> float:
+    def angle(self) -> Union[FreeParameter, float]:
         """
         Returns the angle for the gate
 
         Returns:
-            angle (float): The angle of the gate in radians
+            angle (Union[FreeParameter, float]): The angle of the gate in radians
         """
         return self._angle
 
     def __eq__(self, other):
         if isinstance(other, AngledGate):
-            return self.name == other.name and math.isclose(self.angle, other.angle)
+            if isinstance(self.angle, FreeParameter):
+                return self.name == other.name and self.angle == other.angle
+            else:
+                return self.name == other.name and math.isclose(self.angle, other.angle)
         return NotImplemented
 
     def __repr__(self):

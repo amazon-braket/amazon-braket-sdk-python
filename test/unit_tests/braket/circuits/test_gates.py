@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 import braket.ir.jaqcd as ir
-from braket.circuits import Circuit, Gate, Instruction, QubitSet
+from braket.circuits import Circuit, FreeParameter, Gate, Instruction, QubitSet
 from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
@@ -317,6 +317,19 @@ def test_equality():
     assert u1 is not u2
     assert u1 != other_gate
     assert u1 != non_gate
+
+
+def test_free_param_equality():
+    param1 = FreeParameter("theta")
+    param2 = FreeParameter("phi")
+    rx1 = Gate.Rx(param1)
+    rx2 = Gate.Rx(param1)
+    other_gate = Gate.Rx(param2)
+
+    assert rx1 == rx2
+    assert rx1 is not rx2
+    assert rx1 != other_gate
+    assert rx1 != param1
 
 
 def test_large_unitary():

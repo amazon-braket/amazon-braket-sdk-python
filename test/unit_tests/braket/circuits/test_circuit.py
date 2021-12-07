@@ -20,6 +20,7 @@ import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
     AsciiCircuitDiagram,
     Circuit,
+    FreeParameter,
     Gate,
     Instruction,
     Moments,
@@ -946,6 +947,26 @@ def test_as_unitary_one_gate_returns_expected_unitary(circuit, expected_unitary)
     assert np.allclose(circuit.as_unitary(), expected_unitary)
 
 
+def test_circuit_with_symbol():
+    theta = FreeParameter("theta")
+
+    circ = (
+        Circuit()
+        .ry(angle=theta, target=0)
+        .ry(angle=theta, target=1)
+        .ry(angle=theta, target=2)
+        .ry(angle=theta, target=3)
+    )
+    expected = (
+        Circuit()
+        .ry(angle=theta, target=0)
+        .ry(angle=theta, target=1)
+        .ry(angle=theta, target=2)
+        .ry(angle=theta, target=3)
+    )
+    assert circ == expected
+
+
 def test_basis_rotation_instructions_all():
     circ = Circuit().h(0).cnot(0, 1).sample(observable=Observable.Y())
     expected = [
@@ -1306,3 +1327,73 @@ def test_diagram(h):
 
     assert h.diagram(mock_diagram) == expected
     mock_diagram.build_diagram.assert_called_with(h)
+
+
+def test_add_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = (
+        Circuit()
+        .ry(angle=theta, target=0)
+        .ry(angle=theta, target=1)
+        .ry(angle=theta, target=2)
+        .ry(angle=theta, target=3)
+    )
+    expected = True
+
+    assert circ.is_parameterized == expected
+
+
+def test_add_instr_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ.add_instruction(Instruction(Gate.Ry(theta), 3))
+    expected = True
+
+    assert circ.is_parameterized == expected
+
+
+def test_add_circ_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=theta, target=0))
+
+    expected = True
+    assert circ.is_parameterized == expected
+
+
+@pytest.mark.parametrize(
+    "input_circ",
+    [
+        (Circuit().ry(angle=1, target=0).ry(angle=2, target=1)),
+        (Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=2, target=0))),
+    ],
+)
+def test_parameterized_check_false(input_circ):
+    circ = input_circ
+    expected = False
+
+    assert circ.is_parameterized == expected
+
+
+def test_parameters():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
+
+
+def test_no_parameters():
+    circ = Circuit().ry(angle=0.12, target=0).ry(angle=0.25, target=1).ry(angle=0.6, target=2)
+    expected = set()
+
+    assert circ.parameters == expected
+
+
+def test_set_parameter_values():
+    theta = FreeParameter("theta")
+    input_vals = np.linspace(0, 100, num=10)
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ.set_parameter_values({theta: input_vals})
+
+    assert theta.parameter_values == list(input_vals)

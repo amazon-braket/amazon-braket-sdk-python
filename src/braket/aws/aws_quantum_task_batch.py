@@ -121,6 +121,12 @@ class AwsQuantumTaskBatch:
         *args,
         **kwargs,
     ):
+        for task_specification in task_specifications:
+            if isinstance(task_specification, Circuit) and task_specification.is_parameterized:
+                raise ValueError(
+                    f"Cannot execute parameterized circuit. "
+                    f"Invalid circuit: ({task_specification})"
+                )
         max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in task_specifications]
         with ThreadPoolExecutor(max_workers=max_threads) as executor:

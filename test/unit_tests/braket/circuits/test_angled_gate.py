@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from pydantic import BaseModel
 
-from braket.circuits import AngledGate, Gate
+from braket.circuits import AngledGate, FreeParameter, Gate
 
 
 @pytest.fixture
@@ -59,6 +59,26 @@ def test_equality(angled_gate):
     assert angled_gate is not gate
     assert angled_gate != other_gate
     assert angled_gate != non_gate
+
+
+def test_symbolic_equality():
+    symbol1 = FreeParameter("theta")
+    symbol2 = FreeParameter("phi")
+    gate1 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar"])
+    gate2 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["foo"])
+    other_gate = AngledGate(angle=symbol2, qubit_count=1, ascii_symbols=["foo"])
+
+    assert gate1 == gate2
+    assert gate1 is not gate2
+    assert gate1 != other_gate
+
+
+def test_mixed_angle_equality():
+    symbol1 = FreeParameter("theta")
+    gate1 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar"])
+    gate2 = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["foo"])
+
+    assert gate1 != gate2
 
 
 def test_np_float_angle_json():

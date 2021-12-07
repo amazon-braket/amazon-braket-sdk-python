@@ -17,6 +17,7 @@ from typing import Any, Optional, Sequence, Tuple
 
 import numpy as np
 
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.operator import Operator
 
 
@@ -74,6 +75,8 @@ class QuantumOperator(Operator):
                 f" length must equal qubit_count, {self._qubit_count}"
             )
             raise ValueError(msg)
+        self._parameterized = False
+        self._parameter = FreeParameter
         self._ascii_symbols = tuple(ascii_symbols)
 
     @staticmethod
@@ -109,6 +112,24 @@ class QuantumOperator(Operator):
             The name of the quantum operator as a string
         """
         return self.__class__.__name__
+
+    @property
+    def parameterized(self) -> bool:
+        """
+        Returns if an operator is parameterized.
+
+        Returns: If an operator is parameterized
+        """
+        return self._parameterized
+
+    @property
+    def parameter(self) -> FreeParameter:
+        """
+        Returns if an operator is parameterized.
+
+        Returns: If an operator is parameterized
+        """
+        return self._parameter
 
     def to_ir(self, *args, **kwargs) -> Any:
         """Returns IR representation of quantum operator

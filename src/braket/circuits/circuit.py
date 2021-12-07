@@ -33,6 +33,7 @@ from braket.circuits.noise_helpers import (
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
+from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
@@ -126,8 +127,10 @@ class Circuit:
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
         self._qubit_observable_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
+        self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
+        self._parameterized = False
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -195,6 +198,25 @@ class Circuit:
     def qubits(self) -> QubitSet:
         """QubitSet: Get a copy of the qubits for this circuit."""
         return QubitSet(self._moments.qubits.union(self._qubit_observable_set))
+
+    @property
+    def is_parameterized(self) -> bool:
+        """
+        This is a check to see if the circuit has any free parameters.
+        This can be used to block executions of parameterized circuits without
+        iterating through the circuit each attempted execution.
+
+        Returns: True if the circuit has any free parameters.
+        """
+        return self._parameterized
+
+    @property
+    def parameters(self) -> set:
+        """
+        Gets a list of the parameters in the Circuit.
+        Returns: A list of FreeParameters in the Circuit.
+        """
+        return self._parameters
 
     def add_result_type(
         self,
@@ -412,9 +434,30 @@ class Circuit:
             # non single qubit operator with target, add instruction with target
             instructions_to_add = [instruction.copy(target=target)]
 
+        if self._check_for_params(instruction):
+            self._parameterized = True
+            print(instruction.operator.parameter)
+            self._parameters.add(instruction.operator.parameter)
         self._moments.add(instructions_to_add)
 
         return self
+
+    def _check_for_params(self, instruction: Instruction):
+        """
+        This checks for free parameters in an :class:{Instruction}.
+
+        Args:
+            instruction: The instruction to check for a :class:{FreeParameter}.
+
+        Returns: True if the angle is not a number. False otherwise.
+        """
+        # Check for Angled Gates.
+        if (
+            issubclass(type(instruction.operator), QuantumOperator)
+            and instruction.operator.parameterized
+        ):
+            return True
+        return False
 
     def add_circuit(
         self,
@@ -483,6 +526,9 @@ class Circuit:
             keys = sorted(circuit.qubits)
             values = target
             target_mapping = dict(zip(keys, values))
+
+        if circuit.is_parameterized:
+            self._parameterized = True
 
         for instruction in circuit.instructions:
             self.add_instruction(instruction, target_mapping=target_mapping)
@@ -772,6 +818,16 @@ class Circuit:
                 )
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
+
+    def set_parameter_values(self, param_values: Dict):
+        """
+        Sets FreeParameters based upon values passed in.
+
+        Args:
+            param_values:  A mapping of FreeParameters to a list of values to assign to them.
+        """
+        for param in param_values:
+            param.fix_values(param_values[param])
 
     def apply_readout_noise(
         self,
