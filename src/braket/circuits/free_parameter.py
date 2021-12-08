@@ -41,18 +41,28 @@ class FreeParameter:
         self._parameter_values = []
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
-        Returns:Name for :class:'FreeParameter'.
+        Returns:
+            str: Name for :class:'FreeParameter'.
         """
         return self._name
 
     @property
-    def parameter_values(self):
+    def parameter_values(self) -> list:
         """
-        Returns:Parameter values for :class:'FreeParameter'.
+        Returns:
+            list: Parameter values for :class:'FreeParameter'.
         """
         return self._parameter_values
+
+    @property
+    def symbol(self) -> Symbol:
+        """
+        Returns:
+            Symbol: Symbol for :class:'FreeParameter'.
+        """
+        return self._symbol
 
     def fix_values(self, param_values):
         """
@@ -65,13 +75,6 @@ class FreeParameter:
         for val in param_values:
             param_val = self._parameter_expression.subs(self._symbol, val)
             self._parameter_values.append(float(param_val))
-
-    @property
-    def symbol(self):
-        """
-        Returns:Symbol for :class:'FreeParameter'.
-        """
-        return self._symbol
 
     def _validate_values(self, param_values: Dict):
         """

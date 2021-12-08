@@ -33,7 +33,7 @@ from braket.circuits.noise_helpers import (
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
-from braket.circuits.quantum_operator import QuantumOperator
+from braket.circuits.parameterized_operator import ParameterizedOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
@@ -206,15 +206,17 @@ class Circuit:
         This can be used to block executions of parameterized circuits without
         iterating through the circuit each attempted execution.
 
-        Returns: True if the circuit has any free parameters.
+        Returns:
+            bool: True if the circuit has any free parameters.
         """
         return self._parameterized
 
     @property
     def parameters(self) -> set:
         """
-        Gets a list of the parameters in the Circuit.
-        Returns: A list of FreeParameters in the Circuit.
+        Gets a set of the parameters in the Circuit.
+        Returns:
+            set: A set of FreeParameters in the Circuit.
         """
         return self._parameters
 
@@ -441,18 +443,20 @@ class Circuit:
 
         return self
 
-    def _check_for_params(self, instruction: Instruction):
+    def _check_for_params(self, instruction: Instruction) -> bool:
         """
-        This checks for free parameters in an :class:{Instruction}.
+        This checks for free parameters in an :class:{Instruction}. Checks children classes of
+        :class:{ParameterizedOperator}.
 
         Args:
             instruction: The instruction to check for a :class:{FreeParameter}.
 
-        Returns: True if the angle is not a number. False otherwise.
+        Returns:
+            bool: Whether an object is parameterized.
         """
         # Check for Angled Gates.
         if (
-            issubclass(type(instruction.operator), QuantumOperator)
+            issubclass(type(instruction.operator), ParameterizedOperator)
             and instruction.operator.parameterized
         ):
             return True

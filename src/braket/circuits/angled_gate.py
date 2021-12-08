@@ -16,9 +16,10 @@ from typing import Optional, Sequence, Union
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.gate import Gate
+from braket.circuits.parameterized_operator import ParameterizedOperator
 
 
-class AngledGate(Gate):
+class AngledGate(Gate, ParameterizedOperator):
     """
     Class `AngledGate` represents a quantum gate that operates on N qubits and an angle.
     """
