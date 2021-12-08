@@ -44,7 +44,6 @@ def setup_container(
     run_environment_variables.update(
         _get_env_script_mode_config(creation_kwargs["algorithmSpecification"]["scriptModeConfig"])
     )
-    run_environment_variables.update(_get_env_additional_lib())
     run_environment_variables.update(_get_env_default_vars(aws_session, **creation_kwargs))
     if _copy_hyperparameters(container, **creation_kwargs):
         run_environment_variables.update(_get_env_hyperparameters())
@@ -111,20 +110,6 @@ def _get_env_script_mode_config(script_mode_config: Dict[str, str]) -> Dict[str,
     if "compressionType" in script_mode_config:
         result["AMZN_BRAKET_SCRIPT_COMPRESSION_TYPE"] = script_mode_config["compressionType"]
     return result
-
-
-def _get_env_additional_lib() -> Dict[str, str]:
-    """For preview, we have some libraries that are not available publicly (yet). The container
-    will install these libraries if we set this env variable.
-
-    Returns:
-        (Dict[str, str]): The set of key/value pairs that should be added as environment variables
-        to the running container.
-    """
-    return {
-        "AMZN_BRAKET_IMAGE_SETUP_SCRIPT": "s3://amazon-braket-external-assets-preview-us-west-2/"
-        "HybridJobsAccess/scripts/setup-container.sh",
-    }
 
 
 def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[str, str]:
