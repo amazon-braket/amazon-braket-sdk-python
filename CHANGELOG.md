@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.11.1 (2021-12-09)
+
+### Bug Fixes and Other Changes
+
+ * remove extraneous reference from local job container setup
+
+## v1.11.0 (2021-12-02)
+
+### Features
+
+ * Adding integration tests for DM1
+
+## v1.10.0 (2021-11-29)
+
+### Features
+
+ * Add support for jobs
+
+### Bug Fixes and Other Changes
+
+ * Skip jobs integration tests
+
 ## v1.9.5.post0 (2021-11-04)
 
 ### Testing and Release Infrastructure
