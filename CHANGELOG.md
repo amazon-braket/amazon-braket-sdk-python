@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.11.1 (2021-12-09)
+
+### Bug Fixes and Other Changes
+
+ * remove extraneous reference from local job container setup
+
 ## v1.11.0 (2021-12-02)
 
 ### Features
