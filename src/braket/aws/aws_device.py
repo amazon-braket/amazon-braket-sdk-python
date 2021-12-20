@@ -281,6 +281,8 @@ class AwsDevice(Device):
         if self.status != "ONLINE":
             return False
 
+        is_available_result = False
+
         current_datetime_utc = datetime.utcnow()
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
@@ -290,38 +292,27 @@ class AwsDevice(Device):
                 execution_window.windowEndHour < execution_window.windowStartHour
                 and current_time_utc < execution_window.windowEndHour
             ):
-                weekday = weekday - 1
-                if weekday == -1:
-                    weekday = 6
+                weekday = (weekday - 1) % 7
 
             matched_day = execution_window.executionDay == ExecutionDay.EVERYDAY
-            matched_day = matched_day or execution_window.executionDay == ExecutionDay.EVERYDAY
             matched_day = matched_day or (
                 execution_window.executionDay == ExecutionDay.WEEKDAYS and weekday < 5
             )
             matched_day = matched_day or (
                 execution_window.executionDay == ExecutionDay.WEEKENDS and weekday > 4
             )
-            matched_day = matched_day or (
-                execution_window.executionDay == ExecutionDay.MONDAY and weekday == 0
+            ordered_days = (
+                ExecutionDay.MONDAY,
+                ExecutionDay.TUESDAY,
+                ExecutionDay.WEDNESDAY,
+                ExecutionDay.THURSDAY,
+                ExecutionDay.FRIDAY,
+                ExecutionDay.SATURDAY,
+                ExecutionDay.SUNDAY,
             )
             matched_day = matched_day or (
-                execution_window.executionDay == ExecutionDay.TUESDAY and weekday == 1
-            )
-            matched_day = matched_day or (
-                execution_window.executionDay == ExecutionDay.WEDNESDAY and weekday == 2
-            )
-            matched_day = matched_day or (
-                execution_window.executionDay == ExecutionDay.THURSDAY and weekday == 3
-            )
-            matched_day = matched_day or (
-                execution_window.executionDay == ExecutionDay.FRIDAY and weekday == 4
-            )
-            matched_day = matched_day or (
-                execution_window.executionDay == ExecutionDay.SATURDAY and weekday == 5
-            )
-            matched_day = matched_day or (
-                execution_window.executionDay == ExecutionDay.SUNDAY and weekday == 6
+                execution_window.executionDay in ordered_days
+                and ordered_days.index(execution_window.executionDay) == weekday
             )
 
             matched_time = execution_window.windowStartHour == time(
@@ -330,10 +321,9 @@ class AwsDevice(Device):
 
             matched_time = matched_time or (
                 execution_window.windowStartHour < execution_window.windowEndHour
-                and (
-                    current_time_utc >= execution_window.windowStartHour
-                    and current_time_utc <= execution_window.windowEndHour
-                )
+                and execution_window.windowStartHour
+                <= current_time_utc
+                <= execution_window.windowEndHour
             )
 
             matched_time = matched_time or (
@@ -344,9 +334,9 @@ class AwsDevice(Device):
                 )
             )
 
-            return matched_day and matched_time
+            is_available_result = is_available_result or (matched_day and matched_time)
 
-        return False
+        return is_available_result
 
     @property
     # TODO: Add a link to the boto3 docs

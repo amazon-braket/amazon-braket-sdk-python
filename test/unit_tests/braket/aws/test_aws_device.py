@@ -859,12 +859,13 @@ def test_get_device_availability(mock_utc_now):
         pass
 
     class MockDevice(AwsDevice):
-        def __init__(self, status, execution_day, window_start_hour, window_end_hour):
+        def __init__(self, status, *execution_window_args):
             self._status = status
             self._properties = Expando()
             self._properties.service = Expando()
-            if execution_day is not None:
-                self._properties.service.executionWindows = [
+            execution_windows = []
+            for execution_day, window_start_hour, window_end_hour in execution_window_args:
+                execution_windows.append(
                     DeviceExecutionWindow.parse_raw(
                         json.dumps(
                             {
@@ -874,31 +875,32 @@ def test_get_device_availability(mock_utc_now):
                             }
                         )
                     )
-                ]
-            else:
-                self._properties.service.executionWindows = []
+                )
+            self._properties.service.executionWindows = execution_windows
             self._name = "MockDevice"
-            self._arn = "Blah"
 
-    always_on_device = MockDevice("ONLINE", "Everyday", "00:00", "23:59:59")
-    offline_device = MockDevice("OFFLINE", "Everyday", "00:00", "23:59:59")
-    retired_device = MockDevice("RETIRED", "Everyday", "00:00", "23:59:59")
-    missing_schedule_device = MockDevice("ONLINE", None, None, None)
+    always_on_device = MockDevice("ONLINE", ("Everyday", "00:00", "23:59:59"))
+    offline_device = MockDevice("OFFLINE", ("Everyday", "00:00", "23:59:59"))
+    retired_device = MockDevice("RETIRED", ("Everyday", "00:00", "23:59:59"))
+    missing_schedule_device = MockDevice("ONLINE")
 
-    midday_everyday_device = MockDevice("ONLINE", "Everyday", "07:00", "17:00")
-    midday_weekday_device = MockDevice("ONLINE", "Weekdays", "07:00", "17:00")
-    midday_weekend_device = MockDevice("ONLINE", "Weekend", "07:00", "17:00")
-    evening_everyday_device = MockDevice("ONLINE", "Everyday", "17:00", "07:00")
-    evening_weekday_device = MockDevice("ONLINE", "Weekdays", "17:00", "07:00")
-    evening_weekend_device = MockDevice("ONLINE", "Weekend", "17:00", "07:00")
+    midday_everyday_device = MockDevice("ONLINE", ("Everyday", "07:00", "17:00"))
+    midday_weekday_device = MockDevice("ONLINE", ("Weekdays", "07:00", "17:00"))
+    midday_weekend_device = MockDevice("ONLINE", ("Weekend", "07:00", "17:00"))
+    evening_everyday_device = MockDevice("ONLINE", ("Everyday", "17:00", "07:00"))
+    evening_weekday_device = MockDevice("ONLINE", ("Weekdays", "17:00", "07:00"))
+    evening_weekend_device = MockDevice("ONLINE", ("Weekend", "17:00", "07:00"))
 
-    monday_device = MockDevice("ONLINE", "Monday", "07:00", "17:00")
-    tuesday_device = MockDevice("ONLINE", "Tuesday", "07:00", "17:00")
-    wednesday_device = MockDevice("ONLINE", "Wednesday", "07:00", "17:00")
-    thursday_device = MockDevice("ONLINE", "Thursday", "07:00", "17:00")
-    friday_device = MockDevice("ONLINE", "Friday", "07:00", "17:00")
-    saturday_device = MockDevice("ONLINE", "Saturday", "07:00", "17:00")
-    sunday_device = MockDevice("ONLINE", "Sunday", "07:00", "17:00")
+    monday_device = MockDevice("ONLINE", ("Monday", "07:00", "17:00"))
+    tuesday_device = MockDevice("ONLINE", ("Tuesday", "07:00", "17:00"))
+    wednesday_device = MockDevice("ONLINE", ("Wednesday", "07:00", "17:00"))
+    thursday_device = MockDevice("ONLINE", ("Thursday", "07:00", "17:00"))
+    friday_device = MockDevice("ONLINE", ("Friday", "07:00", "17:00"))
+    saturday_device = MockDevice("ONLINE", ("Saturday", "07:00", "17:00"))
+    sunday_device = MockDevice("ONLINE", ("Sunday", "07:00", "17:00"))
+    monday_friday_device = MockDevice(
+        "ONLINE", ("Monday", "07:00", "17:00"), ("Friday", "07:00", "17:00")
+    )
 
     test_devices = (
         midday_everyday_device,
@@ -914,30 +916,31 @@ def test_get_device_availability(mock_utc_now):
         friday_device,
         saturday_device,
         sunday_device,
+        monday_friday_device,
     )
 
     test_set = (
-        (datetime(2021, 12, 6, 5, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 6, 10, 0, 0), (1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 6, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 7, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 7, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 7, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 8, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 8, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0)),
-        (datetime(2021, 12, 8, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 9, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 9, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)),
-        (datetime(2021, 12, 9, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 10, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 10, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)),
-        (datetime(2021, 12, 10, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 11, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 11, 10, 0, 0), (1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0)),
-        (datetime(2021, 12, 11, 20, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 12, 5, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 12, 10, 0, 0), (1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)),
-        (datetime(2021, 12, 12, 20, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 6, 5, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 6, 10, 0, 0), (1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1)),
+        (datetime(2021, 12, 6, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 7, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 7, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 7, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 8, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 8, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 8, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 9, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 9, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0)),
+        (datetime(2021, 12, 9, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 10, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 10, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1)),
+        (datetime(2021, 12, 10, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 11, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 11, 10, 0, 0), (1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)),
+        (datetime(2021, 12, 11, 20, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 12, 5, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
+        (datetime(2021, 12, 12, 10, 0, 0), (1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0)),
+        (datetime(2021, 12, 12, 20, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
     )
 
     for test_item in test_set:
