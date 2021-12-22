@@ -441,6 +441,7 @@ class Circuit:
 
         if self._check_for_params(instruction):
             self._parameterized = True
+            self._check_parameter_uniqueness(instruction)
             self._parameters.add(instruction.operator.parameter)
         self._moments.add(instructions_to_add)
 
@@ -462,17 +463,18 @@ class Circuit:
             and instruction.operator.parameterized
         )
 
-    def _check_parameter_uniqueness(self, instruction: Instruction) -> bool:
+    def _check_parameter_uniqueness(self, instruction: Instruction):
         """
-
+        The circuit only allows one parameter with the same name.
 
         Args:
             instruction: The parameterized instruction to check.
-
-        Returns:
-            bool: Whether the parameter is unique for the circuit.
-
         """
+        param = instruction.operator.parameter
+        unique_param = param in self.parameters
+        if not unique_param:
+            print(f"The parameter {param} is being used in this circuit. "
+                  f"Uniquness is based on the parameter name.")
 
     def add_circuit(
         self,
