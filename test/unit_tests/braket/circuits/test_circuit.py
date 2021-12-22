@@ -1397,4 +1397,3 @@ def test_set_parameter_value():
     circ.set_parameter_value({theta: input_val})
 
     assert theta.parameter_value == float(input_val)
-

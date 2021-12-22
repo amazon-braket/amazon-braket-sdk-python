@@ -471,10 +471,11 @@ class Circuit:
             instruction: The parameterized instruction to check.
         """
         param = instruction.operator.parameter
-        unique_param = param in self.parameters
-        if not unique_param:
-            print(f"The parameter {param} is being used in this circuit. "
-                  f"Uniquness is based on the parameter name.")
+        if param not in self.parameters:
+            print(
+                f"The parameter {param} is being used in this circuit. "
+                f"Uniquness is based on the parameter name."
+            )
 
     def add_circuit(
         self,
