@@ -1340,7 +1340,7 @@ def test_add_parameterized_check_true():
     )
     expected = True
 
-    assert circ.is_parameterized == expected
+    assert circ.has_free_parameters == expected
 
 
 def test_add_instr_parameterized_check_true():
@@ -1349,7 +1349,7 @@ def test_add_instr_parameterized_check_true():
     circ.add_instruction(Instruction(Gate.Ry(theta), 3))
     expected = True
 
-    assert circ.is_parameterized == expected
+    assert circ.has_free_parameters == expected
 
 
 def test_add_circ_parameterized_check_true():
@@ -1357,7 +1357,7 @@ def test_add_circ_parameterized_check_true():
     circ = Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=theta, target=0))
 
     expected = True
-    assert circ.is_parameterized == expected
+    assert circ.has_free_parameters == expected
 
 
 @pytest.mark.parametrize(
@@ -1371,7 +1371,7 @@ def test_parameterized_check_false(input_circ):
     circ = input_circ
     expected = False
 
-    assert circ.is_parameterized == expected
+    assert circ.has_free_parameters == expected
 
 
 def test_parameters():
@@ -1390,10 +1390,10 @@ def test_no_parameters():
     assert circ.parameters == expected
 
 
-def test_set_parameter_values():
+def test_set_parameter_value():
     theta = FreeParameter("theta")
-    input_vals = np.linspace(0, 100, num=10)
+    input_val = np.pi
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.set_parameter_values({theta: input_vals})
+    circ.set_parameter_value({theta: input_val})
 
-    assert theta.parameter_values == list(input_vals)
+    assert theta.parameter_value == float(input_val)

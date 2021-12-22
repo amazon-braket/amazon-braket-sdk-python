@@ -122,7 +122,7 @@ class AwsQuantumTaskBatch:
         **kwargs,
     ):
         for task_specification in task_specifications:
-            if isinstance(task_specification, Circuit) and task_specification.is_parameterized:
+            if isinstance(task_specification, Circuit) and task_specification.has_free_parameters:
                 raise ValueError(
                     f"Cannot execute parameterized circuit. "
                     f"Invalid circuit: ({task_specification})"

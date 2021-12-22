@@ -13,12 +13,14 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
+from numbers import Number
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy as np
 
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
@@ -200,7 +202,7 @@ class Circuit:
         return QubitSet(self._moments.qubits.union(self._qubit_observable_set))
 
     @property
-    def is_parameterized(self) -> bool:
+    def has_free_parameters(self) -> bool:
         """
         This is a check to see if the circuit has any free parameters.
         This can be used to block executions of parameterized circuits without
@@ -212,11 +214,12 @@ class Circuit:
         return self._parameterized
 
     @property
-    def parameters(self) -> set:
+    def parameters(self) -> Set[FreeParameter]:
         """
         Gets a set of the parameters in the Circuit.
+
         Returns:
-            set: A set of FreeParameters in the Circuit.
+            Set[FreeParameter]: The `FreeParameters` in the Circuit.
         """
         return self._parameters
 
@@ -454,13 +457,22 @@ class Circuit:
         Returns:
             bool: Whether an object is parameterized.
         """
-        # Check for Angled Gates.
-        if (
+        return (
             issubclass(type(instruction.operator), ParameterizedOperator)
             and instruction.operator.parameterized
-        ):
-            return True
-        return False
+        )
+
+    def _check_parameter_uniqueness(self, instruction: Instruction) -> bool:
+        """
+
+
+        Args:
+            instruction: The parameterized instruction to check.
+
+        Returns:
+            bool: Whether the parameter is unique for the circuit.
+
+        """
 
     def add_circuit(
         self,
@@ -530,7 +542,7 @@ class Circuit:
             values = target
             target_mapping = dict(zip(keys, values))
 
-        if circuit.is_parameterized:
+        if circuit.has_free_parameters:
             self._parameterized = True
 
         for instruction in circuit.instructions:
@@ -822,15 +834,16 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
-    def set_parameter_values(self, param_values: Dict):
+    def set_parameter_value(self, param_values: Dict[FreeParameter, Number]):
         """
         Sets FreeParameters based upon values passed in.
 
         Args:
-            param_values:  A mapping of FreeParameters to a list of values to assign to them.
+            param_values Dict[FreeParameter, Number]:  A mapping of FreeParameters
+                to a value to assign to them.
         """
         for param in param_values:
-            param.fix_values(param_values[param])
+            param.fix_value(param_values[param])
 
     def apply_readout_noise(
         self,

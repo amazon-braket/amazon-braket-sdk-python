@@ -18,9 +18,8 @@ from sympy import Symbol
 from braket.circuits import FreeParameter
 
 valid_params = [
-    ({1, 2}),
-    ({1, np.pi}),
-    (np.linspace(2.0, 3.0, num=5)),
+    1,
+    np.pi,
 ]
 
 
@@ -67,18 +66,18 @@ def test_wrong_symbol(free_parameter):
 @pytest.mark.xfail(raises=ValueError)
 def test_invalid_params(free_parameter):
     param_values = {1, 2, "braket"}
-    free_parameter.fix_values(param_values)
+    free_parameter.fix_value(param_values)
 
 
 @pytest.mark.parametrize("param_vals", valid_params)
 def test_valid_params(param_vals):
     theta = FreeParameter("theta")
-    theta.fix_values(param_vals)
+    theta.fix_value(param_vals)
 
 
-@pytest.mark.parametrize("param_values", valid_params)
-def test_fix_values(param_values):
+@pytest.mark.parametrize("param_value", valid_params)
+def test_fix_value(param_value):
     theta = FreeParameter("theta")
-    theta.fix_values(param_values)
+    theta.fix_value(param_value)
 
-    assert theta.parameter_values == list(param_values)
+    assert theta.parameter_value == float(param_value)

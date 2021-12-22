@@ -54,7 +54,7 @@ class Gate(QuantumOperator):
     def __eq__(self, other):
         if isinstance(other, Gate):
             return self.name == other.name
-        return NotImplemented
+        return False
 
     def __repr__(self):
         return f"{self.name}('qubit_count': {self.qubit_count})"

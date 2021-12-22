@@ -1464,7 +1464,7 @@ class Unitary(Gate):
     def __eq__(self, other):
         if isinstance(other, Unitary):
             return self.matrix_equivalence(other)
-        return NotImplemented
+        return False
 
     @staticmethod
     def _transform_matrix_to_ir(matrix: np.ndarray):

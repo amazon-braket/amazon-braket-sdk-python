@@ -73,7 +73,7 @@ class AngledGate(Gate, ParameterizedOperator):
                 return self.name == other.name and self.angle == other.angle
             else:
                 return self.name == other.name and math.isclose(self.angle, other.angle)
-        return NotImplemented
+        return False
 
     def __repr__(self):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"

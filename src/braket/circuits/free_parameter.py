@@ -11,8 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import numbers
-from typing import Dict
+from numbers import Number
 
 from sympy import Symbol
 
@@ -38,60 +37,59 @@ class FreeParameter:
         self._name = name
         self._symbol = parameter_symbol
         self._parameter_expression = parameter_symbol
-        self._parameter_values = []
+        self._parameter_value = Number
 
     @property
     def name(self) -> str:
         """
         Returns:
-            str: Name for :class:'FreeParameter'.
+            str: Name of this parameter.
         """
         return self._name
 
     @property
-    def parameter_values(self) -> list:
+    def parameter_value(self) -> Number:
         """
+        This is set to None until a value is assigned.
+
         Returns:
-            list: Parameter values for :class:'FreeParameter'.
+            Number: The value assigned to a parameter.
         """
-        return self._parameter_values
+        return self._parameter_value
 
     @property
     def symbol(self) -> Symbol:
         """
         Returns:
-            Symbol: Symbol for :class:'FreeParameter'.
+            Symbol: The symbol for a parameter.
         """
         return self._symbol
 
-    def fix_values(self, param_values):
+    def fix_value(self, param_value: Number) -> None:
         """
-        Sets the values for a :class:'FreeParameter'.
+        Sets the value for a :class:'FreeParameter'.
 
         Args:
-            param_values: The values to be set for the object.
+            param_value: The value to be set for the object.
         """
-        self._validate_values(param_values)
-        for val in param_values:
-            param_val = self._parameter_expression.subs(self._symbol, val)
-            self._parameter_values.append(float(param_val))
+        self._validate_values(param_value)
+        self._parameter_value = float(param_value)
 
-    def _validate_values(self, param_values: Dict):
+    def _validate_values(self, param_value):
         """
-        Validates that all param_values being passed in are numeric. Raises a ValueError otherwise.
+        Validates that the param_value being passed in is numeric. Raises a ValueError otherwise.
 
         Args:
-            param_values: A list of values to be checked.
+            param_values: A value to be checked.
 
         Raises:
-            ValueError: If the param_values contains an element that is not a Number.
+            ValueError: If the param_value is not a Number.
 
         """
-        invalid_params = list(filter(lambda val: not isinstance(val, numbers.Number), param_values))
-        if invalid_params:
+        if not isinstance(param_value, Number):
             raise ValueError(
                 f"Parameters value assignment can only take numeric values. "
-                f"Invalid inputs: ({invalid_params})"
+                f"Invalid inputs: {param_value}"
             )
 
     def __str__(self):
@@ -103,7 +101,7 @@ class FreeParameter:
     def __eq__(self, other):
         if isinstance(other, FreeParameter):
             return self.name == other.name
-        return NotImplemented
+        return False
 
     def __repr__(self):
         """
