@@ -16,9 +16,8 @@ from __future__ import annotations
 from braket.circuits.free_parameter import FreeParameter
 
 
-class ParameterizedOperator:
-    """A parameterized operator is the abstract definition of a
-    parameterizable operation for a quantum device."""
+class Parameterized:
+    """A parameterized object is the definition of an object that can take in FreeParameters"""
 
     def __init__(self):
         self._parameterized = False

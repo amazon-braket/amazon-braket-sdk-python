@@ -33,10 +33,7 @@ class FreeParameter:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        parameter_symbol = Symbol(name)
-        self._name = name
-        self._symbol = parameter_symbol
-        self._parameter_expression = parameter_symbol
+        self._name = Symbol(name)
         self._parameter_value = Number
 
     @property
@@ -45,7 +42,7 @@ class FreeParameter:
         Returns:
             str: Name of this parameter.
         """
-        return self._name
+        return self._name.name
 
     @property
     def parameter_value(self) -> Number:
@@ -56,14 +53,6 @@ class FreeParameter:
             Number: The value assigned to a parameter.
         """
         return self._parameter_value
-
-    @property
-    def symbol(self) -> Symbol:
-        """
-        Returns:
-            Symbol: The symbol for a parameter.
-        """
-        return self._symbol
 
     def fix_value(self, param_value: Number) -> None:
         """
@@ -96,7 +85,7 @@ class FreeParameter:
         return self.name
 
     def __hash__(self) -> int:
-        return hash(tuple(self._name))
+        return hash(tuple(self.name))
 
     def __eq__(self, other):
         if isinstance(other, FreeParameter):

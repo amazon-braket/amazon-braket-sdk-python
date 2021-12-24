@@ -35,7 +35,7 @@ from braket.circuits.noise_helpers import (
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
-from braket.circuits.parameterized_operator import ParameterizedOperator
+from braket.circuits.parameterized import Parameterized
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
@@ -441,7 +441,6 @@ class Circuit:
 
         if self._check_for_params(instruction):
             self._parameterized = True
-            self._check_parameter_uniqueness(instruction)
             self._parameters.add(instruction.operator.parameter)
         self._moments.add(instructions_to_add)
 
@@ -450,7 +449,7 @@ class Circuit:
     def _check_for_params(self, instruction: Instruction) -> bool:
         """
         This checks for free parameters in an :class:{Instruction}. Checks children classes of
-        :class:{ParameterizedOperator}.
+        :class:{Parameterized}.
 
         Args:
             instruction: The instruction to check for a :class:{FreeParameter}.
@@ -459,23 +458,9 @@ class Circuit:
             bool: Whether an object is parameterized.
         """
         return (
-            issubclass(type(instruction.operator), ParameterizedOperator)
+            issubclass(type(instruction.operator), Parameterized)
             and instruction.operator.parameterized
         )
-
-    def _check_parameter_uniqueness(self, instruction: Instruction):
-        """
-        The circuit only allows one parameter with the same name.
-
-        Args:
-            instruction: The parameterized instruction to check.
-        """
-        param = instruction.operator.parameter
-        if param not in self.parameters:
-            print(
-                f"The parameter {param} is being used in this circuit. "
-                f"Uniquness is based on the parameter name."
-            )
 
     def add_circuit(
         self,
@@ -837,16 +822,26 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
-    def set_parameter_value(self, param_values: Dict[FreeParameter, Number]):
+    def set_parameter_value(self, param_values: Dict[str, Number]):
         """
-        Sets FreeParameters based upon values passed in.
+        Sets FreeParameters based upon their name and values passed in.
 
         Args:
-            param_values Dict[FreeParameter, Number]:  A mapping of FreeParameters
+            param_values Dict[str, Number]:  A mapping of FreeParameter names
                 to a value to assign to them.
+
+        Raises:
+            ValueError: If there are no parameters that match the key for the arg
+                param_values.
         """
         for param in param_values:
-            param.fix_value(param_values[param])
+            param_valid = False
+            for free_param in self.parameters:
+                if param == free_param.name:
+                    param_valid = True
+                    free_param.fix_value(param_values[param])
+            if not param_valid:
+                raise ValueError(f"No parameter in the circuit named: {param}")
 
     def apply_readout_noise(
         self,

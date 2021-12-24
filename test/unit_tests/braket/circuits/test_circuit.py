@@ -1394,6 +1394,6 @@ def test_set_parameter_value():
     theta = FreeParameter("theta")
     input_val = np.pi
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.set_parameter_value({theta: input_val})
+    circ.set_parameter_value({"theta": input_val})
 
     assert theta.parameter_value == float(input_val)

@@ -13,7 +13,6 @@
 
 import numpy as np
 import pytest
-from sympy import Symbol
 
 from braket.circuits import FreeParameter
 
@@ -51,16 +50,6 @@ def test_str(free_parameter):
 
 def test_hash(free_parameter):
     assert hash(free_parameter) == hash(tuple(free_parameter.name))
-
-
-def test_symbol(free_parameter):
-    expected = Symbol("theta")
-    assert free_parameter.symbol == expected
-
-
-def test_wrong_symbol(free_parameter):
-    not_expected = Symbol("alpha")
-    assert free_parameter.symbol != not_expected
 
 
 @pytest.mark.xfail(raises=ValueError)
