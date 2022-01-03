@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import os
-from datetime import datetime, time
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -286,7 +286,7 @@ class AwsDevice(Device):
         current_datetime_utc = datetime.utcnow()
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
-            current_time_utc = current_datetime_utc.time()
+            current_time_utc = current_datetime_utc.time().replace(microsecond=0)
 
             if (
                 execution_window.windowEndHour < execution_window.windowStartHour
@@ -315,18 +315,12 @@ class AwsDevice(Device):
                 and ordered_days.index(execution_window.executionDay) == weekday
             )
 
-            matched_time = execution_window.windowStartHour == time(
-                0, 0
-            ) and execution_window.windowEndHour == time(23, 59, 59)
-
-            matched_time = matched_time or (
+            matched_time = (
                 execution_window.windowStartHour < execution_window.windowEndHour
                 and execution_window.windowStartHour
                 <= current_time_utc
                 <= execution_window.windowEndHour
-            )
-
-            matched_time = matched_time or (
+            ) or (
                 execution_window.windowEndHour < execution_window.windowStartHour
                 and (
                     current_time_utc >= execution_window.windowStartHour
