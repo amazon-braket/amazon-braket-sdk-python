@@ -877,79 +877,111 @@ def test_get_device_availability(mock_utc_now):
                     )
                 )
             self._properties.service.executionWindows = execution_windows
-            self._name = "MockDevice"
 
-    always_on_device = MockDevice("ONLINE", ("Everyday", "00:00", "23:59:59"))
-    offline_device = MockDevice("OFFLINE", ("Everyday", "00:00", "23:59:59"))
-    retired_device = MockDevice("RETIRED", ("Everyday", "00:00", "23:59:59"))
-    missing_schedule_device = MockDevice("ONLINE")
-
-    midday_everyday_device = MockDevice("ONLINE", ("Everyday", "07:00", "17:00"))
-    midday_weekday_device = MockDevice("ONLINE", ("Weekdays", "07:00", "17:00"))
-    midday_weekend_device = MockDevice("ONLINE", ("Weekend", "07:00", "17:00"))
-    evening_everyday_device = MockDevice("ONLINE", ("Everyday", "17:00", "07:00"))
-    evening_weekday_device = MockDevice("ONLINE", ("Weekdays", "17:00", "07:00"))
-    evening_weekend_device = MockDevice("ONLINE", ("Weekend", "17:00", "07:00"))
-
-    monday_device = MockDevice("ONLINE", ("Monday", "07:00", "17:00"))
-    tuesday_device = MockDevice("ONLINE", ("Tuesday", "07:00", "17:00"))
-    wednesday_device = MockDevice("ONLINE", ("Wednesday", "07:00", "17:00"))
-    thursday_device = MockDevice("ONLINE", ("Thursday", "07:00", "17:00"))
-    friday_device = MockDevice("ONLINE", ("Friday", "07:00", "17:00"))
-    saturday_device = MockDevice("ONLINE", ("Saturday", "07:00", "17:00"))
-    sunday_device = MockDevice("ONLINE", ("Sunday", "07:00", "17:00"))
-    monday_friday_device = MockDevice(
-        "ONLINE", ("Monday", "07:00", "17:00"), ("Friday", "07:00", "17:00")
+    test_sets = (
+        {
+            "test_devices": (
+                ("always_on_device", MockDevice("ONLINE", ("Everyday", "00:00", "23:59:59"))),
+                ("offline_device", MockDevice("OFFLINE", ("Everyday", "00:00", "23:59:59"))),
+                ("retired_device", MockDevice("RETIRED", ("Everyday", "00:00", "23:59:59"))),
+                ("missing_schedule_device", MockDevice("ONLINE")),
+            ),
+            "test_items": (
+                (datetime(2021, 12, 6, 10, 0, 0), (1, 0, 0, 0)),
+                (datetime(2021, 12, 7, 10, 0, 0), (1, 0, 0, 0)),
+                (datetime(2021, 12, 8, 10, 0, 0), (1, 0, 0, 0)),
+                (datetime(2021, 12, 9, 10, 0, 0), (1, 0, 0, 0)),
+                (datetime(2021, 12, 10, 10, 0, 0), (1, 0, 0, 0)),
+                (datetime(2021, 12, 11, 10, 0, 0), (1, 0, 0, 0)),
+                (datetime(2021, 12, 12, 10, 0, 0), (1, 0, 0, 0)),
+            ),
+        },
+        {
+            "test_devices": (
+                ("midday_everyday_device", MockDevice("ONLINE", ("Everyday", "07:00", "17:00"))),
+                ("midday_weekday_device", MockDevice("ONLINE", ("Weekdays", "07:00", "17:00"))),
+                ("midday_weekend_device", MockDevice("ONLINE", ("Weekend", "07:00", "17:00"))),
+                ("evening_everyday_device", MockDevice("ONLINE", ("Everyday", "17:00", "07:00"))),
+                ("evening_weekday_device", MockDevice("ONLINE", ("Weekdays", "17:00", "07:00"))),
+                ("evening_weekend_device", MockDevice("ONLINE", ("Weekend", "17:00", "07:00"))),
+            ),
+            "test_items": (
+                (datetime(2021, 12, 6, 5, 0, 0), (0, 0, 0, 1, 0, 1)),
+                (datetime(2021, 12, 6, 10, 0, 0), (1, 1, 0, 0, 0, 0)),
+                (datetime(2021, 12, 6, 20, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 7, 5, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 7, 10, 0, 0), (1, 1, 0, 0, 0, 0)),
+                (datetime(2021, 12, 7, 20, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 8, 5, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 8, 10, 0, 0), (1, 1, 0, 0, 0, 0)),
+                (datetime(2021, 12, 8, 20, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 9, 5, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 9, 10, 0, 0), (1, 1, 0, 0, 0, 0)),
+                (datetime(2021, 12, 9, 20, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 10, 5, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 10, 10, 0, 0), (1, 1, 0, 0, 0, 0)),
+                (datetime(2021, 12, 10, 20, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 11, 5, 0, 0), (0, 0, 0, 1, 1, 0)),
+                (datetime(2021, 12, 11, 10, 0, 0), (1, 0, 1, 0, 0, 0)),
+                (datetime(2021, 12, 11, 20, 0, 0), (0, 0, 0, 1, 0, 1)),
+                (datetime(2021, 12, 12, 5, 0, 0), (0, 0, 0, 1, 0, 1)),
+                (datetime(2021, 12, 12, 10, 0, 0), (1, 0, 1, 0, 0, 0)),
+                (datetime(2021, 12, 12, 20, 0, 0), (0, 0, 0, 1, 0, 1)),
+            ),
+        },
+        {
+            "test_devices": (
+                ("monday_device", MockDevice("ONLINE", ("Monday", "07:00", "17:00"))),
+                ("tuesday_device", MockDevice("ONLINE", ("Tuesday", "07:00", "17:00"))),
+                ("wednesday_device", MockDevice("ONLINE", ("Wednesday", "07:00", "17:00"))),
+                ("thursday_device", MockDevice("ONLINE", ("Thursday", "07:00", "17:00"))),
+                ("friday_device", MockDevice("ONLINE", ("Friday", "07:00", "17:00"))),
+                ("saturday_device", MockDevice("ONLINE", ("Saturday", "07:00", "17:00"))),
+                ("sunday_device", MockDevice("ONLINE", ("Sunday", "07:00", "17:00"))),
+                (
+                    "monday_friday_device",
+                    MockDevice(
+                        "ONLINE", ("Monday", "07:00", "17:00"), ("Friday", "07:00", "17:00")
+                    ),
+                ),
+            ),
+            "test_items": (
+                (datetime(2021, 12, 6, 5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 6, 10, 0, 0), (1, 0, 0, 0, 0, 0, 0, 1)),
+                (datetime(2021, 12, 6, 20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 7, 5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 7, 10, 0, 0), (0, 1, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 7, 20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 8, 5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 8, 10, 0, 0), (0, 0, 1, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 8, 20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 9, 5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 9, 10, 0, 0), (0, 0, 0, 1, 0, 0, 0, 0)),
+                (datetime(2021, 12, 9, 20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 10, 5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 10, 10, 0, 0), (0, 0, 0, 0, 1, 0, 0, 1)),
+                (datetime(2021, 12, 10, 20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 11, 5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 11, 10, 0, 0), (0, 0, 0, 0, 0, 1, 0, 0)),
+                (datetime(2021, 12, 11, 20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 12, 5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+                (datetime(2021, 12, 12, 10, 0, 0), (0, 0, 0, 0, 0, 0, 1, 0)),
+                (datetime(2021, 12, 12, 20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)),
+            ),
+        },
     )
 
-    test_devices = (
-        midday_everyday_device,
-        midday_weekday_device,
-        midday_weekend_device,
-        evening_everyday_device,
-        evening_weekday_device,
-        evening_weekend_device,
-        monday_device,
-        tuesday_device,
-        wednesday_device,
-        thursday_device,
-        friday_device,
-        saturday_device,
-        sunday_device,
-        monday_friday_device,
-    )
+    for test_set in test_sets:
+        for test_item in test_set["test_items"]:
+            test_date = test_item[0]
+            mock_utc_now.utcnow.return_value = test_date
 
-    test_set = (
-        (datetime(2021, 12, 6, 5, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 6, 10, 0, 0), (1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1)),
-        (datetime(2021, 12, 6, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 7, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 7, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 7, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 8, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 8, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 8, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 9, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 9, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0)),
-        (datetime(2021, 12, 9, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 10, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 10, 10, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1)),
-        (datetime(2021, 12, 10, 20, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 11, 5, 0, 0), (0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 11, 10, 0, 0), (1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)),
-        (datetime(2021, 12, 11, 20, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 12, 5, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-        (datetime(2021, 12, 12, 10, 0, 0), (1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0)),
-        (datetime(2021, 12, 12, 20, 0, 0), (0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0)),
-    )
-
-    for test_item in test_set:
-        mock_utc_now.utcnow.return_value = test_item[0]
-
-        assert always_on_device.is_available is True
-        assert offline_device.is_available is False
-        assert retired_device.is_available is False
-        assert missing_schedule_device.is_available is False
-
-        for i in range(len(test_item[1])):
-            assert test_devices[i].is_available == bool(test_item[1][i])
+            # flake8: noqa: C501
+            for i in range(len(test_item[1])):
+                device_name = test_set["test_devices"][i][0]
+                device = test_set["test_devices"][i][1]
+                expected = bool(test_item[1][i])
+                actual = device.is_available
+                assert (
+                    expected == actual
+                ), f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
