@@ -39,7 +39,7 @@ If you are new to Amazon Braket, onboard to the service and create the resources
 The Amazon Braket Python SDK can be installed with pip as follows:
 
 ```bash
-pip install amazon-braket-sdk
+pip install amazon-braket-sdk-python
 ```
 
 You can also install from source by cloning this repository and running a pip install command in the root directory of the repository:
@@ -66,7 +66,7 @@ You can also check your version of `amazon-braket-sdk` from within Python:
 ### Updating the Amazon Braket Python SDK
 You can update the version of the amazon-braket-sdk you have installed by using the following command:
 ```bash
-pip install amazon-braket-sdk --upgrade --upgrade-strategy eager
+pip install amazon-braket-sdk-python --upgrade --upgrade-strategy eager
 ```
 
 ## Usage
