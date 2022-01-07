@@ -13,23 +13,23 @@
 
 import pytest
 
-from braket.circuits import Parameterized
+from braket.circuits import Parameterizable
 
 
 @pytest.fixture
-def parameterized():
-    return Parameterized()
+def parameterizable():
+    return Parameterizable()
 
 
-def test_is_parameterized_operator(parameterized):
-    assert isinstance(parameterized, Parameterized)
+def test_is_parameterizable(parameterizable):
+    assert isinstance(parameterizable, Parameterizable)
 
 
-def test_parameterized(parameterized):
+def test_parameterized(parameterizable):
     expected = False
-    assert parameterized.parameterized == expected
+    assert parameterizable.parameterized == expected
 
 
-def test_parameter(parameterized):
+def test_parameter(parameterizable):
     expected = None
-    assert parameterized.parameter == expected
+    assert parameterizable.parameter == expected

@@ -239,7 +239,7 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
 
 
 @pytest.fixture
-def quantum_task(aws_session, s3_destination_folder):
+def parameterized_quantum_task(aws_session, s3_destination_folder):
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0)
     return AwsQuantumTask.create(
@@ -253,7 +253,7 @@ def quantum_task(aws_session, s3_destination_folder):
 
 
 @pytest.fixture
-def quantum_task_batch(aws_session, s3_destination_folder):
+def parameterized_quantum_task_batch(aws_session, s3_destination_folder):
     theta = FreeParameter("theta")
     circ_1 = Circuit().ry(angle=3, target=0)
     circ_2 = Circuit().ry(angle=theta, target=0)
@@ -532,11 +532,11 @@ def test_run_no_extra(aws_quantum_task_mock, device, circuit):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_run_param_circuit(quantum_task, device, s3_destination_folder):
+def test_run_param_circuit(parameterized_quantum_task, device, s3_destination_folder):
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0)
     _run_and_assert(
-        quantum_task,
+        parameterized_quantum_task,
         device,
         circ,
         s3_destination_folder,
@@ -545,14 +545,16 @@ def test_run_param_circuit(quantum_task, device, s3_destination_folder):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_run_batch_param_circuit(quantum_task_batch, aws_session, device, s3_destination_folder):
+def test_run_batch_param_circuit(
+    parameterized_quantum_task_batch, aws_session, device, s3_destination_folder
+):
     theta = FreeParameter("theta")
     circ_1 = Circuit().ry(angle=3, target=0)
     circ_2 = Circuit().ry(angle=theta, target=0)
     circuits = [circ_1, circ_2]
 
     _run_batch_and_assert(
-        quantum_task_batch,
+        parameterized_quantum_task_batch,
         aws_session,
         device,
         circuits,

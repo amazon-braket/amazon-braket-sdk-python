@@ -64,11 +64,14 @@ def test_equality(angled_gate):
 def test_symbolic_equality():
     symbol1 = FreeParameter("theta")
     symbol2 = FreeParameter("phi")
+    symbol3 = FreeParameter("theta")
     gate1 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar"])
-    gate2 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["foo"])
+    gate2 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar"])
+    gate3 = AngledGate(angle=symbol3, qubit_count=1, ascii_symbols=["bar"])
     other_gate = AngledGate(angle=symbol2, qubit_count=1, ascii_symbols=["foo"])
 
     assert gate1 == gate2
+    assert gate1 == gate3
     assert gate1 is not gate2
     assert gate1 != other_gate
 

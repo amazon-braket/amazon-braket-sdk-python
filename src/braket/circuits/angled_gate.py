@@ -16,10 +16,10 @@ from typing import Optional, Sequence, Union
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.gate import Gate
-from braket.circuits.parameterized import Parameterized
+from braket.circuits.parameterizable import Parameterizable
 
 
-class AngledGate(Gate, Parameterized):
+class AngledGate(Gate, Parameterizable):
     """
     Class `AngledGate` represents a quantum gate that operates on N qubits and an angle.
     """
@@ -50,8 +50,8 @@ class AngledGate(Gate, Parameterized):
             raise ValueError("angle must not be None")
         if isinstance(angle, FreeParameter):
             self._angle = angle
-            self._parameterized = True
             self._parameter = angle
+            self._parameterized = True
         else:
             self._angle = float(angle)  # explicit casting in case angle is e.g. np.float32
             self._parameterized = False

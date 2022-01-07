@@ -16,12 +16,12 @@ from __future__ import annotations
 from braket.circuits.free_parameter import FreeParameter
 
 
-class Parameterized:
+class Parameterizable:
     """A parameterized object is the definition of an object that can take in FreeParameters"""
 
     def __init__(self):
-        self._parameterized = False
         self._parameter = None
+        self._parameterized = False
 
     @property
     def parameterized(self) -> bool:

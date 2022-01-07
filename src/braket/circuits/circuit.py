@@ -35,7 +35,7 @@ from braket.circuits.noise_helpers import (
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
-from braket.circuits.parameterized import Parameterized
+from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
@@ -449,7 +449,7 @@ class Circuit:
     def _check_for_params(self, instruction: Instruction) -> bool:
         """
         This checks for free parameters in an :class:{Instruction}. Checks children classes of
-        :class:{Parameterized}.
+        :class:{Parameterizable}.
 
         Args:
             instruction: The instruction to check for a :class:{FreeParameter}.
@@ -458,7 +458,7 @@ class Circuit:
             bool: Whether an object is parameterized.
         """
         return (
-            issubclass(type(instruction.operator), Parameterized)
+            issubclass(type(instruction.operator), Parameterizable)
             and instruction.operator.parameterized
         )
 
@@ -529,9 +529,6 @@ class Circuit:
             keys = sorted(circuit.qubits)
             values = target
             target_mapping = dict(zip(keys, values))
-
-        if circuit.has_free_parameters:
-            self._parameterized = True
 
         for instruction in circuit.instructions:
             self.add_instruction(instruction, target_mapping=target_mapping)
@@ -824,7 +821,8 @@ class Circuit:
 
     def set_parameter_values(self, param_values: Dict[str, Number]):
         """
-        Sets FreeParameters based upon their name and values passed in.
+        Sets FreeParameters based upon their name and values passed in. If parameters
+        share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
             param_values Dict[str, Number]:  A mapping of FreeParameter names
@@ -836,7 +834,7 @@ class Circuit:
         """
         for param in param_values:
             param_valid = False
-            for free_param in self.parameters:
+            for free_param in self._parameters:
                 if param == free_param.name:
                     param_valid = True
                     free_param.fix_value(param_values[param])

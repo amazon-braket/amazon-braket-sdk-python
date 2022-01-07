@@ -34,10 +34,14 @@ def test_is_free_param(free_parameter):
 def test_equality():
     param_1 = FreeParameter("theta")
     param_2 = FreeParameter("theta")
+    param_3 = FreeParameter("theta")
     other_param = FreeParameter("phi")
     non_param = "non circuit"
 
+    param_3.fix_value(0)
+
     assert param_1 == param_2
+    assert param_1 == param_3
     assert param_1 is not param_2
     assert param_1 != other_param
     assert param_1 != non_param
