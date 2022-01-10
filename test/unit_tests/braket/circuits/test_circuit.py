@@ -1414,13 +1414,21 @@ def test_no_parameters():
     assert circ.parameters == expected
 
 
-def test_set_parameter_value():
+def test_set_parameter_value_strict():
     theta = FreeParameter("theta")
     input_val = np.pi
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.set_parameter_values({"theta": input_val})
+    circ.set_parameter_values({"theta": input_val}, strict=True)
 
     assert theta.parameter_value == float(input_val)
+
+
+def test_set_parameter_value_strict_false():
+    input_val = np.pi
+    theta = FreeParameter("theta")
+    param_superset = {"theta": input_val, "alpha": input_val, "beta": input_val}
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ.set_parameter_values(param_superset)
 
 
 def test_set_parameter_value_multiple():
@@ -1438,4 +1446,4 @@ def test_set_parameter_value_non_existent_param():
     theta = FreeParameter("theta")
     input_val = np.pi
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.set_parameter_values({"alpha": input_val})
+    circ.set_parameter_values({"alpha": input_val}, strict=True)

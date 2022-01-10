@@ -805,14 +805,17 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
-    def set_parameter_values(self, param_values: Dict[str, Number]):
+    def set_parameter_values(self, param_values: Dict[str, Number], strict: bool = False):
         """
         Sets FreeParameters based upon their name and values passed in. If parameters
         share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
-            param_values Dict[str, Number]:  A mapping of FreeParameter names
+            param_values (Dict[str, Number]):  A mapping of FreeParameter names
                 to a value to assign to them.
+
+            strict (bool, optional): A flag to only accept FreeParameters in the circuit
+                during value assignment. Set to false by default.
 
         Raises:
             ValueError: If there are no parameters that match the key for the arg
@@ -824,7 +827,7 @@ class Circuit:
                 if param == free_param.name:
                     param_valid = True
                     free_param.fix_value(param_values[param])
-            if not param_valid:
+            if not param_valid and strict:
                 raise ValueError(f"No parameter in the circuit named: {param}")
 
     def apply_readout_noise(
