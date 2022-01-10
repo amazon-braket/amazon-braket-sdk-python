@@ -21,18 +21,6 @@ class Parameterizable:
 
     def __init__(self):
         self._parameter = None
-        self._parameterized = False
-
-    @property
-    def parameterized(self) -> bool:
-        """
-        Returns whether an operator is parameterized.
-
-        Returns:
-            bool: Whether an operator is parameterized.
-
-        """
-        return self._parameterized
 
     @property
     def parameter(self) -> FreeParameter:

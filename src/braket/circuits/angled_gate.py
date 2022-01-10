@@ -51,10 +51,8 @@ class AngledGate(Gate, Parameterizable):
         if isinstance(angle, FreeParameter):
             self._angle = angle
             self._parameter = angle
-            self._parameterized = True
         else:
             self._angle = float(angle)  # explicit casting in case angle is e.g. np.float32
-            self._parameterized = False
             self._parameter = None
 
     @property

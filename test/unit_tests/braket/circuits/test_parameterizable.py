@@ -25,11 +25,6 @@ def test_is_parameterizable(parameterizable):
     assert isinstance(parameterizable, Parameterizable)
 
 
-def test_parameterized(parameterizable):
-    expected = False
-    assert parameterizable.parameterized == expected
-
-
 def test_parameter(parameterizable):
     expected = None
     assert parameterizable.parameter == expected

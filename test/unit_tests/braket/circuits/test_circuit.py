@@ -1338,26 +1338,50 @@ def test_add_parameterized_check_true():
         .ry(angle=theta, target=2)
         .ry(angle=theta, target=3)
     )
-    expected = True
+    expected = set()
+    expected.add(theta)
 
-    assert circ.has_free_parameters == expected
+    assert circ.parameters == expected
 
 
-def test_add_instr_parameterized_check_true():
+def test_add_parameterized_instr_parameterized_circ_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
     circ.add_instruction(Instruction(Gate.Ry(theta), 3))
-    expected = True
+    expected = set()
+    expected.add(theta)
 
-    assert circ.has_free_parameters == expected
+    assert circ.parameters == expected
+
+
+def test_add_non_parameterized_instr_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ.add_instruction(Instruction(Gate.Ry(0.1), 3))
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
 
 
 def test_add_circ_parameterized_check_true():
     theta = FreeParameter("theta")
     circ = Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=theta, target=0))
 
-    expected = True
-    assert circ.has_free_parameters == expected
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
+
+
+def test_add_circ_not_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=theta, target=0).add_circuit(Circuit().ry(angle=0.1, target=0))
+
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
 
 
 @pytest.mark.parametrize(
@@ -1369,9 +1393,9 @@ def test_add_circ_parameterized_check_true():
 )
 def test_parameterized_check_false(input_circ):
     circ = input_circ
-    expected = False
+    expected = 0
 
-    assert circ.has_free_parameters == expected
+    assert len(circ.parameters) == expected
 
 
 def test_parameters():
@@ -1415,14 +1439,3 @@ def test_set_parameter_value_non_existent_param():
     input_val = np.pi
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
     circ.set_parameter_values({"alpha": input_val})
-
-
-def test_get_parameter_value_multiple():
-    theta = FreeParameter("theta")
-    alpha = FreeParameter("alpha")
-    input_val = np.pi
-    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=alpha, target=2)
-    circ.set_parameter_values({"theta": input_val, "alpha": input_val})
-
-    expected = {theta: input_val, alpha: input_val}
-    assert circ.get_parameter_values() == expected

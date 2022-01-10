@@ -132,7 +132,6 @@ class Circuit:
         self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
-        self._parameterized = False
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -200,18 +199,6 @@ class Circuit:
     def qubits(self) -> QubitSet:
         """QubitSet: Get a copy of the qubits for this circuit."""
         return QubitSet(self._moments.qubits.union(self._qubit_observable_set))
-
-    @property
-    def has_free_parameters(self) -> bool:
-        """
-        This is a check to see if the circuit has any free parameters.
-        This can be used to block executions of parameterized circuits without
-        iterating through the circuit each attempted execution.
-
-        Returns:
-            bool: True if the circuit has any free parameters.
-        """
-        return self._parameterized
 
     @property
     def parameters(self) -> Set[FreeParameter]:
@@ -440,7 +427,6 @@ class Circuit:
             instructions_to_add = [instruction.copy(target=target)]
 
         if self._check_for_params(instruction):
-            self._parameterized = True
             self._parameters.add(instruction.operator.parameter)
         self._moments.add(instructions_to_add)
 
@@ -459,7 +445,7 @@ class Circuit:
         """
         return (
             issubclass(type(instruction.operator), Parameterizable)
-            and instruction.operator.parameterized
+            and instruction.operator.parameter
         )
 
     def add_circuit(
@@ -840,19 +826,6 @@ class Circuit:
                     free_param.fix_value(param_values[param])
             if not param_valid:
                 raise ValueError(f"No parameter in the circuit named: {param}")
-
-    def get_parameter_values(self) -> Dict[FreeParameter, Number]:
-        """
-        Populates a dictionary of the FreeParameters to their values in this circuit.
-
-        Returns:
-            Dict[FreeParameter, Number]: Returns a mapping of FreeParameter and
-                the corresponding value.
-        """
-        param_values = {}
-        for param in self.parameters:
-            param_values[param] = param.parameter_value
-        return param_values
 
     def apply_readout_noise(
         self,
