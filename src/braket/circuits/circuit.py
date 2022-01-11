@@ -814,8 +814,8 @@ class Circuit:
             param_values (Dict[str, Number]):  A mapping of FreeParameter names
                 to a value to assign to them.
 
-            strict (bool, optional): A flag to only accept FreeParameters in the circuit
-                during value assignment. Set to false by default.
+            strict (bool, optional): If True, raises a ValueError if none of the FreeParameters
+                in param_values appear in the circuit. False by default."
 
         Raises:
             ValueError: If there are no parameters that match the key for the arg
