@@ -243,6 +243,7 @@ def test_openqasm_probability_results(aws_session, s3_destination_folder):
     )
 
 
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 @pytest.mark.parametrize("num_layers", [50, 100, 500, 1000])
 def test_many_layers(simulator_arn, num_layers, aws_session, s3_destination_folder):
     num_qubits = 10
