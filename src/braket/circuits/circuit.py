@@ -1100,6 +1100,13 @@ class Circuit:
             )
         return NotImplemented
 
+    def __call__(self, arg=False, **kwargs):
+        if arg:
+            for param in self.parameters:
+                self.set_parameter_values({str(param): arg})
+        for key, val in kwargs.items():
+            self.set_parameter_values({str(key): val})
+
 
 def subroutine(register=False):
     """

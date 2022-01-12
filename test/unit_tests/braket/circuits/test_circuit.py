@@ -105,6 +105,37 @@ def test_equality():
     assert circ_1 != non_circ
 
 
+def test_call():
+    alpha = FreeParameter("alpha")
+    theta = FreeParameter("theta")
+    circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0)
+    circ(theta=1, alpha=0)
+    assert theta.parameter_value == 1 and alpha.parameter_value == 0
+
+
+def test_call_with_default_parameter_val():
+    alpha = FreeParameter("alpha")
+    beta = FreeParameter("beta")
+    theta = FreeParameter("theta")
+    gamma = FreeParameter("gamma")
+    circ = (
+        Circuit()
+        .h(0)
+        .rx(angle=theta, target=1)
+        .ry(angle=alpha, target=0)
+        .ry(angle=beta, target=2)
+        .rx(angle=gamma, target=1)
+    )
+    circ(np.pi, theta=1, alpha=0)
+
+    assert (
+        theta.parameter_value == 1
+        and alpha.parameter_value == 0
+        and gamma.parameter_value == np.pi
+        and beta.parameter_value == np.pi
+    )
+
+
 def test_add_result_type_default(prob):
     circ = Circuit().add_result_type(prob)
     assert circ.observables_simultaneously_measurable
