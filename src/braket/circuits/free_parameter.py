@@ -27,7 +27,7 @@ class FreeParameter:
         Free parameters can be used in parameterized circuits.
 
         Args:
-            str: Name of the :class:'FreeParameter'. Can be a unicode value.
+            name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
 
         Examples:
             >>> param1 = FreeParameter("theta")
@@ -96,6 +96,7 @@ class FreeParameter:
         """
         The representation of the :class:'FreeParameter'.
 
-        Returns: The name of the class:'FreeParameter' to represent the class.
+        Returns:
+            The name of the class:'FreeParameter' to represent the class.
         """
         return self.name

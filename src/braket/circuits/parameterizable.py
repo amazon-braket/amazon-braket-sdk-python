@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+from typing import Union
+
 from braket.circuits.free_parameter import FreeParameter
 
 
@@ -23,11 +25,12 @@ class Parameterizable:
         self._parameter = None
 
     @property
-    def parameter(self) -> FreeParameter:
+    def parameter(self) -> Union[FreeParameter, float]:
         """
         Returns the free parameter associated with the object.
 
         Returns:
-            FreeParameter: Returns the free parameter associated with the object.
+            Union[FreeParameter, float]: Returns the free parameter or fix value
+                associated with the object.
         """
         return self._parameter

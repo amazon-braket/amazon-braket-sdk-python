@@ -438,14 +438,13 @@ class Circuit:
         :class:{Parameterizable}.
 
         Args:
-            instruction: The instruction to check for a :class:{FreeParameter}.
+            instruction (Instruction): The instruction to check for a :class:{FreeParameter}.
 
         Returns:
             bool: Whether an object is parameterized.
         """
-        return (
-            issubclass(type(instruction.operator), Parameterizable)
-            and instruction.operator.parameter
+        return issubclass(type(instruction.operator), Parameterizable) and isinstance(
+            instruction.operator.parameter, FreeParameter
         )
 
     def add_circuit(
