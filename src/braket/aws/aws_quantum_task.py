@@ -40,6 +40,7 @@ from braket.device_schema.dwave.dwave_advantage_device_level_parameters_v1 impor
 from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
@@ -62,7 +63,7 @@ class AwsQuantumTask(QuantumTask):
     def create(
         aws_session: AwsSession,
         device_arn: str,
-        task_specification: Union[Circuit, Problem],
+        task_specification: Union[Circuit, Problem, OpenQasmProgram],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
@@ -413,6 +414,22 @@ def _create_internal(
 
 @_create_internal.register
 def _(
+    open_qasm_program: OpenQasmProgram,
+    aws_session: AwsSession,
+    create_task_kwargs: Dict[str, Any],
+    device_arn: str,
+    _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
+    _disable_qubit_rewiring,
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    create_task_kwargs.update({"action": open_qasm_program.json()})
+    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+@_create_internal.register
+def _(
     circuit: Circuit,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
@@ -461,7 +478,7 @@ def _(
         DwaveAdvantageDeviceParameters,
         Dwave2000QDeviceParameters,
     ],
-    disable_qubit_rewiring,
+    _,
     *args,
     **kwargs,
 ) -> AwsQuantumTask:

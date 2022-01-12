@@ -32,6 +32,7 @@ from braket.circuits import Circuit
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
+from braket.ir.openqasm import Program as OpenQasmProgram
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -251,6 +252,16 @@ def s3_destination_folder():
 @pytest.fixture
 def circuit():
     return Circuit().h(0)
+
+
+@pytest.fixture
+def openqasm_program():
+    return OpenQasmProgram(source="OPENQASM 3.0; h $0;")
+
+
+@pytest.fixture(params=["circuit", "openqasm_program"])
+def task_specification(request):
+    return request.getfixturevalue(request.param)
 
 
 @pytest.fixture
@@ -493,43 +504,54 @@ def test_device_non_qpu_region_error(mock_copy_session):
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_no_extra(aws_quantum_task_mock, device, circuit):
+def test_run_no_extra(aws_quantum_task_mock, device, task_specification):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
-        circuit,
+        task_specification,
     )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_positional_args(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+def test_run_with_positional_args(
+    aws_quantum_task_mock, device, task_specification, s3_destination_folder
+):
     _run_and_assert(
-        aws_quantum_task_mock, device, circuit, s3_destination_folder, 100, 86400, 0.25, ["foo"]
+        aws_quantum_task_mock,
+        device,
+        task_specification,
+        s3_destination_folder,
+        100,
+        86400,
+        0.25,
+        ["foo"],
     )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_kwargs(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+def test_run_with_kwargs(aws_quantum_task_mock, device, task_specification, s3_destination_folder):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
-        circuit,
+        task_specification,
         s3_destination_folder,
         extra_kwargs={"bar": 1, "baz": 2},
     )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_shots(aws_quantum_task_mock, device, circuit, s3_destination_folder):
-    _run_and_assert(aws_quantum_task_mock, device, circuit, s3_destination_folder, 100)
+def test_run_with_shots(aws_quantum_task_mock, device, task_specification, s3_destination_folder):
+    _run_and_assert(aws_quantum_task_mock, device, task_specification, s3_destination_folder, 100)
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_shots_kwargs(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+def test_run_with_shots_kwargs(
+    aws_quantum_task_mock, device, task_specification, s3_destination_folder
+):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
-        circuit,
+        task_specification,
         s3_destination_folder,
         100,
         extra_kwargs={"bar": 1, "baz": 2},
@@ -537,7 +559,9 @@ def test_run_with_shots_kwargs(aws_quantum_task_mock, device, circuit, s3_destin
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+def test_run_with_qpu_no_shots(
+    aws_quantum_task_mock, device, task_specification, s3_destination_folder
+):
     run_and_assert(
         aws_quantum_task_mock,
         device(RIGETTI_ARN),
@@ -545,7 +569,7 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
         AwsDevice.DEFAULT_SHOTS_QPU,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        circuit,
+        task_specification,
         s3_destination_folder,
         None,
         None,
@@ -556,7 +580,9 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+def test_default_bucket_not_called(
+    aws_quantum_task_mock, device, task_specification, s3_destination_folder
+):
     device = device(RIGETTI_ARN)
     run_and_assert(
         aws_quantum_task_mock,
@@ -565,7 +591,7 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
         AwsDevice.DEFAULT_SHOTS_QPU,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        circuit,
+        task_specification,
         s3_destination_folder,
         None,
         None,
@@ -578,12 +604,12 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_shots_poll_timeout_kwargs(
-    aws_quantum_task_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock, device, task_specification, s3_destination_folder
 ):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
-        circuit,
+        task_specification,
         s3_destination_folder,
         100,
         86400,
@@ -593,12 +619,12 @@ def test_run_with_shots_poll_timeout_kwargs(
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args_and_kwargs(
-    aws_quantum_task_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock, device, task_specification, s3_destination_folder
 ):
     _run_and_assert(
         aws_quantum_task_mock,
         device,
-        circuit,
+        task_specification,
         s3_destination_folder,
         100,
         86400,
@@ -632,13 +658,13 @@ def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, device, cir
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_shots(
-    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock, aws_session_mock, device, task_specification, s3_destination_folder
 ):
     _run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
         device,
-        [circuit for _ in range(10)],
+        [task_specification for _ in range(10)],
         s3_destination_folder,
         1000,
     )
@@ -647,13 +673,13 @@ def test_run_batch_with_shots(
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_max_parallel_and_kwargs(
-    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock, aws_session_mock, device, task_specification, s3_destination_folder
 ):
     _run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
         device,
-        [circuit for _ in range(10)],
+        [task_specification for _ in range(10)],
         s3_destination_folder,
         1000,
         20,
@@ -667,8 +693,8 @@ def test_run_batch_with_max_parallel_and_kwargs(
     {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
 )
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_batch_env_variables(aws_quantum_task_mock, device, circuit):
-    device("foo:bar").run_batch([circuit])
+def test_run_batch_env_variables(aws_quantum_task_mock, device, task_specification):
+    device("foo:bar").run_batch([task_specification])
     assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 
 
@@ -704,7 +730,7 @@ def _run_batch_and_assert(
     aws_quantum_task_mock,
     aws_session_mock,
     device_factory,
-    circuits,
+    task_specifications,
     s3_destination_folder=None,  # Treated as positional arg
     shots=None,  # Treated as positional arg
     max_parallel=None,  # Treated as positional arg
@@ -722,7 +748,7 @@ def _run_batch_and_assert(
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        circuits,
+        task_specifications,
         s3_destination_folder,
         shots,
         max_parallel,
