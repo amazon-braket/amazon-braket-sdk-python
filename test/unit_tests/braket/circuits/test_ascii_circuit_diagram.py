@@ -89,8 +89,6 @@ def test_one_gate_one_qubit_rotation_with_parameter_assigned():
         "q0 : -Rx(theta)-",
         "",
         "T  : |    0    |",
-        "",
-        "theta = 3.141592653589793",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected

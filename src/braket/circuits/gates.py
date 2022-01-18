@@ -460,7 +460,9 @@ class Rx(AngledGate):
 
     def __init__(self, angle: Union[FreeParameter, float]):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["Rx({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=[f'Rx({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -505,7 +507,9 @@ class Ry(AngledGate):
 
     def __init__(self, angle: Union[FreeParameter, float]):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["Ry({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=[f'Ry({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -550,7 +554,9 @@ class Rz(AngledGate):
 
     def __init__(self, angle: Union[FreeParameter, float]):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["Rz({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=[f'Rz({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -595,7 +601,9 @@ class PhaseShift(AngledGate):
 
     def __init__(self, angle: float):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["PHASE({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=[f'PHASE({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -778,7 +786,10 @@ class PSwap(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["PSWAP({:.3g})".format(angle), "PSWAP({:})".format(angle)],
+            ascii_symbols=[
+                f'PSWAP({angle:{".2f" if isinstance(angle, float) else ""}})',
+                f'PSWAP({angle:{".2f" if isinstance(angle, float) else ""}})',
+            ],
         )
 
     def to_ir(self, target: QubitSet):
@@ -834,7 +845,10 @@ class XY(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["XY({:.3g})".format(angle), "XY({:.3g})".format(angle)],
+            ascii_symbols=[
+                f'XY({angle:{".2f" if isinstance(angle, float) else ""}})',
+                f'XY({angle:{".2f" if isinstance(angle, float) else ""}})',
+            ],
         )
 
     def to_ir(self, target: QubitSet):
@@ -890,7 +904,9 @@ class CPhaseShift(AngledGate):
 
     def __init__(self, angle: float):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["C", "PHASE({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=["C", f'PHASE({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -936,7 +952,9 @@ class CPhaseShift00(AngledGate):
 
     def __init__(self, angle: float):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["C", "PHASE00({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=["C", f'PHASE00({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -982,7 +1000,9 @@ class CPhaseShift01(AngledGate):
 
     def __init__(self, angle: float):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["C", "PHASE01({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=["C", f'PHASE01({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -1028,7 +1048,9 @@ class CPhaseShift10(AngledGate):
 
     def __init__(self, angle: float):
         super().__init__(
-            angle=angle, qubit_count=None, ascii_symbols=["C", "PHASE10({:})".format(str(angle))]
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=["C", f'PHASE10({angle:{".2f" if isinstance(angle, float) else ""}})'],
         )
 
     def to_ir(self, target: QubitSet):
@@ -1160,7 +1182,10 @@ class XX(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["XX({:})".format(str(angle)), "XX({:})".format(str(angle))],
+            ascii_symbols=[
+                f'XX({angle:{".2f" if isinstance(angle, float) else ""}})',
+                f'XX({angle:{".2f" if isinstance(angle, float) else ""}})',
+            ],
         )
 
     def to_ir(self, target: QubitSet):
@@ -1220,7 +1245,10 @@ class YY(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["YY({:})".format(str(angle)), "YY({:})".format(str(angle))],
+            ascii_symbols=[
+                f'YY({angle:{".2f" if isinstance(angle, float) else ""}})',
+                f'YY({angle:{".2f" if isinstance(angle, float) else ""}})',
+            ],
         )
 
     def to_ir(self, target: QubitSet):
@@ -1280,7 +1308,10 @@ class ZZ(AngledGate):
         super().__init__(
             angle=angle,
             qubit_count=None,
-            ascii_symbols=["ZZ({:})".format(str(angle)), "ZZ({:})".format(str(angle))],
+            ascii_symbols=[
+                f'ZZ({angle:{".2f" if isinstance(angle, float) else ""}})',
+                f'ZZ({angle:{".2f" if isinstance(angle, float) else ""}})',
+            ],
         )
 
     def to_ir(self, target: QubitSet):

@@ -11,10 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from numbers import Number
-
-from sympy import Symbol
-
 
 class FreeParameter:
     """
@@ -33,8 +29,7 @@ class FreeParameter:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        self._name = Symbol(name)
-        self._parameter_value = None
+        self._name = name
 
     @property
     def name(self) -> str:
@@ -42,44 +37,7 @@ class FreeParameter:
         Returns:
             str: Name of this parameter.
         """
-        return self._name.name
-
-    @property
-    def parameter_value(self) -> Number:
-        """
-        This is set to None until a value is assigned.
-
-        Returns:
-            Number: The value assigned to a parameter.
-        """
-        return self._parameter_value
-
-    def fix_value(self, param_value: Number) -> None:
-        """
-        Sets the value for a :class:'FreeParameter'.
-
-        Args:
-            param_value: The value to be set for the object.
-        """
-        self._validate_values(param_value)
-        self._parameter_value = float(param_value)
-
-    def _validate_values(self, param_value):
-        """
-        Validates that the param_value being passed in is numeric. Raises a ValueError otherwise.
-
-        Args:
-            param_values: A value to be checked.
-
-        Raises:
-            ValueError: If the param_value is not a Number.
-
-        """
-        if not isinstance(param_value, Number):
-            raise ValueError(
-                f"Parameters value assignment can only take numeric values. "
-                f"Invalid inputs: {param_value}"
-            )
+        return self._name
 
     def __str__(self):
         return str(self.name)

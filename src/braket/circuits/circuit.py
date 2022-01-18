@@ -805,7 +805,9 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
-    def set_parameter_values(self, param_values: Dict[str, Number], strict: bool = False):
+    def set_parameter_values(
+        self, param_values: Dict[str, Number], strict: bool = False
+    ) -> Circuit:
         """
         Sets FreeParameters based upon their name and values passed in. If parameters
         share the same name, all the parameters of that name will be set to the mapped value.
@@ -817,18 +819,41 @@ class Circuit:
             strict (bool, optional): If True, raises a ValueError if none of the FreeParameters
                 in param_values appear in the circuit. False by default."
 
+        Returns:
+            Circuit: Returns a circuit with all present parameters fixed to their respective
+                values.
+
         Raises:
             ValueError: If there are no parameters that match the key for the arg
                 param_values.
         """
-        for param in param_values:
-            param_valid = False
-            for free_param in self._parameters:
-                if param == free_param.name:
-                    param_valid = True
-                    free_param.fix_value(param_values[param])
-            if not param_valid and strict:
-                raise ValueError(f"No parameter in the circuit named: {param}")
+        fixed_circ = Circuit()
+        if strict:
+            for param in param_values:
+                param_valid = False
+                for free_param in self._parameters:
+                    if param == free_param.name:
+                        param_valid = True
+                if not param_valid:
+                    raise ValueError(f"No parameter in the circuit named: {param}")
+        for instruction in self.instructions:
+            if self._check_for_params(instruction):
+                param = instruction.operator.parameters[0]
+                value = param_values[str(param)]
+                if not isinstance(value, Number):
+                    raise ValueError(
+                        f"Parameters value assignment can only take numeric values. "
+                        f"Invalid inputs: {value}"
+                    )
+                fixed_circ.add(
+                    Instruction(type(instruction.operator)(value), target=instruction.target)
+                )
+                if param in self._parameters:
+                    self._parameters.remove(param)
+            else:
+                fixed_circ.add(instruction)
+        fixed_circ.add(self.result_types)
+        return fixed_circ
 
     def apply_readout_noise(
         self,
@@ -1101,12 +1126,14 @@ class Circuit:
             )
         return NotImplemented
 
-    def __call__(self, arg=False, **kwargs):
+    def __call__(self, arg=False, **kwargs) -> Circuit:
+        param_values = dict()
         if arg:
             for param in self.parameters:
-                self.set_parameter_values({str(param): arg})
+                param_values[str(param)] = arg
         for key, val in kwargs.items():
-            self.set_parameter_values({str(key): val})
+            param_values[str(key)] = val
+        return self.set_parameter_values(param_values)
 
 
 def subroutine(register=False):
