@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Union
+from typing import Union, List
 
 from braket.circuits.free_parameter import FreeParameter
 
@@ -22,15 +22,15 @@ class Parameterizable:
     """A parameterized object is the definition of an object that can take in FreeParameters"""
 
     def __init__(self):
-        self._parameter = None
+        self._parameters = list()
 
     @property
-    def parameter(self) -> Union[FreeParameter, float]:
+    def parameters(self) -> List[Union[FreeParameter, float]]:
         """
-        Returns the free parameter associated with the object.
+        Returns the free parameters associated with the object.
 
         Returns:
             Union[FreeParameter, float]: Returns the free parameter or fix value
                 associated with the object.
         """
-        return self._parameter
+        return self._parameters

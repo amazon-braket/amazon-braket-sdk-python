@@ -44,13 +44,18 @@ def test_one_gate_one_qubit_rotation():
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
 
 
-def test_one_gate_one_qubit_rotation_with_symbol():
+def test_one_gate_one_qubit_rotation_with_parameter():
     theta = FreeParameter("theta")
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
-    expected = ("T  : |    0    |", "                ", "q0 : -Rx(theta)-", "", "T  : |    0    |")
+    expected = ("T  : |    0    |",
+                "                ",
+                "q0 : -Rx(theta)-",
+                "",
+                "T  : |    0    |",
+                "",
+                "theta has no assigned value.")
     expected = "\n".join(expected)
-
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
 
 
@@ -58,9 +63,30 @@ def test_one_gate_one_qubit_rotation_with_unicode():
     theta = FreeParameter("\u03B8")
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
-    expected = ("T  : |  0  |", "            ", "q0 : -Rx(θ)-", "", "T  : |  0  |")
+    expected = ("T  : |  0  |",
+                "            ",
+                "q0 : -Rx(θ)-",
+                "",
+                "T  : |  0  |",
+                "",
+                "θ has no assigned value.")
     expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
 
+
+def test_one_gate_one_qubit_rotation_with_parameter_assigned():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    circ.set_parameter_values({"theta": np.pi})
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = ("T  : |    0    |",
+                "                ",
+                "q0 : -Rx(theta)-",
+                "",
+                "T  : |    0    |",
+                "",
+                "theta = 3.141592653589793")
+    expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
 
 

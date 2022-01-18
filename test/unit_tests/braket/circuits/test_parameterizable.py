@@ -26,5 +26,5 @@ def test_is_parameterizable(parameterizable):
 
 
 def test_parameter(parameterizable):
-    expected = None
-    assert parameterizable.parameter == expected
+    expected = []
+    assert parameterizable.parameters == expected

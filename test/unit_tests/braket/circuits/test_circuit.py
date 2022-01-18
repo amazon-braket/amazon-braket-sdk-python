@@ -639,6 +639,16 @@ def test_as_unitary_noise_raises_error(circuit):
     circuit.as_unitary()
 
 
+@pytest.mark.xfail(raises=TypeError)
+def test_as_unitary_parameterized():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    print(circ.as_unitary)
+    assert np.allclose(
+        circ.as_unitary()
+    )
+
+
 def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
     circuit = (
         Circuit()
@@ -1377,10 +1387,12 @@ def test_add_parameterized_check_true():
 
 def test_add_parameterized_instr_parameterized_circ_check_true():
     theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.add_instruction(Instruction(Gate.Ry(theta), 3))
+    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
     expected = set()
     expected.add(theta)
+    expected.add(alpha)
 
     assert circ.parameters == expected
 

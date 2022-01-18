@@ -49,9 +49,9 @@ class AngledGate(Gate, Parameterizable):
         if angle is None:
             raise ValueError("angle must not be None")
         if isinstance(angle, FreeParameter):
-            self._parameter = angle
+            self._parameters = [angle]
         else:
-            self._parameter = float(angle)  # explicit casting in case angle is e.g. np.float32
+            self._parameters = [float(angle)]  # explicit casting in case angle is e.g. np.float32
 
     @property
     def angle(self) -> Union[FreeParameter, float]:
@@ -61,7 +61,7 @@ class AngledGate(Gate, Parameterizable):
         Returns:
             Union[FreeParameter, float]: The angle of the gate in radians
         """
-        return self._parameter
+        return self._parameters[0]
 
     def __eq__(self, other):
         if isinstance(other, AngledGate):

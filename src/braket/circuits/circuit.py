@@ -427,7 +427,8 @@ class Circuit:
             instructions_to_add = [instruction.copy(target=target)]
 
         if self._check_for_params(instruction):
-            self._parameters.add(instruction.operator.parameter)
+            for param in instruction.operator.parameters:
+                self._parameters.add(param)
         self._moments.add(instructions_to_add)
 
         return self
@@ -443,9 +444,8 @@ class Circuit:
         Returns:
             bool: Whether an object is parameterized.
         """
-        return issubclass(type(instruction.operator), Parameterizable) and isinstance(
-            instruction.operator.parameter, FreeParameter
-        )
+        return issubclass(type(instruction.operator), Parameterizable) and \
+               all(isinstance(param, FreeParameter) for param in instruction.operator.parameters)
 
     def add_circuit(
         self,

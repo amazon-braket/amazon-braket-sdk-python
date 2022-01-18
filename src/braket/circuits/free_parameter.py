@@ -34,7 +34,7 @@ class FreeParameter:
             >>> param1 = FreeParameter("\u03B8")
         """
         self._name = Symbol(name)
-        self._parameter_value = Number
+        self._parameter_value = None
 
     @property
     def name(self) -> str:
