@@ -643,10 +643,7 @@ def test_as_unitary_noise_raises_error(circuit):
 def test_as_unitary_parameterized():
     theta = FreeParameter("theta")
     circ = Circuit().rx(angle=theta, target=0)
-    print(circ.as_unitary)
-    assert np.allclose(
-        circ.as_unitary()
-    )
+    assert np.allclose(circ.as_unitary())
 
 
 def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):

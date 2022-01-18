@@ -444,8 +444,9 @@ class Circuit:
         Returns:
             bool: Whether an object is parameterized.
         """
-        return issubclass(type(instruction.operator), Parameterizable) and \
-               all(isinstance(param, FreeParameter) for param in instruction.operator.parameters)
+        return issubclass(type(instruction.operator), Parameterizable) and all(
+            isinstance(param, FreeParameter) for param in instruction.operator.parameters
+        )
 
     def add_circuit(
         self,
