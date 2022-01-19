@@ -846,6 +846,7 @@ class Circuit:
     def _use_parameter_value(self, param_values: Dict[str, Number]) -> Circuit:
         """
         Creates a Circuit that uses the parameter values passed in.
+
         Args:
             param_values (Dict[str, Number]): A mapping of FreeParameter names
                 to a value to assign to them.
