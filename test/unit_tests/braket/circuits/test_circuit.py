@@ -109,10 +109,9 @@ def test_call():
     alpha = FreeParameter("alpha")
     theta = FreeParameter("theta")
     circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0)
-    circ_new = circ(theta=1, alpha=0)
+    new_circ = circ(theta=1, alpha=0)
     expected = Circuit().h(0).rx(angle=1, target=1).ry(angle=0, target=0)
-
-    assert circ_new == expected
+    assert new_circ == expected and not new_circ.parameters
 
 
 def test_call_with_default_parameter_val():
@@ -137,7 +136,7 @@ def test_call_with_default_parameter_val():
         .ry(angle=np.pi, target=2)
         .rx(angle=np.pi, target=1)
     )
-    assert new_circ == expected
+    assert new_circ == expected and not new_circ.parameters
 
 
 def test_add_result_type_default(prob):

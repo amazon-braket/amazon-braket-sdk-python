@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import math
-from typing import Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.gate import Gate
@@ -52,6 +52,17 @@ class AngledGate(Gate, Parameterizable):
             self._parameters = [angle]
         else:
             self._parameters = [float(angle)]  # explicit casting in case angle is e.g. np.float32
+
+    @property
+    def parameters(self) -> List[Union[FreeParameter, float]]:
+        """
+        Returns the free parameters associated with the object.
+
+        Returns:
+            Union[FreeParameter, float]: Returns the free parameters or fixed value
+            associated with the object.
+        """
+        return self._parameters
 
     @property
     def angle(self) -> Union[FreeParameter, float]:

@@ -13,24 +13,21 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import List, Union
 
 from braket.circuits.free_parameter import FreeParameter
 
 
-class Parameterizable:
-    """A parameterized object is the definition of an object that can take in FreeParameters"""
-
-    def __init__(self):
-        self._parameters = list()
+class Parameterizable(ABC):
+    """
+    A parameterized object is the abstract definition
+    of an object that can take in FreeParameters.
+    """
 
     @property
+    @abstractmethod
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
         Returns the free parameters associated with the object.
-
-        Returns:
-            Union[FreeParameter, float]: Returns the free parameters or fixed value
-            associated with the object.
         """
-        return self._parameters
