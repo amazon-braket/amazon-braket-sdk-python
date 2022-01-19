@@ -818,7 +818,7 @@ class Circuit:
 
         Returns:
             Circuit: Returns a circuit with all present parameters fixed to their respective
-                values.
+            values.
         """
         if strict:
             self._validate_parameters(param_values)
