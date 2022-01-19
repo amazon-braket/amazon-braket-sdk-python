@@ -853,7 +853,7 @@ class Circuit:
 
         Returns:
             Circuit: A Circuit with specified parameters swapped for their
-                values.
+            values.
 
         """
         fixed_circ = Circuit()
