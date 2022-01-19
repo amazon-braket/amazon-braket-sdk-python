@@ -31,6 +31,6 @@ class Parameterizable:
 
         Returns:
             Union[FreeParameter, float]: Returns the free parameters or fixed value
-                associated with the object.
+            associated with the object.
         """
         return self._parameters
