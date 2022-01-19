@@ -55,7 +55,7 @@ def test_one_gate_one_qubit_rotation_with_parameter():
         "",
         "T  : |    0    |",
         "",
-        "theta has no assigned value.",
+        "Unassigned parameters: {theta}.",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
@@ -72,7 +72,7 @@ def test_one_gate_one_qubit_rotation_with_unicode():
         "",
         "T  : |  0  |",
         "",
-        "θ has no assigned value.",
+        "Unassigned parameters: {θ}.",
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
@@ -81,17 +81,18 @@ def test_one_gate_one_qubit_rotation_with_unicode():
 def test_one_gate_one_qubit_rotation_with_parameter_assigned():
     theta = FreeParameter("theta")
     circ = Circuit().rx(angle=theta, target=0)
-    circ.set_parameter_values({"theta": np.pi})
+    new_circ = circ.make_bound_circuit({"theta": np.pi})
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
-        "T  : |    0    |",
-        "                ",
-        "q0 : -Rx(theta)-",
+        "T  : |   0    |",
+        "               ",
+        "q0 : -Rx(3.14)-",
         "",
-        "T  : |    0    |",
+        "T  : |   0    |",
     )
     expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    print(AsciiCircuitDiagram.build_diagram(new_circ))
+    assert AsciiCircuitDiagram.build_diagram(new_circ) == expected
 
 
 def test_qubit_width():

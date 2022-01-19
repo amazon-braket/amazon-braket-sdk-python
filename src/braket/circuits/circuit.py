@@ -805,55 +805,90 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
-    def set_parameter_values(
-        self, param_values: Dict[str, Number], strict: bool = False
-    ) -> Circuit:
+    def make_bound_circuit(self, param_values: Dict[str, Number], strict: bool = False) -> Circuit:
         """
-        Sets FreeParameters based upon their name and values passed in. If parameters
+        Binds FreeParameters based upon their name and values passed in. If parameters
         share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
             param_values (Dict[str, Number]):  A mapping of FreeParameter names
                 to a value to assign to them.
-
             strict (bool, optional): If True, raises a ValueError if none of the FreeParameters
                 in param_values appear in the circuit. False by default."
 
         Returns:
             Circuit: Returns a circuit with all present parameters fixed to their respective
                 values.
+        """
+        if strict:
+            self._validate_parameters(param_values)
+        return self._use_parameter_value(param_values)
+
+    def _validate_parameters(self, parameter_values: Dict[str, Number]):
+        """
+        This runs a check to see that the parameters are in the Circuit.
+
+        Args:
+            parameter_values (Dict[str, Number]):  A mapping of FreeParameter names
+                to a value to assign to them.
 
         Raises:
             ValueError: If there are no parameters that match the key for the arg
                 param_values.
         """
+        parameter_strings = set()
+        for parameter in self.parameters:
+            parameter_strings.add(str(parameter))
+        for param in parameter_values:
+            if param not in parameter_strings:
+                raise ValueError(f"No parameter in the circuit named: {param}")
+
+    def _use_parameter_value(self, param_values: Dict[str, Number]) -> Circuit:
+        """
+        Creates a Circuit that uses the parameter values passed in.
+        Args:
+            param_values (Dict[str, Number]): A mapping of FreeParameter names
+                to a value to assign to them.
+
+        Returns:
+            Circuit: A Circuit with specified parameters swapped for their
+                values.
+
+        """
         fixed_circ = Circuit()
-        if strict:
-            for param in param_values:
-                param_valid = False
-                for free_param in self._parameters:
-                    if param == free_param.name:
-                        param_valid = True
-                if not param_valid:
-                    raise ValueError(f"No parameter in the circuit named: {param}")
         for instruction in self.instructions:
             if self._check_for_params(instruction):
-                param = instruction.operator.parameters[0]
-                value = param_values[str(param)]
-                if not isinstance(value, Number):
-                    raise ValueError(
-                        f"Parameters value assignment can only take numeric values. "
-                        f"Invalid inputs: {value}"
-                    )
-                fixed_circ.add(
-                    Instruction(type(instruction.operator)(value), target=instruction.target)
+                params = instruction.operator.parameters
+                values = list(
+                    map(lambda x: param_values[str(x)] if str(x) in param_values else x, params)
                 )
-                if param in self._parameters:
-                    self._parameters.remove(param)
+                for val in values:
+                    if not isinstance(val, FreeParameter):
+                        self._validate_parameter_value(val)
+                fixed_circ.add(
+                    Instruction(type(instruction.operator)(*values), target=instruction.target)
+                )
             else:
                 fixed_circ.add(instruction)
         fixed_circ.add(self.result_types)
         return fixed_circ
+
+    @staticmethod
+    def _validate_parameter_value(val):
+        """
+            Validates the value being used is a Number.
+        Args:
+            val: The value be verified.
+
+        Raises:
+            ValueError: If the value is not a Number
+
+        """
+        if not isinstance(val, Number):
+            raise ValueError(
+                f"Parameters value assignment can only take numeric values. "
+                f"Invalid inputs: {val}"
+            )
 
     def apply_readout_noise(
         self,
@@ -1126,14 +1161,25 @@ class Circuit:
             )
         return NotImplemented
 
-    def __call__(self, arg=False, **kwargs) -> Circuit:
+    def __call__(self, arg=None, **kwargs) -> Circuit:
+        """
+        Implements the call function to easily make a bound Circuit.
+        Args:
+            arg: A value to bind to all parameters. Defaults to None and
+                can be overridden if the parameter is in kwargs.
+            **kwargs: the named parameters to have their value bound.
+
+        Returns:
+            Circuit: A circuit with the parameters specified bound.
+
+        """
         param_values = dict()
-        if arg:
+        if arg is not None:
             for param in self.parameters:
                 param_values[str(param)] = arg
         for key, val in kwargs.items():
             param_values[str(key)] = val
-        return self.set_parameter_values(param_values)
+        return self.make_bound_circuit(param_values)
 
 
 def subroutine(register=False):

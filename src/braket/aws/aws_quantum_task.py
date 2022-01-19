@@ -135,7 +135,8 @@ class AwsQuantumTask(QuantumTask):
             create_task_kwargs.update({"tags": tags})
         if isinstance(task_specification, Circuit) and task_specification.parameters:
             raise ValueError(
-                f"Cannot execute parameterized circuit. " f"Invalid circuit: ({task_specification})"
+                f"Cannot execute parameterized circuit. "
+                f"Parameters found are: {task_specification.parameters}"
             )
         return _create_internal(
             task_specification,
