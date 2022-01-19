@@ -114,6 +114,18 @@ def test_call():
     assert new_circ == expected and not new_circ.parameters
 
 
+def test_call_one_param_not_bound():
+    alpha = FreeParameter("alpha")
+    theta = FreeParameter("theta")
+    circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0)
+    new_circ = circ(theta=1)
+    expected_circ = Circuit().h(0).rx(angle=1, target=1).ry(angle=alpha, target=0)
+    expected_parameters = set()
+    expected_parameters.add(alpha)
+
+    assert new_circ == expected_circ and new_circ.parameters == expected_parameters
+
+
 def test_call_with_default_parameter_val():
     alpha = FreeParameter("alpha")
     beta = FreeParameter("beta")
@@ -1388,7 +1400,8 @@ def test_add_parameterized_check_true():
 def test_add_parameterized_instr_parameterized_circ_check_true():
     theta = FreeParameter("theta")
     alpha = FreeParameter("alpha")
-    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    alpha2 = FreeParameter("alpha")
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=alpha2, target=1).ry(angle=theta, target=2)
     circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
     expected = set()
     expected.add(theta)
