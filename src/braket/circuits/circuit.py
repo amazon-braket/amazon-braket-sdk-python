@@ -876,13 +876,13 @@ class Circuit:
     @staticmethod
     def _validate_parameter_value(val):
         """
-            Validates the value being used is a Number.
+        Validates the value being used is a Number.
+
         Args:
             val: The value be verified.
 
         Raises:
             ValueError: If the value is not a Number
-
         """
         if not isinstance(val, Number):
             raise ValueError(
