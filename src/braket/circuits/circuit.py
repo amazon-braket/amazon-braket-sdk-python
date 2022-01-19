@@ -1164,14 +1164,14 @@ class Circuit:
     def __call__(self, arg=None, **kwargs) -> Circuit:
         """
         Implements the call function to easily make a bound Circuit.
+
         Args:
             arg: A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
             **kwargs: the named parameters to have their value bound.
 
         Returns:
-            Circuit: A circuit with the parameters specified bound.
-
+            Circuit: A circuit with the specified parameters bound.
         """
         param_values = dict()
         if arg is not None:
