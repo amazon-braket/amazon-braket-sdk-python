@@ -886,7 +886,7 @@ class Circuit:
         """
         if not isinstance(val, Number):
             raise ValueError(
-                f"Parameters value assignment can only take numeric values. "
+                f"Parameters can only be assigned numeric values. "
                 f"Invalid inputs: {val}"
             )
 
