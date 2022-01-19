@@ -34,8 +34,7 @@ class FreeParameter:
     @property
     def name(self) -> str:
         """
-        Returns:
-            str: Name of this parameter.
+        str: Name of this parameter.
         """
         return self._name
 
