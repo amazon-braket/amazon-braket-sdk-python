@@ -114,6 +114,18 @@ def test_call():
     assert new_circ == expected and not new_circ.parameters
 
 
+def test_call_with_result_type(prob):
+    alpha = FreeParameter("alpha")
+    theta = FreeParameter("theta")
+    circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0).add_result_type(prob)
+    new_circ = circ(theta=1, alpha=0)
+    expected = Circuit().h(0).rx(angle=1, target=1).ry(angle=0, target=0).add_result_type(prob)
+
+    assert new_circ == expected and not new_circ.parameters
+    assert new_circ.observables_simultaneously_measurable
+    assert list(new_circ.result_types) == [prob]
+
+
 def test_call_one_param_not_bound():
     alpha = FreeParameter("alpha")
     theta = FreeParameter("theta")
