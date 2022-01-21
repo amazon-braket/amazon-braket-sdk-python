@@ -857,6 +857,8 @@ class Circuit:
 
         """
         fixed_circ = Circuit()
+        for val in param_values.values():
+            self._validate_parameter_value(val)
         for instruction in self.instructions:
             if self._check_for_params(instruction):
                 params = instruction.operator.parameters
@@ -868,9 +870,6 @@ class Circuit:
                         params,
                     )
                 )
-                for val in bound_mapping.values():
-                    if not isinstance(val, FreeParameter):
-                        self._validate_parameter_value(val)
                 fixed_circ.add(
                     Instruction(
                         instruction.operator.bind_values(**bound_mapping), target=instruction.target
