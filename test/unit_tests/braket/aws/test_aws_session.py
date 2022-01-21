@@ -849,7 +849,7 @@ def test_get_default_jobs_role(aws_session, job_role_arn, job_role_name):
                 ],
                 "IsTruncated": False,
             },
-            {"Marker": "resp-marker"},
+            {"Marker": "resp-marker", "PathPrefix": "/service-role/"},
         )
         aws_session._iam = iam_client
         assert aws_session.get_default_jobs_role() == job_role_arn
@@ -889,7 +889,7 @@ def test_get_default_jobs_role_not_found(aws_session, job_role_arn, job_role_nam
                 ],
                 "IsTruncated": False,
             },
-            {"Marker": "resp-marker"},
+            {"Marker": "resp-marker", "PathPrefix": "/service-role/"},
         )
         aws_session._iam = iam_client
         with pytest.raises(RuntimeError):

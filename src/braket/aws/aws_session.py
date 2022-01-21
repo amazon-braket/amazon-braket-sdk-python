@@ -210,17 +210,18 @@ class AwsSession(object):
         """
         Returns the role ARN for the default jobs role created in the Amazon Braket Console.
         It will pick the first role it finds with the `RoleName` prefix
-        `AmazonBraketJobsExecutionRole`.
+        `AmazonBraketJobsExecutionRole` with a `PathPrefix` of `/service-role/`.
 
         Returns:
             (str): The ARN for the default IAM role for jobs execution created in the Amazon
             Braket console.
 
         Raises:
-            RuntimeError: If no roles can be found with the prefix `AmazonBraketJobsExecutionRole`.
+            RuntimeError: If no roles can be found with the prefix
+            `/service-role/AmazonBraketJobsExecutionRole`.
         """
         roles_paginator = self.iam_client.get_paginator("list_roles")
-        for page in roles_paginator.paginate():
+        for page in roles_paginator.paginate(PathPrefix="/service-role/"):
             for role in page.get("Roles", []):
                 if role["RoleName"].startswith("AmazonBraketJobsExecutionRole"):
                     return role["Arn"]
