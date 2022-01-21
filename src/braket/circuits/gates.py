@@ -477,6 +477,21 @@ class Rx(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.Rx: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     @circuit.subroutine(register=True)
     def rx(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
@@ -524,6 +539,21 @@ class Ry(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.Ry: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     @circuit.subroutine(register=True)
     def ry(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
@@ -566,6 +596,21 @@ class Rz(AngledGate):
         return np.array(
             [[np.exp(-1j * self.angle / 2), 0], [0, np.exp(1j * self.angle / 2)]], dtype=complex
         )
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.Rz: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -611,6 +656,21 @@ class PhaseShift(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * self.angle)]], dtype=complex)
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.PhaseShift: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -806,6 +866,21 @@ class PSwap(AngledGate):
             dtype=complex,
         )
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.PSwap: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
@@ -867,6 +942,21 @@ class XY(AngledGate):
             dtype=complex,
         )
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.XY: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
@@ -914,6 +1004,21 @@ class CPhaseShift(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, 1.0, np.exp(1j * self.angle)])
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.CPhaseShift: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -963,6 +1068,21 @@ class CPhaseShift00(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.diag([np.exp(1j * self.angle), 1.0, 1.0, 1.0])
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.CPhaseShift00: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
@@ -1011,6 +1131,21 @@ class CPhaseShift01(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, np.exp(1j * self.angle), 1.0, 1.0])
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.CPhaseShift01: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
@@ -1058,6 +1193,21 @@ class CPhaseShift10(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, np.exp(1j * self.angle), 1.0])
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.CPhaseShift10: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1204,6 +1354,21 @@ class XX(AngledGate):
             dtype=complex,
         )
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.XX: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
@@ -1267,6 +1432,21 @@ class YY(AngledGate):
             dtype=complex,
         )
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.YY: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
+
     @staticmethod
     def fixed_qubit_count() -> int:
         return 2
@@ -1327,6 +1507,21 @@ class ZZ(AngledGate):
             ],
             dtype=complex,
         )
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.ZZ: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        return type(self)(angle=new_angle)
 
     @staticmethod
     def fixed_qubit_count() -> int:

@@ -84,6 +84,13 @@ def test_mixed_angle_equality():
     assert gate1 != gate2
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_bind_values():
+    theta = FreeParameter("theta")
+    gate = AngledGate(angle=theta, qubit_count=1, ascii_symbols=["bar"])
+    gate.bind_values(theta=1)
+
+
 def test_np_float_angle_json():
     angled_gate = AngledGate(angle=np.float32(0.15), qubit_count=1, ascii_symbols=["foo"])
     angled_gate_json = BaseModel.construct(target=[0], angle=angled_gate.angle).json()

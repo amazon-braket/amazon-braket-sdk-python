@@ -31,3 +31,13 @@ class Parameterizable(ABC):
         """
         Returns the free parameters associated with the object.
         """
+
+    @abstractmethod
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and returns an object with specified parameters
+        replaced with their values.
+
+        Args:
+            **kwargs: The named parameters and the corresponding values.
+        """

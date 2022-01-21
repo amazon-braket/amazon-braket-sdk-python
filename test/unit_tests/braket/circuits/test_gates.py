@@ -100,6 +100,23 @@ testdata = [
 ]
 
 
+parameterizable_gates = [
+    Gate.Rx,
+    Gate.Ry,
+    Gate.Rz,
+    Gate.PhaseShift,
+    Gate.PSwap,
+    Gate.XX,
+    Gate.XY,
+    Gate.YY,
+    Gate.ZZ,
+    Gate.CPhaseShift,
+    Gate.CPhaseShift00,
+    Gate.CPhaseShift01,
+    Gate.CPhaseShift10,
+]
+
+
 invalid_unitary_matrices = [
     (np.array([[1]])),
     (np.array([1])),
@@ -338,6 +355,20 @@ def test_large_unitary():
     matrix[[*range(16)]] = matrix[[(i + 1) % 16 for i in range(16)]]
     unitary = Gate.Unitary(matrix)
     assert unitary.qubit_count == 4
+
+
+@pytest.mark.parametrize("gate", parameterizable_gates)
+def test_bind_values(gate):
+    theta = FreeParameter("theta")
+    param_gate = gate(theta)
+    new_gate = param_gate.bind_values(theta=1)
+    expected = gate(1)
+
+    assert (
+        type(new_gate.angle) == float
+        and type(new_gate) == type(param_gate)
+        and new_gate == expected
+    )
 
 
 @pytest.mark.xfail(raises=ValueError)

@@ -74,6 +74,18 @@ class AngledGate(Gate, Parameterizable):
         """
         return self._parameters[0]
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Raises:
+            NotImplementedError: Subclasses should implement this function.
+        """
+        raise NotImplementedError
+
     def __eq__(self, other):
         if isinstance(other, AngledGate):
             if isinstance(self.angle, FreeParameter):
