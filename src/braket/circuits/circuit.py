@@ -861,18 +861,9 @@ class Circuit:
             self._validate_parameter_value(val)
         for instruction in self.instructions:
             if self._check_for_params(instruction):
-                params = instruction.operator.parameters
-                bound_mapping = dict(
-                    map(
-                        lambda x: (str(x), param_values[str(x)])
-                        if str(x) in param_values
-                        else (str(x), x),
-                        params,
-                    )
-                )
                 fixed_circ.add(
                     Instruction(
-                        instruction.operator.bind_values(**bound_mapping), target=instruction.target
+                        instruction.operator.bind_values(**param_values), target=instruction.target
                     )
                 )
             else:
