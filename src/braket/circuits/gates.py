@@ -1055,14 +1055,13 @@ class CV(Gate):
     def to_ir(self, target: QubitSet):
         return ir.CV.construct(control=target[0], target=target[1])
 
-
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
                 [1.0, 0.0, 0.0, 0.0],
                 [0.0, 1.0, 0.0, 0.0],
-                [0.0, 0.0, 0.5 + 0.5j, 0.5 - 0.5j], # if the control bit, then apply the V gate
-                [0.0, 0.0, 0.5 - 0.5j, 0.5 + 0.5j], # which is the sqrt(NOT) gate.
+                [0.0, 0.0, 0.5 + 0.5j, 0.5 - 0.5j],  # if the control bit, then apply the V gate
+                [0.0, 0.0, 0.5 - 0.5j, 0.5 + 0.5j],  # which is the sqrt(NOT) gate.
             ],
             dtype=complex,
         )
@@ -1087,6 +1086,7 @@ class CV(Gate):
             >>> circ = Circuit().cv(0, 1)
         """
         return Instruction(CV(), target=[control, target])
+
 
 Gate.register_gate(CV)
 
