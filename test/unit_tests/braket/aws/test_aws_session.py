@@ -834,6 +834,7 @@ def test_get_default_jobs_role(aws_session, job_role_arn, job_role_name):
                 "IsTruncated": True,
                 "Marker": "resp-marker",
             },
+            {"PathPrefix": "/service-role/"},
         )
         stub.add_response(
             "list_roles",
@@ -874,6 +875,7 @@ def test_get_default_jobs_role_not_found(aws_session, job_role_arn, job_role_nam
                 "IsTruncated": True,
                 "Marker": "resp-marker",
             },
+            {"PathPrefix": "/service-role/"},
         )
         stub.add_response(
             "list_roles",
