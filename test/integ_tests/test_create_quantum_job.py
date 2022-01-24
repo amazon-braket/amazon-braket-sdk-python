@@ -17,12 +17,9 @@ import re
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from braket.aws.aws_quantum_job import AwsQuantumJob
 
 
-@pytest.mark.skip()
 def test_failed_quantum_job(aws_session, capsys):
     """Asserts the job is failed with the output, checkpoints,
     tasks not created in bucket and only input is uploaded to s3. Validate the
@@ -78,7 +75,6 @@ def test_failed_quantum_job(aws_session, capsys):
     )
 
 
-@pytest.mark.skip()
 def test_completed_quantum_job(aws_session, capsys):
     """Asserts the job is completed with the output, checkpoints, tasks and
     script folder created in S3 for respective job. Validate the results are
