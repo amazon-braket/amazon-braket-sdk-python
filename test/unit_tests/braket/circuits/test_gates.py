@@ -42,6 +42,7 @@ testdata = [
     (Gate.Ry, "ry", ir.Ry, [SingleTarget, Angle], {}),
     (Gate.Rz, "rz", ir.Rz, [SingleTarget, Angle], {}),
     (Gate.CNot, "cnot", ir.CNot, [SingleTarget, SingleControl], {}),
+    (Gate.CV, "cv", ir.CV, [SingleTarget, SingleControl], {}),
     (Gate.CCNot, "ccnot", ir.CCNot, [SingleTarget, DoubleControl], {}),
     (Gate.Swap, "swap", ir.Swap, [DoubleTarget], {}),
     (Gate.CSwap, "cswap", ir.CSwap, [SingleControl, DoubleTarget], {}),
