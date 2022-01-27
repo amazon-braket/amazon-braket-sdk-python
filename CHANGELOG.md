@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.13.0 (2022-01-27)
+
+### Features
+
+ * added controlled-sqrt-not gate
+
 ## v1.12.0 (2022-01-25)
 
 ### Features
