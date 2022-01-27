@@ -1030,6 +1030,21 @@ class Circuit:
 
         return self
 
+    def decompose(self) -> Circuit:
+        """
+        Decomposes instructions in the circuit wherever is possible.
+
+        Returns:
+            Circuit: A decomposed circuit.
+        """
+        decomposed_circ = Circuit()
+        time_slices = self.moments.time_slices()
+        for time, instructions in time_slices.items():
+            for instruction in instructions:
+                decomposed_circ.add(instruction.decompose())
+
+        return decomposed_circ
+
     def diagram(self, circuit_diagram_class=AsciiCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.

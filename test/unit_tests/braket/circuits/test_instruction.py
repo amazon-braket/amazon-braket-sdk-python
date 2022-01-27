@@ -11,9 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import numpy as np
 import pytest
 
-from braket.circuits import Gate, Instruction, Qubit, QubitSet
+from braket.circuits import Circuit, Gate, Instruction, QuantumAlgorithm, Qubit, QubitSet
 
 
 @pytest.fixture
@@ -24,6 +25,11 @@ def instr():
 @pytest.fixture
 def cnot():
     return Instruction(Gate.CNot(), [0, 1])
+
+
+@pytest.fixture
+def algorithm():
+    return QuantumAlgorithm.QFT(qubit_set=[0, 1])
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -133,3 +139,12 @@ def test_copy_with_target(cnot):
 @pytest.mark.xfail(raises=TypeError)
 def test_copy_with_target_and_mapping(instr):
     instr.copy(target=[10], target_mapping={0: 10})
+
+
+def test_instruction_decomposible(instr):
+    assert instr.decompose() == Instruction(Gate.H(), 0)
+
+
+def test_instruction_not_decomposible(algorithm):
+    expected = Circuit().h(0).cphaseshift(0, 1, 0.5 * np.pi).h(1)
+    assert algorithm.decompose() == expected

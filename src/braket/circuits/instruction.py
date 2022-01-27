@@ -135,6 +135,18 @@ class Instruction:
         else:
             return Instruction(self._operator, self._target.map(target_mapping or {}))
 
+    def decompose(self):
+        """
+        Decomposes the instruction.
+
+        Returns:
+            The decomposed set of instructions.
+        """
+        if hasattr(self._operator, "decompose") and callable(self._operator.decompose):
+            return self._operator.decompose()
+        else:
+            return self
+
     def __repr__(self):
         return f"Instruction('operator': {self._operator}, 'target': {self._target})"
 

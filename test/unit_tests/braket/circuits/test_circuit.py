@@ -31,6 +31,7 @@ from braket.circuits import (
     compiler_directives,
     gates,
     noise,
+    quantum_algorithms,
 )
 
 
@@ -1594,3 +1595,28 @@ def test_circuit_with_expr_not_fully_bound():
         .ry(angle=alpha, target=3)
     )
     assert new_circ == expected
+
+
+def test_add_instruction_algo():
+    circ = Circuit().ry(0, 0.4)
+    circ.add_instruction(Instruction(quantum_algorithms.QFT([0, 1, 2]), [0, 1, 2]))
+
+    expected = Circuit().ry(0, 0.4).qft([0, 1, 2])
+    assert circ == expected
+
+
+def test_add_algo():
+    circ = Circuit().qft([0, 1, 4])
+    circ_new = Circuit().ry(0, 0.4)
+    circ_new.add(circ)
+
+    expected = Circuit().ry(0, 0.4).qft([0, 1, 4])
+
+    assert circ_new == expected
+
+
+def test_circuit_decompose():
+    circ = Circuit().ry(0, 0.4).qft([0, 1]).decompose()
+    expected = Circuit().ry(0, 0.4).h(0).cphaseshift(0, 1, 0.5 * np.pi).h(1)
+
+    assert circ == expected

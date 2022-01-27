@@ -18,6 +18,7 @@ from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
+from braket.circuits.quantum_algorithm import QuantumAlgorithm
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.result_type import ResultType
 
@@ -108,9 +109,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
         """
         groupings = []
         for item in items:
-            # Can only print Gate and Noise operators for instructions at the moment
+            # Can only print QuantumAlgorithm, Gate and Noise operators for
+            # instructions at the moment.
             if isinstance(item, Instruction) and not isinstance(
-                item.operator, (Gate, Noise, CompilerDirective)
+                item.operator, (Gate, Noise, QuantumAlgorithm, CompilerDirective)
             ):
                 continue
 
@@ -183,7 +185,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
             AsciiCircuitDiagram._ascii_diagram_column(circuit_qubits, grouping[1])
             for grouping in groupings
         ]
-
         # Unite column strings
         lines = column_strs[0].split("\n")
         for column_str in column_strs[1:]:
