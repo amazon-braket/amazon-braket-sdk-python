@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from pydantic import BaseModel
 
-from braket.circuits import AngledGate, FreeParameter, Gate
+from braket.circuits import AngledGate, FreeParameter, FreeParameterExpression, Gate
 
 
 @pytest.fixture
@@ -89,6 +89,15 @@ def test_bind_values():
     theta = FreeParameter("theta")
     gate = AngledGate(angle=theta, qubit_count=1, ascii_symbols=["bar"])
     gate.bind_values(theta=1)
+
+
+def test_angled_gate_with_expr():
+    expr = FreeParameterExpression(FreeParameter("theta") + 1)
+    new_expr = expr.subs({"theta": 1})
+    gate = AngledGate(angle=new_expr, qubit_count=1, ascii_symbols=["bar"])
+    expected = AngledGate(angle=2, qubit_count=1, ascii_symbols=["bar"])
+
+    assert gate == expected
 
 
 def test_np_float_angle_json():

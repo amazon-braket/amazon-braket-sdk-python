@@ -48,3 +48,11 @@ def test_hash(free_parameter):
 
 def test_rep(free_parameter):
     assert repr(free_parameter) == free_parameter.name
+
+
+def test_sub_successful(free_parameter):
+    assert free_parameter.subs({"theta": 1}) == 1
+
+
+def test_sub_wrong_param(free_parameter):
+    assert free_parameter.subs({"alpha": 1}) == FreeParameter("theta")

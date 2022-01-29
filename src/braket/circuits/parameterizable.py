@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 from typing import List, Union
 
 from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 
 
 class Parameterizable(ABC):
@@ -27,7 +28,7 @@ class Parameterizable(ABC):
 
     @property
     @abstractmethod
-    def parameters(self) -> List[Union[FreeParameter, float]]:
+    def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
         """
         Returns the free parameters associated with the object.
         """

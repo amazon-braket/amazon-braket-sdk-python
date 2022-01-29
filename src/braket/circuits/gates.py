@@ -14,11 +14,13 @@
 from typing import Iterable, Union
 
 import numpy as np
+from sympy import Float
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import AngledGate
 from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.quantum_operator_helpers import (
@@ -489,7 +491,7 @@ class Rx(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        new_angle = self.angle.subs(kwargs) if self.angle.subs(kwargs) else self.angle
         return type(self)(angle=new_angle)
 
     @staticmethod
@@ -551,7 +553,11 @@ class Ry(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        new_angle = (
+            self.angle.subs(kwargs)
+            if issubclass(type(self.angle), FreeParameterExpression)
+            else self.angle
+        )
         return type(self)(angle=new_angle)
 
     @staticmethod
@@ -609,7 +615,7 @@ class Rz(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        new_angle = self.angle.subs(kwargs) if str(self.angle) in kwargs else self.angle
         return type(self)(angle=new_angle)
 
     @staticmethod
@@ -871,7 +877,7 @@ class PSwap(AngledGate):
         Takes in parameters and attempts to assign them to values.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            kwargs: The parameters that are being assigned.
 
         Returns:
             Gate.PSwap: A new Gate of the same type with the requested
@@ -947,7 +953,7 @@ class XY(AngledGate):
         Takes in parameters and attempts to assign them to values.
 
         Args:
-            **kwargs: The parameters that are being assigned.
+            kwargs: The parameters that are being assigned.
 
         Returns:
             Gate.XY: A new Gate of the same type with the requested
@@ -1520,7 +1526,7 @@ class ZZ(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
+        new_angle = self.angle.subs(kwargs) if self.angle.subs(kwargs) else self.angle
         return type(self)(angle=new_angle)
 
     @staticmethod
@@ -1740,4 +1746,4 @@ def angled_ascii_characters(gate: str, angle: Union[FreeParameter, float]) -> st
         str: Returns the ascii representation for an angled gate.
 
     """
-    return f'{gate}({angle:{".2f" if isinstance(angle, float) else ""}})'
+    return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'

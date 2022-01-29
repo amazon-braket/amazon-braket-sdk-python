@@ -1532,6 +1532,12 @@ def test_make_bound_circuit_partial_bind():
     expected_parameters = set()
     expected_parameters.add(alpha)
 
+    print(AsciiCircuitDiagram.build_diagram(circ_new))
+    print(AsciiCircuitDiagram.build_diagram(expected_circ))
+
+    print(circ_new.parameters)
+    print(expected_parameters)
+    print(circ_new.parameters == expected_parameters)
     assert circ_new == expected_circ and circ_new.parameters == expected_parameters
 
 
@@ -1549,3 +1555,26 @@ def test_make_bound_circuit_bad_value():
     input_val = "invalid"
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
     circ.make_bound_circuit({"theta": input_val})
+
+
+def test_circuit_with_expr():
+    theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
+    circ = (
+        Circuit()
+        .ry(angle=theta * 2 + theta, target=0)
+        .rx(angle=(alpha + theta + 2 * alpha * theta), target=2)
+        .rz(angle=theta, target=1)
+    )
+    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+
+    new_circ = circ(theta=1, alpha=np.pi)
+    expected = (
+        Circuit()
+        .ry(angle=3, target=0)
+        .rx(angle=(3 * np.pi + 1), target=2)
+        .rz(angle=1, target=1)
+        .ry(angle=np.pi, target=3)
+    )
+
+    assert new_circ == expected

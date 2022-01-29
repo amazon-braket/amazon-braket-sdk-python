@@ -25,6 +25,7 @@ from braket.circuits.circuit import Circuit  # noqa: F401
 from braket.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
 from braket.circuits.compiler_directive import CompilerDirective  # noqa: F401
 from braket.circuits.free_parameter import FreeParameter  # noqa: F401
+from braket.circuits.free_parameter_expression import FreeParameterExpression  # noqa: F401
 from braket.circuits.gate import Gate  # noqa: F401
 from braket.circuits.instruction import Instruction  # noqa: F401
 from braket.circuits.moments import Moments, MomentsKey  # noqa: F401

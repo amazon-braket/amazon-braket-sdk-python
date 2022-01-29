@@ -21,6 +21,7 @@ import numpy as np
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
@@ -428,7 +429,10 @@ class Circuit:
 
         if self._check_for_params(instruction):
             for param in instruction.operator.parameters:
-                self._parameters.add(param)
+                if issubclass(type(param), FreeParameterExpression):
+                    free_params = param.expression.free_symbols
+                    for parameter in free_params:
+                        self._parameters.add(FreeParameter(parameter.name))
         self._moments.add(instructions_to_add)
 
         return self
@@ -439,13 +443,15 @@ class Circuit:
         :class:{Parameterizable}.
 
         Args:
-            instruction (Instruction): The instruction to check for a :class:{FreeParameter}.
+            instruction (Instruction): The instruction to check for a
+            :class:{FreeParameterExpression}.
 
         Returns:
             bool: Whether an object is parameterized.
         """
-        return issubclass(type(instruction.operator), Parameterizable) and all(
-            isinstance(param, FreeParameter) for param in instruction.operator.parameters
+        return issubclass(type(instruction.operator), Parameterizable) and any(
+            issubclass(type(param), FreeParameterExpression)
+            for param in instruction.operator.parameters
         )
 
     def add_circuit(

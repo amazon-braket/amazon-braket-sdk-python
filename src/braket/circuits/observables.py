@@ -230,7 +230,7 @@ class TensorProduct(Observable):
     def eigenvalue(self, index: int) -> float:
         if index in self._eigenvalue_indices:
             return self._eigenvalue_indices[index]
-        dimension = 2 ** self.qubit_count
+        dimension = 2**self.qubit_count
         if index >= dimension:
             raise ValueError(
                 f"Index {index} requested but observable has at most {dimension} eigenvalues"

@@ -11,8 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from sympy import Symbol
 
-class FreeParameter:
+from braket.circuits.free_parameter_expression import FreeParameterExpression
+
+
+class FreeParameter(FreeParameterExpression):
     """
     Class 'FreeParameter'
     """
@@ -29,14 +33,27 @@ class FreeParameter:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        self._name = name
+        self._name = Symbol(name)
+        super().__init__(expression=self._name)
 
     @property
     def name(self) -> str:
         """
         str: Name of this parameter.
         """
-        return self._name
+        return self._name.name
+
+    def subs(self, parameter_values):
+        """
+        Substitutes a value in if the parameter exists within the mapping.
+
+        Args:
+            parameter_values: A mapping of parameter to its corresponding value.
+
+        Returns: The substituted value otherwise returns the object.
+
+        """
+        return parameter_values[self.name] if self.name in parameter_values else self
 
     def __str__(self):
         return str(self.name)
@@ -46,7 +63,7 @@ class FreeParameter:
 
     def __eq__(self, other):
         if isinstance(other, FreeParameter):
-            return self.name == other.name
+            return self._name == other._name
         return False
 
     def __repr__(self):
