@@ -258,7 +258,7 @@ class MultiQubitPauliNoise(Noise):
         if sum(probabilities.values()) > 1.0 or sum(probabilities.values()) < 0.0:
             raise ValueError("Total probability must be a real number in the interval [0,1]")
 
-        if len(probabilities) >= 4 ** self.qubit_count:
+        if len(probabilities) >= 4**self.qubit_count:
             raise ValueError(
                 "Too many probabilities provided. Only 4 ** self.qubit_count - 1 are allowed."
             )

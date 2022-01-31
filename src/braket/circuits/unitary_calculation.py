@@ -60,7 +60,7 @@ def calculate_unitary(qubit_count: int, instructions: Iterable[Instruction]) -> 
         TypeError: If `instructions` is not composed only of `Gate` instances,
             i.e. a circuit with `Noise` operators will raise this error.
     """
-    unitary = np.eye(2 ** qubit_count, dtype=complex)
+    unitary = np.eye(2**qubit_count, dtype=complex)
     un_tensor = np.reshape(unitary, qubit_count * [2, 2])
 
     for instr in instructions:
@@ -83,4 +83,4 @@ def calculate_unitary(qubit_count: int, instructions: Iterable[Instruction]) -> 
             casting="no",
         )
 
-    return np.reshape(un_tensor, 2 * [2 ** qubit_count])
+    return np.reshape(un_tensor, 2 * [2**qubit_count])

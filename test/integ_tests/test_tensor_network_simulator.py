@@ -64,7 +64,7 @@ def _qft(circuit, num_qubits):
     for i in range(num_qubits):
         circuit.h(i)
         for j in range(1, num_qubits - i):
-            circuit.cphaseshift(i + j, i, math.pi / (2 ** j))
+            circuit.cphaseshift(i + j, i, math.pi / (2**j))
 
     for qubit in range(math.floor(num_qubits / 2)):
         circuit.swap(qubit, num_qubits - qubit - 1)
@@ -78,7 +78,7 @@ def _inverse_qft(circuit, num_qubits):
 
     for i in reversed(range(num_qubits)):
         for j in reversed(range(1, num_qubits - i)):
-            circuit.cphaseshift(i + j, i, -math.pi / (2 ** j))
+            circuit.cphaseshift(i + j, i, -math.pi / (2**j))
         circuit.h(i)
 
     return circuit
