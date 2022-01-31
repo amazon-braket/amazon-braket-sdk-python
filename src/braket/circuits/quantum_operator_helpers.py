@@ -35,7 +35,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
     matrix = np.array(matrix, dtype=complex)
     qubit_count = int(np.log2(matrix.shape[0]))
 
-    if 2 ** qubit_count != matrix.shape[0] or qubit_count < 1:
+    if 2**qubit_count != matrix.shape[0] or qubit_count < 1:
         raise ValueError(f"`matrix` dimension {matrix.shape[0]} is not a positive power of 2")
 
 
