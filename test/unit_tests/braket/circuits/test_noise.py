@@ -17,6 +17,7 @@ from braket.circuits import Operator
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
+    MultiQubitPauliNoise,
     Noise,
     PauliNoise,
     SingleProbabilisticNoise,
@@ -348,3 +349,37 @@ def test_register_noise():
 
     Noise.register_noise(_FooNoise)
     assert Noise._FooNoise().name == _FooNoise().name
+
+
+@pytest.mark.parametrize("probs", [{"X": 0.1}, {"XX": 0.1, "YY": 0.1}])
+def test_valid_data_pauli_nqubit(probs):
+
+    qubit_count = len(list(probs.keys())[0])
+    ascii_symbols = [["foo"] for _ in range(qubit_count)]
+    MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize(
+    "probs",
+    [
+        {"X": -0.1},
+        {"XY": 1.1},
+        {"TX": 0.1},
+        {"X": 0.5, "Y": 0.6},
+        {"X": 0.1, "YY": 0.2},
+        {"II": 0.9, "XX": 0.1},
+    ],
+)
+def test_invalid_values_pauli_nqubit(probs):
+    qubit_count = len(list(probs.keys())[0])
+    ascii_symbols = [["foo"] for _ in range(qubit_count)]
+    MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=TypeError)
+@pytest.mark.parametrize("probs", [{0.1: 0.1}, {"X": "F"}])
+def test_invalid_types_pauli_nqubit(probs):
+    qubit_count = len(list(probs.keys())[0])
+    ascii_symbols = [["foo"] for _ in range(qubit_count)]
+    MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
