@@ -316,7 +316,7 @@
 
 ### Bug Fixes and Other Changes
 
- * remove window check for polling- * revert to polling at all times
+ * remove window check for polling-- revert to polling at all times
  * update result_types to use hashing
 
 ### Testing and Release Infrastructure
