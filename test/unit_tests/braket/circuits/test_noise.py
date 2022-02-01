@@ -17,6 +17,7 @@ from braket.circuits import Operator
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
+    MultiQubitPauliNoise,
     Noise,
     PauliNoise,
     SingleProbabilisticNoise,
@@ -348,3 +349,49 @@ def test_register_noise():
 
     Noise.register_noise(_FooNoise)
     assert Noise._FooNoise().name == _FooNoise().name
+
+
+@pytest.mark.parametrize(
+    "probs, qubit_count, ascii_symbols", [({"X": 0.1}, 1, ["PC"]), ({"XX": 0.1}, 2, ["PC2", "PC2"])]
+)
+def test_multi_qubit_noise(probs, qubit_count, ascii_symbols):
+    MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+
+
+@pytest.mark.xfail(raises=ValueError)
+class TestMultiQubitNoise:
+    qubit_count = 1
+    ascii_symbols = ["PC2"]
+
+    def test_non_empty(self):
+        MultiQubitPauliNoise({}, self.qubit_count, self.ascii_symbols)
+
+    def test_non_identity(self):
+        MultiQubitPauliNoise({"I": 0.1}, self.qubit_count, self.ascii_symbols)
+
+    def test_non_equal_length_paulis(self):
+        MultiQubitPauliNoise({"X": 0.1, "XY": 0.1}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"X": 0.1, "Y": 0.1}, 2, ["PC2", "PC2"])
+
+    def test_prob_over_one(self):
+        MultiQubitPauliNoise({"X": 0.9, "Y": 0.9}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"XX": 0.9, "YY": 0.9}, 1, self.ascii_symbols)
+
+    def test_prob_under_one(self):
+        MultiQubitPauliNoise({"X": -0.6, "Y": -0.9}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"XX": -0.9, "YY": -0.9}, 2, ["PC2", "PC2"])
+
+    def test_non_pauli_string(self):
+        MultiQubitPauliNoise({"T": 0.1}, 1, self.ascii_symbols)
+
+    def test_individual_probs(self):
+        MultiQubitPauliNoise({"X": -0.1}, 1, self.ascii_symbols)
+        MultiQubitPauliNoise({"X": 1.1}, 1, self.ascii_symbols)
+
+    @pytest.mark.xfail(raises=TypeError)
+    def test_keys_strings(self):
+        MultiQubitPauliNoise({1: 1.1}, 1, self.ascii_symbols)
+
+    @pytest.mark.xfail(raises=TypeError)
+    def test_values_floats(self):
+        MultiQubitPauliNoise({"X": "str"}, 1, self.ascii_symbols)
