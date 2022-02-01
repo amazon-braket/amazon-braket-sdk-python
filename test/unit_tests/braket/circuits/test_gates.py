@@ -73,6 +73,7 @@ testdata = [
     ),
     (Gate.CY, "cy", ir.CY, [SingleTarget, SingleControl], {}),
     (Gate.CZ, "cz", ir.CZ, [SingleTarget, SingleControl], {}),
+    (Gate.ECR, "ecr", ir.ECR, [DoubleTarget], {}),
     (Gate.XX, "xx", ir.XX, [DoubleTarget, Angle], {}),
     (Gate.YY, "yy", ir.YY, [DoubleTarget, Angle], {}),
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
