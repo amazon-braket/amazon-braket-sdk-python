@@ -73,7 +73,7 @@ testdata = [
     ),
     (
         Noise.TwoQubitPauliChannel,
-        "multi_qubit_pauli_channel",
+        "two_qubit_pauli_channel",
         ir.MultiQubitPauliChannel,
         [DoubleTarget, MultiProbability],
         {},
