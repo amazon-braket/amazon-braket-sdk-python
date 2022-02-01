@@ -262,11 +262,11 @@ class MultiQubitPauliNoise(Noise):
             )
         for pauli_string, prob in probabilities.items():
             if not isinstance(pauli_string, str):
-                raise TypeError("Keys must be a string type")
+                raise TypeError("Keys must be of string type")
             if len(pauli_string) != self.qubit_count:
-                raise ValueError("Length of each Pauli strings must be equal to number of qubits.")
+                raise ValueError("Length of each Pauli string must be equal to number of qubits.")
             if not isinstance(prob, float):
-                raise TypeError("Keys must be a float type")
+                raise TypeError("Values must be of float type")
             if not set(pauli_string) <= self._allowed_substrings:
                 raise ValueError("Strings must be Pauli strings consisting of only [I, X, Y, Z]")
             if prob < 0.0 or prob > 1.0:
