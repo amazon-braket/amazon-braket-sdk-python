@@ -260,22 +260,45 @@ class MultiQubitPauliNoise(Noise):
             raise ValueError(
                 f"{identity} is not allowed as a key. Please enter only non-identity Pauli strings."
             )
+
         for pauli_string, prob in probabilities.items():
             if not isinstance(pauli_string, str):
-                raise TypeError("Keys must be of string type")
+                raise TypeError(f"Type of {pauli_string} was not a string.")
             if len(pauli_string) != self.qubit_count:
-                raise ValueError("Length of each Pauli string must be equal to number of qubits.")
+                raise ValueError(
+                    (
+                        "Length of each Pauli string must be equal to number of qubits. "
+                        f"{pauli_string} had length {len(pauli_string)} instead of length {self.qubit_count}."  # noqa
+                    )
+                )
             if not isinstance(prob, float):
-                raise TypeError("Values must be of float type")
+                raise TypeError(
+                    (
+                        "Probabilities must be a float type. "
+                        f"The probability for {pauli_string} was of type {type(prob)}."
+                    )
+                )
             if not set(pauli_string) <= self._allowed_substrings:
-                raise ValueError("Strings must be Pauli strings consisting of only [I, X, Y, Z]")
+                raise ValueError(
+                    (
+                        "Strings must be Pauli strings consisting of only [I, X, Y, Z]. "
+                        f"Received {pauli_string}."
+                    )
+                )
             if prob < 0.0 or prob > 1.0:
-                raise ValueError("Individual values must be a real number in the interval [0,1]")
-
+                raise ValueError(
+                    (
+                        "Individual probabilities must be real numbers in the interval [0, 1]. "
+                        f"Probability for {pauli_string} was {prob}."
+                    )
+                )
         total_prob = sum(probabilities.values())
         if total_prob > 1.0 or total_prob < 0.0:
             raise ValueError(
-                f"Total probability must be a real number in the interval [0, 1]. Total probability was {total_prob}."  # noqa: E501
+                (
+                    "Total probability must be a real number in the interval [0, 1]. "
+                    f"Total probability was {total_prob}."
+                )
             )
 
     def __repr__(self):
