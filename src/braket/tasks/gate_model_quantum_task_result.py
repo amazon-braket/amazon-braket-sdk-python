@@ -424,7 +424,7 @@ class GateModelQuantumTaskResult:
 
         # count the basis state occurrences, and construct the probability vector
         basis_states, counts = np.unique(indices, return_counts=True)
-        probabilities = np.zeros([2 ** num_measured_qubits], dtype=np.float64)
+        probabilities = np.zeros([2**num_measured_qubits], dtype=np.float64)
         probabilities[basis_states] = counts / shots
         return probabilities
 

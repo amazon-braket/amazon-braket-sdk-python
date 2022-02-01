@@ -294,6 +294,6 @@ def test_observable_from_ir_tensor_product_value_error():
 def compare_eigenvalues(observable, expected):
     assert np.allclose(observable.eigenvalues, expected)
     assert np.allclose(
-        np.array([observable.eigenvalue(i) for i in range(2 ** observable.qubit_count)]),
+        np.array([observable.eigenvalue(i) for i in range(2**observable.qubit_count)]),
         expected,
     )

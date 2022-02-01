@@ -81,8 +81,11 @@ def expected_envs():
     return {
         "AMZN_BRAKET_CHECKPOINT_DIR": "/opt/omega/checkpoints",
         "AMZN_BRAKET_DEVICE_ARN": "test device ARN",
+<<<<<<< HEAD
         "AMZN_BRAKET_IMAGE_SETUP_SCRIPT": "s3://amazon-braket-external-assets-preview-us-west-2/"
         "HybridJobsAccess/scripts/setup-container.sh",
+=======
+>>>>>>> main
         "AMZN_BRAKET_JOB_NAME": "Test-Job-Name",
         "AMZN_BRAKET_JOB_RESULTS_DIR": "/opt/braket/model",
         "AMZN_BRAKET_JOB_RESULTS_S3_PATH": "test_location/Test-Job-Name/output",

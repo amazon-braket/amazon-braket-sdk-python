@@ -1205,6 +1205,51 @@ class CPhaseShift10(AngledGate):
 Gate.register_gate(CPhaseShift10)
 
 
+class CV(Gate):
+    """Controlled Sqrt of NOT gate."""
+
+    def __init__(self):
+        super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
+
+    def to_ir(self, target: QubitSet):
+        return ir.CV.construct(control=target[0], target=target[1])
+
+    def to_matrix(self) -> np.ndarray:
+        return np.array(
+            [
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 0.5 + 0.5j, 0.5 - 0.5j],  # if the control bit, then apply the V gate
+                [0.0, 0.0, 0.5 - 0.5j, 0.5 + 0.5j],  # which is the sqrt(NOT) gate.
+            ],
+            dtype=complex,
+        )
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 2
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def cv(control: QubitInput, target: QubitInput) -> Instruction:
+        """Registers this function into the circuit class.
+
+        Args:
+            control (Qubit or int): Control qubit index.
+            target (Qubit or int): Target qubit index.
+
+        Returns:
+            Instruction: CV instruction.
+
+        Examples:
+            >>> circ = Circuit().cv(0, 1)
+        """
+        return Instruction(CV(), target=[control, target])
+
+
+Gate.register_gate(CV)
+
+
 class CY(Gate):
     """Controlled Pauli-Y gate."""
 

@@ -44,7 +44,10 @@ def setup_container(
     run_environment_variables.update(
         _get_env_script_mode_config(creation_kwargs["algorithmSpecification"]["scriptModeConfig"])
     )
+<<<<<<< HEAD
     run_environment_variables.update(_get_env_additional_lib())
+=======
+>>>>>>> main
     run_environment_variables.update(_get_env_default_vars(aws_session, **creation_kwargs))
     if _copy_hyperparameters(container, **creation_kwargs):
         run_environment_variables.update(_get_env_hyperparameters())
@@ -113,6 +116,7 @@ def _get_env_script_mode_config(script_mode_config: Dict[str, str]) -> Dict[str,
     return result
 
 
+<<<<<<< HEAD
 def _get_env_additional_lib() -> Dict[str, str]:
     """For preview, we have some libraries that are not available publicly (yet). The container
     will install these libraries if we set this env variable.
@@ -127,6 +131,8 @@ def _get_env_additional_lib() -> Dict[str, str]:
     }
 
 
+=======
+>>>>>>> main
 def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[str, str]:
     """This function gets the remaining 'simple' env variables, that don't require any
      additional logic to determine what they are or when they should be added as env variables.
