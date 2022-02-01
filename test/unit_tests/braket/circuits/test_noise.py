@@ -387,3 +387,11 @@ class TestMultiQubitNoise:
     def test_individual_probs(self):
         MultiQubitPauliNoise({"X": -0.1}, 1, self.ascii_symbols)
         MultiQubitPauliNoise({"X": 1.1}, 1, self.ascii_symbols)
+
+    @pytest.mark.xfail(raises=TypeError)
+    def test_keys_strings(self):
+        MultiQubitPauliNoise({1: 1.1}, 1, self.ascii_symbols)
+
+    @pytest.mark.xfail(raises=TypeError)
+    def test_values_floats(self):
+        MultiQubitPauliNoise({"X": "str"}, 1, self.ascii_symbols)

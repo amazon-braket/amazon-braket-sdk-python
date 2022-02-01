@@ -282,7 +282,7 @@ class MultiQubitPauliNoise(Noise):
         return f"{self.name}('probabilities' : {self.probabilities}, 'qubit_count': {self.qubit_count})"  # noqa
 
 
-class PauliNoise(MultiQubitPauliNoise):
+class PauliNoise(Noise):
     """
     Class `PauliNoise` represents the a single-qubit Pauli noise channel
     acting on one qubit. It is parameterized by three probabilities.
@@ -311,9 +311,7 @@ class PauliNoise(MultiQubitPauliNoise):
                 is not `float`, `probX` or `probY` or `probZ` > 1.0, or
                 `probX` or `probY` or `probZ` < 0.0, or `probX`+`probY`+`probZ` > 1
         """
-        super().__init__(
-            {"X": probX, "Y": probY, "Z": probZ}, qubit_count=1, ascii_symbols=ascii_symbols
-        )
+        super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probX, float):
             raise TypeError("probX must be float type")
