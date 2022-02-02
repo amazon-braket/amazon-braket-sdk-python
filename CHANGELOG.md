@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.14.0 (2022-02-02)
+
+### Features
+
+ * adding TwoQubitPauliChannel
+
 ## v1.13.0 (2022-01-27)
 
 ### Features
