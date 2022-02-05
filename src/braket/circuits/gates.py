@@ -105,8 +105,9 @@ class I(Gate):  # noqa: E742, E261
         return 1
 
     def __call__(self, target: QubitSetInput) -> Union[Instruction, Iterable[Instruction]]:
-        if len(target) > 1:
-            return [Instruction(self, target=qubit) for qubit in QubitSet(target)]
+        target_set = QubitSet(target)
+        if len(target_set) > 1:
+            return [Instruction(self, target=qubit) for qubit in QubitSet(target_set)]
         return Instruction(self, target=target)
 
     @staticmethod
