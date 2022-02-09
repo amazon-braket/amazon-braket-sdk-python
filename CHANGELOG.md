@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.14.0 (2022-02-02)
+
+### Features
+
+ * adding TwoQubitPauliChannel
+
+## v1.13.0 (2022-01-27)
+
+### Features
+
+ * added controlled-sqrt-not gate
+
+## v1.12.0 (2022-01-25)
+
+### Features
+
+ * Added is_available property to AwsDevice
+ * optimize IAM role retrieval
+
+### Bug Fixes and Other Changes
+
+ * Enable jobs integration tests
+
 ## v1.11.1 (2021-12-09)
 
 ### Bug Fixes and Other Changes
