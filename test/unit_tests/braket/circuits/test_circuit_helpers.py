@@ -73,3 +73,14 @@ def test_validate_circuit_and_shots_100_noncommuting():
         .expectation(observables.Y() @ observables.X(), [0, 1]),
         100,
     )
+
+
+def test_probability_limit():
+    circ = Circuit()
+    for i in range(50):
+        circ.h(i)
+    circ.probability()
+
+    too_many_qubits = "Probability target must be less than or equal to 40 qubits."
+    with pytest.raises(ValueError, match=too_many_qubits):
+        validate_circuit_and_shots(circ, 100)
