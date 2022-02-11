@@ -12,12 +12,13 @@
 # language governing permissions and limitations under the License.
 
 import concurrent.futures
+import math
 from typing import Any, Dict
 
 import numpy as np
 
 from braket.aws import AwsDevice
-from braket.circuits import Circuit, Observable, ResultType
+from braket.circuits import Circuit, Gate, Instruction, Observable, ResultType
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 from braket.devices import Device
 from braket.tasks import GateModelQuantumTaskResult
@@ -71,15 +72,19 @@ def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict
 
 
 def result_types_zero_shots_bell_pair_testing(
-    device: Device, include_state_vector: bool, run_kwargs: Dict[str, Any]
+    device: Device,
+    include_state_vector: bool,
+    run_kwargs: Dict[str, Any],
+    include_amplitude: bool = True,
 ):
     circuit = (
         Circuit()
         .h(0)
         .cnot(0, 1)
         .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        .amplitude(["01", "10", "00", "11"])
     )
+    if include_amplitude:
+        circuit.amplitude(["01", "10", "00", "11"])
     if include_state_vector:
         circuit.state_vector()
     result = device.run(circuit, **run_kwargs).result()
@@ -95,12 +100,13 @@ def result_types_zero_shots_bell_pair_testing(
             result.get_value_by_result_type(ResultType.StateVector()),
             np.array([1, 0, 0, 1]) / np.sqrt(2),
         )
-    assert result.get_value_by_result_type(ResultType.Amplitude(["01", "10", "00", "11"])) == {
-        "01": 0j,
-        "10": 0j,
-        "00": (1 / np.sqrt(2)),
-        "11": (1 / np.sqrt(2)),
-    }
+    if include_amplitude:
+        assert result.get_value_by_result_type(ResultType.Amplitude(["01", "10", "00", "11"])) == {
+            "01": 0j,
+            "10": 0j,
+            "00": (1 / np.sqrt(2)),
+            "11": (1 / np.sqrt(2)),
+        }
 
 
 def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: Dict[str, Any]):
@@ -561,3 +567,32 @@ def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
         assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
         assert len(result.measurements) == shots
     assert [task.result() for task in batch.tasks] == results
+
+
+def many_layers(n_qubits: int, n_layers: int) -> Circuit:
+    """
+    Function to return circuit with many layers.
+
+    :param int n_qubits: number of qubits
+    :param int n_layers: number of layers
+    :return: Constructed easy circuit
+    :rtype: Circuit
+    """
+    qubits = range(n_qubits)
+    circuit = Circuit()  # instantiate circuit object
+    for q in range(n_qubits):
+        circuit.h(q)
+    for layer in range(n_layers):
+        if (layer + 1) % 100 != 0:
+            for qubit in range(len(qubits)):
+                angle = np.random.uniform(0, 2 * math.pi)
+                gate = np.random.choice(
+                    [Gate.Rx(angle), Gate.Ry(angle), Gate.Rz(angle), Gate.H()], 1, replace=True
+                )[0]
+                circuit.add_instruction(Instruction(gate, qubit))
+        else:
+            for q in range(0, n_qubits, 2):
+                circuit.cnot(q, q + 1)
+            for q in range(1, n_qubits - 1, 2):
+                circuit.cnot(q, q + 1)
+    return circuit

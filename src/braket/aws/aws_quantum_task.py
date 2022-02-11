@@ -255,9 +255,13 @@ class AwsQuantumTask(QuantumTask):
         return self._status(use_cached_value)
 
     def _status(self, use_cached_value=False):
-        status = self.metadata(use_cached_value).get("status")
+        metadata = self.metadata(use_cached_value)
+        status = metadata.get("status")
         if not use_cached_value and status in self.NO_RESULT_TERMINAL_STATES:
-            self._logger.warning(f"Task is in terminal state {status} and no result is available")
+            self._logger.warning(f"Task is in terminal state {status} and no result is available.")
+            if status == "FAILED":
+                failure_reason = metadata.get("failureReason", "unknown")
+                self._logger.warning(f"Task failure reason is: {failure_reason}.")
         return status
 
     def _update_status_if_nonterminal(self):
@@ -387,7 +391,7 @@ class AwsQuantumTask(QuantumTask):
     def __eq__(self, other) -> bool:
         if isinstance(other, AwsQuantumTask):
             return self.id == other.id
-        return NotImplemented
+        return False
 
     def __hash__(self) -> int:
         return hash(self.id)

@@ -14,5 +14,6 @@ https://github.com/aws/amazon-braket-examples.
    examples-hybrid-quantum.rst
    examples-ml-pennylane.rst
    examples-quantum-annealing-dwave.rst
+   examples-hybrid-jobs.rst
    
     

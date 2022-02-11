@@ -3,6 +3,7 @@
 *.swp
 *.idea
 *.DS_Store
+.vscode/*
 build_files.tar.gz
 
 .ycm_extra_conf.py

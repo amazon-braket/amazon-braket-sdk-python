@@ -31,6 +31,7 @@ setup(
         "backoff",
         "boltons",
         "boto3",
+        "coverage==5.5",
         "nest-asyncio",
         "networkx",
         "numpy",
@@ -38,9 +39,10 @@ setup(
     extras_require={
         "test": [
             "black",
+            "botocore",
             "flake8",
             "isort",
-            "jsonschema",
+            "jsonschema==3.2.0",
             "pre-commit",
             "pylint",
             "pytest",
@@ -53,6 +55,7 @@ setup(
             "tox",
         ]
     },
+    include_package_data=True,
     url="https://github.com/aws/amazon-braket-sdk-python",
     author="Amazon Web Services",
     description=(
