@@ -24,7 +24,8 @@ class FreeParameterExpression:
 
     def __init__(self, expression: Expr):
         """
-                Initializes a .
+                Initializes a FreeParameterExpression. Best practice is to initialize using
+                FreeParameters and Numbers. Not meant to be initialized directly.
 
                 Args:
                     expression (Expr): The expression to use.
