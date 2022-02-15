@@ -481,15 +481,20 @@ def role_arn():
     return "arn:aws:iam::0000000000:role/AmazonBraketInternalSLR"
 
 
-@pytest.fixture
-def device_arn():
-    return "arn:aws:braket:::device/qpu/test/device-name"
+@pytest.fixture(
+    params=[
+        "arn:aws:braket:us-test-1::device/qpu/test/device-name",
+        "arn:aws:braket:::device/qpu/test/device-name",
+    ]
+)
+def device_arn(request):
+    return request.param
 
 
 @pytest.fixture
-def prepare_job_args(aws_session):
+def prepare_job_args(aws_session, device_arn):
     return {
-        "device": Mock(),
+        "device": device_arn,
         "source_module": Mock(),
         "entry_point": Mock(),
         "image_uri": Mock(),
@@ -796,7 +801,8 @@ def test_logs_error(quantum_job, generate_get_job_response, capsys):
         quantum_job.logs(wait=True, poll_interval_seconds=0)
 
 
-def test_initialize_session_for_valid_device(device_arn, aws_session, caplog):
+def test_initialize_session_for_valid_non_regional_device(aws_session, caplog):
+    device_arn = "arn:aws:braket:::device/qpu/test/device-name"
     first_region = aws_session.region
     logger = logging.getLogger(__name__)
 
@@ -826,6 +832,76 @@ def test_initialize_session_for_valid_device(device_arn, aws_session, caplog):
     assert f"Changed session region from '{first_region}' to '{aws_session.region}'" in caplog.text
 
 
+def test_initialize_session_for_valid_regional_device(aws_session, caplog):
+    device_arn = f"arn:aws:braket:{aws_session.region}::device/qpu/test/device-name"
+    logger = logging.getLogger(__name__)
+    aws_session.get_device.return_value = device_arn
+    caplog.set_level(logging.INFO)
+    AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+    assert not caplog.text
+
+
+@pytest.mark.parametrize(
+    "get_device_side_effect, expected_exception",
+    [
+        (
+            [
+                ClientError(
+                    {
+                        "Error": {
+                            "Code": "ResourceNotFoundException",
+                        }
+                    },
+                    "getDevice",
+                )
+            ],
+            ValueError,
+        ),
+        (
+            [
+                ClientError(
+                    {
+                        "Error": {
+                            "Code": "ThrottlingException",
+                        }
+                    },
+                    "getDevice",
+                )
+            ],
+            ClientError,
+        ),
+    ],
+)
+def test_regional_device_raises_error(
+    get_device_side_effect, expected_exception, aws_session, caplog
+):
+    device_arn = f"arn:aws:braket:{aws_session.region}::device/qpu/test/device-name"
+    aws_session.get_device.side_effect = get_device_side_effect
+    logger = logging.getLogger(__name__)
+    caplog.set_level(logging.INFO)
+    with pytest.raises(expected_exception):
+        AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+        aws_session.get_device.assert_called_with(device_arn)
+        assert not caplog.text
+
+
+def test_regional_device_switches(aws_session, caplog):
+    original_region = aws_session.region
+    device_region = "us-east-1"
+    device_arn = f"arn:aws:braket:{device_region}::device/qpu/test/device-name"
+    mock_session = Mock()
+    mock_session.get_device.side_effect = device_arn
+    aws_session.copy_session.side_effect = [mock_session]
+    logger = logging.getLogger(__name__)
+    caplog.set_level(logging.INFO)
+
+    assert mock_session == AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+
+    aws_session.copy_session.assert_called_with(region=device_region)
+    mock_session.get_device.assert_called_with(device_arn)
+    assert f"Changed session region from '{original_region}' to '{device_region}'" in caplog.text
+
+
 def test_initialize_session_for_invalid_device(aws_session, device_arn):
     logger = logging.getLogger(__name__)
     aws_session.get_device.side_effect = ClientError(
@@ -837,7 +913,7 @@ def test_initialize_session_for_invalid_device(aws_session, device_arn):
         "getDevice",
     )
 
-    device_not_found = "QPU 'arn:aws:braket:::device/qpu/test/device-name' not found."
+    device_not_found = f"'{device_arn}' not found."
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
 
@@ -880,7 +956,8 @@ def test_exception_in_credentials_session_region(device_arn, aws_session):
         AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
 
 
-def test_exceptions_in_all_device_regions(device_arn, aws_session):
+def test_exceptions_in_all_device_regions(aws_session):
+    device_arn = "arn:aws:braket:::device/qpu/test/device-name"
     logger = logging.getLogger(__name__)
 
     aws_session.get_device.side_effect = [
