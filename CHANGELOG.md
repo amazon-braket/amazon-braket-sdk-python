@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.15.0 (2022-02-15)
+
+### Features
+
+ * Update region switching for regional device arns (#169)
+
 ## v1.14.0.post0 (2022-02-11)
 
 ### Documentation Changes
