@@ -1532,12 +1532,6 @@ def test_make_bound_circuit_partial_bind():
     expected_parameters = set()
     expected_parameters.add(alpha)
 
-    print(AsciiCircuitDiagram.build_diagram(circ_new))
-    print(AsciiCircuitDiagram.build_diagram(expected_circ))
-
-    print(circ_new.parameters)
-    print(expected_parameters)
-    print(circ_new.parameters == expected_parameters)
     assert circ_new == expected_circ and circ_new.parameters == expected_parameters
 
 
