@@ -241,6 +241,7 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
 )
 
 
+
 @pytest.fixture
 def parameterized_quantum_task(aws_session, s3_destination_folder):
     theta = FreeParameter("theta")
@@ -271,9 +272,14 @@ def parameterized_quantum_task_batch(aws_session, s3_destination_folder):
     )
 
 
-@pytest.fixture
-def arn():
-    return "test_arn"
+@pytest.fixture(
+    params=[
+        "arn:aws:braket:us-west-1::device/quantum-simulator/amazon/sim",
+        "arn:aws:braket:::device/quantum-simulator/amazon/sim",
+    ]
+)
+def arn(request):
+    return request.param
 
 
 @pytest.fixture
@@ -333,6 +339,7 @@ def device(aws_session):
 def test_device_aws_session(device_capabilities, get_device_data, arn):
     mock_session = Mock()
     mock_session.get_device.return_value = get_device_data
+    mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
     _assert_device_fields(device, device_capabilities, get_device_data)
 
@@ -386,9 +393,69 @@ def test_device_qpu_no_aws_session(
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_1, MOCK_GATE_MODEL_QPU_1)
 
 
+@patch("braket.aws.aws_device.AwsSession.copy_session")
+@patch("braket.aws.aws_device.AwsSession")
+def test_regional_device_region_switch(aws_session_init, mock_copy_session, aws_session):
+    device_region = "device-region"
+    arn = f"arn:aws:braket:{device_region}::device/quantum-simulator/amazon/sim"
+    aws_session_init.return_value = aws_session
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_SIMULATOR
+    mock_copy_session.return_value = mock_session
+    device = AwsDevice(arn)
+    aws_session.get_device.assert_not_called()
+    mock_copy_session.assert_called_once()
+    mock_copy_session.assert_called_with(aws_session, device_region)
+    _assert_device_fields(device, MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES, MOCK_GATE_MODEL_SIMULATOR)
+
+
+@patch("braket.aws.aws_device.AwsSession")
+@pytest.mark.parametrize(
+    "get_device_side_effect, expected_exception",
+    [
+        (
+            [
+                ClientError(
+                    {
+                        "Error": {
+                            "Code": "ResourceNotFoundException",
+                        }
+                    },
+                    "getDevice",
+                )
+            ],
+            ValueError,
+        ),
+        (
+            [
+                ClientError(
+                    {
+                        "Error": {
+                            "Code": "ThrottlingException",
+                        }
+                    },
+                    "getDevice",
+                )
+            ],
+            ClientError,
+        ),
+    ],
+)
+def test_regional_device_raises_error(
+    aws_session_init, get_device_side_effect, expected_exception, aws_session
+):
+    arn = "arn:aws:braket:us-west-1::device/quantum-simulator/amazon/sim"
+    aws_session.get_device.side_effect = get_device_side_effect
+    aws_session_init.return_value = aws_session
+    with pytest.raises(expected_exception):
+        AwsDevice(arn)
+        aws_session.get_device.assert_called_once()
+
+
 def test_device_refresh_metadata(arn):
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_1, MOCK_GATE_MODEL_QPU_1)
 
@@ -400,9 +467,10 @@ def test_device_refresh_metadata(arn):
 def test_equality(arn):
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_session.region = RIGETTI_REGION
     device_1 = AwsDevice(arn, mock_session)
     device_2 = AwsDevice(arn, mock_session)
-    other_device = AwsDevice("foo_bar", mock_session)
+    other_device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/bar", mock_session)
     non_device = "HI"
 
     assert device_1 == device_2
@@ -414,6 +482,7 @@ def test_equality(arn):
 def test_repr(arn):
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
     expected = "Device('name': {}, 'arn': {})".format(device.name, device.arn)
     assert repr(device) == expected
@@ -678,8 +747,8 @@ def test_run_with_positional_args_and_kwargs(
     {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
 )
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_env_variables(aws_quantum_task_mock, device, circuit):
-    device("foo:bar").run(circuit)
+def test_run_env_variables(aws_quantum_task_mock, device, circuit, arn):
+    device(arn).run(circuit)
     assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 
 
@@ -732,8 +801,8 @@ def test_run_batch_with_max_parallel_and_kwargs(
     {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
 )
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_batch_env_variables(aws_quantum_task_mock, device, circuit):
-    device("foo:bar").run_batch([circuit])
+def test_run_batch_env_variables(aws_quantum_task_mock, device, circuit, arn):
+    device(arn).run_batch([circuit])
     assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 
 
@@ -750,7 +819,7 @@ def _run_and_assert(
 ):
     run_and_assert(
         aws_quantum_task_mock,
-        device_factory("foo_bar"),
+        device_factory("arn:aws:braket:::device/quantum-simulator/amazon/sim"),
         MOCK_DEFAULT_S3_DESTINATION_FOLDER,
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -782,7 +851,7 @@ def _run_batch_and_assert(
     run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
-        device_factory("foo_bar"),
+        device_factory("arn:aws:braket:::device/quantum-simulator/amazon/sim"),
         MOCK_DEFAULT_S3_DESTINATION_FOLDER,
         AwsDevice.DEFAULT_SHOTS_SIMULATOR,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,

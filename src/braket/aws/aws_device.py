@@ -229,6 +229,29 @@ class AwsDevice(Device):
         self._populate_properties(self._aws_session)
 
     def _get_session_and_initialize(self, session):
+        device_region = self._arn.split(":")[3]
+        return (
+            self._get_regional_device_session(session)
+            if device_region
+            else self._get_non_regional_device_session(session)
+        )
+
+    def _get_regional_device_session(self, session):
+        device_region = self._arn.split(":")[3]
+        region_session = (
+            session
+            if session.region == device_region
+            else AwsSession.copy_session(session, device_region)
+        )
+        try:
+            self._populate_properties(region_session)
+            return region_session
+        except ClientError as e:
+            raise ValueError(f"'{self._arn}' not found") if e.response["Error"][
+                "Code"
+            ] == "ResourceNotFoundException" else e
+
+    def _get_non_regional_device_session(self, session):
         current_region = session.region
         try:
             self._populate_properties(session)
