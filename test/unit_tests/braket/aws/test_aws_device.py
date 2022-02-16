@@ -241,7 +241,6 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
 )
 
 
-
 @pytest.fixture
 def parameterized_quantum_task(aws_session, s3_destination_folder):
     theta = FreeParameter("theta")
