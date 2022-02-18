@@ -78,6 +78,30 @@ def test_mul():
     assert mul_expr == expected
 
 
+def test_pow():
+    mul_expr = FreeParameter("theta") ** FreeParameter("alpha") * 2
+    expected = FreeParameterExpression(FreeParameter("theta") ** FreeParameter("alpha") * 2)
+    assert mul_expr == expected
+
+
+def test_pow_constant():
+    mul_expr = FreeParameter("theta") ** 2
+    expected = FreeParameterExpression(FreeParameter("theta") ** 2)
+    assert mul_expr == expected
+
+
+def test_r_pow():
+    mul_expr = 2 ** FreeParameter("theta")
+    expected = FreeParameterExpression(2 ** FreeParameter("theta"))
+    assert mul_expr == expected
+
+
+def test_neg():
+    expr = FreeParameter("theta") * FreeParameter("alpha") * 2
+    expected_expr = -FreeParameter("theta") * -FreeParameter("alpha") * -2
+    assert -expr == expected_expr and -(-expr) == expr
+
+
 def test_sub_string():
     theta = FreeParameter("theta")
     expr = theta + 1

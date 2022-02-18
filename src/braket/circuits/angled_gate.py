@@ -27,13 +27,13 @@ class AngledGate(Gate, Parameterizable):
 
     def __init__(
         self,
-        angle: Union[FreeParameter, float],
+        angle: Union[FreeParameterExpression, FreeParameter, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            angle (Union[FreeParameter, float]): The angle of the gate in radians.
+            angle (Union[FreeParameterExpression,FreeParameter, float]): The angle of the gate in radians.
             qubit_count (int, optional): The number of qubits that this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and

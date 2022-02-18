@@ -95,6 +95,18 @@ class FreeParameterExpression:
     def __rmul__(self, other):
         return FreeParameterExpression(other * self.expression)
 
+    def __pow__(self, other, modulo=None):
+        if issubclass(type(other), FreeParameterExpression):
+            return FreeParameterExpression(self.expression ** other.expression)
+        else:
+            return FreeParameterExpression(self.expression ** other)
+
+    def __rpow__(self, other):
+        return FreeParameterExpression(other ** self.expression)
+
+    def __neg__(self):
+        return FreeParameterExpression(-1 * self.expression)
+
     def __eq__(self, other):
         if isinstance(other, FreeParameterExpression):
             return sympify(self.expression).equals(sympify(other.expression))
