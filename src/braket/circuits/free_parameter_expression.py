@@ -97,12 +97,12 @@ class FreeParameterExpression:
 
     def __pow__(self, other, modulo=None):
         if issubclass(type(other), FreeParameterExpression):
-            return FreeParameterExpression(self.expression ** other.expression)
+            return FreeParameterExpression(self.expression**other.expression)
         else:
-            return FreeParameterExpression(self.expression ** other)
+            return FreeParameterExpression(self.expression**other)
 
     def __rpow__(self, other):
-        return FreeParameterExpression(other ** self.expression)
+        return FreeParameterExpression(other**self.expression)
 
     def __neg__(self):
         return FreeParameterExpression(-1 * self.expression)
