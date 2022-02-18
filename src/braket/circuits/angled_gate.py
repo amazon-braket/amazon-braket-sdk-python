@@ -33,8 +33,8 @@ class AngledGate(Gate, Parameterizable):
     ):
         """
         Args:
-            angle (Union[FreeParameterExpression,FreeParameter, float]): The angle of the
-                gate in radians or expression representation.
+            angle (Union[FreeParameterExpression, float]): The angle of the gate in radians
+                or expression representation.
             qubit_count (int, optional): The number of qubits that this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
