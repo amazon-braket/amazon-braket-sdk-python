@@ -31,7 +31,6 @@ setup(
         "backoff",
         "boltons",
         "boto3",
-        "coverage==5.5",
         "nest-asyncio",
         "networkx",
         "numpy",
@@ -40,6 +39,7 @@ setup(
         "test": [
             "black",
             "botocore",
+            "coverage==5.5",
             "flake8",
             "isort",
             "jsonschema==3.2.0",
