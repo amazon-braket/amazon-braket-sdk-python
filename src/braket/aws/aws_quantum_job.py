@@ -531,22 +531,41 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _initialize_session(session_value, device, logger):
         aws_session = session_value or AwsSession()
-        current_region = aws_session.region
+        device_region = device.split(":")[3]
+        return (
+            AwsQuantumJob._initialize_regional_device_session(aws_session, device, logger)
+            if device_region
+            else AwsQuantumJob._initialize_non_regional_device_session(aws_session, device, logger)
+        )
 
+    @staticmethod
+    def _initialize_regional_device_session(aws_session, device, logger):
+        device_region = device.split(":")[3]
+        current_region = aws_session.region
+        if current_region != device_region:
+            aws_session = aws_session.copy_session(region=device_region)
+            logger.info(f"Changed session region from '{current_region}' to '{device_region}'")
+        try:
+            aws_session.get_device(device)
+            return aws_session
+        except ClientError as e:
+            raise ValueError(f"'{device}' not found.") if e.response["Error"][
+                "Code"
+            ] == "ResourceNotFoundException" else e
+
+    @staticmethod
+    def _initialize_non_regional_device_session(aws_session, device, logger):
+        original_region = aws_session.region
         try:
             aws_session.get_device(device)
             return aws_session
         except ClientError as e:
             if e.response["Error"]["Code"] == "ResourceNotFoundException":
                 if "qpu" not in device:
-                    raise ValueError(f"Simulator '{device}' not found in '{current_region}'")
+                    raise ValueError(f"Simulator '{device}' not found in '{original_region}'")
             else:
                 raise e
 
-        return AwsQuantumJob._find_device_session(aws_session, device, current_region, logger)
-
-    @staticmethod
-    def _find_device_session(aws_session, device, original_region, logger):
         for region in frozenset(AwsDevice.REGIONS) - {original_region}:
             device_session = aws_session.copy_session(region=region)
             try:

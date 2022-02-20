@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.15.0 (2022-02-15)
+
+### Features
+
+ * Update region switching for regional device arns (#169)
+
+## v1.14.0.post0 (2022-02-11)
+
+### Documentation Changes
+
+ * fix documentation on environment variable to match the code.
+
+## v1.14.0 (2022-02-02)
+
+### Features
+
+ * adding TwoQubitPauliChannel
+
 ## v1.13.0 (2022-01-27)
 
 ### Features
