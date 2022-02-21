@@ -21,7 +21,6 @@ from braket.annealing import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
-from braket.ir.openqasm import Program as OpenQasmProgram
 
 
 class AwsQuantumTaskBatch:
@@ -42,7 +41,7 @@ class AwsQuantumTaskBatch:
         self,
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram]],
+        task_specifications: List[Union[Circuit, Problem]],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         max_parallel: int,

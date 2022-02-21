@@ -13,7 +13,7 @@
 
 import concurrent.futures
 import math
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import numpy as np
 
@@ -21,7 +21,6 @@ from braket.aws import AwsDevice
 from braket.circuits import Circuit, Gate, Instruction, Observable, ResultType
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
 from braket.devices import Device
-from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import GateModelQuantumTaskResult
 
 
@@ -42,14 +41,11 @@ def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
 
 
 def no_result_types_testing(
-    program: Union[Circuit, OpenQasmProgram],
-    device: Device,
-    run_kwargs: Dict[str, Any],
-    expected: Dict[str, float],
+    circuit: Circuit, device: Device, run_kwargs: Dict[str, Any], expected: Dict[str, float]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
-    result = device.run(program, **run_kwargs).result()
+    result = device.run(circuit, **run_kwargs).result()
     probabilities = result.measurement_probabilities
     for bitstring in probabilities:
         assert np.allclose(probabilities[bitstring], expected[bitstring], **tol)
@@ -571,71 +567,6 @@ def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
         assert np.allclose(result.measurement_probabilities["11"], 0.5, **tol)
         assert len(result.measurements) == shots
     assert [task.result() for task in batch.tasks] == results
-
-
-def bell_pair_openqasm_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
-    openqasm_string = (
-        "OPENQASM 3;"
-        "qubit[2] q;"
-        "bit[2] c;"
-        "h q[0];"
-        "cnot q[0], q[1];"
-        "c[0] = measure q[0];"
-        "c[1] = measure q[1];"
-    )
-    no_result_types_testing(
-        OpenQasmProgram(source=openqasm_string), device, run_kwargs, {"00": 0.5, "11": 0.5}
-    )
-
-
-def openqasm_noisy_circuit_1qubit_noise_full_probability(
-    device: Device, run_kwargs: Dict[str, Any]
-):
-    shots = run_kwargs["shots"]
-    tol = get_tol(shots)
-    openqasm_string = (
-        "OPENQASM 3;"
-        "qubit[2] q;"
-        "x q[0];"
-        "x q[1];"
-        "#pragma braket noise bit_flip(0.1) q[0]"
-        "#pragma braket result probability q[0], q[1]"
-    )
-    result = device.run(OpenQasmProgram(source=openqasm_string), **run_kwargs).result()
-    assert len(result.result_types) == 1
-    assert np.allclose(
-        result.get_value_by_result_type(ResultType.Probability(target=[0, 1])),
-        np.array([0.0, 0.1, 0, 0.9]),
-        **tol
-    )
-
-
-def openqasm_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
-    openqasm_string = (
-        "OPENQASM 3;"
-        "qubit[2] q;"
-        "h q[0];"
-        "cnot q[0], q[1];"
-        "#pragma braket result expectation h(q[0]) @ x(q[1])"
-        "#pragma braket result sample h(q[0]) @ x(q[1])"
-    )
-    result = device.run(OpenQasmProgram(source=openqasm_string), **run_kwargs).result()
-    assert len(result.result_types) == 2
-    assert (
-        0.6
-        < result.get_value_by_result_type(
-            ResultType.Expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        )
-        < 0.8
-    )
-    assert (
-        len(
-            result.get_value_by_result_type(
-                ResultType.Sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
-            )
-        )
-        == run_kwargs["shots"]
-    )
 
 
 def many_layers(n_qubits: int, n_layers: int) -> Circuit:

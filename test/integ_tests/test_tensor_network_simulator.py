@@ -15,7 +15,7 @@ import math
 import random
 
 import pytest
-from gate_model_device_testing_utils import bell_pair_openqasm_testing, no_result_types_testing
+from gate_model_device_testing_utils import no_result_types_testing
 
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
@@ -49,14 +49,6 @@ def test_qft_iqft_h(simulator_arn, aws_session, s3_destination_folder):
         device,
         {"shots": SHOTS, "s3_destination_folder": s3_destination_folder},
         {"0" * num_qubits: 0.5, "0" * h_qubit + "1" + "0" * (num_qubits - h_qubit - 1): 0.5},
-    )
-
-
-@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_bell_pair_openqasm(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
-    bell_pair_openqasm_testing(
-        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
