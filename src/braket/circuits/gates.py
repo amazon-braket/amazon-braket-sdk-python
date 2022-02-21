@@ -491,8 +491,7 @@ class Rx(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle.subs(kwargs) if self.angle.subs(kwargs) else self.angle
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -553,12 +552,7 @@ class Ry(AngledGate):
             parameters bound.
 
         """
-        new_angle = (
-            self.angle.subs(kwargs)
-            if issubclass(type(self.angle), FreeParameterExpression)
-            else self.angle
-        )
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -615,8 +609,7 @@ class Rz(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle.subs(kwargs) if str(self.angle) in kwargs else self.angle
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -675,8 +668,7 @@ class PhaseShift(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -884,8 +876,7 @@ class PSwap(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -960,8 +951,7 @@ class XY(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1023,8 +1013,7 @@ class CPhaseShift(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1086,8 +1075,7 @@ class CPhaseShift00(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1149,8 +1137,7 @@ class CPhaseShift01(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1212,8 +1199,7 @@ class CPhaseShift10(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1417,8 +1403,7 @@ class XX(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1495,8 +1480,7 @@ class YY(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle if str(self.angle) not in kwargs else kwargs[str(self.angle)]
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1571,8 +1555,7 @@ class ZZ(AngledGate):
             parameters bound.
 
         """
-        new_angle = self.angle.subs(kwargs) if self.angle.subs(kwargs) else self.angle
-        return type(self)(angle=new_angle)
+        return get_angle(self, **kwargs)
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1792,3 +1775,21 @@ def angled_ascii_characters(gate: str, angle: Union[FreeParameter, float]) -> st
 
     """
     return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
+
+
+def get_angle(self, **kwargs):
+    """
+    Gets the angle with all values substituted in that are requested.
+
+    Args:
+        self: The subclass of AngledGate for which the angle is being obtained.
+        **kwargs: The named parameters that are being filled for a particular gate.
+
+    Returns:
+        A new gate of the type of the AngledGate originally used with all angles updated.
+
+    """
+    new_angle = (
+        self.angle.subs(kwargs) if isinstance(self.angle, FreeParameterExpression) else self.angle
+    )
+    return type(self)(angle=new_angle)

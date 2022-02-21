@@ -21,6 +21,11 @@ def free_parameter():
     return FreeParameter("theta")
 
 
+@pytest.mark.xfail(raises=TypeError)
+def test_bad_input():
+    FreeParameter(6)
+
+
 def test_is_free_param(free_parameter):
     assert isinstance(free_parameter, FreeParameter)
 

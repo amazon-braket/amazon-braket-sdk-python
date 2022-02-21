@@ -1572,3 +1572,25 @@ def test_circuit_with_expr():
     )
 
     assert new_circ == expected
+
+
+def test_circuit_with_expr_not_fully_bound():
+    theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
+    circ = (
+        Circuit()
+        .ry(angle=theta * 2 + theta, target=0)
+        .rx(angle=(alpha + theta + 2 * alpha * theta), target=2)
+        .rz(angle=theta, target=1)
+    )
+    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+
+    new_circ = circ(theta=1)
+    expected = (
+        Circuit()
+        .ry(angle=3, target=0)
+        .rx(angle=(3 * alpha + 1), target=2)
+        .rz(angle=1, target=1)
+        .ry(angle=alpha, target=3)
+    )
+    assert new_circ == expected
