@@ -257,7 +257,7 @@ def s3_destination_folder():
 
 
 @pytest.fixture
-def bell_circuit():
+def circuit():
     return Circuit().h(0)
 
 
