@@ -20,6 +20,7 @@ from botocore.exceptions import ClientError
 from common_test_utils import (
     DWAVE_ARN,
     IONQ_ARN,
+    OQC_ARN,
     RIGETTI_ARN,
     RIGETTI_REGION,
     SV1_ARN,
@@ -129,6 +130,14 @@ MOCK_GATE_MODEL_QPU_2 = {
     "providerName": "blahhhh",
     "deviceStatus": "OFFLINE",
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_2.json(),
+}
+
+MOCK_GATE_MODEL_QPU_3 = {
+    "deviceName": "Lucy",
+    "deviceType": "QPU",
+    "providerName": "OQC",
+    "deviceStatus": "OFFLINE",
+    "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
 }
 
 MOCK_DWAVE_QPU_CAPABILITIES_JSON = {
@@ -864,23 +873,34 @@ def test_get_devices(mock_copy_session, aws_session):
                 "providerName": "Amazon Braket",
             },
         ],
+        # eu-west-2
+        [
+            {
+                "deviceArn": OQC_ARN,
+                "deviceName": "Lucy",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "OQC",
+            }
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
     session_for_region.get_device.side_effect = [
         MOCK_DWAVE_QPU,
         MOCK_GATE_MODEL_QPU_2,
+        MOCK_GATE_MODEL_QPU_3,
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
     results = AwsDevice.get_devices(
-        arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN],
-        provider_names=["Amazon Braket", "D-Wave", "IonQ"],
+        arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN, OQC_ARN],
+        provider_names=["Amazon Braket", "D-Wave", "IonQ", "OQC"],
         statuses=["ONLINE"],
         aws_session=aws_session,
     )
-    assert [result.name for result in results] == ["Advantage_system1.1", "Blah", "SV1"]
+    assert [result.name for result in results] == ["Advantage_system1.1", "Blah", "Lucy", "SV1"]
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")
