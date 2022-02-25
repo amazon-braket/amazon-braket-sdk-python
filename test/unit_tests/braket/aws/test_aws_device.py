@@ -15,6 +15,7 @@ import os
 from datetime import datetime
 from unittest.mock import Mock, patch
 
+import networkx as nx
 import pytest
 from botocore.exceptions import ClientError
 from common_test_utils import (
@@ -150,7 +151,7 @@ MOCK_DWAVE_QPU_CAPABILITIES_JSON = {
         "annealingOffsetStepPhi0": 1.45,
         "annealingOffsetRanges": [[1.45, 1.45], [1.45, 1.45]],
         "annealingDurationRange": [1, 2, 3],
-        "couplers": [[1, 2], [1, 2]],
+        "couplers": [[1, 2], [2, 3]],
         "defaultAnnealingDuration": 1,
         "defaultProgrammingThermalizationDuration": 1,
         "defaultReadoutThermalizationDuration": 1,
@@ -1073,3 +1074,19 @@ def test_get_device_availability(mock_utc_now):
                 assert (
                     expected == actual
                 ), f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+
+
+@pytest.mark.parametrize(
+    "get_device_data, expected_graph",
+    [
+        (MOCK_GATE_MODEL_QPU_1, nx.DiGraph([(1, 2), (1, 3)])),
+        (MOCK_GATE_MODEL_QPU_2, nx.complete_graph(30, nx.DiGraph())),
+        (MOCK_DWAVE_QPU, nx.DiGraph([(1, 2), (2, 3)])),
+    ],
+)
+def test_device_topology_graph_data(get_device_data, expected_graph, arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_device_data
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+    assert nx.is_isomorphic(device.topology_graph, expected_graph)

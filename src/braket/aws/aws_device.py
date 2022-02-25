@@ -19,7 +19,7 @@ from enum import Enum
 from typing import List, Optional, Union
 
 from botocore.errorfactory import ClientError
-from networkx import Graph, complete_graph, from_edgelist
+from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -366,8 +366,8 @@ class AwsDevice(Device):
         return self._properties
 
     @property
-    def topology_graph(self) -> Graph:
-        """Graph: topology of device as a networkx `Graph` object.
+    def topology_graph(self) -> DiGraph:
+        """DiGraph: topology of device as a networkx `DiGraph` object.
         Returns `None` if the topology is not available for the device.
 
         Examples:
@@ -382,29 +382,31 @@ class AwsDevice(Device):
         """
         return self._topology_graph
 
-    def _construct_topology_graph(self) -> Graph:
+    def _construct_topology_graph(self) -> DiGraph:
         """
         Construct topology graph. If no such metadata is available, return `None`.
 
         Returns:
-            Graph: topology of QPU as a networkx `Graph` object.
+            DiGraph: topology of QPU as a networkx `DiGraph` object.
         """
         if hasattr(self.properties, "paradigm") and isinstance(
             self.properties.paradigm, GateModelQpuParadigmProperties
         ):
             if self.properties.paradigm.connectivity.fullyConnected:
-                return complete_graph(int(self.properties.paradigm.qubitCount))
+                return complete_graph(
+                    int(self.properties.paradigm.qubitCount), create_using=DiGraph()
+                )
             adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
             edges = []
             for item in adjacency_lists.items():
                 i = item[0]
                 edges.extend([(int(i), int(j)) for j in item[1]])
-            return from_edgelist(edges)
+            return from_edgelist(edges, create_using=DiGraph())
         elif hasattr(self.properties, "provider") and isinstance(
             self.properties.provider, DwaveProviderProperties
         ):
             edges = self.properties.provider.couplers
-            return from_edgelist(edges)
+            return from_edgelist(edges, create_using=DiGraph())
         else:
             return None
 
