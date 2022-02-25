@@ -15,11 +15,13 @@ import os
 from datetime import datetime
 from unittest.mock import Mock, patch
 
+import networkx as nx
 import pytest
 from botocore.exceptions import ClientError
 from common_test_utils import (
     DWAVE_ARN,
     IONQ_ARN,
+    OQC_ARN,
     RIGETTI_ARN,
     RIGETTI_REGION,
     SV1_ARN,
@@ -132,6 +134,14 @@ MOCK_GATE_MODEL_QPU_2 = {
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_2.json(),
 }
 
+MOCK_GATE_MODEL_QPU_3 = {
+    "deviceName": "Lucy",
+    "deviceType": "QPU",
+    "providerName": "OQC",
+    "deviceStatus": "OFFLINE",
+    "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
+}
+
 MOCK_DWAVE_QPU_CAPABILITIES_JSON = {
     "braketSchemaHeader": {
         "name": "braket.device_schema.dwave.dwave_device_capabilities",
@@ -142,7 +152,7 @@ MOCK_DWAVE_QPU_CAPABILITIES_JSON = {
         "annealingOffsetStepPhi0": 1.45,
         "annealingOffsetRanges": [[1.45, 1.45], [1.45, 1.45]],
         "annealingDurationRange": [1, 2, 3],
-        "couplers": [[1, 2], [1, 2]],
+        "couplers": [[1, 2], [2, 3]],
         "defaultAnnealingDuration": 1,
         "defaultProgrammingThermalizationDuration": 1,
         "defaultReadoutThermalizationDuration": 1,
@@ -619,10 +629,11 @@ def test_run_with_shots_kwargs(aws_quantum_task_mock, device, circuit, s3_destin
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_destination_folder):
+    device = device(RIGETTI_ARN)
     run_and_assert(
         aws_quantum_task_mock,
-        device(RIGETTI_ARN),
+        device,
         MOCK_DEFAULT_S3_DESTINATION_FOLDER,
         AwsDevice.DEFAULT_SHOTS_QPU,
         AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -635,6 +646,7 @@ def test_run_with_qpu_no_shots(aws_quantum_task_mock, device, circuit, s3_destin
         None,
         None,
     )
+    device._aws_session.default_bucket.assert_not_called()
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
@@ -875,23 +887,34 @@ def test_get_devices(mock_copy_session, aws_session):
                 "providerName": "Amazon Braket",
             },
         ],
+        # eu-west-2
+        [
+            {
+                "deviceArn": OQC_ARN,
+                "deviceName": "Lucy",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "OQC",
+            }
+        ],
         # Only two regions to search outside of current
         ValueError("should not be reachable"),
     ]
     session_for_region.get_device.side_effect = [
         MOCK_DWAVE_QPU,
         MOCK_GATE_MODEL_QPU_2,
+        MOCK_GATE_MODEL_QPU_3,
         ValueError("should not be reachable"),
     ]
     mock_copy_session.return_value = session_for_region
-    # Search order: us-east-1, us-west-1, us-west-2
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
     results = AwsDevice.get_devices(
-        arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN],
-        provider_names=["Amazon Braket", "D-Wave", "IonQ"],
+        arns=[SV1_ARN, DWAVE_ARN, IONQ_ARN, OQC_ARN],
+        provider_names=["Amazon Braket", "D-Wave", "IonQ", "OQC"],
         statuses=["ONLINE"],
         aws_session=aws_session,
     )
-    assert [result.name for result in results] == ["Advantage_system1.1", "Blah", "SV1"]
+    assert [result.name for result in results] == ["Advantage_system1.1", "Blah", "Lucy", "SV1"]
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")
@@ -1064,3 +1087,19 @@ def test_get_device_availability(mock_utc_now):
                 assert (
                     expected == actual
                 ), f"device_name: {device_name}, test_date: {test_date}, expected: {expected}, actual: {actual}"
+
+
+@pytest.mark.parametrize(
+    "get_device_data, expected_graph",
+    [
+        (MOCK_GATE_MODEL_QPU_1, nx.DiGraph([(1, 2), (1, 3)])),
+        (MOCK_GATE_MODEL_QPU_2, nx.complete_graph(30, nx.DiGraph())),
+        (MOCK_DWAVE_QPU, nx.DiGraph([(1, 2), (2, 3)])),
+    ],
+)
+def test_device_topology_graph_data(get_device_data, expected_graph, arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_device_data
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+    assert nx.is_isomorphic(device.topology_graph, expected_graph)

@@ -110,8 +110,8 @@ def save_job_result(
 ) -> None:
     """
     Saves the `result_data` to the local output directory that is specified by the container
-    environment variable `OUTPUT_DIR`, with the filename 'results.json'. The `result_data`
-    values are serialized to the specified `data_format`.
+    environment variable `AMZN_BRAKET_JOB_RESULTS_DIR`, with the filename 'results.json'.
+    The `result_data` values are serialized to the specified `data_format`.
 
     Note: This function for storing the results is only for use inside the job container
           as it writes data to directories and references env variables set in the containers.
