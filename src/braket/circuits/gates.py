@@ -1173,6 +1173,50 @@ class CZ(Gate):
 Gate.register_gate(CZ)
 
 
+class ECR(Gate):
+    """An echoed RZX(pi/2) gate."""
+
+    def __init__(self):
+        super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
+
+    def to_ir(self, target: QubitSet):
+        return ir.ECR.construct(targets=[target[0], target[1]])
+
+    def to_matrix(self) -> np.ndarray:
+        return (
+            1
+            / np.sqrt(2)
+            * np.array(
+                [[0, 1, 0, 1.0j], [1, 0, -1.0j, 0], [0, 1.0j, 0, 1], [-1.0j, 0, 1, 0]],
+                dtype=complex,
+            )
+        )
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 2
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def ecr(target1: QubitInput, target2: QubitInput) -> Instruction:
+        """Registers this function into the circuit class.
+
+        Args:
+            target1 (Qubit or int): Target qubit 1 index.
+            target2 (Qubit or int): Target qubit 2 index.
+
+        Returns:
+            Instruction: ECR instruction.
+
+        Examples:
+            >>> circ = Circuit().ecr(0, 1)
+        """
+        return Instruction(ECR(), target=[target1, target2])
+
+
+Gate.register_gate(ECR)
+
+
 class XX(AngledGate):
     """Ising XX coupling gate.
 
