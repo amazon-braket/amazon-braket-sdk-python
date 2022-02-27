@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import Circuit, observables
+from braket.circuits import Circuit, Observable, observables
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 
 
@@ -42,6 +42,10 @@ def test_validate_circuit_and_shots_0_results():
 
 def test_validate_circuit_and_shots_100_results():
     assert validate_circuit_and_shots(Circuit().h(0).probability(), 100) is None
+
+
+def test_validate_circuit_and_shots_100_results_mixed_result():
+    assert validate_circuit_and_shots(Circuit().h(0).expectation(observable=Observable.Z(), target=0), 100) is None
 
 
 @pytest.mark.xfail(raises=ValueError)
