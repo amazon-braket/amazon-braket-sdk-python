@@ -45,7 +45,12 @@ def test_validate_circuit_and_shots_100_results():
 
 
 def test_validate_circuit_and_shots_100_results_mixed_result():
-    assert validate_circuit_and_shots(Circuit().h(0).expectation(observable=Observable.Z(), target=0), 100) is None
+    assert (
+        validate_circuit_and_shots(
+            Circuit().h(0).expectation(observable=Observable.Z(), target=0), 100
+        )
+        is None
+    )
 
 
 @pytest.mark.xfail(raises=ValueError)
