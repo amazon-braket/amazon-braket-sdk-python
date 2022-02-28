@@ -37,11 +37,12 @@ class FreeParameterExpression:
         self._expression = expression
 
     @property
-    def expression(self) -> str:
+    def expression(self):
         """
-        str: The expression for the FreeParameterExpression.
+        Returns:
+            The expression for the FreeParameterExpression.
         """
-        return repr(self.expression)
+        return self._expression
 
     def subs(self, parameter_values: Dict):
         """
