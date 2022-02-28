@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.16.0 (2022-02-27)
+
+### Features
+
+ * LHR region configuration
+
+### Bug Fixes and Other Changes
+
+ * Oqc release
+
 ## v1.15.0 (2022-02-15)
 
 ### Features
