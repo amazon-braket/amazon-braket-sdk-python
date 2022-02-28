@@ -14,7 +14,7 @@
 
 from typing import Dict
 
-from sympy import Expr, sympify
+from sympy import sympify
 
 
 class FreeParameterExpression:
@@ -22,13 +22,13 @@ class FreeParameterExpression:
     Class 'FreeParameterExpression'
     """
 
-    def __init__(self, expression: Expr):
+    def __init__(self, expression):
         """
                 Initializes a FreeParameterExpression. Best practice is to initialize using
                 FreeParameters and Numbers. Not meant to be initialized directly.
 
                 Args:
-                    expression (Expr): The expression to use.
+                    expression: The expression to use.
 
                 Examples:
                     >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
@@ -37,11 +37,11 @@ class FreeParameterExpression:
         self._expression = expression
 
     @property
-    def expression(self) -> Expr:
+    def expression(self) -> str:
         """
-        Expr: The expression for the FreeParameterExpression.
+        str: The expression for the FreeParameterExpression.
         """
-        return self._expression
+        return repr(self.expression)
 
     def subs(self, parameter_values: Dict):
         """
