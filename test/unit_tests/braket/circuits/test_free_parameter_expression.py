@@ -25,6 +25,11 @@ def test_is_free_param_expr(free_parameter_expression):
     assert isinstance(free_parameter_expression, FreeParameterExpression)
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_constructor_bad_input():
+    FreeParameterExpression("theta")
+
+
 def test_equality():
     expr_1 = FreeParameterExpression(FreeParameter("theta") + 1)
     expr_2 = FreeParameterExpression(FreeParameter("theta") + 1)

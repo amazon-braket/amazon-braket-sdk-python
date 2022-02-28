@@ -12,9 +12,10 @@
 # language governing permissions and limitations under the License.
 
 
+from numbers import Number
 from typing import Dict
 
-from sympy import sympify
+from sympy import Expr, sympify
 
 
 class FreeParameterExpression:
@@ -34,7 +35,12 @@ class FreeParameterExpression:
                     >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
                     >>> expression_2 = 1 + FreeParameter("beta") + 2 * FreeParameter("alpha")
         ="""
-        self._expression = expression
+        if isinstance(expression, FreeParameterExpression):
+            self._expression = expression.expression
+        elif isinstance(expression, (Number, Expr)):
+            self._expression = expression
+        else:
+            raise NotImplementedError
 
     @property
     def expression(self):
