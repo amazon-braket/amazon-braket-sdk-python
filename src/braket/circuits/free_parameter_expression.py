@@ -21,16 +21,19 @@ from sympy import Expr, sympify
 class FreeParameterExpression:
     """
     Class 'FreeParameterExpression'
+
+    Objects that can take a parameter all inherit from :class:'Parameterizable'.
+    FreeParametersExpressions can hold FreeParameters that can later be
+    swapped out for a number. Circuits with FreeParameters present will NOT run. Values must
+    be substituted prior to execution.
     """
 
     def __init__(self, expression):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
-        FreeParameters and Numbers. Not meant to be initialized directly. Objects
-        that can take a parameter all inherit from :class:'Parameterizable'.
+        FreeParameters and Numbers. Not meant to be initialized directly.
 
-        Below are examples of how FreeParameterExpressions should be made. FreeParameters
-        are placeholders that can later be swapped out for a number.
+        Below are examples of how FreeParameterExpressions should be made.
 
         Args:
             expression: The expression to use.

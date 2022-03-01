@@ -22,13 +22,16 @@ from braket.circuits.free_parameter_expression import FreeParameterExpression
 class FreeParameter(FreeParameterExpression):
     """
     Class 'FreeParameter'
+
+    Free parameters can be used in parameterized circuits. Objects that can take a parameter
+    all inherit from :class:'Parameterizable'. The FreeParameter can be swapped in to a circuit
+    for a numerical value later on. Circuits with FreeParameters present will NOT run. Values must
+    be substituted prior to execution.
     """
 
     def __init__(self, name: str):
         """
         Initializes a new :class:'FreeParameter' object.
-        Free parameters can be used in parameterized circuits. Objects that can take a parameter
-        all inherit from :class:'Parameterizable'.
 
         Args:
             name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
