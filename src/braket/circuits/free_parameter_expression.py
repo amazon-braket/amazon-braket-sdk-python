@@ -25,16 +25,20 @@ class FreeParameterExpression:
 
     def __init__(self, expression):
         """
-                Initializes a FreeParameterExpression. Best practice is to initialize using
-                FreeParameters and Numbers. Not meant to be initialized directly.
+        Initializes a FreeParameterExpression. Best practice is to initialize using
+        FreeParameters and Numbers. Not meant to be initialized directly. Objects
+        that can take a parameter all inherit from :class:'Parameterizable'.
 
-                Args:
-                    expression: The expression to use.
+        Below are examples of how FreeParameterExpressions should be made. FreeParameters
+        are placeholders that can later be swapped out for a number.
 
-                Examples:
-                    >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
-                    >>> expression_2 = 1 + FreeParameter("beta") + 2 * FreeParameter("alpha")
-        ="""
+        Args:
+            expression: The expression to use.
+
+        Examples:
+            >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
+            >>> expression_2 = 1 + FreeParameter("beta") + 2 * FreeParameter("alpha")
+        """
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
         elif isinstance(expression, (Number, Expr)):
@@ -50,14 +54,14 @@ class FreeParameterExpression:
         """
         return self._expression
 
-    def subs(self, parameter_values: Dict):
+    def subs(self, parameter_values: Dict[str, Number]):
         """
         Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
 
         Args:
-            parameter_values (Dict): A mapping of parameters to their corresponding values to
-            be assigned.
+            parameter_values (Dict[str, Number]): A mapping of parameters to their corresponding
+            values to be assigned.
 
         Returns: A numerical value if there are no symbols left in the expression otherwise
             returns a new FreeParameterExpression.

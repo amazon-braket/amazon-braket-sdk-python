@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from numbers import Number
+from typing import Dict
 
 from sympy import Symbol
 
@@ -26,7 +27,8 @@ class FreeParameter(FreeParameterExpression):
     def __init__(self, name: str):
         """
         Initializes a new :class:'FreeParameter' object.
-        Free parameters can be used in parameterized circuits.
+        Free parameters can be used in parameterized circuits. Objects that can take a parameter
+        all inherit from :class:'Parameterizable'.
 
         Args:
             name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
@@ -45,12 +47,13 @@ class FreeParameter(FreeParameterExpression):
         """
         return self._name.name
 
-    def subs(self, parameter_values: Number):
+    def subs(self, parameter_values: Dict[str, Number]):
         """
         Substitutes a value in if the parameter exists within the mapping.
 
         Args:
-            parameter_values (Number): A mapping of parameter to its corresponding value.
+            parameter_values (Dict[str, Number]): A mapping of parameter to its
+            corresponding value.
 
         Returns: The substituted value if this parameter is in parameter_values,
             otherwise returns self
