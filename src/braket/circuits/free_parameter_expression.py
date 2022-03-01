@@ -56,11 +56,11 @@ class FreeParameterExpression:
         expressions from the dictionary.
 
         Args:
-            parameter_values: A mapping of parameters to their corresponding values to
+            parameter_values (Dict): A mapping of parameters to their corresponding values to
             be assigned.
 
         Returns: A numerical value if there are no symbols left in the expression otherwise
-        returns a new FreeParameterExpression.
+            returns a new FreeParameterExpression.
         """
         new_parameter_values = dict()
         for key, val in parameter_values.items():

@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from numbers import Number
+
 from sympy import Symbol
 
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -43,14 +45,15 @@ class FreeParameter(FreeParameterExpression):
         """
         return self._name.name
 
-    def subs(self, parameter_values):
+    def subs(self, parameter_values: Number):
         """
         Substitutes a value in if the parameter exists within the mapping.
 
         Args:
-            parameter_values: A mapping of parameter to its corresponding value.
+            parameter_values (Number): A mapping of parameter to its corresponding value.
 
-        Returns: The substituted value otherwise returns the object.
+        Returns: The substituted value if this parameter is in parameter_values,
+            otherwise returns self
 
         """
         return parameter_values[self.name] if self.name in parameter_values else self
