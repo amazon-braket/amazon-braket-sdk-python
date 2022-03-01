@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.16.1 (2022-03-01)
+
+### Bug Fixes and Other Changes
+
+ * Add the OQC ARN to the integ tests
+
 ## v1.16.0 (2022-02-27)
 
 ### Features
