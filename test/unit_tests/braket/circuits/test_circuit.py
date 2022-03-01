@@ -20,6 +20,7 @@ import braket.ir.jaqcd as jaqcd
 from braket.circuits import (
     AsciiCircuitDiagram,
     Circuit,
+    FreeParameter,
     Gate,
     Instruction,
     Moments,
@@ -102,6 +103,64 @@ def test_equality():
     assert circ_1 is not circ_2
     assert circ_1 != other_circ
     assert circ_1 != non_circ
+
+
+def test_call():
+    alpha = FreeParameter("alpha")
+    theta = FreeParameter("theta")
+    circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0)
+    new_circ = circ(theta=1, alpha=0)
+    expected = Circuit().h(0).rx(angle=1, target=1).ry(angle=0, target=0)
+    assert new_circ == expected and not new_circ.parameters
+
+
+def test_call_with_result_type(prob):
+    alpha = FreeParameter("alpha")
+    theta = FreeParameter("theta")
+    circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0).add_result_type(prob)
+    new_circ = circ(theta=1, alpha=0)
+    expected = Circuit().h(0).rx(angle=1, target=1).ry(angle=0, target=0).add_result_type(prob)
+
+    assert new_circ == expected and not new_circ.parameters
+    assert new_circ.observables_simultaneously_measurable
+    assert list(new_circ.result_types) == [prob]
+
+
+def test_call_one_param_not_bound():
+    alpha = FreeParameter("alpha")
+    theta = FreeParameter("theta")
+    circ = Circuit().h(0).rx(angle=theta, target=1).ry(angle=alpha, target=0)
+    new_circ = circ(theta=1)
+    expected_circ = Circuit().h(0).rx(angle=1, target=1).ry(angle=alpha, target=0)
+    expected_parameters = set()
+    expected_parameters.add(alpha)
+
+    assert new_circ == expected_circ and new_circ.parameters == expected_parameters
+
+
+def test_call_with_default_parameter_val():
+    alpha = FreeParameter("alpha")
+    beta = FreeParameter("beta")
+    theta = FreeParameter("theta")
+    gamma = FreeParameter("gamma")
+    circ = (
+        Circuit()
+        .h(0)
+        .rx(angle=theta, target=1)
+        .ry(angle=alpha, target=0)
+        .ry(angle=beta, target=2)
+        .rx(angle=gamma, target=1)
+    )
+    new_circ = circ(np.pi, theta=1, alpha=0)
+    expected = (
+        Circuit()
+        .h(0)
+        .rx(angle=1, target=1)
+        .ry(angle=0, target=0)
+        .ry(angle=np.pi, target=2)
+        .rx(angle=np.pi, target=1)
+    )
+    assert new_circ == expected and not new_circ.parameters
 
 
 def test_add_result_type_default(prob):
@@ -607,6 +666,13 @@ def test_as_unitary_noise_raises_error(circuit):
     circuit.as_unitary()
 
 
+@pytest.mark.xfail(raises=TypeError)
+def test_as_unitary_parameterized():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    assert np.allclose(circ.as_unitary())
+
+
 def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
     circuit = (
         Circuit()
@@ -944,6 +1010,26 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
 )
 def test_as_unitary_one_gate_returns_expected_unitary(circuit, expected_unitary):
     assert np.allclose(circuit.as_unitary(), expected_unitary)
+
+
+def test_circuit_with_symbol():
+    theta = FreeParameter("theta")
+
+    circ = (
+        Circuit()
+        .ry(angle=theta, target=0)
+        .ry(angle=theta, target=1)
+        .ry(angle=theta, target=2)
+        .ry(angle=theta, target=3)
+    )
+    expected = (
+        Circuit()
+        .ry(angle=theta, target=0)
+        .ry(angle=theta, target=1)
+        .ry(angle=theta, target=2)
+        .ry(angle=theta, target=3)
+    )
+    assert circ == expected
 
 
 def test_basis_rotation_instructions_all():
@@ -1306,3 +1392,205 @@ def test_diagram(h):
 
     assert h.diagram(mock_diagram) == expected
     mock_diagram.build_diagram.assert_called_with(h)
+
+
+def test_add_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = (
+        Circuit()
+        .ry(angle=theta, target=0)
+        .ry(angle=theta, target=1)
+        .ry(angle=theta, target=2)
+        .ry(angle=theta, target=3)
+    )
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
+
+
+def test_add_parameterized_instr_parameterized_circ_check_true():
+    theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
+    alpha2 = FreeParameter("alpha")
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=alpha2, target=1).ry(angle=theta, target=2)
+    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+    expected = set()
+    expected.add(theta)
+    expected.add(alpha)
+
+    assert circ.parameters == expected
+
+
+def test_add_non_parameterized_instr_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ.add_instruction(Instruction(Gate.Ry(0.1), 3))
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
+
+
+def test_add_circ_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=theta, target=0))
+
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
+
+
+def test_add_circ_not_parameterized_check_true():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=theta, target=0).add_circuit(Circuit().ry(angle=0.1, target=0))
+
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
+
+
+@pytest.mark.parametrize(
+    "input_circ",
+    [
+        (Circuit().ry(angle=1, target=0).ry(angle=2, target=1)),
+        (Circuit().ry(angle=1, target=0).add_circuit(Circuit().ry(angle=2, target=0))),
+    ],
+)
+def test_parameterized_check_false(input_circ):
+    circ = input_circ
+    expected = 0
+
+    assert len(circ.parameters) == expected
+
+
+def test_parameters():
+    theta = FreeParameter("theta")
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    expected = set()
+    expected.add(theta)
+
+    assert circ.parameters == expected
+
+
+def test_no_parameters():
+    circ = Circuit().ry(angle=0.12, target=0).ry(angle=0.25, target=1).ry(angle=0.6, target=2)
+    expected = set()
+
+    assert circ.parameters == expected
+
+
+def test_make_bound_circuit_strict():
+    theta = FreeParameter("theta")
+    input_val = np.pi
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ_new = circ.make_bound_circuit({"theta": input_val}, strict=True)
+    expected = (
+        Circuit().ry(angle=np.pi, target=0).ry(angle=np.pi, target=1).ry(angle=np.pi, target=2)
+    )
+
+    assert circ_new == expected
+
+
+def test_make_bound_circuit_strict_false():
+    input_val = np.pi
+    theta = FreeParameter("theta")
+    param_superset = {"theta": input_val, "alpha": input_val, "beta": input_val}
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ_new = circ.make_bound_circuit(param_superset)
+    expected = (
+        Circuit().ry(angle=np.pi, target=0).ry(angle=np.pi, target=1).ry(angle=np.pi, target=2)
+    )
+
+    assert circ_new == expected
+
+
+def test_make_bound_circuit_multiple():
+    theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
+    input_val = np.pi
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=alpha, target=2)
+    circ_new = circ.make_bound_circuit({"theta": input_val, "alpha": input_val})
+    expected = (
+        Circuit().ry(angle=np.pi, target=0).ry(angle=np.pi, target=1).ry(angle=np.pi, target=2)
+    )
+
+    assert circ_new == expected
+
+
+def test_make_bound_circuit_partial_bind():
+    theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
+    input_val = np.pi
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=alpha, target=2)
+    circ_new = circ.make_bound_circuit({"theta": input_val})
+    expected_circ = (
+        Circuit().ry(angle=np.pi, target=0).ry(angle=np.pi, target=1).ry(angle=alpha, target=2)
+    )
+    expected_parameters = set()
+    expected_parameters.add(alpha)
+
+    assert circ_new == expected_circ and circ_new.parameters == expected_parameters
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_make_bound_circuit_non_existent_param():
+    theta = FreeParameter("theta")
+    input_val = np.pi
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ.make_bound_circuit({"alpha": input_val}, strict=True)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_make_bound_circuit_bad_value():
+    theta = FreeParameter("theta")
+    input_val = "invalid"
+    circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
+    circ.make_bound_circuit({"theta": input_val})
+
+
+def test_circuit_with_expr():
+    theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
+    circ = (
+        Circuit()
+        .ry(angle=theta * 2 + theta, target=0)
+        .rx(angle=(alpha + theta + 2 * alpha * theta), target=2)
+        .rz(angle=theta, target=1)
+    )
+    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+
+    new_circ = circ(theta=1, alpha=np.pi)
+    expected = (
+        Circuit()
+        .ry(angle=3, target=0)
+        .rx(angle=(3 * np.pi + 1), target=2)
+        .rz(angle=1, target=1)
+        .ry(angle=np.pi, target=3)
+    )
+
+    assert new_circ == expected
+
+
+def test_circuit_with_expr_not_fully_bound():
+    theta = FreeParameter("theta")
+    alpha = FreeParameter("alpha")
+    circ = (
+        Circuit()
+        .ry(angle=theta * 2 + theta, target=0)
+        .rx(angle=(alpha + theta + 2 * alpha * theta), target=2)
+        .rz(angle=theta, target=1)
+    )
+    circ.add_instruction(Instruction(Gate.Ry(alpha), 3))
+
+    new_circ = circ(theta=1)
+    expected = (
+        Circuit()
+        .ry(angle=3, target=0)
+        .rx(angle=(3 * alpha + 1), target=2)
+        .rz(angle=1, target=1)
+        .ry(angle=alpha, target=3)
+    )
+    assert new_circ == expected

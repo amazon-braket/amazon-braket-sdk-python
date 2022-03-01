@@ -13,12 +13,15 @@
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
+from numbers import Number
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy as np
 
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
+from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
@@ -33,6 +36,7 @@ from braket.circuits.noise_helpers import (
 )
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
+from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
@@ -126,6 +130,7 @@ class Circuit:
         self._qubit_observable_mapping: Dict[Union[int, Circuit._ALL_QUBITS], Observable] = {}
         self._qubit_observable_target_mapping: Dict[int, Tuple[int]] = {}
         self._qubit_observable_set = set()
+        self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
 
@@ -195,6 +200,16 @@ class Circuit:
     def qubits(self) -> QubitSet:
         """QubitSet: Get a copy of the qubits for this circuit."""
         return QubitSet(self._moments.qubits.union(self._qubit_observable_set))
+
+    @property
+    def parameters(self) -> Set[FreeParameter]:
+        """
+        Gets a set of the parameters in the Circuit.
+
+        Returns:
+            Set[FreeParameter]: The `FreeParameters` in the Circuit.
+        """
+        return self._parameters
 
     def add_result_type(
         self,
@@ -412,9 +427,31 @@ class Circuit:
             # non single qubit operator with target, add instruction with target
             instructions_to_add = [instruction.copy(target=target)]
 
+        if self._check_for_params(instruction):
+            for param in instruction.operator.parameters:
+                free_params = param.expression.free_symbols
+                for parameter in free_params:
+                    self._parameters.add(FreeParameter(parameter.name))
         self._moments.add(instructions_to_add)
 
         return self
+
+    def _check_for_params(self, instruction: Instruction) -> bool:
+        """
+        This checks for free parameters in an :class:{Instruction}. Checks children classes of
+        :class:{Parameterizable}.
+
+        Args:
+            instruction (Instruction): The instruction to check for a
+            :class:{FreeParameterExpression}.
+
+        Returns:
+            bool: Whether an object is parameterized.
+        """
+        return issubclass(type(instruction.operator), Parameterizable) and any(
+            issubclass(type(param), FreeParameterExpression)
+            for param in instruction.operator.parameters
+        )
 
     def add_circuit(
         self,
@@ -773,6 +810,88 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "initialization")
 
+    def make_bound_circuit(self, param_values: Dict[str, Number], strict: bool = False) -> Circuit:
+        """
+        Binds FreeParameters based upon their name and values passed in. If parameters
+        share the same name, all the parameters of that name will be set to the mapped value.
+
+        Args:
+            param_values (Dict[str, Number]):  A mapping of FreeParameter names
+                to a value to assign to them.
+            strict (bool, optional): If True, raises a ValueError if none of the FreeParameters
+                in param_values appear in the circuit. False by default."
+
+        Returns:
+            Circuit: Returns a circuit with all present parameters fixed to their respective
+            values.
+        """
+        if strict:
+            self._validate_parameters(param_values)
+        return self._use_parameter_value(param_values)
+
+    def _validate_parameters(self, parameter_values: Dict[str, Number]):
+        """
+        This runs a check to see that the parameters are in the Circuit.
+
+        Args:
+            parameter_values (Dict[str, Number]):  A mapping of FreeParameter names
+                to a value to assign to them.
+
+        Raises:
+            ValueError: If there are no parameters that match the key for the arg
+            param_values.
+        """
+        parameter_strings = set()
+        for parameter in self.parameters:
+            parameter_strings.add(str(parameter))
+        for param in parameter_values:
+            if param not in parameter_strings:
+                raise ValueError(f"No parameter in the circuit named: {param}")
+
+    def _use_parameter_value(self, param_values: Dict[str, Number]) -> Circuit:
+        """
+        Creates a Circuit that uses the parameter values passed in.
+
+        Args:
+            param_values (Dict[str, Number]): A mapping of FreeParameter names
+                to a value to assign to them.
+
+        Returns:
+            Circuit: A Circuit with specified parameters swapped for their
+            values.
+
+        """
+        fixed_circ = Circuit()
+        for val in param_values.values():
+            self._validate_parameter_value(val)
+        for instruction in self.instructions:
+            if self._check_for_params(instruction):
+                fixed_circ.add(
+                    Instruction(
+                        instruction.operator.bind_values(**param_values), target=instruction.target
+                    )
+                )
+            else:
+                fixed_circ.add(instruction)
+        fixed_circ.add(self.result_types)
+        return fixed_circ
+
+    @staticmethod
+    def _validate_parameter_value(val):
+        """
+        Validates the value being used is a Number.
+
+        Args:
+            val: The value be verified.
+
+        Raises:
+            ValueError: If the value is not a Number
+        """
+        if not isinstance(val, Number):
+            raise ValueError(
+                f"Parameters can only be assigned numeric values. " f"Invalid inputs: {val}"
+            )
+
     def apply_readout_noise(
         self,
         noise: Union[Type[Noise], Iterable[Type[Noise]]],
@@ -1043,6 +1162,26 @@ class Circuit:
                 and self.result_types == other.result_types
             )
         return NotImplemented
+
+    def __call__(self, arg=None, **kwargs) -> Circuit:
+        """
+        Implements the call function to easily make a bound Circuit.
+
+        Args:
+            arg: A value to bind to all parameters. Defaults to None and
+                can be overridden if the parameter is in kwargs.
+            **kwargs: the named parameters to have their value bound.
+
+        Returns:
+            Circuit: A circuit with the specified parameters bound.
+        """
+        param_values = dict()
+        if arg is not None:
+            for param in self.parameters:
+                param_values[str(param)] = arg
+        for key, val in kwargs.items():
+            param_values[str(key)] = val
+        return self.make_bound_circuit(param_values)
 
 
 def subroutine(register=False):

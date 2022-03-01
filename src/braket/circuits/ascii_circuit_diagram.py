@@ -84,6 +84,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
         if additional_result_types:
             lines.append(f"\nAdditional result types: {', '.join(additional_result_types)}")
 
+        # A list of parameters in the circuit to the currently assigned values.
+        if circuit.parameters:
+            lines.append(f"\nUnassigned parameters: {circuit.parameters}.")
+
         return "\n".join(lines)
 
     @staticmethod

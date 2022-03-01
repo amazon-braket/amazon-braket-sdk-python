@@ -134,6 +134,11 @@ class AwsQuantumTask(QuantumTask):
         )
         if tags is not None:
             create_task_kwargs.update({"tags": tags})
+        if isinstance(task_specification, Circuit) and task_specification.parameters:
+            raise ValueError(
+                f"Cannot execute circuit with unbound parameters: "
+                f"{task_specification.parameters}"
+            )
         return _create_internal(
             task_specification,
             aws_session,

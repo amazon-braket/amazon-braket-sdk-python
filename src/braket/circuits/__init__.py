@@ -24,12 +24,15 @@ from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F
 from braket.circuits.circuit import Circuit  # noqa: F401
 from braket.circuits.circuit_diagram import CircuitDiagram  # noqa: F401
 from braket.circuits.compiler_directive import CompilerDirective  # noqa: F401
+from braket.circuits.free_parameter import FreeParameter  # noqa: F401
+from braket.circuits.free_parameter_expression import FreeParameterExpression  # noqa: F401
 from braket.circuits.gate import Gate  # noqa: F401
 from braket.circuits.instruction import Instruction  # noqa: F401
 from braket.circuits.moments import Moments, MomentsKey  # noqa: F401
 from braket.circuits.noise import Noise  # noqa: F401
 from braket.circuits.observable import Observable, StandardObservable  # noqa: F401
 from braket.circuits.operator import Operator  # noqa: F401
+from braket.circuits.parameterizable import Parameterizable  # noqa: F401
 from braket.circuits.quantum_operator import QuantumOperator  # noqa: F401
 from braket.circuits.qubit import Qubit, QubitInput  # noqa: F401
 from braket.circuits.qubit_set import QubitSet, QubitSetInput  # noqa: F401

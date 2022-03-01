@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 
 import braket.ir.jaqcd as ir
-from braket.circuits import Circuit, Gate, Instruction, QubitSet
+from braket.circuits import Circuit, FreeParameter, Gate, Instruction, QubitSet
 from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
@@ -99,6 +99,23 @@ testdata = [
         [TwoDimensionalMatrix, MultiTarget],
         {"input_type": int},
     ),
+]
+
+
+parameterizable_gates = [
+    Gate.Rx,
+    Gate.Ry,
+    Gate.Rz,
+    Gate.PhaseShift,
+    Gate.PSwap,
+    Gate.XX,
+    Gate.XY,
+    Gate.YY,
+    Gate.ZZ,
+    Gate.CPhaseShift,
+    Gate.CPhaseShift00,
+    Gate.CPhaseShift01,
+    Gate.CPhaseShift10,
 ]
 
 
@@ -321,12 +338,39 @@ def test_equality():
     assert u1 != non_gate
 
 
+def test_free_param_equality():
+    param1 = FreeParameter("theta")
+    param2 = FreeParameter("phi")
+    rx1 = Gate.Rx(param1)
+    rx2 = Gate.Rx(param1)
+    other_gate = Gate.Rx(param2)
+
+    assert rx1 == rx2
+    assert rx1 is not rx2
+    assert rx1 != other_gate
+    assert rx1 != param1
+
+
 def test_large_unitary():
     matrix = np.eye(16, dtype=np.float32)
     # Permute rows of matrix
     matrix[[*range(16)]] = matrix[[(i + 1) % 16 for i in range(16)]]
     unitary = Gate.Unitary(matrix)
     assert unitary.qubit_count == 4
+
+
+@pytest.mark.parametrize("gate", parameterizable_gates)
+def test_bind_values(gate):
+    theta = FreeParameter("theta")
+    param_gate = gate(theta)
+    new_gate = param_gate.bind_values(theta=1)
+    expected = gate(1)
+
+    assert (
+        type(new_gate.angle) == float
+        and type(new_gate) == type(param_gate)
+        and new_gate == expected
+    )
 
 
 @pytest.mark.xfail(raises=ValueError)

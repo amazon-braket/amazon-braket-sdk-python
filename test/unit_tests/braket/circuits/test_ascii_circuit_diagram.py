@@ -13,7 +13,15 @@
 
 import numpy as np
 
-from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator
+from braket.circuits import (
+    AsciiCircuitDiagram,
+    Circuit,
+    FreeParameter,
+    Gate,
+    Instruction,
+    Observable,
+    Operator,
+)
 
 
 def test_empty_circuit():
@@ -25,6 +33,66 @@ def test_one_gate_one_qubit():
     expected = ("T  : |0|", "        ", "q0 : -H-", "", "T  : |0|")
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_one_gate_one_qubit_rotation():
+    circ = Circuit().rx(angle=3.14, target=0)
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = ("T  : |   0    |", "               ", "q0 : -Rx(3.14)-", "", "T  : |   0    |")
+    expected = "\n".join(expected)
+
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_one_gate_one_qubit_rotation_with_parameter():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = (
+        "T  : |    0    |",
+        "                ",
+        "q0 : -Rx(theta)-",
+        "",
+        "T  : |    0    |",
+        "",
+        "Unassigned parameters: {theta}.",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_one_gate_one_qubit_rotation_with_unicode():
+    theta = FreeParameter("\u03B8")
+    circ = Circuit().rx(angle=theta, target=0)
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = (
+        "T  : |  0  |",
+        "            ",
+        "q0 : -Rx(θ)-",
+        "",
+        "T  : |  0  |",
+        "",
+        "Unassigned parameters: {θ}.",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_one_gate_one_qubit_rotation_with_parameter_assigned():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    new_circ = circ.make_bound_circuit({"theta": np.pi})
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = (
+        "T  : |   0    |",
+        "               ",
+        "q0 : -Rx(3.14)-",
+        "",
+        "T  : |   0    |",
+    )
+    expected = "\n".join(expected)
+    print(AsciiCircuitDiagram.build_diagram(new_circ))
+    assert AsciiCircuitDiagram.build_diagram(new_circ) == expected
 
 
 def test_qubit_width():

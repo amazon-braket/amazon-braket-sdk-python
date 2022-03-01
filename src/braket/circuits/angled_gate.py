@@ -12,20 +12,28 @@
 # language governing permissions and limitations under the License.
 
 import math
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
+from braket.circuits.parameterizable import Parameterizable
 
 
-class AngledGate(Gate):
+class AngledGate(Gate, Parameterizable):
     """
     Class `AngledGate` represents a quantum gate that operates on N qubits and an angle.
     """
 
-    def __init__(self, angle: float, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
+    def __init__(
+        self,
+        angle: Union[FreeParameterExpression, float],
+        qubit_count: Optional[int],
+        ascii_symbols: Sequence[str],
+    ):
         """
         Args:
-            angle (float): The angle of the gate in radians.
+            angle (Union[FreeParameterExpression, float]): The angle of the gate in radians
+                or expression representation.
             qubit_count (int, optional): The number of qubits that this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -41,22 +49,51 @@ class AngledGate(Gate):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         if angle is None:
             raise ValueError("angle must not be None")
-        self._angle = float(angle)  # explicit casting in case angle is e.g. np.float32
+        if isinstance(angle, FreeParameterExpression):
+            self._parameters = [angle]
+        else:
+            self._parameters = [float(angle)]  # explicit casting in case angle is e.g. np.float32
 
     @property
-    def angle(self) -> float:
+    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+        """
+        Returns the free parameters associated with the object.
+
+        Returns:
+            Union[FreeParameterExpression,, float]: Returns the free parameters or fixed value
+            associated with the object.
+        """
+        return self._parameters
+
+    @property
+    def angle(self) -> Union[FreeParameterExpression, float]:
         """
         Returns the angle for the gate
 
         Returns:
-            angle (float): The angle of the gate in radians
+            Union[FreeParameterExpression, float]: The angle of the gate in radians
         """
-        return self._angle
+        return self._parameters[0]
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Raises:
+            NotImplementedError: Subclasses should implement this function.
+        """
+        raise NotImplementedError
 
     def __eq__(self, other):
         if isinstance(other, AngledGate):
-            return self.name == other.name and math.isclose(self.angle, other.angle)
-        return NotImplemented
+            if isinstance(self.angle, FreeParameterExpression):
+                return self.name == other.name and self.angle == other.angle
+            else:
+                return self.name == other.name and math.isclose(self.angle, other.angle)
+        return False
 
     def __repr__(self):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
