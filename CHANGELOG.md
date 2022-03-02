@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.17.0 (2022-03-02)
+
+### Features
+
+ * Add parameterized circuits
+
 ## v1.16.1 (2022-03-01)
 
 ### Bug Fixes and Other Changes
