@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import math
+import re
 import tarfile
 import tempfile
 import time
@@ -84,8 +85,11 @@ class AwsQuantumJob(QuantumJob):
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
-            device (str): ARN for the AWS device which is primarily
-                accessed for the execution of this job.
+            device (str): ARN for the AWS device which is primarily accessed for the execution
+                of this job. Alternatively, a string of the format
+                "local:<provider>.<simulator>.<name>" for using a local simulator for the job.
+                This string will be available as the environment variable `AMZN_BRAKET_DEVICE_ARN`
+                inside the job container when using a Braket container.
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
@@ -531,6 +535,8 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _initialize_session(session_value, device, logger):
         aws_session = session_value or AwsSession()
+        if re.match("^local:[a-zA-Z0-9-.]+.[a-zA-Z0-9-.]+$", device):
+            return aws_session
         device_region = device.split(":")[3]
         return (
             AwsQuantumJob._initialize_regional_device_session(aws_session, device, logger)

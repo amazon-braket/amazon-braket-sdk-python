@@ -15,6 +15,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import tarfile
 import tempfile
 from unittest.mock import Mock, patch
@@ -184,10 +185,11 @@ def test_quantum_job_constructor_default_session(
     assert job._aws_session == aws_session_mock.return_value
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_quantum_job_constructor_invalid_region(aws_session):
+    region_mismatch = "The aws session region does not match the region for the supplied arn."
     arn = "arn:aws:braket:unknown-region:875981177017:job/quantum_job_name"
-    AwsQuantumJob(arn, aws_session)
+    with pytest.raises(ValueError, match=region_mismatch):
+        AwsQuantumJob(arn, aws_session)
 
 
 @patch("braket.aws.aws_quantum_job.boto3.Session")
@@ -528,9 +530,9 @@ def test_name(quantum_job_arn, quantum_job_name, aws_session):
     assert quantum_job.name == quantum_job_name
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_no_arn_setter(quantum_job):
-    quantum_job.arn = 123
+    with pytest.raises(AttributeError, match="can't set attribute"):
+        quantum_job.arn = 123
 
 
 @pytest.mark.parametrize("wait_until_complete", [True, False])
@@ -577,7 +579,6 @@ def test_cancel_job(quantum_job_arn, aws_session, generate_cancel_job_response):
     assert status == cancellation_status
 
 
-@pytest.mark.xfail(raises=ClientError)
 def test_cancel_job_surfaces_exception(quantum_job, aws_session):
     exception_response = {
         "Error": {
@@ -585,8 +586,13 @@ def test_cancel_job_surfaces_exception(quantum_job, aws_session):
             "Message": "unit-test-error",
         }
     }
+    error_string = re.escape(
+        "An error occurred (ValidationException) when calling the "
+        "cancel_job operation: unit-test-error"
+    )
     aws_session.cancel_job.side_effect = ClientError(exception_response, "cancel_job")
-    quantum_job.cancel()
+    with pytest.raises(ClientError, match=error_string):
+        quantum_job.cancel()
 
 
 @pytest.mark.parametrize(
@@ -985,3 +991,26 @@ def test_exceptions_in_all_device_regions(aws_session):
     )
     with pytest.raises(ClientError, match=error_message):
         AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
+
+
+@pytest.mark.parametrize(
+    "device_str",
+    (
+        "local:provider.device.name",
+        "local:provider.device-name",
+        "local:provider.device",
+        "local:provider.de-vice.name",
+    ),
+)
+@patch("braket.aws.aws_quantum_job.AwsSession")
+def test_initialize_session_local_device(mock_new_session, aws_session, device_str):
+    """
+    aws_session = session_value or AwsSession()
+    if re.match('^local:[a-zA-Z0-9-.]+.[a-zA-Z0-9-.]+$', device):
+        return aws_session
+    """
+    logger = logging.getLogger(__name__)
+    # don't change a provided AwsSession
+    assert AwsQuantumJob._initialize_session(aws_session, device_str, logger) == aws_session
+    # otherwise, create an AwsSession with the profile defaults
+    assert AwsQuantumJob._initialize_session(None, device_str, logger) == mock_new_session()
