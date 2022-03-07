@@ -999,11 +999,7 @@ def test_exceptions_in_all_device_regions(aws_session):
         ("local:provider.devicename", True),
         ("local:prov-ider.device-name", True),
         ("local:provider.device.name", True),
-        ("local:prov-ider.dev-ice.name", True),
-        ("local:prov-ider.dev-ice.na-me", True),
-        ("local:prov-ider.dev-ice.na.me", True),
-        ("local:prov--ider.device-", True),
-        ("local:---.---", True),
+        ("local:prov_ider.dev_ice.na_me", True),
         ("local:provider.devicename.", False),
         ("local:prov-ider.device-name.", False),
         ("local:provider.device.name.", False),
@@ -1014,7 +1010,7 @@ def test_exceptions_in_all_device_regions(aws_session):
     ),
 )
 def test_local_device_pattern(string, is_valid):
-    local_device_pattern = re.compile(r"^local:[a-zA-Z0-9-]+\.([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+$")
+    local_device_pattern = re.compile(r"^local:[a-zA-Z0-9-_]+\.([a-zA-Z0-9-_]+\.)*[a-zA-Z0-9-_]+$")
     assert bool(re.match(local_device_pattern, string)) == is_valid
 
 
