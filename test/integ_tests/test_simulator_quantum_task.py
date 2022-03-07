@@ -16,10 +16,13 @@ import math
 import pytest
 from gate_model_device_testing_utils import (
     batch_bell_pair_testing,
+    bell_pair_openqasm_testing,
     get_tol,
     many_layers,
     multithreaded_bell_pair_testing,
     no_result_types_bell_pair_testing,
+    openqasm_noisy_circuit_1qubit_noise_full_probability,
+    openqasm_result_types_bell_pair_testing,
     qubit_ordering_testing,
     result_types_all_selected_testing,
     result_types_bell_pair_full_probability_testing,
@@ -213,6 +216,29 @@ def test_multithreaded_bell_pair(simulator_arn, aws_session, s3_destination_fold
 def test_batch_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     batch_bell_pair_testing(
+        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
+    )
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_bell_pair_openqasm(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    bell_pair_openqasm_testing(
+        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
+    )
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_bell_pair_openqasm_results(simulator_arn, aws_session, s3_destination_folder):
+    device = AwsDevice(simulator_arn, aws_session)
+    openqasm_result_types_bell_pair_testing(
+        device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
+    )
+
+
+def test_openqasm_probability_results(aws_session, s3_destination_folder):
+    device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/dm1", aws_session)
+    openqasm_noisy_circuit_1qubit_noise_full_probability(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
