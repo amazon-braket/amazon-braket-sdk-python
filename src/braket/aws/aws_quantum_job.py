@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 import math
-import re
 import tarfile
 import tempfile
 import time
@@ -535,8 +534,7 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _initialize_session(session_value, device, logger):
         aws_session = session_value or AwsSession()
-        local_device_pattern = re.compile(r"^local:[a-zA-Z0-9-_]+\.([a-zA-Z0-9-_]+\.)*[a-zA-Z0-9-_]+$")
-        if re.match(local_device_pattern, device):
+        if device.startswith("local:"):
             return aws_session
         device_region = device.split(":")[3]
         return (
