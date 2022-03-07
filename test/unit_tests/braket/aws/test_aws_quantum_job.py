@@ -994,6 +994,31 @@ def test_exceptions_in_all_device_regions(aws_session):
 
 
 @pytest.mark.parametrize(
+    "string, is_valid",
+    (
+        ("local:provider.devicename", True),
+        ("local:prov-ider.device-name", True),
+        ("local:provider.device.name", True),
+        ("local:prov-ider.dev-ice.name", True),
+        ("local:prov-ider.dev-ice.na-me", True),
+        ("local:prov-ider.dev-ice.na.me", True),
+        ("local:prov--ider.device-", True),
+        ("local:---.---", True),
+        ("local:provider.devicename.", False),
+        ("local:prov-ider.device-name.", False),
+        ("local:provider.device.name.", False),
+        ("local:prov-ider.dev-ice.name.", False),
+        ("local:prov-ider.dev-ice.na-me.", False),
+        ("local:prov-ider.dev-ice.na.me.", False),
+        ("non.local:prov-ider.dev-ice.na.me.", False),
+    ),
+)
+def test_local_device_pattern(string, is_valid):
+    local_device_pattern = re.compile(r"^local:[a-zA-Z0-9-]+\.([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+$")
+    assert bool(re.match(local_device_pattern, string)) == is_valid
+
+
+@pytest.mark.parametrize(
     "device_str",
     (
         "local:provider.device.name",

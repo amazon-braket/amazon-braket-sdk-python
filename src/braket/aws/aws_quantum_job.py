@@ -535,7 +535,8 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _initialize_session(session_value, device, logger):
         aws_session = session_value or AwsSession()
-        if re.match("^local:[a-zA-Z0-9-.]+.[a-zA-Z0-9-.]+$", device):
+        local_device_pattern = re.compile(r"^local:[a-zA-Z0-9-]+\.([a-zA-Z0-9-]+\.)*[a-zA-Z0-9-]+$")
+        if re.match(local_device_pattern, device):
             return aws_session
         device_region = device.split(":")[3]
         return (
