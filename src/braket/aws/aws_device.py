@@ -29,6 +29,7 @@ from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
 
 
@@ -79,7 +80,7 @@ class AwsDevice(Device):
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem],
+        task_specification: Union[Circuit, Problem, OpenQasmProgram],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -161,7 +162,7 @@ class AwsDevice(Device):
 
     def run_batch(
         self,
-        task_specifications: List[Union[Circuit, Problem]],
+        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram]],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         max_parallel: Optional[int] = None,

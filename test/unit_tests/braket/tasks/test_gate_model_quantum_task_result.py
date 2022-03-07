@@ -13,6 +13,7 @@
 
 import json
 from typing import Counter
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -420,3 +421,65 @@ def test_hash_result_types(observable_1, observable_2):
     assert GateModelQuantumTaskResult._result_type_hash(
         observable_1
     ) == GateModelQuantumTaskResult._result_type_hash(observable_2)
+
+
+@patch(
+    "braket.tasks.gate_model_quantum_task_result.GateModelQuantumTaskResult._calculate_result_types"
+)
+def test_result_type_skips_computation_already_populated(calculate_result_types_mocked):
+    result_str = json.dumps(
+        {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.gate_model_task_result",
+                "version": "1",
+            },
+            "measurements": [[0]],
+            "resultTypes": [
+                {"type": {"observable": ["z"], "targets": [0], "type": "variance"}, "value": 12.0}
+            ],
+            "measuredQubits": [0],
+            "taskMetadata": {
+                "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+                "id": "arn:aws:braket:us-east-1:1234567890:quantum-task/22a238b2-ae96",
+                "shots": 1,
+                "deviceId": "arn:aws:braket:::device/quantum-simulator/amazon/dm1",
+                "deviceParameters": {
+                    "braketSchemaHeader": {
+                        "name": "braket.device_schema.simulators."
+                        "gate_model_simulator_device_parameters",
+                        "version": "1",
+                    },
+                    "paradigmParameters": {
+                        "braketSchemaHeader": {
+                            "name": "braket.device_schema.gate_model_parameters",
+                            "version": "1",
+                        },
+                        "qubitCount": 1,
+                        "disableQubitRewiring": False,
+                    },
+                },
+                "createdAt": "2022-01-12T06:05:22.633Z",
+                "endedAt": "2022-01-12T06:05:24.136Z",
+                "status": "COMPLETED",
+            },
+            "additionalMetadata": {
+                "action": {
+                    "braketSchemaHeader": {"name": "braket.ir.openqasm.program", "version": "1"},
+                    "source": "\nqubit[1] q;\nh q[0];\n#pragma braket result variance z(q[0])\n",
+                },
+                "simulatorMetadata": {
+                    "braketSchemaHeader": {
+                        "name": "braket.task_result.simulator_metadata",
+                        "version": "1",
+                    },
+                    "executionDuration": 16,
+                },
+            },
+        }
+    )
+    res = GateModelQuantumTaskResult.from_string(result_str)
+    assert (
+        res.get_value_by_result_type(ResultType.Variance(observable=Observable.Z(), target=[0]))
+        == 12
+    )
+    calculate_result_types_mocked.assert_not_called()
