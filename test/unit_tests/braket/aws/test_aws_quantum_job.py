@@ -1004,11 +1004,6 @@ def test_exceptions_in_all_device_regions(aws_session):
 )
 @patch("braket.aws.aws_quantum_job.AwsSession")
 def test_initialize_session_local_device(mock_new_session, aws_session, device_str):
-    """
-    aws_session = session_value or AwsSession()
-    if re.match('^local:[a-zA-Z0-9-.]+.[a-zA-Z0-9-.]+$', device):
-        return aws_session
-    """
     logger = logging.getLogger(__name__)
     # don't change a provided AwsSession
     assert AwsQuantumJob._initialize_session(aws_session, device_str, logger) == aws_session
