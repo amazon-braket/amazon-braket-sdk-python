@@ -37,6 +37,7 @@ from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
+from braket.ir.openqasm import Program as OpenQasmProgram
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -297,15 +298,18 @@ def s3_destination_folder():
 
 
 @pytest.fixture
-def circuit():
+def bell_circuit():
     return Circuit().h(0)
 
 
 @pytest.fixture
-def boto_session():
-    _boto_session = Mock()
-    _boto_session.region_name = RIGETTI_REGION
-    return _boto_session
+def openqasm_program():
+    return OpenQasmProgram(source="OPENQASM 3.0; h $0;")
+
+
+@pytest.fixture(params=["bell_circuit", "openqasm_program"])
+def circuit(request):
+    return request.getfixturevalue(request.param)
 
 
 @pytest.fixture
@@ -647,7 +651,14 @@ def test_run_batch_param_circuit(
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_positional_args(aws_quantum_task_mock, device, circuit, s3_destination_folder):
     _run_and_assert(
-        aws_quantum_task_mock, device, circuit, s3_destination_folder, 100, 86400, 0.25, ["foo"]
+        aws_quantum_task_mock,
+        device,
+        circuit,
+        s3_destination_folder,
+        100,
+        86400,
+        0.25,
+        ["foo"],
     )
 
 
