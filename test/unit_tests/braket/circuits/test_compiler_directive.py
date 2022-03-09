@@ -46,6 +46,11 @@ def test_name(compiler_directive):
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
+def test_opposite_not_implemented_by_default(compiler_directive):
+    compiler_directive.opposite()
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
 def test_to_ir_not_implemented_by_default(compiler_directive):
     compiler_directive.to_ir(None)
 

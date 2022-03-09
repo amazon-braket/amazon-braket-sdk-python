@@ -26,6 +26,11 @@ def test_is_operator(gate):
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
+def test_adjoint_list_not_implemented_by_default(gate):
+    gate.adjoint_list()
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
 def test_to_ir_not_implemented_by_default(gate):
     gate.to_ir(None)
 
@@ -49,14 +54,24 @@ def test_matrix_equivalence_non_gate():
 
 
 def test_str(gate):
-    expected = "{}('qubit_count': {})".format(gate.name, gate.qubit_count)
+    expected = f"{gate.name}('qubit_count': {gate.qubit_count})"
     assert str(gate) == expected
 
 
 def test_str_angle():
     gate = Gate.Rx(0.5)
-    expected = "{}('angle': {}, 'qubit_count': {})".format(gate.name, gate.angle, gate.qubit_count)
+    expected = f"{gate.name}('angle': {gate.angle}, 'qubit_count': {gate.qubit_count})"
     assert str(gate) == expected
+
+
+def test_adjoint():
+    gate_1 = Gate(qubit_count=2, ascii_symbols=["foo", "C"])
+    gate_2 = Gate(qubit_count=2, ascii_symbols=["foo", "C"]).adjoint()
+    adj = gate_1.adjoint()
+    assert str(adj) == f"({gate_1.name})^†('qubit_count': {gate_1.qubit_count})"
+    assert adj.ascii_symbols == ("(foo)^†", "C")
+    assert gate_1 != adj
+    assert adj == gate_2
 
 
 def test_equality():

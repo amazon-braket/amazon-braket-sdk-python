@@ -143,10 +143,9 @@ class Circuit:
         return self._moments.depth
 
     @property
-    def instructions(self) -> Iterable[Instruction]:
+    def instructions(self) -> List[Instruction]:
         """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
-
-        return self._moments.values()
+        return list(self._moments.values())
 
     @property
     def result_types(self) -> List[ResultType]:
@@ -1030,6 +1029,12 @@ class Circuit:
 
         return self
 
+    def adjoint(self) -> Circuit:
+        circ = Circuit([instr.adjoint() for instr in reversed(self.instructions)])
+        for result_type in self._result_types:
+            circ.add_result_type(result_type)
+        return circ
+
     def diagram(self, circuit_diagram_class=AsciiCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.
@@ -1049,9 +1054,15 @@ class Circuit:
         If the circuit is sent over the wire, this method is called before it is sent.
 
         Returns:
-            (Program): An AWS quantum circuit description program in JSON format.
+            Program: A Braket quantum circuit description program in JSON format.
         """
-        ir_instructions = [instr.to_ir() for instr in self.instructions]
+        ir_instructions = []
+        for instruction in self.instructions:
+            ir_instruction = instruction.to_ir()
+            if isinstance(ir_instruction, List):
+                ir_instructions += ir_instruction
+            else:
+                ir_instructions.append(ir_instruction)
         ir_results = [result_type.to_ir() for result_type in self.result_types]
         ir_basis_rotation_instructions = [
             instr.to_ir() for instr in self.basis_rotation_instructions
@@ -1145,10 +1156,10 @@ class Circuit:
 
     def __repr__(self) -> str:
         if not self.result_types:
-            return f"Circuit('instructions': {list(self.instructions)})"
+            return f"Circuit('instructions': {self.instructions})"
         else:
             return (
-                f"Circuit('instructions': {list(self.instructions)}"
+                f"Circuit('instructions': {self.instructions}"
                 + f", 'result_types': {self.result_types})"
             )
 
@@ -1158,8 +1169,7 @@ class Circuit:
     def __eq__(self, other):
         if isinstance(other, Circuit):
             return (
-                list(self.instructions) == list(other.instructions)
-                and self.result_types == other.result_types
+                self.instructions == other.instructions and self.result_types == other.result_types
             )
         return NotImplemented
 

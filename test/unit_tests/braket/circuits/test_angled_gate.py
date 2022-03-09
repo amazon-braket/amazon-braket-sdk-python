@@ -50,6 +50,12 @@ def test_angle_setter(angled_gate):
     angled_gate.angle = 0.14
 
 
+def test_adjoint_list(angled_gate):
+    assert angled_gate.adjoint_list() == [
+        AngledGate(angle=-0.15, qubit_count=1, ascii_symbols=["foo"])
+    ]
+
+
 def test_equality(angled_gate):
     gate = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["bar"])
     other_gate = AngledGate(angle=0.3, qubit_count=1, ascii_symbols=["foo"])

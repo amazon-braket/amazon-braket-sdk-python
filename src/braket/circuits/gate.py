@@ -11,7 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Optional, Sequence
+from __future__ import annotations
+
+import copy
+from typing import Any, List, Optional, Sequence, Tuple
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -40,6 +43,27 @@ class Gate(QuantumOperator):
                 `ascii_symbols` length != `qubit_count`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        self._adjoint = False
+
+    def adjoint(self) -> Gate:
+        """Returns the adjoint of this gate.
+
+        Returns:
+            Gate: The adjoint of this gate.
+        """
+        new = copy.copy(self)
+        new._adjoint = not self._adjoint
+        return new
+
+    def adjoint_list(self) -> List[Gate]:
+        """Returns a list of gates that comprise the adjoint of this gate.
+
+        For compatibility, it is best if all gates in ths list are of the same type as this gate.
+
+        Returns:
+            List[Gate]: The gates comprising the adjoint of this gate.
+        """
+        raise NotImplementedError(f"Gate {self.name} does not have adjoint implemented")
 
     def to_ir(self, target: QubitSet) -> Any:
         """Returns IR object of quantum operator and target
@@ -49,18 +73,35 @@ class Gate(QuantumOperator):
         Returns:
             IR object of the quantum operator and target
         """
+        if self._adjoint:
+            # Use adjoint list of original gate
+            return [elem.to_ir(target) for elem in self.adjoint().adjoint_list()]
+        return self._to_ir(target)
+
+    def _to_ir(self, target: QubitSet) -> Any:
         raise NotImplementedError("to_ir has not been implemented yet.")
+
+    @property
+    def ascii_symbols(self) -> Tuple[str, ...]:
+        """Tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
+        if self._adjoint:
+            return tuple(
+                f"({symbol})^†" if symbol != "C" else symbol for symbol in self._ascii_symbols
+            )
+        return self._ascii_symbols
 
     def __eq__(self, other):
         if isinstance(other, Gate):
-            return self.name == other.name
+            return self.name == other.name and self._adjoint == other._adjoint
         return False
 
     def __repr__(self):
-        return f"{self.name}('qubit_count': {self.qubit_count})"
+        if self._adjoint:
+            return f"({self.name})^†('qubit_count': {self._qubit_count})"
+        return f"{self.name}('qubit_count': {self._qubit_count})"
 
     @classmethod
-    def register_gate(cls, gate: "Gate"):
+    def register_gate(cls, gate: Gate):
         """Register a gate implementation by adding it into the Gate class.
 
         Args:

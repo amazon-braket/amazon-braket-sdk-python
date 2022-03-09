@@ -24,6 +24,9 @@ class StartVerbatimBox(CompilerDirective):
     def __init__(self):
         super().__init__(["StartVerbatim"])
 
+    def opposite(self) -> CompilerDirective:
+        return EndVerbatimBox()
+
     def to_ir(self, *args, **kwargs):
         return ir.StartVerbatimBox.construct()
 
@@ -36,6 +39,9 @@ class EndVerbatimBox(CompilerDirective):
 
     def __init__(self):
         super().__init__(["EndVerbatim"])
+
+    def opposite(self) -> CompilerDirective:
+        return StartVerbatimBox()
 
     def to_ir(self, *args, **kwargs):
         return ir.EndVerbatimBox.construct()
