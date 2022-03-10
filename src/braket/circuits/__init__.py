@@ -30,6 +30,20 @@ from braket.circuits.gate import Gate  # noqa: F401
 from braket.circuits.instruction import Instruction  # noqa: F401
 from braket.circuits.moments import Moments, MomentsKey  # noqa: F401
 from braket.circuits.noise import Noise  # noqa: F401
+from braket.circuits.noise_model import (  # noqa: F401
+    CircuitInstructionCriteria,
+    Criteria,
+    CriteriaKey,
+    CriteriaKeyResult,
+    GateCriteria,
+    InitializationCriteria,
+    NoiseModel,
+    NoiseModelInstruction,
+    ObservableCriteria,
+    QubitInitializationCriteria,
+    ResultTypeCriteria,
+    UnitaryGateCriteria,
+)
 from braket.circuits.observable import Observable, StandardObservable  # noqa: F401
 from braket.circuits.operator import Operator  # noqa: F401
 from braket.circuits.parameterizable import Parameterizable  # noqa: F401

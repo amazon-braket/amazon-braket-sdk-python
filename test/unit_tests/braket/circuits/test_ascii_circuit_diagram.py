@@ -650,3 +650,18 @@ def test_noise_2qubit():
     )
     expected = "\n".join(expected)
     assert AsciiCircuitDiagram.build_diagram(circ) == expected
+
+
+def test_noise_multi_probabilities():
+    circ = Circuit().h(0).x(1).pauli_channel(1, 0.1, 0.2, 0.3)
+    expected = (
+        "T  : |        0        |",
+        "                        ",
+        "q0 : -H-----------------",
+        "                        ",
+        "q1 : -X-PC(0.1,0.2,0.3)-",
+        "",
+        "T  : |        0        |",
+    )
+    expected = "\n".join(expected)
+    assert AsciiCircuitDiagram.build_diagram(circ) == expected

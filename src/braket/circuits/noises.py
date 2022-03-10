@@ -12,12 +12,13 @@
 # language governing permissions and limitations under the License.
 
 import itertools
-from typing import Dict, Iterable
+from typing import Dict, Iterable, List, Union
 
 import numpy as np
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import (
     DampingNoise,
@@ -72,11 +73,11 @@ class BitFlip(SingleProbabilisticNoise):
     This noise channel is shown as `BF` in circuit diagrams.
     """
 
-    def __init__(self, probability: float):
+    def __init__(self, probability: Union[FreeParameter, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
-            ascii_symbols=["BF({:.2g})".format(probability)],
+            ascii_symbols=[_ascii_representation("BF", [probability])],
         )
 
     def to_ir(self, target: QubitSet):
@@ -111,6 +112,38 @@ class BitFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return BitFlip(probability=probability)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return BitFlip(probability=noise["probability"])
+
 
 Noise.register_noise(BitFlip)
 
@@ -141,11 +174,11 @@ class PhaseFlip(SingleProbabilisticNoise):
     This noise channel is shown as `PF` in circuit diagrams.
     """
 
-    def __init__(self, probability: float):
+    def __init__(self, probability: Union[FreeParameter, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
-            ascii_symbols=["PF({:.2g})".format(probability)],
+            ascii_symbols=[_ascii_representation("PF", [probability])],
         )
 
     def to_ir(self, target: QubitSet):
@@ -179,6 +212,38 @@ class PhaseFlip(SingleProbabilisticNoise):
             Instruction(Noise.PhaseFlip(probability=probability), target=qubit)
             for qubit in QubitSet(target)
         ]
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return PhaseFlip(probability=probability)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return PhaseFlip(probability=noise["probability"])
 
 
 Noise.register_noise(PhaseFlip)
@@ -226,13 +291,18 @@ class PauliChannel(PauliNoise):
     This noise channel is shown as `PC` in circuit diagrams.
     """
 
-    def __init__(self, probX: float, probY: float, probZ: float):
+    def __init__(
+        self,
+        probX: Union[FreeParameter, float],
+        probY: Union[FreeParameter, float],
+        probZ: Union[FreeParameter, float],
+    ):
         super().__init__(
             probX=probX,
             probY=probY,
             probZ=probZ,
             qubit_count=None,
-            ascii_symbols=["PC({:.2g},{:.2g},{:.2g})".format(probX, probY, probZ)],
+            ascii_symbols=[_ascii_representation("PC", [probX, probY, probZ])],
         )
 
     def to_ir(self, target: QubitSet):
@@ -273,6 +343,37 @@ class PauliChannel(PauliNoise):
             Instruction(Noise.PauliChannel(probX=probX, probY=probY, probZ=probZ), target=qubit)
             for qubit in QubitSet(target)
         ]
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Gate.Rx: A new Gate of the same type with the requested
+            parameters bound.
+
+        """
+        probX = self.probX if str(self.probX) not in kwargs else kwargs[str(self.probX)]
+        probY = self.probY if str(self.probY) not in kwargs else kwargs[str(self.probY)]
+        probZ = self.probZ if str(self.probZ) not in kwargs else kwargs[str(self.probZ)]
+
+        return type(self)(probX=probX, probY=probY, probZ=probZ)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return PauliChannel(probX=noise["probX"], probY=noise["probY"], probZ=noise["probZ"])
 
 
 Noise.register_noise(PauliChannel)
@@ -322,11 +423,11 @@ class Depolarizing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: float):
+    def __init__(self, probability: Union[FreeParameter, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
-            ascii_symbols=["DEPO({:.2g})".format(probability)],
+            ascii_symbols=[_ascii_representation("DEPO", [probability])],
         )
 
     def to_ir(self, target: QubitSet):
@@ -362,6 +463,38 @@ class Depolarizing(SingleProbabilisticNoise_34):
             Instruction(Noise.Depolarizing(probability=probability), target=qubit)
             for qubit in QubitSet(target)
         ]
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return Depolarizing(probability=probability)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return Depolarizing(probability=noise["probability"])
 
 
 Noise.register_noise(Depolarizing)
@@ -414,11 +547,11 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: float):
+    def __init__(self, probability: Union[FreeParameter, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
-            ascii_symbols=["DEPO({:.2g})".format(probability)] * 2,
+            ascii_symbols=[_ascii_representation("DEPO", [probability])] * 2,
         )
 
     def to_ir(self, target: QubitSet):
@@ -469,6 +602,38 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
             )
         ]
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return TwoQubitDepolarizing(probability=probability)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return TwoQubitDepolarizing(probability=noise["probability"])
+
 
 Noise.register_noise(TwoQubitDepolarizing)
 
@@ -502,11 +667,11 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPH` in circuit diagrams.
     """
 
-    def __init__(self, probability: float):
+    def __init__(self, probability: Union[FreeParameter, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
-            ascii_symbols=["DEPH({:.2g})".format(probability)] * 2,
+            ascii_symbols=[_ascii_representation("DEPH", [probability])] * 2,
         )
 
     def to_ir(self, target: QubitSet):
@@ -549,6 +714,38 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         return [
             Instruction(Noise.TwoQubitDephasing(probability=probability), target=[target1, target2])
         ]
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return TwoQubitDephasing(probability=probability)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return TwoQubitDephasing(probability=noise["probability"])
 
 
 Noise.register_noise(TwoQubitDephasing)
@@ -629,26 +826,27 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
                 f"PC2({probabilities})",
             ],
         )
+        self._matrix = None
 
-        total_prob = sum(self.probabilities.values())
+    def to_ir(self, target: QubitSet):
+        return ir.MultiQubitPauliChannel.construct(
+            targets=[target[0], target[1]], probabilities=self._probabilities
+        )
 
+    def to_matrix(self) -> Iterable[np.ndarray]:
+        if self._matrix is not None:
+            return self._matrix
+        total_prob = sum(self._probabilities.values())
         K_list = [np.sqrt(1 - total_prob) * np.identity(4)]  # "II" element
         for pstring in self._names_list[1:]:  # ignore "II"
-            if pstring in self.probabilities:
-                mat = np.sqrt(self.probabilities[pstring]) * np.kron(
+            if pstring in self._probabilities:
+                mat = np.sqrt(self._probabilities[pstring]) * np.kron(
                     self._paulis[pstring[0]], self._paulis[pstring[1]]
                 )
                 K_list.append(mat)
             else:
                 K_list.append(np.zeros((4, 4)))
         self._matrix = K_list
-
-    def to_ir(self, target: QubitSet):
-        return ir.MultiQubitPauliChannel.construct(
-            targets=[target[0], target[1]], probabilities=self.probabilities
-        )
-
-    def to_matrix(self) -> Iterable[np.ndarray]:
         return self._matrix
 
     @staticmethod
@@ -679,6 +877,37 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
             )
         ]
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        probabilities = {}
+        for pauli_string, prob in self._probabilities.items():
+            bound_prob = prob if str(prob) not in kwargs else kwargs[str(prob)]
+            probabilities[pauli_string] = bound_prob
+        return TwoQubitPauliChannel(probabilities=probabilities)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return TwoQubitPauliChannel(probabilities=noise["probabilities"])
+
 
 Noise.register_noise(TwoQubitPauliChannel)
 
@@ -707,11 +936,11 @@ class AmplitudeDamping(DampingNoise):
     This noise channel is shown as `AD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: float):
+    def __init__(self, gamma: Union[FreeParameter, float]):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
-            ascii_symbols=["AD({:.2g})".format(gamma)],
+            ascii_symbols=[_ascii_representation("AD", [gamma])],
         )
 
     def to_ir(self, target: QubitSet):
@@ -745,6 +974,34 @@ class AmplitudeDamping(DampingNoise):
             Instruction(Noise.AmplitudeDamping(gamma=gamma), target=qubit)
             for qubit in QubitSet(target)
         ]
+
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
+        return AmplitudeDamping(gamma=gamma)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return AmplitudeDamping(gamma=noise["gamma"])
 
 
 Noise.register_noise(AmplitudeDamping)
@@ -788,12 +1045,14 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
     This noise channel is shown as `GAD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: float, probability: float):
+    def __init__(
+        self, gamma: Union[FreeParameter, float], probability: Union[FreeParameter, float]
+    ):
         super().__init__(
             gamma=gamma,
             probability=probability,
             qubit_count=None,
-            ascii_symbols=["GAD({:.2g},{:.2g})".format(gamma, probability)],
+            ascii_symbols=[_ascii_representation("GAD", [gamma, probability])],
         )
 
     def to_ir(self, target: QubitSet):
@@ -842,6 +1101,39 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             for qubit in QubitSet(target)
         ]
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
+        probability = (
+            self.probability
+            if str(self.probability) not in kwargs
+            else kwargs[str(self.probability)]
+        )
+        return GeneralizedAmplitudeDamping(gamma=gamma, probability=probability)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return GeneralizedAmplitudeDamping(gamma=noise["gamma"], probability=noise["probability"])
+
 
 Noise.register_noise(GeneralizedAmplitudeDamping)
 
@@ -872,11 +1164,11 @@ class PhaseDamping(DampingNoise):
     This noise channel is shown as `PD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: float):
+    def __init__(self, gamma: Union[FreeParameter, float]):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
-            ascii_symbols=["PD({:.2g})".format(gamma)],
+            ascii_symbols=[_ascii_representation("PD", [gamma])],
         )
 
     def to_ir(self, target: QubitSet):
@@ -910,6 +1202,34 @@ class PhaseDamping(DampingNoise):
             Instruction(Noise.PhaseDamping(gamma=gamma), target=qubit) for qubit in QubitSet(target)
         ]
 
+    def bind_values(self, **kwargs):
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            Noise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        """
+        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
+        return PhaseDamping(gamma=gamma)
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return PhaseDamping(gamma=noise["gamma"])
+
 
 Noise.register_noise(PhaseDamping)
 
@@ -938,6 +1258,7 @@ class Kraus(Noise):
             if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
                 raise ValueError(f"all matrices in {matrices} must have the same shape")
         self._matrices = [np.array(matrix, dtype=complex) for matrix in matrices]
+        self._display_name = display_name
         qubit_count = int(np.log2(self._matrices[0].shape[0]))
         if qubit_count > 2:
             raise ValueError("Kraus operators with more than two qubits are not supported.")
@@ -998,5 +1319,46 @@ class Kraus(Noise):
             Noise.Kraus(matrices=matrices, display_name=display_name), target=targets
         )
 
+    def to_dict(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "matrices": self._matrices,
+            "display_name": self._display_name,
+        }
+
+    @classmethod
+    def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representation of this class into this class.
+
+        Args:
+            noise(dict): The dictionary representation of this noise.
+
+        Returns:
+            Noise: A Noise object that represents the passed in dictionary.
+        """
+        return Kraus(matrices=noise["matrices"], display_name=noise["display_name"])
+
 
 Noise.register_noise(Kraus)
+
+
+def _ascii_representation(noise: str, parameters: List[Union[FreeParameter, float]]) -> str:
+    """
+    Generates a formatted ascii representation of a noise.
+
+    Args:
+        noise (str): The name of the noise.
+        parameters (List[Union[FreeParameter, float]]): The parameters to the noise.
+
+    Returns:
+        str: Returns the ascii representation for the noise.
+
+    """
+    param_list = []
+    for param in parameters:
+        param_list.append(
+            str(param) if isinstance(param, FreeParameter) else "{:.2g}".format(param)
+        )
+    param_str = ",".join(param_list)
+    return f"{noise}({param_str})"

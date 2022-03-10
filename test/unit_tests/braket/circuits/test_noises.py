@@ -16,6 +16,7 @@ import pytest
 
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Instruction, Noise, QubitSet
+from braket.circuits.free_parameter import FreeParameter
 from braket.ir.jaqcd.shared_models import (
     DampingProbability,
     DampingSingleProbability,
@@ -401,6 +402,65 @@ def test_fixed_qubit_count(testclass, subroutine_name, irclass, irsubclasses, kw
     if fixed_qubit_count is not NotImplemented:
         noise = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
         assert noise.qubit_count == fixed_qubit_count
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_serialization(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    noise = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
+    serialized = noise.to_dict()
+    deserialized = Noise.from_dict(serialized)
+    assert deserialized == noise
+
+
+@pytest.mark.parametrize(
+    "parameterized_noise, params, expected_noise",
+    [
+        (Noise.BitFlip(FreeParameter("alpha")), {"alpha": 0.1}, Noise.BitFlip(0.1)),
+        (Noise.PhaseFlip(FreeParameter("alpha")), {"alpha": 0.1}, Noise.PhaseFlip(0.1)),
+        (Noise.Depolarizing(FreeParameter("alpha")), {"alpha": 0.1}, Noise.Depolarizing(0.1)),
+        (
+            Noise.AmplitudeDamping(FreeParameter("alpha")),
+            {"alpha": 0.1},
+            Noise.AmplitudeDamping(0.1),
+        ),
+        (
+            Noise.GeneralizedAmplitudeDamping(FreeParameter("alpha"), FreeParameter("beta")),
+            {"alpha": 0.1},
+            Noise.GeneralizedAmplitudeDamping(0.1, FreeParameter("beta")),
+        ),
+        (Noise.PhaseDamping(FreeParameter("alpha")), {"alpha": 0.1}, Noise.PhaseDamping(0.1)),
+        (
+            Noise.TwoQubitDepolarizing(FreeParameter("alpha")),
+            {"alpha": 0.1},
+            Noise.TwoQubitDepolarizing(0.1),
+        ),
+        (
+            Noise.TwoQubitDephasing(FreeParameter("alpha")),
+            {"alpha": 0.1},
+            Noise.TwoQubitDephasing(0.1),
+        ),
+        (
+            Noise.TwoQubitPauliChannel({"XX": FreeParameter("x"), "YY": FreeParameter("y")}),
+            {"x": 0.1},
+            Noise.TwoQubitPauliChannel({"XX": 0.1, "YY": FreeParameter("y")}),
+        ),
+        (
+            Noise.PauliChannel(FreeParameter("x"), FreeParameter("y"), FreeParameter("z")),
+            {"x": 0.1, "z": 0.2},
+            Noise.PauliChannel(0.1, FreeParameter("y"), 0.2),
+        ),
+    ],
+)
+def test_parameter_binding(parameterized_noise, params, expected_noise):
+    result_noise = parameterized_noise.bind_values(**params)
+    assert result_noise == expected_noise
+
+
+def test_parameterized_noise():
+    noise = Noise.PauliChannel(FreeParameter("a"), 0.2, FreeParameter("b"))
+    assert noise.probX == FreeParameter("a")
+    assert noise.probY == 0.2
+    assert noise.probZ == FreeParameter("b")
 
 
 # Additional Unitary noise tests
