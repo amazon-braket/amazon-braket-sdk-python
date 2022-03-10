@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Type
 
 from braket.circuits.observable import Observable
 from braket.circuits.qubit import QubitInput
@@ -115,11 +115,11 @@ class ResultType:
         return copy
 
     @classmethod
-    def register_result_type(cls, result_type: "ResultType"):
+    def register_result_type(cls, result_type: Type[ResultType]):
         """Register a result type implementation by adding it into the `ResultType` class.
 
         Args:
-            result_type (ResultType): `ResultType` instance to register.
+            result_type (Type[ResultType]): `ResultType` class to register.
         """
         setattr(cls, result_type.__name__, result_type)
 

@@ -11,7 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Optional, Sequence
+from __future__ import annotations
+
+from typing import Any, Optional, Sequence, Type
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -60,7 +62,7 @@ class Gate(QuantumOperator):
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
     @classmethod
-    def register_gate(cls, gate: "Gate"):
+    def register_gate(cls, gate: Type[Gate]):
         """Register a gate implementation by adding it into the Gate class.
 
         Args:
