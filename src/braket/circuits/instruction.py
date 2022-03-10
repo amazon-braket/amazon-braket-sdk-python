@@ -92,7 +92,7 @@ class Instruction:
             Instruction: A new instruction whose operator is the adjoint of `operator`
 
         Raises:
-            TypeError: If `operator` is not of type `Gate`
+            NotImplementedError: If `operator` is not of type `Gate` or `CompilerDirective`
         """
         operator = self._operator
         if isinstance(operator, Gate):
