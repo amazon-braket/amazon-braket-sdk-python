@@ -14,6 +14,7 @@
 import pytest
 
 from braket.circuits import Operator
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.noise import (
     DampingNoise,
     GeneralizedAmplitudeDampingNoise,
@@ -35,7 +36,7 @@ invalid_data_prob_damping_2 = ["a", 1.0 + 1j]
 
 
 @pytest.fixture
-def noise():
+def base_noise():
     return Noise(qubit_count=1, ascii_symbols=["foo"])
 
 
@@ -250,96 +251,107 @@ def test_invalid_data_generalized_amplitude_damping_gamma(gamma):
     GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
 
 
-def test_ascii_symbols(noise):
-    assert noise.ascii_symbols == ("foo",)
+def test_ascii_symbols(base_noise):
+    assert base_noise.ascii_symbols == ("foo",)
 
 
-def test_is_operator(noise):
-    assert isinstance(noise, Operator)
-
-
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_to_ir_not_implemented_by_default(noise):
-    noise.to_ir(None)
+def test_is_operator(base_noise):
+    assert isinstance(base_noise, Operator)
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
-def test_to_matrix_not_implemented_by_default(noise):
-    noise.to_matrix(None)
+def test_to_ir_not_implemented_by_default(base_noise):
+    base_noise.to_ir(None)
 
 
-def test_noise_str(noise):
-    expected = "{}('qubit_count': {})".format(noise.name, noise.qubit_count)
-    assert str(noise) == expected
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_to_matrix_not_implemented_by_default(base_noise):
+    base_noise.to_matrix(None)
 
 
-def test_single_probability_noise_str(single_probability_noise):
-    expected = "{}('probability': {}, 'qubit_count': {})".format(
-        single_probability_noise.name,
-        single_probability_noise.probability,
-        single_probability_noise.qubit_count,
-    )
-    assert str(single_probability_noise) == expected
+@pytest.mark.parametrize(
+    "noise, expected_string, expected_repr",
+    [
+        (Noise(1, ["foo"]), "Noise('qubit_count': 1)", "Noise('qubit_count': 1)"),
+        (
+            SingleProbabilisticNoise(0.1, 1, ["foo"]),
+            "SingleProbabilisticNoise(0.1)",
+            "SingleProbabilisticNoise('probability': 0.1, 'qubit_count': 1)",
+        ),
+        (
+            DampingNoise(0.1, 1, ["foo"]),
+            "DampingNoise(0.1)",
+            "DampingNoise('gamma': 0.1, 'qubit_count': 1)",
+        ),
+        (
+            GeneralizedAmplitudeDampingNoise(0.1, 0.2, 1, ["foo"]),
+            "GeneralizedAmplitudeDampingNoise(0.1, 0.2)",
+            "GeneralizedAmplitudeDampingNoise('gamma': 0.1, 'probability': 0.2, 'qubit_count': 1)",
+        ),
+        (
+            PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
+            "PauliNoise(0.1, 0.2, 0.3)",
+            "PauliNoise('probX': 0.1, 'probY': 0.2, 'probZ': 0.3, 'qubit_count': 1)",
+        ),
+        (
+            MultiQubitPauliNoise({"X": 0.2}, 1, ["foo"]),
+            "MultiQubitPauliNoise({'X': 0.2})",
+            "MultiQubitPauliNoise('probabilities' : {'X': 0.2}, 'qubit_count': 1)",
+        ),
+    ],
+)
+def test_noise_str_repr(noise, expected_string, expected_repr):
+    assert str(noise) == expected_string
+    assert repr(noise) == expected_repr
 
 
-def test_single_probability_noise_34_str(single_probability_noise_34):
-    expected = "{}('probability': {}, 'qubit_count': {})".format(
-        single_probability_noise_34.name,
-        single_probability_noise_34.probability,
-        single_probability_noise_34.qubit_count,
-    )
-    assert str(single_probability_noise_34) == expected
+@pytest.mark.parametrize(
+    "noise, equal_noise, unequal_noise, param_noise",
+    [
+        (
+            SingleProbabilisticNoise(0.1, 1, ["foo"]),
+            SingleProbabilisticNoise(0.1, 1, ["foo"]),
+            SingleProbabilisticNoise(0.2, 1, ["foo"]),
+            SingleProbabilisticNoise(FreeParameter("alpha"), 1, ["foo"]),
+        ),
+        (
+            DampingNoise(0.1, 1, ["foo"]),
+            DampingNoise(0.1, 1, ["foo"]),
+            DampingNoise(0.2, 1, ["foo"]),
+            DampingNoise(FreeParameter("alpha"), 1, ["foo"]),
+        ),
+        (
+            GeneralizedAmplitudeDampingNoise(0.1, 0.2, 1, ["foo"]),
+            GeneralizedAmplitudeDampingNoise(0.1, 0.2, 1, ["foo"]),
+            GeneralizedAmplitudeDampingNoise(0.2, 0.2, 1, ["foo"]),
+            GeneralizedAmplitudeDampingNoise(FreeParameter("alpha"), 0.2, 1, ["foo"]),
+        ),
+        (
+            PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
+            PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
+            PauliNoise(0.2, 0.2, 0.3, 1, ["foo"]),
+            PauliNoise(FreeParameter("x"), FreeParameter("y"), FreeParameter("z"), 1, ["foo"]),
+        ),
+        (
+            MultiQubitPauliNoise({"X": 0.2}, 1, ["foo"]),
+            MultiQubitPauliNoise({"X": 0.2}, 1, ["foo"]),
+            MultiQubitPauliNoise({"X": 0.3}, 1, ["foo"]),
+            MultiQubitPauliNoise({"X": FreeParameter("alpha")}, 1, ["foo"]),
+        ),
+    ],
+)
+def test_noise_equality(noise, equal_noise, unequal_noise, param_noise):
+    assert noise == noise
+    assert noise is noise
+    assert noise == equal_noise
+    assert noise is not equal_noise
+    assert noise != unequal_noise
+    assert noise != param_noise
+    assert noise != Noise(qubit_count=1, ascii_symbols=["foo"])
 
 
-def test_single_probability_noise_1516_str(single_probability_noise_1516):
-    expected = "{}('probability': {}, 'qubit_count': {})".format(
-        single_probability_noise_1516.name,
-        single_probability_noise_1516.probability,
-        single_probability_noise_1516.qubit_count,
-    )
-    assert str(single_probability_noise_1516) == expected
-
-
-def test_pauli_noise_str(pauli_noise):
-    expected = "{}('probX': {}, 'probY': {}, 'probZ': {}, 'qubit_count': {})".format(
-        pauli_noise.name,
-        pauli_noise.probX,
-        pauli_noise.probY,
-        pauli_noise.probZ,
-        pauli_noise.qubit_count,
-    )
-    assert str(pauli_noise) == expected
-
-
-def test_damping_noise_str(damping_noise):
-    expected = "{}('gamma': {}, 'qubit_count': {})".format(
-        damping_noise.name,
-        damping_noise.gamma,
-        damping_noise.qubit_count,
-    )
-    assert str(damping_noise) == expected
-
-
-def test_generalized_amplitude_damping_noise_str(generalized_amplitude_damping_noise):
-    expected = "{}('gamma': {}, 'probability': {}, 'qubit_count': {})".format(
-        generalized_amplitude_damping_noise.name,
-        generalized_amplitude_damping_noise.gamma,
-        generalized_amplitude_damping_noise.probability,
-        generalized_amplitude_damping_noise.qubit_count,
-    )
-    assert str(generalized_amplitude_damping_noise) == expected
-
-
-def test_equality():
-    noise_1 = Noise(qubit_count=1, ascii_symbols=["foo"])
-    noise_2 = Noise(qubit_count=1, ascii_symbols=["foo"])
-    other_noise = Noise.AmplitudeDamping(gamma=0.5)
-    non_noise = "non noise"
-
-    assert noise_1 == noise_2
-    assert noise_1 is not noise_2
-    assert noise_1 != other_noise
-    assert noise_1 != non_noise
+def test_noise_base_not_equal_to_different_type():
+    assert Noise(qubit_count=1, ascii_symbols=["foo"]) != "foo"
 
 
 def test_register_noise():
@@ -349,6 +361,30 @@ def test_register_noise():
 
     Noise.register_noise(_FooNoise)
     assert Noise._FooNoise().name == _FooNoise().name
+
+
+@pytest.mark.parametrize(
+    "noise_class, params",
+    [
+        (SingleProbabilisticNoise, {"probability": 0.6}),
+        (SingleProbabilisticNoise, {"probability": -0.1}),
+        (SingleProbabilisticNoise_34, {"probability": 0.76}),
+        (SingleProbabilisticNoise_34, {"probability": -0.1}),
+        (SingleProbabilisticNoise_1516, {"probability": 0.93755}),
+        (SingleProbabilisticNoise_1516, {"probability": -0.1}),
+        (MultiQubitPauliNoise, {"probabilities": {"X": 0.4, "Y": 0.7}}),
+        (MultiQubitPauliNoise, {"probabilities": {"X": 0.4, "Y": -0.7}}),
+        (PauliNoise, {"probX": 0.5, "probY": 0.5, "probZ": 0.5}),
+        (PauliNoise, {"probX": -0.1, "probY": 0, "probZ": 0}),
+        (DampingNoise, {"gamma": -0.1}),
+        (DampingNoise, {"gamma": 1.1}),
+        (GeneralizedAmplitudeDampingNoise, {"gamma": 0.1, "probability": -0.2}),
+        (GeneralizedAmplitudeDampingNoise, {"gamma": 0.1, "probability": 1.2}),
+    ],
+)
+@pytest.mark.xfail(raises=ValueError)
+def test_invalid_values(noise_class, params):
+    noise_class(**params, qubit_count=1, ascii_symbols=["foo"])
 
 
 @pytest.mark.parametrize(

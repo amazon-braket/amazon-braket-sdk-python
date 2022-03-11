@@ -19,7 +19,6 @@ from sympy import Float
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import AngledGate
-from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -457,10 +456,10 @@ class Rx(AngledGate):
     """X-axis rotation gate.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameter, float]):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -480,27 +479,18 @@ class Rx(AngledGate):
         return 1
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.Rx: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def rx(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
+    def rx(
+        target: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): Angle in radians.
+            angle (Union[FreeParameterExpression, float]): Angle in radians.
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -518,10 +508,10 @@ class Ry(AngledGate):
     """Y-axis rotation gate.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameter, float]):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -541,27 +531,18 @@ class Ry(AngledGate):
         return 1
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.Ry: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def ry(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
+    def ry(
+        target: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): Angle in radians.
+            angle (Union[FreeParameterExpression, float]): Angle in radians.
 
         Returns:
             Iterable[Instruction]: Ry instruction.
@@ -579,10 +560,10 @@ class Rz(AngledGate):
     """Z-axis rotation gate.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: Union[FreeParameter, float]):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -598,17 +579,6 @@ class Rz(AngledGate):
         )
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.Rz: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -617,12 +587,14 @@ class Rz(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def rz(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
+    def rz(
+        target: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Iterable[Instruction]: Rz instruction.
@@ -640,10 +612,10 @@ class PhaseShift(AngledGate):
     """Phase shift gate.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -657,17 +629,6 @@ class PhaseShift(AngledGate):
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * self.angle)]], dtype=complex)
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.PhaseShift: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -676,12 +637,14 @@ class PhaseShift(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def phaseshift(target: QubitInput, angle: Union[FreeParameter, float]) -> Iterable[Instruction]:
+    def phaseshift(
+        target: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Iterable[Instruction]: PhaseShift instruction.
@@ -837,10 +800,10 @@ class PSwap(AngledGate):
     """PSwap gate.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -865,17 +828,6 @@ class PSwap(AngledGate):
         )
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.PSwap: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -890,7 +842,7 @@ class PSwap(AngledGate):
         Args:
             target1 (Qubit or int): Target qubit 1 index.
             target2 (Qubit or int): Target qubit 2 index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: PSwap instruction.
@@ -910,10 +862,10 @@ class XY(AngledGate):
     Reference: https://arxiv.org/abs/1912.04424v1
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -940,17 +892,6 @@ class XY(AngledGate):
         )
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.XY: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -960,14 +901,14 @@ class XY(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def xy(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameter, float]
+        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (Qubit or int): Target qubit 1 index.
             target2 (Qubit or int): Target qubit 2 index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: XY instruction.
@@ -985,10 +926,10 @@ class CPhaseShift(AngledGate):
     """Controlled phase shift gate.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1002,17 +943,6 @@ class CPhaseShift(AngledGate):
         return np.diag([1.0, 1.0, 1.0, np.exp(1j * self.angle)])
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.CPhaseShift: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1022,14 +952,14 @@ class CPhaseShift(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameter, float]
+        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             control (Qubit or int): Control qubit index.
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: CPhaseShift instruction.
@@ -1047,10 +977,10 @@ class CPhaseShift00(AngledGate):
     """Controlled phase shift gate for phasing the \\|00> state.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1064,17 +994,6 @@ class CPhaseShift00(AngledGate):
         return np.diag([np.exp(1j * self.angle), 1.0, 1.0, 1.0])
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.CPhaseShift00: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1084,14 +1003,14 @@ class CPhaseShift00(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift00(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameter, float]
+        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             control (Qubit or int): Control qubit index.
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: CPhaseShift00 instruction.
@@ -1109,10 +1028,10 @@ class CPhaseShift01(AngledGate):
     """Controlled phase shift gate for phasing the \\|01> state.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1126,17 +1045,6 @@ class CPhaseShift01(AngledGate):
         return np.diag([1.0, np.exp(1j * self.angle), 1.0, 1.0])
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.CPhaseShift01: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1146,14 +1054,14 @@ class CPhaseShift01(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift01(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameter, float]
+        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             control (Qubit or int): Control qubit index.
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: CPhaseShift01 instruction.
@@ -1171,10 +1079,10 @@ class CPhaseShift10(AngledGate):
     """Controlled phase shift gate for phasing the \\|10> state.
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1188,17 +1096,6 @@ class CPhaseShift10(AngledGate):
         return np.diag([1.0, 1.0, np.exp(1j * self.angle), 1.0])
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.CPhaseShift10: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1208,14 +1105,14 @@ class CPhaseShift10(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift10(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameter, float]
+        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             control (Qubit or int): Control qubit index.
             target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: CPhaseShift10 instruction.
@@ -1406,10 +1303,10 @@ class XX(AngledGate):
     Reference: https://arxiv.org/abs/1707.06356
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1436,17 +1333,6 @@ class XX(AngledGate):
         )
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.XX: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1456,14 +1342,14 @@ class XX(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def xx(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameter, float]
+        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (Qubit or int): Target qubit 1 index.
             target2 (Qubit or int): Target qubit 2 index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: XX instruction.
@@ -1483,10 +1369,10 @@ class YY(AngledGate):
     Reference: https://arxiv.org/abs/1707.06356
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1513,17 +1399,6 @@ class YY(AngledGate):
         )
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.YY: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1533,14 +1408,14 @@ class YY(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def yy(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameter, float]
+        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (Qubit or int): Target qubit 1 index.
             target2 (Qubit or int): Target qubit 2 index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: YY instruction.
@@ -1560,10 +1435,10 @@ class ZZ(AngledGate):
     Reference: https://arxiv.org/abs/1707.06356
 
     Args:
-        angle (Union[FreeParameter, float]): angle in radians.
+        angle (Union[FreeParameterExpression, float]): angle in radians.
     """
 
-    def __init__(self, angle: float):
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
         super().__init__(
             angle=angle,
             qubit_count=None,
@@ -1588,17 +1463,6 @@ class ZZ(AngledGate):
         )
 
     def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.ZZ: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1608,14 +1472,14 @@ class ZZ(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def zz(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameter, float]
+        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (Qubit or int): Target qubit 1 index.
             target2 (Qubit or int): Target qubit 2 index.
-            angle (Union[FreeParameter, float]): angle in radians.
+            angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Instruction: ZZ instruction.
@@ -1806,13 +1670,13 @@ class Unitary(Gate):
 Gate.register_gate(Unitary)
 
 
-def angled_ascii_characters(gate: str, angle: Union[FreeParameter, float]) -> str:
+def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, float]) -> str:
     """
     Generates a formatted ascii representation of an angled gate.
 
     Args:
         gate (str): The name of the gate.
-        angle (Union[FreeParameter, float]): The angle for the gate.
+        angle (Union[FreeParameterExpression, float]): The angle for the gate.
 
     Returns:
         str: Returns the ascii representation for an angled gate.
@@ -1831,7 +1695,6 @@ def get_angle(self, **kwargs):
 
     Returns:
         A new gate of the type of the AngledGate originally used with all angles updated.
-
     """
     new_angle = (
         self.angle.subs(kwargs) if isinstance(self.angle, FreeParameterExpression) else self.angle
