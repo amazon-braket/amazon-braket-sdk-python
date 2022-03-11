@@ -46,8 +46,8 @@ def test_name(compiler_directive):
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
-def test_opposite_not_implemented_by_default(compiler_directive):
-    compiler_directive.opposite()
+def test_counterpart_not_implemented_by_default(compiler_directive):
+    compiler_directive.counterpart()
 
 
 @pytest.mark.xfail(raises=NotImplementedError)

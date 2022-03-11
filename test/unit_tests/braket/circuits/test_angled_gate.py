@@ -56,6 +56,14 @@ def test_adjoint_list(angled_gate):
     ]
 
 
+def test_adjoint_list_parameterized():
+    theta = FreeParameter("theta")
+    angled_gate = AngledGate(angle=(theta + 1), qubit_count=1, ascii_symbols=["foo"])
+    assert angled_gate.adjoint_list() == [
+        AngledGate(angle=-(theta + 1), qubit_count=1, ascii_symbols=["foo"])
+    ]
+
+
 def test_equality(angled_gate):
     gate = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["bar"])
     other_gate = AngledGate(angle=0.3, qubit_count=1, ascii_symbols=["foo"])

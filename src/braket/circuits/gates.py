@@ -42,6 +42,12 @@ To add a new gate:
 
 
 class _FiniteOrderGate(Gate, ABC):
+    """
+    Gates that have a finite order (in the group-theoretic sense):
+
+    G^n = I => G^-1 = G^(n-1)
+    """
+
     def __init__(self, order: int, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
         super().__init__(qubit_count, ascii_symbols)
         self._order = order
@@ -51,6 +57,12 @@ class _FiniteOrderGate(Gate, ABC):
 
 
 class _HermitianGate(_FiniteOrderGate, ABC):
+    """
+    A gate that is also a Hermitian operator. Such gates are involutory (order 2):
+
+    G^-1 = G^† = G
+    """
+
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
         super().__init__(2, qubit_count, ascii_symbols)
 

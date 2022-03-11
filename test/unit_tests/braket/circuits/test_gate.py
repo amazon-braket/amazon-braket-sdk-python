@@ -68,8 +68,8 @@ def test_adjoint():
     gate_1 = Gate(qubit_count=2, ascii_symbols=["foo", "C"])
     gate_2 = Gate(qubit_count=2, ascii_symbols=["foo", "C"]).adjoint()
     adj = gate_1.adjoint()
-    assert str(adj) == f"({gate_1.name})^†('qubit_count': {gate_1.qubit_count})"
-    assert adj.ascii_symbols == ("(foo)^†", "C")
+    assert str(adj) == f"({gate_1.name})†('qubit_count': {gate_1.qubit_count})"
+    assert adj.ascii_symbols == ("(foo)†", "C")
     assert gate_1 != adj
     assert adj == gate_2
 

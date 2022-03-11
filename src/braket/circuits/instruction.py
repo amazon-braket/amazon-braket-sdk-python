@@ -86,7 +86,7 @@ class Instruction:
     def adjoint(self) -> Instruction:
         """Returns an Instruction with the adjoint of this instruction's own operator
 
-        This operation only works on Gate operators.
+        This operation only works on Gate operators and compiler directives.
 
         Returns:
             Instruction: A new instruction whose operator is the adjoint of `operator`
@@ -98,7 +98,7 @@ class Instruction:
         if isinstance(operator, Gate):
             return Instruction(operator.adjoint(), self._target)
         elif isinstance(operator, CompilerDirective):
-            return Instruction(operator.opposite(), self._target)
+            return Instruction(operator.counterpart(), self._target)
         raise NotImplementedError(f"Adjoint not supported for {operator}")
 
     def to_ir(self):

@@ -43,19 +43,17 @@ class CompilerDirective(Operator):
         """Tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
         return self._ascii_symbols
 
-    def opposite(self) -> CompilerDirective:
+    def counterpart(self) -> CompilerDirective:
         """Returns the "opposite" counterpart to this compiler directive.
 
-        For example, the opposite of a directive that starts a box
+        For example, the counterpart of a directive that starts a box
         is the directive that ends the box.
 
-        TODO: Better name for this? Dual?
-
         Returns:
-            CompilerDirective: The opposite compiler directive
+            CompilerDirective: The counterpart compiler directive
         """
         raise NotImplementedError(
-            f"Compiler directive {self.name} does not have opposite implemented"
+            f"Compiler directive {self.name} does not have counterpart implemented"
         )
 
     def to_ir(self, *args, **kwargs):

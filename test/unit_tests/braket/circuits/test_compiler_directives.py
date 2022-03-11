@@ -23,18 +23,18 @@ testdata = [
 ]
 
 
-@pytest.mark.parametrize("testclass,irclass,opposite", testdata)
-def test_opposite(testclass, irclass, opposite):
-    assert testclass().opposite() == opposite()
+@pytest.mark.parametrize("testclass,irclass,counterpart", testdata)
+def test_counterpart(testclass, irclass, counterpart):
+    assert testclass().counterpart() == counterpart()
 
 
-@pytest.mark.parametrize("testclass,irclass,opposite", testdata)
-def test_to_ir(testclass, irclass, opposite):
+@pytest.mark.parametrize("testclass,irclass,counterpart", testdata)
+def test_to_ir(testclass, irclass, counterpart):
     assert testclass().to_ir() == irclass()
 
 
-@pytest.mark.parametrize("testclass,irclass,opposite", testdata)
-def test_equality(testclass, irclass, opposite):
+@pytest.mark.parametrize("testclass,irclass,counterpart", testdata)
+def test_equality(testclass, irclass, counterpart):
     op1 = testclass()
     op2 = testclass()
     assert op1 == op2

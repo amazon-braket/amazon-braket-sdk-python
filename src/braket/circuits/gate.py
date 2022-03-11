@@ -58,7 +58,7 @@ class Gate(QuantumOperator):
     def adjoint_list(self) -> List[Gate]:
         """Returns a list of gates that comprise the adjoint of this gate.
 
-        For compatibility, it is best if all gates in ths list are of the same type as this gate.
+        For compatibility, it is best if all gates in this list are of the same type as this gate.
 
         Returns:
             List[Gate]: The gates comprising the adjoint of this gate.
@@ -75,6 +75,7 @@ class Gate(QuantumOperator):
         """
         if self._adjoint:
             # Use adjoint list of original gate
+            # After all, we want the adjoint of the original, not the adjoint of the adjoint!
             return [elem.to_ir(target) for elem in self.adjoint().adjoint_list()]
         return self._to_ir(target)
 
@@ -86,7 +87,9 @@ class Gate(QuantumOperator):
         """Tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
         if self._adjoint:
             return tuple(
-                f"({symbol})^†" if symbol != "C" else symbol for symbol in self._ascii_symbols
+                # "C" stands for control, and doesn't need a dagger symbol
+                f"({symbol})†" if symbol != "C" else symbol
+                for symbol in self._ascii_symbols
             )
         return self._ascii_symbols
 
@@ -97,7 +100,7 @@ class Gate(QuantumOperator):
 
     def __repr__(self):
         if self._adjoint:
-            return f"({self.name})^†('qubit_count': {self._qubit_count})"
+            return f"({self.name})†('qubit_count': {self._qubit_count})"
         return f"{self.name}('qubit_count': {self._qubit_count})"
 
     @classmethod
