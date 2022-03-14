@@ -634,14 +634,3 @@ def test_invalid_input_parameters(entry_point, aws_session):
 def test_process_input_data(aws_session, input_data, input_data_configs):
     job_name = "job-name"
     assert _process_input_data(input_data, job_name, aws_session) == input_data_configs
-
-
-def test_multiple_instances_nonlocal(device, source_module, aws_session):
-    multiple_instances = "Multiple instances only supported for jobs with a 'local' simulator."
-    with pytest.raises(ValueError, match=multiple_instances):
-        prepare_quantum_job(
-            device,
-            source_module,
-            aws_session=aws_session,
-            instance_config=InstanceConfig(instanceCount=2),
-        )
