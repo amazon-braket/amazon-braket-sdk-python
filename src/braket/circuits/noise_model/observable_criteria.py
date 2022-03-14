@@ -39,7 +39,7 @@ class ObservableCriteria(ResultTypeCriteria):
             observables (Optional[Union[Observable, Iterable[Observable]]]): A set of relevant
                 Observables. Observables must only operate on a single qubit. Optional. If
                 observables are not specified, this criteria will match on any observable.
-            qubits (Optional[QubitSetInput], optional): A set of relevant qubits. If no qubits
+            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
 
         Throws:
@@ -78,10 +78,11 @@ class ObservableCriteria(ResultTypeCriteria):
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
+            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
             OBSERVABLE will return a set of Observable classes that are relevant to this Criteria,
-                or CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) observables.
+            or CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) observables.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
-                CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
+            CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty set.
         """
         if key_type == CriteriaKey.OBSERVABLE:
@@ -92,6 +93,8 @@ class ObservableCriteria(ResultTypeCriteria):
 
     def to_dict(self) -> dict:
         """
+        Converts a dictionary representing an object of this class into an instance of this class.
+
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
         """
@@ -140,7 +143,7 @@ class ObservableCriteria(ResultTypeCriteria):
 
         Returns:
             Criteria: A deserialized GateCriteria represented by the passed in
-                serialized data.
+            serialized data.
         """
         observables = (
             [getattr(Observable, name) for name in criteria["observables"]]

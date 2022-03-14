@@ -39,12 +39,12 @@ class GateCriteria(CircuitInstructionCriteria):
             gates (Optional[Union[Gate, Iterable[Gate]]]): A set of relevant Gates. All the Gates
                 must have the same fixed_qubit_count(). Optional. If gates are not provided
                 this matcher will match on all gates.
-            qubits (Optional[QubitSetInput], optional): A set of relevant qubits. If no qubits
+            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
 
         Raises:
             ValueError: If the gates don't all operate on the same number of qubits, or if
-                qubits are not valid targets for the provided gates.
+            qubits are not valid targets for the provided gates.
         """
         self._gates = parse_operator_input(gates)
         expected_qubit_count = next(iter(self._gates)).fixed_qubit_count() if self._gates else 0
@@ -66,15 +66,16 @@ class GateCriteria(CircuitInstructionCriteria):
         return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 
     def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, Set[Any]]:
-        """Gets the keys for a given CriteriaKey.
+        """ Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
+            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
             GATE will return a set of Gate classes that are relevant to this Criteria.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
-                CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
+            CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty list.
         """
         if key_type == CriteriaKey.GATE:
@@ -85,6 +86,8 @@ class GateCriteria(CircuitInstructionCriteria):
 
     def to_dict(self) -> dict:
         """
+        Converts a dictionary representing an object of this class into an instance of this class.
+
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
         """

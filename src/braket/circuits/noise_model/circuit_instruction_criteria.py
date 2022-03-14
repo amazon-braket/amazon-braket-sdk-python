@@ -42,11 +42,11 @@ class CircuitInstructionCriteria(Criteria):
         Returns true if the given targets of an instruction match the given qubit input set.
 
         Args:
-            qubits (Set[Union[int, Tuple[int]]], optional): The qubits provided to the criteria.
+            qubits (Optional[Set[Union[int, Tuple[int]]]]): The qubits provided to the criteria.
             target (QubitSetInput): Targets of an instruction.
 
         Returns:
-            True if the provided target should be matched by the given qubits.
+            bool: True if the provided target should be matched by the given qubits.
         """
         if qubits is None:
             return True

@@ -27,7 +27,7 @@ class QubitInitializationCriteria(InitializationCriteria):
         Creates initialization noise Qubit-based Criteria.
 
         Args:
-            qubits (Optional[QubitSetInput], optional): A set of relevant qubits. If no qubits
+            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
         """
         self._qubits = parse_qubit_input(qubits)
@@ -46,15 +46,15 @@ class QubitInitializationCriteria(InitializationCriteria):
         return [CriteriaKey.QUBIT]
 
     def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, Set[Any]]:
-        """
-        Gets the keys for a given CriteriaKey.
+        """ Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
+            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
             QUBIT will return a set of qubit targets that are relevant to this Critera, or
-                CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
+            CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty set.
         """
         if key_type == CriteriaKey.QUBIT:
@@ -65,6 +65,8 @@ class QubitInitializationCriteria(InitializationCriteria):
 
     def to_dict(self) -> dict:
         """
+        Converts a dictionary representing an object of this class into an instance of this class.
+
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
         """

@@ -68,7 +68,7 @@ class Criteria(ABC):
         """
         raise NotImplementedError
 
-    def __eq__(self, other):
+    def __eq__(self, other: Criteria):
         if not isinstance(other, Criteria):
             return NotImplemented
         if self.applicable_key_types() != other.applicable_key_types():
@@ -109,6 +109,6 @@ class Criteria(ABC):
         """Register a criteria implementation by adding it into the Criteria class.
 
         Args:
-            criteria (Criteria): Criteria class to register.
+            criteria (Type[Criteria]): Criteria class to register.
         """
         setattr(cls, criteria.__name__, criteria)

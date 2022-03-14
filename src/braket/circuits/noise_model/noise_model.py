@@ -114,7 +114,7 @@ class NoiseModel:
         List all the noise in the NoiseModel.
 
         Returns:
-            NoiseModelInstructions: The noise model instructions.
+            List[NoiseModelInstruction]: The noise model instructions.
         """
         return self._instructions
 
@@ -211,13 +211,13 @@ class NoiseModel:
         specified, the returned NoiseModel will be the same as this one.
 
         Args:
-            qubit (Optional[QubitSetInput], optional): The qubit to filter. Default is None.
+            qubit (Optional[QubitSetInput]): The qubit to filter. Default is None.
                 If not None, the returned NoiseModel will only have Noise that might be applicable
                 to the passed qubit (or qubit list, if the criteria acts on a multi-qubit Gate).
-            gate (Optional[Gate], optional): The gate to filter. Default is None. If not None,
+            gate (Optional[Gate]): The gate to filter. Default is None. If not None,
                 the returned NoiseModel will only have Noise that might be applicable
                 to the passed Gate.
-            noise (Optional[Type[Noise]], optional): The noise class to filter. Default is None.
+            noise (Optional[Type[Noise]]): The noise class to filter. Default is None.
                 If not None, the returned NoiseModel will only have noise that is of the same
                 class as the given noise class.
 
@@ -268,13 +268,13 @@ class NoiseModel:
         gate_noise_instructions: List[NoiseModelInstruction],
     ) -> Circuit:
         """
-        Applies the gate noise of this noise model to a set of circuits (representing multiple
-        layers in a single circuit) and returns a new circuit that's the `noisy` version of the
-        given circuit.
+        Applies the gate noise to return a new circuit that's the `noisy` version of the given
+        circuit.
 
         Args:
-            circuit (Iterable[Circuit]): a circuit to apply `noise` to. The list is treated as
-                layers of a single circuit.
+            circuit (Circuit): a circuit to apply `noise` to.
+            gate_noise_instructions (List[NoiseModelInstruction]): a list of gate noise
+                instructions to apply to the circuit.
 
         Returns:
             Circuit: A new circuit that's a `noisy` version of the passed in circuit. The targets
@@ -331,6 +331,8 @@ class NoiseModel:
 
         Args:
             circuit (Circuit): A circuit to apply `noise` to.
+            readout_noise_instructions (List[NoiseModelInstruction]): The list of readout noise
+                to apply.
 
         Returns:
             Circuit: The passed in circuit, with the readout noise applied.

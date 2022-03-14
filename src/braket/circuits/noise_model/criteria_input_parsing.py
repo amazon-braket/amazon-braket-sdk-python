@@ -52,8 +52,8 @@ def parse_qubit_input(
     Processes the qubit input to __init__ to validate and return a set of qubit targets.
 
     Args:
-        qubits (QubitSetInput, optional): Qubit input.
-        expected_qubit_count (int, optional): The expected number of qubits that the input
+        qubits (Optional[QubitSetInput]): Qubit input.
+        expected_qubit_count (Optional[int]): The expected number of qubits that the input
             gates operates on. If the value is non-zero, this method will validate that the
             expected qubit count matches the actual qubit count. Default is 0.
 

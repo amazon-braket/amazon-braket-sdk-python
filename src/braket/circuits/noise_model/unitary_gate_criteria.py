@@ -30,7 +30,7 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
 
         Args:
             unitary (Unitary): A unitary gate matrix represented as a Braket Unitary.
-            qubits (Optional[QubitSetInput], optional): A set of relevant qubits. If no qubits
+            qubits (Optional[QubitSetInput]): A set of relevant qubits. If no qubits
                 are provided, all (possible) qubits are considered to be relevant.
         Throws:
             ValueError: If unitary is not a Unitary type.
@@ -60,10 +60,11 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
+            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
             UNITARY_GATE will return a set containing the bytes of the unitary matrix representing
-                the unitary gate.
+            the unitary gate.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
-                CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
+            CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty list.
         """
         if key_type == CriteriaKey.UNITARY_GATE:
@@ -74,6 +75,8 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
 
     def to_dict(self) -> dict:
         """
+        Converts a dictionary representing an object of this class into an instance of this class.
+
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
         """
