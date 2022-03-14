@@ -52,7 +52,7 @@ class _FiniteOrderGate(Gate, ABC):
         super().__init__(qubit_count, ascii_symbols)
         self._order = order
 
-    def adjoint_list(self) -> List[Gate]:
+    def adjoint_expansion(self) -> List[Gate]:
         return [self for _ in range(self._order - 1)]
 
 
@@ -1786,7 +1786,7 @@ class Unitary(Gate):
     def to_matrix(self):
         return np.array(self._matrix)
 
-    def adjoint_list(self) -> List[Gate]:
+    def adjoint_expansion(self) -> List[Gate]:
         return [Unitary(self._matrix.conj().T, display_name=f"({self.ascii_symbols})^†")]
 
     def _to_ir(self, target: QubitSet):

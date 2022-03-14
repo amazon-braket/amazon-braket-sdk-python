@@ -310,9 +310,9 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
-def test_gate_adjoint_list_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
     gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
-    matrices = [elem.to_matrix() for elem in gate.adjoint_list()]
+    matrices = [elem.to_matrix() for elem in gate.adjoint_expansion()]
     matrices.append(gate.to_matrix())
     identity = np.eye(2**gate.qubit_count)
     assert np.isclose(functools.reduce(lambda a, b: a @ b, matrices), identity).all()

@@ -26,13 +26,22 @@ def test_is_operator(gate):
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
-def test_adjoint_list_not_implemented_by_default(gate):
-    gate.adjoint_list()
+def test_adjoint_expansion_not_implemented_by_default(gate):
+    gate.adjoint_expansion()
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_to_ir_not_implemented_by_default(gate):
     gate.to_ir(None)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_to_it_adjoints_in_expansion():
+    class Foo(Gate):
+        def adjoint_expansion(self):
+            return [self.adjoint()]
+
+    Foo(qubit_count=1, ascii_symbols=["foo"]).adjoint().to_ir(None)
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
