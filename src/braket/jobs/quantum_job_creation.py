@@ -139,6 +139,9 @@ def prepare_quantum_job(
     _validate_params(param_datatype_map)
     aws_session = aws_session or AwsSession()
     device_config = DeviceConfig(device)
+
+    if instance_config and instance_config.instanceCount > 1 and not device.startswith("local:"):
+        raise ValueError("Multiple instances only supported for jobs with a 'local' simulator.")
     job_name = job_name or _generate_default_job_name(image_uri)
     role_arn = role_arn or aws_session.get_default_jobs_role()
     hyperparameters = hyperparameters or {}
