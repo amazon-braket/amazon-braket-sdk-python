@@ -21,6 +21,9 @@ from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
+from braket.ir.openqasm import Program
+from braket.tasks.oq3_quantum_program_result import OQ3QuantumProgramResult
+
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
@@ -149,3 +152,11 @@ def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
     ir = problem.to_ir()
     results = simulator.run(ir, shots, *args, *kwargs)
     return AnnealingQuantumTaskResult.from_object(results)
+
+
+@_run_internal.register
+def _(program: Program, simulator: BraketSimulator, shots, *args, **kwargs):
+    if DeviceActionType.OPENQASM not in simulator.properties.action:
+        raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
+    results = simulator.run(program, shots)
+    return OQ3QuantumProgramResult.from_object(results)
