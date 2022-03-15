@@ -46,7 +46,7 @@ class QubitInitializationCriteria(InitializationCriteria):
         return [CriteriaKey.QUBIT]
 
     def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, Set[Any]]:
-        """ Gets the keys for a given CriteriaKey.
+        """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
