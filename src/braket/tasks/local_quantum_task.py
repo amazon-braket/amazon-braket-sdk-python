@@ -38,7 +38,7 @@ class LocalQuantumTask(QuantumTask):
     def state(self) -> str:
         return "COMPLETED"
 
-    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, OQ3QuantumProgramResult]:
         return self._result
 
     def async_result(self) -> asyncio.Task:

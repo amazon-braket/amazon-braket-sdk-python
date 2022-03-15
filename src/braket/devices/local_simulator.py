@@ -56,7 +56,7 @@ class LocalSimulator(Device):
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem],
+        task_specification: Union[Circuit, Problem, Program],
         shots: int = 0,
         *args,
         **kwargs,
