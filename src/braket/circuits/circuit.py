@@ -710,13 +710,15 @@ class Circuit:
         if not self.qubits:
             raise IndexError("Gate noise cannot be applied to an empty circuit.")
 
+        decomposed_circ = self.decompose()
+
         # check if target_gates and target_unitary are both given
         if (target_unitary is not None) and (target_gates is not None):
             raise ValueError("target_unitary and target_gates cannot be input at the same time.")
 
         # check target_qubits
-        target_qubits = check_noise_target_qubits(self, target_qubits)
-        if not all(qubit in self.qubits for qubit in target_qubits):
+        target_qubits = check_noise_target_qubits(decomposed_circ, target_qubits)
+        if not all(qubit in decomposed_circ.qubits for qubit in target_qubits):
             raise IndexError("target_qubits must be within the range of the current circuit.")
 
         # make noise a list
@@ -738,9 +740,9 @@ class Circuit:
                 check_noise_target_unitary(noise_channel, target_unitary)
 
         if target_unitary is not None:
-            return apply_noise_to_gates(self, noise, target_unitary, target_qubits)
+            return apply_noise_to_gates(decomposed_circ, noise, target_unitary, target_qubits)
         else:
-            return apply_noise_to_gates(self, noise, target_gates, target_qubits)
+            return apply_noise_to_gates(decomposed_circ, noise, target_gates, target_qubits)
 
     def apply_initialization_noise(
         self,
