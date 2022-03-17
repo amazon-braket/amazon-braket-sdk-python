@@ -14,7 +14,8 @@ class OQ3QuantumProgramResult:
     )
     task_metadata: TaskMetadata
     additional_metadata: AdditionalMetadata
-    bit_variables: Dict[str, np.ndarray] = None
+    # bit_variables: Dict[str, np.ndarray] = None
+    output_variables: Dict[str, np.ndarray] = None
 
     @staticmethod
     def from_object(result: OQ3ProgramResult):
@@ -34,8 +35,11 @@ class OQ3QuantumProgramResult:
         return OQ3QuantumProgramResult(
             task_metadata=result.taskMetadata,
             additional_metadata=result.additionalMetadata,
-            bit_variables={
-                var_name: np.array(values) for var_name, values in result.bitVariables.items()
-            }
+            # bit_variables={
+            #     var_name: np.array(values) for var_name, values in result.bitVariables.items()
+            # },
+            output_variables={
+                var_name: np.array(values) for var_name, values in result.outputVariables.items()
+            },
         )
 
