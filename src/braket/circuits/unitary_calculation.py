@@ -18,69 +18,41 @@ import numpy as np
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.qubit_set import QubitSet
+from braket.default_simulator.linalg_utils import multiply_matrix
 
 
-def _einsum_subscripts(targets: QubitSet, qubit_count: int) -> str:
-    target_count = len(targets)
-
-    gate_left_indexes = list(range(target_count))
-    un_left_indexes = list(range(target_count, target_count + qubit_count))
-    un_right_indexes = list(range(target_count + qubit_count, target_count + 2 * qubit_count))
-
-    gate_right_indexes = [un_left_indexes[-1 - target] for target in targets]
-
-    result_left_indexes = un_left_indexes.copy()
-    for pos, target in enumerate(targets):
-        result_left_indexes[-1 - target] = gate_left_indexes[pos]
-
-    return (
-        gate_left_indexes + gate_right_indexes,
-        un_left_indexes + un_right_indexes,
-        result_left_indexes + un_right_indexes,
-    )
-
-
-def calculate_unitary(qubit_count: int, instructions: Iterable[Instruction]) -> np.ndarray:
+def calculate_unitary(instructions: Iterable[Instruction], used_qubits: QubitSet) -> np.ndarray:
     """
-    Returns the unitary matrix representation for all the `instructions` with a given
-    `qubit_count`.
-    *Note*: The performance of this method degrades with qubit count. It might be slow for
-    qubit count > 10.
+    Returns the unitary matrix representation for all the `instructions` on qubits `used_qubits`.
+
+    Note:
+        The performance of this method degrades with qubit count. It might be slow for
+        `len(used_qubits)` > 10.
 
     Args:
-        qubit_count (int): Total number of qubits, enough for all the `instructions`.
         instructions (Iterable[Instruction]): The instructions for which the unitary matrix
             will be calculated.
+        used_qubits (QubitSet, optional): The actual qubits used by the instructions.
 
     Returns:
         np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-            `instructions` as a unitary.
+        `instructions` as a unitary matrix.
 
     Raises:
         TypeError: If `instructions` is not composed only of `Gate` instances,
             i.e. a circuit with `Noise` operators will raise this error.
     """
-    unitary = np.eye(2**qubit_count, dtype=complex)
-    un_tensor = np.reshape(unitary, qubit_count * [2, 2])
+    qubits = sorted(used_qubits)
+    qubit_count = len(qubits)
+    index_substitutions = {qubits[i]: i for i in range(qubit_count)}
 
-    for instr in instructions:
-        if not isinstance(instr.operator, Gate):
+    rank = 2**qubit_count
+    unitary = np.eye(rank).reshape([2] * 2 * qubit_count)
+
+    for instruction in instructions:
+        if not isinstance(instruction.operator, Gate):
             raise TypeError("Only Gate operators are supported to build the unitary")
+        targets = tuple(index_substitutions[qubit] for qubit in instruction.target)
+        unitary = multiply_matrix(unitary, instruction.operator.to_matrix(), targets)
 
-        matrix = instr.operator.to_matrix()
-        targets = instr.target
-
-        gate_indexes, un_indexes, result_indexes = _einsum_subscripts(targets, qubit_count)
-        gate_matrix = np.reshape(matrix, len(targets) * [2, 2])
-
-        un_tensor = np.einsum(
-            gate_matrix,
-            gate_indexes,
-            un_tensor,
-            un_indexes,
-            result_indexes,
-            dtype=complex,
-            casting="no",
-        )
-
-    return np.reshape(un_tensor, 2 * [2**qubit_count])
+    return unitary.reshape(rank, rank)

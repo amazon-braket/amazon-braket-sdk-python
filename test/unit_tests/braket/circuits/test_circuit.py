@@ -676,7 +676,7 @@ def test_as_unitary_parameterized():
 def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
     circuit = (
         Circuit()
-        .cphaseshift(2, 1, 0.15)
+        .cphaseshift(1, 2, 0.15)
         .si(3)
         .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3])
     )
@@ -686,7 +686,7 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
 
     assert np.allclose(
         circuit.as_unitary(),
-        np.kron(gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))),
+        np.kron(gates.CPhaseShift(0.15).to_matrix(), gates.Si().to_matrix()),
     )
 
 
@@ -708,123 +708,88 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
         (Circuit().ry(0, 0.15), gates.Ry(0.15).to_matrix()),
         (Circuit().rz(0, 0.15), gates.Rz(0.15).to_matrix()),
         (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
-        (Circuit().cnot(1, 0), gates.CNot().to_matrix()),
-        (Circuit().cnot(1, 0).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
-        (Circuit().swap(1, 0), gates.Swap().to_matrix()),
+        (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
+        (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
         (Circuit().swap(0, 1), gates.Swap().to_matrix()),
-        (Circuit().iswap(1, 0), gates.ISwap().to_matrix()),
+        (Circuit().swap(1, 0), gates.Swap().to_matrix()),
         (Circuit().iswap(0, 1), gates.ISwap().to_matrix()),
-        (Circuit().pswap(1, 0, 0.15), gates.PSwap(0.15).to_matrix()),
+        (Circuit().iswap(1, 0), gates.ISwap().to_matrix()),
         (Circuit().pswap(0, 1, 0.15), gates.PSwap(0.15).to_matrix()),
-        (Circuit().xy(1, 0, 0.15), gates.XY(0.15).to_matrix()),
+        (Circuit().pswap(1, 0, 0.15), gates.PSwap(0.15).to_matrix()),
         (Circuit().xy(0, 1, 0.15), gates.XY(0.15).to_matrix()),
-        (Circuit().cphaseshift(1, 0, 0.15), gates.CPhaseShift(0.15).to_matrix()),
-        (Circuit().cphaseshift00(1, 0, 0.15), gates.CPhaseShift00(0.15).to_matrix()),
-        (Circuit().cphaseshift01(1, 0, 0.15), gates.CPhaseShift01(0.15).to_matrix()),
-        (Circuit().cphaseshift10(1, 0, 0.15), gates.CPhaseShift10(0.15).to_matrix()),
-        (Circuit().cy(1, 0), gates.CY().to_matrix()),
-        (Circuit().cz(1, 0), gates.CZ().to_matrix()),
-        (Circuit().xx(1, 0, 0.15), gates.XX(0.15).to_matrix()),
-        (Circuit().yy(1, 0, 0.15), gates.YY(0.15).to_matrix()),
-        (Circuit().zz(1, 0, 0.15), gates.ZZ(0.15).to_matrix()),
-        (Circuit().ccnot(2, 1, 0), gates.CCNot().to_matrix()),
+        (Circuit().xy(1, 0, 0.15), gates.XY(0.15).to_matrix()),
+        (Circuit().cphaseshift(0, 1, 0.15), gates.CPhaseShift(0.15).to_matrix()),
+        (Circuit().cphaseshift00(0, 1, 0.15), gates.CPhaseShift00(0.15).to_matrix()),
+        (Circuit().cphaseshift01(0, 1, 0.15), gates.CPhaseShift01(0.15).to_matrix()),
+        (Circuit().cphaseshift10(0, 1, 0.15), gates.CPhaseShift10(0.15).to_matrix()),
+        (Circuit().cy(0, 1), gates.CY().to_matrix()),
+        (Circuit().cz(0, 1), gates.CZ().to_matrix()),
+        (Circuit().xx(0, 1, 0.15), gates.XX(0.15).to_matrix()),
+        (Circuit().yy(0, 1, 0.15), gates.YY(0.15).to_matrix()),
+        (Circuit().zz(0, 1, 0.15), gates.ZZ(0.15).to_matrix()),
+        (Circuit().ccnot(0, 1, 2), gates.CCNot().to_matrix()),
         (
             Circuit()
-            .ccnot(2, 1, 0)
+            .ccnot(0, 1, 2)
             .add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1])),
             gates.CCNot().to_matrix(),
         ),
-        (Circuit().ccnot(1, 2, 0), gates.CCNot().to_matrix()),
-        (Circuit().cswap(2, 1, 0), gates.CSwap().to_matrix()),
-        (Circuit().cswap(2, 0, 1), gates.CSwap().to_matrix()),
-        (Circuit().h(1), np.kron(gates.H().to_matrix(), np.eye(2))),
-        (Circuit().x(1).i(2), np.kron(np.eye(2), np.kron(gates.X().to_matrix(), np.eye(2)))),
+        (Circuit().ccnot(0, 1, 2), gates.CCNot().to_matrix()),
+        (Circuit().cswap(0, 1, 2), gates.CSwap().to_matrix()),
+        (Circuit().cswap(0, 2, 1), gates.CSwap().to_matrix()),
+        (Circuit().h(1), gates.H().to_matrix()),
+        (Circuit().x(1).i(2), np.kron(gates.X().to_matrix(), np.eye(2))),
+        (Circuit().y(1).z(2), np.kron(gates.Y().to_matrix(), gates.Z().to_matrix())),
+        (Circuit().rx(1, 0.15), gates.Rx(0.15).to_matrix()),
+        (Circuit().ry(1, 0.15).i(2), np.kron(gates.Ry(0.15).to_matrix(), np.eye(2))),
+        (Circuit().rz(1, 0.15).s(2), np.kron(gates.Rz(0.15).to_matrix(), gates.S().to_matrix())),
+        (Circuit().pswap(1, 2, 0.15), gates.PSwap(0.15).to_matrix()),
+        (Circuit().pswap(2, 1, 0.15), gates.PSwap(0.15).to_matrix()),
+        (Circuit().xy(1, 2, 0.15).i(3), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
+        (Circuit().xy(2, 1, 0.15).i(3), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
         (
-            Circuit().y(1).z(2),
-            np.kron(gates.Z().to_matrix(), np.kron(gates.Y().to_matrix(), np.eye(2))),
+            Circuit().cphaseshift(1, 2, 0.15).si(3),
+            np.kron(gates.CPhaseShift(0.15).to_matrix(), gates.Si().to_matrix()),
         ),
-        (Circuit().rx(1, 0.15), np.kron(gates.Rx(0.15).to_matrix(), np.eye(2))),
-        (
-            Circuit().ry(1, 0.15).i(2),
-            np.kron(np.eye(2), np.kron(gates.Ry(0.15).to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().rz(1, 0.15).s(2),
-            np.kron(gates.S().to_matrix(), np.kron(gates.Rz(0.15).to_matrix(), np.eye(2))),
-        ),
-        (Circuit().pswap(2, 1, 0.15), np.kron(gates.PSwap(0.15).to_matrix(), np.eye(2))),
-        (Circuit().pswap(1, 2, 0.15), np.kron(gates.PSwap(0.15).to_matrix(), np.eye(2))),
-        (
-            Circuit().xy(2, 1, 0.15).i(3),
-            np.kron(np.eye(2), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().xy(1, 2, 0.15).i(3),
-            np.kron(np.eye(2), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cphaseshift(2, 1, 0.15).si(3),
-            np.kron(
-                gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))
-            ),
-        ),
-        (Circuit().ccnot(3, 2, 1), np.kron(gates.CCNot().to_matrix(), np.eye(2))),
-        (Circuit().ccnot(2, 3, 1), np.kron(gates.CCNot().to_matrix(), np.eye(2))),
-        (
-            Circuit().cswap(3, 2, 1).i(4),
-            np.kron(np.eye(2), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cswap(3, 1, 2).i(4),
-            np.kron(np.eye(2), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cswap(3, 2, 1).t(4),
-            np.kron(gates.T().to_matrix(), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cswap(3, 1, 2).t(4),
-            np.kron(gates.T().to_matrix(), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
+        (Circuit().ccnot(1, 2, 3), gates.CCNot().to_matrix()),
+        (Circuit().ccnot(2, 1, 3), gates.CCNot().to_matrix()),
+        (Circuit().cswap(1, 2, 3).i(4), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
+        (Circuit().cswap(1, 3, 2).i(4), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
+        (Circuit().cswap(1, 2, 3).t(4), np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix())),
+        (Circuit().cswap(1, 3, 2).t(4), np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix())),
         (Circuit().h(0).h(0), gates.I().to_matrix()),
         (Circuit().h(0).x(0), np.dot(gates.X().to_matrix(), gates.H().to_matrix())),
         (Circuit().x(0).h(0), np.dot(gates.H().to_matrix(), gates.X().to_matrix())),
         (
-            Circuit().y(0).z(1).cnot(1, 0),
-            np.dot(gates.CNot().to_matrix(), np.kron(gates.Z().to_matrix(), gates.Y().to_matrix())),
-        ),
-        (
-            Circuit().z(0).y(1).cnot(1, 0),
+            Circuit().y(0).z(1).cnot(0, 1),
             np.dot(gates.CNot().to_matrix(), np.kron(gates.Y().to_matrix(), gates.Z().to_matrix())),
         ),
         (
-            Circuit().z(0).y(1).cnot(1, 0).cnot(2, 1),
+            Circuit().z(0).y(1).cnot(0, 1),
+            np.dot(gates.CNot().to_matrix(), np.kron(gates.Z().to_matrix(), gates.Y().to_matrix())),
+        ),
+        (
+            Circuit().y(0).z(1).cnot(0, 1).cnot(1, 2),
             np.dot(
                 np.dot(
-                    np.dot(
-                        np.kron(gates.CNot().to_matrix(), np.eye(2)),
-                        np.kron(np.eye(2), gates.CNot().to_matrix()),
-                    ),
-                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
+                    np.kron(np.eye(2), gates.CNot().to_matrix()),
+                    np.kron(gates.CNot().to_matrix(), np.eye(2)),
                 ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
+                np.kron(np.kron(gates.Y().to_matrix(), gates.Z().to_matrix()), np.eye(2)),
             ),
         ),
         (
-            Circuit().z(0).y(1).cnot(1, 0).ccnot(2, 1, 0),
+            Circuit().z(0).y(1).cnot(0, 1).ccnot(0, 1, 2),
             np.dot(
                 np.dot(
-                    np.dot(
-                        gates.CCNot().to_matrix(),
-                        np.kron(np.eye(2), gates.CNot().to_matrix()),
-                    ),
-                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
+                    gates.CCNot().to_matrix(),
+                    np.kron(gates.CNot().to_matrix(), np.eye(2)),
                 ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
+                np.kron(np.kron(gates.Z().to_matrix(), gates.Y().to_matrix()), np.eye(2)),
             ),
         ),
         (
-            Circuit().cnot(0, 1),
+            Circuit().cnot(1, 0),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0],
@@ -836,7 +801,7 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
             ),
         ),
         (
-            Circuit().ccnot(0, 1, 2),
+            Circuit().ccnot(1, 2, 0),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -852,7 +817,7 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
             ),
         ),
         (
-            Circuit().ccnot(1, 0, 2),
+            Circuit().ccnot(2, 1, 0),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -900,11 +865,12 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
             ),
         ),
         (
-            Circuit().s(0).v(1).cnot(0, 1).cnot(1, 2),
+            Circuit().s(0).v(1).cnot(0, 1).cnot(2, 1),
             np.dot(
                 np.dot(
                     np.dot(
                         np.kron(
+                            np.eye(2),
                             np.array(
                                 [
                                     [1.0, 0.0, 0.0, 0.0],
@@ -914,46 +880,116 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
                                 ],
                                 dtype=complex,
                             ),
-                            np.eye(2),
                         ),
                         np.kron(
-                            np.eye(2),
                             np.array(
                                 [
                                     [1.0, 0.0, 0.0, 0.0],
+                                    [0.0, 1.0, 0.0, 0.0],
                                     [0.0, 0.0, 0.0, 1.0],
                                     [0.0, 0.0, 1.0, 0.0],
-                                    [0.0, 1.0, 0.0, 0.0],
                                 ],
                                 dtype=complex,
                             ),
+                            np.eye(2),
                         ),
                     ),
                     np.kron(np.kron(np.eye(2), gates.V().to_matrix()), np.eye(2)),
                 ),
-                np.kron(np.eye(4), gates.S().to_matrix()),
+                np.kron(gates.S().to_matrix(), np.eye(4)),
             ),
         ),
         (
-            Circuit().z(0).y(1).cnot(0, 1).ccnot(0, 1, 2),
+            Circuit().z(0).y(1).cnot(1, 0).ccnot(2, 1, 0),
             np.dot(
                 np.dot(
                     np.dot(
                         np.array(
                             [
-                                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                                [
+                                    1.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                ],
+                                [
+                                    0.0 + 0.0j,
+                                    1.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                ],
+                                [
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    1.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                ],
+                                [
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    1.0 + 0.0j,
+                                ],
+                                [
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    1.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                ],
+                                [
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    1.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                ],
+                                [
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    1.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                ],
+                                [
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    1.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                    0.0 + 0.0j,
+                                ],
                             ],
                             dtype=complex,
                         ),
                         np.kron(
-                            np.eye(2),
                             np.array(
                                 [
                                     [1.0, 0.0, 0.0, 0.0],
@@ -963,15 +999,16 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
                                 ],
                                 dtype=complex,
                             ),
+                            np.eye(2),
                         ),
                     ),
                     np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
                 ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
+                np.kron(gates.Z().to_matrix(), np.eye(4)),
             ),
         ),
         (
-            Circuit().z(0).y(1).cnot(0, 1).ccnot(2, 0, 1),
+            Circuit().z(0).y(1).cnot(1, 0).ccnot(2, 0, 1),
             np.dot(
                 np.dot(
                     np.dot(
@@ -989,7 +1026,6 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
                             dtype=complex,
                         ),
                         np.kron(
-                            np.eye(2),
                             np.array(
                                 [
                                     [1.0, 0.0, 0.0, 0.0],
@@ -999,11 +1035,12 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
                                 ],
                                 dtype=complex,
                             ),
+                            np.eye(2),
                         ),
                     ),
                     np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
                 ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
+                np.kron(gates.Z().to_matrix(), np.eye(4)),
             ),
         ),
     ],

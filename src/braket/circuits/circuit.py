@@ -1065,13 +1065,15 @@ class Circuit:
     def as_unitary(self) -> np.ndarray:
         """
         Returns the unitary matrix representation of the entire circuit.
-        *Note*: The performance of this method degrades with qubit count. It might be slow for
-        qubit count > 10.
+
+        Note:
+            The performance of this method degrades with qubit count. It might be slow for
+            `qubit count` > 10.
 
         Returns:
             np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-                circuit as a unitary. *Note*: For an empty circuit, an empty numpy array is
-                returned (`array([], dtype=complex128)`)
+                circuit as a unitary. For an empty circuit, an empty numpy array is
+                returned (`array([], dtype=complex)`)
 
         Raises:
             TypeError: If circuit is not composed only of `Gate` instances,
@@ -1080,21 +1082,19 @@ class Circuit:
         Examples:
             >>> circ = Circuit().h(0).cnot(0, 1)
             >>> circ.as_unitary()
-            array([[ 0.70710678+0.j,  0.70710678+0.j,  0.        +0.j,
+            array([[ 0.70710678+0.j,  0.        +0.j,  0.70710678+0.j,
                      0.        +0.j],
-                   [ 0.        +0.j,  0.        +0.j,  0.70710678+0.j,
-                    -0.70710678+0.j],
-                   [ 0.        +0.j,  0.        +0.j,  0.70710678+0.j,
+                   [ 0.        +0.j,  0.70710678+0.j,  0.        +0.j,
                      0.70710678+0.j],
-                   [ 0.70710678+0.j, -0.70710678+0.j,  0.        +0.j,
+                   [ 0.        +0.j,  0.70710678+0.j,  0.        +0.j,
+                    -0.70710678+0.j],
+                   [ 0.70710678+0.j,  0.        +0.j, -0.70710678+0.j,
                      0.        +0.j]])
         """
         qubits = self.qubits
         if not qubits:
             return np.zeros(0, dtype=complex)
-        qubit_count = max(qubits) + 1
-
-        return calculate_unitary(qubit_count, self.instructions)
+        return calculate_unitary(self.instructions, qubits)
 
     @property
     def qubits_frozen(self) -> bool:
