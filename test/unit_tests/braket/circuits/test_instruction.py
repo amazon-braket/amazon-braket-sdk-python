@@ -82,14 +82,12 @@ def test_target_setter(instr):
 def test_adjoint_gate():
     instr = Instruction(Gate.S(), 0)
     adj = instr.adjoint()
-    assert adj == Instruction(Gate.S().adjoint(), 0)
-    ir_original = instr.to_ir()
-    assert adj.to_ir() == [ir_original, ir_original, ir_original]
+    assert adj == [Instruction(Gate.Si(), 0)]
 
 
 def test_adjoint_compiler_directive():
     instr = Instruction(compiler_directives.StartVerbatimBox()).adjoint()
-    assert instr == Instruction(compiler_directives.EndVerbatimBox())
+    assert instr == [Instruction(compiler_directives.EndVerbatimBox())]
 
 
 @pytest.mark.xfail(raises=NotImplementedError)

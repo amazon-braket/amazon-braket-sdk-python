@@ -490,33 +490,18 @@ def test_add_with_circuit_with_target(bell_pair):
 def test_adjoint():
     circ = Circuit().s(0).add_verbatim_box(Circuit().rz(0, 0.123)).expectation(Observable.X(), 0)
     expected = Circuit()
-    expected.add_verbatim_box(Circuit().add_instruction(Instruction(Gate.Rz(0.123).adjoint(), 0)))
-    expected.add_instruction(Instruction(Gate.S(), 0).adjoint())
+    expected.add_verbatim_box(Circuit().rz(0, -0.123))
+    expected.si(0)
     expected.expectation(Observable.X(), 0)
     actual = circ.adjoint()
     assert actual == expected
     assert circ == expected.adjoint()
     assert circ == actual.adjoint()
-    adj_ir = (
-        Circuit()
-        .add_verbatim_box(Circuit().rz(0, -0.123))
-        .s(0)
-        .s(0)
-        .s(0)
-        .expectation(Observable.X(), 0)
-        .to_ir()
-    )
-    actual_ir = actual.to_ir()
-    assert actual_ir == adj_ir
-    assert actual_ir == expected.to_ir()
 
 
 def test_adjoint_subcircuit_free_parameter():
     circ = Circuit().h(0).add_circuit(Circuit().s(0).rz(0, FreeParameter("theta")).adjoint()).x(0)
-    expected = Circuit().h(0)
-    expected.add_instruction(Instruction(Gate.Rz(FreeParameter("theta")).adjoint(), 0))
-    expected.add_instruction(Instruction(Gate.S().adjoint(), 0))
-    expected.x(0)
+    expected = Circuit().h(0).rz(0, -FreeParameter("theta")).si(0).x(0)
     assert circ == expected
 
 

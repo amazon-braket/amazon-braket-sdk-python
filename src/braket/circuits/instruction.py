@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -83,22 +83,22 @@ class Instruction:
         """
         return self._target
 
-    def adjoint(self) -> Instruction:
-        """Returns an Instruction with the adjoint of this instruction's own operator
+    def adjoint(self) -> List[Instruction]:
+        """Returns a list of Instructions implementing adjoint of this instruction's own operator
 
         This operation only works on Gate operators and compiler directives.
 
         Returns:
-            Instruction: A new instruction whose operator is the adjoint of `operator`
+            List[Instruction]: A list of new instructions that comprise the adjoint of this operator
 
         Raises:
             NotImplementedError: If `operator` is not of type `Gate` or `CompilerDirective`
         """
         operator = self._operator
         if isinstance(operator, Gate):
-            return Instruction(operator.adjoint(), self._target)
+            return [Instruction(gate, self._target) for gate in operator.adjoint()]
         elif isinstance(operator, CompilerDirective):
-            return Instruction(operator.counterpart(), self._target)
+            return [Instruction(operator.counterpart(), self._target)]
         raise NotImplementedError(f"Adjoint not supported for {operator}")
 
     def to_ir(self):

@@ -50,16 +50,14 @@ def test_angle_setter(angled_gate):
     angled_gate.angle = 0.14
 
 
-def test_adjoint_expansion(angled_gate):
-    assert angled_gate.adjoint_expansion() == [
-        AngledGate(angle=-0.15, qubit_count=1, ascii_symbols=["foo"])
-    ]
+def test_adjoint(angled_gate):
+    assert angled_gate.adjoint() == [AngledGate(angle=-0.15, qubit_count=1, ascii_symbols=["foo"])]
 
 
-def test_adjoint_expansion_parameterized():
+def test_adjoint_parameterized():
     theta = FreeParameter("theta")
     angled_gate = AngledGate(angle=(theta + 1), qubit_count=1, ascii_symbols=["foo"])
-    assert angled_gate.adjoint_expansion() == [
+    assert angled_gate.adjoint() == [
         AngledGate(angle=-(theta + 1), qubit_count=1, ascii_symbols=["foo"])
     ]
 
@@ -120,8 +118,3 @@ def test_np_float_angle_json():
     match = re.match(r'\{"target": \[0], "angle": (\d*\.?\d*)}', angled_gate_json)
     angle_value = float(match.group(1))
     assert angle_value == angled_gate.angle
-
-
-def test_str(angled_gate):
-    assert str(angled_gate) == "AngledGate('angle': 0.15, 'qubit_count': 1)"
-    assert str(angled_gate.adjoint()) == "(AngledGate)†('angle': 0.15, 'qubit_count': 1)"

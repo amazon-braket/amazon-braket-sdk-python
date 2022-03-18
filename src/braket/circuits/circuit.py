@@ -1030,7 +1030,17 @@ class Circuit:
         return self
 
     def adjoint(self) -> Circuit:
-        circ = Circuit([instr.adjoint() for instr in reversed(self.instructions)])
+        """Returns the adjoint of this circuit.
+
+        This is the adjoint of every instruction of the circuit, in reverse order. Result types,
+        and consequently basis rotations will stay in the same order at the end of the circuit.
+
+        Returns:
+            Circuit: The adjoint of the circuit.
+        """
+        circ = Circuit()
+        for instr in reversed(self.instructions):
+            circ.add(instr.adjoint())
         for result_type in self._result_types:
             circ.add_result_type(result_type)
         return circ
@@ -1056,13 +1066,7 @@ class Circuit:
         Returns:
             Program: A Braket quantum circuit description program in JSON format.
         """
-        ir_instructions = []
-        for instruction in self.instructions:
-            ir_instruction = instruction.to_ir()
-            if isinstance(ir_instruction, List):
-                ir_instructions += ir_instruction
-            else:
-                ir_instructions.append(ir_instruction)
+        ir_instructions = [instruction.to_ir() for instruction in self.instructions]
         ir_results = [result_type.to_ir() for result_type in self.result_types]
         ir_basis_rotation_instructions = [
             instr.to_ir() for instr in self.basis_rotation_instructions

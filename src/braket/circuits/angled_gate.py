@@ -88,7 +88,7 @@ class AngledGate(Gate, Parameterizable):
         """
         raise NotImplementedError
 
-    def adjoint_expansion(self) -> List[Gate]:
+    def adjoint(self) -> List[Gate]:
         """Returns the adjoint of this gate as a singleton list.
 
         Returns:
@@ -107,6 +107,4 @@ class AngledGate(Gate, Parameterizable):
         return False
 
     def __repr__(self):
-        if self._is_adjoint:
-            return f"({self.name})†('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
