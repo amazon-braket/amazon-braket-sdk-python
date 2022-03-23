@@ -54,8 +54,9 @@ def calculate_unitary(instructions: Iterable[Instruction], qubits: QubitSet) -> 
         if not isinstance(instruction.operator, Gate):
             raise TypeError("Only Gate operators are supported to build the unitary")
         unitary = multiply_matrix(
-            unitary, instruction.operator.to_matrix(),
-            tuple(index_substitutions[qubit] for qubit in instruction.target)
+            unitary,
+            instruction.operator.to_matrix(),
+            tuple(index_substitutions[qubit] for qubit in instruction.target),
         )
 
     return unitary.reshape(rank, rank)
