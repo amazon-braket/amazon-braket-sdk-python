@@ -1072,8 +1072,8 @@ class Circuit:
 
         Returns:
             np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-                circuit as a unitary. For an empty circuit, an empty numpy array is
-                returned (`array([], dtype=complex)`)
+            circuit as a unitary. For an empty circuit, an empty numpy array is returned
+            (`array([], dtype=complex)`)
 
         Raises:
             TypeError: If circuit is not composed only of `Gate` instances,
