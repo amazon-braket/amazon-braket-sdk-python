@@ -107,11 +107,13 @@ class H(_HermitianGate):
 Gate.register_gate(H)
 
 
-class I(_FiniteOrderGate):  # noqa: E742, E261
+# I technically has order 1, but we're treating it as an order-2 gate
+# so inverting a qubit with only I on it doesn't remove the qubit from the circuit altogether
+class I(_HermitianGate):  # noqa: E742, E261
     """Identity gate."""
 
     def __init__(self):
-        super().__init__(1, qubit_count=None, ascii_symbols=["I"])
+        super().__init__(qubit_count=None, ascii_symbols=["I"])
 
     def to_ir(self, target: QubitSet):
         return ir.I.construct(target=target[0])
