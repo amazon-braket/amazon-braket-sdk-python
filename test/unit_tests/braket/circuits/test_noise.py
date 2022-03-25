@@ -388,14 +388,23 @@ def test_invalid_values(noise_class, params):
 
 
 @pytest.mark.parametrize(
-    "probs, qubit_count, ascii_symbols", [({"X": 0.1}, 1, ["PC"]), ({"XX": 0.1}, 2, ["PC2", "PC2"])]
+    "probs, qubit_count, ascii_symbols",
+    [
+        ({"X": 0.1}, 1, ["PC"]),
+        ({"XXY": 0.1}, 3, ["PC3", "PC3", "PC3"]),
+        ({"YX": 0.1, "IZ": 0.2}, 2, ["PC2", "PC2"]),
+    ],
 )
 def test_multi_qubit_noise(probs, qubit_count, ascii_symbols):
-    MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+    noise = MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+    assert noise.probabilities == probs
+    assert noise.qubit_count == qubit_count
+    assert noise.ascii_symbols == tuple(ascii_symbols)
+    assert noise.parameters == [probs[key] for key in sorted(probs.keys())]
 
 
 @pytest.mark.xfail(raises=ValueError)
-class TestMultiQubitNoise:
+class TestInvalidMultiQubitNoise:
     qubit_count = 1
     ascii_symbols = ["PC2"]
 

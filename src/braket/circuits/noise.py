@@ -112,6 +112,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
+            max_probability (float): Maximum allowed probability of the noise channel. Default: 0.5
 
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
@@ -149,7 +150,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         Returns the free parameters associated with the object.
 
         Returns:
-            Union[FreeParameterExpression, float]: Returns the free parameters or fixed value
+            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return [self._probability]
@@ -358,15 +359,26 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         return False
 
     @property
+    def probabilities(self) -> Dict[str, float]:
+        """
+        Dict[str, float]: A map of a Pauli string to its corresponding probability.
+        """
+        return self._probabilities
+
+    @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
         Returns the free parameters associated with the object.
 
+        Parameters are in alphabetical order of the Pauli strings in `probabilities`.
+
         Returns:
-            Union[FreeParameterExpression, float]: Returns the free parameters or fixed value
+            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
-        return list(self._probabilities.values())
+        return [
+            self._probabilities[pauli_string] for pauli_string in sorted(self._probabilities.keys())
+        ]
 
     def bind_values(self, **kwargs) -> MultiQubitPauliNoise:
         """
@@ -421,24 +433,23 @@ class PauliNoise(Noise, Parameterizable):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         total = 0
-        self._parameters = []
-        total += self._add_param("probX", probX)
-        total += self._add_param("probY", probY)
-        total += self._add_param("probZ", probZ)
+        total += PauliNoise._validate_param("probX", probX)
+        total += PauliNoise._validate_param("probY", probY)
+        total += PauliNoise._validate_param("probZ", probZ)
         if total > 1:
             raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
+        self._parameters = [probX, probY, probZ]
 
-    def _add_param(self, paramName, param: Union[FreeParameterExpression, float]):
+    @staticmethod
+    def _validate_param(param_name, param: Union[FreeParameterExpression, float]):
         if isinstance(param, FreeParameterExpression):
-            self._parameters.append(param)
             return 0
         else:
             if not isinstance(param, float):
-                raise TypeError(f"{paramName} must be float type")
-            if not (param <= 1.0 and param >= 0.0):
-                raise ValueError(f"{paramName} must be a real number in the interval [0,1]")
-            self._parameters.append(float(param))
-            return param
+                raise TypeError(f"{param_name} must be float type")
+            if not (1.0 >= param >= 0.0):
+                raise ValueError(f"{param_name} must be a real number in the interval [0,1]")
+            return float(param)
 
     @property
     def probX(self) -> Union[FreeParameterExpression, float]:
@@ -487,8 +498,10 @@ class PauliNoise(Noise, Parameterizable):
         """
         Returns the free parameters associated with the object.
 
+        Parameters are in the order [probX, probY, probZ]
+
         Returns:
-            Union[FreeParameterExpression, float]: Returns the free parameters or fixed value
+            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return self._parameters
@@ -567,7 +580,7 @@ class DampingNoise(Noise, Parameterizable):
         Returns the free parameters associated with the object.
 
         Returns:
-            Union[FreeParameterExpression, float]: Returns the free parameters or fixed value
+            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return [self._gamma]
@@ -658,8 +671,10 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         """
         Returns the free parameters associated with the object.
 
+        Parameters are in the order [gamma, probability]
+
         Returns:
-            Union[FreeParameterExpression, float]: Returns the free parameters or fixed value
+            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return [self.gamma, self.probability]
