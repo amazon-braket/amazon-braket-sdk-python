@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from numbers import Number
 from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
@@ -1063,10 +1064,15 @@ class Circuit:
         )
 
     def as_unitary(self) -> np.ndarray:
-        """
+        r"""
         Returns the unitary matrix representation of the entire circuit.
         *Note*: The performance of this method degrades with qubit count. It might be slow for
         qubit count > 10.
+        
+        Warnings:
+            The unitary returned by this method is *little-endian*; the first qubit in the circuit is the
+            _least_ significant. For example, a circuit `Circuit().h(0).x(1)` will yield the unitary
+            :math:`X(1) \otimes H(0)`. This method will be deprecated in a future release.
 
         Returns:
             np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
@@ -1089,6 +1095,10 @@ class Circuit:
                    [ 0.70710678+0.j, -0.70710678+0.j,  0.        +0.j,
                      0.        +0.j]])
         """
+        warnings.warn(
+            "Matrix returned will have qubits in little-endian order; "
+            "this method will be deprecated in a future release"
+        )
         qubits = self.qubits
         if not qubits:
             return np.zeros(0, dtype=complex)
