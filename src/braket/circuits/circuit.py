@@ -1068,11 +1068,11 @@ class Circuit:
         Returns the unitary matrix representation of the entire circuit.
         *Note*: The performance of this method degrades with qubit count. It might be slow for
         qubit count > 10.
-        
+
         Warnings:
-            The unitary returned by this method is *little-endian*; the first qubit in the circuit is the
-            _least_ significant. For example, a circuit `Circuit().h(0).x(1)` will yield the unitary
-            :math:`X(1) \otimes H(0)`. This method will be deprecated in a future release.
+            The unitary returned by this method is *little-endian*; the first qubit in the circuit
+            is the _least_ significant. For example, a circuit `Circuit().h(0).x(1)` will yield the
+            unitary :math:`X(1) \otimes H(0)`. This method will be deprecated in a future release.
 
         Returns:
             np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
