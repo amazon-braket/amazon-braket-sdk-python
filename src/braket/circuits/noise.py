@@ -147,7 +147,8 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the parameters associated with the object, either unbound free parameters or
+        bound values.
 
         Returns:
             List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
@@ -368,7 +369,8 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the parameters associated with the object, either unbound free parameters or
+        bound values.
 
         Parameters are in alphabetical order of the Pauli strings in `probabilities`.
 
@@ -496,7 +498,8 @@ class PauliNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the parameters associated with the object, either unbound free parameters or
+        bound values.
 
         Parameters are in the order [probX, probY, probZ]
 
@@ -577,7 +580,8 @@ class DampingNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the parameters associated with the object, either unbound free parameters or
+        bound values.
 
         Returns:
             List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
@@ -669,7 +673,8 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the parameters associated with the object, either unbound free parameters or
+        bound values.
 
         Parameters are in the order [gamma, probability]
 
