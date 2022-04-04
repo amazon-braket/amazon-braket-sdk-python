@@ -132,7 +132,7 @@ class AwsQuantumJob(QuantumJob):
 
             instance_config (InstanceConfig): Configuration of the instances to be used
                 to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
-                instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
+                instanceCount=1, volumeSizeInGB=30).
 
             stopping_condition (StoppingCondition): The maximum length of time, in seconds,
                 and the maximum number of tasks that a job can run before being forcefully stopped.
@@ -314,7 +314,7 @@ class AwsQuantumJob(QuantumJob):
         stream_prefix = f"{self.name}/"
         stream_names = []  # The list of log streams
         positions = {}  # The current position in each stream, map of stream name -> position
-        instance_count = 1  # currently only support a single instance
+        instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
         has_streams = False
         color_wrap = logs.ColorWrap()
 
