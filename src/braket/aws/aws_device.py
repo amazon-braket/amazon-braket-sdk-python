@@ -67,7 +67,7 @@ class AwsDevice(Device):
             physically located. When this occurs, a cloned `aws_session` is created for the Region
             the QPU is located in.
 
-            See `braket.aws.aws_device.AwsDevice.DEVICE_REGIONS` for the AWS Regions provider
+            See `braket.aws.aws_device.AwsDevice.REGIONS` for the AWS regions provider
             devices are located in across the AWS Braket service.
             This is not a device specific tuple.
         """
