@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import List, Dict
-import numpy as np
-from braket.schema_common import BraketSchemaBase, BraketSchemaHeader
+from typing import Dict, List
 
-from braket.task_result import TaskMetadata, AdditionalMetadata
+import numpy as np
+from braket.schema_common import BraketSchemaHeader
+from braket.task_result import AdditionalMetadata, ResultTypeValue, TaskMetadata
 from braket.task_result.oq3_program_result_v1 import OQ3ProgramResult
 
 
@@ -14,8 +14,8 @@ class OQ3QuantumProgramResult:
     )
     task_metadata: TaskMetadata
     additional_metadata: AdditionalMetadata
-    # bit_variables: Dict[str, np.ndarray] = None
     output_variables: Dict[str, np.ndarray] = None
+    result_types: List[ResultTypeValue] = None
 
     @staticmethod
     def from_object(result: OQ3ProgramResult):
@@ -35,11 +35,8 @@ class OQ3QuantumProgramResult:
         return OQ3QuantumProgramResult(
             task_metadata=result.taskMetadata,
             additional_metadata=result.additionalMetadata,
-            # bit_variables={
-            #     var_name: np.array(values) for var_name, values in result.bitVariables.items()
-            # },
             output_variables={
                 var_name: np.array(values) for var_name, values in result.outputVariables.items()
             },
+            result_types=result.resultTypes,
         )
-
