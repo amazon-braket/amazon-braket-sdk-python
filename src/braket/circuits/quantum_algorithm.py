@@ -20,8 +20,8 @@ from braket.circuits.quantum_operator import QuantumOperator
 
 class QuantumAlgorithm(QuantumOperator):
     """
-    A circuit that can be distinctly represented in a circuit. Functionally, this is a circuit but
-    can retain the identity of the specific algorithm it represents within a larger circuit.
+    An algorithm that can be distinctly represented in a circuit. Functionally, this is a circuit
+    but can retain the identity of the specific algorithm it represents within a larger circuit.
 
     Generation is done recursively based upon the qubit set.
     """

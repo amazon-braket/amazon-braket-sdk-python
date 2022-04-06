@@ -95,6 +95,26 @@ def test_one_gate_one_qubit_rotation_with_parameter_assigned():
     assert AsciiCircuitDiagram.build_diagram(new_circ) == expected
 
 
+def test_quantum_algorithm():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0).h(0).qft([0, 1, 3]).h(1)
+    new_circ = circ.make_bound_circuit({"theta": np.pi})
+    expected = (
+        "T  : |   0    |1| 2 |3|",
+        "                       ",
+        "q0 : -Rx(3.14)-H-*-----",
+        "                 |     ",
+        "q1 : ------------QFT-H-",
+        "                 |     ",
+        "q3 : ------------*-----",
+        "",
+        "T  : |   0    |1| 2 |3|",
+    )
+    expected = "\n".join(expected)
+    print(AsciiCircuitDiagram.build_diagram(new_circ))
+    assert AsciiCircuitDiagram.build_diagram(new_circ) == expected
+
+
 def test_qubit_width():
     circ = Circuit().h(0).h(100)
     expected = (
