@@ -48,7 +48,7 @@ class Gate(QuantumOperator):
         """Returns IR object of quantum operator and target
 
         Args:
-            target (QubitSet): target qubit(s)
+            target (QubitSet): target qubit(s).
             ir_type(IRType) : The IRType to use for converting the gate object to its
                 IR representation. Defaults to IRType.JAQCD.
             qubit_reference_format (str): The string format to use for referencing the qubits
