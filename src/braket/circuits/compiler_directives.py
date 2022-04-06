@@ -24,8 +24,11 @@ class StartVerbatimBox(CompilerDirective):
     def __init__(self):
         super().__init__(["StartVerbatim"])
 
-    def to_ir(self, *args, **kwargs):
+    def to_jaqcd(self, *args, **kwargs):
         return ir.StartVerbatimBox.construct()
+
+    def to_openqasm(self) -> str:
+        return "#pragma braket verbatim\nbox{"
 
 
 class EndVerbatimBox(CompilerDirective):
@@ -37,5 +40,8 @@ class EndVerbatimBox(CompilerDirective):
     def __init__(self):
         super().__init__(["EndVerbatim"])
 
-    def to_ir(self, *args, **kwargs):
+    def to_jaqcd(self, *args, **kwargs):
         return ir.EndVerbatimBox.construct()
+
+    def to_openqasm(self) -> str:
+        return "}"

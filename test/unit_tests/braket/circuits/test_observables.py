@@ -19,6 +19,7 @@ import pytest
 from braket.circuits import Gate, Observable
 from braket.circuits.observables import observable_from_ir
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
+from braket.circuits.serialization import IRType
 
 testdata = [
     (Observable.I(), Gate.I(), ["i"], (), np.array([1, 1])),
@@ -52,6 +53,35 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
     expected = expected_ir
     actual = testobject.to_ir()
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "observable, qubit_reference_format, target, expected_ir",
+    [
+        (Observable.I(), "qubit[{}]", [3], "i(qubit[3])"),
+        (Observable.I(), "qubit[{}]", None, "i all"),
+        (
+            Observable.Hermitian(np.eye(4)),
+            "qu[{}]",
+            [1, 2],
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) qu[1], qu[2]",
+        ),
+        (
+            Observable.Hermitian(np.eye(2)),
+            "qu[{}]",
+            None,
+            "hermitian([[1+0im, 0im], [0im, 1+0im]]) all",
+        ),
+    ],
+)
+def test_observables_to_ir_openqasm(observable, qubit_reference_format, target, expected_ir):
+    assert (
+        observable.to_ir(
+            target, ir_type=IRType.OPENQASM, qubit_reference_format=qubit_reference_format
+        )
+        == expected_ir
+    )
 
 
 @pytest.mark.parametrize(

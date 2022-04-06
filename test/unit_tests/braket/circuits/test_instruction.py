@@ -14,6 +14,7 @@
 import pytest
 
 from braket.circuits import Gate, Instruction, Qubit, QubitSet
+from braket.circuits.serialization import IRType
 
 
 @pytest.fixture
@@ -99,17 +100,21 @@ def test_equality():
 def test_to_ir():
     expected_target = QubitSet([0, 1])
     expected_ir = "foo bar value"
+    expected_ir_type = IRType.OPENQASM
+    expected_qubit_reference_format = "q[{}]"
 
     class FooGate(Gate):
         def __init__(self):
             super().__init__(qubit_count=2, ascii_symbols=["foo", "bar"])
 
-        def to_ir(self, target):
+        def to_ir(self, target, ir_type, qubit_reference_format):
             assert target == expected_target
+            assert ir_type == expected_ir_type
+            assert qubit_reference_format == expected_qubit_reference_format
             return expected_ir
 
     instr = Instruction(FooGate(), expected_target)
-    assert instr.to_ir() == expected_ir
+    assert instr.to_ir(expected_ir_type, expected_qubit_reference_format) == expected_ir
 
 
 def test_copy_creates_new_object(instr):

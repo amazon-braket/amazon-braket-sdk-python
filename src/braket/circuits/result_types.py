@@ -21,6 +21,7 @@ from braket.circuits import circuit
 from braket.circuits.observable import Observable
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
+from braket.circuits.serialization import IRType
 
 """
 To add a new result type:
@@ -41,7 +42,7 @@ class StateVector(ResultType):
     def __init__(self):
         super().__init__(ascii_symbols=["StateVector"])
 
-    def to_ir(self) -> ir.StateVector:
+    def to_jaqcd(self) -> ir.StateVector:
         return ir.StateVector.construct()
 
     @staticmethod
@@ -102,7 +103,7 @@ class DensityMatrix(ResultType):
     def target(self, target: QubitSetInput) -> None:
         self._target = QubitSet(target)
 
-    def to_ir(self) -> ir.DensityMatrix:
+    def to_jaqcd(self) -> ir.DensityMatrix:
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.DensityMatrix.construct(targets=[int(qubit) for qubit in self.target])
@@ -182,7 +183,7 @@ class Amplitude(ResultType):
     def state(self) -> List[str]:
         return self._state
 
-    def to_ir(self) -> ir.Amplitude:
+    def to_jaqcd(self) -> ir.Amplitude:
         return ir.Amplitude.construct(states=self.state)
 
     @staticmethod
@@ -252,7 +253,7 @@ class Probability(ResultType):
     def target(self, target: QubitSetInput) -> None:
         self._target = QubitSet(target)
 
-    def to_ir(self) -> ir.Probability:
+    def to_jaqcd(self) -> ir.Probability:
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.Probability.construct(targets=[int(qubit) for qubit in self.target])
@@ -332,13 +333,21 @@ class Expectation(ObservableResultType):
             target=target,
         )
 
-    def to_ir(self) -> ir.Expectation:
+    def to_jaqcd(self) -> ir.Expectation:
         if self.target:
             return ir.Expectation.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
             )
         else:
             return ir.Expectation.construct(observable=self.observable.to_ir())
+
+    def to_openqasm(self, qubit_reference_format: str) -> str:
+        observable_ir = self.observable.to_ir(
+            target=self.target,
+            ir_type=IRType.OPENQASM,
+            qubit_reference_format=qubit_reference_format,
+        )
+        return f"#pragma braket result expectation {observable_ir}"
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -399,7 +408,7 @@ class Sample(ObservableResultType):
             target=target,
         )
 
-    def to_ir(self) -> ir.Sample:
+    def to_jaqcd(self) -> ir.Sample:
         if self.target:
             return ir.Sample.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
@@ -467,7 +476,7 @@ class Variance(ObservableResultType):
             target=target,
         )
 
-    def to_ir(self) -> ir.Variance:
+    def to_jaqcd(self) -> ir.Variance:
         if self.target:
             return ir.Variance.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]

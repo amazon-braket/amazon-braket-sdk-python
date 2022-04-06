@@ -19,6 +19,7 @@ from braket.circuits.operator import Operator
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.serialization import IRType
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
 InstructionOperator = Operator
@@ -81,12 +82,22 @@ class Instruction:
         """
         return self._target
 
-    def to_ir(self):
+    def to_ir(self, ir_type: IRType = IRType.JAQCD, qubit_reference_format: str = "${}"):
         """
         Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
+
+        Args:
+            ir_type(IRType) : The IRType to use for converting the instruction object to its
+                IR representation.
+            qubit_reference_format (str): The string format to use for referencing the qubits
+                within an instruction. Defaults to "${}" for referencing qubits physically.
         """
-        return self._operator.to_ir([int(qubit) for qubit in self._target])
+        return self._operator.to_ir(
+            [int(qubit) for qubit in self._target],
+            ir_type=ir_type,
+            qubit_reference_format=qubit_reference_format,
+        )
 
     @property
     def ascii_symbols(self) -> Tuple[str, ...]:

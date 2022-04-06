@@ -18,6 +18,7 @@ from typing import Any, Dict, List
 from braket.circuits.observable import Observable
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.serialization import IRType
 
 
 class ResultType:
@@ -57,17 +58,47 @@ class ResultType:
         """
         return self.__class__.__name__
 
-    def to_ir(self, *args, **kwargs) -> Any:
+    def to_ir(
+        self, ir_type: IRType = IRType.JAQCD, qubit_reference_format: str = "${}", **kwargs
+    ) -> Any:
         """Returns IR object of the result type
 
         Args:
-            *args: Positional arguments
+            ir_type(IRType) : The IRType to use for converting the result type object to its
+                IR representation. Defaults to IRType.JAQCD.
+            qubit_reference_format (str): The string format to use for referencing the qubits
+                within the gate. Defaults to "${}" for referencing qubits physically.
             **kwargs: Keyword arguments
 
         Returns:
             IR object of the result type
+
+        Raises:
+            ValueError: If the supplied `ir_type` is not supported.
         """
-        raise NotImplementedError("to_ir has not been implemented yet.")
+        if ir_type == IRType.JAQCD:
+            return self.to_jaqcd()
+        elif ir_type == IRType.OPENQASM:
+            return self.to_openqasm(qubit_reference_format)
+        else:
+            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    def to_jaqcd(self) -> Any:
+        """Returns the JAQCD representation of the result type."""
+        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+
+    def to_openqasm(self, qubit_reference_format: str) -> str:
+        """
+        Returns the openqasm string representation of the result type.
+
+        Args:
+            qubit_reference_format(str): The string format to use for referencing the qubits
+                within the gate.
+
+        Returns:
+            str: Representing the openqasm representation of the result type.
+        """
+        raise NotImplementedError("to_openqasm has not been implemented yet.")
 
     def copy(
         self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None

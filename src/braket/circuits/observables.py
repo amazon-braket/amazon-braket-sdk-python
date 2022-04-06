@@ -27,6 +27,7 @@ from braket.circuits.quantum_operator_helpers import (
     is_hermitian,
     verify_quantum_operator_matrix_dimensions,
 )
+from braket.circuits.qubit_set import QubitSet
 
 
 class H(StandardObservable):
@@ -39,7 +40,7 @@ class H(StandardObservable):
         """
         super().__init__(ascii_symbols=["H"])
 
-    def to_ir(self) -> List[str]:
+    def to_jaqcd(self) -> List[str]:
         return ["h"]
 
     def to_matrix(self) -> np.ndarray:
@@ -63,8 +64,15 @@ class I(Observable):  # noqa: E742, E261
         """
         super().__init__(qubit_count=1, ascii_symbols=["I"])
 
-    def to_ir(self) -> List[str]:
+    def to_jaqcd(self) -> List[str]:
         return ["i"]
+
+    def to_openqasm(self, qubit_reference_format: str, target: QubitSet = None) -> str:
+        if target:
+            qubit_target = qubit_reference_format.format(int(target[0]))
+            return f"i({qubit_target})"
+        else:
+            return "i all"
 
     def to_matrix(self) -> np.ndarray:
         return np.eye(2, dtype=complex)
@@ -94,7 +102,7 @@ class X(StandardObservable):
         """
         super().__init__(ascii_symbols=["X"])
 
-    def to_ir(self) -> List[str]:
+    def to_jaqcd(self) -> List[str]:
         return ["x"]
 
     def to_matrix(self) -> np.ndarray:
@@ -118,7 +126,7 @@ class Y(StandardObservable):
         """
         super().__init__(ascii_symbols=["Y"])
 
-    def to_ir(self) -> List[str]:
+    def to_jaqcd(self) -> List[str]:
         return ["y"]
 
     def to_matrix(self) -> np.ndarray:
@@ -142,7 +150,7 @@ class Z(StandardObservable):
         """
         super().__init__(ascii_symbols=["Z"])
 
-    def to_ir(self) -> List[str]:
+    def to_jaqcd(self) -> List[str]:
         return ["z"]
 
     def to_matrix(self) -> np.ndarray:
@@ -198,7 +206,7 @@ class TensorProduct(Observable):
         self._eigenvalue_indices = {}
         self._all_eigenvalues = None
 
-    def to_ir(self) -> List[str]:
+    def to_jaqcd(self) -> List[str]:
         ir = []
         for obs in self.factors:
             ir.extend(obs.to_ir())
@@ -311,10 +319,25 @@ class Hermitian(Observable):
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
-    def to_ir(self) -> List[List[List[List[float]]]]:
+    def to_jaqcd(self) -> List[List[List[List[float]]]]:
         return [
             [[[element.real, element.imag] for element in row] for row in self._matrix.tolist()]
         ]
+
+    def to_openqasm(self, qubit_reference_format: str, target: QubitSet = None) -> str:
+        def _serialized_matrix():
+            serialized = str(
+                [[f"{complex(elem)}" for elem in row] for row in self._matrix.tolist()]
+            )
+            for replacements in [("(", ""), (")", ""), ("'", ""), ("j", "im")]:
+                serialized = serialized.replace(replacements[0], replacements[1])
+            return serialized
+
+        if target:
+            qubit_target = ", ".join([qubit_reference_format.format(int(t)) for t in target])
+            return f"hermitian({str(_serialized_matrix())}) {qubit_target}"
+        else:
+            return f"hermitian({_serialized_matrix()}) all"
 
     def to_matrix(self) -> np.ndarray:
         return self._matrix

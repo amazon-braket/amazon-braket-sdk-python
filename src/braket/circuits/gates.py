@@ -48,7 +48,7 @@ class H(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["H"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.H.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -85,7 +85,7 @@ class I(Gate):  # noqa: E742, E261
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["I"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.I.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -122,7 +122,7 @@ class X(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["X"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.X.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -159,7 +159,7 @@ class Y(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Y"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Y.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -196,7 +196,7 @@ class Z(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Z"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Z.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -233,7 +233,7 @@ class S(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["S"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.S.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -271,7 +271,7 @@ class Si(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Si"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Si.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -308,7 +308,7 @@ class T(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["T"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.T.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -345,7 +345,7 @@ class Ti(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Ti"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Ti.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -382,7 +382,7 @@ class V(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["V"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.V.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -419,7 +419,7 @@ class Vi(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Vi"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Vi.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
@@ -467,8 +467,14 @@ class Rx(AngledGate):
             ascii_symbols=[angled_ascii_characters("Rx", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet, **kwargs):
         return ir.Rx.construct(target=target[0], angle=self.angle)
+
+    def to_openqasm(self, target: QubitSet, qubit_reference_format: str, **kwargs):
+        print("In Rx")
+        print(target)
+        target_qubit = qubit_reference_format.format(target[0])
+        return f"rx({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
@@ -528,7 +534,7 @@ class Ry(AngledGate):
             ascii_symbols=[angled_ascii_characters("Ry", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Ry.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -589,7 +595,7 @@ class Rz(AngledGate):
             ascii_symbols=[angled_ascii_characters("Rz", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Rz.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -650,7 +656,7 @@ class PhaseShift(AngledGate):
             ascii_symbols=[angled_ascii_characters("PHASE", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.PhaseShift.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -704,7 +710,7 @@ class CNot(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CNot.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
@@ -749,7 +755,7 @@ class Swap(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["SWAP", "SWAP"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Swap.construct(targets=[target[0], target[1]])
 
     def to_matrix(self) -> np.ndarray:
@@ -794,7 +800,7 @@ class ISwap(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.ISwap.construct(targets=[target[0], target[1]])
 
     def to_matrix(self) -> np.ndarray:
@@ -850,7 +856,7 @@ class PSwap(AngledGate):
             ],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.PSwap.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -923,7 +929,7 @@ class XY(AngledGate):
             ],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -995,7 +1001,7 @@ class CPhaseShift(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CPhaseShift.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -1057,7 +1063,7 @@ class CPhaseShift00(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE00", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CPhaseShift00.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -1119,7 +1125,7 @@ class CPhaseShift01(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE01", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CPhaseShift01.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -1181,7 +1187,7 @@ class CPhaseShift10(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE10", angle)],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CPhaseShift10.construct(control=target[0], target=target[1], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -1235,7 +1241,7 @@ class CV(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CV.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
@@ -1280,7 +1286,7 @@ class CY(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CY.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
@@ -1325,7 +1331,7 @@ class CZ(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CZ.construct(control=target[0], target=target[1])
 
     def to_matrix(self) -> np.ndarray:
@@ -1362,7 +1368,7 @@ class ECR(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.ECR.construct(targets=[target[0], target[1]])
 
     def to_matrix(self) -> np.ndarray:
@@ -1419,7 +1425,7 @@ class XX(AngledGate):
             ],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -1496,7 +1502,7 @@ class YY(AngledGate):
             ],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -1573,7 +1579,7 @@ class ZZ(AngledGate):
             ],
         )
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.ZZ.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
@@ -1638,7 +1644,7 @@ class CCNot(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CCNot.construct(controls=[target[0], target[1]], target=target[2])
 
     def to_matrix(self) -> np.ndarray:
@@ -1688,7 +1694,7 @@ class CSwap(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
 
     def to_matrix(self) -> np.ndarray:
@@ -1759,7 +1765,7 @@ class Unitary(Gate):
     def to_matrix(self):
         return np.array(self._matrix)
 
-    def to_ir(self, target: QubitSet):
+    def to_jaqcd(self, target: QubitSet):
         return ir.Unitary.construct(
             targets=[qubit for qubit in target],
             matrix=Unitary._transform_matrix_to_ir(self._matrix),

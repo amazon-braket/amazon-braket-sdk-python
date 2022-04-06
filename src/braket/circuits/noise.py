@@ -15,6 +15,7 @@ from typing import Any, Dict, Optional, Sequence
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
+from braket.circuits.serialization import IRType
 
 
 class Noise(QuantumOperator):
@@ -51,15 +52,52 @@ class Noise(QuantumOperator):
         """
         return self.__class__.__name__
 
-    def to_ir(self, target: QubitSet) -> Any:
+    def to_ir(
+        self, target: QubitSet, ir_type: IRType = IRType.JAQCD, qubit_reference_format: str = "${}"
+    ) -> Any:
         """Returns IR object of quantum operator and target
 
         Args:
             target (QubitSet): target qubit(s)
+            ir_type(IRType) : The IRType to use for converting the noise object to its
+                IR representation. Defaults to IRType.JAQCD.
+            qubit_reference_format (str): The string format to use for referencing the qubits
+                within the noise. Defaults to "${}" for referencing qubits physically.
         Returns:
             IR object of the quantum operator and target
         """
-        raise NotImplementedError("to_ir has not been implemented yet.")
+        if ir_type == IRType.JAQCD:
+            return self.to_jaqcd(target)
+        elif ir_type == IRType.OPENQASM:
+            return self.to_openqasm(target, qubit_reference_format)
+        else:
+            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    def to_jaqcd(self, target: QubitSet) -> Any:
+        """
+        Returns the JAQCD representation of the noise.
+
+        Args:
+            target (QubitSet): target qubit(s).
+
+        Returns:
+            Any: JAQCD object representing the noise.
+        """
+        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+
+    def to_openqasm(self, target: QubitSet, qubit_reference_format: str) -> str:
+        """
+        Returns the openqasm string representation of the noise.
+
+        Args:
+            target (QubitSet): target qubit(s).
+            qubit_reference_format(str): The string format to use for referencing the qubits
+                within the gate.
+
+        Returns:
+            str: Representing the openqasm representation of the noise.
+        """
+        raise NotImplementedError("to_openqasm has not been implemented yet.")
 
     def to_matrix(self, *args, **kwargs) -> Any:
         """Returns a list of matrices defining the Kraus matrices of the noise channel.
