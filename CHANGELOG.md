@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.18.0.post0 (2022-04-06)
+
+### Documentation Changes
+
+ * Specify DEVICE_REGIONS docs.
+
 ## v1.18.0 (2022-03-07)
 
 ### Features
