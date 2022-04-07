@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Union
 
@@ -80,7 +81,7 @@ class Noise(QuantumOperator):
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
     @classmethod
-    def from_dict(cls, noise: dict) -> "Noise":
+    def from_dict(cls, noise: dict) -> Noise:
         if "__class__" in noise:
             noise_name = noise["__class__"]
             noise_cls = getattr(cls, noise_name)
@@ -88,7 +89,7 @@ class Noise(QuantumOperator):
         raise NotImplementedError
 
     @classmethod
-    def register_noise(cls, noise: "Noise"):
+    def register_noise(cls, noise: Noise):
         """Register a noise implementation by adding it into the Noise class.
 
         Args:
