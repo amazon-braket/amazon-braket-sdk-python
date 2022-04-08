@@ -152,7 +152,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the free parameters or fixed value associated with the object.
 
         Returns:
             Union[FreeParameter, float]: Returns the free parameters or fixed value
@@ -377,7 +377,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the free parameters or fixed value associated with the object.
 
         Returns:
             Union[FreeParameter, float]: Returns the free parameters or fixed value
@@ -518,7 +518,7 @@ class PauliNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the free parameters or fixed value associated with the object.
 
         Returns:
             Union[FreeParameter, float]: Returns the free parameters or fixed value
@@ -619,7 +619,7 @@ class DampingNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the free parameters or fixed value associated with the object.
 
         Returns:
             Union[FreeParameter, float]: Returns the free parameters or fixed value
@@ -721,7 +721,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
     @property
     def parameters(self) -> List[Union[FreeParameter, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the free parameters or fixed value associated with the object.
 
         Returns:
             Union[FreeParameter, float]: Returns the free parameters or fixed value

@@ -57,7 +57,7 @@ class AngledGate(Gate, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the free parameters or fixed value associated with the object.
 
         Returns:
             Union[FreeParameterExpression,, float]: Returns the free parameters or fixed value
