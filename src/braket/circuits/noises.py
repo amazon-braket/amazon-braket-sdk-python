@@ -142,7 +142,7 @@ class BitFlip(SingleProbabilisticNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return BitFlip(probability=noise["probability"])
+        return BitFlip(probability=_parameter_from_dict(noise["probability"]))
 
 
 Noise.register_noise(BitFlip)
@@ -243,7 +243,7 @@ class PhaseFlip(SingleProbabilisticNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return PhaseFlip(probability=noise["probability"])
+        return PhaseFlip(probability=_parameter_from_dict(noise["probability"]))
 
 
 Noise.register_noise(PhaseFlip)
@@ -373,7 +373,11 @@ class PauliChannel(PauliNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return PauliChannel(probX=noise["probX"], probY=noise["probY"], probZ=noise["probZ"])
+        return PauliChannel(
+            probX=_parameter_from_dict(noise["probX"]),
+            probY=_parameter_from_dict(noise["probY"]),
+            probZ=_parameter_from_dict(noise["probZ"]),
+        )
 
 
 Noise.register_noise(PauliChannel)
@@ -494,7 +498,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return Depolarizing(probability=noise["probability"])
+        return Depolarizing(probability=_parameter_from_dict(noise["probability"]))
 
 
 Noise.register_noise(Depolarizing)
@@ -632,7 +636,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return TwoQubitDepolarizing(probability=noise["probability"])
+        return TwoQubitDepolarizing(probability=_parameter_from_dict(noise["probability"]))
 
 
 Noise.register_noise(TwoQubitDepolarizing)
@@ -745,7 +749,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return TwoQubitDephasing(probability=noise["probability"])
+        return TwoQubitDephasing(probability=_parameter_from_dict(noise["probability"]))
 
 
 Noise.register_noise(TwoQubitDephasing)
@@ -906,7 +910,10 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return TwoQubitPauliChannel(probabilities=noise["probabilities"])
+        probabilities = dict()
+        for pauli_string, prob in noise["probabilities"].items():
+            probabilities[pauli_string] = _parameter_from_dict(prob)
+        return TwoQubitPauliChannel(probabilities=probabilities)
 
 
 Noise.register_noise(TwoQubitPauliChannel)
@@ -1001,7 +1008,7 @@ class AmplitudeDamping(DampingNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return AmplitudeDamping(gamma=noise["gamma"])
+        return AmplitudeDamping(gamma=_parameter_from_dict(noise["gamma"]))
 
 
 Noise.register_noise(AmplitudeDamping)
@@ -1132,7 +1139,10 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return GeneralizedAmplitudeDamping(gamma=noise["gamma"], probability=noise["probability"])
+        return GeneralizedAmplitudeDamping(
+            gamma=_parameter_from_dict(noise["gamma"]),
+            probability=_parameter_from_dict(noise["probability"]),
+        )
 
 
 Noise.register_noise(GeneralizedAmplitudeDamping)
@@ -1228,7 +1238,7 @@ class PhaseDamping(DampingNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return PhaseDamping(gamma=noise["gamma"])
+        return PhaseDamping(gamma=_parameter_from_dict(noise["gamma"]))
 
 
 Noise.register_noise(PhaseDamping)
@@ -1320,11 +1330,7 @@ class Kraus(Noise):
         )
 
     def to_dict(self) -> dict:
-        return {
-            "__class__": self.__class__.__name__,
-            "matrices": self._matrices,
-            "display_name": self._display_name,
-        }
+        raise NotImplementedError
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -1337,7 +1343,7 @@ class Kraus(Noise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        return Kraus(matrices=noise["matrices"], display_name=noise["display_name"])
+        raise NotImplementedError
 
 
 Noise.register_noise(Kraus)
@@ -1362,3 +1368,18 @@ def _ascii_representation(noise: str, parameters: List[Union[FreeParameter, floa
         )
     param_str = ",".join(param_list)
     return f"{noise}({param_str})"
+
+
+def _parameter_from_dict(parameter: Union[dict, float]) -> Union[FreeParameter, float]:
+    """Converts a parameter from a dictionary if it's a FreeParameter, otherwise returns the float.
+
+    Args:
+        parameter(Union[dict, float]): The parameter to convert.
+
+    Returns:
+        A FreeParameter representing the parameter, if the parameter is a dictionary,
+        otherwise returns the float.
+    """
+    if isinstance(parameter, dict):
+        return FreeParameter.from_dict(parameter)
+    return parameter

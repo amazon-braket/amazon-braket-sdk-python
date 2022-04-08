@@ -175,7 +175,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         """
         return {
             "__class__": self.__class__.__name__,
-            "probability": self.probability,
+            "probability": _parameter_to_dict(self.probability),
             "qubit_count": self.qubit_count,
             "ascii_symbols": self.ascii_symbols,
         }
@@ -393,9 +393,12 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             dict: A dictionary object that represents this object. It can be converted back
             into this object using the `from_dict()` method.
         """
+        probabilities = dict()
+        for pauli_string, prob in self._probabilities.items():
+            probabilities[pauli_string] = _parameter_to_dict(prob)
         return {
             "__class__": self.__class__.__name__,
-            "probabilities": self._probabilities,
+            "probabilities": probabilities,
             "qubit_count": self.qubit_count,
             "ascii_symbols": self.ascii_symbols,
         }
@@ -536,9 +539,9 @@ class PauliNoise(Noise, Parameterizable):
         """
         return {
             "__class__": self.__class__.__name__,
-            "probX": self.probX,
-            "probY": self.probY,
-            "probZ": self.probZ,
+            "probX": _parameter_to_dict(self.probX),
+            "probY": _parameter_to_dict(self.probY),
+            "probZ": _parameter_to_dict(self.probZ),
             "qubit_count": self.qubit_count,
             "ascii_symbols": self.ascii_symbols,
         }
@@ -642,7 +645,7 @@ class DampingNoise(Noise, Parameterizable):
         """
         return {
             "__class__": self.__class__.__name__,
-            "gamma": self.gamma,
+            "gamma": _parameter_to_dict(self.gamma),
             "qubit_count": self.qubit_count,
             "ascii_symbols": self.ascii_symbols,
         }
@@ -748,8 +751,8 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         """
         return {
             "__class__": self.__class__.__name__,
-            "gamma": self.gamma,
-            "probability": self.probability,
+            "gamma": _parameter_to_dict(self.gamma),
+            "probability": _parameter_to_dict(self.probability),
             "qubit_count": self.qubit_count,
             "ascii_symbols": self.ascii_symbols,
         }
@@ -778,3 +781,18 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
             qubit_count=self.qubit_count,
             ascii_symbols=self.ascii_symbols,
         )
+
+
+def _parameter_to_dict(parameter: Union[FreeParameter, float]) -> Union[dict, float]:
+    """Converts a parameter to a dictionary if it's a FreeParameter, otherwise returns the float.
+
+    Args:
+        parameter(Union[FreeParameter, float]): The parameter to convert.
+
+    Returns:
+        A dictionary representation of a FreeParameter if the parameter is a FreeParameter,
+        otherwise returns the float.
+    """
+    if isinstance(parameter, FreeParameter):
+        return parameter.to_dict()
+    return parameter
