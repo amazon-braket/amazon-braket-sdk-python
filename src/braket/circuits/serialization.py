@@ -15,10 +15,18 @@ from enum import Enum
 
 
 class IRType(str, Enum):
+    """Defines the available IRTypes for circuit serialization."""
+
     OPENQASM = "OPENQASM"
     JAQCD = "JAQCD"
 
 
 class QubitReferenceType(str, Enum):
+    """
+    Defines how qubits should be referenced in the generated OpenQASM string.
+    See https://qiskit.github.io/openqasm/language/types.html#quantum-types
+    for details.
+    """
+
     VIRTUAL = "VIRTUAL"
     PHYSICAL = "PHYSICAL"

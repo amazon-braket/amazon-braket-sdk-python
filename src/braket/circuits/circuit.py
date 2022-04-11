@@ -1075,10 +1075,11 @@ class Circuit:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self) -> JaqcdProgram:
-        ir_instructions = [instr.to_ir(ir_type=IRType.JAQCD) for instr in self.instructions]
-        ir_results = [result_type.to_ir(ir_type=IRType.JAQCD) for result_type in self.result_types]
+        jaqcd_ir_type = IRType.JAQCD
+        ir_instructions = [instr.to_ir(ir_type=jaqcd_ir_type) for instr in self.instructions]
+        ir_results = [result_type.to_ir(ir_type=jaqcd_ir_type) for result_type in self.result_types]
         ir_basis_rotation_instructions = [
-            instr.to_ir(ir_type=IRType.JAQCD) for instr in self.basis_rotation_instructions
+            instr.to_ir(ir_type=jaqcd_ir_type) for instr in self.basis_rotation_instructions
         ]
         return JaqcdProgram.construct(
             instructions=ir_instructions,
@@ -1087,6 +1088,36 @@ class Circuit:
         )
 
     def _to_openqasm(self, qubit_reference_type: QubitReferenceType) -> OpenQasmProgram:
+        ir_instructions, qubit_reference_format = self._create_openqasm_header(qubit_reference_type)
+        openqasm_ir_type = IRType.OPENQASM
+        ir_instructions.extend(
+            [
+                instruction.to_ir(
+                    ir_type=openqasm_ir_type, qubit_reference_format=qubit_reference_format
+                )
+                for instruction in self.instructions
+            ]
+        )
+
+        if self.result_types:
+            ir_instructions.extend(
+                [
+                    result_type.to_ir(
+                        ir_type=openqasm_ir_type, qubit_reference_format=qubit_reference_format
+                    )
+                    for result_type in self.result_types
+                ]
+            )
+        else:
+            for idx, qubit in enumerate(self.qubits):
+                qubit_target = qubit_reference_format.format(int(qubit))
+                ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
+
+        return OpenQasmProgram.construct(source="\n".join(ir_instructions))
+
+    def _create_openqasm_header(
+        self, qubit_reference_type: QubitReferenceType
+    ) -> Tuple[List[str], str]:
         ir_instructions = ["OPENQASM 3.0;"]
         if not self.result_types:
             ir_instructions.append(f"bit[{self.qubit_count}] b;")
@@ -1099,31 +1130,7 @@ class Circuit:
             qubit_reference_format = "${}"
         else:
             raise ValueError(f"Invalid qubit_reference_type {qubit_reference_type} supplied.")
-
-        ir_instructions.extend(
-            [
-                instruction.to_ir(
-                    ir_type=IRType.OPENQASM, qubit_reference_format=qubit_reference_format
-                )
-                for instruction in self.instructions
-            ]
-        )
-
-        if self.result_types:
-            ir_instructions.extend(
-                [
-                    result_type.to_ir(
-                        ir_type=IRType.OPENQASM, qubit_reference_format=qubit_reference_format
-                    )
-                    for result_type in self.result_types
-                ]
-            )
-        else:
-            for idx, qubit in enumerate(self.qubits):
-                qubit_target = qubit_reference_format.format(int(qubit))
-                ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
-
-        return OpenQasmProgram.construct(source="\n".join(ir_instructions))
+        return ir_instructions, qubit_reference_format
 
     def as_unitary(self) -> np.ndarray:
         """
