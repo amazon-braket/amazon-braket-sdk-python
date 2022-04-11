@@ -26,7 +26,7 @@ from braket.circuits.noise_model import (
     QubitInitializationCriteria,
     UnitaryGateCriteria,
 )
-from braket.circuits.noises import Depolarizing, PauliChannel, TwoQubitDepolarizing
+from braket.circuits.noises import BitFlip, Depolarizing, PauliChannel, TwoQubitDepolarizing
 
 
 def h_unitary():
@@ -425,6 +425,29 @@ def test_apply_initialization_noise(noise_model, input_circuit, expected_circuit
             .depolarizing(0, 0.02)
             .sample(Observable.X(), 0),
         ),
+        (
+            # model uses observable criteria with any observable/qubit.
+            NoiseModel().add_noise(BitFlip(0.01), ObservableCriteria(None, None)),
+            # input circuit contains many different types of result types for qubit 0
+            Circuit()
+            .h(0)
+            .cnot(0, 1)
+            .probability(target=[0, 1])
+            .probability(target=0)
+            .expectation(observable=Observable.Z(), target=0)
+            .sample(observable=Observable.X(), target=0)
+            .variance(observable=Observable.Z(), target=0),
+            # expected circuit only applies BitFlip once to qubit 0
+            Circuit()
+            .h(0)
+            .cnot(0, 1)
+            .probability(target=[0, 1])
+            .probability(target=0)
+            .expectation(observable=Observable.Z(), target=0)
+            .sample(observable=Observable.X(), target=0)
+            .variance(observable=Observable.Z(), target=0)
+            .apply_readout_noise(BitFlip(0.01), 0),
+        ),
     ],
 )
 def test_apply_readout_noise(noise_model, input_circuit, expected_circuit):
@@ -456,3 +479,17 @@ def test_apply_to_circuit_list():
     noise_model = NoiseModel()
     noise_model.add_noise(Mock(), Mock(spec=Criteria))
     noise_model.apply([])
+
+
+@pytest.mark.parametrize(
+    "circuit",
+    [
+        (Circuit().h(0).amplitude(state=["01", "10"])),
+        (Circuit().h(0).state_vector()),
+    ],
+)
+@pytest.mark.xfail(raises=ValueError)
+def test_apply_invalid_circuit(circuit):
+    noise_model = NoiseModel()
+    noise_model.add_noise(Mock(spec=BitFlip), Mock(spec=ObservableCriteria))
+    noise_model.apply(circuit)
