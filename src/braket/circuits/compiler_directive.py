@@ -67,17 +67,17 @@ class CompilerDirective(Operator):
             ValueError: If the supplied `ir_type` is not supported.
         """
         if ir_type == IRType.JAQCD:
-            return self.to_jaqcd()
+            return self._to_jaqcd()
         elif ir_type == IRType.OPENQASM:
-            return self.to_openqasm()
+            return self._to_openqasm()
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
-    def to_jaqcd(self) -> Any:
+    def _to_jaqcd(self) -> Any:
         """Returns the JAQCD representation of the compiler directive."""
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
-    def to_openqasm(self) -> str:
+    def _to_openqasm(self) -> str:
         """Returns the openqasm string representation of the compiler directive."""
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 

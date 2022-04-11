@@ -57,13 +57,13 @@ class Gate(QuantumOperator):
             IR object of the quantum operator and target
         """
         if ir_type == IRType.JAQCD:
-            return self.to_jaqcd(target)
+            return self._to_jaqcd(target)
         elif ir_type == IRType.OPENQASM:
-            return self.to_openqasm(target, qubit_reference_format)
+            return self._to_openqasm(target, qubit_reference_format)
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
-    def to_jaqcd(self, target: QubitSet) -> Any:
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         """
         Returns the JAQCD representation of the gate.
 
@@ -75,7 +75,7 @@ class Gate(QuantumOperator):
         """
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
-    def to_openqasm(self, target: QubitSet, qubit_reference_format: str) -> str:
+    def _to_openqasm(self, target: QubitSet, qubit_reference_format: str) -> str:
         """
         Returns the openqasm string representation of the gate.
 

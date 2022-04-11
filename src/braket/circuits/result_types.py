@@ -42,7 +42,7 @@ class StateVector(ResultType):
     def __init__(self):
         super().__init__(ascii_symbols=["StateVector"])
 
-    def to_jaqcd(self) -> ir.StateVector:
+    def _to_jaqcd(self) -> ir.StateVector:
         return ir.StateVector.construct()
 
     @staticmethod
@@ -103,7 +103,7 @@ class DensityMatrix(ResultType):
     def target(self, target: QubitSetInput) -> None:
         self._target = QubitSet(target)
 
-    def to_jaqcd(self) -> ir.DensityMatrix:
+    def _to_jaqcd(self) -> ir.DensityMatrix:
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.DensityMatrix.construct(targets=[int(qubit) for qubit in self.target])
@@ -183,7 +183,7 @@ class Amplitude(ResultType):
     def state(self) -> List[str]:
         return self._state
 
-    def to_jaqcd(self) -> ir.Amplitude:
+    def _to_jaqcd(self) -> ir.Amplitude:
         return ir.Amplitude.construct(states=self.state)
 
     @staticmethod
@@ -253,7 +253,7 @@ class Probability(ResultType):
     def target(self, target: QubitSetInput) -> None:
         self._target = QubitSet(target)
 
-    def to_jaqcd(self) -> ir.Probability:
+    def _to_jaqcd(self) -> ir.Probability:
         if self.target:
             # convert qubits to int as required by the ir type
             return ir.Probability.construct(targets=[int(qubit) for qubit in self.target])
@@ -333,7 +333,7 @@ class Expectation(ObservableResultType):
             target=target,
         )
 
-    def to_jaqcd(self) -> ir.Expectation:
+    def _to_jaqcd(self) -> ir.Expectation:
         if self.target:
             return ir.Expectation.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
@@ -341,7 +341,7 @@ class Expectation(ObservableResultType):
         else:
             return ir.Expectation.construct(observable=self.observable.to_ir())
 
-    def to_openqasm(self, qubit_reference_format: str) -> str:
+    def _to_openqasm(self, qubit_reference_format: str) -> str:
         observable_ir = self.observable.to_ir(
             target=self.target,
             ir_type=IRType.OPENQASM,
@@ -408,7 +408,7 @@ class Sample(ObservableResultType):
             target=target,
         )
 
-    def to_jaqcd(self) -> ir.Sample:
+    def _to_jaqcd(self) -> ir.Sample:
         if self.target:
             return ir.Sample.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]
@@ -476,7 +476,7 @@ class Variance(ObservableResultType):
             target=target,
         )
 
-    def to_jaqcd(self) -> ir.Variance:
+    def _to_jaqcd(self) -> ir.Variance:
         if self.target:
             return ir.Variance.construct(
                 observable=self.observable.to_ir(), targets=[int(qubit) for qubit in self.target]

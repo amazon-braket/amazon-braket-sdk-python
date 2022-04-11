@@ -57,17 +57,17 @@ class Observable(QuantumOperator):
             ValueError: If the supplied `ir_type` is not supported.
         """
         if ir_type == IRType.JAQCD:
-            return self.to_jaqcd()
+            return self._to_jaqcd()
         elif ir_type == IRType.OPENQASM:
-            return self.to_openqasm(qubit_reference_format, target)
+            return self._to_openqasm(qubit_reference_format, target)
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
-    def to_jaqcd(self) -> List[Union[str, List[List[List[float]]]]]:
+    def _to_jaqcd(self) -> List[Union[str, List[List[List[float]]]]]:
         """Returns the JAQCD representation of the observable."""
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
-    def to_openqasm(self, qubit_reference_format: str, target: QubitSet = None) -> str:
+    def _to_openqasm(self, qubit_reference_format: str, target: QubitSet = None) -> str:
         """
         Returns the openqasm string representation of the result type.
 

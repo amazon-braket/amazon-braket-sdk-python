@@ -79,10 +79,10 @@ class BitFlip(SingleProbabilisticNoise):
             ascii_symbols=["BF({:.2g})".format(probability)],
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.BitFlip.construct(target=target[0], probability=self.probability)
 
-    def to_openqasm(self, target: QubitSet, qubit_reference_format: str):
+    def _to_openqasm(self, target: QubitSet, qubit_reference_format: str):
         target_qubit = qubit_reference_format.format(int(target[0]))
         return f"#pragma braket noise bit_flip({self.probability}) {target_qubit}"
 
@@ -152,7 +152,7 @@ class PhaseFlip(SingleProbabilisticNoise):
             ascii_symbols=["PF({:.2g})".format(probability)],
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.PhaseFlip.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -239,7 +239,7 @@ class PauliChannel(PauliNoise):
             ascii_symbols=["PC({:.2g},{:.2g},{:.2g})".format(probX, probY, probZ)],
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.PauliChannel.construct(
             target=target[0], probX=self.probX, probY=self.probY, probZ=self.probZ
         )
@@ -333,7 +333,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
             ascii_symbols=["DEPO({:.2g})".format(probability)],
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.Depolarizing.construct(target=target[0], probability=self.probability)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -425,7 +425,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
             ascii_symbols=["DEPO({:.2g})".format(probability)] * 2,
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.TwoQubitDepolarizing.construct(
             targets=[target[0], target[1]], probability=self.probability
         )
@@ -513,7 +513,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
             ascii_symbols=["DEPH({:.2g})".format(probability)] * 2,
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.TwoQubitDephasing.construct(
             targets=[target[0], target[1]], probability=self.probability
         )
@@ -647,7 +647,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
                 K_list.append(np.zeros((4, 4)))
         self._matrix = K_list
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.MultiQubitPauliChannel.construct(
             targets=[target[0], target[1]], probabilities=self.probabilities
         )
@@ -718,7 +718,7 @@ class AmplitudeDamping(DampingNoise):
             ascii_symbols=["AD({:.2g})".format(gamma)],
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.AmplitudeDamping.construct(target=target[0], gamma=self.gamma)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -800,7 +800,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             ascii_symbols=["GAD({:.2g},{:.2g})".format(gamma, probability)],
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.GeneralizedAmplitudeDamping.construct(
             target=target[0], gamma=self.gamma, probability=self.probability
         )
@@ -883,7 +883,7 @@ class PhaseDamping(DampingNoise):
             ascii_symbols=["PD({:.2g})".format(gamma)],
         )
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.PhaseDamping.construct(target=target[0], gamma=self.gamma)
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -958,7 +958,7 @@ class Kraus(Noise):
     def to_matrix(self) -> Iterable[np.ndarray]:
         return self._matrices
 
-    def to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.Kraus.construct(
             targets=[qubit for qubit in target],
             matrices=Kraus._transform_matrix_to_ir(self._matrices),
