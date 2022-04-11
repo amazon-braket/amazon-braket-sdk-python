@@ -529,9 +529,16 @@ class AwsQuantumJob(QuantumJob):
         return hash(self.arn)
 
     @staticmethod
+    def _get_device_region(device_arn: str) -> str:
+        try:
+            return device_arn.split(":")[3]
+        except IndexError:
+            raise ValueError(f"Device arn is not a valid format: {device_arn}")
+
+    @staticmethod
     def _initialize_session(session_value, device, logger):
         aws_session = session_value or AwsSession()
-        device_region = device.split(":")[3]
+        device_region = AwsQuantumJob._get_device_region(device)
         return (
             AwsQuantumJob._initialize_regional_device_session(aws_session, device, logger)
             if device_region
@@ -540,7 +547,7 @@ class AwsQuantumJob(QuantumJob):
 
     @staticmethod
     def _initialize_regional_device_session(aws_session, device, logger):
-        device_region = device.split(":")[3]
+        device_region = AwsQuantumJob._get_device_region(device)
         current_region = aws_session.region
         if current_region != device_region:
             aws_session = aws_session.copy_session(region=device_region)
