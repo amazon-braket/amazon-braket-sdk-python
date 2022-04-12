@@ -25,10 +25,8 @@ from braket.circuits.noise_model.circuit_instruction_criteria import CircuitInst
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
-from braket.circuits.observable import Observable
 from braket.circuits.qubit_set import QubitSetInput
-from braket.circuits.result_type import ResultType
-from braket.circuits.result_types import Amplitude, ObservableResultType, StateVector
+from braket.circuits.result_types import ObservableResultType
 
 
 @dataclass
@@ -339,11 +337,9 @@ class NoiseModel:
         Returns:
             Circuit: The passed in circuit, with the readout noise applied.
         """
-        if not readout_noise_instructions:
+        if not readout_noise_instructions or not circuit.result_types:
             return circuit
-        if _has_observable_result_types(circuit.result_types):
-            return _apply_noise_on_observable_result_types(circuit, readout_noise_instructions)
-        return _apply_noise_on_default_result_types(circuit, readout_noise_instructions)
+        return _apply_noise_on_observable_result_types(circuit, readout_noise_instructions)
 
     @classmethod
     def _items_to_string(
@@ -385,29 +381,6 @@ class NoiseModel:
         return model
 
 
-def _has_observable_result_types(result_types: List[ResultType]) -> bool:
-    """Returns true if the result types have an observable result type that could be matched by
-    noise model instructions. This function will also validate the result types to ensure
-    no invalid result types are present in the circuit.
-
-    Args:
-        result_types (List[ResultType]): The result types.
-
-    Returns:
-        bool: True if the result types have an observable result type that could be matched by
-        noise model instructions.
-    """
-    check_result_types = False
-    for result_type in result_types:
-        if isinstance(result_type, ObservableResultType):
-            check_result_types = True
-        elif isinstance(result_type, (Amplitude, StateVector)):
-            raise ValueError(
-                f"Unable to apply noise to circuits with result type {type(result_type)}"
-            )
-    return check_result_types
-
-
 def _apply_noise_on_observable_result_types(
     circuit: Circuit, readout_noise_instructions: List[NoiseModelInstruction]
 ) -> Circuit:
@@ -433,23 +406,4 @@ def _apply_noise_on_observable_result_types(
         for noise_item_index in noise_to_apply[qubit]:
             item = readout_noise_instructions[noise_item_index]
             circuit.apply_readout_noise(item.noise, qubit)
-    return circuit
-
-
-def _apply_noise_on_default_result_types(
-    circuit: Circuit, readout_noise_instructions: List[NoiseModelInstruction]
-) -> Circuit:
-    """Applies readout noise assuming that the circuit is sampling Z in each qubit in the circuit.
-
-    Args:
-        circuit (Circuit): The circuit to apply the readout noise to.
-
-    Returns:
-        Circuit: The passed in circuit, with the readout noise applied.
-    """
-    for qubits in circuit.qubits:
-        result_type = ResultType.Sample(Observable.Z(), qubits)
-        for item in readout_noise_instructions:
-            if item.criteria.result_type_matches(result_type):
-                circuit.apply_readout_noise(noise=item.noise, target_qubits=qubits)
     return circuit
