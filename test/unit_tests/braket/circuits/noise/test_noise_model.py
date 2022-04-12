@@ -448,6 +448,20 @@ def test_apply_initialization_noise(noise_model, input_circuit, expected_circuit
             .variance(observable=Observable.Z(), target=0)
             .apply_readout_noise(BitFlip(0.01), 0),
         ),
+        (
+            # model uses observable criteria with any observable/qubit.
+            NoiseModel().add_noise(BitFlip(0.01), ObservableCriteria(None, None)),
+            # input circuit only has a probability result type
+            Circuit().h(0).cnot(0, 1).probability(target=[0, 1]).probability(target=0),
+            # expected circuit only applies BitFlip once to qubit 0 and qubit 1
+            Circuit()
+            .h(0)
+            .cnot(0, 1)
+            .probability(target=[0, 1])
+            .probability(target=0)
+            .apply_readout_noise(BitFlip(0.01), 0)
+            .apply_readout_noise(BitFlip(0.01), 1),
+        ),
     ],
 )
 def test_apply_readout_noise(noise_model, input_circuit, expected_circuit):
