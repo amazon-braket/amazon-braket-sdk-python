@@ -1100,6 +1100,8 @@ def test_to_unitary_noise_not_apply_returns_expected_unitary(recwarn):
     [
         (Circuit().h(0), gates.H().to_matrix()),
         (Circuit().h(0).add_result_type(ResultType.Probability(target=[0])), gates.H().to_matrix()),
+        (Circuit().h(1), gates.H().to_matrix()),
+        (Circuit().h(2), gates.H().to_matrix()),
         (Circuit().x(0), gates.X().to_matrix()),
         (Circuit().y(0), gates.Y().to_matrix()),
         (Circuit().z(0), gates.Z().to_matrix()),
@@ -1115,6 +1117,7 @@ def test_to_unitary_noise_not_apply_returns_expected_unitary(recwarn):
         (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
         (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
         (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
+        (Circuit().cnot(2, 4), gates.CNot().to_matrix()),
         (Circuit().swap(0, 1), gates.Swap().to_matrix()),
         (Circuit().swap(1, 0), gates.Swap().to_matrix()),
         (Circuit().iswap(0, 1), gates.ISwap().to_matrix()),
