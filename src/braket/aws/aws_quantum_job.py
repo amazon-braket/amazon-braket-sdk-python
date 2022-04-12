@@ -533,7 +533,11 @@ class AwsQuantumJob(QuantumJob):
         try:
             return device_arn.split(":")[3]
         except IndexError:
-            raise ValueError(f"Device arn is not a valid format: {device_arn}")
+            raise ValueError(
+                f"Device arn is not a valid format: {device_arn}. Examples of correct arns are: "
+                "arn:aws:braket:::device/quantum-simulator/amazon/sv1 or "
+                "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-1."
+            )
 
     @staticmethod
     def _initialize_session(session_value, device, logger):
