@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from dataclasses import dataclass
 from enum import Enum
 
 
@@ -30,3 +31,16 @@ class QubitReferenceType(str, Enum):
 
     VIRTUAL = "VIRTUAL"
     PHYSICAL = "PHYSICAL"
+
+
+@dataclass
+class OpenQASMSerializationProperties:
+    qubit_reference_type: QubitReferenceType = QubitReferenceType.VIRTUAL
+    # Defines the format for addressing the qubits. This assumes that a qubit register named
+    # q has been pre-defined in the OpenQASMProgram.
+    qubit_reference_format: str = "q[{}]"
+
+
+# Type alias to refer to possible serialization properties. Can be expanded once
+# new properties are added.
+SerializationProperties = OpenQASMSerializationProperties

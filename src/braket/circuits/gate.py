@@ -15,7 +15,11 @@ from typing import Any, Optional, Sequence
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
-from braket.circuits.serialization import IRType
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    SerializationProperties,
+)
 
 
 class Gate(QuantumOperator):
@@ -43,7 +47,10 @@ class Gate(QuantumOperator):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     def to_ir(
-        self, target: QubitSet, ir_type: IRType = IRType.JAQCD, qubit_reference_format: str = "${}"
+        self,
+        target: QubitSet,
+        ir_type: IRType = IRType.JAQCD,
+        serialization_properties: SerializationProperties = None,
     ) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -51,15 +58,29 @@ class Gate(QuantumOperator):
             target (QubitSet): target qubit(s).
             ir_type(IRType) : The IRType to use for converting the gate object to its
                 IR representation. Defaults to IRType.JAQCD.
-            qubit_reference_format (str): The string format to use for referencing the qubits
-                within the gate. Defaults to "${}" for referencing qubits physically.
+            serialization_properties (SerializationProperties): The serialization properties to use
+                while serializing the object to the IR representation. The serialization properties
+                supplied must correspond to the supplied `ir_type`. Defaults to None.
         Returns:
             IR object of the quantum operator and target
+
+        Raises:
+            ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
+            properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd(target)
         elif ir_type == IRType.OPENQASM:
-            return self._to_openqasm(target, qubit_reference_format)
+            if serialization_properties and not isinstance(
+                serialization_properties, OpenQASMSerializationProperties
+            ):
+                raise ValueError(
+                    "serialization_properties must be of type OpenQASMSerializationProperties "
+                    "for IRType.OPENQASM."
+                )
+            return self._to_openqasm(
+                target, serialization_properties or OpenQASMSerializationProperties()
+            )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
@@ -75,14 +96,16 @@ class Gate(QuantumOperator):
         """
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
-    def _to_openqasm(self, target: QubitSet, qubit_reference_format: str) -> str:
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ) -> str:
         """
         Returns the openqasm string representation of the gate.
 
         Args:
             target (QubitSet): target qubit(s).
-            qubit_reference_format(str): The string format to use for referencing the qubits
-                within the gate.
+            serialization_properties (OpenQASMSerializationProperties): The serialization properties
+                to use while serializing the object to the IR representation.
 
         Returns:
             str: Representing the openqasm representation of the gate.

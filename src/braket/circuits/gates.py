@@ -29,6 +29,7 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.serialization import OpenQASMSerializationProperties
 
 """
 To add a new gate:
@@ -470,8 +471,10 @@ class Rx(AngledGate):
     def _to_jaqcd(self, target: QubitSet, **kwargs):
         return ir.Rx.construct(target=target[0], angle=self.angle)
 
-    def _to_openqasm(self, target: QubitSet, qubit_reference_format: str, **kwargs):
-        target_qubit = qubit_reference_format.format(target[0])
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.qubit_reference_format.format(target[0])
         return f"rx({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:

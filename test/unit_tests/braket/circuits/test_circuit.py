@@ -32,7 +32,11 @@ from braket.circuits import (
     gates,
     noise,
 )
-from braket.circuits.serialization import IRType, QubitReferenceType
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 from braket.ir.openqasm import Program as OpenQasmProgram
 
 
@@ -610,11 +614,11 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
 
 
 @pytest.mark.parametrize(
-    "circuit, qubit_reference_type, expected_ir",
+    "circuit, serialization_properties, expected_ir",
     [
         (
             Circuit().rx(0, 0.15).rx(1, 0.3),
-            QubitReferenceType.VIRTUAL,
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -631,7 +635,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         ),
         (
             Circuit().rx(0, 0.15).rx(4, 0.3),
-            QubitReferenceType.PHYSICAL,
+            OpenQASMSerializationProperties(QubitReferenceType.PHYSICAL),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -650,7 +654,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
             .rx(0, 0.15)
             .add_verbatim_box(Circuit().rx(4, 0.3))
             .expectation(observable=Observable.I()),
-            QubitReferenceType.PHYSICAL,
+            OpenQASMSerializationProperties(QubitReferenceType.PHYSICAL),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -671,7 +675,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
             .rx(4, 0.3)
             .bit_flip(3, probability=0.2)
             .expectation(observable=Observable.I(), target=0),
-            QubitReferenceType.VIRTUAL,
+            None,
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -687,36 +691,43 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         ),
     ],
 )
-def test_circuit_to_ir_openqasm(circuit, qubit_reference_type, expected_ir):
+def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
     assert (
-        circuit.to_ir(ir_type=IRType.OPENQASM, qubit_reference_type=qubit_reference_type)
+        circuit.to_ir(ir_type=IRType.OPENQASM, serialization_properties=serialization_properties)
         == expected_ir
     )
 
 
 @pytest.mark.parametrize(
-    "ir_type, qubit_reference_type, expected_exception, expected_message",
+    "ir_type, serialization_properties, expected_exception, expected_message",
     [
         (
             "invalid-ir-type",
-            QubitReferenceType.VIRTUAL,
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
             ValueError,
             "Supplied ir_type invalid-ir-type is not supported.",
         ),
         (
             IRType.OPENQASM,
-            "invalid-qubit-reference-type",
+            OpenQASMSerializationProperties("invalid-qubit-reference-type"),
             ValueError,
             "Invalid qubit_reference_type invalid-qubit-reference-type supplied.",
+        ),
+        (
+            IRType.OPENQASM,
+            "invalid-serialization-properties",
+            ValueError,
+            "serialization_properties must be of type OpenQASMSerializationProperties "
+            "for IRType.OPENQASM.",
         ),
     ],
 )
 def test_circuit_to_ir_invalid_inputs(
-    ir_type, qubit_reference_type, expected_exception, expected_message
+    ir_type, serialization_properties, expected_exception, expected_message
 ):
     circuit = Circuit().h(0).cnot(0, 1)
     with pytest.raises(expected_exception) as exc:
-        circuit.to_ir(ir_type, qubit_reference_type)
+        circuit.to_ir(ir_type, serialization_properties=serialization_properties)
     assert exc.value.args[0] == expected_message
 
 

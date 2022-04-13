@@ -260,16 +260,25 @@ def test_is_operator(noise):
 
 
 @pytest.mark.parametrize(
-    "ir_type, expected_exception, expected_message",
+    "ir_type, serialization_properties, expected_exception, expected_message",
     [
-        (IRType.JAQCD, NotImplementedError, "to_jaqcd has not been implemented yet."),
-        (IRType.OPENQASM, NotImplementedError, "to_openqasm has not been implemented yet."),
-        ("invalid-ir-type", ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd has not been implemented yet."),
+        (IRType.OPENQASM, None, NotImplementedError, "to_openqasm has not been implemented yet."),
+        ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+        (
+            IRType.OPENQASM,
+            "invalid-serialization-properties",
+            ValueError,
+            "serialization_properties must be of type OpenQASMSerializationProperties for "
+            "IRType.OPENQASM.",
+        ),
     ],
 )
-def test_noise_to_ir(ir_type, expected_exception, expected_message, noise):
+def test_noise_to_ir(
+    ir_type, serialization_properties, expected_exception, expected_message, noise
+):
     with pytest.raises(expected_exception) as exc:
-        noise.to_ir(0, ir_type)
+        noise.to_ir(0, ir_type, serialization_properties=serialization_properties)
     assert exc.value.args[0] == expected_message
 
 

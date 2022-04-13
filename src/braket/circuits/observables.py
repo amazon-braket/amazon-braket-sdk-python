@@ -28,6 +28,7 @@ from braket.circuits.quantum_operator_helpers import (
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.qubit_set import QubitSet
+from braket.circuits.serialization import OpenQASMSerializationProperties
 
 
 class H(StandardObservable):
@@ -67,9 +68,11 @@ class I(Observable):  # noqa: E742, E261
     def _to_jaqcd(self) -> List[str]:
         return ["i"]
 
-    def _to_openqasm(self, qubit_reference_format: str, target: QubitSet = None) -> str:
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> str:
         if target:
-            qubit_target = qubit_reference_format.format(int(target[0]))
+            qubit_target = serialization_properties.qubit_reference_format.format(int(target[0]))
             return f"i({qubit_target})"
         else:
             return "i all"
@@ -324,9 +327,13 @@ class Hermitian(Observable):
             [[[element.real, element.imag] for element in row] for row in self._matrix.tolist()]
         ]
 
-    def _to_openqasm(self, qubit_reference_format: str, target: QubitSet = None) -> str:
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> str:
         if target:
-            qubit_target = ", ".join([qubit_reference_format.format(int(t)) for t in target])
+            qubit_target = ", ".join(
+                [serialization_properties.qubit_reference_format.format(int(t)) for t in target]
+            )
             return f"hermitian({self._serialized_matrix_openqasm_matrix()}) {qubit_target}"
         else:
             return f"hermitian({self._serialized_matrix_openqasm_matrix()}) all"

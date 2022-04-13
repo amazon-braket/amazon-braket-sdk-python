@@ -15,7 +15,7 @@ from typing import Any, Sequence, Tuple
 
 from braket.circuits.operator import Operator
 from braket.circuits.qubit_set import QubitSet
-from braket.circuits.serialization import IRType
+from braket.circuits.serialization import IRType, SerializationProperties
 
 
 class CompilerDirective(Operator):
@@ -47,7 +47,7 @@ class CompilerDirective(Operator):
         self,
         target: QubitSet = None,
         ir_type: IRType = IRType.JAQCD,
-        qubit_reference_format: str = "${}",
+        serialization_properties: SerializationProperties = None,
         **kwargs,
     ):
         """Returns IR object of the compiler directive.
@@ -56,8 +56,9 @@ class CompilerDirective(Operator):
             target (QubitSet): target qubit(s). Defaults to None
             ir_type(IRType) : The IRType to use for converting the compiler directive object to its
                 IR representation. Defaults to IRType.JAQCD.
-            qubit_reference_format (str): The string format to use for referencing the qubits
-                within the gate. Defaults to "${}" for referencing qubits physically.
+            serialization_properties (SerializationProperties): The serialization properties to use
+                while serializing the object to the IR representation. The serialization properties
+                supplied must correspond to the supplied `ir_type`. Defaults to None.
             **kwargs: Keyword arguments
 
         Returns:

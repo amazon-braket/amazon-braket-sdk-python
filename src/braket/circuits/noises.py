@@ -35,6 +35,7 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.serialization import OpenQASMSerializationProperties
 
 """
 To add a new Noise implementation:
@@ -82,8 +83,10 @@ class BitFlip(SingleProbabilisticNoise):
     def _to_jaqcd(self, target: QubitSet):
         return ir.BitFlip.construct(target=target[0], probability=self.probability)
 
-    def _to_openqasm(self, target: QubitSet, qubit_reference_format: str):
-        target_qubit = qubit_reference_format.format(int(target[0]))
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.qubit_reference_format.format(int(target[0]))
         return f"#pragma braket noise bit_flip({self.probability}) {target_qubit}"
 
     def to_matrix(self) -> Iterable[np.ndarray]:

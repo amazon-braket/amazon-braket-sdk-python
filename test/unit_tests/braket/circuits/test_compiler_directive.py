@@ -51,16 +51,16 @@ def test_str(compiler_directive):
 
 
 @pytest.mark.parametrize(
-    "ir_type, expected_exception, expected_message",
+    "ir_type, serialization_properties, expected_exception, expected_message",
     [
-        (IRType.JAQCD, NotImplementedError, "to_jaqcd has not been implemented yet."),
-        (IRType.OPENQASM, NotImplementedError, "to_openqasm has not been implemented yet."),
-        ("invalid-ir-type", ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd has not been implemented yet."),
+        (IRType.OPENQASM, None, NotImplementedError, "to_openqasm has not been implemented yet."),
+        ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
     ],
 )
 def test_compiler_directive_to_ir(
-    ir_type, expected_exception, expected_message, compiler_directive
+    ir_type, serialization_properties, expected_exception, expected_message, compiler_directive
 ):
     with pytest.raises(expected_exception) as exc:
-        compiler_directive.to_ir(0, ir_type)
+        compiler_directive.to_ir(0, ir_type, serialization_properties=serialization_properties)
     assert exc.value.args[0] == expected_message

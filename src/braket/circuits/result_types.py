@@ -21,7 +21,7 @@ from braket.circuits import circuit
 from braket.circuits.observable import Observable
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
-from braket.circuits.serialization import IRType
+from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
 
 """
 To add a new result type:
@@ -341,11 +341,11 @@ class Expectation(ObservableResultType):
         else:
             return ir.Expectation.construct(observable=self.observable.to_ir())
 
-    def _to_openqasm(self, qubit_reference_format: str) -> str:
+    def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         observable_ir = self.observable.to_ir(
             target=self.target,
             ir_type=IRType.OPENQASM,
-            qubit_reference_format=qubit_reference_format,
+            serialization_properties=serialization_properties,
         )
         return f"#pragma braket result expectation {observable_ir}"
 

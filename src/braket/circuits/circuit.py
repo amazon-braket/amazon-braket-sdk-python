@@ -40,7 +40,12 @@ from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
-from braket.circuits.serialization import IRType, QubitReferenceType
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+    SerializationProperties,
+)
 from braket.circuits.unitary_calculation import calculate_unitary
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
@@ -1048,7 +1053,7 @@ class Circuit:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        qubit_reference_type: QubitReferenceType = QubitReferenceType.VIRTUAL,
+        serialization_properties: SerializationProperties = None,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """
         Converts the circuit into the canonical intermediate representation.
@@ -1057,20 +1062,29 @@ class Circuit:
         Args:
             ir_type (IRType): The IRType to use for converting the circuit object to its
                 IR representation.
-            qubit_reference_type (QubitReferenceType): The qubit reference type to use for
-                the IR representation.
+            serialization_properties (SerializationProperties): The serialization properties to use
+                while serializing the object to the IR representation. The serialization properties
+                supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             (Union[OpenQasmProgram, JaqcdProgram]): A representation of the circuit in the
             `ir_type` format.
 
         Raises:
-            ValueError: If the supplied `ir_type` is not supported.
+            ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
+            properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
         elif ir_type == IRType.OPENQASM:
-            return self._to_openqasm(qubit_reference_type)
+            if serialization_properties and not isinstance(
+                serialization_properties, OpenQASMSerializationProperties
+            ):
+                raise ValueError(
+                    "serialization_properties must be of type OpenQASMSerializationProperties "
+                    "for IRType.OPENQASM."
+                )
+            return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
@@ -1087,13 +1101,18 @@ class Circuit:
             basis_rotation_instructions=ir_basis_rotation_instructions,
         )
 
-    def _to_openqasm(self, qubit_reference_type: QubitReferenceType) -> OpenQasmProgram:
-        ir_instructions, qubit_reference_format = self._create_openqasm_header(qubit_reference_type)
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties
+    ) -> OpenQasmProgram:
+        ir_instructions, qubit_reference_format = self._create_openqasm_header(
+            serialization_properties
+        )
+        serialization_properties.qubit_reference_format = qubit_reference_format
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend(
             [
                 instruction.to_ir(
-                    ir_type=openqasm_ir_type, qubit_reference_format=qubit_reference_format
+                    ir_type=openqasm_ir_type, serialization_properties=serialization_properties
                 )
                 for instruction in self.instructions
             ]
@@ -1103,7 +1122,7 @@ class Circuit:
             ir_instructions.extend(
                 [
                     result_type.to_ir(
-                        ir_type=openqasm_ir_type, qubit_reference_format=qubit_reference_format
+                        ir_type=openqasm_ir_type, serialization_properties=serialization_properties
                     )
                     for result_type in self.result_types
                 ]
@@ -1116,20 +1135,23 @@ class Circuit:
         return OpenQasmProgram.construct(source="\n".join(ir_instructions))
 
     def _create_openqasm_header(
-        self, qubit_reference_type: QubitReferenceType
+        self, serialization_properties: OpenQASMSerializationProperties
     ) -> Tuple[List[str], str]:
         ir_instructions = ["OPENQASM 3.0;"]
         if not self.result_types:
             ir_instructions.append(f"bit[{self.qubit_count}] b;")
 
-        if qubit_reference_type == QubitReferenceType.VIRTUAL:
+        if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
             ir_instructions.append(f"qubit[{total_qubits}] q;")
             qubit_reference_format = "q[{}]"
-        elif qubit_reference_type == QubitReferenceType.PHYSICAL:
+        elif serialization_properties.qubit_reference_type == QubitReferenceType.PHYSICAL:
             qubit_reference_format = "${}"
         else:
-            raise ValueError(f"Invalid qubit_reference_type {qubit_reference_type} supplied.")
+            raise ValueError(
+                f"Invalid qubit_reference_type "
+                f"{serialization_properties.qubit_reference_type} supplied."
+            )
         return ir_instructions, qubit_reference_format
 
     def as_unitary(self) -> np.ndarray:
