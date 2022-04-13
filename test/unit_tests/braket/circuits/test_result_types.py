@@ -16,7 +16,11 @@ import pytest
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Observable, ResultType
 from braket.circuits.result_types import ObservableResultType
-from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 
 testdata = [
     (ResultType.StateVector, "state_vector", ir.StateVector, {}, {}),
@@ -114,12 +118,12 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
     [
         (
             ResultType.Expectation(Observable.I(), target=0),
-            OpenQASMSerializationProperties(qubit_reference_format="q[{}]"),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket result expectation i(q[0])",
         ),
         (
             ResultType.Expectation(Observable.I()),
-            OpenQASMSerializationProperties(qubit_reference_format="${}"),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket result expectation i all",
         ),
     ],

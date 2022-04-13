@@ -14,7 +14,11 @@
 import pytest
 
 from braket.circuits import Gate, Instruction, Qubit, QubitSet
-from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 
 
 @pytest.fixture
@@ -102,7 +106,7 @@ def test_to_ir():
     expected_ir = "foo bar value"
     expected_ir_type = IRType.OPENQASM
     expected_serialization_properties = OpenQASMSerializationProperties(
-        qubit_reference_format="q[{}]"
+        qubit_reference_type=QubitReferenceType.PHYSICAL
     )
 
     class FooGate(Gate):

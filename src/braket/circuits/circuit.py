@@ -1104,10 +1104,7 @@ class Circuit:
     def _to_openqasm(
         self, serialization_properties: OpenQASMSerializationProperties
     ) -> OpenQasmProgram:
-        ir_instructions, qubit_reference_format = self._create_openqasm_header(
-            serialization_properties
-        )
-        serialization_properties.qubit_reference_format = qubit_reference_format
+        ir_instructions = self._create_openqasm_header(serialization_properties)
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend(
             [
@@ -1129,14 +1126,14 @@ class Circuit:
             )
         else:
             for idx, qubit in enumerate(self.qubits):
-                qubit_target = qubit_reference_format.format(int(qubit))
+                qubit_target = serialization_properties.format_target(int(qubit))
                 ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
 
         return OpenQasmProgram.construct(source="\n".join(ir_instructions))
 
     def _create_openqasm_header(
         self, serialization_properties: OpenQASMSerializationProperties
-    ) -> Tuple[List[str], str]:
+    ) -> List[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         if not self.result_types:
             ir_instructions.append(f"bit[{self.qubit_count}] b;")
@@ -1144,15 +1141,12 @@ class Circuit:
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
             ir_instructions.append(f"qubit[{total_qubits}] q;")
-            qubit_reference_format = "q[{}]"
-        elif serialization_properties.qubit_reference_type == QubitReferenceType.PHYSICAL:
-            qubit_reference_format = "${}"
-        else:
+        elif serialization_properties.qubit_reference_type != QubitReferenceType.PHYSICAL:
             raise ValueError(
                 f"Invalid qubit_reference_type "
                 f"{serialization_properties.qubit_reference_type} supplied."
             )
-        return ir_instructions, qubit_reference_format
+        return ir_instructions
 
     def as_unitary(self) -> np.ndarray:
         """

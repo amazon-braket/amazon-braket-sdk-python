@@ -86,7 +86,7 @@ class BitFlip(SingleProbabilisticNoise):
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
     ):
-        target_qubit = serialization_properties.qubit_reference_format.format(int(target[0]))
+        target_qubit = serialization_properties.format_target(int(target[0]))
         return f"#pragma braket noise bit_flip({self.probability}) {target_qubit}"
 
     def to_matrix(self) -> Iterable[np.ndarray]:

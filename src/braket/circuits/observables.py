@@ -72,7 +72,7 @@ class I(Observable):  # noqa: E742, E261
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
         if target:
-            qubit_target = serialization_properties.qubit_reference_format.format(int(target[0]))
+            qubit_target = serialization_properties.format_target(int(target[0]))
             return f"i({qubit_target})"
         else:
             return "i all"
@@ -332,7 +332,7 @@ class Hermitian(Observable):
     ) -> str:
         if target:
             qubit_target = ", ".join(
-                [serialization_properties.qubit_reference_format.format(int(t)) for t in target]
+                [serialization_properties.format_target(int(t)) for t in target]
             )
             return f"hermitian({self._serialized_matrix_openqasm_matrix()}) {qubit_target}"
         else:

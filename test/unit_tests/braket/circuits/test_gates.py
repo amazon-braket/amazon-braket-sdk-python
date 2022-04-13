@@ -16,7 +16,11 @@ import pytest
 
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, FreeParameter, Gate, Instruction, QubitSet
-from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
@@ -282,13 +286,13 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
         (
             Gate.Rx(angle=0.17),
             [4],
-            OpenQASMSerializationProperties(qubit_reference_format="q[{}]"),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "rx(0.17) q[4];",
         ),
         (
             Gate.Rx(angle=0.17),
             [4],
-            OpenQASMSerializationProperties(qubit_reference_format="${}"),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "rx(0.17) $4;",
         ),
     ],

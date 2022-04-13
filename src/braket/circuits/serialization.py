@@ -36,9 +36,12 @@ class QubitReferenceType(str, Enum):
 @dataclass
 class OpenQASMSerializationProperties:
     qubit_reference_type: QubitReferenceType = QubitReferenceType.VIRTUAL
-    # Defines the format for addressing the qubits. This assumes that a qubit register named
-    # q has been pre-defined in the OpenQASMProgram.
-    qubit_reference_format: str = "q[{}]"
+
+    def format_target(self, target: int) -> str:
+        qubit_reference_format = (
+            "q[{}]" if self.qubit_reference_type == QubitReferenceType.VIRTUAL else "${}"
+        )
+        return qubit_reference_format.format(target)
 
 
 # Type alias to refer to possible serialization properties. Can be expanded once
