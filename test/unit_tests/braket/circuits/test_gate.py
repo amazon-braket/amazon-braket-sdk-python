@@ -14,6 +14,7 @@
 import pytest
 
 from braket.circuits import Gate, QuantumOperator
+from braket.circuits.serialization import IRType
 
 
 @pytest.fixture
@@ -23,11 +24,6 @@ def gate():
 
 def test_is_operator(gate):
     assert isinstance(gate, QuantumOperator)
-
-
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_to_ir_not_implemented_by_default(gate):
-    gate.to_ir(None)
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
@@ -78,3 +74,24 @@ def test_register_gate():
 
     Gate.register_gate(_FooGate)
     assert Gate._FooGate().name == _FooGate().name
+
+
+@pytest.mark.parametrize(
+    "ir_type, serialization_properties, expected_exception, expected_message",
+    [
+        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd has not been implemented yet."),
+        (IRType.OPENQASM, None, NotImplementedError, "to_openqasm has not been implemented yet."),
+        ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+        (
+            IRType.OPENQASM,
+            "invalid-property-type",
+            ValueError,
+            "serialization_properties must be of type OpenQASMSerializationProperties for "
+            "IRType.OPENQASM.",
+        ),
+    ],
+)
+def test_gate_to_ir(ir_type, serialization_properties, expected_exception, expected_message, gate):
+    with pytest.raises(expected_exception) as exc:
+        gate.to_ir(0, ir_type, serialization_properties=serialization_properties)
+    assert exc.value.args[0] == expected_message

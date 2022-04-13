@@ -11,9 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Sequence, Tuple
+from typing import Any, Sequence, Tuple
 
 from braket.circuits.operator import Operator
+from braket.circuits.qubit_set import QubitSet
+from braket.circuits.serialization import IRType, SerializationProperties
 
 
 class CompilerDirective(Operator):
@@ -41,8 +43,44 @@ class CompilerDirective(Operator):
         """Tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
         return self._ascii_symbols
 
-    def to_ir(self, *args, **kwargs):
-        raise NotImplementedError("to_ir has not been implemented yet.")
+    def to_ir(
+        self,
+        target: QubitSet = None,
+        ir_type: IRType = IRType.JAQCD,
+        serialization_properties: SerializationProperties = None,
+        **kwargs,
+    ):
+        """Returns IR object of the compiler directive.
+
+        Args:
+            target (QubitSet): target qubit(s). Defaults to None
+            ir_type(IRType) : The IRType to use for converting the compiler directive object to its
+                IR representation. Defaults to IRType.JAQCD.
+            serialization_properties (SerializationProperties): The serialization properties to use
+                while serializing the object to the IR representation. The serialization properties
+                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            **kwargs: Keyword arguments
+
+        Returns:
+            IR object of the compiler directive.
+
+        Raises:
+            ValueError: If the supplied `ir_type` is not supported.
+        """
+        if ir_type == IRType.JAQCD:
+            return self._to_jaqcd()
+        elif ir_type == IRType.OPENQASM:
+            return self._to_openqasm()
+        else:
+            raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    def _to_jaqcd(self) -> Any:
+        """Returns the JAQCD representation of the compiler directive."""
+        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+
+    def _to_openqasm(self) -> str:
+        """Returns the openqasm string representation of the compiler directive."""
+        raise NotImplementedError("to_openqasm has not been implemented yet.")
 
     def __eq__(self, other):
         return isinstance(other, CompilerDirective) and self.name == other.name

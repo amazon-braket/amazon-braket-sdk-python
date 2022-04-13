@@ -16,6 +16,11 @@ import pytest
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Observable, ResultType
 from braket.circuits.result_types import ObservableResultType
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 
 testdata = [
     (ResultType.StateVector, "state_vector", ir.StateVector, {}, {}),
@@ -106,6 +111,28 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
     expected = irclass(**ir_input)
     actual = testclass(**input).to_ir()
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "result_type, serialization_properties, expected_ir",
+    [
+        (
+            ResultType.Expectation(Observable.I(), target=0),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result expectation i(q[0])",
+        ),
+        (
+            ResultType.Expectation(Observable.I()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result expectation i all",
+        ),
+    ],
+)
+def test_result_to_ir_openqasm(result_type, serialization_properties, expected_ir):
+    assert (
+        result_type.to_ir(IRType.OPENQASM, serialization_properties=serialization_properties)
+        == expected_ir
+    )
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,input,ir_input", testdata)

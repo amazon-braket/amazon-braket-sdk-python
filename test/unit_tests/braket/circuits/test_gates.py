@@ -16,6 +16,11 @@ import pytest
 
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, FreeParameter, Gate, Instruction, QubitSet
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
@@ -273,6 +278,32 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
         **create_valid_target_input(irsubclasses)
     )
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "gate, target, serialization_properties, expected_ir",
+    [
+        (
+            Gate.Rx(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "rx(0.17) q[4];",
+        ),
+        (
+            Gate.Rx(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "rx(0.17) $4;",
+        ),
+    ],
+)
+def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
+    assert (
+        gate.to_ir(
+            target, ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        )
+        == expected_ir
+    )
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
