@@ -166,10 +166,6 @@ class AwsQuantumJob(QuantumJob):
             ValueError: Raises ValueError if the parameters are not valid.
         """
 
-        if(type(hyperparameters) is dict):
-            keys_values = hyperparameters.items()
-            hyperparameters = {str(key): str(value) for key, value in keys_values}
-
         aws_session = AwsQuantumJob._initialize_session(aws_session, device, logger)
 
         create_job_kwargs = prepare_quantum_job(

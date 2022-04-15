@@ -142,6 +142,7 @@ def prepare_quantum_job(
     job_name = job_name or _generate_default_job_name(image_uri)
     role_arn = role_arn or aws_session.get_default_jobs_role()
     hyperparameters = hyperparameters or {}
+    hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = input_data or {}
     tags = tags or {}
     default_bucket = aws_session.default_bucket()

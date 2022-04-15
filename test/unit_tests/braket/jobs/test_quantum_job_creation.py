@@ -305,6 +305,7 @@ def _translate_creation_args(create_job_args):
     role_arn = create_job_args["role_arn"] or aws_session.get_default_jobs_role()
     device = create_job_args["device"]
     hyperparameters = create_job_args["hyperparameters"] or {}
+    hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
