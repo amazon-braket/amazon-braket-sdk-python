@@ -165,7 +165,6 @@ class AwsQuantumJob(QuantumJob):
         Raises:
             ValueError: Raises ValueError if the parameters are not valid.
         """
-
         aws_session = AwsQuantumJob._initialize_session(aws_session, device, logger)
 
         create_job_kwargs = prepare_quantum_job(
