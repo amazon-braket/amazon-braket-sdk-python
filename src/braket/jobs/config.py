@@ -29,7 +29,6 @@ class InstanceConfig:
 
     instanceType: str = "ml.m5.large"
     volumeSizeInGb: int = 30
-    instanceCount: int = 1
 
 
 @dataclass
