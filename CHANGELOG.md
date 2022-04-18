@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.18.2 (2022-04-18)
+
+### Bug Fixes and Other Changes
+
+ * stringify hyperparameters automatically
+
+## v1.18.1 (2022-04-14)
+
+### Bug Fixes and Other Changes
+
+ * add exception handling to local job test
+ * Run github workflows on feature branches
+
 ## v1.18.0.post0 (2022-04-06)
 
 ### Documentation Changes
