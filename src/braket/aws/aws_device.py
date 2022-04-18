@@ -516,6 +516,6 @@ class AwsDevice(Device):
             return device_arn.split(":")[3]
         except IndexError:
             raise ValueError(
-                f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
+                f"Device ARN is not a valid format. For valid Braket ARNs, "
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )

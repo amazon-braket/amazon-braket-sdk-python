@@ -990,7 +990,7 @@ def test_exceptions_in_all_device_regions(aws_session):
 def test_bad_arn_format(aws_session):
     logger = logging.getLogger(__name__)
     device_not_found = (
-        "Device ARN is not a valid format: bad-arn-format. For valid Braket ARNs, "
+        "Device ARN is not a valid format. For valid Braket ARNs, "
         "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
     )
 
