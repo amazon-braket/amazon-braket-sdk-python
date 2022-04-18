@@ -1065,7 +1065,7 @@ class Circuit:
 
     def as_unitary(self) -> np.ndarray:
         r"""
-        Returns the unitary matrix representation of the entire circuit.
+        Returns the unitary matrix representation, in little endian format, of the entire circuit.
         *Note*: The performance of this method degrades with qubit count. It might be slow for
         qubit count > 10.
 
@@ -1098,7 +1098,8 @@ class Circuit:
         """
         warnings.warn(
             "Matrix returned will have qubits in little-endian order; "
-            "This method has been deprecated. Please use to_unitary() instead."
+            "This method has been deprecated. Please use to_unitary() instead.",
+            category=DeprecationWarning,
         )
 
         qubits = self.qubits
@@ -1127,7 +1128,7 @@ class Circuit:
 
         Examples:
             >>> circ = Circuit().h(0).cnot(0, 1)
-            >>> circ.as_unitary()
+            >>> circ.to_unitary()
             array([[ 0.70710678+0.j,  0.        +0.j,  0.70710678+0.j,
                      0.        +0.j],
                    [ 0.        +0.j,  0.70710678+0.j,  0.        +0.j,
