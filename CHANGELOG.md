@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.18.2 (2022-04-18)
+
+### Bug Fixes and Other Changes
+
+ * stringify hyperparameters automatically
+
 ## v1.18.1 (2022-04-14)
 
 ### Bug Fixes and Other Changes
