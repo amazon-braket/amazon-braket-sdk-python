@@ -990,9 +990,9 @@ def test_exceptions_in_all_device_regions(aws_session):
 def test_bad_arn_format(aws_session):
     logger = logging.getLogger(__name__)
     device_not_found = (
-        "Device arn is not a valid format: bad-arn-format. Examples of correct arns are: "
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1 or "
-        "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-1."
+        "Device ARN is not a valid format: bad-arn-format. For valid Braket ARNs, "
+        "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
     )
+
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, "bad-arn-format", logger)
