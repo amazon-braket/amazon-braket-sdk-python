@@ -506,6 +506,7 @@ def prepare_job_args(aws_session, device_arn):
         "hyperparameters": Mock(),
         "input_data": Mock(),
         "instance_config": Mock(),
+        "distribution": Mock(),
         "stopping_condition": Mock(),
         "output_data_config": Mock(),
         "copy_checkpoints_from_job": Mock(),

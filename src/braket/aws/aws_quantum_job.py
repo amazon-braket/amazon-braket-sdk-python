@@ -73,6 +73,7 @@ class AwsQuantumJob(QuantumJob):
         hyperparameters: Dict[str, Any] = None,
         input_data: Union[str, Dict, S3DataSourceConfig] = None,
         instance_config: InstanceConfig = None,
+        distribution: str = None,
         stopping_condition: StoppingCondition = None,
         output_data_config: OutputDataConfig = None,
         copy_checkpoints_from_job: str = None,
@@ -134,6 +135,10 @@ class AwsQuantumJob(QuantumJob):
                 to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
                 instanceCount=1, volumeSizeInGB=30).
 
+            distribution (str): A str that specifies how the job should be distributed. If set to
+                "dataparallel", the hyperparameters for the job will be set to use data parallelism
+                features for PyTorch or TensorFlow. Default: None.
+
             stopping_condition (StoppingCondition): The maximum length of time, in seconds,
                 and the maximum number of tasks that a job can run before being forcefully stopped.
                 Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
@@ -181,6 +186,7 @@ class AwsQuantumJob(QuantumJob):
             hyperparameters=hyperparameters,
             input_data=input_data,
             instance_config=instance_config,
+            distribution=distribution,
             stopping_condition=stopping_condition,
             output_data_config=output_data_config,
             copy_checkpoints_from_job=copy_checkpoints_from_job,
