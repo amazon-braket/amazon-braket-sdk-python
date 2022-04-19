@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.19.0 (2022-04-19)
+
+### Deprecations and Removals
+
+ * use to_unitary rather than as_unitary.
+
+### Bug Fixes and Other Changes
+
+ * align ECR gate definition with OQC
+ * add device arn error handling for badly formed ARNs
+
 ## v1.18.2 (2022-04-18)
 
 ### Bug Fixes and Other Changes
