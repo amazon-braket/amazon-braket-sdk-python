@@ -531,7 +531,7 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _initialize_session(session_value, device, logger):
         aws_session = session_value or AwsSession()
-        device_region = device.split(":")[3]
+        device_region = AwsDevice.get_device_region(device)
         return (
             AwsQuantumJob._initialize_regional_device_session(aws_session, device, logger)
             if device_region
@@ -540,7 +540,7 @@ class AwsQuantumJob(QuantumJob):
 
     @staticmethod
     def _initialize_regional_device_session(aws_session, device, logger):
-        device_region = device.split(":")[3]
+        device_region = AwsDevice.get_device_region(device)
         current_region = aws_session.region
         if current_region != device_region:
             aws_session = aws_session.copy_session(region=device_region)
