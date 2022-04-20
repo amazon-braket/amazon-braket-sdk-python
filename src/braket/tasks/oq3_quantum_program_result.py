@@ -1,3 +1,4 @@
+from collections import Counter
 from dataclasses import dataclass
 from typing import Dict, List
 
@@ -17,6 +18,27 @@ class OQ3QuantumProgramResult:
     output_variables: Dict[str, np.ndarray] = None
     result_types: List[ResultTypeValue] = None
 
+    measurements: np.ndarray = None
+    measured_qubits: List[int] = None
+    measurement_counts: Counter = None
+
+    @staticmethod
+    def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
+        """
+        Creates measurement counts from measurements
+
+        Args:
+            measurements (numpy.ndarray): 2d array - row is shot and column is qubit.
+
+        Returns:
+            Counter: A Counter of measurements. Key is the measurements in a big endian binary
+                string. Value is the number of times that measurement occurred.
+        """
+        bitstrings = []
+        for j in range(len(measurements)):
+            bitstrings.append("".join([str(element) for element in measurements[j]]))
+        return Counter(bitstrings)
+
     @staticmethod
     def from_object(result: OQ3ProgramResult):
         """
@@ -32,11 +54,18 @@ class OQ3QuantumProgramResult:
             ValueError: If neither "Measurements" nor "MeasurementProbabilities" is a key
                 in the result dict
         """
-        return OQ3QuantumProgramResult(
+        program_result = OQ3QuantumProgramResult(
             task_metadata=result.taskMetadata,
             additional_metadata=result.additionalMetadata,
             output_variables={
                 var_name: np.array(values) for var_name, values in result.outputVariables.items()
             },
-            result_types=result.resultTypes,
+            result_types=result.resultTypes
         )
+
+        if result.measurements:
+            program_result.measurements = np.asarray(result.measurements, dtype=int)
+            m_counts = OQ3QuantumProgramResult.measurement_counts_from_measurements(program_result.measurements)
+            program_result.measurement_counts = m_counts
+
+        return program_result
