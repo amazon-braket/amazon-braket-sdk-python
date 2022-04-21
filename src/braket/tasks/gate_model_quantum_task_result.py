@@ -28,6 +28,7 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
+from pydantic.main import BaseModel
 
 T = TypeVar("T")
 
@@ -278,13 +279,17 @@ class GateModelQuantumTaskResult:
                 f"Measured qubits {measured_qubits} is not equivalent to number of qubits "
                 + f"{measurements.shape[1]} in measurements"
             )
-        result_types = (
-            result.resultTypes
-            if result.resultTypes
-            else GateModelQuantumTaskResult._calculate_result_types(
+        if result.resultTypes:
+            if isinstance(result.resultTypes[0], BaseModel):
+                result_types = GateModelQuantumTaskResult._calculate_result_types(
+                    json.dumps({"results": [rt.dict() for rt in result.resultTypes]}), measurements, measured_qubits
+                )
+            else:
+                result_types = result.resultTypes
+        else:
+            result_types = GateModelQuantumTaskResult._calculate_result_types(
                 additional_metadata.action.json(), measurements, measured_qubits
             )
-        )
         values = [rt.value for rt in result_types]
         return cls(
             task_metadata=task_metadata,

@@ -158,5 +158,9 @@ def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
 def _(program: Program, simulator: BraketSimulator, shots, *args, **kwargs):
     if DeviceActionType.OPENQASM not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-    results = simulator.run(program, shots)
-    return OQ3QuantumProgramResult.from_object(results)
+    results = simulator.run(program, shots, *args, **kwargs)
+    sim_result_type_map = {
+        "braket_oq3_sv": GateModelQuantumTaskResult,
+        "braket_oq3_native_sv": OQ3QuantumProgramResult,
+    }
+    return sim_result_type_map[simulator.DEVICE_ID].from_object(results)

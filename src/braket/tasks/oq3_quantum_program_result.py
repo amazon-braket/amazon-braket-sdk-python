@@ -63,9 +63,9 @@ class OQ3QuantumProgramResult:
             result_types=result.resultTypes
         )
 
-        if result.measurements:
-            program_result.measurements = np.asarray(result.measurements, dtype=int)
-            m_counts = OQ3QuantumProgramResult.measurement_counts_from_measurements(program_result.measurements)
-            program_result.measurement_counts = m_counts
+        # if result.measurements:
+        #     program_result.measurements = np.asarray(result.measurements, dtype=int)
+        #     m_counts = OQ3QuantumProgramResult.measurement_counts_from_measurements(program_result.measurements)
+        #     program_result.measurement_counts = m_counts
 
         return program_result
