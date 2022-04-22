@@ -36,7 +36,7 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
             ValueError: If unitary is not a Unitary type.
         """
         if not isinstance(unitary, Unitary):
-            raise ValueError("unitary must be a Unitary type")
+            raise TypeError("unitary must be a Unitary type")
         self._unitary = unitary
         self._qubits = parse_qubit_input(qubits)
 

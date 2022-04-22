@@ -75,16 +75,23 @@ def test_matcher(qubits, input_qubits, expected_result):
 @pytest.mark.parametrize(
     "qubits",
     [
-        ([[0, 1], [2]]),
         ([[0, 1], 2]),
     ],
 )
+@pytest.mark.xfail(raises=TypeError)
+def test_invalid_param_types(qubits):
+    QubitInitializationCriteria(qubits=qubits)
+
+
+@pytest.mark.parametrize(
+    "qubits",
+    [
+        ([[0, 1], [2]]),
+    ],
+)
+@pytest.mark.xfail(raises=ValueError)
 def test_invalid_params(qubits):
-    try:
-        QubitInitializationCriteria(qubits=qubits)
-        assert False
-    except ValueError:
-        pass
+    QubitInitializationCriteria(qubits=qubits)
 
 
 def test_representation():

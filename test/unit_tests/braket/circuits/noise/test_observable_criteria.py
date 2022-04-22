@@ -168,12 +168,9 @@ def test_matcher(observables, qubits, matching_result_type, non_matching_result_
         ([Observable.X], [[0, 1]]),
     ],
 )
+@pytest.mark.xfail(raises=ValueError)
 def test_invalid_params(observables, qubits):
-    try:
-        ObservableCriteria(observables=observables, qubits=qubits)
-        assert False
-    except ValueError:
-        pass
+    ObservableCriteria(observables=observables, qubits=qubits)
 
 
 def test_representation():

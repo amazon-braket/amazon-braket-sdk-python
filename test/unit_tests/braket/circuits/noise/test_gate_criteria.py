@@ -140,17 +140,24 @@ def test_matcher(gates, qubits, matching_instructions, non_matching_instructions
 @pytest.mark.parametrize(
     "gates, qubits",
     [
-        ([Gate.H, Gate.CNot], 1),
-        (Gate.CNot, [[0, 1], [2]]),
         (Gate.CNot, [[0, 1], 2]),
     ],
 )
-def test_invalid_params(gates, qubits):
-    try:
-        GateCriteria(gates=gates, qubits=qubits)
-        assert False
-    except ValueError:
-        pass
+@pytest.mark.xfail(raises=TypeError)
+def test_invalid_type_params(gates, qubits):
+    GateCriteria(gates=gates, qubits=qubits)
+
+
+@pytest.mark.parametrize(
+    "gates, qubits",
+    [
+        ([Gate.H, Gate.CNot], 1),
+        (Gate.CNot, [[0, 1], [2]]),
+    ],
+)
+@pytest.mark.xfail(raises=ValueError)
+def test_invalid_value_params(gates, qubits):
+    GateCriteria(gates=gates, qubits=qubits)
 
 
 def test_representation():

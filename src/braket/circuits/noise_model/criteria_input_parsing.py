@@ -69,7 +69,7 @@ def parse_qubit_input(
         return None
     types = {type(item) for item in qubits}
     if len(types) != 1:
-        raise ValueError("Qubit targets must be all the same type.")
+        raise TypeError("Qubit targets must be all the same type.")
     qubit_count = (
         expected_qubit_count if expected_qubit_count is not None and expected_qubit_count > 0 else 1
     )

@@ -72,12 +72,11 @@ def test_serialization():
 
 
 @pytest.mark.parametrize(
-    "unitary, qubits, defaults, matching_instructions, non_matching_instructions",
+    "unitary, qubits, matching_instructions, non_matching_instructions",
     [
         (
             h_unitary(),
             range(3),
-            None,
             [
                 Instruction(h_unitary(), 0),
                 Instruction(h_unitary(), 1),
@@ -92,7 +91,6 @@ def test_serialization():
         (
             cnot_unitary(),
             [[0, 1]],
-            None,
             [
                 Instruction(cnot_unitary(), [0, 1]),
             ],
@@ -103,13 +101,11 @@ def test_serialization():
         (
             h_unitary(),
             1,
-            None,
             [Instruction(h_unitary(), 1)],
             [Instruction(h_unitary(), 0)],
         ),
         (
             h_unitary(),
-            None,
             None,
             [Instruction(h_unitary(), 0), Instruction(h_unitary(), 10)],
             [Instruction(i_unitary(), 1), Instruction(x_unitary(), 3)],
@@ -117,13 +113,12 @@ def test_serialization():
         (
             h_unitary(),
             [],
-            None,
             [Instruction(h_unitary(), 0), Instruction(h_unitary(), 10)],
             [Instruction(i_unitary(), 1), Instruction(x_unitary(), 3)],
         ),
     ],
 )
-def test_matcher(unitary, qubits, defaults, matching_instructions, non_matching_instructions):
+def test_matcher(unitary, qubits, matching_instructions, non_matching_instructions):
     criteria = UnitaryGateCriteria(unitary=unitary, qubits=qubits)
     for instruction in matching_instructions:
         assert criteria.instruction_matches(instruction)
@@ -140,12 +135,9 @@ def test_matcher(unitary, qubits, defaults, matching_instructions, non_matching_
         (np.zeros(15, dtype=int), 1),
     ],
 )
+@pytest.mark.xfail(raises=TypeError)
 def test_invalid_params(unitary, qubits):
-    try:
-        UnitaryGateCriteria(unitary=unitary, qubits=qubits)
-        assert False
-    except ValueError:
-        pass
+    UnitaryGateCriteria(unitary=unitary, qubits=qubits)
 
 
 def test_representation():
