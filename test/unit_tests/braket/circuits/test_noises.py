@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import json
+
 import numpy as np
 import pytest
 
@@ -402,6 +404,39 @@ def test_fixed_qubit_count(testclass, subroutine_name, irclass, irsubclasses, kw
     if fixed_qubit_count is not NotImplemented:
         noise = testclass(**create_valid_noise_class_input(irsubclasses, **kwargs))
         assert noise.qubit_count == fixed_qubit_count
+
+
+@pytest.mark.parametrize(
+    "parameterized_noise",
+    [
+        (Noise.BitFlip(0.1)),
+        (Noise.BitFlip(FreeParameter("alpha"))),
+        (Noise.PhaseFlip(0.1)),
+        (Noise.PhaseFlip(FreeParameter("alpha"))),
+        (Noise.Depolarizing(0.1)),
+        (Noise.Depolarizing(FreeParameter("alpha"))),
+        (Noise.AmplitudeDamping(0.1)),
+        (Noise.AmplitudeDamping(FreeParameter("alpha"))),
+        (Noise.GeneralizedAmplitudeDamping(0.1, 0.2)),
+        (Noise.GeneralizedAmplitudeDamping(FreeParameter("alpha"), FreeParameter("beta"))),
+        (Noise.PhaseDamping(0.1)),
+        (Noise.PhaseDamping(FreeParameter("alpha"))),
+        (Noise.TwoQubitDepolarizing(0.1)),
+        (Noise.TwoQubitDepolarizing(FreeParameter("alpha"))),
+        (Noise.TwoQubitDephasing(0.1)),
+        (Noise.TwoQubitDephasing(FreeParameter("alpha"))),
+        (Noise.TwoQubitPauliChannel({"XX": 0.1, "YY": 0.2})),
+        (Noise.TwoQubitPauliChannel({"XX": FreeParameter("x"), "YY": FreeParameter("y")})),
+        (Noise.PauliChannel(0.1, 0.2, 0.3)),
+        (Noise.PauliChannel(FreeParameter("x"), FreeParameter("y"), FreeParameter("z"))),
+    ],
+)
+def test_serialization(parameterized_noise):
+    serialized = parameterized_noise.to_dict()
+    serialized_str = json.dumps(serialized)
+    deserialized_dict = json.loads(serialized_str)
+    deserialized = Noise.from_dict(deserialized_dict)
+    assert deserialized == parameterized_noise
 
 
 @pytest.mark.parametrize(

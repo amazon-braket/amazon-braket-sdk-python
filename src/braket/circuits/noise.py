@@ -82,7 +82,15 @@ class Noise(QuantumOperator):
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
     @classmethod
-    def register_noise(cls, noise: "Noise"):
+    def from_dict(cls, noise: dict) -> Noise:
+        if "__class__" in noise:
+            noise_name = noise["__class__"]
+            noise_cls = getattr(cls, noise_name)
+            return noise_cls.from_dict(noise)
+        raise NotImplementedError
+
+    @classmethod
+    def register_noise(cls, noise: Noise):
         """Register a noise implementation by adding it into the Noise class.
 
         Args:
@@ -176,6 +184,21 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
             NotImplementedError: Subclasses should implement this function.
         """
         raise NotImplementedError
+
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
+        return {
+            "__class__": self.__class__.__name__,
+            "probability": _parameter_to_dict(self.probability),
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
 
 
 class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
@@ -397,6 +420,24 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             NotImplementedError: Subclasses should implement this function.
         """
         raise NotImplementedError
+    
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
+        probabilities = dict()
+        for pauli_string, prob in self._probabilities.items():
+            probabilities[pauli_string] = _parameter_to_dict(prob)
+        return {
+            "__class__": self.__class__.__name__,
+            "probabilities": probabilities,
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
 
 
 class PauliNoise(Noise, Parameterizable):
@@ -457,7 +498,7 @@ class PauliNoise(Noise, Parameterizable):
     def probX(self) -> Union[FreeParameterExpression, float]:
         """
         Returns:
-            probX (Union[FreeParameterExpression, float]): The probability of a Pauli X error.
+            Union[FreeParameterExpression, float]: The probability of a Pauli X error.
         """
         return self._parameters[0]
 
@@ -465,7 +506,7 @@ class PauliNoise(Noise, Parameterizable):
     def probY(self) -> Union[FreeParameterExpression, float]:
         """
         Returns:
-            probY (Union[FreeParameterExpression, float]): The probability of a Pauli Y error.
+            Union[FreeParameterExpression, float]: The probability of a Pauli Y error.
         """
         return self._parameters[1]
 
@@ -473,7 +514,7 @@ class PauliNoise(Noise, Parameterizable):
     def probZ(self) -> Union[FreeParameterExpression, float]:
         """
         Returns:
-            probZ (Union[FreeParameterExpression, float]): The probability of a Pauli Z error.
+            Union[FreeParameterExpression, float]: The probability of a Pauli Z error.
         """
         return self._parameters[2]
 
@@ -525,7 +566,24 @@ class PauliNoise(Noise, Parameterizable):
         """
         raise NotImplementedError
 
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
 
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
+        return {
+            "__class__": self.__class__.__name__,
+            "probX": _parameter_to_dict(self.probX),
+            "probY": _parameter_to_dict(self.probY),
+            "probZ": _parameter_to_dict(self.probZ),
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
+      
 class DampingNoise(Noise, Parameterizable):
     """
     Class `DampingNoise` represents a damping noise channel
@@ -610,6 +668,21 @@ class DampingNoise(Noise, Parameterizable):
         """
         raise NotImplementedError
 
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
+        return {
+            "__class__": self.__class__.__name__,
+            "gamma": _parameter_to_dict(self.gamma),
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
 
 class GeneralizedAmplitudeDampingNoise(DampingNoise):
     """
@@ -692,3 +765,34 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
                 and self.probability == other.probability
             )
         return False
+
+    def to_dict(self) -> dict:
+        """
+        Converts a this object into a dictionary representation.
+
+        Returns:
+            dict: A dictionary object that represents this object. It can be converted back
+            into this object using the `from_dict()` method.
+        """
+        return {
+            "__class__": self.__class__.__name__,
+            "gamma": _parameter_to_dict(self.gamma),
+            "probability": _parameter_to_dict(self.probability),
+            "qubit_count": self.qubit_count,
+            "ascii_symbols": self.ascii_symbols,
+        }
+
+
+def _parameter_to_dict(parameter: Union[FreeParameter, float]) -> Union[dict, float]:
+    """Converts a parameter to a dictionary if it's a FreeParameter, otherwise returns the float.
+
+    Args:
+        parameter(Union[FreeParameter, float]): The parameter to convert.
+
+    Returns:
+        A dictionary representation of a FreeParameter if the parameter is a FreeParameter,
+        otherwise returns the float.
+    """
+    if isinstance(parameter, FreeParameter):
+        return parameter.to_dict()
+    return parameter
