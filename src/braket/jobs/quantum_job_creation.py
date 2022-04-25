@@ -197,11 +197,11 @@ def prepare_quantum_job(
         ]
         aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
     if distribution == "dataparallel":
-        distribruted_hyperparams = {
+        distributed_hyperparams = {
             "sagemaker_distributed_dataparallel_enabled": "true",
             "sagemaker_instance_type": instance_config.instanceType,
         }
-        hyperparameters.update(distribruted_hyperparams)
+        hyperparameters.update(distributed_hyperparams)
 
     create_job_kwargs = {
         "jobName": job_name,
