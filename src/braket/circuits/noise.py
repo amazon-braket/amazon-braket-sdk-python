@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Union
 
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.quantum_operator import QuantumOperator
@@ -187,7 +188,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -420,10 +421,10 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             NotImplementedError: Subclasses should implement this function.
         """
         raise NotImplementedError
-    
+
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -568,7 +569,7 @@ class PauliNoise(Noise, Parameterizable):
 
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -583,7 +584,7 @@ class PauliNoise(Noise, Parameterizable):
             "ascii_symbols": self.ascii_symbols,
         }
 
-      
+
 class DampingNoise(Noise, Parameterizable):
     """
     Class `DampingNoise` represents a damping noise channel
@@ -670,7 +671,7 @@ class DampingNoise(Noise, Parameterizable):
 
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -768,7 +769,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back

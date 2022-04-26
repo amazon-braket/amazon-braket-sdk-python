@@ -18,6 +18,7 @@ import numpy as np
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import (
@@ -869,6 +870,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
             pauli_string: _substitute_value(prob, **kwargs)
             for pauli_string, prob in self._probabilities.items()
         }
+        return TwoQubitPauliChannel(probabilities=probabilities)
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:

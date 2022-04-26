@@ -271,7 +271,6 @@ def test_to_matrix_not_implemented_by_default(base_noise):
     base_noise.to_matrix(None)
 
 
-
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_invalid_deserializatoin():
     Noise.from_dict({})
@@ -386,41 +385,6 @@ def test_register_noise():
 
     Noise.register_noise(_FooNoise)
     assert Noise._FooNoise().name == _FooNoise().name
-
-
-@pytest.mark.parametrize(
-    "parameterized_noise, params, expected_noise",
-    [
-        (
-            SingleProbabilisticNoise(FreeParameter("alpha"), 1, ["foo"]),
-            {"alpha": 0.1},
-            SingleProbabilisticNoise(0.1, 1, ["foo"]),
-        ),
-        (
-            MultiQubitPauliNoise({"X": FreeParameter("alpha")}, 1, ["foo"]),
-            {"alpha": 0.1},
-            MultiQubitPauliNoise({"X": 0.1}, 1, ["foo"]),
-        ),
-        (
-            PauliNoise(FreeParameter("x"), FreeParameter("y"), FreeParameter("z"), 1, ["foo"]),
-            {"x": 0.1, "y": 0.2, "z": 0.3},
-            PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
-        ),
-        (
-            DampingNoise(FreeParameter("alpha"), 1, ["foo"]),
-            {"alpha": 0.1},
-            DampingNoise(0.1, 1, ["foo"]),
-        ),
-        (
-            GeneralizedAmplitudeDampingNoise(FreeParameter("a"), FreeParameter("b"), 1, ["foo"]),
-            {"a": 0.1, "b": 0.2},
-            GeneralizedAmplitudeDampingNoise(0.1, 0.2, 1, ["foo"]),
-        ),
-    ],
-)
-def test_parameter_binding(parameterized_noise, params, expected_noise):
-    result_noise = parameterized_noise.bind_values(**params)
-    assert result_noise == expected_noise
 
 
 @pytest.mark.parametrize(
