@@ -100,7 +100,7 @@ def prepare_quantum_job(
             instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
 
         distribution (str): A str that specifies how the job should be distributed. If set to
-            "dataparallel", the hyperparameters for the job will be set to use data parallelism
+            "data_parallel", the hyperparameters for the job will be set to use data parallelism
             features for PyTorch or TensorFlow. Default: None.
 
         stopping_condition (StoppingCondition): The maximum length of time, in seconds,
@@ -196,7 +196,7 @@ def prepare_quantum_job(
             "s3Uri"
         ]
         aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
-    if distribution == "dataparallel":
+    if distribution == "data_parallel":
         distributed_hyperparams = {
             "sagemaker_distributed_dataparallel_enabled": "true",
             "sagemaker_instance_type": instance_config.instanceType,

@@ -136,7 +136,7 @@ class AwsQuantumJob(QuantumJob):
                 instanceCount=1, volumeSizeInGB=30).
 
             distribution (str): A str that specifies how the job should be distributed. If set to
-                "dataparallel", the hyperparameters for the job will be set to use data parallelism
+                "data_parallel", the hyperparameters for the job will be set to use data parallelism
                 features for PyTorch or TensorFlow. Default: None.
 
             stopping_condition (StoppingCondition): The maximum length of time, in seconds,
