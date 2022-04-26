@@ -27,6 +27,8 @@ class LogMetricsParser(object):
     METRICS_DEFINITIONS = re.compile(r"(\w+)\s*=\s*([^;]+)\s*;")
     TIMESTAMP = "timestamp"
     ITERATION_NUMBER = "iteration_number"
+    NODE_ID = "node_id"
+    NODE_TAG = re.compile(r"^\[([^\]]*)\]")
 
     def __init__(
         self,
@@ -102,32 +104,37 @@ class LogMetricsParser(object):
             return
         if timestamp and self.TIMESTAMP not in parsed_metrics:
             parsed_metrics[self.TIMESTAMP] = timestamp
+        node_match = self.NODE_TAG.match(message)
+        if node_match:
+            parsed_metrics[self.NODE_ID] = node_match.group(1)
         self.all_metrics.append(parsed_metrics)
 
     def get_columns_and_pivot_indices(
         self, pivot: str
-    ) -> Tuple[Dict[str, List[Union[str, float, int]]], Dict[int, int]]:
+    ) -> Tuple[Dict[str, List[Union[str, float, int]]], Dict[Tuple[int, str], int]]:
         """
-        Parses the metrics to find all the metrics that have the pivot column. The values of
-        the pivot column are assigned a row index, so that all metrics with the same pivot value
-        are stored in the same row.
+        Parses the metrics to find all the metrics that have the pivot column. The values of the
+        pivot column are paired with the node_id and assigned a row index, so that all metrics
+        with the same pivot value and node_id are stored in the same row.
         Args:
             pivot (str): The name of the pivot column. Must be TIMESTAMP or ITERATION_NUMBER.
 
         Returns:
-            Tuple[Dict[str, List[Any]], Dict[int, int]]:
+            Tuple[Dict[str, List[Any]], Dict[Tuple[int, str], int]]:
                 The Dict[str, List[Any]] the result table with all the metrics values initialized
                     to None
-                The Dict[int, int] is the list of pivot indices, where the value of a pivot column
-                    is mapped to a row index.
+                The Dict[Tuple[int, str], int] is the list of pivot indices, where the value of a
+                    pivot column and node_id is mapped to a row index.
         """
         row_count = 0
         pivot_indices: dict[int, int] = {}
         table: dict[str, list[Optional[Union[str, float, int]]]] = {}
         for metric in self.all_metrics:
             if pivot in metric:
-                if metric[pivot] not in pivot_indices:
-                    pivot_indices[metric[pivot]] = row_count
+                # If no node_id is present, pair pivot value with None for the key.
+                metric_pivot = (metric[pivot], metric.get("node_id"))
+                if metric_pivot not in pivot_indices:
+                    pivot_indices[metric_pivot] = row_count
                     row_count += 1
                 for column_name in metric:
                     table[column_name] = [None]
@@ -141,18 +148,21 @@ class LogMetricsParser(object):
         """
         Gets the metric data for a given pivot column name. Metrics without the pivot column
         are not included in the results. Metrics that have the same value in the pivot column
-        are returned in the same row. If the a metric has multiple values for the pivot value,
-        the statistic is used to determine which value is returned.
+        from the same node are returned in the same row. Metrics from different nodes are stored
+        in different rows. If the metric has multiple values for the row, the statistic is used
+        to determine which value is returned.
         For example, for the metrics:
         "iteration_number" : 0, "metricA" : 2, "metricB" : 1,
         "iteration_number" : 0, "metricA" : 1,
         "no_pivot_column" : 0,  "metricA" : 0,
         "iteration_number" : 1, "metricA" : 2,
+        "iteration_number" : 1, "node_id" : "nodeB", "metricB" : 0,
 
         The result with iteration_number as the pivot, statistic of MIN the result will be:
-            iteration_number metricA metricB
-            0                1       1
-            1                2       None
+            iteration_number node_id metricA metricB
+            0                None    1       1
+            1                None    2       None
+            1                nodeB   None    0
 
         Args:
             pivot (str): The name of the pivot column. Must be TIMESTAMP or ITERATION_NUMBER.
@@ -164,7 +174,8 @@ class LogMetricsParser(object):
         table, pivot_indices = self.get_columns_and_pivot_indices(pivot)
         for metric in self.all_metrics:
             if pivot in metric:
-                row = pivot_indices[metric[pivot]]
+                metric_pivot = (metric[pivot], metric.get("node_id"))
+                row = pivot_indices[metric_pivot]
                 for column_name in metric:
                     table[column_name][row] = self._get_value(
                         table[column_name][row], metric[column_name], statistic
