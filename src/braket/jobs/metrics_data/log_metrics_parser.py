@@ -132,7 +132,7 @@ class LogMetricsParser(object):
         for metric in self.all_metrics:
             if pivot in metric:
                 # If no node_id is present, pair pivot value with None for the key.
-                metric_pivot = (metric[pivot], metric.get("node_id"))
+                metric_pivot = (metric[pivot], metric.get(self.NODE_ID))
                 if metric_pivot not in pivot_indices:
                     pivot_indices[metric_pivot] = row_count
                     row_count += 1
@@ -174,7 +174,7 @@ class LogMetricsParser(object):
         table, pivot_indices = self.get_columns_and_pivot_indices(pivot)
         for metric in self.all_metrics:
             if pivot in metric:
-                metric_pivot = (metric[pivot], metric.get("node_id"))
+                metric_pivot = (metric[pivot], metric.get(self.NODE_ID))
                 row = pivot_indices[metric_pivot]
                 for column_name in metric:
                     table[column_name][row] = self._get_value(
