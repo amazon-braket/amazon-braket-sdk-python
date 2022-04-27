@@ -10,7 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 from functools import lru_cache
 from typing import Iterable
 
@@ -129,3 +128,29 @@ def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
     )
     eigs.setflags(write=False)
     return eigs
+
+
+def solve_unitary_parameterization(unitary, verify_unitary=False):
+    ((a, b), (c, d)) = unitary
+    theta = abs(2 * np.arccos(a))
+    sin_theta_over_2 = np.sin(theta / 2)
+    phi = np.angle(c / sin_theta_over_2) if sin_theta_over_2 else 0
+    lambda_ = np.angle(-b / sin_theta_over_2) if sin_theta_over_2 else np.angle(d / a) - phi
+
+    if verify_unitary:
+        regenerated = np.array(
+            [
+                [np.cos(theta / 2), -np.exp(1j * lambda_) * np.sin(theta / 2)],
+                [
+                    np.exp(1j * phi) * np.sin(theta / 2),
+                    np.exp(1j * (phi + lambda_)) * np.cos(theta / 2),
+                ],
+            ]
+        )
+        if not np.allclose(
+            unitary,
+            regenerated,
+        ):
+            raise ValueError("Argument is not unitary")
+
+    return theta, phi, lambda_

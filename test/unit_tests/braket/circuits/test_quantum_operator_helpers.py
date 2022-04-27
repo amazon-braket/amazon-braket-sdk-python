@@ -22,6 +22,7 @@ from braket.circuits.quantum_operator_helpers import (
     is_hermitian,
     is_square_matrix,
     is_unitary,
+    solve_unitary_parameterization,
     verify_quantum_operator_matrix_dimensions,
 )
 
@@ -137,3 +138,15 @@ def test_get_pauli_eigenvalues_cache_usage(depth):
 @pytest.mark.parametrize("num_qubits", [1, 2])
 def test_get_pauli_eigenvalues_immutable(num_qubits):
     get_pauli_eigenvalues(num_qubits)[0] = 100
+
+
+@pytest.mark.parametrize("non_unitary", invalid_unitary_matrices_false)
+def test_solve_unitary_parameterization_invalid_unitary(non_unitary):
+    not_unitary = "Argument is not unitary"
+    with pytest.raises(ValueError, match=not_unitary):
+        solve_unitary_parameterization(non_unitary, verify_unitary=True)
+
+
+@pytest.mark.parametrize("unitary", (valid_unitary_hermitian_matrix, z_matrix))
+def test_solve_unitary_parameterization_valid_unitary(unitary):
+    solve_unitary_parameterization(unitary, verify_unitary=True)

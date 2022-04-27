@@ -25,6 +25,7 @@ from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.quantum_operator_helpers import (
     is_unitary,
+    solve_unitary_parameterization,
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.qubit import QubitInput
@@ -1771,6 +1772,18 @@ class Unitary(Gate):
             targets=[qubit for qubit in target],
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ) -> str:
+        if self._matrix.shape != (2, 2):
+            raise NotImplementedError(
+                "Converting arbitrary unitary matrix to OpenQASM is currently "
+                "only implemented for 1 qubit gates."
+            )
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        theta, phi, lambda_ = solve_unitary_parameterization(self._matrix)
+        return f"U({theta}, {phi}, {lambda_}) {target_qubit};"
 
     def __eq__(self, other):
         if isinstance(other, Unitary):

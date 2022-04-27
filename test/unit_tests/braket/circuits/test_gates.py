@@ -295,6 +295,25 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "rx(0.17) $4;",
         ),
+        (
+            Gate.Unitary(matrix=Gate.Rx(angle=0.17).to_matrix()),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "U(0.17000000000000087, -1.5707963267948966, 1.5707963267948966) q[4];",
+        ),
+        (
+            Gate.Unitary(matrix=Gate.Rx(angle=0.17).to_matrix()),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "U(0.17000000000000087, -1.5707963267948966, 1.5707963267948966) $4;",
+        ),
+        pytest.param(
+            Gate.Unitary(matrix=np.eye(4)),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "",
+            marks=pytest.mark.xfail(raises=NotImplementedError, strict=True),
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
