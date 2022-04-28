@@ -156,12 +156,12 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the parameters associated with the object, either unbound free parameters or
-        bound values.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return [self._probability]
 
@@ -326,8 +326,10 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             MultiQubitPauliNoise._validate_pauli_string(
                 pauli_string, self.qubit_count, self._allowed_substrings
             )
-            if isinstance(prob, float):
-                if prob < 0.0 or prob > 1.0:
+            if not isinstance(prob, FreeParameterExpression):
+                if not isinstance(prob, float):
+                    raise TypeError("probability must be float type")
+                if not (1.0 >= prob >= 0.0):
                     raise ValueError(
                         (
                             "Individual probabilities must be real numbers in the interval [0, 1]. "
@@ -335,14 +337,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
                         )
                     )
                 total_prob += prob
-            elif not isinstance(prob, FreeParameterExpression):
-                raise TypeError(
-                    (
-                        "Probabilities must be a float or FreeParameterExpression type. "
-                        f"The probability for {pauli_string} was of type {type(prob)}."
-                    )
-                )
-        if total_prob > 1.0 or total_prob < 0.0:
+        if not (1.0 >= total_prob >= 0.0):
             raise ValueError(
                 (
                     "Total probability must be a real number in the interval [0, 1]. "
@@ -393,14 +388,14 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the parameters associated with the object, either unbound free parameters or
-        bound values.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
 
         Parameters are in alphabetical order of the Pauli strings in `probabilities`.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return [
             self._probabilities[pauli_string] for pauli_string in sorted(self._probabilities.keys())
@@ -540,14 +535,14 @@ class PauliNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the parameters associated with the object, either unbound free parameters or
-        bound values.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
 
         Parameters are in the order [probX, probY, probZ]
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return self._parameters
 
@@ -639,12 +634,12 @@ class DampingNoise(Noise, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the parameters associated with the object, either unbound free parameters or
-        bound values.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return [self._gamma]
 
@@ -747,14 +742,14 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the parameters associated with the object, either unbound free parameters or
-        bound values.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
 
         Parameters are in the order [gamma, probability]
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return [self.gamma, self.probability]
 

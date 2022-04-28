@@ -22,15 +22,16 @@ from braket.circuits.free_parameter_expression import FreeParameterExpression
 
 class Parameterizable(ABC):
     """
-    A parameterized object is the abstract definition of an object that can take in FreeParameters.
+    A parameterized object is the abstract definition of an object
+    that can take in FreeParameterExpressions.
     """
 
     @property
     @abstractmethod
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
         """
-        Returns the parameters associated with the object, either unbound free parameters or
-        bound values. The order of the parameters is determined by the subclass.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values. The order of the parameters is determined by the subclass.
         """
 
     @abstractmethod
