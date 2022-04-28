@@ -121,7 +121,7 @@ class LogMetricsParser(object):
 
         Returns:
             Tuple[Dict[str, List[Any]], Dict[Tuple[int, str], int]]:
-                The Dict[str, List[Any]] the result table with all the metrics values initialized
+                The Dict[str, List[Any]] is the result table with all the metrics values initialized
                     to None
                 The Dict[Tuple[int, str], int] is the list of pivot indices, where the value of a
                     pivot column and node_id is mapped to a row index.
