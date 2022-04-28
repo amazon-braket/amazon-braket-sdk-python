@@ -1002,3 +1002,14 @@ def test_initialize_session_local_device(mock_new_session, aws_session):
     assert AwsQuantumJob._initialize_session(aws_session, device, logger) == aws_session
     # otherwise, create an AwsSession with the profile defaults
     assert AwsQuantumJob._initialize_session(None, device, logger) == mock_new_session()
+
+
+def test_bad_arn_format(aws_session):
+    logger = logging.getLogger(__name__)
+    device_not_found = (
+        "Device ARN is not a valid format: bad-arn-format. For valid Braket ARNs, "
+        "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
+    )
+
+    with pytest.raises(ValueError, match=device_not_found):
+        AwsQuantumJob._initialize_session(aws_session, "bad-arn-format", logger)
