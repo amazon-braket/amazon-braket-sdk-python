@@ -41,22 +41,7 @@ To add a new gate:
 """
 
 
-class _FiniteOrderGate(Gate, ABC):
-    """
-    A gate that has a finite order (in the group-theoretic sense):
-
-    G^n = I => G^-1 = G^(n-1)
-    """
-
-    def __init__(self, order: int, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        super().__init__(qubit_count, ascii_symbols)
-        self._order = order
-
-    def adjoint(self) -> List[Gate]:
-        return [self for _ in range(self._order - 1)]
-
-
-class _HermitianGate(_FiniteOrderGate, ABC):
+class _HermitianGate(Gate, ABC):
     """
     A gate that is also a Hermitian operator. Such gates are involutory (order 2):
 
@@ -64,7 +49,10 @@ class _HermitianGate(_FiniteOrderGate, ABC):
     """
 
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        super().__init__(2, qubit_count, ascii_symbols)
+        super().__init__(qubit_count, ascii_symbols)
+
+    def adjoint(self) -> List[Gate]:
+        return [self]
 
 
 # Single qubit gates #
@@ -835,11 +823,14 @@ class Swap(_HermitianGate):
 Gate.register_gate(Swap)
 
 
-class ISwap(_FiniteOrderGate):
+class ISwap(Gate):
     """ISwap gate."""
 
     def __init__(self):
-        super().__init__(4, qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
+        super().__init__(qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
+
+    def adjoint(self) -> List[Gate]:
+        return [self, self, self]
 
     def to_ir(self, target: QubitSet):
         return ir.ISwap.construct(targets=[target[0], target[1]])
@@ -1276,11 +1267,14 @@ class CPhaseShift10(AngledGate):
 Gate.register_gate(CPhaseShift10)
 
 
-class CV(_FiniteOrderGate):
+class CV(Gate):
     """Controlled Sqrt of NOT gate."""
 
     def __init__(self):
-        super().__init__(4, qubit_count=None, ascii_symbols=["C", "V"])
+        super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
+
+    def adjoint(self) -> List[Gate]:
+        return [self, self, self]
 
     def to_ir(self, target: QubitSet):
         return ir.CV.construct(control=target[0], target=target[1])
