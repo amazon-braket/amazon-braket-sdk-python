@@ -29,19 +29,18 @@ from braket.jobs.image_uris import Framework, retrieve_image
             "us-east-1",
             Framework.PL_TENSORFLOW,
             "292282985366.dkr.ecr.us-east-1.amazonaws.com/amazon-braket-tensorflow-jobs:"
-            "2.4.1-cpu-py37-ubuntu18.04",
+            "2.4.1-gpu-py37-cu110-ubuntu18.04",
         ),
         (
             "us-west-2",
             Framework.PL_PYTORCH,
             "292282985366.dkr.ecr.us-west-2.amazonaws.com/"
-            "amazon-braket-pytorch-jobs:1.8.1-cpu-py37-ubuntu18.04",
+            "amazon-braket-pytorch-jobs:1.9.1-gpu-py38-cu111-ubuntu20.04",
         ),
     ],
 )
 def test_retrieve_image_default_version(region, framework, expected_uri):
     assert retrieve_image(framework, region) == expected_uri
-
 
 @pytest.mark.parametrize(
     "region, framework",
