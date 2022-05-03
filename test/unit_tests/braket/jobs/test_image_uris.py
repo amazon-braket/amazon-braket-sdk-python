@@ -42,6 +42,7 @@ from braket.jobs.image_uris import Framework, retrieve_image
 def test_retrieve_image_default_version(region, framework, expected_uri):
     assert retrieve_image(framework, region) == expected_uri
 
+
 @pytest.mark.parametrize(
     "region, framework",
     [
