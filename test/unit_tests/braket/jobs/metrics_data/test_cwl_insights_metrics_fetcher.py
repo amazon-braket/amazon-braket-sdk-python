@@ -73,7 +73,7 @@ def test_get_all_metrics_complete_results(mock_add_metrics, mock_get_metrics, aw
         startTime=1,
         endTime=2,
         queryString="fields @timestamp, @message | filter @logStream like /^test_job\\//"
-        " | filter @message like /^Metrics - /",
+        " | filter @message like /Metrics - /",
         limit=10000,
     )
     assert mock_add_metrics.call_args_list == EXPECTED_CALL_LIST
