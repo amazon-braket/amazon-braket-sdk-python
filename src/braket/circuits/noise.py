@@ -131,12 +131,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probability, FreeParameterExpression):
-            if not isinstance(probability, float):
-                raise TypeError("probability must be float type")
-            if not (max_probability >= probability >= 0.0):
-                raise ValueError(
-                    f"probability must be a real number in the interval [0,{max_probability}]"
-                )
+            _validate_param_value(probability, "probability", max_probability)
         self._probability = probability
 
     @property
@@ -327,15 +322,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
                 pauli_string, self.qubit_count, self._allowed_substrings
             )
             if not isinstance(prob, FreeParameterExpression):
-                if not isinstance(prob, float):
-                    raise TypeError("probability must be float type")
-                if not (1.0 >= prob >= 0.0):
-                    raise ValueError(
-                        (
-                            "Individual probabilities must be real numbers in the interval [0, 1]. "
-                            f"Probability for {pauli_string} was {prob}."
-                        )
-                    )
+                _validate_param_value(prob, f"probability for {pauli_string}")
                 total_prob += prob
         if not (1.0 >= total_prob >= 0.0):
             raise ValueError(
@@ -472,22 +459,30 @@ class PauliNoise(Noise, Parameterizable):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         total = 0
-        total += PauliNoise._validate_param("probX", probX)
-        total += PauliNoise._validate_param("probY", probY)
-        total += PauliNoise._validate_param("probZ", probZ)
+        total += PauliNoise._get_param_float(probX, "probX")
+        total += PauliNoise._get_param_float(probY, "probY")
+        total += PauliNoise._get_param_float(probZ, "probZ")
         if total > 1:
             raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
         self._parameters = [probX, probY, probZ]
 
     @staticmethod
-    def _validate_param(param_name, param: Union[FreeParameterExpression, float]):
+    def _get_param_float(param: Union[FreeParameterExpression, float], param_name: str) -> float:
+        """Validates the value of a probability and returns its value.
+
+        If param is a free parameter expression, this method returns 0.
+
+        Args:
+            param (Union[FreeParameterExpression, float]): The probability to validate
+            param_name (str): The name of the probability parameter
+
+        Returns:
+            float: The value of the parameter, or 0 if it is a free parameter expression
+        """
         if isinstance(param, FreeParameterExpression):
             return 0
         else:
-            if not isinstance(param, float):
-                raise TypeError(f"{param_name} must be float type")
-            if not (1.0 >= param >= 0.0):
-                raise ValueError(f"{param_name} must be a real number in the interval [0,1]")
+            _validate_param_value(param, param_name)
             return float(param)
 
     @property
@@ -611,10 +606,7 @@ class DampingNoise(Noise, Parameterizable):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(gamma, FreeParameterExpression):
-            if not isinstance(gamma, float):
-                raise TypeError("gamma must be float type")
-            if not (1.0 >= gamma >= 0.0):
-                raise ValueError("gamma must be a real number in the interval [0,1]")
+            _validate_param_value(gamma, "gamma")
         self._gamma = gamma
 
     @property
@@ -715,10 +707,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         super().__init__(gamma=gamma, qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         if not isinstance(probability, FreeParameterExpression):
-            if not isinstance(probability, float):
-                raise TypeError("probability must be float type")
-            if not (1.0 >= probability >= 0.0):
-                raise ValueError("probability must be a real number in the interval [0,1]")
+            _validate_param_value(probability, "probability")
         self._probability = probability
 
     @property
@@ -777,6 +766,22 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
             "qubit_count": self.qubit_count,
             "ascii_symbols": self.ascii_symbols,
         }
+
+
+def _validate_param_value(
+    parameter: Union[FreeParameterExpression, float], param_name: str, maximum: float = 1.0
+) -> None:
+    """Validates the value of a given parameter.
+
+    Args:
+        parameter (Union[FreeParameterExpression, float]): The parameter to validate
+        param_name (str): The name of the parameter
+        maximum (float): The maximum value of the parameter. Default: 1.0
+    """
+    if not isinstance(parameter, float):
+        raise TypeError(f"{param_name} must be float type")
+    if not (maximum >= parameter >= 0.0):
+        raise ValueError(f"{param_name} must be a real number in the interval [0, {maximum}]")
 
 
 def _parameter_to_dict(parameter: Union[FreeParameter, float]) -> Union[dict, float]:
