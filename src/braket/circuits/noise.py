@@ -10,11 +10,13 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -106,33 +108,30 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probability: Union[FreeParameter, float],
+        probability: Union[FreeParameterExpression, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
         max_probability: float = 0.5,
     ):
         """
         Args:
-            probability (Union[FreeParameter, float]): The probability that the noise occurs.
+            probability (Union[FreeParameterExpression, float]): The probability that the
+                noise occurs.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
+            max_probability (float): Maximum allowed probability of the noise channel. Default: 0.5
 
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probability` is not `float` or
-                `FreeParameter`, `probability` > 1/2, or `probability` < 0
+                `FreeParameterExpression`, `probability` > 1/2, or `probability` < 0
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(probability, FreeParameter):
-            if not isinstance(probability, float):
-                raise TypeError("probability must be float type")
-            if not (max_probability >= probability >= 0.0):
-                raise ValueError(
-                    f"probability must be a real number in the interval [0,{max_probability}]"
-                )
+        if not isinstance(probability, FreeParameterExpression):
+            _validate_param_value(probability, "probability", max_probability)
         self._probability = probability
 
     @property
@@ -150,13 +149,14 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         return f"{self.name}({self.probability})"
 
     @property
-    def parameters(self) -> List[Union[FreeParameter, float]]:
+    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters or fixed value associated with the object.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
 
         Returns:
-            Union[FreeParameter, float]: Returns the free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return [self._probability]
 
@@ -165,9 +165,25 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
             return self.name == other.name and self.probability == other.probability
         return False
 
+    def bind_values(self, **kwargs) -> SingleProbabilisticNoise:
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            SingleProbabilisticNoise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        Raises:
+            NotImplementedError: Subclasses should implement this function.
+        """
+        raise NotImplementedError
+
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -180,27 +196,6 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
             "ascii_symbols": self.ascii_symbols,
         }
 
-    def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Noise: A new Noise object of the same type with the requested
-            parameters bound.
-
-        """
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
-        return type(self)(
-            probability=probability, qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols
-        )
-
 
 class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
     """
@@ -210,13 +205,14 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
 
     def __init__(
         self,
-        probability: Union[FreeParameter, float],
+        probability: Union[FreeParameterExpression, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            probability (Union[FreeParameter, float]): The probability that the noise occurs.
+            probability (Union[FreeParameterExpression, float]): The probability that the
+                noise occurs.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -225,7 +221,7 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probability` is not `float` or
-                `FreeParameter`, `probability` > 3/4, or `probability` < 0
+                `FreeParameterExpression`, `probability` > 3/4, or `probability` < 0
         """
         super().__init__(
             probability=probability,
@@ -243,13 +239,14 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
 
     def __init__(
         self,
-        probability: Union[FreeParameter, float],
+        probability: Union[FreeParameterExpression, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            probability (Union[FreeParameter, float]): The probability that the noise occurs.
+            probability (Union[FreeParameterExpression, float]): The probability that the
+                noise occurs.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
@@ -258,7 +255,7 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probability` is not `float` or
-                `FreeParameter`, `probability` > 15/16, or `probability` < 0
+                `FreeParameterExpression`, `probability` > 15/16, or `probability` < 0
         """
         super().__init__(
             probability=probability,
@@ -278,27 +275,31 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probabilities: Dict[str, Union[FreeParameter, float]],
+        probabilities: Dict[str, Union[FreeParameterExpression, float]],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """[summary]
 
         Args:
-            probabilities (Dict[str, Union[FreeParameter, float]]): A dictionary with Pauli string
-                as the keys, and the probabilities as values, i.e. {"XX": 0.1. "IZ": 0.2}.
+            probabilities (Dict[str, Union[FreeParameterExpression, float]]): A dictionary with
+                Pauli strings as keys and the probabilities as values, i.e. {"XX": 0.1. "IZ": 0.2}.
             qubit_count (Optional[int]): The number of qubits the Pauli noise acts on.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
 
         Raises:
-            ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`. Also if `probabilities` are
-                not `float`s or FreeParameters any `probabilities` > 1, or `probabilities` < 0, or
-                if the sum of all probabilities is > 1, or if "II" is specified as a Pauli string.
-                Also if any Pauli string contains invalid strings.
-                Also if the length of probabilities is greater than 4**qubit_count.
+            ValueError: If
+                `qubit_count` < 1,
+                `ascii_symbols` is `None`,
+                `ascii_symbols` length != `qubit_count`,
+                `probabilities` are not `float`s or FreeParameterExpressions,
+                any of `probabilities` > 1 or `probabilities` < 0,
+                the sum of all probabilities is > 1,
+                if "II" is specified as a Pauli string,
+                if any Pauli string contains invalid strings,
+                or if the length of probabilities is greater than 4**qubit_count.
             TypeError: If the type of the dictionary keys are not strings.
                 If the probabilities are not floats.
         """
@@ -320,23 +321,10 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             MultiQubitPauliNoise._validate_pauli_string(
                 pauli_string, self.qubit_count, self._allowed_substrings
             )
-            if isinstance(prob, float):
-                if prob < 0.0 or prob > 1.0:
-                    raise ValueError(
-                        (
-                            "Individual probabilities must be real numbers in the interval [0, 1]. "
-                            f"Probability for {pauli_string} was {prob}."
-                        )
-                    )
+            if not isinstance(prob, FreeParameterExpression):
+                _validate_param_value(prob, f"probability for {pauli_string}")
                 total_prob += prob
-            elif not isinstance(prob, FreeParameter):
-                raise TypeError(
-                    (
-                        "Probabilities must be a float or FreeParameter type. "
-                        f"The probability for {pauli_string} was of type {type(prob)}."
-                    )
-                )
-        if total_prob > 1.0 or total_prob < 0.0:
+        if not (1.0 >= total_prob >= 0.0):
             raise ValueError(
                 (
                     "Total probability must be a real number in the interval [0, 1]. "
@@ -364,7 +352,10 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             )
 
     def __repr__(self):
-        return f"{self.name}('probabilities' : {self._probabilities}, 'qubit_count': {self.qubit_count})"  # noqa
+        return (
+            f"{self.name}('probabilities' : {self._probabilities}, "
+            f"'qubit_count': {self.qubit_count})"
+        )
 
     def __str__(self):
         return f"{self.name}({self._probabilities})"
@@ -375,19 +366,47 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         return False
 
     @property
-    def parameters(self) -> List[Union[FreeParameter, float]]:
+    def probabilities(self) -> Dict[str, float]:
         """
-        Returns the free parameters or fixed value associated with the object.
+        Dict[str, float]: A map of a Pauli string to its corresponding probability.
+        """
+        return self._probabilities
+
+    @property
+    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+        """
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
+
+        Parameters are in alphabetical order of the Pauli strings in `probabilities`.
 
         Returns:
-            Union[FreeParameter, float]: Returns the free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
-        return list(self._probabilities.values())
+        return [
+            self._probabilities[pauli_string] for pauli_string in sorted(self._probabilities.keys())
+        ]
+
+    def bind_values(self, **kwargs) -> MultiQubitPauliNoise:
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            MultiQubitPauliNoise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        Raises:
+            NotImplementedError: Subclasses should implement this function.
+        """
+        raise NotImplementedError
 
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -403,29 +422,6 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             "ascii_symbols": self.ascii_symbols,
         }
 
-    def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.Rx: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
-        probabilities = {}
-        for pauli_string, prob in self._probabilities.items():
-            bound_prob = prob if str(prob) not in kwargs else kwargs[str(prob)]
-            probabilities[pauli_string] = bound_prob
-
-        return type(self)(
-            probabilities=probabilities,
-            qubit_count=self.qubit_count,
-            ascii_symbols=self.ascii_symbols,
-        )
-
 
 class PauliNoise(Noise, Parameterizable):
     """
@@ -435,19 +431,19 @@ class PauliNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probX: Union[FreeParameter, float],
-        probY: Union[FreeParameter, float],
-        probZ: Union[FreeParameter, float],
+        probX: Union[FreeParameterExpression, float],
+        probY: Union[FreeParameterExpression, float],
+        probZ: Union[FreeParameterExpression, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            probX Union[FreeParameter, float]: The X coefficient of the Kraus operators
+            probX Union[FreeParameterExpression, float]: The X coefficient of the Kraus operators
                 in the channel.
-            probY Union[FreeParameter, float]: The Y coefficient of the Kraus operators
+            probY Union[FreeParameterExpression, float]: The Y coefficient of the Kraus operators
                 in the channel.
-            probZ Union[FreeParameter, float]: The Z coefficient of the Kraus operators
+            probZ Union[FreeParameterExpression, float]: The Z coefficient of the Kraus operators
                 in the channel.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
@@ -457,58 +453,71 @@ class PauliNoise(Noise, Parameterizable):
         Raises:
             ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`, `probX` or `probY` or `probZ`
-                is not `float` or FreeParameter, `probX` or `probY` or `probZ` > 1.0, or
+                is not `float` or FreeParameterExpression, `probX` or `probY` or `probZ` > 1.0, or
                 `probX` or `probY` or `probZ` < 0.0, or `probX`+`probY`+`probZ` > 1
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
         total = 0
-        self._parameters = []
-        total += self._add_param("probX", probX)
-        total += self._add_param("probY", probY)
-        total += self._add_param("probZ", probZ)
+        total += PauliNoise._get_param_float(probX, "probX")
+        total += PauliNoise._get_param_float(probY, "probY")
+        total += PauliNoise._get_param_float(probZ, "probZ")
         if total > 1:
             raise ValueError("the sum of probX, probY, probZ cannot be larger than 1")
+        self._parameters = [probX, probY, probZ]
 
-    def _add_param(self, paramName, param: Union[FreeParameter, float]):
-        if isinstance(param, FreeParameter):
-            self._parameters.append(param)
+    @staticmethod
+    def _get_param_float(param: Union[FreeParameterExpression, float], param_name: str) -> float:
+        """Validates the value of a probability and returns its value.
+
+        If param is a free parameter expression, this method returns 0.
+
+        Args:
+            param (Union[FreeParameterExpression, float]): The probability to validate
+            param_name (str): The name of the probability parameter
+
+        Returns:
+            float: The value of the parameter, or 0 if it is a free parameter expression
+        """
+        if isinstance(param, FreeParameterExpression):
             return 0
         else:
-            if not isinstance(param, float):
-                raise TypeError(f"{paramName} must be float type")
-            if not (param <= 1.0 and param >= 0.0):
-                raise ValueError(f"{paramName} must be a real number in the interval [0,1]")
-            self._parameters.append(float(param))
-            return param
+            _validate_param_value(param, param_name)
+            return float(param)
 
     @property
-    def probX(self) -> Union[FreeParameter, float]:
+    def probX(self) -> Union[FreeParameterExpression, float]:
         """
         Returns:
-            probX (Union[FreeParameter, float]): The probability of a Pauli X error.
+            Union[FreeParameterExpression, float]: The probability of a Pauli X error.
         """
         return self._parameters[0]
 
     @property
-    def probY(self) -> Union[FreeParameter, float]:
+    def probY(self) -> Union[FreeParameterExpression, float]:
         """
         Returns:
-            probY (Union[FreeParameter, float]): The probability of a Pauli Y error.
+            Union[FreeParameterExpression, float]: The probability of a Pauli Y error.
         """
         return self._parameters[1]
 
     @property
-    def probZ(self) -> Union[FreeParameter, float]:
+    def probZ(self) -> Union[FreeParameterExpression, float]:
         """
         Returns:
-            probZ (Union[FreeParameter, float]): The probability of a Pauli Z error.
+            Union[FreeParameterExpression, float]: The probability of a Pauli Z error.
         """
         return self._parameters[2]
 
     def __repr__(self):
-        return f"{self.name}('probX': {self._parameters[0]}, 'probY': {self._parameters[1]}, \
-'probZ': {self._parameters[2]}, 'qubit_count': {self.qubit_count})"
+        return (
+            f"{self.name}("
+            f"'probX': {self._parameters[0]}, "
+            f"'probY': {self._parameters[1]}, "
+            f"'probZ': {self._parameters[2]}, "
+            f"'qubit_count': {self.qubit_count}"
+            f")"
+        )
 
     def __str__(self):
         return f"{self.name}({self._parameters[0]}, {self._parameters[1]}, {self._parameters[2]})"
@@ -519,19 +528,38 @@ class PauliNoise(Noise, Parameterizable):
         return False
 
     @property
-    def parameters(self) -> List[Union[FreeParameter, float]]:
+    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters or fixed value associated with the object.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
+
+        Parameters are in the order [probX, probY, probZ]
 
         Returns:
-            Union[FreeParameter, float]: Returns the free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return self._parameters
 
+    def bind_values(self, **kwargs) -> PauliNoise:
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            PauliNoise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        Raises:
+            NotImplementedError: Subclasses should implement this function.
+        """
+        raise NotImplementedError
+
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -546,30 +574,6 @@ class PauliNoise(Noise, Parameterizable):
             "ascii_symbols": self.ascii_symbols,
         }
 
-    def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Gate.Rx: A new Gate of the same type with the requested
-            parameters bound.
-
-        """
-        probX = self.probX if str(self.probX) not in kwargs else kwargs[str(self.probX)]
-        probY = self.probY if str(self.probY) not in kwargs else kwargs[str(self.probY)]
-        probZ = self.probZ if str(self.probZ) not in kwargs else kwargs[str(self.probZ)]
-
-        return type(self)(
-            probX=probX,
-            probY=probY,
-            probZ=probZ,
-            qubit_count=self.qubit_count,
-            ascii_symbols=self.ascii_symbols,
-        )
-
 
 class DampingNoise(Noise, Parameterizable):
     """
@@ -579,30 +583,30 @@ class DampingNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        gamma: Union[FreeParameter, float],
+        gamma: Union[FreeParameterExpression, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            gamma (Union[FreeParameter, float]): Probability of damping.
+            gamma (Union[FreeParameterExpression, float]): Probability of damping.
             qubit_count (int, optional): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
 
             Raises:
-                ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `gamma` is not `float` or `FreeParameter`,
-                `gamma` > 1.0, or `gamma` < 0.0.
+                ValueError: If
+                    `qubit_count` < 1,
+                    `ascii_symbols` is `None`,
+                    `len(ascii_symbols)` != `qubit_count`,
+                    `gamma` is not `float` or `FreeParameterExpression`,
+                    or `gamma` > 1.0 or `gamma` < 0.0.
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(gamma, FreeParameter):
-            if not isinstance(gamma, float):
-                raise TypeError("gamma must be float type")
-            if not (1.0 >= gamma >= 0.0):
-                raise ValueError("gamma must be a real number in the interval [0,1]")
+        if not isinstance(gamma, FreeParameterExpression):
+            _validate_param_value(gamma, "gamma")
         self._gamma = gamma
 
     @property
@@ -620,13 +624,14 @@ class DampingNoise(Noise, Parameterizable):
         return f"{self.name}({self.gamma})"
 
     @property
-    def parameters(self) -> List[Union[FreeParameter, float]]:
+    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters or fixed value associated with the object.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
 
         Returns:
-            Union[FreeParameter, float]: Returns the free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return [self._gamma]
 
@@ -635,9 +640,25 @@ class DampingNoise(Noise, Parameterizable):
             return self.name == other.name and self.gamma == other.gamma
         return False
 
+    def bind_values(self, **kwargs) -> DampingNoise:
+        """
+        Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs: The parameters that are being assigned.
+
+        Returns:
+            DampingNoise: A new Noise object of the same type with the requested
+            parameters bound.
+
+        Raises:
+            NotImplementedError: Subclasses should implement this function.
+        """
+        raise NotImplementedError
+
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -650,23 +671,6 @@ class DampingNoise(Noise, Parameterizable):
             "ascii_symbols": self.ascii_symbols,
         }
 
-    def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
-
-        Returns:
-            Noise: A new Noise object of the same type with the requested
-            parameters bound.
-
-        """
-        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
-        return type(self)(
-            gamma=gamma, qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols
-        )
-
 
 class GeneralizedAmplitudeDampingNoise(DampingNoise):
     """
@@ -676,34 +680,34 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     def __init__(
         self,
-        gamma: Union[FreeParameter, float],
-        probability: Union[FreeParameter, float],
+        gamma: Union[FreeParameterExpression, float],
+        probability: Union[FreeParameterExpression, float],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """
         Args:
-            gamma (Union[FreeParameter, float]): Probability of damping.
-            probability (Union[FreeParameter, float]): Probability of the system being excited
-                by the environment.
+            gamma (Union[FreeParameterExpression, float]): Probability of damping.
+            probability (Union[FreeParameterExpression, float]): Probability of the system being
+                excited by the environment.
             qubit_count (int): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
 
             Raises:
-                ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, `probability` or `gamma` is not `float` or
-                `FreeParameter`, `probability` > 1.0, or `probability` < 0.0, `gamma` > 1.0, or
-                `gamma` < 0.0.
+                ValueError: If
+                    `qubit_count` < 1,
+                    `ascii_symbols` is `None`,
+                    `len(ascii_symbols)` != `qubit_count`,
+                    `probability` or `gamma` is not `float` or `FreeParameterExpression`,
+                    `probability` > 1.0 or `probability` < 0.0,
+                    or `gamma` > 1.0 or `gamma` < 0.0.
         """
         super().__init__(gamma=gamma, qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
-        if not isinstance(probability, FreeParameter):
-            if not isinstance(probability, float):
-                raise TypeError("probability must be float type")
-            if not (1.0 >= probability >= 0.0):
-                raise ValueError("probability must be a real number in the interval [0,1]")
+        if not isinstance(probability, FreeParameterExpression):
+            _validate_param_value(probability, "probability")
         self._probability = probability
 
     @property
@@ -715,20 +719,26 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         return self._probability
 
     def __repr__(self):
-        return f"{self.name}('gamma': {self.gamma}, 'probability': {self.probability}, \
-'qubit_count': {self.qubit_count})"
+        return (
+            f"{self.name}('gamma': {self.gamma}, "
+            f"'probability': {self.probability}, "
+            f"'qubit_count': {self.qubit_count})"
+        )
 
     def __str__(self):
         return f"{self.name}({self.gamma}, {self.probability})"
 
     @property
-    def parameters(self) -> List[Union[FreeParameter, float]]:
+    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters or fixed value associated with the object.
+        Returns the parameters associated with the object, either unbound free parameter expressions
+        or bound values.
+
+        Parameters are in the order [gamma, probability]
 
         Returns:
-            Union[FreeParameter, float]: Returns the free parameters or fixed value
-            associated with the object.
+            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            or fixed values associated with the object.
         """
         return [self.gamma, self.probability]
 
@@ -743,7 +753,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     def to_dict(self) -> dict:
         """
-        Converts a this object into a dictionary representation.
+        Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -757,30 +767,21 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
             "ascii_symbols": self.ascii_symbols,
         }
 
-    def bind_values(self, **kwargs):
-        """
-        Takes in parameters and attempts to assign them to values.
 
-        Args:
-            **kwargs: The parameters that are being assigned.
+def _validate_param_value(
+    parameter: Union[FreeParameterExpression, float], param_name: str, maximum: float = 1.0
+) -> None:
+    """Validates the value of a given parameter.
 
-        Returns:
-            Noise: A new Noise object of the same type with the requested
-            parameters bound.
-
-        """
-        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
-        return type(self)(
-            gamma=gamma,
-            probability=probability,
-            qubit_count=self.qubit_count,
-            ascii_symbols=self.ascii_symbols,
-        )
+    Args:
+        parameter (Union[FreeParameterExpression, float]): The parameter to validate
+        param_name (str): The name of the parameter
+        maximum (float): The maximum value of the parameter. Default: 1.0
+    """
+    if not isinstance(parameter, float):
+        raise TypeError(f"{param_name} must be float type")
+    if not (maximum >= parameter >= 0.0):
+        raise ValueError(f"{param_name} must be a real number in the interval [0, {maximum}]")
 
 
 def _parameter_to_dict(parameter: Union[FreeParameter, float]) -> Union[dict, float]:

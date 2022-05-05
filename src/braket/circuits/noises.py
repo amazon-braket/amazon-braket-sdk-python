@@ -19,6 +19,7 @@ import numpy as np
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import (
     DampingNoise,
@@ -73,7 +74,7 @@ class BitFlip(SingleProbabilisticNoise):
     This noise channel is shown as `BF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameter, float]):
+    def __init__(self, probability: Union[FreeParameterExpression, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -122,14 +123,8 @@ class BitFlip(SingleProbabilisticNoise):
         Returns:
             Noise: A new Noise object of the same type with the requested
             parameters bound.
-
         """
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
-        return BitFlip(probability=probability)
+        return BitFlip(probability=_substitute_value(self._probability, **kwargs))
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -174,7 +169,7 @@ class PhaseFlip(SingleProbabilisticNoise):
     This noise channel is shown as `PF` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameter, float]):
+    def __init__(self, probability: Union[FreeParameterExpression, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -223,14 +218,8 @@ class PhaseFlip(SingleProbabilisticNoise):
         Returns:
             Noise: A new Noise object of the same type with the requested
             parameters bound.
-
         """
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
-        return PhaseFlip(probability=probability)
+        return PhaseFlip(probability=_substitute_value(self._probability, **kwargs))
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -293,9 +282,9 @@ class PauliChannel(PauliNoise):
 
     def __init__(
         self,
-        probX: Union[FreeParameter, float],
-        probY: Union[FreeParameter, float],
-        probZ: Union[FreeParameter, float],
+        probX: Union[FreeParameterExpression, float],
+        probY: Union[FreeParameterExpression, float],
+        probZ: Union[FreeParameterExpression, float],
     ):
         super().__init__(
             probX=probX,
@@ -354,13 +343,12 @@ class PauliChannel(PauliNoise):
         Returns:
             Gate.Rx: A new Gate of the same type with the requested
             parameters bound.
-
         """
-        probX = self.probX if str(self.probX) not in kwargs else kwargs[str(self.probX)]
-        probY = self.probY if str(self.probY) not in kwargs else kwargs[str(self.probY)]
-        probZ = self.probZ if str(self.probZ) not in kwargs else kwargs[str(self.probZ)]
+        probX = _substitute_value(self.probX, **kwargs)
+        probY = _substitute_value(self.probY, **kwargs)
+        probZ = _substitute_value(self.probZ, **kwargs)
 
-        return type(self)(probX=probX, probY=probY, probZ=probZ)
+        return PauliChannel(probX=probX, probY=probY, probZ=probZ)
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -427,7 +415,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameter, float]):
+    def __init__(self, probability: Union[FreeParameterExpression, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -480,12 +468,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
             parameters bound.
 
         """
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
-        return Depolarizing(probability=probability)
+        return Depolarizing(probability=_substitute_value(self._probability, **kwargs))
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -551,7 +534,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
     This noise channel is shown as `DEPO` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameter, float]):
+    def __init__(self, probability: Union[FreeParameterExpression, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -618,12 +601,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
             parameters bound.
 
         """
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
-        return TwoQubitDepolarizing(probability=probability)
+        return TwoQubitDepolarizing(probability=_substitute_value(self._probability, **kwargs))
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -671,7 +649,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     This noise channel is shown as `DEPH` in circuit diagrams.
     """
 
-    def __init__(self, probability: Union[FreeParameter, float]):
+    def __init__(self, probability: Union[FreeParameterExpression, float]):
         super().__init__(
             probability=probability,
             qubit_count=None,
@@ -731,12 +709,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
             parameters bound.
 
         """
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
-        return TwoQubitDephasing(probability=probability)
+        return TwoQubitDephasing(probability=_substitute_value(self._probability, **kwargs))
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -893,10 +866,10 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
             parameters bound.
 
         """
-        probabilities = {}
-        for pauli_string, prob in self._probabilities.items():
-            bound_prob = prob if str(prob) not in kwargs else kwargs[str(prob)]
-            probabilities[pauli_string] = bound_prob
+        probabilities = {
+            pauli_string: _substitute_value(prob, **kwargs)
+            for pauli_string, prob in self._probabilities.items()
+        }
         return TwoQubitPauliChannel(probabilities=probabilities)
 
     @classmethod
@@ -943,7 +916,7 @@ class AmplitudeDamping(DampingNoise):
     This noise channel is shown as `AD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameter, float]):
+    def __init__(self, gamma: Union[FreeParameterExpression, float]):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -994,8 +967,7 @@ class AmplitudeDamping(DampingNoise):
             parameters bound.
 
         """
-        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
-        return AmplitudeDamping(gamma=gamma)
+        return AmplitudeDamping(gamma=_substitute_value(self._gamma, **kwargs))
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -1053,7 +1025,9 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
     """
 
     def __init__(
-        self, gamma: Union[FreeParameter, float], probability: Union[FreeParameter, float]
+        self,
+        gamma: Union[FreeParameterExpression, float],
+        probability: Union[FreeParameterExpression, float],
     ):
         super().__init__(
             gamma=gamma,
@@ -1120,12 +1094,8 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             parameters bound.
 
         """
-        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
-        probability = (
-            self.probability
-            if str(self.probability) not in kwargs
-            else kwargs[str(self.probability)]
-        )
+        gamma = _substitute_value(self._gamma, **kwargs)
+        probability = _substitute_value(self._probability, **kwargs)
         return GeneralizedAmplitudeDamping(gamma=gamma, probability=probability)
 
     @classmethod
@@ -1174,7 +1144,7 @@ class PhaseDamping(DampingNoise):
     This noise channel is shown as `PD` in circuit diagrams.
     """
 
-    def __init__(self, gamma: Union[FreeParameter, float]):
+    def __init__(self, gamma: Union[FreeParameterExpression, float]):
         super().__init__(
             gamma=gamma,
             qubit_count=None,
@@ -1224,8 +1194,7 @@ class PhaseDamping(DampingNoise):
             parameters bound.
 
         """
-        gamma = self.gamma if str(self.gamma) not in kwargs else kwargs[str(self.gamma)]
-        return PhaseDamping(gamma=gamma)
+        return PhaseDamping(gamma=_substitute_value(self._gamma, **kwargs))
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
@@ -1349,25 +1318,30 @@ class Kraus(Noise):
 Noise.register_noise(Kraus)
 
 
-def _ascii_representation(noise: str, parameters: List[Union[FreeParameter, float]]) -> str:
+def _ascii_representation(
+    noise: str, parameters: List[Union[FreeParameterExpression, float]]
+) -> str:
     """
     Generates a formatted ascii representation of a noise.
 
     Args:
         noise (str): The name of the noise.
-        parameters (List[Union[FreeParameter, float]]): The parameters to the noise.
+        parameters (List[Union[FreeParameterExpression, float]]): The parameters to the noise.
 
     Returns:
-        str: Returns the ascii representation for the noise.
-
+        str: The ascii representation of the noise.
     """
     param_list = []
     for param in parameters:
         param_list.append(
-            str(param) if isinstance(param, FreeParameter) else "{:.2g}".format(param)
+            str(param) if isinstance(param, FreeParameterExpression) else "{:.2g}".format(param)
         )
     param_str = ",".join(param_list)
     return f"{noise}({param_str})"
+
+
+def _substitute_value(expr, **kwargs):
+    return expr.subs(kwargs) if isinstance(expr, FreeParameterExpression) else expr
 
 
 def _parameter_from_dict(parameter: Union[dict, float]) -> Union[FreeParameter, float]:

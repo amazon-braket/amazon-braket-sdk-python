@@ -388,41 +388,6 @@ def test_register_noise():
 
 
 @pytest.mark.parametrize(
-    "parameterized_noise, params, expected_noise",
-    [
-        (
-            SingleProbabilisticNoise(FreeParameter("alpha"), 1, ["foo"]),
-            {"alpha": 0.1},
-            SingleProbabilisticNoise(0.1, 1, ["foo"]),
-        ),
-        (
-            MultiQubitPauliNoise({"X": FreeParameter("alpha")}, 1, ["foo"]),
-            {"alpha": 0.1},
-            MultiQubitPauliNoise({"X": 0.1}, 1, ["foo"]),
-        ),
-        (
-            PauliNoise(FreeParameter("x"), FreeParameter("y"), FreeParameter("z"), 1, ["foo"]),
-            {"x": 0.1, "y": 0.2, "z": 0.3},
-            PauliNoise(0.1, 0.2, 0.3, 1, ["foo"]),
-        ),
-        (
-            DampingNoise(FreeParameter("alpha"), 1, ["foo"]),
-            {"alpha": 0.1},
-            DampingNoise(0.1, 1, ["foo"]),
-        ),
-        (
-            GeneralizedAmplitudeDampingNoise(FreeParameter("a"), FreeParameter("b"), 1, ["foo"]),
-            {"a": 0.1, "b": 0.2},
-            GeneralizedAmplitudeDampingNoise(0.1, 0.2, 1, ["foo"]),
-        ),
-    ],
-)
-def test_parameter_binding(parameterized_noise, params, expected_noise):
-    result_noise = parameterized_noise.bind_values(**params)
-    assert result_noise == expected_noise
-
-
-@pytest.mark.parametrize(
     "noise_class, params",
     [
         (SingleProbabilisticNoise, {"probability": 0.6}),
@@ -447,14 +412,23 @@ def test_invalid_values(noise_class, params):
 
 
 @pytest.mark.parametrize(
-    "probs, qubit_count, ascii_symbols", [({"X": 0.1}, 1, ["PC"]), ({"XX": 0.1}, 2, ["PC2", "PC2"])]
+    "probs, qubit_count, ascii_symbols",
+    [
+        ({"X": 0.1}, 1, ["PC"]),
+        ({"XXY": 0.1}, 3, ["PC3", "PC3", "PC3"]),
+        ({"YX": 0.1, "IZ": 0.2}, 2, ["PC2", "PC2"]),
+    ],
 )
 def test_multi_qubit_noise(probs, qubit_count, ascii_symbols):
-    MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+    noise = MultiQubitPauliNoise(probs, qubit_count, ascii_symbols)
+    assert noise.probabilities == probs
+    assert noise.qubit_count == qubit_count
+    assert noise.ascii_symbols == tuple(ascii_symbols)
+    assert noise.parameters == [probs[key] for key in sorted(probs.keys())]
 
 
 @pytest.mark.xfail(raises=ValueError)
-class TestMultiQubitNoise:
+class TestInvalidMultiQubitNoise:
     qubit_count = 1
     ascii_symbols = ["PC2"]
 
