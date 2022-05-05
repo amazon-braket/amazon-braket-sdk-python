@@ -11,8 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from abc import ABC
-from typing import Iterable, List, Optional, Sequence, Union
+from typing import Iterable, List, Union
 
 import numpy as np
 from sympy import Float
@@ -41,28 +40,17 @@ To add a new gate:
 """
 
 
-class _HermitianGate(Gate, ABC):
-    """
-    A gate that is also a Hermitian operator. Such gates are involutory (order 2):
-
-    G^-1 = G^† = G
-    """
-
-    def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        super().__init__(qubit_count, ascii_symbols)
-
-    def adjoint(self) -> List[Gate]:
-        return [self]
-
-
 # Single qubit gates #
 
 
-class H(_HermitianGate):
+class H(Gate):
     """Hadamard gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["H"])
+
+    def adjoint(self) -> List[Gate]:
+        return [H()]
 
     def to_ir(self, target: QubitSet):
         return ir.H.construct(target=target[0])
@@ -95,13 +83,14 @@ class H(_HermitianGate):
 Gate.register_gate(H)
 
 
-# I technically has order 1, but we're treating it as an order-2 gate
-# so inverting a qubit with only I on it doesn't remove the qubit from the circuit altogether
-class I(_HermitianGate):  # noqa: E742, E261
+class I(Gate):  # noqa: E742, E261
     """Identity gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["I"])
+
+    def adjoint(self) -> List[Gate]:
+        return [I()]
 
     def to_ir(self, target: QubitSet):
         return ir.I.construct(target=target[0])
@@ -134,11 +123,14 @@ class I(_HermitianGate):  # noqa: E742, E261
 Gate.register_gate(I)
 
 
-class X(_HermitianGate):
+class X(Gate):
     """Pauli-X gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["X"])
+
+    def adjoint(self) -> List[Gate]:
+        return [X()]
 
     def to_ir(self, target: QubitSet):
         return ir.X.construct(target=target[0])
@@ -171,11 +163,14 @@ class X(_HermitianGate):
 Gate.register_gate(X)
 
 
-class Y(_HermitianGate):
+class Y(Gate):
     """Pauli-Y gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Y"])
+
+    def adjoint(self) -> List[Gate]:
+        return [Y()]
 
     def to_ir(self, target: QubitSet):
         return ir.Y.construct(target=target[0])
@@ -208,11 +203,14 @@ class Y(_HermitianGate):
 Gate.register_gate(Y)
 
 
-class Z(_HermitianGate):
+class Z(Gate):
     """Pauli-Z gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Z"])
+
+    def adjoint(self) -> List[Gate]:
+        return [Z()]
 
     def to_ir(self, target: QubitSet):
         return ir.Z.construct(target=target[0])
@@ -733,11 +731,14 @@ Gate.register_gate(PhaseShift)
 # Two qubit gates #
 
 
-class CNot(_HermitianGate):
+class CNot(Gate):
     """Controlled NOT gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
+
+    def adjoint(self) -> List[Gate]:
+        return [CNot()]
 
     def to_ir(self, target: QubitSet):
         return ir.CNot.construct(control=target[0], target=target[1])
@@ -778,11 +779,14 @@ class CNot(_HermitianGate):
 Gate.register_gate(CNot)
 
 
-class Swap(_HermitianGate):
+class Swap(Gate):
     """Swap gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["SWAP", "SWAP"])
+
+    def adjoint(self) -> List[Gate]:
+        return [Swap()]
 
     def to_ir(self, target: QubitSet):
         return ir.Swap.construct(targets=[target[0], target[1]])
@@ -1315,11 +1319,14 @@ class CV(Gate):
 Gate.register_gate(CV)
 
 
-class CY(_HermitianGate):
+class CY(Gate):
     """Controlled Pauli-Y gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
+
+    def adjoint(self) -> List[Gate]:
+        return [CY()]
 
     def to_ir(self, target: QubitSet):
         return ir.CY.construct(control=target[0], target=target[1])
@@ -1360,11 +1367,14 @@ class CY(_HermitianGate):
 Gate.register_gate(CY)
 
 
-class CZ(_HermitianGate):
+class CZ(Gate):
     """Controlled Pauli-Z gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
+
+    def adjoint(self) -> List[Gate]:
+        return [CZ()]
 
     def to_ir(self, target: QubitSet):
         return ir.CZ.construct(control=target[0], target=target[1])
@@ -1397,11 +1407,14 @@ class CZ(_HermitianGate):
 Gate.register_gate(CZ)
 
 
-class ECR(_HermitianGate):
+class ECR(Gate):
     """An echoed RZX(pi/2) gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
+
+    def adjoint(self) -> List[Gate]:
+        return [ECR()]
 
     def to_ir(self, target: QubitSet):
         return ir.ECR.construct(targets=[target[0], target[1]])
@@ -1673,11 +1686,14 @@ Gate.register_gate(ZZ)
 # Three qubit gates #
 
 
-class CCNot(_HermitianGate):
+class CCNot(Gate):
     """CCNOT gate or Toffoli gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
+
+    def adjoint(self) -> List[Gate]:
+        return [CCNot()]
 
     def to_ir(self, target: QubitSet):
         return ir.CCNot.construct(controls=[target[0], target[1]], target=target[2])
@@ -1723,11 +1739,14 @@ class CCNot(_HermitianGate):
 Gate.register_gate(CCNot)
 
 
-class CSwap(_HermitianGate):
+class CSwap(Gate):
     """Controlled Swap gate."""
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
+
+    def adjoint(self) -> List[Gate]:
+        return [CSwap()]
 
     def to_ir(self, target: QubitSet):
         return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
