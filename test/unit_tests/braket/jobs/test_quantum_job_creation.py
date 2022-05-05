@@ -138,6 +138,18 @@ def instance_config():
     )
 
 
+@pytest.fixture(params=[False, True])
+def data_parallel(request):
+    return request.param
+
+
+@pytest.fixture
+def distribution(data_parallel):
+    if data_parallel:
+        return "data_parallel"
+    return None
+
+
 @pytest.fixture
 def stopping_condition():
     return StoppingCondition(
@@ -227,6 +239,7 @@ def create_job_args(
     hyperparameters,
     input_data,
     instance_config,
+    distribution,
     stopping_condition,
     output_data_config,
     checkpoint_config,
@@ -246,6 +259,7 @@ def create_job_args(
                 "hyperparameters": hyperparameters,
                 "input_data": input_data,
                 "instance_config": instance_config,
+                "distribution": distribution,
                 "stopping_condition": stopping_condition,
                 "output_data_config": output_data_config,
                 "checkpoint_config": checkpoint_config,
@@ -308,6 +322,12 @@ def _translate_creation_args(create_job_args):
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
+    if create_job_args["distribution"] == "data_parallel":
+        distributed_hyperparams = {
+            "sagemaker_distributed_dataparallel_enabled": "true",
+            "sagemaker_instance_type": instance_config.instanceType,
+        }
+        hyperparameters.update(distributed_hyperparams)
     output_data_config = create_job_args["output_data_config"] or OutputDataConfig(
         s3Path=AwsSession.construct_s3_uri(default_bucket, "jobs", job_name, "data")
     )

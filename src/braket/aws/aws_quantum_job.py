@@ -73,6 +73,7 @@ class AwsQuantumJob(QuantumJob):
         hyperparameters: Dict[str, Any] = None,
         input_data: Union[str, Dict, S3DataSourceConfig] = None,
         instance_config: InstanceConfig = None,
+        distribution: str = None,
         stopping_condition: StoppingCondition = None,
         output_data_config: OutputDataConfig = None,
         copy_checkpoints_from_job: str = None,
@@ -84,8 +85,11 @@ class AwsQuantumJob(QuantumJob):
         """Creates a job by invoking the Braket CreateJob API.
 
         Args:
-            device (str): ARN for the AWS device which is primarily
-                accessed for the execution of this job.
+            device (str): ARN for the AWS device which is primarily accessed for the execution
+                of this job. Alternatively, a string of the format "local:<provider>/<simulator>"
+                for using a local simulator for the job. This string will be available as the
+                environment variable `AMZN_BRAKET_DEVICE_ARN` inside the job container when
+                using a Braket container.
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
@@ -129,7 +133,11 @@ class AwsQuantumJob(QuantumJob):
 
             instance_config (InstanceConfig): Configuration of the instances to be used
                 to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
-                instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
+                instanceCount=1, volumeSizeInGB=30).
+
+            distribution (str): A str that specifies how the job should be distributed. If set to
+                "data_parallel", the hyperparameters for the job will be set to use data parallelism
+                features for PyTorch or TensorFlow. Default: None.
 
             stopping_condition (StoppingCondition): The maximum length of time, in seconds,
                 and the maximum number of tasks that a job can run before being forcefully stopped.
@@ -178,6 +186,7 @@ class AwsQuantumJob(QuantumJob):
             hyperparameters=hyperparameters,
             input_data=input_data,
             instance_config=instance_config,
+            distribution=distribution,
             stopping_condition=stopping_condition,
             output_data_config=output_data_config,
             copy_checkpoints_from_job=copy_checkpoints_from_job,
@@ -311,7 +320,7 @@ class AwsQuantumJob(QuantumJob):
         stream_prefix = f"{self.name}/"
         stream_names = []  # The list of log streams
         positions = {}  # The current position in each stream, map of stream name -> position
-        instance_count = 1  # currently only support a single instance
+        instance_count = self.metadata(use_cached_value=True)["instanceConfig"]["instanceCount"]
         has_streams = False
         color_wrap = logs.ColorWrap()
 
@@ -531,6 +540,8 @@ class AwsQuantumJob(QuantumJob):
     @staticmethod
     def _initialize_session(session_value, device, logger):
         aws_session = session_value or AwsSession()
+        if device.startswith("local:"):
+            return aws_session
         device_region = AwsDevice.get_device_region(device)
         return (
             AwsQuantumJob._initialize_regional_device_session(aws_session, device, logger)

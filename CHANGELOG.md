@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.20.0 (2022-05-04)
+
+### Features
+
+ * support local simulators for jobs
+
 ## v1.19.0 (2022-04-19)
 
 ### Deprecations and Removals
