@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import copy
 import math
 from typing import List, Optional, Sequence, Union
 
@@ -92,6 +93,16 @@ class AngledGate(Gate, Parameterizable):
             NotImplementedError: Subclasses should implement this function.
         """
         raise NotImplementedError
+
+    def adjoint(self) -> List[Gate]:
+        """Returns the adjoint of this gate as a singleton list.
+
+        Returns:
+            List[Gate]: A list containing the gate with negated angle.
+        """
+        new = copy.copy(self)
+        new._parameters = [-angle for angle in self._parameters]
+        return [new]
 
     def __eq__(self, other):
         if isinstance(other, AngledGate):

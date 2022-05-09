@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import Gate, Instruction, Qubit, QubitSet
+from braket.circuits import Gate, Instruction, Noise, Qubit, QubitSet, compiler_directives
 
 
 @pytest.fixture
@@ -77,6 +77,22 @@ def test_operator_setter(instr):
 @pytest.mark.xfail(raises=AttributeError)
 def test_target_setter(instr):
     instr.target = QubitSet(0)
+
+
+def test_adjoint_gate():
+    instr = Instruction(Gate.S(), 0)
+    adj = instr.adjoint()
+    assert adj == [Instruction(Gate.Si(), 0)]
+
+
+def test_adjoint_compiler_directive():
+    instr = Instruction(compiler_directives.StartVerbatimBox()).adjoint()
+    assert instr == [Instruction(compiler_directives.EndVerbatimBox())]
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_adjoint_unsupported():
+    Instruction(Noise.BitFlip(0.1), 0).adjoint()
 
 
 def test_str(instr):
