@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Sequence, Tuple
 
 from braket.circuits.operator import Operator
@@ -40,6 +42,19 @@ class CompilerDirective(Operator):
     def ascii_symbols(self) -> Tuple[str, ...]:
         """Tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
         return self._ascii_symbols
+
+    def counterpart(self) -> CompilerDirective:
+        """Returns the "opposite" counterpart to this compiler directive.
+
+        For example, the counterpart of a directive that starts a box
+        is the directive that ends the box.
+
+        Returns:
+            CompilerDirective: The counterpart compiler directive
+        """
+        raise NotImplementedError(
+            f"Compiler directive {self.name} does not have counterpart implemented"
+        )
 
     def to_ir(self, *args, **kwargs):
         raise NotImplementedError("to_ir has not been implemented yet.")
