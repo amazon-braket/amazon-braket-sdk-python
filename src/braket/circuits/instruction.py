@@ -13,8 +13,10 @@
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
+from braket.circuits.compiler_directive import CompilerDirective
+from braket.circuits.gate import Gate
 from braket.circuits.operator import Operator
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
@@ -31,7 +33,7 @@ class Instruction:
 
     def __init__(self, operator: InstructionOperator, target: QubitSetInput = None):
         """
-        InstructionOperator includes objects of type `Gate` only.
+        InstructionOperator includes objects of type `Gate` and `Noise` only.
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
@@ -80,6 +82,24 @@ class Instruction:
             Don't mutate this property, any mutations can have unexpected consequences.
         """
         return self._target
+
+    def adjoint(self) -> List[Instruction]:
+        """Returns a list of Instructions implementing adjoint of this instruction's own operator
+
+        This operation only works on Gate operators and compiler directives.
+
+        Returns:
+            List[Instruction]: A list of new instructions that comprise the adjoint of this operator
+
+        Raises:
+            NotImplementedError: If `operator` is not of type `Gate` or `CompilerDirective`
+        """
+        operator = self._operator
+        if isinstance(operator, Gate):
+            return [Instruction(gate, self._target) for gate in operator.adjoint()]
+        elif isinstance(operator, CompilerDirective):
+            return [Instruction(operator.counterpart(), self._target)]
+        raise NotImplementedError(f"Adjoint not supported for {operator}")
 
     def to_ir(self):
         """

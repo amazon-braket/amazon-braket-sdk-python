@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence, Type
+from typing import Any, List, Optional, Sequence, Tuple, Type
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -43,6 +43,16 @@ class Gate(QuantumOperator):
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
+    def adjoint(self) -> List[Gate]:
+        """Returns a list of gates that implement the adjoint of this gate.
+
+        This is a list because some gates do not have an inverse defined by a single existing gate.
+
+        Returns:
+            List[Gate]: The gates comprising the adjoint of this gate.
+        """
+        raise NotImplementedError(f"Gate {self.name} does not have adjoint implemented")
+
     def to_ir(self, target: QubitSet) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -53,19 +63,22 @@ class Gate(QuantumOperator):
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
+    @property
+    def ascii_symbols(self) -> Tuple[str, ...]:
+        """Tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
+        return self._ascii_symbols
+
     def __eq__(self, other):
-        if isinstance(other, Gate):
-            return self.name == other.name
-        return False
+        return isinstance(other, Gate) and self.name == other.name
 
     def __repr__(self):
-        return f"{self.name}('qubit_count': {self.qubit_count})"
+        return f"{self.name}('qubit_count': {self._qubit_count})"
 
     @classmethod
     def register_gate(cls, gate: Type[Gate]):
         """Register a gate implementation by adding it into the Gate class.
 
         Args:
-            gate (Gate): Gate class to register.
+            gate (Type[Gate]): Gate class to register.
         """
         setattr(cls, gate.__name__, gate)

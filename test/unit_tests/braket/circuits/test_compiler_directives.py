@@ -18,18 +18,23 @@ from braket.circuits import compiler_directives
 from braket.circuits.compiler_directive import CompilerDirective
 
 testdata = [
-    (compiler_directives.StartVerbatimBox, ir.StartVerbatimBox),
-    (compiler_directives.EndVerbatimBox, ir.EndVerbatimBox),
+    (compiler_directives.StartVerbatimBox, ir.StartVerbatimBox, compiler_directives.EndVerbatimBox),
+    (compiler_directives.EndVerbatimBox, ir.EndVerbatimBox, compiler_directives.StartVerbatimBox),
 ]
 
 
-@pytest.mark.parametrize("testclass,irclass", testdata)
-def test_to_ir(testclass, irclass):
+@pytest.mark.parametrize("testclass,irclass,counterpart", testdata)
+def test_counterpart(testclass, irclass, counterpart):
+    assert testclass().counterpart() == counterpart()
+
+
+@pytest.mark.parametrize("testclass,irclass,counterpart", testdata)
+def test_to_ir(testclass, irclass, counterpart):
     assert testclass().to_ir() == irclass()
 
 
-@pytest.mark.parametrize("testclass,irclass", testdata)
-def test_equality(testclass, irclass):
+@pytest.mark.parametrize("testclass,irclass,counterpart", testdata)
+def test_equality(testclass, irclass, counterpart):
     op1 = testclass()
     op2 = testclass()
     assert op1 == op2

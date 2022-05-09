@@ -75,14 +75,14 @@ def bell_pair(prob):
 
 
 def test_repr_instructions(h):
-    expected = f"Circuit('instructions': {list(h.instructions)})"
+    expected = f"Circuit('instructions': {h.instructions})"
     assert repr(h) == expected
 
 
 def test_repr_result_types(cnot_prob):
     circuit = cnot_prob
     expected = (
-        f"Circuit('instructions': {list(circuit.instructions)}"
+        f"Circuit('instructions': {circuit.instructions}"
         + f", 'result_types': {circuit.result_types})"
     )
     assert repr(circuit) == expected
@@ -123,7 +123,7 @@ def test_call_with_result_type(prob):
 
     assert new_circ == expected and not new_circ.parameters
     assert new_circ.observables_simultaneously_measurable
-    assert list(new_circ.result_types) == [prob]
+    assert new_circ.result_types == [prob]
 
 
 def test_call_one_param_not_bound():
@@ -166,28 +166,28 @@ def test_call_with_default_parameter_val():
 def test_add_result_type_default(prob):
     circ = Circuit().add_result_type(prob)
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == [prob]
+    assert circ.result_types == [prob]
 
 
 def test_add_result_type_with_mapping(prob):
     expected = [ResultType.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target_mapping={0: 10, 1: 11})
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == expected
+    assert circ.result_types == expected
 
 
 def test_add_result_type_with_target(prob):
     expected = [ResultType.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target=[10, 11])
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == expected
+    assert circ.result_types == expected
 
 
 def test_add_result_type_already_exists():
     expected = [ResultType.StateVector()]
     circ = Circuit(expected).add_result_type(expected[0])
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == expected
+    assert circ.result_types == expected
 
 
 def test_add_result_type_observable_conflict_target():
@@ -302,19 +302,19 @@ def test_add_result_type_with_target_and_mapping(prob):
 
 def test_add_instruction_default(cnot_instr):
     circ = Circuit().add_instruction(cnot_instr)
-    assert list(circ.instructions) == [cnot_instr]
+    assert circ.instructions == [cnot_instr]
 
 
 def test_add_instruction_with_mapping(cnot_instr):
     expected = [Instruction(Gate.CNot(), [10, 11])]
     circ = Circuit().add_instruction(cnot_instr, target_mapping={0: 10, 1: 11})
-    assert list(circ.instructions) == expected
+    assert circ.instructions == expected
 
 
 def test_add_instruction_with_target(cnot_instr):
     expected = [Instruction(Gate.CNot(), [10, 11])]
     circ = Circuit().add_instruction(cnot_instr, target=[10, 11])
-    assert list(circ.instructions) == expected
+    assert circ.instructions == expected
 
 
 def test_add_multiple_single_qubit_instruction(h_instr):
@@ -484,6 +484,24 @@ def test_add_with_circuit_with_target(bell_pair):
     target = [10, 11]
     circ = Circuit().add(bell_pair, target=target)
     expected = Circuit().add_circuit(bell_pair, target=target)
+    assert circ == expected
+
+
+def test_adjoint():
+    circ = Circuit().s(0).add_verbatim_box(Circuit().rz(0, 0.123)).expectation(Observable.X(), 0)
+    expected = Circuit()
+    expected.add_verbatim_box(Circuit().rz(0, -0.123))
+    expected.si(0)
+    expected.expectation(Observable.X(), 0)
+    actual = circ.adjoint()
+    assert actual == expected
+    assert circ == expected.adjoint()
+    assert circ == actual.adjoint()
+
+
+def test_adjoint_subcircuit_free_parameter():
+    circ = Circuit().h(0).add_circuit(Circuit().s(0).rz(0, FreeParameter("theta")).adjoint()).x(0)
+    expected = Circuit().h(0).rz(0, -FreeParameter("theta")).si(0).x(0)
     assert circ == expected
 
 
@@ -1664,12 +1682,12 @@ def test_depth_setter(h):
 
 
 def test_instructions_getter(h):
-    assert list(h.instructions) == list(h._moments.values())
+    assert h.instructions == list(h._moments.values())
 
 
 @pytest.mark.xfail(raises=AttributeError)
 def test_instructions_setter(h, h_instr):
-    h.instructions = iter([h_instr])
+    h.instructions = [h_instr]
 
 
 def test_moments_getter(h):
