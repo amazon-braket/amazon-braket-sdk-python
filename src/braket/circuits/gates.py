@@ -538,6 +538,12 @@ class Ry(AngledGate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.Ry.construct(target=target[0], angle=self.angle)
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"ry({self.angle}) {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)

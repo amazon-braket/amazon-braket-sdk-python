@@ -288,12 +288,28 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "rx(0.17) q[4];",
+            """
+            qubit[5] q;     // maps to qubits 0-4 on the device
+            x q[0];
+            """
         ),
         (
             Gate.Rx(angle=0.17),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "rx(0.17) $4;",
+        ),
+        (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ry(0.17) q[4];",
+        ),
+        (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ry(0.17) $4;",
         ),
     ],
 )
