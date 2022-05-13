@@ -89,6 +89,12 @@ class I(Gate):  # noqa: E742, E261
     def _to_jaqcd(self, target: QubitSet):
         return ir.I.construct(target=target[0])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"I {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         return np.eye(2, dtype=complex)
 
