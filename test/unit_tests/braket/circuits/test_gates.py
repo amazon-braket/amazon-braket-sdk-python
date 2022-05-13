@@ -295,6 +295,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "rx(0.17) $4;",
         ),
+        (
+            Gate.Z(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "z q[4];",
+        ),
+        (
+            Gate.Z(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "z $4;",
+        )
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
