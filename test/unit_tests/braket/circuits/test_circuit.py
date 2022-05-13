@@ -81,14 +81,14 @@ def bell_pair(prob):
 
 
 def test_repr_instructions(h):
-    expected = f"Circuit('instructions': {list(h.instructions)})"
+    expected = f"Circuit('instructions': {h.instructions})"
     assert repr(h) == expected
 
 
 def test_repr_result_types(cnot_prob):
     circuit = cnot_prob
     expected = (
-        f"Circuit('instructions': {list(circuit.instructions)}"
+        f"Circuit('instructions': {circuit.instructions}"
         + f", 'result_types': {circuit.result_types})"
     )
     assert repr(circuit) == expected
@@ -129,7 +129,7 @@ def test_call_with_result_type(prob):
 
     assert new_circ == expected and not new_circ.parameters
     assert new_circ.observables_simultaneously_measurable
-    assert list(new_circ.result_types) == [prob]
+    assert new_circ.result_types == [prob]
 
 
 def test_call_one_param_not_bound():
@@ -172,28 +172,28 @@ def test_call_with_default_parameter_val():
 def test_add_result_type_default(prob):
     circ = Circuit().add_result_type(prob)
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == [prob]
+    assert circ.result_types == [prob]
 
 
 def test_add_result_type_with_mapping(prob):
     expected = [ResultType.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target_mapping={0: 10, 1: 11})
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == expected
+    assert circ.result_types == expected
 
 
 def test_add_result_type_with_target(prob):
     expected = [ResultType.Probability([10, 11])]
     circ = Circuit().add_result_type(prob, target=[10, 11])
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == expected
+    assert circ.result_types == expected
 
 
 def test_add_result_type_already_exists():
     expected = [ResultType.StateVector()]
     circ = Circuit(expected).add_result_type(expected[0])
     assert circ.observables_simultaneously_measurable
-    assert list(circ.result_types) == expected
+    assert circ.result_types == expected
 
 
 def test_add_result_type_observable_conflict_target():
@@ -308,19 +308,19 @@ def test_add_result_type_with_target_and_mapping(prob):
 
 def test_add_instruction_default(cnot_instr):
     circ = Circuit().add_instruction(cnot_instr)
-    assert list(circ.instructions) == [cnot_instr]
+    assert circ.instructions == [cnot_instr]
 
 
 def test_add_instruction_with_mapping(cnot_instr):
     expected = [Instruction(Gate.CNot(), [10, 11])]
     circ = Circuit().add_instruction(cnot_instr, target_mapping={0: 10, 1: 11})
-    assert list(circ.instructions) == expected
+    assert circ.instructions == expected
 
 
 def test_add_instruction_with_target(cnot_instr):
     expected = [Instruction(Gate.CNot(), [10, 11])]
     circ = Circuit().add_instruction(cnot_instr, target=[10, 11])
-    assert list(circ.instructions) == expected
+    assert circ.instructions == expected
 
 
 def test_add_multiple_single_qubit_instruction(h_instr):
@@ -490,6 +490,24 @@ def test_add_with_circuit_with_target(bell_pair):
     target = [10, 11]
     circ = Circuit().add(bell_pair, target=target)
     expected = Circuit().add_circuit(bell_pair, target=target)
+    assert circ == expected
+
+
+def test_adjoint():
+    circ = Circuit().s(0).add_verbatim_box(Circuit().rz(0, 0.123)).expectation(Observable.X(), 0)
+    expected = Circuit()
+    expected.add_verbatim_box(Circuit().rz(0, -0.123))
+    expected.si(0)
+    expected.expectation(Observable.X(), 0)
+    actual = circ.adjoint()
+    assert actual == expected
+    assert circ == expected.adjoint()
+    assert circ == actual.adjoint()
+
+
+def test_adjoint_subcircuit_free_parameter():
+    circ = Circuit().h(0).add_circuit(Circuit().s(0).rz(0, FreeParameter("theta")).adjoint()).x(0)
+    expected = Circuit().h(0).rz(0, -FreeParameter("theta")).si(0).x(0)
     assert circ == expected
 
 
@@ -1136,6 +1154,379 @@ def test_as_unitary_one_gate_returns_expected_unitary(circuit, expected_unitary)
     assert np.allclose(circuit.as_unitary(), expected_unitary)
 
 
+def test_to_unitary_empty_instructions_returns_empty_array():
+    circ = Circuit()
+    circ.to_unitary() == []
+
+
+@pytest.mark.parametrize(
+    "circuit",
+    [
+        (Circuit().phaseshift(0, 0.15).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
+        (Circuit().cnot(1, 0).apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1))),
+        (
+            Circuit()
+            .x(1)
+            .i(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1])
+        ),
+        (
+            Circuit()
+            .x(1)
+            .i(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2])
+        ),
+        (Circuit().x(1).i(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
+        (Circuit().x(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).i(2)),
+        (
+            Circuit()
+            .y(1)
+            .z(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1])
+        ),
+        (
+            Circuit()
+            .y(1)
+            .z(2)
+            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2])
+        ),
+        (Circuit().y(1).z(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
+        (Circuit().y(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).z(2)),
+        (
+            Circuit()
+            .cphaseshift(2, 1, 0.15)
+            .si(3)
+            .apply_gate_noise(
+                noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 2]
+            )
+        ),
+        (
+            Circuit()
+            .cphaseshift(2, 1, 0.15)
+            .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1))
+            .si(3)
+        ),
+    ],
+)
+@pytest.mark.xfail(raises=TypeError)
+def test_to_unitary_noise_raises_error(circuit):
+    circuit.to_unitary()
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_to_unitary_parameterized():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    assert np.allclose(circ.to_unitary())
+
+
+def test_to_unitary_noise_not_apply_returns_expected_unitary(recwarn):
+    circuit = (
+        Circuit()
+        .cphaseshift(1, 2, 0.15)
+        .si(3)
+        .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3])
+    )
+
+    assert len(recwarn) == 1
+    assert str(recwarn[0].message).startswith("Noise is not applied to any gate")
+
+    assert np.allclose(
+        circuit.to_unitary(),
+        np.kron(gates.CPhaseShift(0.15).to_matrix(), gates.Si().to_matrix()),
+    )
+
+
+@pytest.mark.parametrize(
+    "circuit,expected_unitary",
+    [
+        (Circuit().h(0), gates.H().to_matrix()),
+        (Circuit().h(0).add_result_type(ResultType.Probability(target=[0])), gates.H().to_matrix()),
+        (Circuit().h(1), gates.H().to_matrix()),
+        (Circuit().h(2), gates.H().to_matrix()),
+        (Circuit().x(0), gates.X().to_matrix()),
+        (Circuit().y(0), gates.Y().to_matrix()),
+        (Circuit().z(0), gates.Z().to_matrix()),
+        (Circuit().s(0), gates.S().to_matrix()),
+        (Circuit().si(0), gates.Si().to_matrix()),
+        (Circuit().t(0), gates.T().to_matrix()),
+        (Circuit().ti(0), gates.Ti().to_matrix()),
+        (Circuit().v(0), gates.V().to_matrix()),
+        (Circuit().vi(0), gates.Vi().to_matrix()),
+        (Circuit().rx(0, 0.15), gates.Rx(0.15).to_matrix()),
+        (Circuit().ry(0, 0.15), gates.Ry(0.15).to_matrix()),
+        (Circuit().rz(0, 0.15), gates.Rz(0.15).to_matrix()),
+        (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
+        (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
+        (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
+        (Circuit().cnot(2, 4), gates.CNot().to_matrix()),
+        (Circuit().swap(0, 1), gates.Swap().to_matrix()),
+        (Circuit().swap(1, 0), gates.Swap().to_matrix()),
+        (Circuit().iswap(0, 1), gates.ISwap().to_matrix()),
+        (Circuit().iswap(1, 0), gates.ISwap().to_matrix()),
+        (Circuit().pswap(0, 1, 0.15), gates.PSwap(0.15).to_matrix()),
+        (Circuit().pswap(1, 0, 0.15), gates.PSwap(0.15).to_matrix()),
+        (Circuit().xy(0, 1, 0.15), gates.XY(0.15).to_matrix()),
+        (Circuit().xy(1, 0, 0.15), gates.XY(0.15).to_matrix()),
+        (Circuit().cphaseshift(0, 1, 0.15), gates.CPhaseShift(0.15).to_matrix()),
+        (Circuit().cphaseshift00(0, 1, 0.15), gates.CPhaseShift00(0.15).to_matrix()),
+        (Circuit().cphaseshift01(0, 1, 0.15), gates.CPhaseShift01(0.15).to_matrix()),
+        (Circuit().cphaseshift10(0, 1, 0.15), gates.CPhaseShift10(0.15).to_matrix()),
+        (Circuit().cy(0, 1), gates.CY().to_matrix()),
+        (Circuit().cz(0, 1), gates.CZ().to_matrix()),
+        (Circuit().xx(0, 1, 0.15), gates.XX(0.15).to_matrix()),
+        (Circuit().yy(0, 1, 0.15), gates.YY(0.15).to_matrix()),
+        (Circuit().zz(0, 1, 0.15), gates.ZZ(0.15).to_matrix()),
+        (Circuit().ccnot(0, 1, 2), gates.CCNot().to_matrix()),
+        (
+            Circuit()
+            .ccnot(0, 1, 2)
+            .add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1])),
+            gates.CCNot().to_matrix(),
+        ),
+        (Circuit().ccnot(0, 1, 2), gates.CCNot().to_matrix()),
+        (Circuit().cswap(0, 1, 2), gates.CSwap().to_matrix()),
+        (Circuit().cswap(0, 2, 1), gates.CSwap().to_matrix()),
+        (Circuit().h(1), gates.H().to_matrix()),
+        (Circuit().x(1).i(2), np.kron(gates.X().to_matrix(), np.eye(2))),
+        (Circuit().y(1).z(2), np.kron(gates.Y().to_matrix(), gates.Z().to_matrix())),
+        (Circuit().rx(1, 0.15), gates.Rx(0.15).to_matrix()),
+        (Circuit().ry(1, 0.15).i(2), np.kron(gates.Ry(0.15).to_matrix(), np.eye(2))),
+        (Circuit().rz(1, 0.15).s(2), np.kron(gates.Rz(0.15).to_matrix(), gates.S().to_matrix())),
+        (Circuit().pswap(1, 2, 0.15), gates.PSwap(0.15).to_matrix()),
+        (Circuit().pswap(2, 1, 0.15), gates.PSwap(0.15).to_matrix()),
+        (Circuit().xy(1, 2, 0.15).i(3), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
+        (Circuit().xy(2, 1, 0.15).i(3), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
+        (
+            Circuit().cphaseshift(1, 2, 0.15).si(3),
+            np.kron(gates.CPhaseShift(0.15).to_matrix(), gates.Si().to_matrix()),
+        ),
+        (Circuit().ccnot(1, 2, 3), gates.CCNot().to_matrix()),
+        (Circuit().ccnot(2, 1, 3), gates.CCNot().to_matrix()),
+        (Circuit().cswap(1, 2, 3).i(4), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
+        (Circuit().cswap(1, 3, 2).i(4), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
+        (Circuit().cswap(1, 2, 3).t(4), np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix())),
+        (Circuit().cswap(1, 3, 2).t(4), np.kron(gates.CSwap().to_matrix(), gates.T().to_matrix())),
+        (Circuit().h(0).h(0), gates.I().to_matrix()),
+        (Circuit().h(0).x(0), np.dot(gates.X().to_matrix(), gates.H().to_matrix())),
+        (Circuit().x(0).h(0), np.dot(gates.H().to_matrix(), gates.X().to_matrix())),
+        (
+            Circuit().y(0).z(1).cnot(0, 1),
+            np.dot(gates.CNot().to_matrix(), np.kron(gates.Y().to_matrix(), gates.Z().to_matrix())),
+        ),
+        (
+            Circuit().z(0).y(1).cnot(0, 1),
+            np.dot(gates.CNot().to_matrix(), np.kron(gates.Z().to_matrix(), gates.Y().to_matrix())),
+        ),
+        (
+            Circuit().y(0).z(1).cnot(0, 1).cnot(1, 2),
+            np.dot(
+                np.dot(
+                    np.kron(np.eye(2), gates.CNot().to_matrix()),
+                    np.kron(gates.CNot().to_matrix(), np.eye(2)),
+                ),
+                np.kron(np.kron(gates.Y().to_matrix(), gates.Z().to_matrix()), np.eye(2)),
+            ),
+        ),
+        (
+            Circuit().z(0).y(1).cnot(0, 1).ccnot(0, 1, 2),
+            np.dot(
+                np.dot(
+                    gates.CCNot().to_matrix(),
+                    np.kron(gates.CNot().to_matrix(), np.eye(2)),
+                ),
+                np.kron(np.kron(gates.Z().to_matrix(), gates.Y().to_matrix()), np.eye(2)),
+            ),
+        ),
+        (
+            Circuit().cnot(1, 0),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 1.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().ccnot(1, 2, 0),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().ccnot(2, 1, 0),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().ccnot(0, 2, 1),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().ccnot(2, 0, 1),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().s(0).v(1).cnot(0, 1).cnot(2, 1),
+            np.dot(
+                np.dot(
+                    np.dot(
+                        np.kron(
+                            np.eye(2),
+                            np.array(
+                                [
+                                    [1.0, 0.0, 0.0, 0.0],
+                                    [0.0, 0.0, 0.0, 1.0],
+                                    [0.0, 0.0, 1.0, 0.0],
+                                    [0.0, 1.0, 0.0, 0.0],
+                                ],
+                                dtype=complex,
+                            ),
+                        ),
+                        np.kron(
+                            np.array(
+                                [
+                                    [1.0, 0.0, 0.0, 0.0],
+                                    [0.0, 1.0, 0.0, 0.0],
+                                    [0.0, 0.0, 0.0, 1.0],
+                                    [0.0, 0.0, 1.0, 0.0],
+                                ],
+                                dtype=complex,
+                            ),
+                            np.eye(2),
+                        ),
+                    ),
+                    np.kron(np.kron(np.eye(2), gates.V().to_matrix()), np.eye(2)),
+                ),
+                np.kron(gates.S().to_matrix(), np.eye(4)),
+            ),
+        ),
+        (
+            Circuit().z(0).y(1).cnot(1, 0).ccnot(2, 1, 0),
+            np.dot(
+                np.dot(
+                    np.dot(
+                        np.array(
+                            [
+                                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                            ],
+                            dtype=complex,
+                        ),
+                        np.kron(
+                            np.array(
+                                [
+                                    [1.0, 0.0, 0.0, 0.0],
+                                    [0.0, 0.0, 0.0, 1.0],
+                                    [0.0, 0.0, 1.0, 0.0],
+                                    [0.0, 1.0, 0.0, 0.0],
+                                ],
+                                dtype=complex,
+                            ),
+                            np.eye(2),
+                        ),
+                    ),
+                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
+                ),
+                np.kron(gates.Z().to_matrix(), np.eye(4)),
+            ),
+        ),
+        (
+            Circuit().z(0).y(1).cnot(1, 0).ccnot(2, 0, 1),
+            np.dot(
+                np.dot(
+                    np.dot(
+                        np.array(
+                            [
+                                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                            ],
+                            dtype=complex,
+                        ),
+                        np.kron(
+                            np.array(
+                                [
+                                    [1.0, 0.0, 0.0, 0.0],
+                                    [0.0, 0.0, 0.0, 1.0],
+                                    [0.0, 0.0, 1.0, 0.0],
+                                    [0.0, 1.0, 0.0, 0.0],
+                                ],
+                                dtype=complex,
+                            ),
+                            np.eye(2),
+                        ),
+                    ),
+                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
+                ),
+                np.kron(gates.Z().to_matrix(), np.eye(4)),
+            ),
+        ),
+    ],
+)
+def test_to_matrix_one_gate_returns_expected_unitary(circuit, expected_unitary):
+    assert np.allclose(circuit.to_unitary(), expected_unitary)
+
+
 def test_circuit_with_symbol():
     theta = FreeParameter("theta")
 
@@ -1415,12 +1806,12 @@ def test_depth_setter(h):
 
 
 def test_instructions_getter(h):
-    assert list(h.instructions) == list(h._moments.values())
+    assert h.instructions == list(h._moments.values())
 
 
 @pytest.mark.xfail(raises=AttributeError)
 def test_instructions_setter(h, h_instr):
-    h.instructions = iter([h_instr])
+    h.instructions = [h_instr]
 
 
 def test_moments_getter(h):
