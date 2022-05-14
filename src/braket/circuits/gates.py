@@ -93,7 +93,7 @@ class I(Gate):  # noqa: E742, E261
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
     ):
         target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"I {target_qubit};"
+        return f"i {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.eye(2, dtype=complex)
