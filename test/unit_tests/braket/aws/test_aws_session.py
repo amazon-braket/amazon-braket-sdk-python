@@ -146,7 +146,7 @@ def throttling_response():
 
 def test_initializes_boto_client_if_required(boto_session):
     AwsSession(boto_session=boto_session)
-    boto_session.client.assert_any_call("braket", config=None)
+    boto_session.client.assert_any_call("braket", config=None, endpoint_url=None)
 
 
 def test_user_supplied_braket_client():
@@ -158,10 +158,15 @@ def test_user_supplied_braket_client():
     assert aws_session.braket_client == braket_client
 
 
+@patch.dict("os.environ", {"BRAKET_ENDPOINT": "some-endpoint"})
 def test_config(boto_session):
     config = Mock()
     AwsSession(boto_session=boto_session, config=config)
-    boto_session.client.assert_any_call("braket", config=config)
+    boto_session.client.assert_any_call(
+        "braket",
+        config=config,
+        endpoint_url="some-endpoint",
+    )
 
 
 def test_region():
