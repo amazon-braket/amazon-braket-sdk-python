@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.21.0 (2022-05-10)
+
+### Features
+
+ * Gate and Circuit inversion
+
 ## v1.20.0 (2022-05-04)
 
 ### Features
