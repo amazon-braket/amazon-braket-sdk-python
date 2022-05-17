@@ -11,7 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Optional, Sequence
+from __future__ import annotations
+
+from typing import Any, List, Optional, Sequence, Tuple
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -45,6 +47,16 @@ class Gate(QuantumOperator):
                 `ascii_symbols` length != `qubit_count`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+    def adjoint(self) -> List[Gate]:
+        """Returns a list of gates that implement the adjoint of this gate.
+
+        This is a list because some gates do not have an inverse defined by a single existing gate.
+
+        Returns:
+            List[Gate]: The gates comprising the adjoint of this gate.
+        """
+        raise NotImplementedError(f"Gate {self.name} does not have adjoint implemented")
 
     def to_ir(
         self,
@@ -112,16 +124,19 @@ class Gate(QuantumOperator):
         """
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
+    @property
+    def ascii_symbols(self) -> Tuple[str, ...]:
+        """Tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
+        return self._ascii_symbols
+
     def __eq__(self, other):
-        if isinstance(other, Gate):
-            return self.name == other.name
-        return False
+        return isinstance(other, Gate) and self.name == other.name
 
     def __repr__(self):
-        return f"{self.name}('qubit_count': {self.qubit_count})"
+        return f"{self.name}('qubit_count': {self._qubit_count})"
 
     @classmethod
-    def register_gate(cls, gate: "Gate"):
+    def register_gate(cls, gate: Gate):
         """Register a gate implementation by adding it into the Gate class.
 
         Args:

@@ -167,7 +167,7 @@ class CwlInsightsMetricsFetcher(object):
         query = (
             f"fields @timestamp, @message "
             f"| filter @logStream like /^{job_name}\\// "
-            f"| filter @message like /^Metrics - /"
+            f"| filter @message like /Metrics - /"
         )
 
         response = self._logs_client.start_query(
