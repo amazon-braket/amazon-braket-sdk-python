@@ -18,6 +18,7 @@ import numpy as np
 import pytest
 
 from braket.circuits import Circuit, PauliString, gates
+from braket.circuits.observables import X, Y, Z
 
 ORDER = ["I", "X", "Y", "Z"]
 PAULI_INDEX_MATRICES = {
@@ -30,31 +31,33 @@ SIGN_MAP = {"+": 1, "-": -1}
 
 
 @pytest.mark.parametrize(
-    "pauli_string, string, phase",
+    "pauli_string, string, phase, observable",
     [
-        ("+XYZ", "+XYZ", complex(1)),
-        ("-ZXY", "-ZXY", complex(-1)),
-        ("YIX", "+YIX", complex(1)),
-        ("+iZYXI", "+iZYXI", complex(1j)),
-        ("-iXIZY", "-iXIZY", complex(-1j)),
-        ("iYXIZ", "+iYXIZ", complex(1j)),
-        (PauliString("-iYX"), "-iYX", complex(-1j)),
-        (PauliString("ZYXI"), "+ZYXI", complex(1)),
+        ("+XZ", "+XZ", 1, X() @ Z()),
+        ("-ZXY", "-ZXY", -1, Z() @ X() @ Y()),
+        ("YIX", "+YIX", 1, Y() @ X()),
+        (PauliString("-ZYXI"), "-ZYXI", -1, Z() @ Y() @ X()),
     ],
 )
-def test_happy_case(pauli_string, string, phase):
+def test_happy_case(pauli_string, string, phase, observable):
     instance = PauliString(pauli_string)
     assert str(instance) == string
     assert instance.phase == phase
     pauli_list = list(str(pauli_string))
     if pauli_list[0] in {"-", "+"}:
         pauli_list.pop(0)
-    if pauli_list[0] in {"i", "j"}:
-        pauli_list.pop(0)
     stripped = "".join(pauli_list)
     assert len(instance) == len(stripped)
     for i in range(len(instance)):
         assert ORDER[instance[i]] == stripped[i]
+    assert instance == PauliString(pauli_string)
+    assert instance == PauliString(instance)
+    assert instance.to_unsigned_observable() == observable
+
+
+@pytest.mark.parametrize("other", ["foo", PauliString("+XYZ"), PauliString("-XI")])
+def test_not_equal(other):
+    assert PauliString("-XYZ") != other
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -63,7 +66,7 @@ def test_none():
 
 
 @pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize("invalid_string", ["XAY", "-BYZ", "+", "-i", "j", "xyz", "", None])
+@pytest.mark.parametrize("invalid_string", ["XAY", "-BYZ", "+", "-", "xyz", "", None])
 def test_invalid_string(invalid_string):
     PauliString(invalid_string)
 
@@ -73,22 +76,30 @@ def test_invalid_type():
     PauliString(1234)
 
 
-@pytest.mark.parametrize("string,signs", list(itertools.product(["X", "Y", "Z"], ["+", "-"])))
+@pytest.mark.parametrize(
+    "string,signs",
+    list(itertools.product(["X", "Y", "Z"], ["+", "-"]))
+    + [("ZIY", "+--"), ("YIXIZ", [1, 1, -1, -1, 1]), ("XYZ", (-1, -1, -1)), ("XZIY", None)],
+)
 def test_eigenstate(string, signs):
+    if not signs:
+        signs = [1] * len(string)
     pauli_string = PauliString(string)
     circuit = pauli_string.eigenstate(signs)
-    for qubit in range(len(signs)):
+    for qubit in range(len(string)):
         circuit.i(qubit)
     initial_state = np.zeros(2 ** len(pauli_string))
     initial_state[0] = 1
-    state = circuit.as_unitary() @ initial_state
+    state = circuit.to_unitary() @ initial_state
+
     signs_list = [SIGN_MAP[sign] for sign in signs] if isinstance(signs, str) else signs
-    total_sign = 1 if len([1 for sign in signs_list if sign < 0]) % 2 == 0 else -1
+    positive = [signs_list[i] for i in range(len(string)) if signs_list[i] < 0 and string[i] != "I"]
+    total_sign = 1 if len(positive) % 2 == 0 else -1
     pauli_matrix = functools.reduce(
         np.kron, [PAULI_INDEX_MATRICES[pauli] for pauli in pauli_string]
     )
     actual = total_sign * pauli_matrix @ state
-    assert np.isclose(actual, state).all()
+    assert np.allclose(actual, state)
     assert tuple(signs_list) in pauli_string._eigenstate_circuits
 
 
