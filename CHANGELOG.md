@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.21.1 (2022-05-17)
+
+### Bug Fixes and Other Changes
+
+ * broken links for examples
+
 ## v1.21.0 (2022-05-10)
 
 ### Features
