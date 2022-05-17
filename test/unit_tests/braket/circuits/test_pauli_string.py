@@ -82,8 +82,6 @@ def test_invalid_type():
     + [("ZIY", "+--"), ("YIXIZ", [1, 1, -1, -1, 1]), ("XYZ", (-1, -1, -1)), ("XZIY", None)],
 )
 def test_eigenstate(string, signs):
-    if not signs:
-        signs = [1] * len(string)
     pauli_string = PauliString(string)
     circuit = pauli_string.eigenstate(signs)
     for qubit in range(len(string)):
@@ -92,6 +90,8 @@ def test_eigenstate(string, signs):
     initial_state[0] = 1
     state = circuit.to_unitary() @ initial_state
 
+    if not signs:
+        signs = [1] * len(string)
     signs_list = [SIGN_MAP[sign] for sign in signs] if isinstance(signs, str) else signs
     positive = [signs_list[i] for i in range(len(string)) if signs_list[i] < 0 and string[i] != "I"]
     total_sign = 1 if len(positive) % 2 == 0 else -1
