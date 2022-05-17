@@ -127,9 +127,6 @@ class NoiseModel:
 
         Returns:
             NoiseModel: This NoiseModel object.
-
-        Raises:
-            ValueError: If the noise type is not specified and can not be inferred.
         """
         return self._add_instruction(NoiseModelInstruction(noise, criteria))
 
