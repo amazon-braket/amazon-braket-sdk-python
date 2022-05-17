@@ -40,6 +40,7 @@ To add a new gate:
     3. Register the class with the `Gate` class via `Gate.register_gate()`.
 """
 
+
 # Single qubit gates #
 
 
@@ -163,6 +164,12 @@ class Y(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.Y.construct(target=target[0])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ) -> str:
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"y {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
@@ -238,7 +245,6 @@ class S(Gate):
         return ir.S.construct(target=target[0])
 
     def to_matrix(self) -> np.ndarray:
-
         return np.array([[1.0, 0.0], [0.0, 1.0j]], dtype=complex)
 
     @staticmethod
