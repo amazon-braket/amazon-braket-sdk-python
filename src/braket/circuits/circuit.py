@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import warnings
 from numbers import Number
 from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
@@ -46,7 +47,7 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
-from braket.circuits.unitary_calculation import calculate_unitary
+from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 
@@ -150,10 +151,9 @@ class Circuit:
         return self._moments.depth
 
     @property
-    def instructions(self) -> Iterable[Instruction]:
+    def instructions(self) -> List[Instruction]:
         """Iterable[Instruction]: Get an `iterable` of instructions in the circuit."""
-
-        return self._moments.values()
+        return list(self._moments.values())
 
     @property
     def result_types(self) -> List[ResultType]:
@@ -1037,6 +1037,22 @@ class Circuit:
 
         return self
 
+    def adjoint(self) -> Circuit:
+        """Returns the adjoint of this circuit.
+
+        This is the adjoint of every instruction of the circuit, in reverse order. Result types,
+        and consequently basis rotations will stay in the same order at the end of the circuit.
+
+        Returns:
+            Circuit: The adjoint of the circuit.
+        """
+        circ = Circuit()
+        for instr in reversed(self.instructions):
+            circ.add(instr.adjoint())
+        for result_type in self._result_types:
+            circ.add_result_type(result_type)
+        return circ
+
     def diagram(self, circuit_diagram_class=AsciiCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.
@@ -1149,8 +1165,8 @@ class Circuit:
         return ir_instructions
 
     def as_unitary(self) -> np.ndarray:
-        """
-        Returns the unitary matrix representation of the entire circuit.
+        r"""
+        Returns the unitary matrix representation, in little endian format, of the entire circuit.
         *Note*: The performance of this method degrades with qubit count. It might be slow for
         qubit count > 10.
 
@@ -1158,6 +1174,12 @@ class Circuit:
             np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
                 circuit as a unitary. *Note*: For an empty circuit, an empty numpy array is
                 returned (`array([], dtype=complex128)`)
+
+        Warnings:
+            This method has been deprecated, please use to_unitary() instead.
+            The unitary returned by this method is *little-endian*; the first qubit in the circuit
+            is the _least_ significant. For example, a circuit `Circuit().h(0).x(1)` will yield the
+            unitary :math:`X(1) \otimes H(0)`.
 
         Raises:
             TypeError: If circuit is not composed only of `Gate` instances,
@@ -1175,12 +1197,52 @@ class Circuit:
                    [ 0.70710678+0.j, -0.70710678+0.j,  0.        +0.j,
                      0.        +0.j]])
         """
+        warnings.warn(
+            "Matrix returned will have qubits in little-endian order; "
+            "This method has been deprecated. Please use to_unitary() instead.",
+            category=DeprecationWarning,
+        )
+
         qubits = self.qubits
         if not qubits:
             return np.zeros(0, dtype=complex)
         qubit_count = max(qubits) + 1
 
         return calculate_unitary(qubit_count, self.instructions)
+
+    def to_unitary(self) -> np.ndarray:
+        """
+        Returns the unitary matrix representation of the entire circuit.
+
+        Note:
+            The performance of this method degrades with qubit count. It might be slow for
+            `qubit count` > 10.
+
+        Returns:
+            np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
+            circuit as a unitary. For an empty circuit, an empty numpy array is returned
+            (`array([], dtype=complex)`)
+
+        Raises:
+            TypeError: If circuit is not composed only of `Gate` instances,
+                i.e. a circuit with `Noise` operators will raise this error.
+
+        Examples:
+            >>> circ = Circuit().h(0).cnot(0, 1)
+            >>> circ.to_unitary()
+            array([[ 0.70710678+0.j,  0.        +0.j,  0.70710678+0.j,
+                     0.        +0.j],
+                   [ 0.        +0.j,  0.70710678+0.j,  0.        +0.j,
+                     0.70710678+0.j],
+                   [ 0.        +0.j,  0.70710678+0.j,  0.        +0.j,
+                    -0.70710678+0.j],
+                   [ 0.70710678+0.j,  0.        +0.j, -0.70710678+0.j,
+                     0.        +0.j]])
+        """
+        qubits = self.qubits
+        if not qubits:
+            return np.zeros(0, dtype=complex)
+        return calculate_unitary_big_endian(self.instructions, qubits)
 
     @property
     def qubits_frozen(self) -> bool:
@@ -1231,10 +1293,10 @@ class Circuit:
 
     def __repr__(self) -> str:
         if not self.result_types:
-            return f"Circuit('instructions': {list(self.instructions)})"
+            return f"Circuit('instructions': {self.instructions})"
         else:
             return (
-                f"Circuit('instructions': {list(self.instructions)}"
+                f"Circuit('instructions': {self.instructions}"
                 + f", 'result_types': {self.result_types})"
             )
 
@@ -1244,8 +1306,7 @@ class Circuit:
     def __eq__(self, other):
         if isinstance(other, Circuit):
             return (
-                list(self.instructions) == list(other.instructions)
-                and self.result_types == other.result_types
+                self.instructions == other.instructions and self.result_types == other.result_types
             )
         return NotImplemented
 
