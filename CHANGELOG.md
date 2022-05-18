@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.22.0 (2022-05-18)
+
+### Features
+
+ * Noise models
+
 ## v1.21.1 (2022-05-17)
 
 ### Bug Fixes and Other Changes
