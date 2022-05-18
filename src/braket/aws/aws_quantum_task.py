@@ -45,7 +45,12 @@ from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult
-from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
+from braket.tasks import (
+    AnnealingQuantumTaskResult,
+    BosonSamplingQuantumTaskResult,
+    GateModelQuantumTaskResult,
+    QuantumTask,
+)
 
 
 class AwsQuantumTask(QuantumTask):
@@ -193,7 +198,9 @@ class AwsQuantumTask(QuantumTask):
         self._logger = logger
 
         self._metadata: Dict[str, Any] = {}
-        self._result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult] = None
+        self._result: Union[
+            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult
+        ] = None
 
     @staticmethod
     def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
@@ -279,7 +286,11 @@ class AwsQuantumTask(QuantumTask):
         cached = self._status(True)
         return cached if cached in self.TERMINAL_STATES else self._status(metadata_absent)
 
-    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    def result(
+        self,
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult
+    ]:
         """
         Get the quantum task result by polling Amazon Braket to see if the task is completed.
         Once the task is completed, the result is retrieved from S3 and returned as a
@@ -345,7 +356,9 @@ class AwsQuantumTask(QuantumTask):
 
     async def _wait_for_completion(
         self,
-    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult
+    ]:
         """
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
 

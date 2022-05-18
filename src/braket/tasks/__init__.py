@@ -13,6 +13,7 @@
 
 import braket.ipython_utils as ipython_utils
 from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult  # noqa: F401
+from braket.tasks.boson_sampling_quantum_task_result import BosonSamplingQuantumTaskResult  # noqa: F401
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult  # noqa: F401
 from braket.tasks.quantum_task import QuantumTask  # noqa: F401
 

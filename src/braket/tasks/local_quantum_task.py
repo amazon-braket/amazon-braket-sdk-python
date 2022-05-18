@@ -14,7 +14,7 @@
 import asyncio
 from typing import Union
 
-from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
+from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, BosonSamplingQuantumTaskResult, QuantumTask
 
 
 class LocalQuantumTask(QuantumTask):
@@ -23,7 +23,7 @@ class LocalQuantumTask(QuantumTask):
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
     """
 
-    def __init__(self, result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]):
+    def __init__(self, result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult]):
         self._id = result.task_metadata.id
         self._result = result
 
@@ -37,7 +37,7 @@ class LocalQuantumTask(QuantumTask):
     def state(self) -> str:
         return "COMPLETED"
 
-    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult]:
         return self._result
 
     def async_result(self) -> asyncio.Task:
