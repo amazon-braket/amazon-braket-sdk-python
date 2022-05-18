@@ -18,6 +18,7 @@ import time
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from braket.aws import aws_quantum_task
 from common_test_utils import MockS3
 from jsonschema import validate
 
@@ -37,6 +38,7 @@ from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
@@ -45,6 +47,7 @@ IONQ_ARN = "device/qpu/ionq"
 RIGETTI_ARN = "device/qpu/rigetti"
 OQC_ARN = "device/qpu/oqc"
 SIMULATOR_ARN = "device/quantum-simulator"
+XANADU_ARN = "device/qpu/xanadu"
 
 DEVICE_PARAMETERS = [
     (IONQ_ARN, IonqDeviceParameters),
@@ -95,6 +98,9 @@ def problem():
 def openqasm_program():
     return OpenQasmProgram(source="OPENQASM 3.0; h $0;")
 
+@pytest.fixture
+def blackbird_program():
+    return BlackbirdProgram(source="Vac | q[0]")
 
 def test_equality(arn, aws_session):
     quantum_task_1 = AwsQuantumTask(arn, aws_session)
@@ -374,6 +380,20 @@ def test_create_openqasm_program(aws_session, arn, openqasm_program):
         aws_session,
         SIMULATOR_ARN,
         openqasm_program.json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_blackbird_program(aws_session, arn, blackbird_program):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, XANADU_ARN, blackbird_program, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        XANADU_ARN,
+        blackbird_program.json(),
         S3_TARGET,
         shots,
     )

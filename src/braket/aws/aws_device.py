@@ -30,6 +30,7 @@ from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuP
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.schema_common import BraketSchemaBase
 
 
@@ -81,7 +82,7 @@ class AwsDevice(Device):
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem, OpenQasmProgram],
+        task_specification: Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -94,8 +95,8 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]): Specification of task
-                (circuit or annealing problem) to run on device.
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]):
+                Specification of task (circuit or annealing problem or program) to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
                 save the task's results to. Default is `<default_bucket>/tasks` if evoked
                 outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
@@ -163,7 +164,7 @@ class AwsDevice(Device):
 
     def run_batch(
         self,
-        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram]],
+        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         max_parallel: Optional[int] = None,
@@ -176,8 +177,8 @@ class AwsDevice(Device):
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (List[Union[Circuit, Problem]]): List of  circuits
-                or annealing problems to run on device.
+            task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]]):
+                List of  circuits or annealing problems to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
                 save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
                 outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
