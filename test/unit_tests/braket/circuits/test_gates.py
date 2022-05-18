@@ -298,6 +298,30 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "rx(0.17) $4;",
         ),
         (
+            Gate.Y(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "y q[4];",
+        ),
+        (
+            Gate.Y(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "y $4;",
+        ),
+        (
+            Gate.H(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "h q[4];",
+        ),
+        (
+            Gate.H(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "h $4;",
+        ),
+        (
             Gate.Ry(angle=0.17),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
@@ -321,7 +345,10 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "i $4;",
         ),
+<<<<<<< HEAD
 
+=======
+>>>>>>> aws-feature/openqasm_generation
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
