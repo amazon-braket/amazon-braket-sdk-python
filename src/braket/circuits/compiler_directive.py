@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Any, Sequence, Tuple
 
 from braket.circuits.operator import Operator
@@ -81,6 +83,19 @@ class CompilerDirective(Operator):
     def _to_openqasm(self) -> str:
         """Returns the openqasm string representation of the compiler directive."""
         raise NotImplementedError("to_openqasm has not been implemented yet.")
+
+    def counterpart(self) -> CompilerDirective:
+        """Returns the "opposite" counterpart to this compiler directive.
+
+        For example, the counterpart of a directive that starts a box
+        is the directive that ends the box.
+
+        Returns:
+            CompilerDirective: The counterpart compiler directive
+        """
+        raise NotImplementedError(
+            f"Compiler directive {self.name} does not have counterpart implemented"
+        )
 
     def __eq__(self, other):
         return isinstance(other, CompilerDirective) and self.name == other.name

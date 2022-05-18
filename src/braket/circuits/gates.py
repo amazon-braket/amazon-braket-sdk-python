@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Iterable, Union
+from typing import Iterable, List, Union
 
 import numpy as np
 from sympy import Float
@@ -50,6 +50,9 @@ class H(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["H"])
 
+    def adjoint(self) -> List[Gate]:
+        return [H()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.H.construct(target=target[0])
 
@@ -86,6 +89,9 @@ class I(Gate):  # noqa: E742, E261
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["I"])
+
+    def adjoint(self) -> List[Gate]:
+        return [I()]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.I.construct(target=target[0])
@@ -124,6 +130,9 @@ class X(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["X"])
 
+    def adjoint(self) -> List[Gate]:
+        return [X()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.X.construct(target=target[0])
 
@@ -160,6 +169,9 @@ class Y(Gate):
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Y"])
+
+    def adjoint(self) -> List[Gate]:
+        return [Y()]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.Y.construct(target=target[0])
@@ -204,6 +216,9 @@ class Z(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Z"])
 
+    def adjoint(self) -> List[Gate]:
+        return [Z()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.Z.construct(target=target[0])
 
@@ -240,6 +255,9 @@ class S(Gate):
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["S"])
+
+    def adjoint(self) -> List[Gate]:
+        return [Si()]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.S.construct(target=target[0])
@@ -278,6 +296,9 @@ class Si(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Si"])
 
+    def adjoint(self) -> List[Gate]:
+        return [S()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.Si.construct(target=target[0])
 
@@ -314,6 +335,9 @@ class T(Gate):
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["T"])
+
+    def adjoint(self) -> List[Gate]:
+        return [Ti()]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.T.construct(target=target[0])
@@ -352,6 +376,9 @@ class Ti(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Ti"])
 
+    def adjoint(self) -> List[Gate]:
+        return [T()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.Ti.construct(target=target[0])
 
@@ -389,6 +416,9 @@ class V(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["V"])
 
+    def adjoint(self) -> List[Gate]:
+        return [Vi()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.V.construct(target=target[0])
 
@@ -425,6 +455,9 @@ class Vi(Gate):
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Vi"])
+
+    def adjoint(self) -> List[Gate]:
+        return [V()]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.Vi.construct(target=target[0])
@@ -543,6 +576,12 @@ class Ry(AngledGate):
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.Ry.construct(target=target[0], angle=self.angle)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"ry({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
@@ -717,6 +756,9 @@ class CNot(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
 
+    def adjoint(self) -> List[Gate]:
+        return [CNot()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.CNot.construct(control=target[0], target=target[1])
 
@@ -762,6 +804,9 @@ class Swap(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["SWAP", "SWAP"])
 
+    def adjoint(self) -> List[Gate]:
+        return [Swap()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.Swap.construct(targets=[target[0], target[1]])
 
@@ -806,6 +851,9 @@ class ISwap(Gate):
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
+
+    def adjoint(self) -> List[Gate]:
+        return [self, self, self]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.ISwap.construct(targets=[target[0], target[1]])
@@ -1248,6 +1296,9 @@ class CV(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
 
+    def adjoint(self) -> List[Gate]:
+        return [self, self, self]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.CV.construct(control=target[0], target=target[1])
 
@@ -1292,6 +1343,9 @@ class CY(Gate):
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
+
+    def adjoint(self) -> List[Gate]:
+        return [CY()]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.CY.construct(control=target[0], target=target[1])
@@ -1338,6 +1392,9 @@ class CZ(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
 
+    def adjoint(self) -> List[Gate]:
+        return [CZ()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.CZ.construct(control=target[0], target=target[1])
 
@@ -1375,6 +1432,9 @@ class ECR(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
 
+    def adjoint(self) -> List[Gate]:
+        return [ECR()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.ECR.construct(targets=[target[0], target[1]])
 
@@ -1383,7 +1443,7 @@ class ECR(Gate):
             1
             / np.sqrt(2)
             * np.array(
-                [[0, 1, 0, 1.0j], [1, 0, -1.0j, 0], [0, 1.0j, 0, 1], [-1.0j, 0, 1, 0]],
+                [[0, 0, 1, 1.0j], [0, 0, 1.0j, 1], [1, -1.0j, 0, 0], [-1.0j, 1, 0, 0]],
                 dtype=complex,
             )
         )
@@ -1651,6 +1711,9 @@ class CCNot(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
 
+    def adjoint(self) -> List[Gate]:
+        return [CCNot()]
+
     def _to_jaqcd(self, target: QubitSet):
         return ir.CCNot.construct(controls=[target[0], target[1]], target=target[2])
 
@@ -1700,6 +1763,9 @@ class CSwap(Gate):
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
+
+    def adjoint(self) -> List[Gate]:
+        return [CSwap()]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
@@ -1771,6 +1837,9 @@ class Unitary(Gate):
 
     def to_matrix(self):
         return np.array(self._matrix)
+
+    def adjoint(self) -> List[Gate]:
+        return [Unitary(self._matrix.conj().T, display_name=f"({self.ascii_symbols})^†")]
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.Unitary.construct(

@@ -63,6 +63,40 @@ SIMPLE_METRICS_RESULT = {
     "metric3": [None, None, 0.2, None],
 }
 
+MULTINODE_METRICS_LOG_LINES = [
+    {
+        "timestamp": "Test timestamp 0",
+        "message": "[nodeA]<stdout>:Metrics - metric0=1.0;",
+    },
+    # This line logs the same metric from a different node.
+    {
+        "timestamp": "Test timestamp 0",
+        "message": "[nodeB]<stdout>:Metrics - metric0=2.0;",
+    },
+    # This line also logs a metric unique to one node.
+    {
+        "timestamp": "Test timestamp 1",
+        "message": "[nodeA]<stdout>:Metrics - metricA=3.0;",
+    },
+    # This line logs a metric without a node tag.
+    {
+        "timestamp": "Test timestamp 1",
+        "message": "Metrics - metric0=0.0;",
+    },
+]
+
+MULTINODES_METRICS_RESULT = {
+    "timestamp": ["Test timestamp 0", "Test timestamp 0", "Test timestamp 1", "Test timestamp 1"],
+    "node_id": [
+        "nodeA",
+        "nodeB",
+        "nodeA",
+        None,
+    ],
+    "metric0": [1.0, 2.0, None, 0.0],
+    "metricA": [None, None, 3.0, None],
+}
+
 # This will test how metrics are combined when the multiple metrics have the same timestamp
 SINGLE_TIMESTAMP_METRICS_LOG_LINES = [
     {"timestamp": "Test timestamp 0", "message": "Metrics - metric0=0.0;"},
@@ -134,6 +168,12 @@ ITERATION_NUMBER_MAX_RESULTS = {
             MetricType.TIMESTAMP,
             MetricStatistic.MAX,
             SIMPLE_METRICS_RESULT,
+        ),
+        (
+            MULTINODE_METRICS_LOG_LINES,
+            MetricType.TIMESTAMP,
+            MetricStatistic.MAX,
+            MULTINODES_METRICS_RESULT,
         ),
         (
             SINGLE_TIMESTAMP_METRICS_LOG_LINES,

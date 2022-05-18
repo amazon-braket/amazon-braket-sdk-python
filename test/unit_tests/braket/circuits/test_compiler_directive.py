@@ -46,6 +46,11 @@ def test_name(compiler_directive):
     assert compiler_directive.name == expected
 
 
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_counterpart_not_implemented_by_default(compiler_directive):
+    compiler_directive.counterpart()
+
+
 def test_str(compiler_directive):
     assert str(compiler_directive) == compiler_directive.name
 
