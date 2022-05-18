@@ -53,8 +53,11 @@ class LocalQuantumJob(QuantumJob):
          docker container.
 
          Args:
-            device (str): ARN for the AWS device which is primarily
-                accessed for the execution of this job.
+            device (str): ARN for the AWS device which is primarily accessed for the execution
+                of this job. Alternatively, a string of the format "local:<provider>/<simulator>"
+                for using a local simulator for the job. This string will be available as the
+                environment variable `AMZN_BRAKET_DEVICE_ARN` inside the job container when
+                using a Braket container.
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a

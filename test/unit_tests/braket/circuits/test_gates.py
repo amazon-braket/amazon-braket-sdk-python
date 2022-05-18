@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import functools
+
 import numpy as np
 import pytest
 
@@ -296,6 +298,30 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "rx(0.17) $4;",
         ),
         (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ry(0.17) q[4];",
+        ),
+        (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ry(0.17) $4;",
+        ),
+        (
+            Gate.I(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "i q[4];",
+        ),
+        (
+            Gate.I(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "i $4;",
+        ),
+        (
             Gate.H(),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
@@ -360,6 +386,15 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         if Angle in irsubclasses:
             subroutine_input.update(angle_valid_input())
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
+    matrices = [elem.to_matrix() for elem in gate.adjoint()]
+    matrices.append(gate.to_matrix())
+    identity = np.eye(2**gate.qubit_count)
+    assert np.isclose(functools.reduce(lambda a, b: a @ b, matrices), identity).all()
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)

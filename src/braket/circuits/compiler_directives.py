@@ -24,6 +24,9 @@ class StartVerbatimBox(CompilerDirective):
     def __init__(self):
         super().__init__(["StartVerbatim"])
 
+    def counterpart(self) -> CompilerDirective:
+        return EndVerbatimBox()
+
     def _to_jaqcd(self, *args, **kwargs):
         return ir.StartVerbatimBox.construct()
 
@@ -39,6 +42,9 @@ class EndVerbatimBox(CompilerDirective):
 
     def __init__(self):
         super().__init__(["EndVerbatim"])
+
+    def counterpart(self) -> CompilerDirective:
+        return StartVerbatimBox()
 
     def _to_jaqcd(self, *args, **kwargs):
         return ir.EndVerbatimBox.construct()
