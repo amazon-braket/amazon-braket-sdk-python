@@ -603,7 +603,7 @@ class Rz(AngledGate):
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
     ):
         target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"rzz ({self.angle}) {target_qubit};"
+        return f"rz({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
