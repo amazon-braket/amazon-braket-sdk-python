@@ -52,7 +52,7 @@ def test_one_gate_one_qubit_rotation_with_parameter():
         "",
         "T  : |    0    |",
         "",
-        "Unassigned parameters: {theta}.",
+        "Unassigned parameters: [theta].",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -68,7 +68,7 @@ def test_one_gate_one_qubit_rotation_with_unicode():
         "",
         "T  : |  0  |",
         "",
-        "Unassigned parameters: {θ}.",
+        "Unassigned parameters: [θ].",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -613,6 +613,39 @@ def test_noise_2qubit():
         "q2 : ---KR-",
         "",
         "T  : | 0  |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_noise_multi_probabilities():
+    circ = Circuit().h(0).x(1).pauli_channel(1, 0.1, 0.2, 0.3)
+    expected = (
+        "T  : |        0        |",
+        "                        ",
+        "q0 : -H-----------------",
+        "                        ",
+        "q1 : -X-PC(0.1,0.2,0.3)-",
+        "",
+        "T  : |        0        |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_noise_multi_probabilities_with_parameter():
+    a = FreeParameter("a")
+    b = FreeParameter("b")
+    c = FreeParameter("c")
+    circ = Circuit().h(0).x(1).pauli_channel(1, a, b, c)
+    expected = (
+        "T  : |     0     |",
+        "                  ",
+        "q0 : -H-----------",
+        "                  ",
+        "q1 : -X-PC(a,b,c)-",
+        "",
+        "T  : |     0     |",
+        "",
+        "Unassigned parameters: [a, b, c].",
     )
     _assert_correct_diagram(circ, expected)
 
