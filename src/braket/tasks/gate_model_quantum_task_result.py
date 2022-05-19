@@ -29,7 +29,6 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
-from pydantic.main import BaseModel
 
 T = TypeVar("T")
 
@@ -290,7 +289,9 @@ class GateModelQuantumTaskResult:
         if result.resultTypes:
             if not isinstance(result.resultTypes[0], ResultTypeValue):
                 result_types = GateModelQuantumTaskResult._calculate_result_types(
-                    json.dumps({"results": [rt.dict() for rt in result.resultTypes]}), measurements, measured_qubits
+                    json.dumps({"results": [rt.dict() for rt in result.resultTypes]}),
+                    measurements,
+                    measured_qubits,
                 )
             else:
                 result_types = result.resultTypes

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 import numpy as np
+
 from braket.schema_common import BraketSchemaHeader
 from braket.task_result import AdditionalMetadata, ResultTypeValue, TaskMetadata
 from braket.task_result.oq3_program_result_v1 import OQ3ProgramResult
@@ -60,12 +61,6 @@ class OQ3QuantumProgramResult:
             output_variables={
                 var_name: np.array(values) for var_name, values in result.outputVariables.items()
             },
-            result_types=result.resultTypes
+            result_types=result.resultTypes,
         )
-
-        # if result.measurements:
-        #     program_result.measurements = np.asarray(result.measurements, dtype=int)
-        #     m_counts = OQ3QuantumProgramResult.measurement_counts_from_measurements(program_result.measurements)
-        #     program_result.measurement_counts = m_counts
-
         return program_result

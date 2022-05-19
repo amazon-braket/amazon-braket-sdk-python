@@ -22,11 +22,10 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
 from braket.ir.openqasm import Program
-from braket.tasks.oq3_quantum_program_result import OQ3QuantumProgramResult
-
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
+from braket.tasks.oq3_quantum_program_result import OQ3QuantumProgramResult
 
 _simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
