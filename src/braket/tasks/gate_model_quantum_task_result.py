@@ -14,8 +14,9 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Callable, Counter, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 import numpy as np
 
@@ -94,6 +95,7 @@ class GateModelQuantumTaskResult:
     _result_types_indices: Dict[str, int] = None
 
     def __post_init__(self):
+        print("SRTL ", self._result_types_indices)
         if self.result_types is not None:
             self._result_types_indices = dict(
                 (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
@@ -118,8 +120,11 @@ class GateModelQuantumTaskResult:
                 Result types must be added to the circuit before the circuit is run on a device.
         """
         rt_ir = result_type.to_ir()
+        print(rt_ir)
         try:
             rt_hash = GateModelQuantumTaskResult._result_type_hash(rt_ir)
+            print(rt_hash)
+            print(self._result_types_indices)
             result_type_index = self._result_types_indices[rt_hash]
             return self.values[result_type_index]
         except KeyError:
@@ -233,7 +238,10 @@ class GateModelQuantumTaskResult:
                 in the result dict
         """
         obj = GateModelTaskResult.parse_raw(result)
+        print(obj)
         GateModelQuantumTaskResult.cast_result_types(obj)
+        print(obj)
+        print(GateModelQuantumTaskResult._from_object_internal(obj))
         return GateModelQuantumTaskResult._from_object_internal(obj)
 
     @classmethod
@@ -280,7 +288,7 @@ class GateModelQuantumTaskResult:
                 + f"{measurements.shape[1]} in measurements"
             )
         if result.resultTypes:
-            if isinstance(result.resultTypes[0], BaseModel):
+            if not isinstance(result.resultTypes[0], ResultTypeValue):
                 result_types = GateModelQuantumTaskResult._calculate_result_types(
                     json.dumps({"results": [rt.dict() for rt in result.resultTypes]}), measurements, measured_qubits
                 )
