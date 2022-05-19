@@ -146,9 +146,7 @@ def prepare_quantum_job(
     aws_session = aws_session or AwsSession()
     device_config = DeviceConfig(device)
     job_name = job_name or _generate_default_job_name(image_uri)
-    role_arn = (
-        role_arn or os.os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
-    )
+    role_arn = role_arn or os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
     hyperparameters = hyperparameters or {}
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = input_data or {}
