@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.23.0 (2022-05-19)
+
+### Features
+
+ * allow job role to be set via env variable
+ * allow user to set region+endpoint through env variables
+
 ## v1.22.0 (2022-05-18)
 
 ### Features
