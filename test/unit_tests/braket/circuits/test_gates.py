@@ -355,18 +355,6 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "i $4;",
         ),
         (
-            Gate.H(),
-            [4],
-            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "h q[4];",
-        ),
-        (
-            Gate.H(),
-            [4],
-            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "h $4;",
-        ),
-        (
             Gate.V(),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
