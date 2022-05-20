@@ -32,74 +32,75 @@ def test_completed_local_job(aws_session, capsys):
     current_dir = Path.cwd()
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
-        job = LocalQuantumJob.create(
-            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            source_module=absolute_source_module,
-            entry_point="job_test_script:start_here",
-            hyperparameters={"test_case": "completed"},
-            aws_session=aws_session,
-        )
+        try:
+            os.chdir(temp_dir)
+            job = LocalQuantumJob.create(
+                "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+                source_module=absolute_source_module,
+                entry_point="job_test_script:start_here",
+                hyperparameters={"test_case": "completed"},
+                aws_session=aws_session,
+            )
 
-        job_name = job.name
-        pattern = f"^local:job/{job_name}$"
-        re.match(pattern=pattern, string=job.arn)
+            job_name = job.name
+            pattern = f"^local:job/{job_name}$"
+            re.match(pattern=pattern, string=job.arn)
 
-        assert job.state() == "COMPLETED"
-        assert Path(job_name).is_dir()
+            assert job.state() == "COMPLETED"
+            assert Path(job_name).is_dir()
 
-        # Check results match the expectations.
-        assert Path(f"{job_name}/results.json").exists()
-        assert job.result() == {"converged": True, "energy": -0.2}
+            # Check results match the expectations.
+            assert Path(f"{job_name}/results.json").exists()
+            assert job.result() == {"converged": True, "energy": -0.2}
 
-        # Validate checkpoint files and data
-        assert Path(f"{job_name}/checkpoints/{job_name}.json").exists()
-        assert Path(f"{job_name}/checkpoints/{job_name}_plain_data.json").exists()
+            # Validate checkpoint files and data
+            assert Path(f"{job_name}/checkpoints/{job_name}.json").exists()
+            assert Path(f"{job_name}/checkpoints/{job_name}_plain_data.json").exists()
 
-        for file_name, expected_data in [
-            (
-                f"{job_name}/checkpoints/{job_name}_plain_data.json",
-                {
-                    "braketSchemaHeader": {
-                        "name": "braket.jobs_data.persisted_job_data",
-                        "version": "1",
+            for file_name, expected_data in [
+                (
+                    f"{job_name}/checkpoints/{job_name}_plain_data.json",
+                    {
+                        "braketSchemaHeader": {
+                            "name": "braket.jobs_data.persisted_job_data",
+                            "version": "1",
+                        },
+                        "dataDictionary": {"some_data": "abc"},
+                        "dataFormat": "plaintext",
                     },
-                    "dataDictionary": {"some_data": "abc"},
-                    "dataFormat": "plaintext",
-                },
-            ),
-            (
-                f"{job_name}/checkpoints/{job_name}.json",
-                {
-                    "braketSchemaHeader": {
-                        "name": "braket.jobs_data.persisted_job_data",
-                        "version": "1",
+                ),
+                (
+                    f"{job_name}/checkpoints/{job_name}.json",
+                    {
+                        "braketSchemaHeader": {
+                            "name": "braket.jobs_data.persisted_job_data",
+                            "version": "1",
+                        },
+                        "dataDictionary": {"some_data": "gASVBwAAAAAAAACMA2FiY5Qu\n"},
+                        "dataFormat": "pickled_v4",
                     },
-                    "dataDictionary": {"some_data": "gASVBwAAAAAAAACMA2FiY5Qu\n"},
-                    "dataFormat": "pickled_v4",
-                },
-            ),
-        ]:
-            with open(file_name, "r") as f:
-                assert json.loads(f.read()) == expected_data
+                ),
+            ]:
+                with open(file_name, "r") as f:
+                    assert json.loads(f.read()) == expected_data
 
-        # Capture logs
-        assert Path(f"{job_name}/log.txt").exists()
-        job.logs()
-        log_data, errors = capsys.readouterr()
+            # Capture logs
+            assert Path(f"{job_name}/log.txt").exists()
+            job.logs()
+            log_data, errors = capsys.readouterr()
 
-        logs_to_validate = [
-            "Beginning Setup",
-            "Running Code As Process",
-            "Test job started!!!!!",
-            "Test job completed!!!!!",
-            "Code Run Finished",
-        ]
+            logs_to_validate = [
+                "Beginning Setup",
+                "Running Code As Process",
+                "Test job started!!!!!",
+                "Test job completed!!!!!",
+                "Code Run Finished",
+            ]
 
-        for data in logs_to_validate:
-            assert data in log_data
-
-        os.chdir(current_dir)
+            for data in logs_to_validate:
+                assert data in log_data
+        finally:
+            os.chdir(current_dir)
 
 
 def test_failed_local_job(aws_session, capsys):
@@ -111,41 +112,42 @@ def test_failed_local_job(aws_session, capsys):
     current_dir = Path.cwd()
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        os.chdir(temp_dir)
-        job = LocalQuantumJob.create(
-            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            source_module=absolute_source_module,
-            entry_point="job_test_script:start_here",
-            hyperparameters={"test_case": "failed"},
-            aws_session=aws_session,
-        )
+        try:
+            os.chdir(temp_dir)
+            job = LocalQuantumJob.create(
+                "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+                source_module=absolute_source_module,
+                entry_point="job_test_script:start_here",
+                hyperparameters={"test_case": "failed"},
+                aws_session=aws_session,
+            )
 
-        job_name = job.name
-        pattern = f"^local:job/{job_name}$"
-        re.match(pattern=pattern, string=job.arn)
+            job_name = job.name
+            pattern = f"^local:job/{job_name}$"
+            re.match(pattern=pattern, string=job.arn)
 
-        assert Path(job_name).is_dir()
+            assert Path(job_name).is_dir()
 
-        # Check no files are populated in checkpoints folder.
-        assert not any(Path(f"{job_name}/checkpoints").iterdir())
+            # Check no files are populated in checkpoints folder.
+            assert not any(Path(f"{job_name}/checkpoints").iterdir())
 
-        # Check results match the expectations.
-        error_message = f"Unable to find results in the local job directory {job_name}."
-        with pytest.raises(ValueError, match=error_message):
-            job.result()
+            # Check results match the expectations.
+            error_message = f"Unable to find results in the local job directory {job_name}."
+            with pytest.raises(ValueError, match=error_message):
+                job.result()
 
-        assert Path(f"{job_name}/log.txt").exists()
-        job.logs()
-        log_data, errors = capsys.readouterr()
+            assert Path(f"{job_name}/log.txt").exists()
+            job.logs()
+            log_data, errors = capsys.readouterr()
 
-        logs_to_validate = [
-            "Beginning Setup",
-            "Running Code As Process",
-            "Test job started!!!!!",
-            "Code Run Finished",
-        ]
+            logs_to_validate = [
+                "Beginning Setup",
+                "Running Code As Process",
+                "Test job started!!!!!",
+                "Code Run Finished",
+            ]
 
-        for data in logs_to_validate:
-            assert data in log_data
-
-        os.chdir(current_dir)
+            for data in logs_to_validate:
+                assert data in log_data
+        finally:
+            os.chdir(current_dir)

@@ -231,7 +231,7 @@ class AwsDevice(Device):
         self._populate_properties(self._aws_session)
 
     def _get_session_and_initialize(self, session):
-        device_region = self._arn.split(":")[3]
+        device_region = AwsDevice.get_device_region(self._arn)
         return (
             self._get_regional_device_session(session)
             if device_region
@@ -239,7 +239,7 @@ class AwsDevice(Device):
         )
 
     def _get_regional_device_session(self, session):
-        device_region = self._arn.split(":")[3]
+        device_region = AwsDevice.get_device_region(self._arn)
         region_session = (
             session
             if session.region == device_region
@@ -509,3 +509,13 @@ class AwsDevice(Device):
         devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
+
+    @staticmethod
+    def get_device_region(device_arn: str) -> str:
+        try:
+            return device_arn.split(":")[3]
+        except IndexError:
+            raise ValueError(
+                f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
+                "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
+            )

@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import functools
+
 import numpy as np
 import pytest
 
@@ -106,7 +108,6 @@ testdata = [
     ),
 ]
 
-
 parameterizable_gates = [
     Gate.Rx,
     Gate.Ry,
@@ -122,7 +123,6 @@ parameterizable_gates = [
     Gate.CPhaseShift01,
     Gate.CPhaseShift10,
 ]
-
 
 invalid_unitary_matrices = [
     (np.array([[1]])),
@@ -185,7 +185,6 @@ valid_ir_switcher = {
     "MultiTarget": multi_target_valid_input,
     "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
 }
-
 
 valid_subroutine_switcher = dict(
     valid_ir_switcher,
@@ -307,6 +306,90 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "x $4;",
         ),
+        (
+            Gate.Z(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "z q[4];",
+        ),
+        (
+            Gate.Z(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "z $4;",
+        ),
+        (
+            Gate.Y(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "y q[4];",
+        ),
+        (
+            Gate.Y(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "y $4;",
+        ),
+        (
+            Gate.H(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "h q[4];",
+        ),
+        (
+            Gate.H(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "h $4;",
+        ),
+        (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ry(0.17) q[4];",
+        ),
+        (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ry(0.17) $4;",
+        ),
+        (
+            Gate.I(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "i q[4];",
+        ),
+        (
+            Gate.I(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "i $4;",
+        ),
+        (
+            Gate.CY(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cy q[0], q[1];",
+        ),
+        (
+            Gate.CY(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cy $0, $1;",
+        ),
+        (
+            Gate.Rz(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "rz(0.17) q[4];",
+        ),
+        (
+            Gate.Rz(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "rz(0.17) $4;",
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
@@ -348,6 +431,15 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         if Angle in irsubclasses:
             subroutine_input.update(angle_valid_input())
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
+    matrices = [elem.to_matrix() for elem in gate.adjoint()]
+    matrices.append(gate.to_matrix())
+    identity = np.eye(2**gate.qubit_count)
+    assert np.isclose(functools.reduce(lambda a, b: a @ b, matrices), identity).all()
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
