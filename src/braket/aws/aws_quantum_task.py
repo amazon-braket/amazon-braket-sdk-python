@@ -446,11 +446,6 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
-    if circuit.qubits_frozen and not disable_qubit_rewiring:
-        raise ValueError(
-            "disable_qubit_rewiring must be True to run circuit with compiler directives"
-        )
-
     # TODO: Update this to use `deviceCapabilities` from Amazon Braket's GetDevice operation
     # in order to decide what parameters to build.
     paradigm_parameters = GateModelParameters(
