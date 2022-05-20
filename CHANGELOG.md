@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.23.1 (2022-05-20)
+
+### Bug Fixes and Other Changes
+
+ * removing validation for disable_qubit_rewiring
+
 ## v1.23.0 (2022-05-19)
 
 ### Features
