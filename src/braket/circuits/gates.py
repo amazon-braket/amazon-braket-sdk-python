@@ -1530,8 +1530,8 @@ class XX(AngledGate):
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
     ):
         target_qubit_1 = serialization_properties.format_target(int(target[0]))
-        target_qubit_2 = serialization_properties.format_target(int(target[1]))
-        return f"xx({self.angle}) {target_qubit_1}, {target_qubit_2};"
+        target_qubit2 = serialization_properties.format_target(int(target[1]))
+        return f"xx({self.angle}) {target_qubit_1}, {target_qubit2};"
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
