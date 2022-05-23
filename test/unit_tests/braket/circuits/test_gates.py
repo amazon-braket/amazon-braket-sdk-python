@@ -11,11 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import functools
+
 import numpy as np
 import pytest
 
 import braket.ir.jaqcd as ir
-from braket.circuits import Circuit, Gate, Instruction, QubitSet
+from braket.circuits import Circuit, FreeParameter, Gate, Instruction, QubitSet
 from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
@@ -74,6 +76,7 @@ testdata = [
     ),
     (Gate.CY, "cy", ir.CY, [SingleTarget, SingleControl], {}),
     (Gate.CZ, "cz", ir.CZ, [SingleTarget, SingleControl], {}),
+    (Gate.ECR, "ecr", ir.ECR, [DoubleTarget], {}),
     (Gate.XX, "xx", ir.XX, [DoubleTarget, Angle], {}),
     (Gate.YY, "yy", ir.YY, [DoubleTarget, Angle], {}),
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
@@ -98,6 +101,23 @@ testdata = [
         [TwoDimensionalMatrix, MultiTarget],
         {"input_type": int},
     ),
+]
+
+
+parameterizable_gates = [
+    Gate.Rx,
+    Gate.Ry,
+    Gate.Rz,
+    Gate.PhaseShift,
+    Gate.PSwap,
+    Gate.XX,
+    Gate.XY,
+    Gate.YY,
+    Gate.ZZ,
+    Gate.CPhaseShift,
+    Gate.CPhaseShift00,
+    Gate.CPhaseShift01,
+    Gate.CPhaseShift10,
 ]
 
 
@@ -290,6 +310,15 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
+    gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
+    matrices = [elem.to_matrix() for elem in gate.adjoint()]
+    matrices.append(gate.to_matrix())
+    identity = np.eye(2**gate.qubit_count)
+    assert np.isclose(functools.reduce(lambda a, b: a @ b, matrices), identity).all()
+
+
+@pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_gate_to_matrix(testclass, subroutine_name, irclass, irsubclasses, kwargs):
     gate1 = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
     gate2 = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
@@ -320,12 +349,39 @@ def test_equality():
     assert u1 != non_gate
 
 
+def test_free_param_equality():
+    param1 = FreeParameter("theta")
+    param2 = FreeParameter("phi")
+    rx1 = Gate.Rx(param1)
+    rx2 = Gate.Rx(param1)
+    other_gate = Gate.Rx(param2)
+
+    assert rx1 == rx2
+    assert rx1 is not rx2
+    assert rx1 != other_gate
+    assert rx1 != param1
+
+
 def test_large_unitary():
     matrix = np.eye(16, dtype=np.float32)
     # Permute rows of matrix
     matrix[[*range(16)]] = matrix[[(i + 1) % 16 for i in range(16)]]
     unitary = Gate.Unitary(matrix)
     assert unitary.qubit_count == 4
+
+
+@pytest.mark.parametrize("gate", parameterizable_gates)
+def test_bind_values(gate):
+    theta = FreeParameter("theta")
+    param_gate = gate(theta)
+    new_gate = param_gate.bind_values(theta=1)
+    expected = gate(1)
+
+    assert (
+        type(new_gate.angle) == float
+        and type(new_gate) == type(param_gate)
+        and new_gate == expected
+    )
 
 
 @pytest.mark.xfail(raises=ValueError)

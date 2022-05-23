@@ -2,9 +2,13 @@ name: Dependent tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - feature/**
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
+      - feature/**
 
 jobs:
   build:
@@ -25,8 +29,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python@main
-        pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python@main
+        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@main
+        pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
         pip install -e .
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git

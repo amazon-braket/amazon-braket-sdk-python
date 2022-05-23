@@ -17,7 +17,7 @@ import numpy as np
 import pytest
 from pydantic import BaseModel
 
-from braket.circuits import AngledGate, Gate
+from braket.circuits import AngledGate, FreeParameter, FreeParameterExpression, Gate
 
 
 @pytest.fixture
@@ -50,6 +50,18 @@ def test_angle_setter(angled_gate):
     angled_gate.angle = 0.14
 
 
+def test_adjoint(angled_gate):
+    assert angled_gate.adjoint() == [AngledGate(angle=-0.15, qubit_count=1, ascii_symbols=["foo"])]
+
+
+def test_adjoint_parameterized():
+    theta = FreeParameter("theta")
+    angled_gate = AngledGate(angle=(theta + 1), qubit_count=1, ascii_symbols=["foo"])
+    assert angled_gate.adjoint() == [
+        AngledGate(angle=-(theta + 1), qubit_count=1, ascii_symbols=["foo"])
+    ]
+
+
 def test_equality(angled_gate):
     gate = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["bar"])
     other_gate = AngledGate(angle=0.3, qubit_count=1, ascii_symbols=["foo"])
@@ -59,6 +71,45 @@ def test_equality(angled_gate):
     assert angled_gate is not gate
     assert angled_gate != other_gate
     assert angled_gate != non_gate
+
+
+def test_symbolic_equality():
+    symbol1 = FreeParameter("theta")
+    symbol2 = FreeParameter("phi")
+    symbol3 = FreeParameter("theta")
+    gate1 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar"])
+    gate2 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar"])
+    gate3 = AngledGate(angle=symbol3, qubit_count=1, ascii_symbols=["bar"])
+    other_gate = AngledGate(angle=symbol2, qubit_count=1, ascii_symbols=["foo"])
+
+    assert gate1 == gate2
+    assert gate1 == gate3
+    assert gate1 is not gate2
+    assert gate1 != other_gate
+
+
+def test_mixed_angle_equality():
+    symbol1 = FreeParameter("theta")
+    gate1 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar"])
+    gate2 = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["foo"])
+
+    assert gate1 != gate2
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_bind_values():
+    theta = FreeParameter("theta")
+    gate = AngledGate(angle=theta, qubit_count=1, ascii_symbols=["bar"])
+    gate.bind_values(theta=1)
+
+
+def test_angled_gate_with_expr():
+    expr = FreeParameterExpression(FreeParameter("theta") + 1)
+    new_expr = expr.subs({"theta": 1})
+    gate = AngledGate(angle=new_expr, qubit_count=1, ascii_symbols=["bar"])
+    expected = AngledGate(angle=2, qubit_count=1, ascii_symbols=["bar"])
+
+    assert gate == expected
 
 
 def test_np_float_angle_json():

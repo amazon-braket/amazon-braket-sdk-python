@@ -40,3 +40,7 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
         for rt in circuit.result_types:
             if isinstance(rt, ResultType.StateVector) or isinstance(rt, ResultType.Amplitude):
                 raise ValueError("StateVector or Amplitude cannot be specified when shots>0")
+            elif isinstance(rt, ResultType.Probability):
+                num_qubits = len(rt.target) or circuit.qubit_count
+                if num_qubits > 40:
+                    raise ValueError("Probability target must be less than or equal to 40 qubits.")

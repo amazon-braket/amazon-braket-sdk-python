@@ -21,6 +21,7 @@ from braket.annealing import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.ir.openqasm import Program as OpenQasmProgram
 
 
 class AwsQuantumTaskBatch:
@@ -41,7 +42,7 @@ class AwsQuantumTaskBatch:
         self,
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: List[Union[Circuit, Problem]],
+        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram]],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         max_parallel: int,
@@ -121,6 +122,12 @@ class AwsQuantumTaskBatch:
         *args,
         **kwargs,
     ):
+        for task_specification in task_specifications:
+            if isinstance(task_specification, Circuit) and task_specification.parameters:
+                raise ValueError(
+                    f"Cannot execute circuit with unbound parameters: "
+                    f"{task_specification.parameters}"
+                )
         max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in task_specifications]
         with ThreadPoolExecutor(max_workers=max_threads) as executor:

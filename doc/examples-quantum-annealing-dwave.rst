@@ -8,7 +8,7 @@ Learn more about quantum annealing with D-Wave.
     :maxdepth: 2
 
 **************************
-`Anatomy of annealing with ocean <https://github.com/aws/amazon-braket-examples/blob/main/examples/quantum_annealing/Dwave_Anatomy.ipynb>`_
+`Anatomy of annealing with ocean <https://github.com/aws/amazon-braket-examples/blob/main/examples/quantum_annealing/Dwave_Anatomy/Dwave_Anatomy.ipynb>`_
 **************************
 
 Learn more about the anatomy of quantum annealing with D-Wave on Amazon Braket. 

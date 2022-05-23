@@ -278,8 +278,12 @@ class GateModelQuantumTaskResult:
                 f"Measured qubits {measured_qubits} is not equivalent to number of qubits "
                 + f"{measurements.shape[1]} in measurements"
             )
-        result_types = GateModelQuantumTaskResult._calculate_result_types(
-            additional_metadata.action.json(), measurements, measured_qubits
+        result_types = (
+            result.resultTypes
+            if result.resultTypes
+            else GateModelQuantumTaskResult._calculate_result_types(
+                additional_metadata.action.json(), measurements, measured_qubits
+            )
         )
         values = [rt.value for rt in result_types]
         return cls(

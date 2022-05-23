@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import re
 import sys
 import tarfile
@@ -44,6 +45,7 @@ def prepare_quantum_job(
     hyperparameters: Dict[str, Any] = None,
     input_data: Union[str, Dict, S3DataSourceConfig] = None,
     instance_config: InstanceConfig = None,
+    distribution: str = None,
     stopping_condition: StoppingCondition = None,
     output_data_config: OutputDataConfig = None,
     copy_checkpoints_from_job: str = None,
@@ -98,6 +100,10 @@ def prepare_quantum_job(
             to execute the job. Default: InstanceConfig(instanceType='ml.m5.large',
             instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
 
+        distribution (str): A str that specifies how the job should be distributed. If set to
+            "data_parallel", the hyperparameters for the job will be set to use data parallelism
+            features for PyTorch or TensorFlow. Default: None.
+
         stopping_condition (StoppingCondition): The maximum length of time, in seconds,
             and the maximum number of tasks that a job can run before being forcefully stopped.
             Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
@@ -140,8 +146,9 @@ def prepare_quantum_job(
     aws_session = aws_session or AwsSession()
     device_config = DeviceConfig(device)
     job_name = job_name or _generate_default_job_name(image_uri)
-    role_arn = role_arn or aws_session.get_default_jobs_role()
+    role_arn = role_arn or os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
     hyperparameters = hyperparameters or {}
+    hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = input_data or {}
     tags = tags or {}
     default_bucket = aws_session.default_bucket()
@@ -191,6 +198,12 @@ def prepare_quantum_job(
             "s3Uri"
         ]
         aws_session.copy_s3_directory(checkpoints_to_copy, checkpoint_config.s3Uri)
+    if distribution == "data_parallel":
+        distributed_hyperparams = {
+            "sagemaker_distributed_dataparallel_enabled": "true",
+            "sagemaker_instance_type": instance_config.instanceType,
+        }
+        hyperparameters.update(distributed_hyperparams)
 
     create_job_kwargs = {
         "jobName": job_name,

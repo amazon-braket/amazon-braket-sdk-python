@@ -1,5 +1,100 @@
 # Changelog
 
+## v1.23.1 (2022-05-20)
+
+### Bug Fixes and Other Changes
+
+ * removing validation for disable_qubit_rewiring
+
+## v1.23.0 (2022-05-19)
+
+### Features
+
+ * allow job role to be set via env variable
+ * allow user to set region+endpoint through env variables
+
+## v1.22.0 (2022-05-18)
+
+### Features
+
+ * Noise models
+
+## v1.21.1 (2022-05-17)
+
+### Bug Fixes and Other Changes
+
+ * broken links for examples
+
+## v1.21.0 (2022-05-10)
+
+### Features
+
+ * Gate and Circuit inversion
+
+## v1.20.0 (2022-05-04)
+
+### Features
+
+ * support local simulators for jobs
+
+## v1.19.0 (2022-04-19)
+
+### Deprecations and Removals
+
+ * use to_unitary rather than as_unitary.
+
+### Bug Fixes and Other Changes
+
+ * align ECR gate definition with OQC
+ * add device arn error handling for badly formed ARNs
+
+## v1.18.2 (2022-04-18)
+
+### Bug Fixes and Other Changes
+
+ * stringify hyperparameters automatically
+
+## v1.18.1 (2022-04-14)
+
+### Bug Fixes and Other Changes
+
+ * add exception handling to local job test
+ * Run github workflows on feature branches
+
+## v1.18.0.post0 (2022-04-06)
+
+### Documentation Changes
+
+ * Specify DEVICE_REGIONS docs.
+
+## v1.18.0 (2022-03-07)
+
+### Features
+
+ * Add support for running OpenQASM programs
+
+## v1.17.0 (2022-03-02)
+
+### Features
+
+ * Add parameterized circuits
+
+## v1.16.1 (2022-03-01)
+
+### Bug Fixes and Other Changes
+
+ * Add the OQC ARN to the integ tests
+
+## v1.16.0 (2022-02-27)
+
+### Features
+
+ * LHR region configuration
+
+### Bug Fixes and Other Changes
+
+ * Oqc release
+
 ## v1.15.0 (2022-02-15)
 
 ### Features

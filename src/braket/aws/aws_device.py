@@ -19,7 +19,7 @@ from enum import Enum
 from typing import List, Optional, Union
 
 from botocore.errorfactory import ClientError
-from networkx import Graph, complete_graph, from_edgelist
+from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -29,6 +29,7 @@ from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
 
 
@@ -46,7 +47,7 @@ class AwsDevice(Device):
     device.
     """
 
-    REGIONS = ("us-east-1", "us-west-1", "us-west-2")
+    REGIONS = ("us-east-1", "us-west-1", "us-west-2", "eu-west-2")
 
     DEFAULT_SHOTS_QPU = 1000
     DEFAULT_SHOTS_SIMULATOR = 0
@@ -66,8 +67,9 @@ class AwsDevice(Device):
             physically located. When this occurs, a cloned `aws_session` is created for the Region
             the QPU is located in.
 
-            See `braket.aws.aws_device.AwsDevice.DEVICE_REGIONS` for the AWS Regions provider
-            devices are located in.
+            See `braket.aws.aws_device.AwsDevice.REGIONS` for the AWS regions provider
+            devices are located in across the AWS Braket service.
+            This is not a device specific tuple.
         """
         super().__init__(name=None, status=None)
         self._arn = arn
@@ -79,7 +81,7 @@ class AwsDevice(Device):
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem],
+        task_specification: Union[Circuit, Problem, OpenQasmProgram],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -161,7 +163,7 @@ class AwsDevice(Device):
 
     def run_batch(
         self,
-        task_specifications: List[Union[Circuit, Problem]],
+        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram]],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         max_parallel: Optional[int] = None,
@@ -229,7 +231,7 @@ class AwsDevice(Device):
         self._populate_properties(self._aws_session)
 
     def _get_session_and_initialize(self, session):
-        device_region = self._arn.split(":")[3]
+        device_region = AwsDevice.get_device_region(self._arn)
         return (
             self._get_regional_device_session(session)
             if device_region
@@ -237,7 +239,7 @@ class AwsDevice(Device):
         )
 
     def _get_regional_device_session(self, session):
-        device_region = self._arn.split(":")[3]
+        device_region = AwsDevice.get_device_region(self._arn)
         region_session = (
             session
             if session.region == device_region
@@ -366,8 +368,8 @@ class AwsDevice(Device):
         return self._properties
 
     @property
-    def topology_graph(self) -> Graph:
-        """Graph: topology of device as a networkx `Graph` object.
+    def topology_graph(self) -> DiGraph:
+        """DiGraph: topology of device as a networkx `DiGraph` object.
         Returns `None` if the topology is not available for the device.
 
         Examples:
@@ -382,29 +384,31 @@ class AwsDevice(Device):
         """
         return self._topology_graph
 
-    def _construct_topology_graph(self) -> Graph:
+    def _construct_topology_graph(self) -> DiGraph:
         """
         Construct topology graph. If no such metadata is available, return `None`.
 
         Returns:
-            Graph: topology of QPU as a networkx `Graph` object.
+            DiGraph: topology of QPU as a networkx `DiGraph` object.
         """
         if hasattr(self.properties, "paradigm") and isinstance(
             self.properties.paradigm, GateModelQpuParadigmProperties
         ):
             if self.properties.paradigm.connectivity.fullyConnected:
-                return complete_graph(int(self.properties.paradigm.qubitCount))
+                return complete_graph(
+                    int(self.properties.paradigm.qubitCount), create_using=DiGraph()
+                )
             adjacency_lists = self.properties.paradigm.connectivity.connectivityGraph
             edges = []
             for item in adjacency_lists.items():
                 i = item[0]
                 edges.extend([(int(i), int(j)) for j in item[1]])
-            return from_edgelist(edges)
+            return from_edgelist(edges, create_using=DiGraph())
         elif hasattr(self.properties, "provider") and isinstance(
             self.properties.provider, DwaveProviderProperties
         ):
             edges = self.properties.provider.couplers
-            return from_edgelist(edges)
+            return from_edgelist(edges, create_using=DiGraph())
         else:
             return None
 
@@ -505,3 +509,13 @@ class AwsDevice(Device):
         devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
+
+    @staticmethod
+    def get_device_region(device_arn: str) -> str:
+        try:
+            return device_arn.split(":")[3]
+        except IndexError:
+            raise ValueError(
+                f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
+                "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
+            )

@@ -13,7 +13,15 @@
 
 import numpy as np
 
-from braket.circuits import AsciiCircuitDiagram, Circuit, Gate, Instruction, Observable, Operator
+from braket.circuits import (
+    AsciiCircuitDiagram,
+    Circuit,
+    FreeParameter,
+    Gate,
+    Instruction,
+    Observable,
+    Operator,
+)
 
 
 def test_empty_circuit():
@@ -23,8 +31,61 @@ def test_empty_circuit():
 def test_one_gate_one_qubit():
     circ = Circuit().h(0)
     expected = ("T  : |0|", "        ", "q0 : -H-", "", "T  : |0|")
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
+
+
+def test_one_gate_one_qubit_rotation():
+    circ = Circuit().rx(angle=3.14, target=0)
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = ("T  : |   0    |", "               ", "q0 : -Rx(3.14)-", "", "T  : |   0    |")
+    _assert_correct_diagram(circ, expected)
+
+
+def test_one_gate_one_qubit_rotation_with_parameter():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = (
+        "T  : |    0    |",
+        "                ",
+        "q0 : -Rx(theta)-",
+        "",
+        "T  : |    0    |",
+        "",
+        "Unassigned parameters: [theta].",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_one_gate_one_qubit_rotation_with_unicode():
+    theta = FreeParameter("\u03B8")
+    circ = Circuit().rx(angle=theta, target=0)
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = (
+        "T  : |  0  |",
+        "            ",
+        "q0 : -Rx(θ)-",
+        "",
+        "T  : |  0  |",
+        "",
+        "Unassigned parameters: [θ].",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_one_gate_one_qubit_rotation_with_parameter_assigned():
+    theta = FreeParameter("theta")
+    circ = Circuit().rx(angle=theta, target=0)
+    new_circ = circ.make_bound_circuit({"theta": np.pi})
+    # Column formats to length of the gate plus the ascii representation for the angle.
+    expected = (
+        "T  : |   0    |",
+        "               ",
+        "q0 : -Rx(3.14)-",
+        "",
+        "T  : |   0    |",
+    )
+    _assert_correct_diagram(new_circ, expected)
 
 
 def test_qubit_width():
@@ -38,8 +99,7 @@ def test_qubit_width():
         "",
         "T    : |0|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_gate_width():
@@ -60,8 +120,7 @@ def test_gate_width():
         "",
         "T  : |0| 1 |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_time_width():
@@ -106,8 +165,7 @@ def test_time_width():
         "",
         "T   : |0|1|2|3|4|5|6|7|8|9|10|11|12|13|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_connector_across_two_qubits():
@@ -125,8 +183,7 @@ def test_connector_across_two_qubits():
         "",
         "T  : |0|1|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_overlapping_qubits():
@@ -144,8 +201,7 @@ def test_overlapping_qubits():
         "",
         "T  : | 0 |1|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_overlapping_qubits_angled_gates():
@@ -163,8 +219,7 @@ def test_overlapping_qubits_angled_gates():
         "",
         "T  : |    0     |1|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_connector_across_gt_two_qubits():
@@ -182,8 +237,7 @@ def test_connector_across_gt_two_qubits():
         "",
         "T  : | 0 |1|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_connector_across_non_used_qubits():
@@ -201,8 +255,7 @@ def test_connector_across_non_used_qubits():
         "",
         "T    : | 0 |1|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_1q_no_preceding():
@@ -214,8 +267,7 @@ def test_verbatim_1q_no_preceding():
         "",
         "T  : |      0      |1|     2     |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_1q_preceding():
@@ -227,8 +279,7 @@ def test_verbatim_1q_preceding():
         "",
         "T  : |0|      1      |2|     3     |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_1q_following():
@@ -240,8 +291,7 @@ def test_verbatim_1q_following():
         "",
         "T  : |      0      |1|     2     |3|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_2q_no_preceding():
@@ -255,8 +305,7 @@ def test_verbatim_2q_no_preceding():
         "",
         "T  : |      0      |1|2|     3     |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_2q_preceding():
@@ -270,8 +319,7 @@ def test_verbatim_2q_preceding():
         "",
         "T  : |0|      1      |2|3|     4     |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_2q_following():
@@ -285,8 +333,7 @@ def test_verbatim_2q_following():
         "",
         "T  : |      0      |1|2|     3     |4|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_3q_no_preceding():
@@ -302,8 +349,7 @@ def test_verbatim_3q_no_preceding():
         "",
         "T  : |      0      |1|2|3|     4     |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_3q_preceding():
@@ -319,8 +365,7 @@ def test_verbatim_3q_preceding():
         "",
         "T  : |0|      1      |2|3|4|     5     |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_3q_following():
@@ -336,8 +381,7 @@ def test_verbatim_3q_following():
         "",
         "T  : |      0      |1|2|3|     4     |5|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_different_qubits():
@@ -355,8 +399,7 @@ def test_verbatim_different_qubits():
         "",
         "T  : |0|      1      |2|     3     |4|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_verbatim_qubset_qubits():
@@ -374,8 +417,7 @@ def test_verbatim_qubset_qubits():
         "",
         "T  : |0|1|2|      3      |4|     5     |6|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_ignore_non_gates():
@@ -399,8 +441,7 @@ def test_ignore_non_gates():
         "",
         "T  : |0|1|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_result_types_target_none():
@@ -414,8 +455,7 @@ def test_result_types_target_none():
         "",
         "T    : |0|Result Types|",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_result_types_target_some():
@@ -437,8 +477,7 @@ def test_result_types_target_some():
         "",
         "T    : |0|  Result Types  |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_additional_result_types():
@@ -456,8 +495,7 @@ def test_additional_result_types():
         "",
         "Additional result types: StateVector, Amplitude(110,001)",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_multiple_result_types():
@@ -483,8 +521,7 @@ def test_multiple_result_types():
         "",
         "T  : | 0 |1|      Result Types      |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_multiple_result_types_with_state_vector_amplitude():
@@ -514,8 +551,7 @@ def test_multiple_result_types_with_state_vector_amplitude():
         "",
         "Additional result types: Amplitude(0001), StateVector",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
@@ -548,8 +584,7 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
         "",
         "T  : | 0 |1|   Result Types    |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_noise_1qubit():
@@ -563,8 +598,7 @@ def test_noise_1qubit():
         "",
         "T  : |    0    |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
 
 
 def test_noise_2qubit():
@@ -580,5 +614,41 @@ def test_noise_2qubit():
         "",
         "T  : | 0  |",
     )
-    expected = "\n".join(expected)
-    assert AsciiCircuitDiagram.build_diagram(circ) == expected
+    _assert_correct_diagram(circ, expected)
+
+
+def test_noise_multi_probabilities():
+    circ = Circuit().h(0).x(1).pauli_channel(1, 0.1, 0.2, 0.3)
+    expected = (
+        "T  : |        0        |",
+        "                        ",
+        "q0 : -H-----------------",
+        "                        ",
+        "q1 : -X-PC(0.1,0.2,0.3)-",
+        "",
+        "T  : |        0        |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_noise_multi_probabilities_with_parameter():
+    a = FreeParameter("a")
+    b = FreeParameter("b")
+    c = FreeParameter("c")
+    circ = Circuit().h(0).x(1).pauli_channel(1, a, b, c)
+    expected = (
+        "T  : |     0     |",
+        "                  ",
+        "q0 : -H-----------",
+        "                  ",
+        "q1 : -X-PC(a,b,c)-",
+        "",
+        "T  : |     0     |",
+        "",
+        "Unassigned parameters: [a, b, c].",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def _assert_correct_diagram(circ, expected):
+    assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)

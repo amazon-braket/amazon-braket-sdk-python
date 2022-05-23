@@ -34,6 +34,7 @@ setup(
         "nest-asyncio",
         "networkx",
         "numpy",
+        "sympy",
     ],
     extras_require={
         "test": [
