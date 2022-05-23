@@ -27,7 +27,11 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-default-simulator",
+        (
+            "amazon-braket-default-simulator "
+            "@ git+https://github.com/aws/amazon-braket-default-simulator-python.git"
+            "@openqasm-local-simulator"
+        ),
         "backoff",
         "boltons",
         "boto3",
