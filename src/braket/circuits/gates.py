@@ -1351,6 +1351,13 @@ class CV(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.CV.construct(control=target[0], target=target[1])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        control_qubit = serialization_properties.format_target(int(target[0]))
+        target_qubit = serialization_properties.format_target(int(target[1]))
+        return f"cv {control_qubit}, {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
