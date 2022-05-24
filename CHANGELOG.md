@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.23.2 (2022-05-24)
+
+### Bug Fixes and Other Changes
+
+ * pin coverage dependency only for test extra
+
 ## v1.23.1 (2022-05-20)
 
 ### Bug Fixes and Other Changes
