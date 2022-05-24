@@ -1705,6 +1705,13 @@ class ZZ(AngledGate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.ZZ.construct(targets=[target[0], target[1]], angle=self.angle)
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit_1 = serialization_properties.format_target(int(target[0]))
+        target_qubit_2 = serialization_properties.format_target(int(target[1]))
+        return f"zz({self.angle}) {target_qubit_1}, {target_qubit_2};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
