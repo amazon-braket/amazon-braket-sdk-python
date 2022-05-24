@@ -366,6 +366,12 @@ class T(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.T.construct(target=target[0])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"t {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * np.pi / 4)]], dtype=complex)
 
