@@ -108,7 +108,6 @@ testdata = [
     ),
 ]
 
-
 parameterizable_gates = [
     Gate.Rx,
     Gate.Ry,
@@ -124,7 +123,6 @@ parameterizable_gates = [
     Gate.CPhaseShift01,
     Gate.CPhaseShift10,
 ]
-
 
 invalid_unitary_matrices = [
     (np.array([[1]])),
@@ -187,7 +185,6 @@ valid_ir_switcher = {
     "MultiTarget": multi_target_valid_input,
     "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
 }
-
 
 valid_subroutine_switcher = dict(
     valid_ir_switcher,
