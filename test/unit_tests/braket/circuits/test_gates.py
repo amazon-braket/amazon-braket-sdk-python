@@ -474,6 +474,54 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "iswap q[0], q[1];",
         ),
+        (
+            Gate.ECR(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ecr $0, $1;",
+        ),
+        (
+            Gate.ECR(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ecr q[0], q[1];",
+        ),
+        (
+            Gate.CV(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cv $0, $1;",
+        ),
+        (
+            Gate.CV(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cv q[0], q[1];",
+        ),
+        (
+            Gate.Vi(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "vi q[4];",
+        ),
+        (
+            Gate.Vi(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "vi $4;",
+        ),
+        (
+            Gate.CSwap(),
+            [0, 1, 2],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cswap q[0], q[1], q[2];",
+        ),
+        (
+            Gate.CSwap(),
+            [0, 1, 2],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cswap $0, $1, $2;",
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
