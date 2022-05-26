@@ -415,6 +415,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "rz(0.17) $4;",
         ),
         (
+            Gate.XX(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "xx(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.XX(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "xx(0.17) $4, $5;",
+        ),
+        (
             Gate.T(),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
@@ -437,6 +449,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [0, 1],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "cz q[0], q[1];",
+        ),
+        (
+            Gate.YY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "yy(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.YY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "yy(0.17) $4, $5;",
         ),
         (
             Gate.ISwap(),

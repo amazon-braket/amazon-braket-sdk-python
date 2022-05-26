@@ -1578,6 +1578,13 @@ class XX(AngledGate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit_1 = serialization_properties.format_target(int(target[0]))
+        target_qubit_2 = serialization_properties.format_target(int(target[1]))
+        return f"xx({self.angle}) {target_qubit_1}, {target_qubit_2};"
+
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
@@ -1654,6 +1661,13 @@ class YY(AngledGate):
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit_1 = serialization_properties.format_target(int(target[0]))
+        target_qubit_2 = serialization_properties.format_target(int(target[1]))
+        return f"yy({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
