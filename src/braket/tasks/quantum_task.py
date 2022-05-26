@@ -17,7 +17,7 @@ from typing import Any, Dict, Union
 
 from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
-from braket.tasks.boson_sampling_quantum_task_result import BosonSamplingQuantumTaskResult
+from braket.tasks.photonic_model_quantum_task_result import PhotonicModelQuantumTaskResult
 
 
 class QuantumTask(ABC):
@@ -37,7 +37,11 @@ class QuantumTask(ABC):
         """str: State of the quantum task"""
 
     @abstractmethod
-    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult]:
+    def result(
+        self,
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+    ]:
         """
         Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: Get the quantum task result.
         Call async_result if you want the result in an asynchronous way.

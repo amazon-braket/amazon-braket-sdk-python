@@ -11,6 +11,19 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import pytest
 
-class BosonSamplingQuantumTaskResult:
-    pass
+from braket.task_result import AdditionalMetadata, TaskMetadata
+from braket.tasks import PhotonicModelQuantumTaskResult
+
+
+@pytest.fixture
+def task_metadata():
+    return TaskMetadata(**{"id": "task_arn", "deviceId": "arn1", "shots": 100})
+
+
+# @pytest.fixture
+# def additional_metadata
+
+# def test_equality(str1, str2):
+#     result1 = PhotonicModelQuantumTaskResult.from_string(str1)

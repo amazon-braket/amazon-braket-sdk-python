@@ -29,8 +29,8 @@ from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.devices.device import Device
-from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.blackbird import Program as BlackbirdProgram
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
 
 

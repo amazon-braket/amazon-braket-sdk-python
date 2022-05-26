@@ -37,8 +37,8 @@ from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
-from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.blackbird import Program as BlackbirdProgram
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
@@ -54,6 +54,7 @@ DEVICE_PARAMETERS = [
     (RIGETTI_ARN, RigettiDeviceParameters),
     (OQC_ARN, OqcDeviceParameters),
     (SIMULATOR_ARN, GateModelSimulatorDeviceParameters),
+    # (XANADU_ARN, XanaduDeviceParameters),
 ]
 
 
@@ -98,9 +99,11 @@ def problem():
 def openqasm_program():
     return OpenQasmProgram(source="OPENQASM 3.0; h $0;")
 
+
 @pytest.fixture
 def blackbird_program():
     return BlackbirdProgram(source="Vac | q[0]")
+
 
 def test_equality(arn, aws_session):
     quantum_task_1 = AwsQuantumTask(arn, aws_session)

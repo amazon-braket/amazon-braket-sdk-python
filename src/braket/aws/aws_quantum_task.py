@@ -41,14 +41,14 @@ from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
-from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.blackbird import Program as BlackbirdProgram
+from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
-from braket.task_result import AnnealingTaskResult, GateModelTaskResult
+from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
 from braket.tasks import (
     AnnealingQuantumTaskResult,
-    BosonSamplingQuantumTaskResult,
     GateModelQuantumTaskResult,
+    PhotonicModelQuantumTaskResult,
     QuantumTask,
 )
 
@@ -199,7 +199,7 @@ class AwsQuantumTask(QuantumTask):
 
         self._metadata: Dict[str, Any] = {}
         self._result: Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult
+            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
         ] = None
 
     @staticmethod
@@ -289,7 +289,7 @@ class AwsQuantumTask(QuantumTask):
     def result(
         self,
     ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
         """
         Get the quantum task result by polling Amazon Braket to see if the task is completed.
@@ -357,7 +357,7 @@ class AwsQuantumTask(QuantumTask):
     async def _wait_for_completion(
         self,
     ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, BosonSamplingQuantumTaskResult
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
         """
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
@@ -420,7 +420,7 @@ class AwsQuantumTask(QuantumTask):
 
 @singledispatch
 def _create_internal(
-    task_specification: Union[Circuit, Problem],
+    task_specification: Union[Circuit, Problem, BlackbirdProgram],
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
     device_arn: str,
@@ -586,3 +586,8 @@ def _(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
 @_format_result.register
 def _(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
     return AnnealingQuantumTaskResult.from_object(result)
+
+
+@_format_result.register
+def _(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
+    return PhotonicModelQuantumTaskResult.from_object(result)
