@@ -108,7 +108,6 @@ testdata = [
     ),
 ]
 
-
 parameterizable_gates = [
     Gate.Rx,
     Gate.Ry,
@@ -124,7 +123,6 @@ parameterizable_gates = [
     Gate.CPhaseShift01,
     Gate.CPhaseShift10,
 ]
-
 
 invalid_unitary_matrices = [
     (np.array([[1]])),
@@ -187,7 +185,6 @@ valid_ir_switcher = {
     "MultiTarget": multi_target_valid_input,
     "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
 }
-
 
 valid_subroutine_switcher = dict(
     valid_ir_switcher,
@@ -524,6 +521,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [0, 1, 2],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "cswap $0, $1, $2;",
+        ),
+        (
+            Gate.CPhaseShift01(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cphaseshift01(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.CPhaseShift01(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cphaseshift01(0.17) $4, $5;",
         ),
     ],
 )
