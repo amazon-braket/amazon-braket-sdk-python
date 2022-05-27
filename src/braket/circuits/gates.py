@@ -858,6 +858,13 @@ class Swap(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.Swap.construct(targets=[target[0], target[1]])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit0 = serialization_properties.format_target(int(target[0]))
+        target_qubit1 = serialization_properties.format_target(int(target[1]))
+        return f"swap {target_qubit0}, {target_qubit1};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
