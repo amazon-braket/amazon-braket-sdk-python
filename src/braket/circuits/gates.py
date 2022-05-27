@@ -1881,6 +1881,15 @@ class CSwap(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        control_qubit = serialization_properties.format_target(int(target[0]))
+        target_qubit_0 = serialization_properties.format_target(int(target[1]))
+        target_qubit_1 = serialization_properties.format_target(int(target[2]))
+
+        return f"cswap {control_qubit}, {target_qubit_0}, {target_qubit_1};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
