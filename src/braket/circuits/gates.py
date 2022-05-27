@@ -498,6 +498,12 @@ class Vi(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.Vi.construct(target=target[0])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"vi {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array(([[0.5 - 0.5j, 0.5 + 0.5j], [0.5 + 0.5j, 0.5 - 0.5j]]), dtype=complex)
 
@@ -1358,6 +1364,13 @@ class CV(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.CV.construct(control=target[0], target=target[1])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        control_qubit = serialization_properties.format_target(int(target[0]))
+        target_qubit = serialization_properties.format_target(int(target[1]))
+        return f"cv {control_qubit}, {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
@@ -1508,6 +1521,13 @@ class ECR(Gate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.ECR.construct(targets=[target[0], target[1]])
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit_0 = serialization_properties.format_target(int(target[0]))
+        target_qubit_1 = serialization_properties.format_target(int(target[1]))
+        return f"ecr {target_qubit_0}, {target_qubit_1};"
+
     def to_matrix(self) -> np.ndarray:
         return (
             1
@@ -1564,6 +1584,13 @@ class XX(AngledGate):
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit_1 = serialization_properties.format_target(int(target[0]))
+        target_qubit_2 = serialization_properties.format_target(int(target[1]))
+        return f"xx({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
@@ -1641,6 +1668,13 @@ class YY(AngledGate):
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit_1 = serialization_properties.format_target(int(target[0]))
+        target_qubit_2 = serialization_properties.format_target(int(target[1]))
+        return f"yy({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
         cos = np.cos(self.angle / 2)
@@ -1846,6 +1880,15 @@ class CSwap(Gate):
 
     def _to_jaqcd(self, target: QubitSet):
         return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        control_qubit = serialization_properties.format_target(int(target[0]))
+        target_qubit_0 = serialization_properties.format_target(int(target[1]))
+        target_qubit_1 = serialization_properties.format_target(int(target[2]))
+
+        return f"cswap {control_qubit}, {target_qubit_0}, {target_qubit_1};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
