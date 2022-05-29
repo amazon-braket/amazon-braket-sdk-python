@@ -466,6 +466,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "yy(0.17) $4, $5;",
         ),
         (
+            Gate.XY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "xy(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.XY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "xy(0.17) $4, $5;",
+        ),
+        (
             Gate.ISwap(),
             [0, 1],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
@@ -476,6 +488,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [0, 1],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "iswap q[0], q[1];",
+        ),
+        (
+            Gate.Swap(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "swap $0, $1;",
+        ),
+        (
+            Gate.Swap(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "swap q[0], q[1];",
         ),
         (
             Gate.ECR(),
@@ -524,6 +548,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [0, 1, 2],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "cswap $0, $1, $2;",
+        ),
+        (
+            Gate.CPhaseShift01(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cphaseshift01(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.CPhaseShift01(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cphaseshift01(0.17) $4, $5;",
         ),
     ],
 )
