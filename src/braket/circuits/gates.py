@@ -1128,6 +1128,13 @@ class CPhaseShift(AngledGate):
     def _to_jaqcd(self, target: QubitSet):
         return ir.CPhaseShift.construct(control=target[0], target=target[1], angle=self.angle)
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        control_qubit = serialization_properties.format_target(int(target[0]))
+        target_qubit = serialization_properties.format_target(int(target[1]))
+        return f"cphaseshift({self.angle}) {control_qubit}, {target_qubit};"
+
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, 1.0, np.exp(1j * self.angle)])
 
