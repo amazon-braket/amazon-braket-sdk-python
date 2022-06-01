@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.23.2 (2022-05-24)
+
+### Bug Fixes and Other Changes
+
+ * pin coverage dependency only for test extra
+
+## v1.23.1 (2022-05-20)
+
+### Bug Fixes and Other Changes
+
+ * removing validation for disable_qubit_rewiring
+
+## v1.23.0 (2022-05-19)
+
+### Features
+
+ * allow job role to be set via env variable
+ * allow user to set region+endpoint through env variables
+
+## v1.22.0 (2022-05-18)
+
+### Features
+
+ * Noise models
+
 ## v1.21.1 (2022-05-17)
 
 ### Bug Fixes and Other Changes

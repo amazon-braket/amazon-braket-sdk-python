@@ -476,9 +476,12 @@ def test_from_circuit_with_disabled_rewiring(
 
 
 @pytest.mark.parametrize(
-    "device_arn,device_parameters_class", [(RIGETTI_ARN, RigettiDeviceParameters)]
+    "device_arn,device_parameters_class, disable_qubit_rewiring",
+    [(RIGETTI_ARN, RigettiDeviceParameters, True), (RIGETTI_ARN, RigettiDeviceParameters, False)],
 )
-def test_from_circuit_with_verbatim(device_arn, device_parameters_class, aws_session):
+def test_from_circuit_with_verbatim(
+    device_arn, device_parameters_class, disable_qubit_rewiring, aws_session
+):
     circ = Circuit().add_verbatim_box(Circuit().h(0))
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
@@ -490,7 +493,7 @@ def test_from_circuit_with_verbatim(device_arn, device_parameters_class, aws_ses
         circ,
         S3_TARGET,
         shots,
-        disable_qubit_rewiring=True,
+        disable_qubit_rewiring=disable_qubit_rewiring,
     )
     assert task == AwsQuantumTask(mocked_task_arn, aws_session)
 
@@ -502,17 +505,10 @@ def test_from_circuit_with_verbatim(device_arn, device_parameters_class, aws_ses
         shots,
         device_parameters_class(
             paradigmParameters=GateModelParameters(
-                qubitCount=circ.qubit_count, disableQubitRewiring=True
+                qubitCount=circ.qubit_count, disableQubitRewiring=disable_qubit_rewiring
             )
         ),
     )
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_from_circuit_with_verbatim_qubit_rewiring_not_disabled(aws_session):
-    circ = Circuit().add_verbatim_box(Circuit().h(0))
-    shots = 57
-    AwsQuantumTask.create(aws_session, RIGETTI_ARN, circ, S3_TARGET, shots)
 
 
 @pytest.mark.xfail(raises=ValueError)

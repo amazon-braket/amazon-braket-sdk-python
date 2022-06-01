@@ -108,8 +108,6 @@ class AwsQuantumTask(QuantumTask):
                 without any rewiring downstream, if this is supported by the device.
                 Only applies to digital, gate-based circuits (as opposed to annealing problems).
                 If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
-                If the circuit has frozen qubits (``circuit.has_frozen_qubits==True``), then this
-                must be True, or running will throw an exception.
                 Default: False
 
             tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
@@ -476,11 +474,6 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
-    if circuit.qubits_frozen and not disable_qubit_rewiring:
-        raise ValueError(
-            "disable_qubit_rewiring must be True to run circuit with compiler directives"
-        )
-
     # TODO: Update this to use `deviceCapabilities` from Amazon Braket's GetDevice operation
     # in order to decide what parameters to build.
     paradigm_parameters = GateModelParameters(

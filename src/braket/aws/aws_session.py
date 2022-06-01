@@ -60,8 +60,12 @@ class AwsSession(object):
             )
             self.braket_client = braket_client
         else:
-            self.boto_session = boto_session or boto3.Session()
-            self.braket_client = self.boto_session.client("braket", config=self._config)
+            self.boto_session = boto_session or boto3.Session(
+                region_name=os.environ.get("AWS_REGION")
+            )
+            self.braket_client = self.boto_session.client(
+                "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
+            )
 
         self._update_user_agent()
         self._custom_default_bucket = bool(default_bucket)
