@@ -18,7 +18,6 @@ import time
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from braket.aws import aws_quantum_task
 from common_test_utils import MockS3
 from jsonschema import validate
 
@@ -39,7 +38,11 @@ from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
+from braket.tasks import (
+    AnnealingQuantumTaskResult,
+    GateModelQuantumTaskResult,
+    PhotonicModelQuantumTaskResult,
+)
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 
@@ -54,7 +57,6 @@ DEVICE_PARAMETERS = [
     (RIGETTI_ARN, RigettiDeviceParameters),
     (OQC_ARN, OqcDeviceParameters),
     (SIMULATOR_ARN, GateModelSimulatorDeviceParameters),
-    # (XANADU_ARN, XanaduDeviceParameters),
 ]
 
 
@@ -77,6 +79,11 @@ def circuit_task(aws_session):
 
 @pytest.fixture
 def annealing_task(aws_session):
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
+
+
+@pytest.fixture
+def photonic_model_task(aws_session):
     return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
 
@@ -236,6 +243,20 @@ def test_result_annealing(annealing_task):
     s3_bucket = annealing_task.metadata()["outputS3Bucket"]
     s3_object_key = annealing_task.metadata()["outputS3Directory"]
     annealing_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_photonic_model(photonic_model_task):
+    _mock_metadata(photonic_model_task._aws_session, "COMPLETED")
+    _mock_s3(photonic_model_task._aws_session, MockS3.MOCK_S3_RESULT_PHOTONIC_MODEL)
+
+    expected = PhotonicModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_PHOTONIC_MODEL)
+    assert photonic_model_task.result() == expected
+
+    s3_bucket = photonic_model_task.metadata()["outputS3Bucket"]
+    s3_object_key = photonic_model_task.metadata()["outputS3Directory"]
+    photonic_model_task._aws_session.retrieve_s3_object_body.assert_called_with(
         s3_bucket, f"{s3_object_key}/results.json"
     )
 

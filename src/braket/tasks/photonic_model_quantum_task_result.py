@@ -55,7 +55,10 @@ class PhotonicModelQuantumTaskResult:
     def _from_object_internal(cls, result: PhotonicModelTaskResult):
         task_metadata = result.taskMetadata
         additional_metadata = result.additionalMetadata
-        measurements = np.asarray(result.measurements, dtype=int)
+        if result.measurements is not None:
+            measurements = np.asarray(result.measurements, dtype=int)
+        else:
+            measurements = None
         return cls(
             task_metadata=task_metadata,
             additional_metadata=additional_metadata,
