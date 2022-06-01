@@ -559,6 +559,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "cphaseshift01(0.17) $4, $5;",
         ),
         (
+            Gate.CPhaseShift00(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cphaseshift00(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.CPhaseShift00(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cphaseshift00(0.17) $4, $5;",
+        ),
+        (
             Gate.CPhaseShift(angle=0.17),
             [4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
