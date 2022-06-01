@@ -13,9 +13,15 @@
 
 from __future__ import annotations
 
-from braket.ahs.atom_arrangement import AtomArrangement
+from collections import defaultdict
+from functools import singledispatch
+from typing import Tuple
+
+import braket.ir.neutral_atom as ir
+from braket.ahs.atom_arrangement import AtomArrangement, SiteType
+from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.aws.aws_device import AwsDevice
+from braket.ahs.shifting_field import ShiftingField
 
 
 class AnalogHamiltonianSimulation:
@@ -29,21 +35,6 @@ class AnalogHamiltonianSimulation:
         self._register = register
         self._hamiltonian = hamiltonian
 
-    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:
-        """Creates a new AnalogHamiltonianSimulation with all numerical values represented
-        as Decimal objects with fixed precision based on the capabilities of the device.
-
-        Args:
-            device (AwsDevice): The device for which to discretize the model.
-
-        Returns:
-            AnalogHamiltonianSimulation: A discretized version of this model.
-
-        Raises:
-            DiscretizeError: If unable to discretize the model.
-        """
-        raise NotImplementedError("Discretize is not yet implemented.")
-
     @property
     def register(self) -> AtomArrangement:
         return self._register
@@ -51,3 +42,68 @@ class AnalogHamiltonianSimulation:
     @property
     def hamiltonian(self) -> Hamiltonian:
         return self._hamiltonian
+
+    def to_ir(self) -> dict:
+        return ir.Problem(ir.Setup(self._register_to_ir()), self._hamiltonian_to_ir())
+
+    def _register_to_ir(self) -> dict:
+        return ir.AtomArray(
+            sites=[site.coordinate for site in self.register],
+            filling=[1 if site.site_type == SiteType.FILLED else 0 for site in self.register],
+        )
+
+    def _hamiltonian_to_ir(self) -> dict:
+        terms = defaultdict(list)
+        for term in self.hamiltonian.terms:
+            term_type, term_ir = _get_term_ir(term)
+            terms[term_type].append(term_ir)
+        return ir.Hamiltonian(
+            driving_fields=terms["driving_fields"], shifting_fields=terms["shifting_fields"]
+        )
+
+
+@singledispatch
+def _get_term_ir(
+    term: Hamiltonian,
+) -> Tuple[str, dict]:
+    raise TypeError(f"Unable to convert Hamiltonian term type {type(term)}.")
+
+
+@_get_term_ir.register
+def _(term: ShiftingField) -> Tuple[str, dict]:
+    return "shifting_fields", ir.ShiftingField(
+        ir.AhsField(
+            ir.Sequence(
+                times=term.magnitude.time_series.times(),
+                values=term.magnitude.time_series.values(),
+            ),
+            ir.Pattern(term.magnitude.pattern.series),
+        )
+    )
+
+
+@_get_term_ir.register
+def _(term: DrivingField) -> Tuple[str, dict]:
+    return "driving_fields", ir.DrivingField(
+        amplitude=ir.AhsField(
+            ir.Sequence(
+                times=term.amplitude.time_series.times(),
+                values=term.amplitude.time_series.values(),
+            ),
+            "uniform",
+        ),
+        phase=ir.AhsField(
+            ir.Sequence(
+                times=term.phase.time_series.times(),
+                values=term.phase.time_series.values(),
+            ),
+            "uniform",
+        ),
+        detuning=ir.AhsField(
+            ir.Sequence(
+                times=term.detuning.time_series.times(),
+                values=term.detuning.time_series.values(),
+            ),
+            "uniform",
+        ),
+    )

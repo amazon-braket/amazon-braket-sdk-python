@@ -21,6 +21,7 @@ from typing import Any, Dict, Union
 
 import boto3
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
@@ -64,7 +65,7 @@ class AwsQuantumTask(QuantumTask):
     def create(
         aws_session: AwsSession,
         device_arn: str,
-        task_specification: Union[Circuit, Problem, OpenQasmProgram],
+        task_specification: Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
@@ -82,8 +83,8 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem]): The specification of the task
-                to run on device.
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation]): # noqa
+                The specification of the task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -491,6 +492,22 @@ def _(
         }
     )
 
+    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+@_create_internal.register
+def _(
+    analog_hamiltonian_simulation: AnalogHamiltonianSimulation,
+    aws_session: AwsSession,
+    create_task_kwargs: Dict[str, Any],
+    device_arn: str,
+    device_parameters: dict,
+    _,
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    create_task_kwargs.update({"action": analog_hamiltonian_simulation.to_ir().json()})
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 

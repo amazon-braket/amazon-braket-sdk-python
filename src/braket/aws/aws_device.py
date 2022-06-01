@@ -21,6 +21,7 @@ from typing import List, Optional, Union
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
@@ -81,7 +82,7 @@ class AwsDevice(Device):
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem, OpenQasmProgram],
+        task_specification: Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -94,8 +95,8 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]): Specification of task
-                (circuit or annealing problem) to run on device.
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation]): # noqa
+                Specification of task (circuit or annealing problem) to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
                 save the task's results to. Default is `<default_bucket>/tasks` if evoked
                 outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
@@ -163,7 +164,9 @@ class AwsDevice(Device):
 
     def run_batch(
         self,
-        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram]],
+        task_specifications: List[
+            Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation]
+        ],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         max_parallel: Optional[int] = None,
@@ -176,8 +179,8 @@ class AwsDevice(Device):
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (List[Union[Circuit, Problem]]): List of  circuits
-                or annealing problems to run on device.
+            task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation]]):  # noqa
+                List of  circuits or annealing problems to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
                 save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
                 outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
