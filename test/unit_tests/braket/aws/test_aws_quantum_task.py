@@ -21,6 +21,7 @@ import pytest
 from common_test_utils import MockS3
 from jsonschema import validate
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_task import _create_annealing_device_params
@@ -94,6 +95,13 @@ def problem():
 @pytest.fixture
 def openqasm_program():
     return OpenQasmProgram(source="OPENQASM 3.0; h $0;")
+
+
+@pytest.fixture
+def ahs_problem():
+    mock = Mock(spec=AnalogHamiltonianSimulation)
+    mock.to_ir.return_value.json.return_value = "Test AHS Problem"
+    return mock
 
 
 def test_equality(arn, aws_session):
@@ -374,6 +382,20 @@ def test_create_openqasm_program(aws_session, arn, openqasm_program):
         aws_session,
         SIMULATOR_ARN,
         openqasm_program.json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_ahs_problem(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, SIMULATOR_ARN, ahs_problem, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
         S3_TARGET,
         shots,
     )

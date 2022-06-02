@@ -17,7 +17,7 @@ from collections import defaultdict
 from functools import singledispatch
 from typing import Tuple
 
-import braket.ir.neutral_atom as ir
+import braket.ir.neutral_atom.problem_v1 as ir
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
@@ -43,16 +43,18 @@ class AnalogHamiltonianSimulation:
     def hamiltonian(self) -> Hamiltonian:
         return self._hamiltonian
 
-    def to_ir(self) -> dict:
-        return ir.Problem(ir.Setup(self._register_to_ir()), self._hamiltonian_to_ir())
+    def to_ir(self) -> ir.Problem:
+        return ir.Problem(
+            setup=ir.Setup(atom_array=self._register_to_ir()), hamiltonian=self._hamiltonian_to_ir()
+        )
 
-    def _register_to_ir(self) -> dict:
+    def _register_to_ir(self) -> ir.AtomArray:
         return ir.AtomArray(
             sites=[site.coordinate for site in self.register],
             filling=[1 if site.site_type == SiteType.FILLED else 0 for site in self.register],
         )
 
-    def _hamiltonian_to_ir(self) -> dict:
+    def _hamiltonian_to_ir(self) -> ir.Hamiltonian:
         terms = defaultdict(list)
         for term in self.hamiltonian.terms:
             term_type, term_ir = _get_term_ir(term)
@@ -70,40 +72,40 @@ def _get_term_ir(
 
 
 @_get_term_ir.register
-def _(term: ShiftingField) -> Tuple[str, dict]:
+def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
     return "shifting_fields", ir.ShiftingField(
-        ir.AhsField(
-            ir.Sequence(
+        magnitude=ir.AhsField(
+            sequence=ir.Sequence(
                 times=term.magnitude.time_series.times(),
                 values=term.magnitude.time_series.values(),
             ),
-            ir.Pattern(term.magnitude.pattern.series),
+            pattern=term.magnitude.pattern.series,
         )
     )
 
 
 @_get_term_ir.register
-def _(term: DrivingField) -> Tuple[str, dict]:
+def _(term: DrivingField) -> Tuple[str, ir.DrivingField]:
     return "driving_fields", ir.DrivingField(
         amplitude=ir.AhsField(
-            ir.Sequence(
+            sequence=ir.Sequence(
                 times=term.amplitude.time_series.times(),
                 values=term.amplitude.time_series.values(),
             ),
-            "uniform",
+            pattern="uniform",
         ),
         phase=ir.AhsField(
-            ir.Sequence(
+            sequence=ir.Sequence(
                 times=term.phase.time_series.times(),
                 values=term.phase.time_series.values(),
             ),
-            "uniform",
+            pattern="uniform",
         ),
         detuning=ir.AhsField(
-            ir.Sequence(
+            sequence=ir.Sequence(
                 times=term.detuning.time_series.times(),
                 values=term.detuning.time_series.values(),
             ),
-            "uniform",
+            pattern="uniform",
         ),
     )
