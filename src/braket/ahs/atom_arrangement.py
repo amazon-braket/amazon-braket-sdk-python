@@ -55,6 +55,9 @@ class AtomArrangement:
     def coordinate_list(self, coordinate_index: Number) -> List[Number]:
         """Returns all the coordinates at the given index.
 
+        Args:
+            coordinate_index (Number): The index to get for each coordinate.
+
         Returns:
             List[Number]:The list of coordinates at the given index.
 

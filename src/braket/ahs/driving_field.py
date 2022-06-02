@@ -41,9 +41,9 @@ class DrivingField(Hamiltonian):
         Args:
             amplitude (Union[Field, TimeSeries]): global amplitude (Omega(t).
                 Time is in us, and value is in rad/us.
-            amplitude (Union[Field, TimeSeries]): global phase (phi(t)).
+            phase (Union[Field, TimeSeries]): global phase (phi(t)).
                 Time is in us, and value is in rad/us.
-            amplitude (Union[Field, TimeSeries]): global detuning (Delta(t)).
+            detuning (Union[Field, TimeSeries]): global detuning (Delta(t)).
                 Time is in us, and value is in rad/us.
         """
         super().__init__()
