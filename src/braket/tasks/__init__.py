@@ -14,6 +14,9 @@
 import braket.ipython_utils as ipython_utils
 from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult  # noqa: F401
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult  # noqa: F401
+from braket.tasks.photonic_model_quantum_task_result import (  # noqa: F401
+    PhotonicModelQuantumTaskResult,
+)
 from braket.tasks.quantum_task import QuantumTask  # noqa: F401
 
 # Apply nest_asyncio if currently running within Jupyter. This ensures anything that uses
