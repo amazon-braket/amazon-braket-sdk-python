@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.24.0 (2022-06-02)
+
+### Features
+
+ * Add support for photonic computations
+
 ## v1.23.2 (2022-05-24)
 
 ### Bug Fixes and Other Changes
