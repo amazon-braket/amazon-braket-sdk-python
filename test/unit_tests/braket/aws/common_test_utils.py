@@ -22,6 +22,7 @@ IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
+XANADU_ARN = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
 
 RIGETTI_REGION = "us-west-1"
 
@@ -123,6 +124,29 @@ class MockS3:
                         "annealTimePerRun": 20,
                         "readoutTimePerRun": 274,
                     },
+                },
+            },
+        }
+    )
+
+    MOCK_S3_RESULT_PHOTONIC_MODEL = json.dumps(
+        {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.photonic_model_task_result",
+                "version": "1",
+            },
+            "measurements": [[[1, 2, 3, 4]], [[4, 3, 2, 1]], [[0, 0, 0, 0]]],
+            "taskMetadata": {
+                "id": "task_arn",
+                "shots": 3,
+                "deviceId": XANADU_ARN,
+            },
+            "additionalMetadata": {
+                "action": {
+                    "source": "Vac | q[0]",
+                },
+                "xanaduMetadata": {
+                    "compiledProgram": "DECLARE ro BIT[2];",
                 },
             },
         }
