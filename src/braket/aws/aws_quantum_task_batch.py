@@ -22,6 +22,7 @@ from braket.annealing import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 
 
@@ -43,9 +44,7 @@ class AwsQuantumTaskBatch:
         self,
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: List[
-            Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation]
-        ],
+        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         max_parallel: int,
@@ -60,7 +59,7 @@ class AwsQuantumTaskBatch:
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             device_arn (str): The ARN of the quantum device.
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, AnalogHamiltonianSimulation]): # noqa
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgramAnalogHamiltonianSimulation]): # noqa
                 The specification of the task to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder

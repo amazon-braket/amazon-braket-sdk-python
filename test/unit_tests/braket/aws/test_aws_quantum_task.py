@@ -37,8 +37,13 @@ from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
+from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
+from braket.tasks import (
+    AnnealingQuantumTaskResult,
+    GateModelQuantumTaskResult,
+    PhotonicModelQuantumTaskResult,
+)
 
 S3_TARGET = AwsSession.S3DestinationFolder("foo", "bar")
 
@@ -46,6 +51,7 @@ IONQ_ARN = "device/qpu/ionq"
 RIGETTI_ARN = "device/qpu/rigetti"
 OQC_ARN = "device/qpu/oqc"
 SIMULATOR_ARN = "device/quantum-simulator"
+XANADU_ARN = "device/qpu/xanadu"
 
 DEVICE_PARAMETERS = [
     (IONQ_ARN, IonqDeviceParameters),
@@ -78,6 +84,11 @@ def annealing_task(aws_session):
 
 
 @pytest.fixture
+def photonic_model_task(aws_session):
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
+
+
+@pytest.fixture
 def arn():
     return "foo:bar:arn"
 
@@ -95,6 +106,11 @@ def problem():
 @pytest.fixture
 def openqasm_program():
     return OpenQasmProgram(source="OPENQASM 3.0; h $0;")
+
+
+@pytest.fixture
+def blackbird_program():
+    return BlackbirdProgram(source="Vac | q[0]")
 
 
 @pytest.fixture
@@ -235,6 +251,20 @@ def test_result_annealing(annealing_task):
     s3_bucket = annealing_task.metadata()["outputS3Bucket"]
     s3_object_key = annealing_task.metadata()["outputS3Directory"]
     annealing_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_photonic_model(photonic_model_task):
+    _mock_metadata(photonic_model_task._aws_session, "COMPLETED")
+    _mock_s3(photonic_model_task._aws_session, MockS3.MOCK_S3_RESULT_PHOTONIC_MODEL)
+
+    expected = PhotonicModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_PHOTONIC_MODEL)
+    assert photonic_model_task.result() == expected
+
+    s3_bucket = photonic_model_task.metadata()["outputS3Bucket"]
+    s3_object_key = photonic_model_task.metadata()["outputS3Directory"]
+    photonic_model_task._aws_session.retrieve_s3_object_body.assert_called_with(
         s3_bucket, f"{s3_object_key}/results.json"
     )
 
@@ -382,6 +412,20 @@ def test_create_openqasm_program(aws_session, arn, openqasm_program):
         aws_session,
         SIMULATOR_ARN,
         openqasm_program.json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_blackbird_program(aws_session, arn, blackbird_program):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, XANADU_ARN, blackbird_program, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        XANADU_ARN,
+        blackbird_program.json(),
         S3_TARGET,
         shots,
     )
