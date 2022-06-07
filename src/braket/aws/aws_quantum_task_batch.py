@@ -44,7 +44,9 @@ class AwsQuantumTaskBatch:
         self,
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]],
+        task_specifications: List[
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]
+        ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         max_parallel: int,

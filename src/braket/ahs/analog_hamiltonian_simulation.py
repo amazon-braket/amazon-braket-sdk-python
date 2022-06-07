@@ -17,7 +17,7 @@ from collections import defaultdict
 from functools import singledispatch
 from typing import Tuple
 
-import braket.ir.neutral_atom.problem_v1 as ir
+import braket.ir.ahs as ir
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
@@ -44,7 +44,7 @@ class AnalogHamiltonianSimulation:
         return self._hamiltonian
 
     def to_ir(self) -> ir.Problem:
-        return ir.Problem(
+        return ir.Program(
             setup=ir.Setup(atom_array=self._register_to_ir()), hamiltonian=self._hamiltonian_to_ir()
         )
 
@@ -74,8 +74,8 @@ def _get_term_ir(
 @_get_term_ir.register
 def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
     return "shifting_fields", ir.ShiftingField(
-        magnitude=ir.AhsField(
-            sequence=ir.Sequence(
+        magnitude=ir.PhysicalField(
+            sequence=ir.Waveform(
                 times=term.magnitude.time_series.times(),
                 values=term.magnitude.time_series.values(),
             ),
@@ -87,22 +87,22 @@ def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
 @_get_term_ir.register
 def _(term: DrivingField) -> Tuple[str, ir.DrivingField]:
     return "driving_fields", ir.DrivingField(
-        amplitude=ir.AhsField(
-            sequence=ir.Sequence(
+        amplitude=ir.PhysicalField(
+            sequence=ir.Waveform(
                 times=term.amplitude.time_series.times(),
                 values=term.amplitude.time_series.values(),
             ),
             pattern="uniform",
         ),
-        phase=ir.AhsField(
-            sequence=ir.Sequence(
+        phase=ir.PhysicalField(
+            sequence=ir.Waveform(
                 times=term.phase.time_series.times(),
                 values=term.phase.time_series.values(),
             ),
             pattern="uniform",
         ),
-        detuning=ir.AhsField(
-            sequence=ir.Sequence(
+        detuning=ir.PhysicalField(
+            sequence=ir.Waveform(
                 times=term.detuning.time_series.times(),
                 values=term.detuning.time_series.values(),
             ),
