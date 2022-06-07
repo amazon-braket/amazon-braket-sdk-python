@@ -140,8 +140,9 @@ class AwsSession(object):
 
     def add_braket_user_agent(self, user_agent: str) -> None:
         """
-        Appends the `user-agent` value to the User-Agent header, if it does not yet exist in the header.
-        This method is typically only relevant for libraries integrating with the Amazon Braket SDK.
+        Appends the `user-agent` value to the User-Agent header, if it does not yet exist in the
+        header. This method is typically only relevant for libraries integrating with the
+        Amazon Braket SDK.
 
         Args:
             user_agent (str): The user_agent value to append to the header.
@@ -149,7 +150,6 @@ class AwsSession(object):
         existing_user_agent = self.braket_client._client_config.user_agent
         if user_agent not in existing_user_agent:
             self.braket_client._client_config.user_agent = f"{existing_user_agent} {user_agent}"
-
 
     #
     # Quantum Tasks
@@ -746,7 +746,11 @@ class AwsSession(object):
             )
         else:
             boto_session = boto3.Session(region_name=new_region)
-        copied_session = AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
+        copied_session = AwsSession(
+            boto_session=boto_session, config=config, default_bucket=default_bucket
+        )
         # Preserve user_agent information
-        copied_session.braket_client._client_config.user_agent = self.braket_client._client_config.user_agent
+        copied_session.braket_client._client_config.user_agent = (
+            self.braket_client._client_config.user_agent
+        )
         return copied_session
