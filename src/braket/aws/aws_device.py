@@ -297,6 +297,10 @@ class AwsDevice(Device):
         return self._provider_name
 
     @property
+    def aws_session(self) -> AwsSession:
+        return self._aws_session
+
+    @property
     def arn(self) -> str:
         """str: Return the ARN of the device"""
         return self._arn
