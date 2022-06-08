@@ -17,6 +17,8 @@ from unittest.mock import Mock
 import pytest
 
 import braket.ir as ir
+from braket.ir.openqasm import Program
+
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities
@@ -123,6 +125,40 @@ class DummyCircuitSimulator(BraketSimulator):
         assert self._qubits == qubits
 
 
+class DummyProgramSimulator(BraketSimulator):
+    def run(
+        self,
+        openqasm_ir: Program,
+        shots: int = 0,
+        batch_size: int = 1,
+    ) -> GateModelTaskResult:
+        return GATE_MODEL_RESULT
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "00:00",
+                            "windowEndHour": "23:59:59",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.openqasm.program": {
+                        "actionType": "braket.ir.openqasm.program",
+                        "version": ["1"],
+                    }
+                },
+                "deviceParameters": {},
+            }
+        )
+
+
 class DummyAnnealingSimulator(BraketSimulator):
     def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> AnnealingTaskResult:
         return ANNEALING_RESULT
@@ -152,9 +188,11 @@ class DummyAnnealingSimulator(BraketSimulator):
         )
 
 
-mock_entry = Mock()
-mock_entry.load.return_value = DummyCircuitSimulator
-local_simulator._simulator_devices = {"dummy": mock_entry}
+mock_circuit_entry = Mock()
+mock_program_entry = Mock()
+mock_circuit_entry.load.return_value = DummyCircuitSimulator
+mock_program_entry.load.return_value = DummyCircuitSimulator
+local_simulator._simulator_devices = {"dummy": mock_circuit_entry, "dummy_oq3": mock_program_entry}
 
 
 def test_load_from_entry_point():
@@ -172,6 +210,21 @@ def test_run_gate_model():
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
+def test_run_program_model():
+    dummy = DummyProgramSimulator()
+    sim = LocalSimulator(dummy)
+    task = sim.run(Program(source="""
+qubit[2] q;
+bit[2] c;
+
+h q[0];
+cnot q[0], q[1];
+
+c = measure q;
+"""))
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_run_gate_model_value_error():
     dummy = DummyCircuitSimulator()
@@ -186,7 +239,7 @@ def test_run_annealing():
 
 
 def test_registered_backends():
-    assert LocalSimulator.registered_backends() == {"dummy"}
+    assert LocalSimulator.registered_backends() == {"dummy", "dummy_oq3"}
 
 
 @pytest.mark.xfail(raises=TypeError)

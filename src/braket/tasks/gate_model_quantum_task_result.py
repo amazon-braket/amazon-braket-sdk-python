@@ -233,10 +233,7 @@ class GateModelQuantumTaskResult:
                 in the result dict
         """
         obj = GateModelTaskResult.parse_raw(result)
-        print(obj)
         GateModelQuantumTaskResult.cast_result_types(obj)
-        print(obj)
-        print(GateModelQuantumTaskResult._from_object_internal(obj))
         return GateModelQuantumTaskResult._from_object_internal(obj)
 
     @classmethod
@@ -283,6 +280,12 @@ class GateModelQuantumTaskResult:
                 + f"{measurements.shape[1]} in measurements"
             )
         if result.resultTypes:
+            # Jaqcd does not return anything in the resultTypes schema field since the
+            # result types are easily parsable from the IR. However, an OpenQASM program
+            # specifies result types inline and parsing result types is more involved
+            # (ie. may involve dereferencing logical qubits at runtime), so the parsed
+            # result type specifications need to be returned, even if not calculated
+            # during simulation.
             if not isinstance(result.resultTypes[0], ResultTypeValue):
                 result_types = GateModelQuantumTaskResult._calculate_result_types(
                     json.dumps({"results": [rt.dict() for rt in result.resultTypes]}),

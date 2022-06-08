@@ -15,7 +15,6 @@ import asyncio
 from typing import Union
 
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
-from braket.tasks.oq3_quantum_program_result import OQ3QuantumProgramResult
 
 
 class LocalQuantumTask(QuantumTask):
@@ -26,9 +25,7 @@ class LocalQuantumTask(QuantumTask):
 
     def __init__(
         self,
-        result: Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, OQ3QuantumProgramResult
-        ],
+        result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult],
     ):
         self._id = result.task_metadata.id
         self._result = result
@@ -45,7 +42,7 @@ class LocalQuantumTask(QuantumTask):
 
     def result(
         self,
-    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, OQ3QuantumProgramResult]:
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         return self._result
 
     def async_result(self) -> asyncio.Task:

@@ -25,7 +25,6 @@ from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
-from braket.tasks.oq3_quantum_program_result import OQ3QuantumProgramResult
 
 _simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
@@ -158,8 +157,4 @@ def _(program: Program, simulator: BraketSimulator, shots, *args, **kwargs):
     if DeviceActionType.OPENQASM not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
     results = simulator.run(program, shots, *args, **kwargs)
-    sim_result_type_map = {
-        "braket_oq3_sv": GateModelQuantumTaskResult,
-        "braket_oq3_native_sv": OQ3QuantumProgramResult,
-    }
-    return sim_result_type_map[simulator.DEVICE_ID].from_object(results)
+    return GateModelQuantumTaskResult.from_object(results)
