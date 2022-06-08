@@ -17,12 +17,11 @@ from unittest.mock import Mock
 import pytest
 
 import braket.ir as ir
-from braket.ir.openqasm import Program
-
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities
 from braket.devices import LocalSimulator, local_simulator
+from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -213,7 +212,9 @@ def test_run_gate_model():
 def test_run_program_model():
     dummy = DummyProgramSimulator()
     sim = LocalSimulator(dummy)
-    task = sim.run(Program(source="""
+    task = sim.run(
+        Program(
+            source="""
 qubit[2] q;
 bit[2] c;
 
@@ -221,7 +222,9 @@ h q[0];
 cnot q[0], q[1];
 
 c = measure q;
-"""))
+"""
+        )
+    )
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 

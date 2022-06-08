@@ -47,7 +47,8 @@ def additional_metadata():
 
 @pytest.fixture
 def additional_metadata_openqasm():
-    program = openqasm.Program(source="""
+    program = openqasm.Program(
+        source="""
         qubit[2] q;
         bit[2] c;
 
@@ -198,7 +199,7 @@ def test_openqasm_shots_calculate_result_types(openqasm_result_obj_shots):
         openqasm_result_obj_shots
     )
     assert result.result_types[0].type == jaqcd.Probability()
-    assert np.array_equal(result.result_types[0].value, [.25, .75, 0, 0])
+    assert np.array_equal(result.result_types[0].value, [0.25, 0.75, 0, 0])
 
 
 test_ir_results = [
