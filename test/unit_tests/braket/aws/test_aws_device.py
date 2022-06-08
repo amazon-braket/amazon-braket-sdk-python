@@ -355,6 +355,7 @@ def test_device_aws_session(device_capabilities, get_device_data, arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
     _assert_device_fields(device, device_capabilities, get_device_data)
+    assert device.aws_session == mock_session
 
 
 @patch("braket.aws.aws_device.AwsSession")

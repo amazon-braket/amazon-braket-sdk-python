@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.25.0 (2022-06-08)
+
+### Features
+
+ * Add method for updating the user agent for braket client
+
 ## v1.24.0 (2022-06-02)
 
 ### Features
