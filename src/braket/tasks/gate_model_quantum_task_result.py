@@ -94,7 +94,6 @@ class GateModelQuantumTaskResult:
     _result_types_indices: Dict[str, int] = None
 
     def __post_init__(self):
-        print("SRTL ", self._result_types_indices)
         if self.result_types is not None:
             self._result_types_indices = dict(
                 (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
@@ -119,11 +118,8 @@ class GateModelQuantumTaskResult:
                 Result types must be added to the circuit before the circuit is run on a device.
         """
         rt_ir = result_type.to_ir()
-        print(rt_ir)
         try:
             rt_hash = GateModelQuantumTaskResult._result_type_hash(rt_ir)
-            print(rt_hash)
-            print(self._result_types_indices)
             result_type_index = self._result_types_indices[rt_hash]
             return self.values[result_type_index]
         except KeyError:
