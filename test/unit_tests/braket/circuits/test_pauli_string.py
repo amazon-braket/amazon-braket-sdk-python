@@ -78,6 +78,12 @@ def test_invalid_type():
     PauliString(1234)
 
 
+@pytest.mark.xfail(raises=IndexError)
+@pytest.mark.parametrize("string", ["XZY", "-YIIXZ", "+IXIYIZ"])
+def test_index_out_of_bounds(string):
+    PauliString(string)[len(string)]
+
+
 @pytest.mark.parametrize(
     "string,weight",
     # Make phase explicit for test simplicity
@@ -92,10 +98,10 @@ def test_weight_n_substrings(string, weight):
         substrings.append(PauliString(f"{string[0]}{''.join(factors)}"))
     actual = pauli_string.weight_n_substrings(weight)
     assert actual == tuple(substrings)
-    assert len(actual) == n_choose_r(qubit_count, weight)
+    assert len(actual) == n_choose_k(qubit_count, weight)
 
 
-def n_choose_r(n, k):
+def n_choose_k(n, k):
     m = min(k, n - k)
     return functools.reduce(lambda x, y: x * y, range(m + 1, n + 1)) // (math.factorial(n - m))
 
