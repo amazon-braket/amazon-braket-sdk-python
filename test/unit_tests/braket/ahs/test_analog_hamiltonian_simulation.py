@@ -25,7 +25,7 @@ from braket.ahs.analog_hamiltonian_simulation import (
 from braket.ahs.field import Field
 from braket.ahs.pattern import Pattern
 from braket.ahs.time_series import TimeSeries
-from braket.ir.neutral_atom.problem_v1 import Problem
+from braket.ir.ahs.program_v1 import Program
 
 
 @pytest.fixture
@@ -77,8 +77,8 @@ def test_to_ir(register, driving_field, shifting_field):
     hamiltonian = driving_field + shifting_field
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
     problem = ahs.to_ir()
-    assert Problem.parse_raw(problem.json()) == problem
-    assert problem == Problem.parse_raw_schema(problem.json())
+    assert Program.parse_raw(problem.json()) == problem
+    assert problem == Program.parse_raw_schema(problem.json())
 
 
 def test_to_ir_empty():
@@ -86,8 +86,8 @@ def test_to_ir_empty():
     hamiltonian.terms = []
     ahs = AnalogHamiltonianSimulation(register=AtomArrangement(), hamiltonian=hamiltonian)
     problem = ahs.to_ir()
-    assert Problem.parse_raw(problem.json()) == problem
-    assert problem == Problem.parse_raw_schema(problem.json())
+    assert Program.parse_raw(problem.json()) == problem
+    assert problem == Program.parse_raw_schema(problem.json())
 
 
 @pytest.mark.xfail(raises=TypeError)

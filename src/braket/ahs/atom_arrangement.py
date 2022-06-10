@@ -26,7 +26,7 @@ class SiteType(Enum):
 
 @dataclass
 class AtomArrangementItem:
-    coordinate: Tuple[Number, ...]
+    coordinate: Tuple[Number, Number]
     site_type: SiteType
 
 
@@ -38,12 +38,12 @@ class AtomArrangement:
         self._sites = []
 
     def add(
-        self, coord: Tuple[Number, ...], site_type: SiteType = SiteType.FILLED
+        self, coord: Tuple[Number, Number], site_type: SiteType = SiteType.FILLED
     ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
 
         Args:
-            coord (Tuple[Number,...]): The coordinate of the atom. The coordinates
+            coord (Tuple[Number, Number]): The coordinate of the atom (in meters). The coordinates
                 can be int, float or Decimal.
             site_type (SiteType): The type of site. Optional. Default is FILLED.
         Returns:

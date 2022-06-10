@@ -31,8 +31,9 @@ class ShiftingField(Hamiltonian):
           Sum_k : summation over all target atoms.
 
         Args:
-            magnitude (Field): containing the global magnitude (Delta(t)) and the local
-                pattern of real numbers between 0 and 1 (h_k):
+            magnitude (Field): containing the global magnitude time series (Delta(t)),
+                where time measured in seconds (s) and values measured in rad/s) and the
+                local pattern of unitless real numbers between 0 and 1 (h_k).
         """
         super().__init__()
         self._magnitude = magnitude

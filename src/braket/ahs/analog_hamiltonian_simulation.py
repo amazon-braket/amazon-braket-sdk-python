@@ -43,7 +43,7 @@ class AnalogHamiltonianSimulation:
     def hamiltonian(self) -> Hamiltonian:
         return self._hamiltonian
 
-    def to_ir(self) -> ir.Problem:
+    def to_ir(self) -> ir.Program:
         return ir.Program(
             setup=ir.Setup(atom_array=self._register_to_ir()), hamiltonian=self._hamiltonian_to_ir()
         )
