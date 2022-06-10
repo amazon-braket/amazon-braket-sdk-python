@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import itertools
 from typing import List, Optional, Tuple, Union
 
 from braket.circuits.circuit import Circuit
@@ -23,11 +24,7 @@ _PAULI_X = "X"
 _PAULI_Y = "Y"
 _PAULI_Z = "Z"
 _PAULI_INDICES = {_IDENTITY: 0, _PAULI_X: 1, _PAULI_Y: 2, _PAULI_Z: 3}
-_PAULI_OBSERVABLES = {
-    _PAULI_INDICES[_PAULI_X]: X(),
-    _PAULI_INDICES[_PAULI_Y]: Y(),
-    _PAULI_INDICES[_PAULI_Z]: Z(),
-}
+_PAULI_OBSERVABLES = {_PAULI_X: X(), _PAULI_Y: Y(), _PAULI_Z: Z()}
 _SIGN_MAP = {"+": 1, "-": -1}
 
 
@@ -48,13 +45,15 @@ class PauliString:
             raise ValueError("pauli_string must not be empty")
         if isinstance(pauli_string, PauliString):
             self._phase = pauli_string._phase
-            self._str = pauli_string._str
-            self._indices = pauli_string._indices
+            self._qubit_count = pauli_string._qubit_count
+            self._nontrivial = pauli_string._nontrivial
             self._eigenstate_circuits = pauli_string._eigenstate_circuits
         elif isinstance(pauli_string, str):
             self._phase, factors_str = PauliString._split(pauli_string)
-            self._str = f"{PauliString._phase_to_str(self._phase)}{factors_str}"
-            self._indices = [_PAULI_INDICES[letter] for letter in factors_str]
+            self._qubit_count = len(factors_str)
+            self._nontrivial = {
+                i: factors_str[i] for i in range(len(factors_str)) if factors_str[i] != "I"
+            }
             self._eigenstate_circuits = {}
         else:
             raise TypeError(f"Pauli word {pauli_string} must be of type {PauliString} or {str}")
@@ -67,6 +66,11 @@ class PauliString:
         """
         return self._phase
 
+    @property
+    def qubit_count(self) -> int:
+        """int: The number of qubits this Pauli string acts on."""
+        return self._qubit_count
+
     def to_unsigned_observable(self) -> TensorProduct:
         """Returns the observable corresponding to the unsigned part of the Pauli string.
 
@@ -77,12 +81,32 @@ class PauliString:
         """
 
         return TensorProduct(
-            [
-                _PAULI_OBSERVABLES[index]
-                for index in self._indices
-                if index != _PAULI_INDICES[_IDENTITY]
-            ]
+            [_PAULI_OBSERVABLES[self._nontrivial[qubit]] for qubit in sorted(self._nontrivial)]
         )
+
+    def weight_n_substrings(self, weight: int) -> Tuple[PauliString, ...]:
+        """Returns every substring of this Pauli string with exactly `weight` non-identity factors.
+
+        The number of substrings is equal to `self.qubit_count` choose `weight`.
+
+        Args:
+            weight (int): The number of non-identity factors in the substrings.
+
+        Returns:
+            Tuple[PauliString, ...]: A tuple of weight-n Pauli substrings.
+        """
+        substrings = []
+        for indices in itertools.combinations(range(self._qubit_count), weight):
+            factors = [
+                self._nontrivial[qubit]
+                if qubit in set(indices).intersection(self._nontrivial)
+                else "I"
+                for qubit in range(self._qubit_count)
+            ]
+            substrings.append(
+                PauliString(f"{PauliString._phase_to_str(self._phase)}{''.join(factors)}")
+            )
+        return tuple(substrings)
 
     def eigenstate(self, signs: Optional[Union[str, List[int], Tuple[int, ...]]] = None) -> Circuit:
         """Returns the eigenstate of this Pauli string with the given factor signs.
@@ -105,11 +129,12 @@ class PauliString:
             ValueError: If the length of signs is not equal to that of the Pauli string or the signs
                 are invalid.
         """
+        qubit_count = self._qubit_count
         if not signs:
-            signs = "+" * len(self._indices)
-        if len(signs) != len(self._indices):
+            signs = "+" * qubit_count
+        if len(signs) != qubit_count:
             raise ValueError(
-                f"signs must be the same length of the Pauli string ({len(self._indices)}), "
+                f"signs must be the same length of the Pauli string ({qubit_count}), "
                 f"but was {len(signs)}"
             )
         if isinstance(signs, str) and not set(signs) <= {"+", "-"}:
@@ -127,17 +152,23 @@ class PauliString:
 
     def __eq__(self, other):
         if isinstance(other, PauliString):
-            return self._phase == other._phase and self._indices == other._indices
+            return self._phase == other._phase and self._nontrivial == other._nontrivial
         return False
 
     def __getitem__(self, item):
-        return self._indices[item]
+        if item >= self._qubit_count:
+            raise IndexError(item)
+        return _PAULI_INDICES[self._nontrivial.get(item, "I")]
 
     def __len__(self):
-        return len(self._indices)
+        return self._qubit_count
 
     def __repr__(self):
-        return self._str
+        factors = [
+            self._nontrivial[qubit] if qubit in self._nontrivial else "I"
+            for qubit in range(self._qubit_count)
+        ]
+        return f"{PauliString._phase_to_str(self._phase)}{''.join(factors)}"
 
     @staticmethod
     def _split(pauli_word: str) -> Tuple[int, str]:
@@ -160,7 +191,7 @@ class PauliString:
     def _generate_eigenstate_circuit(self, signs: Tuple[int, ...]) -> Circuit:
         circ = Circuit()
         for qubit in range(len(signs)):
-            state = signs[qubit] * self._indices[qubit]
+            state = signs[qubit] * self[qubit]
             if state == -3:
                 circ.x(qubit)
             elif state == 1:

@@ -13,6 +13,7 @@
 
 import functools
 import itertools
+import math
 
 import numpy as np
 import pytest
@@ -48,6 +49,7 @@ def test_happy_case(pauli_string, string, phase, observable):
         pauli_list.pop(0)
     stripped = "".join(pauli_list)
     assert len(instance) == len(stripped)
+    assert len(instance) == instance.qubit_count
     for i in range(len(instance)):
         assert ORDER[instance[i]] == stripped[i]
     assert instance == PauliString(pauli_string)
@@ -74,6 +76,28 @@ def test_invalid_string(invalid_string):
 @pytest.mark.xfail(raises=TypeError)
 def test_invalid_type():
     PauliString(1234)
+
+
+@pytest.mark.parametrize(
+    "string,weight",
+    # Make phase explicit for test simplicity
+    list(itertools.product(["-ZYX", "-IXIIXYZ", "+ZXYXY"], [1, 2, 3])),
+)
+def test_weight_n_substrings(string, weight):
+    pauli_string = PauliString(string)
+    qubit_count = pauli_string.qubit_count
+    substrings = []
+    for indices in itertools.combinations(range(qubit_count), weight):
+        factors = [string[qubit + 1] if qubit in indices else "I" for qubit in range(qubit_count)]
+        substrings.append(PauliString(f"{string[0]}{''.join(factors)}"))
+    actual = pauli_string.weight_n_substrings(weight)
+    assert actual == tuple(substrings)
+    assert len(actual) == n_choose_r(qubit_count, weight)
+
+
+def n_choose_r(n, k):
+    m = min(k, n - k)
+    return functools.reduce(lambda x, y: x * y, range(m + 1, n + 1)) // (math.factorial(n - m))
 
 
 @pytest.mark.parametrize(
