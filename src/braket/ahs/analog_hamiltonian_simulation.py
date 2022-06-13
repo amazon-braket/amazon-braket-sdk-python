@@ -45,7 +45,7 @@ class AnalogHamiltonianSimulation:
 
     def to_ir(self) -> ir.Program:
         return ir.Program(
-            setup=ir.Setup(atom_array=self._register_to_ir()), hamiltonian=self._hamiltonian_to_ir()
+            setup=ir.Setup(atomArray=self._register_to_ir()), hamiltonian=self._hamiltonian_to_ir()
         )
 
     def _register_to_ir(self) -> ir.AtomArray:
@@ -60,7 +60,7 @@ class AnalogHamiltonianSimulation:
             term_type, term_ir = _get_term_ir(term)
             terms[term_type].append(term_ir)
         return ir.Hamiltonian(
-            driving_fields=terms["driving_fields"], shifting_fields=terms["shifting_fields"]
+            drivingFields=terms["driving_fields"], shiftingFields=terms["shifting_fields"]
         )
 
 
