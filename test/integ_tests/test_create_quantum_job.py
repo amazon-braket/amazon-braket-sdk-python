@@ -70,8 +70,8 @@ def test_failed_quantum_job(aws_session, capsys):
     for data in logs_to_validate:
         assert data in log_data
 
-    assert job.metadata()["failureReason"] == (
-        "AlgorithmError: Job at job_test_script:start_here exited with exit code: 1"
+    assert job.metadata()["failureReason"].startswith(
+        "AlgorithmError: Job at job_test_script:start_here"
     )
 
 
