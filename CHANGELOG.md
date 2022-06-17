@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.25.1.post0 (2022-06-17)
+
+### Documentation Changes
+
+ * remove s3 references from README
+
 ## v1.25.1 (2022-06-16)
 
 ### Bug Fixes and Other Changes
