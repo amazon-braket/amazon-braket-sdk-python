@@ -45,8 +45,14 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
-from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
+from braket.task_result import (
+    AnalogHamiltonianSimulationTaskResult,
+    AnnealingTaskResult,
+    GateModelTaskResult,
+    PhotonicModelTaskResult,
+)
 from braket.tasks import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
@@ -603,3 +609,10 @@ def _(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
 @_format_result.register
 def _(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
     return PhotonicModelQuantumTaskResult.from_object(result)
+
+
+@_format_result.register
+def _(
+    result: AnalogHamiltonianSimulationTaskResult,
+) -> AnalogHamiltonianSimulationQuantumTaskResult:
+    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(result)

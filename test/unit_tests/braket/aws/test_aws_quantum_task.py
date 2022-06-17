@@ -40,6 +40,7 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
@@ -265,6 +266,22 @@ def test_result_photonic_model(photonic_model_task):
     s3_bucket = photonic_model_task.metadata()["outputS3Bucket"]
     s3_object_key = photonic_model_task.metadata()["outputS3Directory"]
     photonic_model_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_analog_hamiltonian_simulation(quantum_task):
+    _mock_metadata(quantum_task._aws_session, "COMPLETED")
+    _mock_s3(quantum_task._aws_session, MockS3.MOCK_S3_RESULT_ANALOG_HAMILTONIAN_SIMULTION)
+
+    expected = AnalogHamiltonianSimulationQuantumTaskResult.from_string(
+        MockS3.MOCK_S3_RESULT_ANALOG_HAMILTONIAN_SIMULTION
+    )
+    assert quantum_task.result() == expected
+
+    s3_bucket = quantum_task.metadata()["outputS3Bucket"]
+    s3_object_key = quantum_task.metadata()["outputS3Directory"]
+    quantum_task._aws_session.retrieve_s3_object_body.assert_called_with(
         s3_bucket, f"{s3_object_key}/results.json"
     )
 
