@@ -79,14 +79,13 @@ from braket.aws import AwsDevice
 from braket.circuits import Circuit
 
 device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
-s3_folder = ("amazon-braket-Your-Bucket-Name", "folder-name") # Use the S3 bucket you created during onboarding
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder, shots=100)
+task = device.run(bell, shots=100)
 print(task.result().measurement_counts)
 ```
 
-The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). The `s3_folder` statement defines the Amazon S3 bucket for the task result and the folder in the bucket to store the task result. This folder is created when you run the task. It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job. This example can be found in `../examples/bell.py`.
+The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job. This example can be found in `../examples/bell.py`.
 
 ### Running multiple tasks at once
 
@@ -94,7 +93,7 @@ Many quantum algorithms need to run multiple independent circuits, and submittin
 
 ```python
 circuits = [bell for _ in range(5)]
-batch = device.run_batch(circuits, s3_folder, shots=100)
+batch = device.run_batch(circuits, shots=100)
 print(batch.results()[0].measurement_counts)  # The result of the first task in the batch
 ```
 
@@ -139,17 +138,16 @@ from braket.circuits import Circuit
 from braket.aws import AwsDevice
 
 device = AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-8")
-s3_folder = ("amazon-braket-Your-Bucket-Name", "RIGETTI") # Use the S3 bucket you created during onboarding
 
 bell = Circuit().h(0).cnot(0, 1)
-task = device.run(bell, s3_folder) 
+task = device.run(bell) 
 print(task.result().measurement_counts)
 ```
 
 When you execute your task, Amazon Braket polls for a result. By default, Braket polls for 5 days; however, it is possible to change this by modifying the `poll_timeout_seconds` parameter in `AwsDevice.run`, as in the example below. Keep in mind that if your polling timeout is too short, results may not be returned within the polling time, such as when a QPU is unavailable, and a local timeout error is returned. You can always restart the polling by using `task.result()`.
 
 ```python
-task = device.run(bell, s3_folder, poll_timeout_seconds=86400)  # 1 day 
+task = device.run(bell, poll_timeout_seconds=86400)  # 1 day 
 print(task.result().measurement_counts)
 ```
 
