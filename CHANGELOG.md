@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.25.1 (2022-06-16)
+
+### Bug Fixes and Other Changes
+
+ * change failureReason string check to let test pass
+
 ## v1.25.0 (2022-06-08)
 
 ### Features
