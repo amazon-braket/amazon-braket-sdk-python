@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.25.1.post0 (2022-06-17)
+
+### Documentation Changes
+
+ * remove s3 references from README
+
+## v1.25.1 (2022-06-16)
+
+### Bug Fixes and Other Changes
+
+ * change failureReason string check to let test pass
+
+## v1.25.0 (2022-06-08)
+
+### Features
+
+ * Add method for updating the user agent for braket client
+
 ## v1.24.0 (2022-06-02)
 
 ### Features
