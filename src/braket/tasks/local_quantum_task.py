@@ -23,7 +23,10 @@ class LocalQuantumTask(QuantumTask):
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
     """
 
-    def __init__(self, result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]):
+    def __init__(
+        self,
+        result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult],
+    ):
         self._id = result.task_metadata.id
         self._result = result
 
@@ -37,7 +40,9 @@ class LocalQuantumTask(QuantumTask):
     def state(self) -> str:
         return "COMPLETED"
 
-    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    def result(
+        self,
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         return self._result
 
     def async_result(self) -> asyncio.Task:
