@@ -21,6 +21,7 @@ from typing import Any, Dict, Union
 
 import boto3
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
@@ -44,8 +45,14 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
-from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
+from braket.task_result import (
+    AnalogHamiltonianSimulationTaskResult,
+    AnnealingTaskResult,
+    GateModelTaskResult,
+    PhotonicModelTaskResult,
+)
 from braket.tasks import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
@@ -70,7 +77,9 @@ class AwsQuantumTask(QuantumTask):
     def create(
         aws_session: AwsSession,
         device_arn: str,
-        task_specification: Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram],
+        task_specification: Union[
+            Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
+        ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
@@ -88,7 +97,7 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]):
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]): # noqa
                 The specification of the task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
@@ -525,6 +534,22 @@ def _(
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
 
+@_create_internal.register
+def _(
+    analog_hamiltonian_simulation: AnalogHamiltonianSimulation,
+    aws_session: AwsSession,
+    create_task_kwargs: Dict[str, Any],
+    device_arn: str,
+    device_parameters: dict,
+    _,
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    create_task_kwargs.update({"action": analog_hamiltonian_simulation.to_ir().json()})
+    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
 def _create_annealing_device_params(device_params, device_arn):
     if type(device_params) is not dict:
         device_params = device_params.dict()
@@ -584,3 +609,10 @@ def _(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
 @_format_result.register
 def _(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
     return PhotonicModelQuantumTaskResult.from_object(result)
+
+
+@_format_result.register
+def _(
+    result: AnalogHamiltonianSimulationTaskResult,
+) -> AnalogHamiltonianSimulationQuantumTaskResult:
+    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(result)

@@ -21,6 +21,7 @@ import pytest
 from common_test_utils import MockS3
 from jsonschema import validate
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_task import _create_annealing_device_params
@@ -39,6 +40,7 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
@@ -110,6 +112,13 @@ def openqasm_program():
 @pytest.fixture
 def blackbird_program():
     return BlackbirdProgram(source="Vac | q[0]")
+
+
+@pytest.fixture
+def ahs_problem():
+    mock = Mock(spec=AnalogHamiltonianSimulation)
+    mock.to_ir.return_value.json.return_value = "Test AHS Problem"
+    return mock
 
 
 def test_equality(arn, aws_session):
@@ -257,6 +266,22 @@ def test_result_photonic_model(photonic_model_task):
     s3_bucket = photonic_model_task.metadata()["outputS3Bucket"]
     s3_object_key = photonic_model_task.metadata()["outputS3Directory"]
     photonic_model_task._aws_session.retrieve_s3_object_body.assert_called_with(
+        s3_bucket, f"{s3_object_key}/results.json"
+    )
+
+
+def test_result_analog_hamiltonian_simulation(quantum_task):
+    _mock_metadata(quantum_task._aws_session, "COMPLETED")
+    _mock_s3(quantum_task._aws_session, MockS3.MOCK_S3_RESULT_ANALOG_HAMILTONIAN_SIMULTION)
+
+    expected = AnalogHamiltonianSimulationQuantumTaskResult.from_string(
+        MockS3.MOCK_S3_RESULT_ANALOG_HAMILTONIAN_SIMULTION
+    )
+    assert quantum_task.result() == expected
+
+    s3_bucket = quantum_task.metadata()["outputS3Bucket"]
+    s3_object_key = quantum_task.metadata()["outputS3Directory"]
+    quantum_task._aws_session.retrieve_s3_object_body.assert_called_with(
         s3_bucket, f"{s3_object_key}/results.json"
     )
 
@@ -418,6 +443,20 @@ def test_create_blackbird_program(aws_session, arn, blackbird_program):
         aws_session,
         XANADU_ARN,
         blackbird_program.json(),
+        S3_TARGET,
+        shots,
+    )
+
+
+def test_create_ahs_problem(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(aws_session, SIMULATOR_ARN, ahs_problem, S3_TARGET, shots)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
         S3_TARGET,
         shots,
     )
