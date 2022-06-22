@@ -678,6 +678,56 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "ccnot $4, $5, $6;",
         ),
+        (
+            Gate.Unitary(Gate.CCNot().to_matrix()),
+            [4, 5, 6],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary([[1.0, 0, 0, 0, 0, 0, 0, 0], [0, 1.0, 0, 0, 0, 0, 0, 0], "
+            "[0, 0, 1.0, 0, 0, 0, 0, 0], [0, 0, 0, 1.0, 0, 0, 0, 0], [0, 0, 0, 0, 1.0, 0, 0, 0], "
+            "[0, 0, 0, 0, 0, 1.0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1.0], [0, 0, 0, 0, 0, 0, 1.0, 0]]"
+            ") q[4], q[5], q[6]",
+        ),
+        (
+            Gate.Unitary(Gate.CCNot().to_matrix()),
+            [4, 5, 6],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket unitary([[1.0, 0, 0, 0, 0, 0, 0, 0], [0, 1.0, 0, 0, 0, 0, 0, 0], "
+            "[0, 0, 1.0, 0, 0, 0, 0, 0], [0, 0, 0, 1.0, 0, 0, 0, 0], [0, 0, 0, 0, 1.0, 0, 0, 0], "
+            "[0, 0, 0, 0, 0, 1.0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1.0], [0, 0, 0, 0, 0, 0, 1.0, 0]]"
+            ") $4, $5, $6",
+        ),
+        (
+            Gate.Unitary(Gate.ECR().to_matrix()),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary([[0, 0, 0.7071067811865475, 0.7071067811865475im], "
+            "[0, 0, 0.7071067811865475im, 0.7071067811865475], [0.7071067811865475, "
+            "-0.7071067811865475im, 0, 0], [-0.7071067811865475im, 0.7071067811865475, 0, 0]]) "
+            "q[4], q[5]",
+        ),
+        (
+            Gate.Unitary(Gate.ECR().to_matrix()),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket unitary([[0, 0, 0.7071067811865475, 0.7071067811865475im], "
+            "[0, 0, 0.7071067811865475im, 0.7071067811865475], [0.7071067811865475, "
+            "-0.7071067811865475im, 0, 0], [-0.7071067811865475im, 0.7071067811865475, 0, 0]]) "
+            "$4, $5",
+        ),
+        (
+            Gate.Unitary(Gate.T().to_matrix()),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary([[1.0, 0], [0, 0.7071067811865476 + 0.7071067811865475im]]) "
+            "q[4]",
+        ),
+        (
+            Gate.Unitary(Gate.T().to_matrix()),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket unitary([[1.0, 0], [0, 0.7071067811865476 + 0.7071067811865475im]]) "
+            "$4",
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):

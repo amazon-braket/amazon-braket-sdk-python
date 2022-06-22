@@ -1913,6 +1913,19 @@ class Unitary(Gate):
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
 
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
+        formatted_matrix = np.array2string(
+            self._matrix,
+            separator=", ",
+            formatter={"all": lambda x: format_complex(x)},
+            threshold=float("inf"),
+        ).replace("\n", "")
+
+        return f"#pragma braket unitary({formatted_matrix}) {', '.join(qubits)}"
+
     def __eq__(self, other):
         if isinstance(other, Unitary):
             return self.matrix_equivalence(other)
@@ -1984,3 +1997,25 @@ def get_angle(self, **kwargs):
         self.angle.subs(kwargs) if isinstance(self.angle, FreeParameterExpression) else self.angle
     )
     return type(self)(angle=new_angle)
+
+
+def format_complex(number: complex) -> str:
+    """
+    Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
+
+    Args:
+        number (complex): A complex number.
+
+    Returns:
+        str: The formatted string.
+    """
+    if number.real:
+        if number.imag:
+            return f"{number.real} + {number.imag}im"
+        else:
+            return f"{number.real}"
+    else:
+        if number.imag:
+            return f"{number.imag}im"
+        else:
+            return "0"
