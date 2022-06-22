@@ -118,7 +118,6 @@ class Instruction:
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
         """
-        print(type(self._operator))
         return self._operator.to_ir(
             [int(qubit) for qubit in self._target],
             ir_type=ir_type,
