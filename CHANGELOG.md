@@ -1,5 +1,60 @@
 # Changelog
 
+## v1.25.1.post0 (2022-06-17)
+
+### Documentation Changes
+
+ * remove s3 references from README
+
+## v1.25.1 (2022-06-16)
+
+### Bug Fixes and Other Changes
+
+ * change failureReason string check to let test pass
+
+## v1.25.0 (2022-06-08)
+
+### Features
+
+ * Add method for updating the user agent for braket client
+
+## v1.24.0 (2022-06-02)
+
+### Features
+
+ * Add support for photonic computations
+
+## v1.23.2 (2022-05-24)
+
+### Bug Fixes and Other Changes
+
+ * pin coverage dependency only for test extra
+
+## v1.23.1 (2022-05-20)
+
+### Bug Fixes and Other Changes
+
+ * removing validation for disable_qubit_rewiring
+
+## v1.23.0 (2022-05-19)
+
+### Features
+
+ * allow job role to be set via env variable
+ * allow user to set region+endpoint through env variables
+
+## v1.22.0 (2022-05-18)
+
+### Features
+
+ * Noise models
+
+## v1.21.1 (2022-05-17)
+
+### Bug Fixes and Other Changes
+
+ * broken links for examples
+
 ## v1.21.0 (2022-05-10)
 
 ### Features

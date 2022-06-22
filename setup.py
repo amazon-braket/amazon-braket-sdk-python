@@ -28,10 +28,10 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-default-simulator",
+        "amazon-braket-schemas>=1.10.0",
         "backoff",
         "boltons",
         "boto3",
-        "coverage==5.5",
         "nest-asyncio",
         "networkx",
         "numpy",
@@ -41,6 +41,7 @@ setup(
         "test": [
             "black",
             "botocore",
+            "coverage==5.5",
             "flake8",
             "isort",
             "jsonschema==3.2.0",

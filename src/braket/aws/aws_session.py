@@ -60,8 +60,12 @@ class AwsSession(object):
             )
             self.braket_client = braket_client
         else:
-            self.boto_session = boto_session or boto3.Session()
-            self.braket_client = self.boto_session.client("braket", config=self._config)
+            self.boto_session = boto_session or boto3.Session(
+                region_name=os.environ.get("AWS_REGION")
+            )
+            self.braket_client = self.boto_session.client(
+                "braket", config=self._config, endpoint_url=os.environ.get("BRAKET_ENDPOINT")
+            )
 
         self._update_user_agent()
         self._custom_default_bucket = bool(default_bucket)
@@ -133,6 +137,19 @@ class AwsSession(object):
         self.braket_client._client_config.user_agent = (
             f"{self.braket_client._client_config.user_agent} {additional_user_agent_fields}"
         )
+
+    def add_braket_user_agent(self, user_agent: str) -> None:
+        """
+        Appends the `user-agent` value to the User-Agent header, if it does not yet exist in the
+        header. This method is typically only relevant for libraries integrating with the
+        Amazon Braket SDK.
+
+        Args:
+            user_agent (str): The user_agent value to append to the header.
+        """
+        existing_user_agent = self.braket_client._client_config.user_agent
+        if user_agent not in existing_user_agent:
+            self.braket_client._client_config.user_agent = f"{existing_user_agent} {user_agent}"
 
     #
     # Quantum Tasks
@@ -729,4 +746,11 @@ class AwsSession(object):
             )
         else:
             boto_session = boto3.Session(region_name=new_region)
-        return AwsSession(boto_session=boto_session, config=config, default_bucket=default_bucket)
+        copied_session = AwsSession(
+            boto_session=boto_session, config=config, default_bucket=default_bucket
+        )
+        # Preserve user_agent information
+        copied_session.braket_client._client_config.user_agent = (
+            self.braket_client._client_config.user_agent
+        )
+        return copied_session
