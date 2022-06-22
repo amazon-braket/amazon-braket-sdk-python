@@ -41,8 +41,6 @@ from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
-from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
-from braket.ir.jaqcd import Program
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
@@ -1092,8 +1090,6 @@ class Circuit:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
             properties don't correspond to the `ir_type`.
         """
-        ir_instructions = [instruction.to_ir() for instruction in self.instructions]
-        ir_results = [result_type.to_ir() for result_type in self.result_types]
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
         elif ir_type == IRType.OPENQASM:
