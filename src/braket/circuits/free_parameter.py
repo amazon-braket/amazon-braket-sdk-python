@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from numbers import Number
 from typing import Dict
 
@@ -83,3 +85,13 @@ class FreeParameter(FreeParameterExpression):
             The name of the class:'FreeParameter' to represent the class.
         """
         return self.name
+
+    def to_dict(self) -> dict:
+        return {
+            "__class__": self.__class__.__name__,
+            "name": self.name,
+        }
+
+    @classmethod
+    def from_dict(cls, parameter: dict) -> FreeParameter:
+        return FreeParameter(parameter["name"])

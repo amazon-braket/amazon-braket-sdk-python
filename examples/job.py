@@ -19,6 +19,7 @@ from braket.jobs import save_job_result
 
 
 def run_job():
+    assert 0
     device = AwsDevice(os.environ.get("AMZN_BRAKET_DEVICE_ARN"))
 
     bell = Circuit().h(0).cnot(0, 1)

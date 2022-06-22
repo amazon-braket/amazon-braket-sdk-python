@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import math
 from typing import List, Optional, Sequence, Union
@@ -58,10 +60,11 @@ class AngledGate(Gate, Parameterizable):
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, float]]:
         """
-        Returns the free parameters associated with the object.
+        Returns the parameters associated with the object, either unbound free parameters or
+        bound values.
 
         Returns:
-            Union[FreeParameterExpression,, float]: Returns the free parameters or fixed value
+            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return self._parameters
@@ -76,12 +79,15 @@ class AngledGate(Gate, Parameterizable):
         """
         return self._parameters[0]
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         """
         Takes in parameters and attempts to assign them to values.
 
         Args:
             **kwargs: The parameters that are being assigned.
+
+        Returns:
+            AngledGate: A new Gate of the same type with the requested parameters bound.
 
         Raises:
             NotImplementedError: Subclasses should implement this function.

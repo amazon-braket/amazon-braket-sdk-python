@@ -146,7 +146,7 @@ def throttling_response():
 
 def test_initializes_boto_client_if_required(boto_session):
     AwsSession(boto_session=boto_session)
-    boto_session.client.assert_any_call("braket", config=None)
+    boto_session.client.assert_any_call("braket", config=None, endpoint_url=None)
 
 
 def test_user_supplied_braket_client():
@@ -158,10 +158,15 @@ def test_user_supplied_braket_client():
     assert aws_session.braket_client == braket_client
 
 
+@patch.dict("os.environ", {"BRAKET_ENDPOINT": "some-endpoint"})
 def test_config(boto_session):
     config = Mock()
     AwsSession(boto_session=boto_session, config=config)
-    boto_session.client.assert_any_call("braket", config=config)
+    boto_session.client.assert_any_call(
+        "braket",
+        config=config,
+        endpoint_url="some-endpoint",
+    )
 
 
 def test_region():
@@ -1227,8 +1232,10 @@ def test_get_log_events(aws_session, next_token):
 @patch("boto3.Session")
 def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock()
+    aws_session.braket_client._client_config.user_agent = "foo/bar"
     copied_session = AwsSession.copy_session(aws_session, "us-west-2")
     boto_session_init.assert_called_with(region_name="us-west-2")
+    assert copied_session.braket_client._client_config.user_agent == "foo/bar"
     assert copied_session._default_bucket is None
 
 
@@ -1251,3 +1258,10 @@ def test_copy_session_custom_default_bucket(mock_boto, aws_session):
     aws_session._custom_default_bucket = True
     copied_session = AwsSession.copy_session(aws_session)
     assert copied_session._default_bucket == "my-own-default"
+
+
+def test_add_braket_user_agent(aws_session):
+    user_agent = "newAgent/1.0"
+    aws_session.add_braket_user_agent(user_agent)
+    aws_session.add_braket_user_agent(user_agent)
+    assert aws_session.braket_client._client_config.user_agent.count(user_agent) == 1

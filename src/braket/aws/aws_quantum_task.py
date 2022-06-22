@@ -41,10 +41,16 @@ from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
+from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
-from braket.task_result import AnnealingTaskResult, GateModelTaskResult
-from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult, QuantumTask
+from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
+from braket.tasks import (
+    AnnealingQuantumTaskResult,
+    GateModelQuantumTaskResult,
+    PhotonicModelQuantumTaskResult,
+    QuantumTask,
+)
 
 
 class AwsQuantumTask(QuantumTask):
@@ -64,7 +70,7 @@ class AwsQuantumTask(QuantumTask):
     def create(
         aws_session: AwsSession,
         device_arn: str,
-        task_specification: Union[Circuit, Problem, OpenQasmProgram],
+        task_specification: Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
@@ -82,8 +88,8 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem]): The specification of the task
-                to run on device.
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]):
+                The specification of the task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -102,8 +108,6 @@ class AwsQuantumTask(QuantumTask):
                 without any rewiring downstream, if this is supported by the device.
                 Only applies to digital, gate-based circuits (as opposed to annealing problems).
                 If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
-                If the circuit has frozen qubits (``circuit.has_frozen_qubits==True``), then this
-                must be True, or running will throw an exception.
                 Default: False
 
             tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
@@ -192,7 +196,9 @@ class AwsQuantumTask(QuantumTask):
         self._logger = logger
 
         self._metadata: Dict[str, Any] = {}
-        self._result: Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult] = None
+        self._result: Union[
+            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+        ] = None
 
     @staticmethod
     def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
@@ -278,7 +284,11 @@ class AwsQuantumTask(QuantumTask):
         cached = self._status(True)
         return cached if cached in self.TERMINAL_STATES else self._status(metadata_absent)
 
-    def result(self) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    def result(
+        self,
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+    ]:
         """
         Get the quantum task result by polling Amazon Braket to see if the task is completed.
         Once the task is completed, the result is retrieved from S3 and returned as a
@@ -344,7 +354,9 @@ class AwsQuantumTask(QuantumTask):
 
     async def _wait_for_completion(
         self,
-    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+    ) -> Union[
+        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+    ]:
         """
         Waits for the quantum task to be completed, then returns the result from the S3 bucket.
 
@@ -406,7 +418,7 @@ class AwsQuantumTask(QuantumTask):
 
 @singledispatch
 def _create_internal(
-    task_specification: Union[Circuit, Problem],
+    task_specification: Union[Circuit, Problem, BlackbirdProgram],
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
     device_arn: str,
@@ -436,6 +448,22 @@ def _(
 
 @_create_internal.register
 def _(
+    blackbird_program: BlackbirdProgram,
+    aws_session: AwsSession,
+    create_task_kwargs: Dict[str, any],
+    device_arn: str,
+    _device_parameters: Union[dict, BraketSchemaBase],
+    _disable_qubit_rewiring,
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    create_task_kwargs.update({"action": blackbird_program.json()})
+    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+@_create_internal.register
+def _(
     circuit: Circuit,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
@@ -446,11 +474,6 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     validate_circuit_and_shots(circuit, create_task_kwargs["shots"])
-    if circuit.qubits_frozen and not disable_qubit_rewiring:
-        raise ValueError(
-            "disable_qubit_rewiring must be True to run circuit with compiler directives"
-        )
-
     # TODO: Update this to use `deviceCapabilities` from Amazon Braket's GetDevice operation
     # in order to decide what parameters to build.
     paradigm_parameters = GateModelParameters(
@@ -556,3 +579,8 @@ def _(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
 @_format_result.register
 def _(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
     return AnnealingQuantumTaskResult.from_object(result)
+
+
+@_format_result.register
+def _(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
+    return PhotonicModelQuantumTaskResult.from_object(result)
