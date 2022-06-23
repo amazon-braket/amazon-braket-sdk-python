@@ -734,13 +734,13 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             Gate.Unitary(np.round(Gate.T().to_matrix(), 8)),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket unitary([" "[1.0, 0], [0, 0.70710678 + 0.70710678im]" "]) q[4]",
+            "#pragma braket unitary([[1.0, 0], [0, 0.70710678 + 0.70710678im]]) q[4]",
         ),
         (
             Gate.Unitary(np.round(Gate.T().to_matrix(), 8)),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "#pragma braket unitary([" "[1.0, 0], [0, 0.70710678 + 0.70710678im]]) $4",
+            "#pragma braket unitary([[1.0, 0], [0, 0.70710678 + 0.70710678im]]) $4",
         ),
     ],
 )
