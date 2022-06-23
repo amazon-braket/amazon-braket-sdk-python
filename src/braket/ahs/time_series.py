@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass
 from numbers import Number
 from typing import Iterator, List
@@ -26,7 +27,8 @@ class TimeSeriesItem:
 
 class TimeSeries:
     def __init__(self):
-        self._series = dict()
+        self._series = OrderedDict()
+        self._sorted = True
 
     def put(
         self,
@@ -43,7 +45,11 @@ class TimeSeries:
         Returns:
             TimeSeries: returns self (to allow for chaining).
         """
-        self._series[time] = TimeSeriesItem(time, value)
+        if time in self._series:
+            self._series[time] = TimeSeriesItem(time, value)
+        else:
+            self._series[time] = TimeSeriesItem(time, value)
+            self._sorted = False
         return self
 
     def times(self) -> List[Number]:
@@ -52,6 +58,7 @@ class TimeSeries:
         Returns:
             List[Number]: The times in the time series.
         """
+        self._ensure_sorted()
         return [item.time for item in self._series.values()]
 
     def values(self) -> List[Number]:
@@ -60,10 +67,17 @@ class TimeSeries:
         Returns:
             List[Number]: The values in the time series.
         """
+        self._ensure_sorted()
         return [item.value for item in self._series.values()]
 
     def __iter__(self) -> Iterator:
+        self._ensure_sorted()
         return self._series.values().__iter__()
 
     def __len__(self):
         return self._series.values().__len__()
+
+    def _ensure_sorted(self):
+        if not self._sorted:
+            self._series = OrderedDict(sorted(self._series.items()))
+            self._sorted = True
