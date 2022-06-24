@@ -29,6 +29,7 @@ class TimeSeries:
     def __init__(self):
         self._series = OrderedDict()
         self._sorted = True
+        self._largest_time = -1
 
     def put(
         self,
@@ -47,6 +48,9 @@ class TimeSeries:
         """
         if time in self._series:
             self._series[time] = TimeSeriesItem(time, value)
+        elif time > self._largest_time:
+            self._series[time] = TimeSeriesItem(time, value)
+            self._largest_time = time
         else:
             self._series[time] = TimeSeriesItem(time, value)
             self._sorted = False
