@@ -256,9 +256,8 @@ class TensorProduct(Observable):
     ) -> str:
         print(target)
         return " @ ".join(
-            obs._to_openqasm(
-                serialization_properties, (targ,)
-            ) for obs, targ in zip(self._factors, target)
+            obs._to_openqasm(serialization_properties, (targ,))
+            for obs, targ in zip(self._factors, target)
         )
 
     @property
