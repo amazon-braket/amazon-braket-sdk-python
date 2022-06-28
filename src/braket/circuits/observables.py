@@ -28,7 +28,7 @@ from braket.circuits.quantum_operator_helpers import (
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.qubit_set import QubitSet
-from braket.circuits.serialization import OpenQASMSerializationProperties
+from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
 
 
 class H(StandardObservable):
@@ -254,9 +254,12 @@ class TensorProduct(Observable):
     def _to_openqasm(
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
-        print(target)
         return " @ ".join(
-            obs._to_openqasm(serialization_properties, (targ,))
+            obs.to_ir(
+                target=QubitSet(targ),
+                ir_type=IRType.OPENQASM,
+                serialization_properties=serialization_properties,
+            )
             for obs, targ in zip(self._factors, target)
         )
 
