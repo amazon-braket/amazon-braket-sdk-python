@@ -126,6 +126,66 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket result expectation i all",
         ),
+        (
+            ResultType.StateVector(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result state_vector",
+        ),
+        (
+            ResultType.DensityMatrix(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result density_matrix",
+        ),
+        (
+            ResultType.DensityMatrix([0, 2]),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result density_matrix q[0], q[2]",
+        ),
+        (
+            ResultType.DensityMatrix(0),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket result density_matrix $0",
+        ),
+        (
+            ResultType.Amplitude(["01", "10"]),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            '#pragma braket result amplitude "01", "10"',
+        ),
+        (
+            ResultType.Probability(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result probability",
+        ),
+        (
+            ResultType.Probability([0, 2]),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result probability q[0], q[2]",
+        ),
+        (
+            ResultType.Probability(0),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket result probability $0",
+        ),
+        (
+            ResultType.Sample(Observable.I(), target=0),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result sample i(q[0])",
+        ),
+        (
+            ResultType.Sample(Observable.I()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result sample i all",
+        ),
+        (
+            ResultType.Variance(Observable.I(), target=0),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result variance i(q[0])",
+        ),
+        (
+            ResultType.Variance(Observable.I()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result variance i all",
+        ),
     ],
 )
 def test_result_to_ir_openqasm(result_type, serialization_properties, expected_ir):
