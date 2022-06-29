@@ -28,7 +28,7 @@ from braket.circuits.quantum_operator_helpers import (
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.qubit_set import QubitSet
-from braket.circuits.serialization import OpenQASMSerializationProperties
+from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
 
 
 class H(StandardObservable):
@@ -43,6 +43,15 @@ class H(StandardObservable):
 
     def _to_jaqcd(self) -> List[str]:
         return ["h"]
+
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> str:
+        if target:
+            qubit_target = serialization_properties.format_target(int(target[0]))
+            return f"h({qubit_target})"
+        else:
+            return "h all"
 
     def to_matrix(self) -> np.ndarray:
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
@@ -108,6 +117,15 @@ class X(StandardObservable):
     def _to_jaqcd(self) -> List[str]:
         return ["x"]
 
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> str:
+        if target:
+            qubit_target = serialization_properties.format_target(int(target[0]))
+            return f"x({qubit_target})"
+        else:
+            return "x all"
+
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
@@ -132,6 +150,15 @@ class Y(StandardObservable):
     def _to_jaqcd(self) -> List[str]:
         return ["y"]
 
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> str:
+        if target:
+            qubit_target = serialization_properties.format_target(int(target[0]))
+            return f"y({qubit_target})"
+        else:
+            return "y all"
+
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
@@ -155,6 +182,15 @@ class Z(StandardObservable):
 
     def _to_jaqcd(self) -> List[str]:
         return ["z"]
+
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> str:
+        if target:
+            qubit_target = serialization_properties.format_target(int(target[0]))
+            return f"z({qubit_target})"
+        else:
+            return "z all"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -214,6 +250,18 @@ class TensorProduct(Observable):
         for obs in self.factors:
             ir.extend(obs.to_ir())
         return ir
+
+    def _to_openqasm(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> str:
+        return " @ ".join(
+            obs.to_ir(
+                target=QubitSet(targ),
+                ir_type=IRType.OPENQASM,
+                serialization_properties=serialization_properties,
+            )
+            for obs, targ in zip(self._factors, target)
+        )
 
     @property
     def factors(self) -> Tuple[Observable, ...]:
