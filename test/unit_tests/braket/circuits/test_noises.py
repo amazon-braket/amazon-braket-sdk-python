@@ -19,6 +19,11 @@ import pytest
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Instruction, Noise, QubitSet
 from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 from braket.ir.jaqcd.shared_models import (
     DampingProbability,
     DampingSingleProbability,
@@ -532,3 +537,189 @@ def test_invalid_values_pauli_channel_two_qubit(probs):
 def test_valid_values_pauli_channel_two_qubit(probs):
     noise = Noise.TwoQubitPauliChannel(probs)
     assert len(noise.to_matrix()) == 16
+
+
+@pytest.mark.parametrize(
+    "noise, serialization_properties, target, expected_ir",
+    [
+        (
+            Noise.BitFlip(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise bit_flip(0.5) q[3]",
+        ),
+        (
+            Noise.BitFlip(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise bit_flip(0.5) $3",
+        ),
+        (
+            Noise.PhaseFlip(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise phase_flip(0.5) q[3]",
+        ),
+        (
+            Noise.PhaseFlip(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise phase_flip(0.5) $3",
+        ),
+        (
+            Noise.PauliChannel(0.1, 0.2, 0.3),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) q[3]",
+        ),
+        (
+            Noise.PauliChannel(0.1, 0.2, 0.3),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) $3",
+        ),
+        (
+            Noise.Depolarizing(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise depolarizing(0.5) q[3]",
+        ),
+        (
+            Noise.Depolarizing(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise depolarizing(0.5) $3",
+        ),
+        (
+            Noise.TwoQubitDepolarizing(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3, 5],
+            "#pragma braket noise two_qubit_depolarizing(0.5) q[3], q[5]",
+        ),
+        (
+            Noise.TwoQubitDepolarizing(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 5],
+            "#pragma braket noise two_qubit_depolarizing(0.5) $3, $5",
+        ),
+        (
+            Noise.TwoQubitDephasing(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3, 5],
+            "#pragma braket noise two_qubit_dephasing(0.5) q[3], q[5]",
+        ),
+        (
+            Noise.TwoQubitDephasing(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 5],
+            "#pragma braket noise two_qubit_dephasing(0.5) $3, $5",
+        ),
+        (
+            Noise.AmplitudeDamping(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise amplitude_damping(0.5) q[3]",
+        ),
+        (
+            Noise.AmplitudeDamping(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise amplitude_damping(0.5) $3",
+        ),
+        (
+            Noise.GeneralizedAmplitudeDamping(0.5, 0.1),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise generalized_amplitude_damping(0.5, 0.1) q[3]",
+        ),
+        (
+            Noise.GeneralizedAmplitudeDamping(0.5, 0.1),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise generalized_amplitude_damping(0.5, 0.1) $3",
+        ),
+        (
+            Noise.PhaseDamping(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise phase_damping(0.5) q[3]",
+        ),
+        (
+            Noise.PhaseDamping(0.5),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise phase_damping(0.5) $3",
+        ),
+        (
+            Noise.Kraus(
+                [
+                    np.eye(4) * np.sqrt(0.9),
+                    np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
+                ]
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3, 5],
+            "#pragma braket noise kraus(["
+            "[0.9486832980505138, 0, 0, 0], "
+            "[0, 0.9486832980505138, 0, 0], "
+            "[0, 0, 0.9486832980505138, 0], "
+            "[0, 0, 0, 0.9486832980505138]], ["
+            "[0, 0.31622776601683794, 0, 0], "
+            "[0.31622776601683794, 0, 0, 0], "
+            "[0, 0, 0, 0.31622776601683794], "
+            "[0, 0, 0.31622776601683794, 0]]) q[3], q[5]",
+        ),
+        (
+            Noise.Kraus(
+                [
+                    np.eye(4) * np.sqrt(0.9),
+                    np.kron([[1.0, 0.0], [0.0, 1.0]], [[0.0, 1.0], [1.0, 0.0]]) * np.sqrt(0.1),
+                ]
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 5],
+            "#pragma braket noise kraus(["
+            "[0.9486832980505138, 0, 0, 0], "
+            "[0, 0.9486832980505138, 0, 0], "
+            "[0, 0, 0.9486832980505138, 0], "
+            "[0, 0, 0, 0.9486832980505138]], ["
+            "[0, 0.31622776601683794, 0, 0], "
+            "[0.31622776601683794, 0, 0, 0], "
+            "[0, 0, 0, 0.31622776601683794], "
+            "[0, 0, 0.31622776601683794, 0]]) $3, $5",
+        ),
+        (
+            Noise.Kraus(
+                [
+                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                    np.array([[0, 0.31622777], [0.31622777, 0]]),
+                ]
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "#pragma braket noise kraus(["
+            "[0.9486833im, 0], [0, 0.9486833im]], ["
+            "[0, 0.31622777], [0.31622777, 0]]) q[3]",
+        ),
+        (
+            Noise.Kraus(
+                [
+                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                    np.array([[0, 0.31622777], [0.31622777, 0]]),
+                ]
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "#pragma braket noise kraus(["
+            "[0.9486833im, 0], [0, 0.9486833im]], ["
+            "[0, 0.31622777], [0.31622777, 0]]) $3",
+        ),
+    ],
+)
+def test_noise_to_ir_openqasm(noise, serialization_properties, target, expected_ir):
+    assert (
+        noise.to_ir(
+            target, ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        )
+        == expected_ir
+    )
