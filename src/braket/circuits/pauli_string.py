@@ -85,9 +85,10 @@ class PauliString:
         )
 
     def weight_n_substrings(self, weight: int) -> Tuple[PauliString, ...]:
-        """Returns every substring of this Pauli string with exactly `weight` non-identity factors.
+        r"""Returns every substring of this Pauli string with exactly `weight` nontrivial factors.
 
-        The number of substrings is equal to `self.qubit_count` choose `weight`.
+        The number of substrings is equal to :math:`\binom{n}{w}`, where :math`n` is the number of
+        nontrivial (non-identity) factors in the Pauli string and :math`w` is `weight`.
 
         Args:
             weight (int): The number of non-identity factors in the substrings.
@@ -96,7 +97,7 @@ class PauliString:
             Tuple[PauliString, ...]: A tuple of weight-n Pauli substrings.
         """
         substrings = []
-        for indices in itertools.combinations(range(self._qubit_count), weight):
+        for indices in itertools.combinations(self._nontrivial, weight):
             factors = [
                 self._nontrivial[qubit]
                 if qubit in set(indices).intersection(self._nontrivial)

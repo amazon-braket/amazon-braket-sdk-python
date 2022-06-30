@@ -92,13 +92,14 @@ def test_index_out_of_bounds(string):
 def test_weight_n_substrings(string, weight):
     pauli_string = PauliString(string)
     qubit_count = pauli_string.qubit_count
+    nontrivial = [qubit for qubit in range(qubit_count) if pauli_string[qubit]]
     substrings = []
-    for indices in itertools.combinations(range(qubit_count), weight):
+    for indices in itertools.combinations(nontrivial, weight):
         factors = [string[qubit + 1] if qubit in indices else "I" for qubit in range(qubit_count)]
         substrings.append(PauliString(f"{string[0]}{''.join(factors)}"))
     actual = pauli_string.weight_n_substrings(weight)
     assert actual == tuple(substrings)
-    assert len(actual) == n_choose_k(qubit_count, weight)
+    assert len(actual) == n_choose_k(len(nontrivial), weight)
 
 
 def n_choose_k(n, k):
