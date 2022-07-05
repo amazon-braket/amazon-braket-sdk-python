@@ -124,7 +124,7 @@ setup(
         (
             "amazon-braket-default-simulator "
             "@ git+https://github.com/aws/amazon-braket-default-simulator-python.git"
-            "@openqasm-local-simulator"
+            "@feature/openqasm-local-simulator"
         ),
         "backoff",
         "boltons",
