@@ -27,6 +27,8 @@ from botocore.exceptions import ClientError
 
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
+from braket.tracking.tracking_context import broadcast_event
+from braket.tracking.tracking_events import _TaskCreationEvent, _TaskGetEvent
 
 
 class AwsSession(object):
@@ -76,6 +78,7 @@ class AwsSession(object):
         self._sts = None
         self._logs = None
         self._ecr = None
+        self._pricing = None
 
     @property
     def region(self):
@@ -114,6 +117,14 @@ class AwsSession(object):
         if not self._ecr:
             self._ecr = self.boto_session.client("ecr", region_name=self.region)
         return self._ecr
+
+    @property
+    def pricing_client(self):
+        if not self._pricing:
+            self._pricing = self.boto_session.client(
+                "pricing", region_name="us-east-1"
+            )  # No region for pricing
+        return self._pricing
 
     def _update_user_agent(self):
         """
@@ -177,7 +188,16 @@ class AwsSession(object):
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
             boto3_kwargs.update({"jobToken": job_token})
+        self.add_braket_user_agent("({len(active_trackers)} Active Cost Trackers)")
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
+        broadcast_event(
+            _TaskCreationEvent(
+                arn=response["quantumTaskArn"],
+                shots=boto3_kwargs["shots"],
+                is_job_task=(job_token is not None),
+                device=boto3_kwargs["deviceArn"],
+            )
+        )
         return response["quantumTaskArn"]
 
     def create_job(self, **boto3_kwargs) -> str:
@@ -221,7 +241,9 @@ class AwsSession(object):
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
-        return self.braket_client.get_quantum_task(quantumTaskArn=arn)
+        response = self.braket_client.get_quantum_task(quantumTaskArn=arn)
+        broadcast_event(_TaskGetEvent(arn=response["quantumTaskArn"], status=response["status"]))
+        return response
 
     def get_default_jobs_role(self) -> str:
         """
