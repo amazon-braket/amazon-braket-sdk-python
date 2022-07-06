@@ -338,13 +338,16 @@ def test_cancel_quantum_task(aws_session):
 
 def test_create_quantum_task(aws_session):
     arn = "foo:bar:arn"
-    aws_session.braket_client.create_quantum_task.return_value = {"quantumTaskArn": arn}
+    aws_session.braket_client.create_quantum_task.return_value = {        "quantumTaskArn": arn
+    }
 
     kwargs = {
         "backendArn": "arn:aws:us-west-2:abc:xyz:abc",
         "cwLogGroupArn": "arn:aws:us-west-2:abc:xyz:abc",
         "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-bar-1/output.json",
         "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
+        "shots":1,
+        "deviceArn":"foo:bar:device_arn"
     }
     assert aws_session.create_quantum_task(**kwargs) == arn
     aws_session.braket_client.create_quantum_task.assert_called_with(**kwargs)
@@ -353,13 +356,17 @@ def test_create_quantum_task(aws_session):
 def test_create_quantum_task_with_job_token(aws_session):
     arn = "arn:aws:braket:us-west-2:1234567890:task/task-name"
     job_token = "arn:aws:braket:us-west-2:1234567890:job/job-name"
-    aws_session.braket_client.create_quantum_task.return_value = {"quantumTaskArn": arn}
+    shots = 1
+    aws_session.braket_client.create_quantum_task.return_value = {        "quantumTaskArn": arn
+    }
 
     kwargs = {
         "backendArn": "arn:aws:us-west-2:abc:xyz:abc",
         "cwLogGroupArn": "arn:aws:us-west-2:abc:xyz:abc",
         "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-foo-1/output.json",
         "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
+        "shots":1,
+        "deviceArn": "foo:bar:device_arn"
     }
     with patch.dict(os.environ, {"AMZN_BRAKET_JOB_TOKEN": job_token}):
         assert aws_session.create_quantum_task(**kwargs) == arn
@@ -369,7 +376,8 @@ def test_create_quantum_task_with_job_token(aws_session):
 
 def test_get_quantum_task(aws_session):
     arn = "foo:bar:arn"
-    return_value = {"quantumTaskArn": arn}
+    status = "STATUS"
+    return_value = {"quantumTaskArn": arn, "status": status}
     aws_session.braket_client.get_quantum_task.return_value = return_value
 
     assert aws_session.get_quantum_task(arn) == return_value
@@ -378,7 +386,8 @@ def test_get_quantum_task(aws_session):
 
 def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_found_response):
     arn = "foo:bar:arn"
-    return_value = {"quantumTaskArn": arn}
+    status = "STATUS"
+    return_value = {"quantumTaskArn": arn, "status": status}
 
     aws_session.braket_client.get_quantum_task.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
