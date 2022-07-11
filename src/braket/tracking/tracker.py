@@ -111,8 +111,8 @@ class Tracker:
                     device_stats.get("billed_execution_duration", 0) + details["billed_duration"]
                 )
 
-                device_stats["execution_duration"] = duration
-                device_stats["billed_execution_duration"] = billed_duration
+                device_stats["execution_duration"] = duration/1000
+                device_stats["billed_execution_duration"] = billed_duration/1000
 
             stats.setdefault(details["device"], {}).update(device_stats)
 
