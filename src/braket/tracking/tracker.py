@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from functools import lru_cache, singledispatchmethod
+from functools import lru_cache, singledispatch
 from json import loads
 
 import braket.aws
@@ -43,33 +43,9 @@ class Tracker:
     def stop(self):
         return self.__exit__()
 
-    @singledispatchmethod
+    # @singledispatchmethod
     def receive_event(self, event):
-        raise ValueError(f"Event type {type(event)} is not supported")
-
-    @receive_event.register
-    def _receive_task_creation_event(self, event: _TaskCreationEvent):
-        self._resources[event.arn] = {
-            "shots": event.shots,
-            "device": event.device,
-            "status": "CREATED",
-            "is_job_task": event.is_job_task,
-        }
-
-    @receive_event.register
-    def _receive_task_get_event(self, event: _TaskGetEvent):
-        # Update task data corresponding to the arn only if it exists in self._resources
-        if event.arn in self._resources:
-            self._resources[event.arn]["status"] = event.status
-
-    @receive_event.register
-    def _receive_task_completion_event(self, event: _TaskCompletionEvent):
-        # Update task completion data corresponding to the arn only if it exists in self._resources
-        if event.arn in self._resources:
-            self._resources[event.arn]["status"] = event.status
-            if event.execution_duration:
-                self._resources[event.arn]["execution_duration"] = event.execution_duration
-                self._resources[event.arn]["billed_duration"] = max(event.execution_duration, MIN_SIMULATOR_DURATION)
+        _recieve_internal(event, self._resources)
 
     # Not making this a property so that it can be extended
     # to include filters if needed.
@@ -111,8 +87,8 @@ class Tracker:
                     device_stats.get("billed_execution_duration", 0) + details["billed_duration"]
                 )
 
-                device_stats["execution_duration"] = duration/1000
-                device_stats["billed_execution_duration"] = billed_duration/1000
+                device_stats["execution_duration"] = duration / 1000
+                device_stats["billed_execution_duration"] = billed_duration / 1000
 
             stats.setdefault(details["device"], {}).update(device_stats)
 
@@ -215,3 +191,37 @@ def _recursive_dict_search(key, dictionary):
             result = _recursive_dict_search(key, x)
             if result is not None:
                 return result
+
+
+@singledispatch
+def _recieve_internal(event, resources):
+    raise ValueError(f"Event type {type(event)} is not supported")
+
+
+@_recieve_internal.register
+def _(event: _TaskCreationEvent, resources: dict):
+    resources[event.arn] = {
+        "shots": event.shots,
+        "device": event.device,
+        "status": "CREATED",
+        "is_job_task": event.is_job_task,
+    }
+
+
+@_recieve_internal.register
+def _(event: _TaskGetEvent, resources: dict):
+    # Update task data corresponding to the arn only if it exists in self._resources
+    if event.arn in resources:
+        resources[event.arn]["status"] = event.status
+
+
+@_recieve_internal.register
+def _(event: _TaskCompletionEvent, resources: dict):
+    # Update task completion data corresponding to the arn only if it exists in self._resources
+    if event.arn in resources:
+        resources[event.arn]["status"] = event.status
+        if event.execution_duration:
+            resources[event.arn]["execution_duration"] = event.execution_duration
+            resources[event.arn]["billed_duration"] = max(
+                event.execution_duration, MIN_SIMULATOR_DURATION
+            )

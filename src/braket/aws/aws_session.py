@@ -27,7 +27,7 @@ from botocore.exceptions import ClientError
 
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
-from braket.tracking.tracking_context import broadcast_event, active_trackers
+from braket.tracking.tracking_context import active_trackers, broadcast_event
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskGetEvent
 
 
@@ -186,7 +186,9 @@ class AwsSession(object):
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
             boto3_kwargs.update({"jobToken": job_token})
-        self.braket_client._client_config.user_agent_extra = f"({len(active_trackers())} Active Cost Trackers)"
+        self.braket_client._client_config.user_agent_extra = (
+            f"({len(active_trackers())} Active Cost Trackers)"
+        )
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         broadcast_event(
             _TaskCreationEvent(

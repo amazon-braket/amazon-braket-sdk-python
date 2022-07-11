@@ -246,6 +246,7 @@ def test_ecr(aws_session):
     assert aws_session.ecr_client
     aws_session.boto_session.client.assert_called_with("ecr", region_name="us-west-2")
 
+
 def test_pricing(aws_session):
     aws_session._pricing = Mock()
     assert aws_session.pricing_client
@@ -363,7 +364,6 @@ def test_create_quantum_task(aws_session):
 def test_create_quantum_task_with_job_token(aws_session):
     arn = "arn:aws:braket:us-west-2:1234567890:task/task-name"
     job_token = "arn:aws:braket:us-west-2:1234567890:job/job-name"
-    shots = 1
     aws_session.braket_client.create_quantum_task.return_value = {"quantumTaskArn": arn}
 
     kwargs = {
