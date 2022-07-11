@@ -11,13 +11,12 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-# from functools import singledispatch
-
 from __future__ import annotations
 
 from decimal import Decimal
 from functools import lru_cache, singledispatch
 from json import loads
+from typing import Any, Dict, List
 
 import braket.aws
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
@@ -27,6 +26,11 @@ MIN_SIMULATOR_DURATION = 3000
 
 
 class Tracker:
+    """
+    Amazon Braket cost tracker.
+    Use this class to track costs incurred from quantum tasks on Amazon Braket.
+    """
+
     def __init__(self):
         self._resources = {}  # Key = quantum_task_arn
 
@@ -38,22 +42,36 @@ class Tracker:
         deregister_tracker(self)
 
     def start(self):
+        """
+        Start tracking resources with this tracker.
+        """
         return self.__enter__()
 
     def stop(self):
+        """
+        Stop tracking resources with this tracker.
+        """
         return self.__exit__()
 
-    # @singledispatchmethod
     def receive_event(self, event):
         _recieve_internal(event, self._resources)
 
-    # Not making this a property so that it can be extended
-    # to include filters if needed.
-    def tracked_resources(self):
+    def tracked_resources(self) -> List[str]:
+        """
+        Resources tracked by this tracker.
+
+        Returns:
+            List[str]: The list of task ids for tasks tracked by this tracker.
+        """
         return list(self._resources.keys())
 
     def qpu_tasks_cost(self) -> Decimal:
-        # Filter qpu tasks and return sum of all costs.
+        """
+        Estimate cost of all quantum tasks tracked by this tracker that use Braket qpu devices.
+
+        Returns:
+            Decimal: The estimated total cost in USD
+        """
         total_cost = Decimal(0)
         for task_arn, details in self._resources.items():
             if "qpu" in details["device"]:
@@ -61,14 +79,43 @@ class Tracker:
         return total_cost
 
     def simulator_tasks_cost(self) -> Decimal:
-        # Filter simulator tasks and return sum of all costs.
+        """
+        Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
+
+        Returns:
+            Decimal: The estimated total cost in USD
+        """
         total_cost = Decimal(0)
         for task_arn, details in self._resources.items():
             if "qpu" not in details["device"]:
                 total_cost = total_cost + _get_simulator_task_cost(task_arn, details)
         return total_cost
 
-    def quantum_tasks_statistics(self):
+    def quantum_tasks_statistics(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Get a summary of quantum tasks grouped by device.
+
+        Returns:
+            Dict[str,Dict[str,Any]] : A dictionary where each key is a device arn, and maps to
+                a dictionary sumarizing the tasks run on the device. The summary includes the
+                total shots sent to the device and the most recent status of the quantum tasks
+                created on this device. For finished tasks on simulator devices, the summary
+                also includes the duration of the simulation in seconds.
+
+        Example:
+            >>> tracker.quantum_tasks_statistics()
+            {'qpu_device_foo':
+                {'shots' : 1000,
+                 'tasks' : { 'COMPLETED' : 4,
+                             'QUEUED' : 1 },
+                },
+             'simulator_device_bar':
+                {'shots' : 1000
+                 'tasks' : { 'COMPLETED' : 2,
+                              'CREATED' : 1},
+                 'execution_duration' : 5.432,
+                 'billed_execution_duration' : 6.543}}
+        """
         stats = {}
         for _, details in self._resources.items():
 
@@ -108,7 +155,7 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
 
 
 @lru_cache()
-def _get_qpu_price(region: str, product: str, device_arn: str, job_task: bool):
+def _get_qpu_price(region: str, product: str, device_arn: str, job_task: bool) -> Dict[str, Any]:
     device_name = device_arn.split("/")[-1]
     if "2000Q" in device_name:
         device_name = "2000Q"
@@ -149,7 +196,9 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
 
 
 @lru_cache()
-def _get_simulator_price(region: str, device_arn: str, job_task: bool, status: str):
+def _get_simulator_price(
+    region: str, device_arn: str, job_task: bool, status: str
+) -> Dict[str, Any]:
     device_name = device_arn.split("/")[-1].upper()
 
     if job_task:
@@ -168,7 +217,7 @@ def _get_simulator_price(region: str, device_arn: str, job_task: bool, status: s
     return _get_pricing(filters)
 
 
-def _get_pricing(filters) -> dict:
+def _get_pricing(filters) -> Dict[str, Any]:
     client = braket.aws.AwsSession().pricing_client
     response = client.get_products(
         ServiceCode="AmazonBraket",
