@@ -246,6 +246,14 @@ def test_ecr(aws_session):
     assert aws_session.ecr_client
     aws_session.boto_session.client.assert_called_with("ecr", region_name="us-west-2")
 
+def test_pricing(aws_session):
+    aws_session._pricing = Mock()
+    assert aws_session.pricing_client
+    aws_session.boto_session.client.assert_not_called()
+    aws_session._pricing = None
+    assert aws_session.pricing_client
+    aws_session.boto_session.client.assert_called_with("pricing", region_name="us-east-1")
+
 
 @patch("os.path.exists")
 @pytest.mark.parametrize(
@@ -338,16 +346,15 @@ def test_cancel_quantum_task(aws_session):
 
 def test_create_quantum_task(aws_session):
     arn = "foo:bar:arn"
-    aws_session.braket_client.create_quantum_task.return_value = {        "quantumTaskArn": arn
-    }
+    aws_session.braket_client.create_quantum_task.return_value = {"quantumTaskArn": arn}
 
     kwargs = {
         "backendArn": "arn:aws:us-west-2:abc:xyz:abc",
         "cwLogGroupArn": "arn:aws:us-west-2:abc:xyz:abc",
         "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-bar-1/output.json",
         "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
-        "shots":1,
-        "deviceArn":"foo:bar:device_arn"
+        "shots": 1,
+        "deviceArn": "foo:bar:device_arn",
     }
     assert aws_session.create_quantum_task(**kwargs) == arn
     aws_session.braket_client.create_quantum_task.assert_called_with(**kwargs)
@@ -357,16 +364,15 @@ def test_create_quantum_task_with_job_token(aws_session):
     arn = "arn:aws:braket:us-west-2:1234567890:task/task-name"
     job_token = "arn:aws:braket:us-west-2:1234567890:job/job-name"
     shots = 1
-    aws_session.braket_client.create_quantum_task.return_value = {        "quantumTaskArn": arn
-    }
+    aws_session.braket_client.create_quantum_task.return_value = {"quantumTaskArn": arn}
 
     kwargs = {
         "backendArn": "arn:aws:us-west-2:abc:xyz:abc",
         "cwLogGroupArn": "arn:aws:us-west-2:abc:xyz:abc",
         "destinationUrl": "http://s3-us-west-2.amazonaws.com/task-output-foo-1/output.json",
         "program": {"ir": '{"instructions":[]}', "qubitCount": 4},
-        "shots":1,
-        "deviceArn": "foo:bar:device_arn"
+        "shots": 1,
+        "deviceArn": "foo:bar:device_arn",
     }
     with patch.dict(os.environ, {"AMZN_BRAKET_JOB_TOKEN": job_token}):
         assert aws_session.create_quantum_task(**kwargs) == arn

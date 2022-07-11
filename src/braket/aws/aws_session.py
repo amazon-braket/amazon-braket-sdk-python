@@ -27,7 +27,7 @@ from botocore.exceptions import ClientError
 
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
-from braket.tracking.tracking_context import broadcast_event
+from braket.tracking.tracking_context import broadcast_event, active_trackers
 from braket.tracking.tracking_events import _TaskCreationEvent, _TaskGetEvent
 
 
@@ -121,9 +121,7 @@ class AwsSession(object):
     @property
     def pricing_client(self):
         if not self._pricing:
-            self._pricing = self.boto_session.client(
-                "pricing", region_name="us-east-1"
-            )  # No region for pricing
+            self._pricing = self.boto_session.client("pricing", region_name="us-east-1")
         return self._pricing
 
     def _update_user_agent(self):
@@ -188,7 +186,7 @@ class AwsSession(object):
         job_token = os.getenv("AMZN_BRAKET_JOB_TOKEN")
         if job_token:
             boto3_kwargs.update({"jobToken": job_token})
-        self.add_braket_user_agent("({len(active_trackers)} Active Cost Trackers)")
+        self.braket_client._client_config.user_agent_extra = f"({len(active_trackers())} Active Cost Trackers)"
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
         broadcast_event(
             _TaskCreationEvent(
