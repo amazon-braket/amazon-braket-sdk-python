@@ -283,7 +283,6 @@ class AwsDevice(Device):
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
         self._properties = metadata.get("deviceCapabilities")
-        self._topology_graph = self._construct_topology_graph()
 
     @property
     def type(self) -> str:
@@ -386,7 +385,7 @@ class AwsDevice(Device):
 
             >>> print(device.topology_graph.edges)
         """
-        return self._topology_graph
+        return self._construct_topology_graph()
 
     def _construct_topology_graph(self) -> DiGraph:
         """
