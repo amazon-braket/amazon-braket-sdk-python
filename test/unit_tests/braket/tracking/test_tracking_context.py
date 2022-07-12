@@ -12,12 +12,18 @@
 # language governing permissions and limitations under the License.
 
 from unittest.mock import Mock
-import pytest
 
-from braket.tracking.tracking_context import active_trackers,register_tracker,deregister_tracker,broadcast_event
+from braket.tracking.tracking_context import (
+    active_trackers,
+    broadcast_event,
+    deregister_tracker,
+    register_tracker,
+)
+
 
 def test_tracking_context():
     assert active_trackers() == set()
+
 
 def test_register_deregister_tracker():
     register_tracker("foo")
@@ -28,6 +34,7 @@ def test_register_deregister_tracker():
     deregister_tracker("foo")
     assert active_trackers() == {"bar"}
     deregister_tracker("bar")
+
 
 def test_broadcast_event():
     tracker = Mock()

@@ -19,7 +19,6 @@ from json import loads
 from typing import Any, Dict, List
 
 import braket.aws
-from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
 from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent, _TaskGetEvent
 
@@ -130,9 +129,12 @@ class Tracker:
             device_stats["tasks"] = task_states
 
             if "execution_duration" in details:
-                duration = device_stats.get("execution_duration", 0) + details["execution_duration"] / 1000
+                duration = (
+                    device_stats.get("execution_duration", 0) + details["execution_duration"] / 1000
+                )
                 billed_duration = (
-                    device_stats.get("billed_execution_duration", 0) + details["billed_duration"] / 1000
+                    device_stats.get("billed_execution_duration", 0)
+                    + details["billed_duration"] / 1000
                 )
 
                 device_stats["execution_duration"] = duration
@@ -144,7 +146,7 @@ class Tracker:
 
 
 def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
-    if details["status"] in ["FAILED","CANCELLED"]:
+    if details["status"] in ["FAILED", "CANCELLED"]:
         return Decimal(0)
     task_region = task_arn.split(":")[3]
 
@@ -225,9 +227,11 @@ def _get_simulator_price(
 
     return _get_pricing(filters)
 
+
 @lru_cache()
 def _get_client():
     return braket.aws.AwsSession().pricing_client
+
 
 def _get_pricing(filters) -> Dict[str, Any]:
     client = _get_client
