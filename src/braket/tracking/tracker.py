@@ -19,6 +19,7 @@ from json import loads
 from typing import Any, Dict, List
 
 import braket.aws
+from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
 from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent, _TaskGetEvent
 
@@ -87,7 +88,7 @@ class Tracker:
         """
         total_cost = Decimal(0)
         for task_arn, details in self._resources.items():
-            if "qpu" not in details["device"]:
+            if "simulator" in details["device"]:
                 total_cost = total_cost + _get_simulator_task_cost(task_arn, details)
         return total_cost
 
@@ -129,13 +130,13 @@ class Tracker:
             device_stats["tasks"] = task_states
 
             if "execution_duration" in details:
-                duration = device_stats.get("execution_duration", 0) + details["execution_duration"]
+                duration = device_stats.get("execution_duration", 0) + details["execution_duration"] / 1000
                 billed_duration = (
-                    device_stats.get("billed_execution_duration", 0) + details["billed_duration"]
+                    device_stats.get("billed_execution_duration", 0) + details["billed_duration"] / 1000
                 )
 
-                device_stats["execution_duration"] = duration / 1000
-                device_stats["billed_execution_duration"] = billed_duration / 1000
+                device_stats["execution_duration"] = duration
+                device_stats["billed_execution_duration"] = billed_duration
 
             stats.setdefault(details["device"], {}).update(device_stats)
 
@@ -143,6 +144,8 @@ class Tracker:
 
 
 def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
+    if details["status"] in ["FAILED","CANCELLED"]:
+        return Decimal(0)
     task_region = task_arn.split(":")[3]
 
     shot_price = _get_qpu_price(task_region, "shot", details["device"], details["is_job_task"])
@@ -179,7 +182,7 @@ def _get_qpu_price(region: str, product: str, device_arn: str, job_task: bool) -
 
 def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
     if details["status"] not in braket.aws.AwsQuantumTask.TERMINAL_STATES:
-        return None
+        return Decimal(0)
     task_region = task_arn.split(":")[3]
 
     duration_price = _get_simulator_price(
@@ -208,17 +211,26 @@ def _get_simulator_price(
 
     filters = {"regionCode": region, "productFamily": product_family, "version": device_name}
 
+    # Rehersal step of TN1 can fail and charges still apply
     if device_name == "TN1":
         if status == "FAILED":
             filters["operation"] = "FailedTask"
         elif status == "COMPLETED":
             filters["operation"] = "CompleteTask"
+        else:
+            return Decimal(0)
+    else:
+        if status != "COMPLETED":
+            return Decimal(0)
 
     return _get_pricing(filters)
 
+@lru_cache()
+def _get_client():
+    return braket.aws.AwsSession().pricing_client
 
 def _get_pricing(filters) -> Dict[str, Any]:
-    client = braket.aws.AwsSession().pricing_client
+    client = _get_client
     response = client.get_products(
         ServiceCode="AmazonBraket",
         Filters=[{"Field": k, "Type": "TERM_MATCH", "Value": v} for k, v in filters.items()],
