@@ -234,7 +234,7 @@ def _get_client():
 
 
 def _get_pricing(filters) -> Dict[str, Any]:
-    client = _get_client
+    client = _get_client()
     response = client.get_products(
         ServiceCode="AmazonBraket",
         Filters=[{"Field": k, "Type": "TERM_MATCH", "Value": v} for k, v in filters.items()],
