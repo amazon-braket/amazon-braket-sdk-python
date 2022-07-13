@@ -14,11 +14,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from functools import lru_cache, singledispatch
-from json import loads
+from functools import singledispatch
 from typing import Any, Dict, List
 
 import braket.aws
+from braket.tracking.pricing import price_search
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
 from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent, _TaskGetEvent
 
@@ -150,89 +150,86 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
         return Decimal(0)
     task_region = task_arn.split(":")[3]
 
-    shot_price = _get_qpu_price(task_region, "shot", details["device"], details["is_job_task"])
-    task_price = _get_qpu_price(task_region, "task", details["device"], details["is_job_task"])
+    search_dict = {"Region Code": task_region}
 
-    shot_cost = Decimal(shot_price["pricePerUnit"]["USD"]) * details["shots"]
-    task_cost = Decimal(task_price["pricePerUnit"]["USD"])
-
-    return shot_cost + task_cost
-
-
-@lru_cache()
-def _get_qpu_price(region: str, product: str, device_arn: str, job_task: bool) -> Dict[str, Any]:
-    device_name = device_arn.split("/")[-1]
+    device_name = details["device"].split("/")[-1]
     if "2000Q" in device_name:
         device_name = "2000Q"
     elif "Advantage_system" in device_name:
         device_name = "Advantage_system"
 
-    if job_task:
-        if product == "shot":
-            product_family = "Braket Managed Jobs QPU Task Shot"
-        elif product == "task":
-            product_family = "Braket Managed Jobs QPU Task"
+    if details["job_task"]:
+        search_dict["Device Name"] = device_name
+        shot_product_family = "Braket Managed Jobs QPU Task Shot"
+        task_product_family = "Braket Managed Jobs QPU Task"
     else:
-        if product == "shot":
-            product_family = "Quantum Task-Shot"
-        elif product == "task":
-            product_family = "Quantum Task"
+        search_dict["DeviceName"] = device_name  # The difference in spelling is intentional
+        shot_product_family = "Quantum Task-Shot"
+        task_product_family = "Quantum Task"
 
-    filters = {"regionCode": region, "productFamily": product_family, "devicename": device_name}
-    return _get_pricing(filters)
+    search_dict["Product Family"] = shot_product_family
+    shot_prices = price_search(**search_dict)
+    if len(shot_prices) != 1:
+        raise ValueError(f"Found {len(shot_prices)} products matching {search_dict}")
+
+    search_dict["Product Family"] = task_product_family
+    task_prices = price_search(**search_dict)
+    if len(task_prices) != 1:
+        raise ValueError(f"Found {len(task_prices)} products matching {search_dict}")
+
+    shot_price = shot_prices[0]
+    task_price = task_prices[0]
+
+    for price in [shot_price, task_price]:
+        if price["Currency"] != "USD":
+            raise ValueError(f"Expected USD, found {price['Currency']}")
+
+    shot_cost = Decimal(shot_price["PricePerUnit"]) * details["shots"]
+    task_cost = Decimal(task_price["PricePerUnit"]) * 1
+
+    return shot_cost + task_cost
 
 
 def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
+    if not details.get("billed_duration"):
+        return Decimal(0)
     if details["status"] not in braket.aws.AwsQuantumTask.TERMINAL_STATES:
         return Decimal(0)
     task_region = task_arn.split(":")[3]
 
-    duration_price = _get_simulator_price(
-        task_region, details["device"], details["is_job_task"], details["status"]
-    )
+    device_name = details["device"].split("/")[-1].upper()
 
-    if duration_price["unit"] != "minutes":
-        raise ValueError(f"Expected price per minute. Found price per f{duration_price['unit']}.")
-    duration_cost = (
-        Decimal(duration_price["pricePerUnit"]["USD"]) * details["billed_duration"] / (60 * 1000)
-    )
-
-    return duration_cost
-
-
-@lru_cache()
-def _get_simulator_price(
-    region: str, device_arn: str, job_task: bool, status: str
-) -> Dict[str, Any]:
-    device_name = device_arn.split("/")[-1].upper()
-
-    if job_task:
+    if details["job_task"]:
         product_family = "Braket Managed Jobs Simulator Task"
+        operation = "Managed-Jobs"
     else:
         product_family = "Simulator Task"
-
-    filters = {"regionCode": region, "productFamily": product_family, "version": device_name}
-
-    # Rehersal step of TN1 can fail and charges still apply
-    if device_name == "TN1":
-        if status == "FAILED":
-            filters["operation"] = "FailedTask"
-        elif status == "COMPLETED":
-            filters["operation"] = "CompleteTask"
+        if details["status"] == "FAILED":
+            # Rehersal step of TN1 can fail and charges still apply
+            if device_name == "TN1":
+                operation = "FailedTask"
+            else:
+                return Decimal(0)
+        elif details["status"] == "COMPLETED":
+            operation = "CompleteTask"
         else:
             return Decimal(0)
-    else:
-        if status != "COMPLETED":
-            return Decimal(0)
 
-    return _get_pricing(filters)
+    search_dict = {
+        "Region Code": task_region,
+        "Version": device_name,
+        "Product Family": product_family,
+        "operation": operation,
+    }
 
+    duration_prices = price_search(**search_dict)
 
-@lru_cache()
-def _get_client():
-    return braket.aws.AwsSession().pricing_client
+    if len(duration_prices) != 1:
+        raise ValueError(f"Found {len(duration_prices)} products matching {search_dict}")
 
+    duration_price = duration_prices[0]
 
+<<<<<<< HEAD
 def _get_pricing(filters) -> Dict[str, Any]:
     client = _get_client()
     response = client.get_products(
@@ -246,16 +243,18 @@ def _get_pricing(filters) -> Dict[str, Any]:
     price = _recursive_dict_search("pricePerUnit", price_list)
     unit = _recursive_dict_search("unit", price_list)
     return {"unit": unit, "pricePerUnit": price}
+=======
+    if duration_price["Currency"] != "USD":
+        raise ValueError(f"Expected USD, found {duration_price['Currency']}")
+>>>>>>> add cost tracking integ test
 
+    if duration_price["Unit"] != "minutes":
+        raise ValueError(f"Expected price per minute. Found price per f{duration_price['Unit']}.")
+    duration_cost = (
+        Decimal(duration_price["PricePerUnit"]) * details["billed_duration"] / (60 * 1000)
+    )
 
-def _recursive_dict_search(key, dictionary):
-    if key in dictionary:
-        return dictionary[key]
-    for x in dictionary.values():
-        if isinstance(x, dict):
-            result = _recursive_dict_search(key, x)
-            if result is not None:
-                return result
+    return duration_cost
 
 
 @singledispatch
@@ -269,7 +268,7 @@ def _(event: _TaskCreationEvent, resources: dict):
         "shots": event.shots,
         "device": event.device,
         "status": "CREATED",
-        "is_job_task": event.is_job_task,
+        "job_task": event.is_job_task,
     }
 
 
