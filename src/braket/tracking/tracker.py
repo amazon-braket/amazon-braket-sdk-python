@@ -231,24 +231,8 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
 
     duration_price = duration_prices[0]
 
-<<<<<<< HEAD
-def _get_pricing(filters) -> Dict[str, Any]:
-    client = _get_client()
-    response = client.get_products(
-        ServiceCode="AmazonBraket",
-        Filters=[{"Field": k, "Type": "TERM_MATCH", "Value": v} for k, v in filters.items()],
-    )
-    price_list = response["PriceList"]
-    if len(price_list) != 1:
-        raise ValueError(f"Found {len(price_list)} products matching {filters}")
-    price_list = loads(price_list[0])
-    price = _recursive_dict_search("pricePerUnit", price_list)
-    unit = _recursive_dict_search("unit", price_list)
-    return {"unit": unit, "pricePerUnit": price}
-=======
     if duration_price["Currency"] != "USD":
         raise ValueError(f"Expected USD, found {duration_price['Currency']}")
->>>>>>> add cost tracking integ test
 
     duration_cost = (
         Decimal(duration_price["PricePerUnit"])
