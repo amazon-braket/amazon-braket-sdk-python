@@ -247,15 +247,6 @@ def test_ecr(aws_session):
     aws_session.boto_session.client.assert_called_with("ecr", region_name="us-west-2")
 
 
-def test_pricing(aws_session):
-    aws_session._pricing = Mock()
-    assert aws_session.pricing_client
-    aws_session.boto_session.client.assert_not_called()
-    aws_session._pricing = None
-    assert aws_session.pricing_client
-    aws_session.boto_session.client.assert_called_with("pricing", region_name="us-east-1")
-
-
 @patch("os.path.exists")
 @pytest.mark.parametrize(
     "metadata_file_exists, initial_user_agent",

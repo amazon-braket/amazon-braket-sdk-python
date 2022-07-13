@@ -118,12 +118,6 @@ class AwsSession(object):
             self._ecr = self.boto_session.client("ecr", region_name=self.region)
         return self._ecr
 
-    @property
-    def pricing_client(self):
-        if not self._pricing:
-            self._pricing = self.boto_session.client("pricing", region_name="us-east-1")
-        return self._pricing
-
     def _update_user_agent(self):
         """
         Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
