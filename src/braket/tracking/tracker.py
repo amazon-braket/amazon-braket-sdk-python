@@ -18,7 +18,6 @@ from decimal import Decimal
 from functools import singledispatch
 from typing import Any, Dict, List
 
-import braket.aws
 from braket.tracking.pricing import price_search
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
 from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent, _TaskGetEvent
@@ -195,8 +194,6 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
 def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
     if not details.get("billed_duration"):
         return Decimal(0)
-    if details["status"] not in braket.aws.AwsQuantumTask.TERMINAL_STATES:
-        return Decimal(0)
     task_region = task_arn.split(":")[3]
 
     device_name = details["device"].split("/")[-1].upper()
@@ -206,16 +203,10 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
         operation = "Managed-Jobs"
     else:
         product_family = "Simulator Task"
-        if details["status"] == "FAILED":
-            # Rehersal step of TN1 can fail and charges still apply
-            if device_name == "TN1":
-                operation = "FailedTask"
-            else:
-                return Decimal(0)
-        elif details["status"] == "COMPLETED":
-            operation = "CompleteTask"
-        else:
-            return Decimal(0)
+        operation = "CompleteTask"
+        if details["status"] == "FAILED" and device_name == "TN1":
+            # Rehersal step of TN1 can fail and charges still apply.
+            operation = "FailedTask"
 
     search_dict = {
         "Region Code": task_region,

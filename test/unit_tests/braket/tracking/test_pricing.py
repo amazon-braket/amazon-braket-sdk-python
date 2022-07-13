@@ -19,10 +19,9 @@ from braket.tracking.pricing import Pricing
 
 
 @patch("urllib.request.urlopen")
-@patch("io.TextIOWrapper")
-def test_search_prices(mock_text, mock_url):
-    mock_text.return_value = io.StringIO(
-        """line1
+def test_search_prices(mock_url):
+    mock_url.return_value = io.BytesIO(
+        b"""line1
 line2
 line3
 line4
