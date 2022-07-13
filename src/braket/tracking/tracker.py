@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 from functools import singledispatch
 from typing import Any, Dict, List
@@ -22,7 +23,7 @@ from braket.tracking.pricing import price_search
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
 from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent, _TaskGetEvent
 
-MIN_SIMULATOR_DURATION = 3000
+MIN_SIMULATOR_DURATION = timedelta(milliseconds=3000)
 
 
 class Tracker:
@@ -100,7 +101,7 @@ class Tracker:
                 a dictionary sumarizing the tasks run on the device. The summary includes the
                 total shots sent to the device and the most recent status of the quantum tasks
                 created on this device. For finished tasks on simulator devices, the summary
-                also includes the duration of the simulation in seconds.
+                also includes the duration of the simulation.
 
         Example:
             >>> tracker.quantum_tasks_statistics()
@@ -113,8 +114,8 @@ class Tracker:
                 {'shots' : 1000
                  'tasks' : { 'COMPLETED' : 2,
                               'CREATED' : 1},
-                 'execution_duration' : 5.432,
-                 'billed_execution_duration' : 6.543}}
+                 'execution_duration' : datetime.timedelta(seconds=5, microseconds=654321),
+                 'billed_execution_duration' : datetime.timedelta(seconds=6, microseconds=123456)}}
         """
         stats = {}
         for _, details in self._resources.items():
@@ -130,11 +131,12 @@ class Tracker:
 
             if "execution_duration" in details:
                 duration = (
-                    device_stats.get("execution_duration", 0) + details["execution_duration"] / 1000
+                    device_stats.get("execution_duration", timedelta(0))
+                    + details["execution_duration"]
                 )
                 billed_duration = (
-                    device_stats.get("billed_execution_duration", 0)
-                    + details["billed_duration"] / 1000
+                    device_stats.get("billed_execution_duration", timedelta(0))
+                    + details["billed_duration"]
                 )
 
                 device_stats["execution_duration"] = duration
@@ -248,10 +250,10 @@ def _get_pricing(filters) -> Dict[str, Any]:
         raise ValueError(f"Expected USD, found {duration_price['Currency']}")
 >>>>>>> add cost tracking integ test
 
-    if duration_price["Unit"] != "minutes":
-        raise ValueError(f"Expected price per minute. Found price per f{duration_price['Unit']}.")
     duration_cost = (
-        Decimal(duration_price["PricePerUnit"]) * details["billed_duration"] / (60 * 1000)
+        Decimal(duration_price["PricePerUnit"])
+        * Decimal(details["billed_duration"] / timedelta(milliseconds=1))
+        / Decimal(timedelta(**{duration_price["Unit"]: 1}) / timedelta(milliseconds=1))
     )
 
     return duration_cost
@@ -285,7 +287,6 @@ def _(event: _TaskCompletionEvent, resources: dict):
     if event.arn in resources:
         resources[event.arn]["status"] = event.status
         if event.execution_duration:
-            resources[event.arn]["execution_duration"] = event.execution_duration
-            resources[event.arn]["billed_duration"] = max(
-                event.execution_duration, MIN_SIMULATOR_DURATION
-            )
+            duration = timedelta(milliseconds=event.execution_duration)
+            resources[event.arn]["execution_duration"] = duration
+            resources[event.arn]["billed_duration"] = max(duration, MIN_SIMULATOR_DURATION)

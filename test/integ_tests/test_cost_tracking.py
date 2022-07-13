@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from datetime import timedelta
+
 from braket.annealing import Problem, ProblemType
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
@@ -75,9 +77,9 @@ def test_simulator_tracking():
         task1.result()
 
     quantum_stats = t.quantum_tasks_statistics()[device.arn]
-    assert quantum_stats["execution_duration"] > 0
+    assert quantum_stats["execution_duration"] > timedelta(0)
     assert quantum_stats["billed_execution_duration"] >= quantum_stats["execution_duration"]
-    assert quantum_stats["billed_execution_duration"] >= 2 * MIN_SIMULATOR_DURATION / 1000
+    assert quantum_stats["billed_execution_duration"] >= 2 * MIN_SIMULATOR_DURATION
 
     assert t.qpu_tasks_cost() == 0
     assert t.simulator_tasks_cost() > 0
