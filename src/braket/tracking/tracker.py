@@ -69,6 +69,10 @@ class Tracker:
         """
         Estimate cost of all quantum tasks tracked by this tracker that use Braket qpu devices.
 
+        Charges shown are estimates based on your simulator and QPU quantum task usage. These
+        estimates do not factor in any discounts or credits. Your actual charges may differ based
+        on additional classical compute.
+
         Returns:
             Decimal: The estimated total cost in USD
         """
@@ -81,6 +85,10 @@ class Tracker:
     def simulator_tasks_cost(self) -> Decimal:
         """
         Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
+
+        Charges shown are estimates based on your simulator and QPU quantum task usage. These
+        estimates do not factor in any discounts or credits. Your actual charges may differ based
+        on additional classical compute.
 
         Returns:
             Decimal: The estimated total cost in USD
