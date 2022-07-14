@@ -59,6 +59,14 @@ def test_qpu_tracking():
     assert t.qpu_tasks_cost() > s.qpu_tasks_cost()
     assert t.qpu_tasks_cost() > t_partial_cost
 
+    circuit = Circuit().h(0)
+    with Tracker() as t:
+        AwsDevice("arn:aws:braket:::device/qpu/ionq/ionQdevice").run(circuit, shots=10)
+        AwsDevice("arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy").run(circuit, shots=10)
+        AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-11").run(circuit, shots=10)
+
+    assert t.qpu_tasks_cost() > 0
+
 
 def test_simulator_tracking():
     circuit = Circuit().h(0).cnot(0, 1)

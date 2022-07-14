@@ -154,6 +154,7 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
     search_dict = {"Region Code": task_region}
 
     device_name = details["device"].split("/")[-1]
+    device_name = device_name[0].upper() + device_name[1:]
     if "2000Q" in device_name:
         device_name = "2000Q"
     elif "Advantage_system" in device_name:
