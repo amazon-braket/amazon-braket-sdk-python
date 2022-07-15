@@ -95,3 +95,29 @@ def test_simulator_tracking():
 
     assert t.qpu_tasks_cost() == 0
     assert t.simulator_tasks_cost() > 0
+
+
+def test_all_devices_price_search():
+    devices = AwsDevice.get_devices(statuses=["ONLINE", "OFFLINE"])
+
+    tasks = {}
+    for device in devices:
+        tasks[f"task:for:{device.name}:us-west-2"] = {
+            "shots": 100,
+            "device": device.arn,
+            "billed_duration": MIN_SIMULATOR_DURATION,
+            "job_task": False,
+            "status": "COMPLETED",
+        }
+
+    job_tasks = {}
+    for task, details in tasks.items():
+        job_details = details
+        job_details["job_task"] = True
+        job_tasks[f"job{task}"] = job_details
+
+    tasks.update(job_tasks)
+    t = Tracker()
+    t._resources = tasks
+
+    assert t.qpu_tasks_cost() + t.simulator_tasks_cost() > 0
