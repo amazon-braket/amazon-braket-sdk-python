@@ -36,5 +36,5 @@ class _TaskCompletionEvent(_TrackingEvent):
 
 
 @dataclass
-class _TaskGetEvent(_TrackingEvent):
+class _TaskStatusEvent(_TrackingEvent):
     status: str

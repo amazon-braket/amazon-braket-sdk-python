@@ -84,7 +84,11 @@ def test_simulator_tracking():
         task0.result()
         task1.result()
 
+        device.run(circuit, shots=100).cancel()
+
     quantum_stats = t.quantum_tasks_statistics()[device.arn]
+    assert quantum_stats["shots"] == 300
+    assert quantum_stats["tasks"] == {"COMPLETED": 2, "CANCELLING": 1}
     assert quantum_stats["execution_duration"] > timedelta(0)
     assert quantum_stats["billed_execution_duration"] >= quantum_stats["execution_duration"]
     assert quantum_stats["billed_execution_duration"] >= 2 * MIN_SIMULATOR_DURATION

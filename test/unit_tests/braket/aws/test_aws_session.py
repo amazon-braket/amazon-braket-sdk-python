@@ -342,7 +342,10 @@ def test_get_device(boto_session, braket_client):
 
 def test_cancel_quantum_task(aws_session):
     arn = "foo:bar:arn"
-    aws_session.braket_client.cancel_quantum_task.return_value = {"quantumTaskArn": arn}
+    aws_session.braket_client.cancel_quantum_task.return_value = {
+        "quantumTaskArn": arn,
+        "cancellationStatus": "CANCELLING OR CANCELLED",
+    }
 
     assert aws_session.cancel_quantum_task(arn) is None
     aws_session.braket_client.cancel_quantum_task.assert_called_with(quantumTaskArn=arn)

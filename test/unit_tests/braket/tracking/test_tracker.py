@@ -19,7 +19,11 @@ import pytest
 
 from braket.tracking.tracker import Tracker
 from braket.tracking.tracking_context import active_trackers
-from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent, _TaskGetEvent
+from braket.tracking.tracking_events import (
+    _TaskCompletionEvent,
+    _TaskCreationEvent,
+    _TaskStatusEvent,
+)
 
 
 @pytest.fixture()
@@ -84,11 +88,10 @@ CREATE_EVENTS = [
 ]
 
 GET_EVENTS = [
-    _TaskGetEvent(arn="untracked_task:::region", status="FOO"),
-    _TaskGetEvent(arn="task1:::region", status="BAR"),
-    _TaskGetEvent(arn="task2:::region", status="FAILED"),
+    _TaskStatusEvent(arn="untracked_task:::region", status="FOO"),
+    _TaskStatusEvent(arn="task1:::region", status="BAR"),
+    _TaskStatusEvent(arn="task2:::region", status="FAILED"),
 ]
-
 COMPLETE_EVENTS = [
     _TaskCompletionEvent(arn="untracked_task:::region", execution_duration=999999, status="BAR"),
     _TaskCompletionEvent(arn="task1:::region", execution_duration=None, status="COMPLETED"),

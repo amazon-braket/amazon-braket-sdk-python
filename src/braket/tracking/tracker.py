@@ -20,7 +20,11 @@ from typing import Any, Dict, List
 
 from braket.tracking.pricing import price_search
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
-from braket.tracking.tracking_events import _TaskCompletionEvent, _TaskCreationEvent, _TaskGetEvent
+from braket.tracking.tracking_events import (
+    _TaskCompletionEvent,
+    _TaskCreationEvent,
+    _TaskStatusEvent,
+)
 
 MIN_SIMULATOR_DURATION = timedelta(milliseconds=3000)
 
@@ -259,15 +263,15 @@ def _(event: _TaskCreationEvent, resources: dict):
 
 
 @_recieve_internal.register
-def _(event: _TaskGetEvent, resources: dict):
-    # Update task data corresponding to the arn only if it exists in self._resources
+def _(event: _TaskStatusEvent, resources: dict):
+    # Update task data corresponding to the arn only if it exists in resources
     if event.arn in resources:
         resources[event.arn]["status"] = event.status
 
 
 @_recieve_internal.register
 def _(event: _TaskCompletionEvent, resources: dict):
-    # Update task completion data corresponding to the arn only if it exists in self._resources
+    # Update task completion data corresponding to the arn only if it exists in resources
     if event.arn in resources:
         resources[event.arn]["status"] = event.status
         if event.execution_duration:

@@ -28,7 +28,7 @@ from botocore.exceptions import ClientError
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
 from braket.tracking.tracking_context import active_trackers, broadcast_event
-from braket.tracking.tracking_events import _TaskCreationEvent, _TaskGetEvent
+from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 
 
 class AwsSession(object):
@@ -174,7 +174,8 @@ class AwsSession(object):
         Args:
             arn (str): The ARN of the quantum task to cancel.
         """
-        self.braket_client.cancel_quantum_task(quantumTaskArn=arn)
+        response = self.braket_client.cancel_quantum_task(quantumTaskArn=arn)
+        broadcast_event(_TaskStatusEvent(arn=arn, status=response["cancellationStatus"]))
 
     def create_quantum_task(self, **boto3_kwargs) -> str:
         """
@@ -243,7 +244,7 @@ class AwsSession(object):
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
         response = self.braket_client.get_quantum_task(quantumTaskArn=arn)
-        broadcast_event(_TaskGetEvent(arn=response["quantumTaskArn"], status=response["status"]))
+        broadcast_event(_TaskStatusEvent(arn=response["quantumTaskArn"], status=response["status"]))
         return response
 
     def get_default_jobs_role(self) -> str:
