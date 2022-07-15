@@ -73,7 +73,7 @@ class AwsSession(object):
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
         self.braket_client.meta.events.register(
-            "provide-client-params.braket.*", self._add_cost_tracker_count_handler
+            "before-sign.braket.CreateQuantumTask", self._add_cost_tracker_count_handler
         )
 
         self._iam = None
@@ -81,7 +81,6 @@ class AwsSession(object):
         self._sts = None
         self._logs = None
         self._ecr = None
-        self._pricing = None
 
     @property
     def region(self):
@@ -137,8 +136,7 @@ class AwsSession(object):
         additional_user_agent_fields = (
             f"BraketSdk/{braket_sdk.__version__} "
             f"BraketSchemas/{braket_schemas.__version__} "
-            f"NotebookInstance/{_notebook_instance_version()} "
-            "(0 active cost trackers)"
+            f"NotebookInstance/{_notebook_instance_version()}"
         )
 
         self.braket_client._client_config.user_agent = (
@@ -158,11 +156,9 @@ class AwsSession(object):
         if user_agent not in existing_user_agent:
             self.braket_client._client_config.user_agent = f"{existing_user_agent} {user_agent}"
 
-    def _add_cost_tracker_count_handler(self, *params, **kwargs) -> None:
-        active_tracker_tag = f"({len(active_trackers())} active cost trackers)"
-        user_agent = self.braket_client.meta.config.user_agent
-        user_agent = re.sub(r"\([0-9]+ active cost trackers\)", active_tracker_tag, user_agent)
-        self.braket_client.meta.config.user_agent = user_agent
+    @staticmethod
+    def _add_cost_tracker_count_handler(request, **kwargs) -> None:
+        request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
     # Quantum Tasks

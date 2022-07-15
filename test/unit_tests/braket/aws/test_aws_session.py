@@ -271,8 +271,7 @@ def test_populates_user_agent(os_path_exists_mock, metadata_file_exists, initial
     expected_user_agent = (
         f"{initial_user_agent} BraketSdk/{braket_sdk.__version__} "
         f"BraketSchemas/{braket_schemas.__version__} "
-        f"NotebookInstance/{0 if metadata_file_exists else None} "
-        "(0 active cost trackers)"
+        f"NotebookInstance/{0 if metadata_file_exists else None}"
     )
     os_path_exists_mock.assert_called_with(nbi_metadata_path)
     assert aws_session.braket_client._client_config.user_agent == expected_user_agent
@@ -280,13 +279,13 @@ def test_populates_user_agent(os_path_exists_mock, metadata_file_exists, initial
 
 @patch("braket.aws.aws_session.active_trackers")
 def test_add_cost_tracker_count(active_trackers_mock, aws_session):
+    request = Mock()
     active_trackers_mock.return_value = {"A tracker"}
-    aws_session.braket_client.meta.config.user_agent = "1/A 2/B (0 active cost trackers)"
-    aws_session._add_cost_tracker_count_handler()
-    assert aws_session.braket_client.meta.config.user_agent == "1/A 2/B (1 active cost trackers)"
+    aws_session._add_cost_tracker_count_handler(request)
+    request.headers.add_header.assert_called_with("Braket-Trackers", "1")
     active_trackers_mock.return_value = {}
-    aws_session._add_cost_tracker_count_handler()
-    assert aws_session.braket_client.meta.config.user_agent == "1/A 2/B (0 active cost trackers)"
+    aws_session._add_cost_tracker_count_handler(request)
+    request.headers.add_header.assert_called_with("Braket-Trackers", "0")
 
 
 def test_retrieve_s3_object_body_success(boto_session):
