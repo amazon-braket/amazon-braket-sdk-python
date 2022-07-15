@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import csv
 import io
-import urllib.request
 from functools import lru_cache
 from typing import Dict, List
+
+import urllib3
 
 
 class Pricing:
@@ -27,11 +28,25 @@ class Pricing:
     def get_prices(self):
         # Using AWS Pricing Bulk API. Format for the response is described at
         # https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/reading-an-offer.html
-        response = urllib.request.urlopen(
+
+        http = urllib3.PoolManager()
+        price_url = (
             "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv"
         )
+        response = http.request(
+            "GET",
+            price_url,
+            preload_content=False,
+        )
+        response.auto_close = False
+
         text_response = io.TextIOWrapper(response)
+
         # Data starts on line 6
+        #
+        # > The first five rows of the CSV are the metadata for the offer file. The sixth row has
+        # > all the column names for the products and their attributes...
+        # https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/reading-an-offer.html#csv
         for _ in range(5):
             text_response.readline()
         self._price_list = list(csv.DictReader(text_response))

@@ -18,9 +18,9 @@ from unittest.mock import patch
 from braket.tracking.pricing import Pricing
 
 
-@patch("urllib.request.urlopen")
-def test_search_prices(mock_url):
-    mock_url.return_value = io.BytesIO(
+@patch("urllib3.PoolManager")
+def test_search_prices(mock_http):
+    mock_http().request.return_value = io.BytesIO(
         b"""line1
 line2
 line3
