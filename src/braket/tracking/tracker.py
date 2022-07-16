@@ -161,8 +161,9 @@ class Tracker:
 def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
     if details["status"] in ["FAILED", "CANCELLED"]:
         return Decimal(0)
+    task_region = task_arn.split(":")[3]
 
-    search_dict = {}
+    search_dict = {"Region Code": task_region}
 
     device_name = details["device"].split("/")[-1]
     device_name = device_name[0].upper() + device_name[1:]

@@ -13,8 +13,10 @@
 
 from datetime import timedelta
 
+import boto3
+
 from braket.annealing import Problem, ProblemType
-from braket.aws import AwsDevice
+from braket.aws import AwsDevice, AwsSession
 from braket.circuits import Circuit
 from braket.tracking import Tracker
 from braket.tracking.tracker import MIN_SIMULATOR_DURATION
@@ -101,22 +103,27 @@ def test_all_devices_price_search():
     devices = AwsDevice.get_devices(statuses=["ONLINE", "OFFLINE"])
 
     tasks = {}
-    for device in devices:
-        tasks[f"task:for:{device.name}:us-west-2"] = {
-            "shots": 100,
-            "device": device.arn,
-            "billed_duration": MIN_SIMULATOR_DURATION,
-            "job_task": False,
-            "status": "COMPLETED",
-        }
+    for region in AwsDevice.REGIONS:
+        s = AwsSession(boto3.Session(region_name=region))
+        for device in devices:
+            try:
+                s.get_device(device.arn)
 
-    job_tasks = {}
-    for task, details in tasks.items():
-        job_details = details
-        job_details["job_task"] = True
-        job_tasks[f"job{task}"] = job_details
+                # If we are here, device can create tasks in region
+                details = {
+                    "shots": 100,
+                    "device": device.arn,
+                    "billed_duration": MIN_SIMULATOR_DURATION,
+                    "job_task": False,
+                    "status": "COMPLETED",
+                }
+                tasks[f"task:for:{device.name}:{region}"] = details.copy()
+                details["job_task"] = True
+                tasks[f"jobtask:for:{device.name}:{region}"] = details
+            except s.braket_client.exceptions.ResourceNotFoundException:
+                # device does not exist in region, so nothing to test
+                pass
 
-    tasks.update(job_tasks)
     t = Tracker()
     t._resources = tasks
 
