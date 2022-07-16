@@ -27,6 +27,8 @@ from botocore.exceptions import ClientError
 
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
+from braket.tracking.tracking_context import active_trackers, broadcast_event
+from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 
 
 class AwsSession(object):
@@ -70,6 +72,9 @@ class AwsSession(object):
         self._update_user_agent()
         self._custom_default_bucket = bool(default_bucket)
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
+        self.braket_client.meta.events.register(
+            "before-sign.braket.CreateQuantumTask", self._add_cost_tracker_count_handler
+        )
 
         self._iam = None
         self._s3 = None
@@ -151,6 +156,10 @@ class AwsSession(object):
         if user_agent not in existing_user_agent:
             self.braket_client._client_config.user_agent = f"{existing_user_agent} {user_agent}"
 
+    @staticmethod
+    def _add_cost_tracker_count_handler(request, **kwargs) -> None:
+        request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
+
     #
     # Quantum Tasks
     #
@@ -161,7 +170,8 @@ class AwsSession(object):
         Args:
             arn (str): The ARN of the quantum task to cancel.
         """
-        self.braket_client.cancel_quantum_task(quantumTaskArn=arn)
+        response = self.braket_client.cancel_quantum_task(quantumTaskArn=arn)
+        broadcast_event(_TaskStatusEvent(arn=arn, status=response["cancellationStatus"]))
 
     def create_quantum_task(self, **boto3_kwargs) -> str:
         """
@@ -178,6 +188,14 @@ class AwsSession(object):
         if job_token:
             boto3_kwargs.update({"jobToken": job_token})
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
+        broadcast_event(
+            _TaskCreationEvent(
+                arn=response["quantumTaskArn"],
+                shots=boto3_kwargs["shots"],
+                is_job_task=(job_token is not None),
+                device=boto3_kwargs["deviceArn"],
+            )
+        )
         return response["quantumTaskArn"]
 
     def create_job(self, **boto3_kwargs) -> str:
@@ -221,7 +239,9 @@ class AwsSession(object):
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
-        return self.braket_client.get_quantum_task(quantumTaskArn=arn)
+        response = self.braket_client.get_quantum_task(quantumTaskArn=arn)
+        broadcast_event(_TaskStatusEvent(arn=response["quantumTaskArn"], status=response["status"]))
+        return response
 
     def get_default_jobs_role(self) -> str:
         """
