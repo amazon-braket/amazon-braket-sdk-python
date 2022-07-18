@@ -73,9 +73,11 @@ class Tracker:
         """
         Estimate cost of all quantum tasks tracked by this tracker that use Braket qpu devices.
 
-        Charges shown are estimates based on your simulator and QPU quantum task usage. These
-        estimates do not factor in any discounts or credits. Your actual charges may differ based
-        on additional classical compute.
+        Note: Charges shown are estimates based on your Amazon Braket simulator and quantum
+        processing unit (QPU) task usage. Estimated charges shown may differ from your actual
+        charges. Estimated charges do not factor in any discounts or credits, and you may
+        experience additional charges based on your use of other services such as
+        Amazon Elastic Compute Cloud (Amazon EC2).
 
         Returns:
             Decimal: The estimated total cost in USD
@@ -90,9 +92,11 @@ class Tracker:
         """
         Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
 
-        Charges shown are estimates based on your simulator and QPU quantum task usage. These
-        estimates do not factor in any discounts or credits. Your actual charges may differ based
-        on additional classical compute.
+        Note: Charges shown are estimates based on your Amazon Braket simulator and quantum
+        processing unit (QPU) task usage. Estimated charges shown may differ from your actual
+        charges. Estimated charges do not factor in any discounts or credits, and you may
+        experience additional charges based on your use of other services such as
+        Amazon Elastic Compute Cloud (Amazon EC2).
 
         Returns:
             Decimal: The estimated total cost in USD
