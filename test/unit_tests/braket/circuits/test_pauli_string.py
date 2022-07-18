@@ -18,7 +18,7 @@ import math
 import numpy as np
 import pytest
 
-from braket.circuits import Circuit, PauliString, gates
+from braket.circuits import PauliString, gates
 from braket.circuits.observables import X, Y, Z
 
 ORDER = ["I", "X", "Y", "Z"]
@@ -57,7 +57,9 @@ def test_happy_case(pauli_string, string, phase, observable):
     assert instance.to_unsigned_observable() == observable
 
 
-@pytest.mark.parametrize("other", ["foo", PauliString("+XYZ"), PauliString("-XI")])
+@pytest.mark.parametrize(
+    "other", ["foo", PauliString("+XYZ"), PauliString("-XI"), PauliString("-XYZI")]
+)
 def test_not_equal(other):
     assert PauliString("-XYZ") != other
 
@@ -131,15 +133,6 @@ def test_eigenstate(string, signs):
     )
     actual = total_sign * pauli_matrix @ state
     assert np.allclose(actual, state)
-    assert tuple(signs_list) in pauli_string._eigenstate_circuits
-
-
-def test_cached_eigenstate_used():
-    pauli_string = PauliString("XYZ")
-    sign = (+1, -1, -1)
-    circuit = Circuit()
-    pauli_string._eigenstate_circuits[sign] = circuit
-    assert pauli_string.eigenstate(sign) == circuit
 
 
 @pytest.mark.xfail(raises=ValueError)

@@ -47,14 +47,12 @@ class PauliString:
             self._phase = pauli_string._phase
             self._qubit_count = pauli_string._qubit_count
             self._nontrivial = pauli_string._nontrivial
-            self._eigenstate_circuits = pauli_string._eigenstate_circuits
         elif isinstance(pauli_string, str):
             self._phase, factors_str = PauliString._split(pauli_string)
             self._qubit_count = len(factors_str)
             self._nontrivial = {
                 i: factors_str[i] for i in range(len(factors_str)) if factors_str[i] != "I"
             }
-            self._eigenstate_circuits = {}
         else:
             raise TypeError(f"Pauli word {pauli_string} must be of type {PauliString} or {str}")
 
@@ -133,27 +131,25 @@ class PauliString:
         qubit_count = self._qubit_count
         if not signs:
             signs = "+" * qubit_count
-        if len(signs) != qubit_count:
+        elif len(signs) != qubit_count:
             raise ValueError(
                 f"signs must be the same length of the Pauli string ({qubit_count}), "
                 f"but was {len(signs)}"
             )
-        if isinstance(signs, str) and not set(signs) <= {"+", "-"}:
-            raise ValueError(f"signs must be +/-1, got {signs}")
         signs_tup = (
-            tuple(_SIGN_MAP[sign] for sign in signs) if isinstance(signs, str) else tuple(signs)
+            tuple(_SIGN_MAP.get(sign) for sign in signs) if isinstance(signs, str) else tuple(signs)
         )
         if not set(signs_tup) <= {1, -1}:
             raise ValueError(f"signs must be +/-1, got {signs}")
-        if signs_tup in self._eigenstate_circuits:
-            return self._eigenstate_circuits[signs_tup]
-        circuit = self._generate_eigenstate_circuit(signs_tup)
-        self._eigenstate_circuits[signs_tup] = circuit
-        return circuit
+        return self._generate_eigenstate_circuit(signs_tup)
 
     def __eq__(self, other):
         if isinstance(other, PauliString):
-            return self._phase == other._phase and self._nontrivial == other._nontrivial
+            return (
+                self._phase == other._phase
+                and self._nontrivial == other._nontrivial
+                and self._qubit_count == other._qubit_count
+            )
         return False
 
     def __getitem__(self, item):
