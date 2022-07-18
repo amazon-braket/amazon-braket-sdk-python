@@ -2011,7 +2011,8 @@ def format_complex(number: complex) -> str:
     """
     if number.real:
         if number.imag:
-            return f"{number.real} + {number.imag}im"
+            imag_sign = "+" if number.imag > 0 else "-"
+            return f"{number.real} {imag_sign} {abs(number.imag)}im"
         else:
             return f"{number.real}"
     else:
