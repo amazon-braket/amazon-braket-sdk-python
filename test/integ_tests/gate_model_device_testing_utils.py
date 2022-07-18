@@ -589,9 +589,7 @@ def bell_pair_openqasm_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
     generated_openqasm = circuit.to_ir(ir_type=IRType.OPENQASM)
 
     for program in hardcoded_openqasm, generated_openqasm:
-        no_result_types_testing(
-            program, device, run_kwargs, {"00": 0.5, "11": 0.5}
-        )
+        no_result_types_testing(program, device, run_kwargs, {"00": 0.5, "11": 0.5})
 
 
 def openqasm_noisy_circuit_1qubit_noise_full_probability(
@@ -631,10 +629,12 @@ def openqasm_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str
         "#pragma braket result sample h(q[0]) @ x(q[1])"
     )
     hardcoded_openqasm = OpenQasmProgram(source=openqasm_string)
-    circuit = Circuit().h(0).cnot(0, 1).expectation(
-        Observable.H() @ Observable.X(), (0, 1)
-    ).sample(
-        Observable.H() @ Observable.X(), (0, 1)
+    circuit = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .expectation(Observable.H() @ Observable.X(), (0, 1))
+        .sample(Observable.H() @ Observable.X(), (0, 1))
     )
     generated_openqasm = circuit.to_ir(ir_type=IRType.OPENQASM)
 
