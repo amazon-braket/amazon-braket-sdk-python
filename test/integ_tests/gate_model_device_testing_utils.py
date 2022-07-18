@@ -20,6 +20,7 @@ import numpy as np
 from braket.aws import AwsDevice
 from braket.circuits import Circuit, Gate, Instruction, Observable, ResultType
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
+from braket.circuits.serialization import IRType
 from braket.devices import Device
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks import GateModelQuantumTaskResult
@@ -583,9 +584,14 @@ def bell_pair_openqasm_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
         "c[0] = measure q[0];"
         "c[1] = measure q[1];"
     )
-    no_result_types_testing(
-        OpenQasmProgram(source=openqasm_string), device, run_kwargs, {"00": 0.5, "11": 0.5}
-    )
+    hardcoded_openqasm = OpenQasmProgram(source=openqasm_string)
+    circuit = Circuit().h(0).cnot(0, 1)
+    generated_openqasm = circuit.to_ir(ir_type=IRType.OPENQASM)
+
+    for program in hardcoded_openqasm, generated_openqasm:
+        no_result_types_testing(
+            program, device, run_kwargs, {"00": 0.5, "11": 0.5}
+        )
 
 
 def openqasm_noisy_circuit_1qubit_noise_full_probability(
@@ -601,13 +607,18 @@ def openqasm_noisy_circuit_1qubit_noise_full_probability(
         "#pragma braket noise bit_flip(0.1) q[0]"
         "#pragma braket result probability q[0], q[1]"
     )
-    result = device.run(OpenQasmProgram(source=openqasm_string), **run_kwargs).result()
-    assert len(result.result_types) == 1
-    assert np.allclose(
-        result.get_value_by_result_type(ResultType.Probability(target=[0, 1])),
-        np.array([0.0, 0.1, 0, 0.9]),
-        **tol
-    )
+    hardcoded_openqasm = OpenQasmProgram(source=openqasm_string)
+    circuit = Circuit().x(0).x(1).bit_flip(0, 0.1).probability([0, 1])
+    generated_openqasm = circuit.to_ir(ir_type=IRType.OPENQASM)
+
+    for program in hardcoded_openqasm, generated_openqasm:
+        result = device.run(program, **run_kwargs).result()
+        assert len(result.result_types) == 1
+        assert np.allclose(
+            result.get_value_by_result_type(ResultType.Probability(target=[0, 1])),
+            np.array([0.0, 0.1, 0, 0.9]),
+            **tol
+        )
 
 
 def openqasm_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
@@ -619,23 +630,32 @@ def openqasm_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str
         "#pragma braket result expectation h(q[0]) @ x(q[1])"
         "#pragma braket result sample h(q[0]) @ x(q[1])"
     )
-    result = device.run(OpenQasmProgram(source=openqasm_string), **run_kwargs).result()
-    assert len(result.result_types) == 2
-    assert (
-        0.6
-        < result.get_value_by_result_type(
-            ResultType.Expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
-        )
-        < 0.8
+    hardcoded_openqasm = OpenQasmProgram(source=openqasm_string)
+    circuit = Circuit().h(0).cnot(0, 1).expectation(
+        Observable.H() @ Observable.X(), (0, 1)
+    ).sample(
+        Observable.H() @ Observable.X(), (0, 1)
     )
-    assert (
-        len(
-            result.get_value_by_result_type(
-                ResultType.Sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
+    generated_openqasm = circuit.to_ir(ir_type=IRType.OPENQASM)
+
+    for program in hardcoded_openqasm, generated_openqasm:
+        result = device.run(program, **run_kwargs).result()
+        assert len(result.result_types) == 2
+        assert (
+            0.6
+            < result.get_value_by_result_type(
+                ResultType.Expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
             )
+            < 0.8
         )
-        == run_kwargs["shots"]
-    )
+        assert (
+            len(
+                result.get_value_by_result_type(
+                    ResultType.Sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
+                )
+            )
+            == run_kwargs["shots"]
+        )
 
 
 def many_layers(n_qubits: int, n_layers: int) -> Circuit:
