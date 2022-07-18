@@ -58,6 +58,8 @@ from braket.tasks import (
     PhotonicModelQuantumTaskResult,
     QuantumTask,
 )
+from braket.tracking.tracking_context import broadcast_event
+from braket.tracking.tracking_events import _TaskCompletionEvent
 
 
 class AwsQuantumTask(QuantumTask):
@@ -411,6 +413,14 @@ class AwsQuantumTask(QuantumTask):
             current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
         )
         self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
+        task_event = {"arn": self.id, "status": self.state(), "execution_duration": None}
+        try:
+            task_event[
+                "execution_duration"
+            ] = self._result.additional_metadata.simulatorMetadata.executionDuration
+        except AttributeError:
+            pass
+        broadcast_event(_TaskCompletionEvent(**task_event))
         return self._result
 
     def __repr__(self) -> str:
