@@ -11,8 +11,27 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-   Version number (major.minor.patch[-label])
-"""
 
-__version__ = "1.26.1.dev0"
+import io
+from unittest.mock import patch
+
+from braket.tracking.pricing import Pricing
+
+
+@patch("urllib3.PoolManager")
+def test_search_prices(mock_http):
+    mock_http().request.return_value = io.BytesIO(
+        b"""line1
+line2
+line3
+line4
+line5
+A,B
+1,1
+1,2
+"""
+    )
+    pricer = Pricing()
+    assert pricer.price_search(A="0") == []
+    assert pricer.price_search(A="1", B="1") == [{"A": "1", "B": "1"}]
+    assert pricer.price_search(A="1") == [{"A": "1", "B": "1"}, {"A": "1", "B": "2"}]
