@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.25.2 (2022-06-22)
+
+### Bug Fixes and Other Changes
+
+ * Set the range for amazon-braket-schemas to >= 1.10.0 for the latest device schemas needed.
+
 ## v1.25.1.post0 (2022-06-17)
 
 ### Documentation Changes
