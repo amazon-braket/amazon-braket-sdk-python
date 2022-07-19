@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.26.0 (2022-07-18)
+
+### Features
+
+ * SDK Cost Tracker
+
 ## v1.25.2 (2022-06-22)
 
 ### Bug Fixes and Other Changes
