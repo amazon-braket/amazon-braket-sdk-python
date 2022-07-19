@@ -287,9 +287,7 @@ class AwsDevice(Device):
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
-        qpu_properties = metadata.get("deviceCapabilities")
-        self._properties = BraketSchemaBase.parse_raw_schema(qpu_properties)
-        self._topology_graph = self._construct_topology_graph()
+        self._properties = metadata.get("deviceCapabilities")
 
     @property
     def type(self) -> str:
@@ -375,7 +373,7 @@ class AwsDevice(Device):
         Please see `braket.device_schema` in amazon-braket-schemas-python_
 
         .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
-        return self._properties
+        return BraketSchemaBase.parse_raw_schema(self._properties)
 
     @property
     def topology_graph(self) -> DiGraph:
@@ -392,7 +390,7 @@ class AwsDevice(Device):
 
             >>> print(device.topology_graph.edges)
         """
-        return self._topology_graph
+        return self._construct_topology_graph()
 
     def _construct_topology_graph(self) -> DiGraph:
         """
