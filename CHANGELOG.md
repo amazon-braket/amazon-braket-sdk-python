@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.26.1 (2022-07-19)
+
+### Bug Fixes and Other Changes
+
+ * Lazily parse schemas for devices so getDevice calls do not rely …
+
 ## v1.26.0 (2022-07-18)
 
 ### Features
