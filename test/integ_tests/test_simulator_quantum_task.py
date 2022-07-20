@@ -164,6 +164,7 @@ def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_d
     )
 
 
+@pytest.mark.xfail(reason="hermitian all service bug")
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_all_selected(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -188,6 +189,7 @@ def test_result_types_noncommuting_flipped_targets(
     )
 
 
+@pytest.mark.xfail(reason="hermitian all, x all service bug")
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_noncommuting_all(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
