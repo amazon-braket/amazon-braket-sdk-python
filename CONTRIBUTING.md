@@ -21,6 +21,7 @@ information to effectively respond to your bug report or contribution.
   * [API References (docstrings)](#api-references-docstrings)
   * [Build and Test Documentation](#build-and-test-documentation)
 * [Find Contributions to Work On](#find-contributions-to-work-on)
+* [Building Integrations](#building-integrations)
 * [Code of Conduct](#code-of-conduct)
 * [Security Issue Notifications](#security-issue-notifications)
 * [Licensing](#licensing)
@@ -188,6 +189,10 @@ You can then find the generated HTML files in `build/documentation/html`.
 
 Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels ((enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'](https://github.com/aws/amazon-braket-sdk-python/labels/help%20wanted) issues is a great place to start.
 
+## Building Integrations
+The Amazon Braket SDK supports integrations with popular quantum computing frameworks such as [PennyLane](https://github.com/aws/amazon-braket-pennylane-plugin-python), [Strawberryfields](https://github.com/aws/amazon-braket-strawberryfields-plugin-python) and [DWave's Ocean library](https://github.com/aws/amazon-braket-ocean-plugin-python). These serve as a good reference for a new integration you wish to develop. 
+
+When developing a new integration with the Amazon Braket SDK, please remember to update the [user agent header](https://datatracker.ietf.org/doc/html/rfc7231#section-5.5.3) to include version information for your integration. An example can be found [here](https://github.com/aws/amazon-braket-pennylane-plugin-python/commit/ccee35604afc2b04d83ee9103eccb2821a4256cb). 
 
 ## Code of Conduct
 
