@@ -250,10 +250,11 @@ def result_types_all_selected_testing(
         .variance(Observable.Hermitian(array))
         .expectation(Observable.Hermitian(array), 0)
     )
+    if shots:
+        circuit.add_result_type(ResultType.Sample(Observable.Hermitian(array), 1))
+
     tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
-        if shots:
-            circuit.add_result_type(ResultType.Sample(Observable.Hermitian(array), 1))
         result = device.run(task, **run_kwargs).result()
 
         expected_mean = 2 * np.sin(theta) + 0.5 * np.cos(theta) + 0.5
