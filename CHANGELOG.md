@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.26.2 (2022-07-21)
+
+### Bug Fixes and Other Changes
+
+ * docs: Update README to include guidance for integrations
+
 ## v1.26.1 (2022-07-19)
 
 ### Bug Fixes and Other Changes
