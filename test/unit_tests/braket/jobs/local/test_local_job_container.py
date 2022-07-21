@@ -57,31 +57,85 @@ def test_start_and_stop(mock_run, mock_check_output, image_uri, aws_session):
     assert mock_run.call_count == 1
 
 
+@pytest.mark.parametrize(
+    "forced_update, check_output",
+    [
+        (
+            False,
+            [
+                str.encode(""),  # This means that the container image does not exist locally.
+                str.encode("LocalImageName"),
+                str.encode("RunningContainer"),
+            ],
+        ),
+        (
+            True,
+            [
+                str.encode(""),  # This means that the container image does not exist locally.
+                str.encode("LocalImageName"),
+                str.encode("RunningContainer"),
+            ],
+        ),
+        (
+            True,  # When force update is true, we'll pull containers, even if they exist locally.
+            [
+                str.encode("LocalImageName"),  # This means that the container image exists locally.
+                str.encode("RunningContainer"),
+            ],
+        ),
+    ],
+)
 @patch("subprocess.check_output")
 @patch("subprocess.run")
-def test_pull_container(mock_run, mock_check_output, repo_uri, image_uri, aws_session):
+def test_pull_container(
+    mock_run, mock_check_output, repo_uri, image_uri, aws_session, forced_update, check_output
+):
     local_image_name = "LocalImageName"
     running_container_name = "RunningContainer"
     test_token = "Test Token"
-    mock_check_output.side_effect = [
-        str.encode(""),
-        str.encode(local_image_name),
-        str.encode(running_container_name),
-    ]
+    mock_check_output.side_effect = check_output
     aws_session.ecr_client.get_authorization_token.return_value = {
         "authorizationData": [{"authorizationToken": base64.b64encode(str.encode(test_token))}]
     }
-    with _LocalJobContainer(image_uri, aws_session):
+    with _LocalJobContainer(
+        image_uri=image_uri, aws_session=aws_session, force_update=forced_update
+    ):
         pass
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
     mock_check_output.assert_any_call(
         ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
     )
-    assert mock_check_output.call_count == 3
+    assert mock_check_output.call_count == len(check_output)
     mock_run.assert_any_call(["docker", "login", "-u", "AWS", "-p", test_token, repo_uri])
     mock_run.assert_any_call(["docker", "pull", image_uri])
     mock_run.assert_any_call(["docker", "stop", running_container_name])
     assert mock_run.call_count == 3
+
+
+@patch("subprocess.check_output")
+@patch("subprocess.run")
+def test_pull_container_forced_update_invalid_name(
+    mock_run, mock_check_output, repo_uri, aws_session
+):
+    local_image_name = "LocalImageName"
+    running_container_name = "RunningContainer"
+    mock_logger = Mock()
+    mock_check_output.side_effect = [
+        str.encode(local_image_name),
+        str.encode(running_container_name),
+    ]
+    with _LocalJobContainer(
+        image_uri=local_image_name, aws_session=aws_session, force_update=True, logger=mock_logger
+    ):
+        pass
+    mock_logger.warning.assert_called_with(f"Unable to update {local_image_name}.")
+    mock_check_output.assert_any_call(["docker", "images", "-q", local_image_name])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
+    assert mock_check_output.call_count == 2
+    mock_run.assert_any_call(["docker", "stop", running_container_name])
+    assert mock_run.call_count == 1
 
 
 @patch("subprocess.check_output")
