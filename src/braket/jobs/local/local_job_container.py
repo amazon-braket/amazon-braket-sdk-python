@@ -157,6 +157,7 @@ class _LocalJobContainer(object):
         elif force_update:
             try:
                 self._pull_image(image_uri)
+                image_name = self._check_output_formatted(["docker", "images", "-q", image_uri])
             except ValueError:
                 self._logger.warning(f"Unable to update {image_uri}.")
 

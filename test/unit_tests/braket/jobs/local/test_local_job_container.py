@@ -58,7 +58,7 @@ def test_start_and_stop(mock_run, mock_check_output, image_uri, aws_session):
 
 
 @pytest.mark.parametrize(
-    "forced_update, check_output",
+    "forced_update, check_output, local_image_name",
     [
         (
             False,
@@ -67,6 +67,7 @@ def test_start_and_stop(mock_run, mock_check_output, image_uri, aws_session):
                 str.encode("LocalImageName"),
                 str.encode("RunningContainer"),
             ],
+            "LocalImageName",
         ),
         (
             True,
@@ -75,22 +76,31 @@ def test_start_and_stop(mock_run, mock_check_output, image_uri, aws_session):
                 str.encode("LocalImageName"),
                 str.encode("RunningContainer"),
             ],
+            "LocalImageName",
         ),
         (
             True,  # When force update is true, we'll pull containers, even if they exist locally.
             [
-                str.encode("LocalImageName"),  # This means that the container image exists locally.
+                str.encode("PreUpdateName"),  # This means that the container image exists locally.
+                str.encode("PostUpdateName"),  # This means that the container image exists locally.
                 str.encode("RunningContainer"),
             ],
+            "PostUpdateName",
         ),
     ],
 )
 @patch("subprocess.check_output")
 @patch("subprocess.run")
 def test_pull_container(
-    mock_run, mock_check_output, repo_uri, image_uri, aws_session, forced_update, check_output
+    mock_run,
+    mock_check_output,
+    repo_uri,
+    image_uri,
+    aws_session,
+    forced_update,
+    check_output,
+    local_image_name,
 ):
-    local_image_name = "LocalImageName"
     running_container_name = "RunningContainer"
     test_token = "Test Token"
     mock_check_output.side_effect = check_output
