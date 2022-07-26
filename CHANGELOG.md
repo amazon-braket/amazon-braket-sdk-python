@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.27.0 (2022-07-26)
+
+### Features
+
+ * provide easy mechanism to update the local container when running local job.
+
 ## v1.26.2 (2022-07-21)
 
 ### Bug Fixes and Other Changes
