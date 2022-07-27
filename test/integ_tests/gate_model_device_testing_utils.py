@@ -224,7 +224,6 @@ def result_types_hermitian_testing(
     if shots:
         circuit.add_result_type(ResultType.Sample(Observable.Hermitian(array), 0))
     tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
-    print(circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
