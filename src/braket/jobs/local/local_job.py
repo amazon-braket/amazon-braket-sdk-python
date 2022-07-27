@@ -48,6 +48,7 @@ class LocalQuantumJob(QuantumJob):
         output_data_config: OutputDataConfig = None,
         checkpoint_config: CheckpointConfig = None,
         aws_session: AwsSession = None,
+        local_container_update: bool = True,
     ) -> LocalQuantumJob:
         """Creates and runs job by setting up and running the customer script in a local
          docker container.
@@ -108,6 +109,10 @@ class LocalQuantumJob(QuantumJob):
             aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
 
+            local_container_update (bool): Perform an update, if available, from ECR to the local
+                container image. Optional.
+                Default: True.
+
         Returns:
             LocalQuantumJob: The representation of a local Braket Job.
         """
@@ -140,7 +145,9 @@ class LocalQuantumJob(QuantumJob):
         else:
             image_uri = retrieve_image(Framework.BASE, session.region)
 
-        with _LocalJobContainer(image_uri) as container:
+        with _LocalJobContainer(
+            image_uri=image_uri, force_update=local_container_update
+        ) as container:
             env_variables = setup_container(container, session, **create_job_kwargs)
             container.run_local_job(env_variables)
             container.copy_from("/opt/ml/model", job_name)

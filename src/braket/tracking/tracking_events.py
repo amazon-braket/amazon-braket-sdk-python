@@ -11,8 +11,30 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-   Version number (major.minor.patch[-label])
-"""
+from __future__ import annotations
 
-__version__ = "1.27.1.dev0"
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class _TrackingEvent:
+    arn: str
+
+
+@dataclass
+class _TaskCreationEvent(_TrackingEvent):
+    shots: int
+    is_job_task: bool
+    device: str
+
+
+@dataclass
+class _TaskCompletionEvent(_TrackingEvent):
+    execution_duration: Optional[float]
+    status: str
+
+
+@dataclass
+class _TaskStatusEvent(_TrackingEvent):
+    status: str

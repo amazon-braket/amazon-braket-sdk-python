@@ -1,5 +1,35 @@
 # Changelog
 
+## v1.27.0 (2022-07-26)
+
+### Features
+
+ * provide easy mechanism to update the local container when running local job.
+
+## v1.26.2 (2022-07-21)
+
+### Bug Fixes and Other Changes
+
+ * docs: Update README to include guidance for integrations
+
+## v1.26.1 (2022-07-19)
+
+### Bug Fixes and Other Changes
+
+ * Lazily parse schemas for devices so getDevice calls do not rely …
+
+## v1.26.0 (2022-07-18)
+
+### Features
+
+ * SDK Cost Tracker
+
+## v1.25.2 (2022-06-22)
+
+### Bug Fixes and Other Changes
+
+ * Set the range for amazon-braket-schemas to >= 1.10.0 for the latest device schemas needed.
+
 ## v1.25.1.post0 (2022-06-17)
 
 ### Documentation Changes

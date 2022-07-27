@@ -13,7 +13,7 @@
 import json
 import os
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import networkx as nx
 import pytest
@@ -1145,6 +1145,11 @@ def test_get_device_availability(mock_utc_now):
             for i in range(len(test_item[1])):
                 device_name = test_set["test_devices"][i][0]
                 device = test_set["test_devices"][i][1]
+                type(device).properties = PropertyMock(return_value=Expando())
+                type(device).properties.service = PropertyMock(return_value=Expando())
+                device.properties.service.executionWindows = (
+                    device._properties.service.executionWindows
+                )
                 expected = bool(test_item[1][i])
                 actual = device.is_available
                 assert (
