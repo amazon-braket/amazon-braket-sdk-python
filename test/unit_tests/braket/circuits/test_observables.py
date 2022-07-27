@@ -196,6 +196,22 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             [3, 0, 1],
             "h($3) @ z($0) @ i($1)",
         ),
+        (
+            Observable.Hermitian(np.eye(4)) @ Observable.I(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3, 0, 1],
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) q[3], q[0]"
+            " @ i(q[1])",
+        ),
+        (
+            Observable.I() @ Observable.Hermitian(np.eye(4)),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 0, 1],
+            "i($3) @ "
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) $0, $1",
+        ),
     ],
 )
 def test_observables_to_ir_openqasm(observable, serialization_properties, target, expected_ir):

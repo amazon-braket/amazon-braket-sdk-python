@@ -40,84 +40,86 @@ SHOTS = 8000
 
 
 def test_no_result_types_bell_pair():
-    no_result_types_bell_pair_testing(DEVICE, {"shots": SHOTS})
+    no_result_types_bell_pair_testing(DEVICE, {"shots": SHOTS}, test_program=False)
 
 
 def test_qubit_ordering():
-    qubit_ordering_testing(DEVICE, {"shots": SHOTS})
+    qubit_ordering_testing(DEVICE, {"shots": SHOTS}, test_program=False)
 
 
 def test_result_types_nonzero_shots_bell_pair():
-    result_types_nonzero_shots_bell_pair_testing(DEVICE, {"shots": SHOTS})
+    result_types_nonzero_shots_bell_pair_testing(DEVICE, {"shots": SHOTS}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_bell_pair_full_probability(shots):
-    result_types_bell_pair_full_probability_testing(DEVICE, {"shots": shots})
+    result_types_bell_pair_full_probability_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_bell_pair_marginal_probability(shots):
-    result_types_bell_pair_marginal_probability_testing(DEVICE, {"shots": shots})
+    result_types_bell_pair_marginal_probability_testing(
+        DEVICE, {"shots": shots}, test_program=False
+    )
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_hermitian(shots):
-    result_types_hermitian_testing(DEVICE, {"shots": shots})
+    result_types_hermitian_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_tensor_x_y(shots):
-    result_types_tensor_x_y_testing(DEVICE, {"shots": shots})
+    result_types_tensor_x_y_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_tensor_z_z(shots):
-    result_types_tensor_z_z_testing(DEVICE, {"shots": shots})
+    result_types_tensor_z_z_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_tensor_z_h_y(shots):
-    result_types_tensor_z_h_y_testing(DEVICE, {"shots": shots})
+    result_types_tensor_z_h_y_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_tensor_z_hermitian(shots):
-    result_types_tensor_z_hermitian_testing(DEVICE, {"shots": shots})
+    result_types_tensor_z_hermitian_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_tensor_hermitian_hermitian(shots):
-    result_types_tensor_hermitian_hermitian_testing(DEVICE, {"shots": shots})
+    result_types_tensor_hermitian_hermitian_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_tensor_y_hermitian(shots):
-    result_types_tensor_y_hermitian_testing(DEVICE, {"shots": shots})
+    result_types_tensor_y_hermitian_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_all_selected(shots):
-    result_types_all_selected_testing(DEVICE, {"shots": shots})
+    result_types_all_selected_testing(DEVICE, {"shots": shots}, test_program=False)
 
 
 def test_result_types_noncommuting():
-    result_types_noncommuting_testing(DEVICE, {})
+    result_types_noncommuting_testing(DEVICE, {}, test_program=False)
 
 
 def test_result_types_noncommuting_flipped_targets():
-    result_types_noncommuting_flipped_targets_testing(DEVICE, {})
+    result_types_noncommuting_flipped_targets_testing(DEVICE, {}, test_program=False)
 
 
 def test_result_types_noncommuting_all():
-    result_types_noncommuting_all(DEVICE, {})
+    result_types_noncommuting_all(DEVICE, {}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_noisy_circuit_1qubit_noise(shots):
-    noisy_circuit_1qubit_noise_full_probability(DEVICE, {"shots": shots})
+    noisy_circuit_1qubit_noise_full_probability(DEVICE, {"shots": shots}, test_program=False)
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_noisy_circuit_2qubit_noise(shots):
-    noisy_circuit_2qubit_noise_full_probability(DEVICE, {"shots": shots})
+    noisy_circuit_2qubit_noise_full_probability(DEVICE, {"shots": shots}, test_program=False)

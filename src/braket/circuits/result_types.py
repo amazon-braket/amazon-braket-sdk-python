@@ -277,7 +277,7 @@ class Probability(ResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         if not self.target:
-            return "#pragma braket result probability"
+            return "#pragma braket result probability all"
         targets = ", ".join(
             serialization_properties.format_target(int(target)) for target in self.target
         )

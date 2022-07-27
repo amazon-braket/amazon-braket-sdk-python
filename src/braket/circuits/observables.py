@@ -254,14 +254,21 @@ class TensorProduct(Observable):
     def _to_openqasm(
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
-        return " @ ".join(
-            obs.to_ir(
-                target=QubitSet(targ),
-                ir_type=IRType.OPENQASM,
-                serialization_properties=serialization_properties,
+        factors = []
+        use_qubits = iter(target)
+        for obs in self._factors:
+            obs_target = QubitSet()
+            num_qubits = int(np.log2(obs.to_matrix().shape[0]))
+            for _ in range(num_qubits):
+                obs_target.add(next(use_qubits))
+            factors.append(
+                obs.to_ir(
+                    target=obs_target,
+                    ir_type=IRType.OPENQASM,
+                    serialization_properties=serialization_properties,
+                )
             )
-            for obs, targ in zip(self._factors, target)
-        )
+        return " @ ".join(factors)
 
     @property
     def factors(self) -> Tuple[Observable, ...]:
