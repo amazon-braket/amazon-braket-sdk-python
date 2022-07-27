@@ -742,6 +742,12 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "#pragma braket unitary([[1.0, 0], [0, 0.70710678 + 0.70710678im]]) $4",
         ),
+        (
+            Gate.Unitary(np.array([[1.0, 0], [0, 0.70710678 - 0.70710678j]])),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary([[1.0, 0], [0, 0.70710678 - 0.70710678im]]) q[4]",
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):

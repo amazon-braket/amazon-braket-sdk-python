@@ -154,7 +154,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.Probability(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result probability",
+            "#pragma braket result probability all",
         ),
         (
             ResultType.Probability([0, 2]),

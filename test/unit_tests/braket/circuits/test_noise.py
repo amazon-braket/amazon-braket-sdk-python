@@ -291,6 +291,11 @@ def test_noise_to_ir(
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
+def test_to_matrix_not_implemented_by_default(base_noise):
+    base_noise.to_matrix(None)
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
 def test_invalid_deserializatoin():
     Noise.from_dict({})
 
