@@ -30,25 +30,22 @@ def get_tol(shots: int) -> Dict[str, float]:
     return {"atol": 0.1, "rtol": 0.15} if shots else {"atol": 0.01, "rtol": 0}
 
 
-def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any], test_program: bool = True):
+def qubit_ordering_testing(device: Device, run_kwargs: Dict[str, Any]):
     # |110> should get back value of "110"
     state_110 = Circuit().x(0).x(1).i(2)
     result = device.run(state_110, **run_kwargs).result()
+    assert result.measurement_counts.most_common(1)[0][0] == "110"
+    state_110_qasm = state_110.to_ir(ir_type=IRType.OPENQASM)
+    result = device.run(state_110_qasm, **run_kwargs).result()
     assert result.measurement_counts.most_common(1)[0][0] == "110"
 
     # |001> should get back value of "001"
     state_001 = Circuit().i(0).i(1).x(2)
     result = device.run(state_001, **run_kwargs).result()
     assert result.measurement_counts.most_common(1)[0][0] == "001"
-
-    if test_program:
-        state_110_qasm = state_110.to_ir(ir_type=IRType.OPENQASM)
-        result = device.run(state_110_qasm, **run_kwargs).result()
-        assert result.measurement_counts.most_common(1)[0][0] == "110"
-
-        state_001_qasm = state_001.to_ir(ir_type=IRType.OPENQASM)
-        result = device.run(state_001_qasm, **run_kwargs).result()
-        assert result.measurement_counts.most_common(1)[0][0] == "001"
+    state_001_qasm = state_001.to_ir(ir_type=IRType.OPENQASM)
+    result = device.run(state_001_qasm, **run_kwargs).result()
+    assert result.measurement_counts.most_common(1)[0][0] == "001"
 
 
 def no_result_types_testing(
@@ -67,18 +64,16 @@ def no_result_types_testing(
 
 
 def no_result_types_bell_pair_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     bell = Circuit().h(0).cnot(0, 1)
-    no_result_types_testing(bell, device, run_kwargs, {"00": 0.5, "11": 0.5})
-
-    if test_program:
-        bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
-        no_result_types_testing(bell_qasm, device, run_kwargs, {"00": 0.5, "11": 0.5})
+    bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
+    for task in (bell, bell_qasm):
+        no_result_types_testing(task, device, run_kwargs, {"00": 0.5, "11": 0.5})
 
 
 def result_types_observable_not_in_instructions(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
@@ -89,13 +84,9 @@ def result_types_observable_not_in_instructions(
         .expectation(observable=Observable.X(), target=[2])
         .variance(observable=Observable.Y(), target=[3])
     )
-    result = device.run(bell, **run_kwargs).result()
-    assert np.allclose(result.values[0], 0, **tol)
-    assert np.allclose(result.values[1], 1, **tol)
-
-    if test_program:
-        bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
-        result = device.run(bell_qasm, **run_kwargs).result()
+    bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
+    for task in (bell, bell_qasm):
+        result = device.run(task, **run_kwargs).result()
         assert np.allclose(result.values[0], 0, **tol)
         assert np.allclose(result.values[1], 1, **tol)
 
@@ -105,7 +96,6 @@ def result_types_zero_shots_bell_pair_testing(
     include_state_vector: bool,
     run_kwargs: Dict[str, Any],
     include_amplitude: bool = True,
-    test_program: bool = True,
 ):
     circuit = (
         Circuit()
@@ -117,7 +107,7 @@ def result_types_zero_shots_bell_pair_testing(
         circuit.amplitude(["01", "10", "00", "11"])
     if include_state_vector:
         circuit.state_vector()
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
         assert len(result.result_types) == 3 if include_state_vector else 2
@@ -133,23 +123,22 @@ def result_types_zero_shots_bell_pair_testing(
                 np.array([1, 0, 0, 1]) / np.sqrt(2),
             )
         if include_amplitude:
-            assert result.get_value_by_result_type(
+            amplitude = result.get_value_by_result_type(
                 ResultType.Amplitude(["01", "10", "00", "11"])
-            ) == {
-                "01": 0j,
-                "10": 0j,
-                "00": (1 / np.sqrt(2)),
-                "11": (1 / np.sqrt(2)),
-            }
+            )
+            assert np.isclose(amplitude["01"], 0)
+            assert np.isclose(amplitude["10"], 0)
+            assert np.isclose(amplitude["00"], 1 / np.sqrt(2))
+            assert np.isclose(amplitude["11"], 1 / np.sqrt(2))
 
 
 def result_types_bell_pair_full_probability_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().h(0).cnot(0, 1).probability()
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
         assert len(result.result_types) == 1
@@ -161,12 +150,12 @@ def result_types_bell_pair_full_probability_testing(
 
 
 def result_types_bell_pair_marginal_probability_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().h(0).cnot(0, 1).probability(0)
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
         assert len(result.result_types) == 1
@@ -178,7 +167,7 @@ def result_types_bell_pair_marginal_probability_testing(
 
 
 def result_types_nonzero_shots_bell_pair_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     circuit = (
         Circuit()
@@ -187,7 +176,7 @@ def result_types_nonzero_shots_bell_pair_testing(
         .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
         .sample(observable=Observable.H() @ Observable.X(), target=[0, 1])
     )
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
         assert len(result.result_types) == 2
@@ -253,6 +242,7 @@ def result_types_all_selected_testing(
         circuit.add_result_type(ResultType.Sample(Observable.Hermitian(array), 1))
 
     tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -301,7 +291,7 @@ def assert_variance_expectation_sample_result(
 
 
 def result_types_tensor_x_y_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     theta = 0.432
@@ -310,7 +300,7 @@ def result_types_tensor_x_y_testing(
     obs = Observable.X() @ Observable.Y()
     obs_targets = [0, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -331,7 +321,7 @@ def result_types_tensor_x_y_testing(
 
 
 def result_types_tensor_z_z_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     theta = 0.432
@@ -340,7 +330,7 @@ def result_types_tensor_z_z_testing(
     obs = Observable.Z() @ Observable.Z()
     obs_targets = [0, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -354,7 +344,7 @@ def result_types_tensor_z_z_testing(
 
 
 def result_types_tensor_hermitian_hermitian_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     theta = 0.432
@@ -372,7 +362,7 @@ def result_types_tensor_hermitian_hermitian_testing(
     obs = Observable.Hermitian(matrix1) @ Observable.Hermitian(matrix2)
     obs_targets = [0, 1, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -386,7 +376,7 @@ def result_types_tensor_hermitian_hermitian_testing(
 
 
 def result_types_tensor_z_h_y_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     theta = 0.432
@@ -395,7 +385,7 @@ def result_types_tensor_z_h_y_testing(
     obs = Observable.Z() @ Observable.H() @ Observable.Y()
     obs_targets = [0, 1, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -415,7 +405,7 @@ def result_types_tensor_z_h_y_testing(
 
 
 def result_types_tensor_z_hermitian_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     theta = 0.432
@@ -432,7 +422,7 @@ def result_types_tensor_z_hermitian_testing(
     obs = Observable.Z() @ Observable.Hermitian(array)
     obs_targets = [0, 1, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -481,7 +471,7 @@ def result_types_tensor_z_hermitian_testing(
 
 
 def result_types_tensor_y_hermitian_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     theta = 0.432
@@ -498,7 +488,7 @@ def result_types_tensor_y_hermitian_testing(
     obs = Observable.Y() @ Observable.Hermitian(array)
     obs_targets = [0, 1, 2]
     circuit = get_result_types_three_qubit_circuit(theta, phi, varphi, obs, obs_targets, shots)
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -512,7 +502,7 @@ def result_types_tensor_y_hermitian_testing(
 
 
 def result_types_noncommuting_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = 0
     theta = 0.432
@@ -537,7 +527,7 @@ def result_types_noncommuting_testing(
         .expectation(obs2, obs2_targets)
         .expectation(obs3, obs3_targets)
     )
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
 
@@ -560,7 +550,7 @@ def result_types_noncommuting_testing(
 
 
 def result_types_noncommuting_flipped_targets_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     circuit = (
         Circuit()
@@ -569,7 +559,7 @@ def result_types_noncommuting_flipped_targets_testing(
         .expectation(observable=Observable.H() @ Observable.X(), target=[0, 1])
         .expectation(observable=Observable.H() @ Observable.X(), target=[1, 0])
     )
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, shots=0, **run_kwargs).result()
         assert np.allclose(result.values[0], np.sqrt(2) / 2)
@@ -577,7 +567,7 @@ def result_types_noncommuting_flipped_targets_testing(
 
 
 def result_types_noncommuting_all(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     array = np.array([[1, 2j], [-2j, 0]])
     circuit = (
@@ -587,7 +577,7 @@ def result_types_noncommuting_all(
         .expectation(observable=Observable.Hermitian(array))
         .expectation(observable=Observable.X())
     )
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, shots=0, **run_kwargs).result()
         assert np.allclose(result.values[0], [0.5, 0.5])
@@ -595,7 +585,7 @@ def result_types_noncommuting_all(
 
 
 def multithreaded_bell_pair_testing(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
@@ -608,7 +598,7 @@ def multithreaded_bell_pair_testing(
     futures = []
     num_threads = 2
 
-    tasks = (bell,) if not test_program else (bell, bell.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (bell, bell.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             for _ in range(num_threads):
@@ -622,12 +612,12 @@ def multithreaded_bell_pair_testing(
 
 
 def noisy_circuit_1qubit_noise_full_probability(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().x(0).x(1).bit_flip(0, 0.1).probability()
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
         assert len(result.result_types) == 1
@@ -639,7 +629,7 @@ def noisy_circuit_1qubit_noise_full_probability(
 
 
 def noisy_circuit_2qubit_noise_full_probability(
-    device: Device, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: Device, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
@@ -648,7 +638,7 @@ def noisy_circuit_2qubit_noise_full_probability(
         0.1
     )
     circuit = Circuit().x(0).x(1).kraus((0, 1), [K0, K1]).probability()
-    tasks = (circuit,) if not test_program else (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
+    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
     for task in tasks:
         result = device.run(task, **run_kwargs).result()
         assert len(result.result_types) == 1
@@ -660,16 +650,12 @@ def noisy_circuit_2qubit_noise_full_probability(
 
 
 def batch_bell_pair_testing(
-    device: AwsDevice, run_kwargs: Dict[str, Any], test_program: bool = True
+    device: AwsDevice, run_kwargs: Dict[str, Any]
 ):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuits = [Circuit().h(0).cnot(0, 1) for _ in range(10)]
-    tasks_list = (
-        (circuits,)
-        if not test_program
-        else (circuits, [circuit.to_ir(ir_type=IRType.OPENQASM) for circuit in circuits])
-    )
+    tasks_list = (circuits, [circuit.to_ir(ir_type=IRType.OPENQASM) for circuit in circuits])
     for tasks in tasks_list:
         batch = device.run_batch(tasks, max_parallel=5, **run_kwargs)
         results = batch.results()
