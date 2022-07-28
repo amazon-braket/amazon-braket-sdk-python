@@ -63,18 +63,14 @@ def no_result_types_testing(
     assert len(result.measurements) == shots
 
 
-def no_result_types_bell_pair_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def no_result_types_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
     bell = Circuit().h(0).cnot(0, 1)
     bell_qasm = bell.to_ir(ir_type=IRType.OPENQASM)
     for task in (bell, bell_qasm):
         no_result_types_testing(task, device, run_kwargs, {"00": 0.5, "11": 0.5})
 
 
-def result_types_observable_not_in_instructions(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_observable_not_in_instructions(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     bell = (
@@ -132,9 +128,7 @@ def result_types_zero_shots_bell_pair_testing(
             assert np.isclose(amplitude["11"], 1 / np.sqrt(2))
 
 
-def result_types_bell_pair_full_probability_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().h(0).cnot(0, 1).probability()
@@ -149,9 +143,7 @@ def result_types_bell_pair_full_probability_testing(
         )
 
 
-def result_types_bell_pair_marginal_probability_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_bell_pair_marginal_probability_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().h(0).cnot(0, 1).probability(0)
@@ -166,9 +158,7 @@ def result_types_bell_pair_marginal_probability_testing(
         )
 
 
-def result_types_nonzero_shots_bell_pair_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_nonzero_shots_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
     circuit = (
         Circuit()
         .h(0)
@@ -290,9 +280,7 @@ def assert_variance_expectation_sample_result(
     assert np.allclose(variance, expected_var, **tol)
 
 
-def result_types_tensor_x_y_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_tensor_x_y_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
@@ -320,9 +308,7 @@ def result_types_tensor_x_y_testing(
         )
 
 
-def result_types_tensor_z_z_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_tensor_z_z_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
@@ -343,9 +329,7 @@ def result_types_tensor_z_z_testing(
         )
 
 
-def result_types_tensor_hermitian_hermitian_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_tensor_hermitian_hermitian_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
@@ -375,9 +359,7 @@ def result_types_tensor_hermitian_hermitian_testing(
         )
 
 
-def result_types_tensor_z_h_y_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_tensor_z_h_y_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
@@ -404,9 +386,7 @@ def result_types_tensor_z_h_y_testing(
         )
 
 
-def result_types_tensor_z_hermitian_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_tensor_z_hermitian_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
@@ -470,9 +450,7 @@ def result_types_tensor_z_hermitian_testing(
         )
 
 
-def result_types_tensor_y_hermitian_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_tensor_y_hermitian_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     theta = 0.432
     phi = 0.123
@@ -501,9 +479,7 @@ def result_types_tensor_y_hermitian_testing(
         )
 
 
-def result_types_noncommuting_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_noncommuting_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = 0
     theta = 0.432
     phi = 0.123
@@ -549,9 +525,7 @@ def result_types_noncommuting_testing(
         assert np.allclose(result.values[3], expected_mean3)
 
 
-def result_types_noncommuting_flipped_targets_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_noncommuting_flipped_targets_testing(device: Device, run_kwargs: Dict[str, Any]):
     circuit = (
         Circuit()
         .h(0)
@@ -566,9 +540,7 @@ def result_types_noncommuting_flipped_targets_testing(
         assert np.allclose(result.values[1], np.sqrt(2) / 2)
 
 
-def result_types_noncommuting_all(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def result_types_noncommuting_all(device: Device, run_kwargs: Dict[str, Any]):
     array = np.array([[1, 2j], [-2j, 0]])
     circuit = (
         Circuit()
@@ -584,9 +556,7 @@ def result_types_noncommuting_all(
         assert np.allclose(result.values[1], [0, 0])
 
 
-def multithreaded_bell_pair_testing(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def multithreaded_bell_pair_testing(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     bell = Circuit().h(0).cnot(0, 1)
@@ -611,9 +581,7 @@ def multithreaded_bell_pair_testing(
             assert len(result.measurements) == shots
 
 
-def noisy_circuit_1qubit_noise_full_probability(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def noisy_circuit_1qubit_noise_full_probability(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuit = Circuit().x(0).x(1).bit_flip(0, 0.1).probability()
@@ -628,9 +596,7 @@ def noisy_circuit_1qubit_noise_full_probability(
         )
 
 
-def noisy_circuit_2qubit_noise_full_probability(
-    device: Device, run_kwargs: Dict[str, Any]
-):
+def noisy_circuit_2qubit_noise_full_probability(device: Device, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     K0 = np.eye(4) * np.sqrt(0.9)
@@ -649,9 +615,7 @@ def noisy_circuit_2qubit_noise_full_probability(
         )
 
 
-def batch_bell_pair_testing(
-    device: AwsDevice, run_kwargs: Dict[str, Any]
-):
+def batch_bell_pair_testing(device: AwsDevice, run_kwargs: Dict[str, Any]):
     shots = run_kwargs["shots"]
     tol = get_tol(shots)
     circuits = [Circuit().h(0).cnot(0, 1) for _ in range(10)]

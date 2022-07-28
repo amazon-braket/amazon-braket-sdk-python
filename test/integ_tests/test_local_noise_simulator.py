@@ -58,9 +58,7 @@ def test_result_types_bell_pair_full_probability(shots):
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
 def test_result_types_bell_pair_marginal_probability(shots):
-    result_types_bell_pair_marginal_probability_testing(
-        DEVICE, {"shots": shots}
-    )
+    result_types_bell_pair_marginal_probability_testing(DEVICE, {"shots": shots})
 
 
 @pytest.mark.parametrize("shots", [0, SHOTS])
