@@ -14,6 +14,7 @@
 import base64
 import subprocess
 from pathlib import Path
+from subprocess import CompletedProcess
 from unittest.mock import Mock, patch
 
 import pytest
@@ -35,6 +36,11 @@ def image_uri(repo_uri):
 def aws_session():
     _aws_session = Mock()
     return _aws_session
+
+
+@pytest.fixture
+def run_result():
+    return CompletedProcess(None, 0, None, None)
 
 
 @patch("subprocess.check_output")
@@ -150,7 +156,7 @@ def test_pull_container_forced_update_invalid_name(
 
 @patch("subprocess.check_output")
 @patch("subprocess.run")
-def test_run_job_success(mock_run, mock_check_output, repo_uri, image_uri, aws_session):
+def test_run_job_success(mock_run, mock_check_output, repo_uri, image_uri, aws_session, run_result):
     local_image_name = "LocalImageName"
     running_container_name = "RunningContainer"
     env_variables = {
@@ -158,17 +164,15 @@ def test_run_job_success(mock_run, mock_check_output, repo_uri, image_uri, aws_s
         "ENV1": "VALUE1",
     }
     run_program_name = "Run Program Name"
-    expected_run_output = "Expected Run Output"
     mock_check_output.side_effect = [
         str.encode(local_image_name),
         str.encode(running_container_name),
         str.encode(run_program_name),
-        str.encode(expected_run_output),
     ]
+    mock_run.side_effect = [run_result, None]
     with _LocalJobContainer(image_uri, aws_session) as container:
         container.run_local_job(env_variables)
-        run_output = container.run_log
-        assert run_output == expected_run_output
+        assert container.run_result == run_result
     mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
     mock_check_output.assert_any_call(
         ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
@@ -176,7 +180,8 @@ def test_run_job_success(mock_run, mock_check_output, repo_uri, image_uri, aws_s
     mock_check_output.assert_any_call(
         ["docker", "exec", running_container_name, "printenv", "SAGEMAKER_PROGRAM"]
     )
-    mock_check_output.assert_any_call(
+    assert mock_check_output.call_count == 3
+    mock_run.assert_any_call(
         [
             "docker",
             "exec",
@@ -189,16 +194,17 @@ def test_run_job_success(mock_run, mock_check_output, repo_uri, image_uri, aws_s
             running_container_name,
             "python",
             run_program_name,
-        ]
+        ],
+        capture_output=True,
     )
-    assert mock_check_output.call_count == 4
     mock_run.assert_any_call(["docker", "stop", running_container_name])
-    assert mock_run.call_count == 1
+    assert mock_run.call_count == 2
 
 
 @patch("subprocess.check_output")
 @patch("subprocess.run")
-def test_customer_script_fails(mock_run, mock_check_output, repo_uri, image_uri, aws_session):
+def test_run_customer_script_fails(mock_run, mock_check_output, repo_uri, image_uri, aws_session):
+    mock_logger = Mock()
     local_image_name = "LocalImageName"
     running_container_name = "RunningContainer"
     env_variables = {
@@ -211,15 +217,68 @@ def test_customer_script_fails(mock_run, mock_check_output, repo_uri, image_uri,
         str.encode(local_image_name),
         str.encode(running_container_name),
         str.encode(run_program_name),
-        subprocess.CalledProcessError("Test Error", "test", str.encode(expected_error_output)),
     ]
-    with _LocalJobContainer(image_uri, aws_session) as container:
+    expected_exception = Exception("Test Error")
+    mock_run.side_effect = [expected_exception, None]
+    with _LocalJobContainer(image_uri, aws_session, mock_logger) as container:
         container.run_local_job(env_variables)
-        run_output = container.run_log
-        assert run_output == expected_error_output
-    assert mock_check_output.call_count == 4
+        assert container.run_result == expected_exception
+    assert mock_check_output.call_count == 3
     mock_run.assert_any_call(["docker", "stop", running_container_name])
-    assert mock_run.call_count == 1
+    assert mock_run.call_count == 2
+    mock_logger.error.assert_called_with(expected_exception)
+
+
+@patch("subprocess.check_output")
+@patch("subprocess.run")
+def test_customer_script_check_output(
+    mock_run, mock_check_output, repo_uri, image_uri, aws_session
+):
+    mock_logger = Mock()
+    local_image_name = "LocalImageName"
+    running_container_name = "RunningContainer"
+    env_variables = {
+        "ENV0": "VALUE0",
+        "ENV1": "VALUE1",
+    }
+    run_program_name = "Run Program Name"
+    mock_check_output.side_effect = [
+        str.encode(local_image_name),
+        str.encode(running_container_name),
+        str.encode(run_program_name),
+    ]
+    run_result = CompletedProcess(None, 0, str.encode("Test Output"), str.encode("Test Error"))
+    mock_run.side_effect = [run_result, None]
+    with _LocalJobContainer(image_uri, aws_session, mock_logger) as container:
+        container.run_local_job(env_variables)
+        assert container.run_result == run_result
+    mock_check_output.assert_any_call(["docker", "images", "-q", image_uri])
+    mock_check_output.assert_any_call(
+        ["docker", "run", "-d", "--rm", local_image_name, "tail", "-f", "/dev/null"]
+    )
+    mock_check_output.assert_any_call(
+        ["docker", "exec", running_container_name, "printenv", "SAGEMAKER_PROGRAM"]
+    )
+    assert mock_check_output.call_count == 3
+    mock_run.assert_any_call(
+        [
+            "docker",
+            "exec",
+            "-w",
+            "/opt/ml/code/",
+            "-e",
+            "ENV0=VALUE0",
+            "-e",
+            "ENV1=VALUE1",
+            running_container_name,
+            "python",
+            run_program_name,
+        ],
+        capture_output=True,
+    )
+    mock_run.assert_any_call(["docker", "stop", running_container_name])
+    assert mock_run.call_count == 2
+    mock_logger.error.assert_called_with("Test Error")
 
 
 @patch("subprocess.check_output")
