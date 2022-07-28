@@ -108,10 +108,14 @@ class DummyCircuitSimulator(BraketSimulator):
                     "shotsRange": [1, 10],
                 },
                 "action": {
+                    "braket.ir.openqasm.program": {
+                        "actionType": "braket.ir.openqasm.program",
+                        "version": ["1"],
+                    },
                     "braket.ir.jaqcd.program": {
                         "actionType": "braket.ir.jaqcd.program",
                         "version": ["1"],
-                    }
+                    },
                 },
                 "deviceParameters": {},
             }
@@ -190,22 +194,20 @@ class DummyAnnealingSimulator(BraketSimulator):
 mock_circuit_entry = Mock()
 mock_program_entry = Mock()
 mock_circuit_entry.load.return_value = DummyCircuitSimulator
-mock_program_entry.load.return_value = DummyCircuitSimulator
+mock_program_entry.load.return_value = DummyProgramSimulator
 local_simulator._simulator_devices = {"dummy": mock_circuit_entry, "dummy_oq3": mock_program_entry}
 
 
 def test_load_from_entry_point():
-    sim = LocalSimulator("dummy")
+    sim = LocalSimulator("dummy_oq3")
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_gate_model():
-    dummy = DummyCircuitSimulator()
+    dummy = DummyProgramSimulator()
     sim = LocalSimulator(dummy)
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    dummy.assert_shots(10)
-    dummy.assert_qubits(2)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 

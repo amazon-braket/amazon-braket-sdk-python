@@ -38,6 +38,8 @@ from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+
+from braket.circuits.serialization import IRType
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
@@ -435,7 +437,7 @@ def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_sessio
     _assert_create_quantum_task_called_with(
         aws_session,
         device_arn,
-        circuit.to_ir().json(),
+        circuit.to_ir(ir_type=IRType.OPENQASM).json(),
         S3_TARGET,
         shots,
         device_parameters_class(
@@ -464,7 +466,7 @@ def test_from_circuit_with_disabled_rewiring(
     _assert_create_quantum_task_called_with(
         aws_session,
         device_arn,
-        circuit.to_ir().json(),
+        circuit.to_ir(ir_type=IRType.OPENQASM).json(),
         S3_TARGET,
         shots,
         device_parameters_class(
@@ -500,7 +502,7 @@ def test_from_circuit_with_verbatim(
     _assert_create_quantum_task_called_with(
         aws_session,
         device_arn,
-        circ.to_ir().json(),
+        circ.to_ir(ir_type=IRType.OPENQASM).json(),
         S3_TARGET,
         shots,
         device_parameters_class(
@@ -795,7 +797,7 @@ def test_create_with_tags(device_arn, device_parameters_class, aws_session, circ
     _assert_create_quantum_task_called_with(
         aws_session,
         device_arn,
-        circuit.to_ir().json(),
+        circuit.to_ir(ir_type=IRType.OPENQASM).json(),
         S3_TARGET,
         shots,
         device_parameters_class(

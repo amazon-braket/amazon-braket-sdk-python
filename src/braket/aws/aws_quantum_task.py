@@ -45,6 +45,8 @@ from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
+
+from braket.circuits.serialization import IRType
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
@@ -501,7 +503,10 @@ def _(
         )
 
     create_task_kwargs.update(
-        {"action": circuit.to_ir().json(), "deviceParameters": device_parameters.json()}
+        {
+            "action": circuit.to_ir(ir_type=IRType.OPENQASM).json(),
+            "deviceParameters": device_parameters.json(),
+        }
     )
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)

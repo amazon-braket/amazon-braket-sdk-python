@@ -20,6 +20,8 @@ from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.device_schema import DeviceActionType, DeviceCapabilities
+
+from braket.circuits.serialization import IRType
 from braket.devices.device import Device
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
@@ -134,12 +136,11 @@ def _run_internal(
 
 @_run_internal.register
 def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
-    if DeviceActionType.JAQCD not in simulator.properties.action:
+    if DeviceActionType.OPENQASM not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
     validate_circuit_and_shots(circuit, shots)
-    program = circuit.to_ir()
-    qubits = circuit.qubit_count
-    results = simulator.run(program, qubits, shots, *args, **kwargs)
+    program = circuit.to_ir(ir_type=IRType.OPENQASM)
+    results = simulator.run(program, shots, *args, **kwargs)
     return GateModelQuantumTaskResult.from_object(results)
 
 
