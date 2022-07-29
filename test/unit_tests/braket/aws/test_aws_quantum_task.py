@@ -870,3 +870,20 @@ def _mock_metadata(aws_session, state):
 
 def _mock_s3(aws_session, result):
     aws_session.retrieve_s3_object_body.return_value = result
+
+
+def test_no_program_inputs(aws_session):
+    openqasm_program = OpenQasmProgram(
+        source="""
+        qubit q;
+        h q;
+        """,
+        inputs={"x": 1},
+    )
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    only_for_local_sim = (
+        "OpenQASM Program inputs are only currently supported in the LocalSimulator."
+    )
+    with pytest.raises(ValueError, match=only_for_local_sim):
+        AwsQuantumTask.create(aws_session, SIMULATOR_ARN, openqasm_program, S3_TARGET, shots)
