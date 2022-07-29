@@ -47,7 +47,7 @@ class _LocalJobContainer(object):
         """
         self._aws_session = aws_session or AwsSession()
         self.image_uri = image_uri
-        self.run_log = None
+        self.run_result = None
         self._container_name = None
         self._logger = logger
         self._force_update = force_update
@@ -249,11 +249,14 @@ class _LocalJobContainer(object):
         command.append(start_program_name)
 
         try:
-            self.run_log = self._check_output_formatted(command)
-            print(self.run_log)
-        except subprocess.CalledProcessError as e:
-            self.run_log = e.output.decode("utf-8").strip()
-            self._logger.error(self.run_log)
+            self.run_result = subprocess.run(command, capture_output=True)
+            if self.run_result.stdout:
+                print(self.run_result.stdout.decode("utf-8").strip())
+            if self.run_result.stderr:
+                self._logger.error(self.run_result.stderr.decode("utf-8").strip())
+        except Exception as e:
+            self.run_result = e
+            self._logger.error(e)
 
     def _end_session(self):
         """Stops and removes the local container."""
