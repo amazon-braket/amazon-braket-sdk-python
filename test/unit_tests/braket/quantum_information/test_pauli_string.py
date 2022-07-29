@@ -18,8 +18,9 @@ import math
 import numpy as np
 import pytest
 
-from braket.circuits import PauliString, gates
+from braket.circuits import gates
 from braket.circuits.observables import X, Y, Z
+from braket.quantum_information import PauliString
 
 ORDER = ["I", "X", "Y", "Z"]
 PAULI_INDEX_MATRICES = {

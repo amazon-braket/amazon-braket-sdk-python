@@ -77,7 +77,6 @@ class PauliString:
         Returns:
             TensorProduct: The tensor product of the unsigned factors in the Pauli string.
         """
-
         return TensorProduct(
             [_PAULI_OBSERVABLES[self._nontrivial[qubit]] for qubit in sorted(self._nontrivial)]
         )

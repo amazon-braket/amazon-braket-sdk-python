@@ -33,7 +33,6 @@ from braket.circuits.noise import Noise  # noqa: F401
 from braket.circuits.observable import Observable, StandardObservable  # noqa: F401
 from braket.circuits.operator import Operator  # noqa: F401
 from braket.circuits.parameterizable import Parameterizable  # noqa: F401
-from braket.circuits.pauli_string import PauliString  # noqa: F401
 from braket.circuits.quantum_operator import QuantumOperator  # noqa: F401
 from braket.circuits.qubit import Qubit, QubitInput  # noqa: F401
 from braket.circuits.qubit_set import QubitSet, QubitSetInput  # noqa: F401
