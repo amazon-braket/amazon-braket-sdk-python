@@ -121,6 +121,39 @@ class DummyCircuitSimulator(BraketSimulator):
             }
         )
 
+
+class DummyJaqcdSimulator(BraketSimulator):
+    def run(
+        self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
+    ) -> Dict[str, Any]:
+        self._shots = shots
+        self._qubits = qubits
+        return GATE_MODEL_RESULT
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "11:00",
+                            "windowEndHour": "12:00",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.jaqcd.program": {
+                        "actionType": "braket.ir.jaqcd.program",
+                        "version": ["1"],
+                    },
+                },
+                "deviceParameters": {},
+            }
+        )
+
     def assert_shots(self, shots):
         assert self._shots == shots
 
@@ -193,9 +226,15 @@ class DummyAnnealingSimulator(BraketSimulator):
 
 mock_circuit_entry = Mock()
 mock_program_entry = Mock()
+mock_jaqcd_entry = Mock()
 mock_circuit_entry.load.return_value = DummyCircuitSimulator
 mock_program_entry.load.return_value = DummyProgramSimulator
-local_simulator._simulator_devices = {"dummy": mock_circuit_entry, "dummy_oq3": mock_program_entry}
+mock_jaqcd_entry.load.return_value = DummyJaqcdSimulator
+local_simulator._simulator_devices = {
+    "dummy": mock_circuit_entry,
+    "dummy_oq3": mock_program_entry,
+    "dummy_jaqcd": mock_jaqcd_entry,
+}
 
 
 def test_load_from_entry_point():
@@ -208,6 +247,15 @@ def test_run_gate_model():
     dummy = DummyProgramSimulator()
     sim = LocalSimulator(dummy)
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_run_jaqcd_only():
+    dummy = DummyJaqcdSimulator()
+    sim = LocalSimulator(dummy)
+    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    dummy.assert_shots(10)
+    dummy.assert_qubits(2)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
@@ -244,7 +292,7 @@ def test_run_annealing():
 
 
 def test_registered_backends():
-    assert LocalSimulator.registered_backends() == {"dummy", "dummy_oq3"}
+    assert LocalSimulator.registered_backends() == {"dummy", "dummy_oq3", "dummy_jaqcd"}
 
 
 @pytest.mark.xfail(raises=TypeError)

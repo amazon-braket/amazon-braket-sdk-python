@@ -26,6 +26,7 @@ from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.circuits.serialization import IRType
 from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import (
     Dwave2000QDeviceParameters,
@@ -38,8 +39,6 @@ from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-
-from braket.circuits.serialization import IRType
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,

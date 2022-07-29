@@ -25,6 +25,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.circuits.serialization import IRType
 from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import (
     Dwave2000QDeviceParameters,
@@ -45,8 +46,6 @@ from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
-
-from braket.circuits.serialization import IRType
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
