@@ -212,7 +212,6 @@ def test_run_customer_script_fails(mock_run, mock_check_output, repo_uri, image_
         "ENV1": "VALUE1",
     }
     run_program_name = "Run Program Name"
-    expected_error_output = "Expected Error Output"
     mock_check_output.side_effect = [
         str.encode(local_image_name),
         str.encode(running_container_name),
