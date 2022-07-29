@@ -126,6 +126,8 @@ class DummyJaqcdSimulator(BraketSimulator):
     def run(
         self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
     ) -> Dict[str, Any]:
+        if not isinstance(program, ir.jaqcd.Program):
+            raise TypeError("Not a Jaqcd program")
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT

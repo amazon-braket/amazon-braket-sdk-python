@@ -142,7 +142,7 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
         return GateModelQuantumTaskResult.from_object(results)
     elif DeviceActionType.JAQCD in simulator.properties.action:
         validate_circuit_and_shots(circuit, shots)
-        program = circuit.to_ir(ir_type=IRType.OPENQASM)
+        program = circuit.to_ir(ir_type=IRType.JAQCD)
         qubits = circuit.qubit_count
         results = simulator.run(program, qubits, shots, *args, **kwargs)
         return GateModelQuantumTaskResult.from_object(results)
