@@ -26,7 +26,11 @@ from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
-from braket.circuits.serialization import IRType, OpenQASMSerializationProperties, QubitReferenceType
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import (
     Dwave2000QDeviceParameters,
@@ -467,9 +471,7 @@ def test_from_circuit_with_disabled_rewiring(
         device_arn,
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
-            serialization_properties=OpenQASMSerializationProperties(
-                QubitReferenceType.PHYSICAL
-            ),
+            serialization_properties=OpenQASMSerializationProperties(QubitReferenceType.PHYSICAL),
         ).json(),
         S3_TARGET,
         shots,
@@ -505,9 +507,7 @@ def test_from_circuit_with_verbatim(
 
     serialization_properties = OpenQASMSerializationProperties(
         qubit_reference_type=(
-            QubitReferenceType.PHYSICAL
-            if disable_qubit_rewiring
-            else QubitReferenceType.VIRTUAL
+            QubitReferenceType.PHYSICAL if disable_qubit_rewiring else QubitReferenceType.VIRTUAL
         )
     )
 
