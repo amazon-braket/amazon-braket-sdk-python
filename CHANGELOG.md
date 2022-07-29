@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.27.1 (2022-07-29)
+
+### Bug Fixes and Other Changes
+
+ * customer script errors not shown when local jobs run from a notebook.
+
 ## v1.27.0 (2022-07-26)
 
 ### Features
