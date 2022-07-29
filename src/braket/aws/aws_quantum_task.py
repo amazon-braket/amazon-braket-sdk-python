@@ -25,7 +25,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from braket.circuits.serialization import IRType
+from braket.circuits.serialization import IRType, OpenQASMSerializationProperties, QubitReferenceType
 from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import (
     Dwave2000QDeviceParameters,
@@ -501,9 +501,20 @@ def _(
             paradigmParameters=paradigm_parameters
         )
 
+    serialization_properties = OpenQASMSerializationProperties(
+        qubit_reference_type=(
+            QubitReferenceType.PHYSICAL
+            if disable_qubit_rewiring
+            else QubitReferenceType.VIRTUAL
+        )
+    )
+
     create_task_kwargs.update(
         {
-            "action": circuit.to_ir(ir_type=IRType.OPENQASM).json(),
+            "action": circuit.to_ir(
+                ir_type=IRType.OPENQASM,
+                serialization_properties=serialization_properties,
+            ).json(),
             "deviceParameters": device_parameters.json(),
         }
     )
