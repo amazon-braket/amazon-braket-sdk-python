@@ -14,8 +14,9 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from dataclasses import dataclass
-from typing import Any, Callable, Counter, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 import numpy as np
 
@@ -278,13 +279,25 @@ class GateModelQuantumTaskResult:
                 f"Measured qubits {measured_qubits} is not equivalent to number of qubits "
                 + f"{measurements.shape[1]} in measurements"
             )
-        result_types = (
-            result.resultTypes
-            if result.resultTypes
-            else GateModelQuantumTaskResult._calculate_result_types(
+        if result.resultTypes:
+            # Jaqcd does not return anything in the resultTypes schema field since the
+            # result types are easily parsable from the IR. However, an OpenQASM program
+            # specifies result types inline and parsing result types is more involved
+            # (ie. may involve dereferencing logical qubits at runtime), so the parsed
+            # result type specifications need to be returned, even if not calculated
+            # during simulation.
+            if not isinstance(result.resultTypes[0], ResultTypeValue):
+                result_types = GateModelQuantumTaskResult._calculate_result_types(
+                    json.dumps({"results": [rt.dict() for rt in result.resultTypes]}),
+                    measurements,
+                    measured_qubits,
+                )
+            else:
+                result_types = result.resultTypes
+        else:
+            result_types = GateModelQuantumTaskResult._calculate_result_types(
                 additional_metadata.action.json(), measurements, measured_qubits
             )
-        )
         values = [rt.value for rt in result_types]
         return cls(
             task_metadata=task_metadata,
