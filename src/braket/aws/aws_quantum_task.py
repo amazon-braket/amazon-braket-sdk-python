@@ -458,6 +458,10 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
+    if open_qasm_program.inputs is not None:
+        raise ValueError(
+            "OpenQASM Program inputs are only currently supported in the LocalSimulator."
+        )
     create_task_kwargs.update({"action": open_qasm_program.json()})
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
