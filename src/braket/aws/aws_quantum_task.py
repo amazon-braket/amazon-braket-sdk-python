@@ -23,8 +23,10 @@ import boto3
 
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
+from braket.circuits import Instruction
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
+from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
@@ -505,10 +507,13 @@ def _(
             paradigmParameters=paradigm_parameters
         )
 
+    qubit_reference_type = QubitReferenceType.VIRTUAL
+
+    if disable_qubit_rewiring or Instruction(StartVerbatimBox()) in circuit.instructions:
+        qubit_reference_type = QubitReferenceType.PHYSICAL
+
     serialization_properties = OpenQASMSerializationProperties(
-        qubit_reference_type=(
-            QubitReferenceType.PHYSICAL if disable_qubit_rewiring else QubitReferenceType.VIRTUAL
-        )
+        qubit_reference_type=qubit_reference_type
     )
 
     create_task_kwargs.update(

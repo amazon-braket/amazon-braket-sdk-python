@@ -506,9 +506,7 @@ def test_from_circuit_with_verbatim(
     assert task == AwsQuantumTask(mocked_task_arn, aws_session)
 
     serialization_properties = OpenQASMSerializationProperties(
-        qubit_reference_type=(
-            QubitReferenceType.PHYSICAL if disable_qubit_rewiring else QubitReferenceType.VIRTUAL
-        )
+        qubit_reference_type=QubitReferenceType.PHYSICAL
     )
 
     _assert_create_quantum_task_called_with(
