@@ -754,7 +754,8 @@ class Circuit:
         noise: Union[Type[Noise], Iterable[Type[Noise]]],
         target_qubits: Optional[QubitSetInput] = None,
     ) -> Circuit:
-        """Apply `noise` at the beginning of the circuit for every qubit (default) or target_qubits`.
+        """Apply `noise` at the beginning of the circuit for every qubit (default) or
+        target_qubits`.
 
         Only when `target_qubits` is given can the noise be applied to an empty circuit.
 
