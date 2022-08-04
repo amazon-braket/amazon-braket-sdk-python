@@ -41,6 +41,7 @@ class OpenQASMSerializationProperties:
     qubit_reference_type (QubitReferenceType): determines whether to use
         logical qubits or physical qubits (q[i] vs $i).
     """
+
     qubit_reference_type: QubitReferenceType = QubitReferenceType.VIRTUAL
 
     def format_target(self, target: int) -> str:
