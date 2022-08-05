@@ -492,7 +492,12 @@ class GateModelQuantumTaskResult:
     @staticmethod
     def _result_type_hash(rt_type):
         if hasattr(rt_type, "observable") and isinstance(rt_type.observable, list):
-            as_array = np.array(rt_type.observable)
-            replaced_neg_0 = np.where(as_array == 0, 0, as_array)
-            rt_type.observable = replaced_neg_0.tolist()
+            rt_type.observable = GateModelQuantumTaskResult._replace_neg_zero(rt_type.observable)
         return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
+
+    @staticmethod
+    def _replace_neg_zero(observable_matrix):
+        if isinstance(observable_matrix, list):
+            return [GateModelQuantumTaskResult._replace_neg_zero(x) for x in observable_matrix]
+        else:
+            return 0 if observable_matrix == 0 else observable_matrix
