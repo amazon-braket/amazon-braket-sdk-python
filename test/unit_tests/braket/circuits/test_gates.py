@@ -18,6 +18,11 @@ import pytest
 
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, FreeParameter, Gate, Instruction, QubitSet
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 from braket.ir.jaqcd.shared_models import (
     Angle,
     DoubleControl,
@@ -103,7 +108,6 @@ testdata = [
     ),
 ]
 
-
 parameterizable_gates = [
     Gate.Rx,
     Gate.Ry,
@@ -119,7 +123,6 @@ parameterizable_gates = [
     Gate.CPhaseShift01,
     Gate.CPhaseShift10,
 ]
-
 
 invalid_unitary_matrices = [
     (np.array([[1]])),
@@ -182,7 +185,6 @@ valid_ir_switcher = {
     "MultiTarget": multi_target_valid_input,
     "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
 }
-
 
 valid_subroutine_switcher = dict(
     valid_ir_switcher,
@@ -275,6 +277,486 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
         **create_valid_target_input(irsubclasses)
     )
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "gate, target, serialization_properties, expected_ir",
+    [
+        (
+            Gate.Rx(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "rx(0.17) q[4];",
+        ),
+        (
+            Gate.Rx(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "rx(0.17) $4;",
+        ),
+        (
+            Gate.X(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "x q[4];",
+        ),
+        (
+            Gate.X(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "x $4;",
+        ),
+        (
+            Gate.Z(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "z q[4];",
+        ),
+        (
+            Gate.Z(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "z $4;",
+        ),
+        (
+            Gate.Y(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "y q[4];",
+        ),
+        (
+            Gate.Y(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "y $4;",
+        ),
+        (
+            Gate.H(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "h q[4];",
+        ),
+        (
+            Gate.H(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "h $4;",
+        ),
+        (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ry(0.17) q[4];",
+        ),
+        (
+            Gate.Ry(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ry(0.17) $4;",
+        ),
+        (
+            Gate.ZZ(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "zz(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.ZZ(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "zz(0.17) $4, $5;",
+        ),
+        (
+            Gate.I(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "i q[4];",
+        ),
+        (
+            Gate.I(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "i $4;",
+        ),
+        (
+            Gate.V(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "v q[4];",
+        ),
+        (
+            Gate.V(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "v $4;",
+        ),
+        (
+            Gate.CY(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cy q[0], q[1];",
+        ),
+        (
+            Gate.CY(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cy $0, $1;",
+        ),
+        (
+            Gate.Rz(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "rz(0.17) q[4];",
+        ),
+        (
+            Gate.Rz(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "rz(0.17) $4;",
+        ),
+        (
+            Gate.XX(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "xx(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.XX(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "xx(0.17) $4, $5;",
+        ),
+        (
+            Gate.T(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "t q[4];",
+        ),
+        (
+            Gate.T(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "t $4;",
+        ),
+        (
+            Gate.CZ(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cz $0, $1;",
+        ),
+        (
+            Gate.CZ(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cz q[0], q[1];",
+        ),
+        (
+            Gate.YY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "yy(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.YY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "yy(0.17) $4, $5;",
+        ),
+        (
+            Gate.XY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "xy(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.XY(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "xy(0.17) $4, $5;",
+        ),
+        (
+            Gate.ISwap(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "iswap $0, $1;",
+        ),
+        (
+            Gate.ISwap(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "iswap q[0], q[1];",
+        ),
+        (
+            Gate.Swap(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "swap $0, $1;",
+        ),
+        (
+            Gate.Swap(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "swap q[0], q[1];",
+        ),
+        (
+            Gate.ECR(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ecr $0, $1;",
+        ),
+        (
+            Gate.ECR(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ecr q[0], q[1];",
+        ),
+        (
+            Gate.CV(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cv $0, $1;",
+        ),
+        (
+            Gate.CV(),
+            [0, 1],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cv q[0], q[1];",
+        ),
+        (
+            Gate.Vi(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "vi q[4];",
+        ),
+        (
+            Gate.Vi(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "vi $4;",
+        ),
+        (
+            Gate.CSwap(),
+            [0, 1, 2],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cswap q[0], q[1], q[2];",
+        ),
+        (
+            Gate.CSwap(),
+            [0, 1, 2],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cswap $0, $1, $2;",
+        ),
+        (
+            Gate.CPhaseShift01(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cphaseshift01(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.CPhaseShift01(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cphaseshift01(0.17) $4, $5;",
+        ),
+        (
+            Gate.CPhaseShift00(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cphaseshift00(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.CPhaseShift00(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cphaseshift00(0.17) $4, $5;",
+        ),
+        (
+            Gate.CPhaseShift(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cphaseshift(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.CPhaseShift(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cphaseshift(0.17) $4, $5;",
+        ),
+        (
+            Gate.S(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "s q[4];",
+        ),
+        (
+            Gate.S(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "s $4;",
+        ),
+        (
+            Gate.Si(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "si q[4];",
+        ),
+        (
+            Gate.Si(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "si $4;",
+        ),
+        (
+            Gate.Ti(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ti q[4];",
+        ),
+        (
+            Gate.Ti(),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ti $4;",
+        ),
+        (
+            Gate.PhaseShift(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "phaseshift(0.17) q[4];",
+        ),
+        (
+            Gate.PhaseShift(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "phaseshift(0.17) $4;",
+        ),
+        (
+            Gate.CNot(),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cnot q[4], q[5];",
+        ),
+        (
+            Gate.CNot(),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cnot $4, $5;",
+        ),
+        (
+            Gate.PSwap(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "pswap(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.PSwap(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "pswap(0.17) $4, $5;",
+        ),
+        (
+            Gate.CPhaseShift10(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "cphaseshift10(0.17) q[4], q[5];",
+        ),
+        (
+            Gate.CPhaseShift10(angle=0.17),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "cphaseshift10(0.17) $4, $5;",
+        ),
+        (
+            Gate.CCNot(),
+            [4, 5, 6],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ccnot q[4], q[5], q[6];",
+        ),
+        (
+            Gate.CCNot(),
+            [4, 5, 6],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ccnot $4, $5, $6;",
+        ),
+        (
+            Gate.Unitary(Gate.CCNot().to_matrix()),
+            [4, 5, 6],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary(["
+            "[1.0, 0, 0, 0, 0, 0, 0, 0], "
+            "[0, 1.0, 0, 0, 0, 0, 0, 0], "
+            "[0, 0, 1.0, 0, 0, 0, 0, 0], "
+            "[0, 0, 0, 1.0, 0, 0, 0, 0], "
+            "[0, 0, 0, 0, 1.0, 0, 0, 0], "
+            "[0, 0, 0, 0, 0, 1.0, 0, 0], "
+            "[0, 0, 0, 0, 0, 0, 0, 1.0], "
+            "[0, 0, 0, 0, 0, 0, 1.0, 0]"
+            "]) q[4], q[5], q[6]",
+        ),
+        (
+            Gate.Unitary(Gate.CCNot().to_matrix()),
+            [4, 5, 6],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket unitary(["
+            "[1.0, 0, 0, 0, 0, 0, 0, 0], "
+            "[0, 1.0, 0, 0, 0, 0, 0, 0], "
+            "[0, 0, 1.0, 0, 0, 0, 0, 0], "
+            "[0, 0, 0, 1.0, 0, 0, 0, 0], "
+            "[0, 0, 0, 0, 1.0, 0, 0, 0], "
+            "[0, 0, 0, 0, 0, 1.0, 0, 0], "
+            "[0, 0, 0, 0, 0, 0, 0, 1.0], "
+            "[0, 0, 0, 0, 0, 0, 1.0, 0]"
+            "]) $4, $5, $6",
+        ),
+        (
+            Gate.Unitary(np.round(Gate.ECR().to_matrix(), 8)),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary(["
+            "[0, 0, 0.70710678, 0.70710678im], "
+            "[0, 0, 0.70710678im, 0.70710678], "
+            "[0.70710678, -0.70710678im, 0, 0], "
+            "[-0.70710678im, 0.70710678, 0, 0]"
+            "]) q[4], q[5]",
+        ),
+        (
+            Gate.Unitary(np.round(Gate.ECR().to_matrix(), 8)),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket unitary(["
+            "[0, 0, 0.70710678, 0.70710678im], "
+            "[0, 0, 0.70710678im, 0.70710678], "
+            "[0.70710678, -0.70710678im, 0, 0], "
+            "[-0.70710678im, 0.70710678, 0, 0]"
+            "]) $4, $5",
+        ),
+        (
+            Gate.Unitary(np.round(Gate.T().to_matrix(), 8)),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary([[1.0, 0], [0, 0.70710678 + 0.70710678im]]) q[4]",
+        ),
+        (
+            Gate.Unitary(np.round(Gate.T().to_matrix(), 8)),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "#pragma braket unitary([[1.0, 0], [0, 0.70710678 + 0.70710678im]]) $4",
+        ),
+        (
+            Gate.Unitary(np.array([[1.0, 0], [0, 0.70710678 - 0.70710678j]])),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket unitary([[1.0, 0], [0, 0.70710678 - 0.70710678im]]) q[4]",
+        ),
+    ],
+)
+def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
+    assert (
+        gate.to_ir(
+            target, ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        )
+        == expected_ir
+    )
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
