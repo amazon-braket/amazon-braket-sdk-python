@@ -491,4 +491,8 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def _result_type_hash(rt_type):
+        if hasattr(rt_type, "observable") and isinstance(rt_type.observable, list):
+            as_array = np.array(rt_type.observable)
+            replaced_neg_0 = np.where(as_array == 0, 0, as_array)
+            rt_type.observable = replaced_neg_0.tolist()
         return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
