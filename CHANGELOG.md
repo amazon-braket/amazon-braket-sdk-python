@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.28.0 (2022-08-05)
+
+### Features
+
+ * OpenQASM default IR and OpenQASM Local Simulator
+
+### Bug Fixes and Other Changes
+
+ * update simulator version
+ * handle -0 edge case in result type hash
+
 ## v1.27.1 (2022-07-29)
 
 ### Bug Fixes and Other Changes
