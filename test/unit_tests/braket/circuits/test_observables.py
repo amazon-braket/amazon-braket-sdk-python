@@ -19,6 +19,11 @@ import pytest
 from braket.circuits import Gate, Observable
 from braket.circuits.observables import observable_from_ir
 from braket.circuits.quantum_operator_helpers import get_pauli_eigenvalues
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 
 testdata = [
     (Observable.I(), Gate.I(), ["i"], (), np.array([1, 1])),
@@ -52,6 +57,170 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
     expected = expected_ir
     actual = testobject.to_ir()
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "observable, serialization_properties, target, expected_ir",
+    [
+        (
+            Observable.I(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "i(q[3])",
+        ),
+        (
+            Observable.I(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "i($3)",
+        ),
+        (
+            Observable.I(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            None,
+            "i all",
+        ),
+        (
+            Observable.X(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "x(q[3])",
+        ),
+        (
+            Observable.X(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "x($3)",
+        ),
+        (
+            Observable.X(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            None,
+            "x all",
+        ),
+        (
+            Observable.Y(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "y(q[3])",
+        ),
+        (
+            Observable.Y(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "y($3)",
+        ),
+        (
+            Observable.Y(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            None,
+            "y all",
+        ),
+        (
+            Observable.Z(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "z(q[3])",
+        ),
+        (
+            Observable.Z(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "z($3)",
+        ),
+        (
+            Observable.Z(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            None,
+            "z all",
+        ),
+        (
+            Observable.H(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3],
+            "h(q[3])",
+        ),
+        (
+            Observable.H(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "h($3)",
+        ),
+        (
+            Observable.H(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            None,
+            "h all",
+        ),
+        (
+            Observable.Hermitian(np.eye(4)),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [1, 2],
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) q[1], q[2]",
+        ),
+        (
+            Observable.Hermitian(np.eye(4)),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [1, 2],
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) $1, $2",
+        ),
+        (
+            Observable.Hermitian(np.eye(2)),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            None,
+            "hermitian([[1+0im, 0im], [0im, 1+0im]]) all",
+        ),
+        (
+            Observable.H() @ Observable.Z(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3, 0],
+            "h(q[3]) @ z(q[0])",
+        ),
+        (
+            Observable.H() @ Observable.Z(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 0],
+            "h($3) @ z($0)",
+        ),
+        (
+            Observable.H() @ Observable.Z() @ Observable.I(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3, 0, 1],
+            "h(q[3]) @ z(q[0]) @ i(q[1])",
+        ),
+        (
+            Observable.H() @ Observable.Z() @ Observable.I(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 0, 1],
+            "h($3) @ z($0) @ i($1)",
+        ),
+        (
+            Observable.Hermitian(np.eye(4)) @ Observable.I(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            [3, 0, 1],
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) q[3], q[0]"
+            " @ i(q[1])",
+        ),
+        (
+            Observable.I() @ Observable.Hermitian(np.eye(4)),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 0, 1],
+            "i($3) @ "
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) $0, $1",
+        ),
+    ],
+)
+def test_observables_to_ir_openqasm(observable, serialization_properties, target, expected_ir):
+    assert (
+        observable.to_ir(
+            target, ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        )
+        == expected_ir
+    )
 
 
 @pytest.mark.parametrize(
