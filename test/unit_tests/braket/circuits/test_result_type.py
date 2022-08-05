@@ -14,6 +14,7 @@
 import pytest
 
 from braket.circuits import Observable, ObservableResultType, ResultType
+from braket.circuits.serialization import IRType
 
 
 @pytest.fixture
@@ -75,11 +76,6 @@ def test_ascii_symbol_setter(result_type):
 @pytest.mark.xfail(raises=AttributeError)
 def test_name_setter(result_type):
     result_type.name = "hi"
-
-
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_to_ir_not_implemented_by_default(result_type):
-    result_type.to_ir(None)
 
 
 def test_register_result():
@@ -167,3 +163,26 @@ def test_obs_rt_repr():
         str(a1)
         == "ObservableResultType(observable=X('qubit_count': 1), target=QubitSet([Qubit(0)]))"
     )
+
+
+@pytest.mark.parametrize(
+    "ir_type, serialization_properties, expected_exception, expected_message",
+    [
+        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd has not been implemented yet."),
+        (IRType.OPENQASM, None, NotImplementedError, "to_openqasm has not been implemented yet."),
+        ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+        (
+            IRType.OPENQASM,
+            "invalid-serialization-properties",
+            ValueError,
+            "serialization_properties must be of type OpenQASMSerializationProperties for "
+            "IRType.OPENQASM.",
+        ),
+    ],
+)
+def test_result_type_to_ir(
+    ir_type, serialization_properties, expected_exception, expected_message, result_type
+):
+    with pytest.raises(expected_exception) as exc:
+        result_type.to_ir(ir_type, serialization_properties=serialization_properties)
+    assert exc.value.args[0] == expected_message

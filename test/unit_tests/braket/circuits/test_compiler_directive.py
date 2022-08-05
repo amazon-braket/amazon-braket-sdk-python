@@ -15,6 +15,7 @@ import pytest
 
 from braket.circuits import Operator
 from braket.circuits.compiler_directive import CompilerDirective
+from braket.circuits.serialization import IRType
 
 
 @pytest.fixture
@@ -50,10 +51,21 @@ def test_counterpart_not_implemented_by_default(compiler_directive):
     compiler_directive.counterpart()
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
-def test_to_ir_not_implemented_by_default(compiler_directive):
-    compiler_directive.to_ir(None)
-
-
 def test_str(compiler_directive):
     assert str(compiler_directive) == compiler_directive.name
+
+
+@pytest.mark.parametrize(
+    "ir_type, serialization_properties, expected_exception, expected_message",
+    [
+        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd has not been implemented yet."),
+        (IRType.OPENQASM, None, NotImplementedError, "to_openqasm has not been implemented yet."),
+        ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+    ],
+)
+def test_compiler_directive_to_ir(
+    ir_type, serialization_properties, expected_exception, expected_message, compiler_directive
+):
+    with pytest.raises(expected_exception) as exc:
+        compiler_directive.to_ir(0, ir_type, serialization_properties=serialization_properties)
+    assert exc.value.args[0] == expected_message

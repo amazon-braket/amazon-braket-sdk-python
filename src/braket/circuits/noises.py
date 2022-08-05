@@ -20,6 +20,7 @@ import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
+from braket.circuits.gates import format_complex
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import (
     DampingNoise,
@@ -37,6 +38,7 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.serialization import OpenQASMSerializationProperties
 
 """
 To add a new Noise implementation:
@@ -81,8 +83,14 @@ class BitFlip(SingleProbabilisticNoise):
             ascii_symbols=[_ascii_representation("BF", [probability])],
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.BitFlip.construct(target=target[0], probability=self.probability)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"#pragma braket noise bit_flip({self.probability}) {target_qubit}"
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
@@ -176,8 +184,14 @@ class PhaseFlip(SingleProbabilisticNoise):
             ascii_symbols=[_ascii_representation("PF", [probability])],
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.PhaseFlip.construct(target=target[0], probability=self.probability)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"#pragma braket noise phase_flip({self.probability}) {target_qubit}"
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
@@ -294,9 +308,18 @@ class PauliChannel(PauliNoise):
             ascii_symbols=[_ascii_representation("PC", [probX, probY, probZ])],
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.PauliChannel.construct(
             target=target[0], probX=self.probX, probY=self.probY, probZ=self.probZ
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return (
+            f"#pragma braket noise pauli_channel"
+            f"({self.probX}, {self.probY}, {self.probZ}) {target_qubit}"
         )
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -326,7 +349,7 @@ class PauliChannel(PauliNoise):
             Iterable[Instruction]: `Iterable` of PauliChannel instructions.
 
         Examples:
-            >>> circ = Circuit().pauli_channel(0,probX=0.1,probY=0.2,probZ=0.3)
+            >>> circ = Circuit().pauli_channel(0, probX=0.1, probY=0.2, probZ=0.3)
         """
         return [
             Instruction(Noise.PauliChannel(probX=probX, probY=probY, probZ=probZ), target=qubit)
@@ -422,8 +445,14 @@ class Depolarizing(SingleProbabilisticNoise_34):
             ascii_symbols=[_ascii_representation("DEPO", [probability])],
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.Depolarizing.construct(target=target[0], probability=self.probability)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"#pragma braket noise depolarizing({self.probability}) {target_qubit}"
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
@@ -541,9 +570,19 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
             ascii_symbols=[_ascii_representation("DEPO", [probability])] * 2,
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.TwoQubitDepolarizing.construct(
             targets=[target[0], target[1]], probability=self.probability
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit_0 = serialization_properties.format_target(int(target[0]))
+        target_qubit_1 = serialization_properties.format_target(int(target[1]))
+        return (
+            f"#pragma braket noise two_qubit_depolarizing({self.probability}) "
+            f"{target_qubit_0}, {target_qubit_1}"
         )
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -656,9 +695,19 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
             ascii_symbols=[_ascii_representation("DEPH", [probability])] * 2,
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.TwoQubitDephasing.construct(
             targets=[target[0], target[1]], probability=self.probability
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit_0 = serialization_properties.format_target(int(target[0]))
+        target_qubit_1 = serialization_properties.format_target(int(target[1]))
+        return (
+            f"#pragma braket noise two_qubit_dephasing({self.probability}) "
+            f"{target_qubit_0}, {target_qubit_1}"
         )
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -805,11 +854,6 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         )
         self._matrix = None
 
-    def to_ir(self, target: QubitSet):
-        return ir.MultiQubitPauliChannel.construct(
-            targets=[target[0], target[1]], probabilities=self._probabilities
-        )
-
     def to_matrix(self) -> Iterable[np.ndarray]:
         if self._matrix is not None:
             return self._matrix
@@ -825,6 +869,11 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
                 K_list.append(np.zeros((4, 4)))
         self._matrix = K_list
         return self._matrix
+
+    def _to_jaqcd(self, target: QubitSet):
+        return ir.MultiQubitPauliChannel.construct(
+            targets=[target[0], target[1]], probabilities=self.probabilities
+        )
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -923,8 +972,14 @@ class AmplitudeDamping(DampingNoise):
             ascii_symbols=[_ascii_representation("AD", [gamma])],
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.AmplitudeDamping.construct(target=target[0], gamma=self.gamma)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"#pragma braket noise amplitude_damping({self.gamma}) {target_qubit}"
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
@@ -1036,9 +1091,18 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             ascii_symbols=[_ascii_representation("GAD", [gamma, probability])],
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.GeneralizedAmplitudeDamping.construct(
             target=target[0], gamma=self.gamma, probability=self.probability
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return (
+            "#pragma braket noise generalized_amplitude_damping("
+            f"{self.gamma}, {self.probability}) {target_qubit}"
         )
 
     def to_matrix(self) -> Iterable[np.ndarray]:
@@ -1072,7 +1136,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
             Iterable[Instruction]: `Iterable` of GeneralizedAmplitudeDamping instructions.
 
         Examples:
-            >>> circ = Circuit().generalized_amplitude_damping(0, probability = 0.9, gamma=0.1)
+            >>> circ = Circuit().generalized_amplitude_damping(0, gamma=0.1, probability = 0.9)
         """
         return [
             Instruction(
@@ -1151,8 +1215,14 @@ class PhaseDamping(DampingNoise):
             ascii_symbols=[_ascii_representation("PD", [gamma])],
         )
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.PhaseDamping.construct(target=target[0], gamma=self.gamma)
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"#pragma braket noise phase_damping({self.gamma}) {target_qubit}"
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
@@ -1254,11 +1324,27 @@ class Kraus(Noise):
     def to_matrix(self) -> Iterable[np.ndarray]:
         return self._matrices
 
-    def to_ir(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet):
         return ir.Kraus.construct(
             targets=[qubit for qubit in target],
             matrices=Kraus._transform_matrix_to_ir(self._matrices),
         )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+    ):
+        matrix_list = ", ".join(
+            np.array2string(
+                matrix,
+                separator=", ",
+                formatter={"all": lambda x: format_complex(x)},
+            ).replace("\n", "")
+            for matrix in self._matrices
+        )
+        qubit_list = ", ".join(
+            serialization_properties.format_target(int(qubit)) for qubit in target
+        )
+        return f"#pragma braket noise kraus({matrix_list}) {qubit_list}"
 
     @staticmethod
     def _transform_matrix_to_ir(matrices: Iterable[np.ndarray]):

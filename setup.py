@@ -27,8 +27,8 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-default-simulator",
-        "amazon-braket-schemas>=1.10.0",
+        "amazon-braket-schemas>=1.10.1",
+        "amazon-braket-default-simulator>=1.7.1",
         "backoff",
         "boltons",
         "boto3",
