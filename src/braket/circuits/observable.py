@@ -109,13 +109,13 @@ class Observable(QuantumOperator):
         raise NotImplementedError
 
     def eigenvalue(self, index: int) -> float:
-        """Returns the the eigenvalue of this observable at the given index.
+        """Returns the eigenvalue of this observable at the given index.
 
         The eigenvalues are ordered by their corresponding computational basis state
         after diagonalization.
 
         Args:
-            index: The index of the desired eigenvalue
+            index (int): The index of the desired eigenvalue
 
         Returns:
             float: The `index`th eigenvalue of the observable.

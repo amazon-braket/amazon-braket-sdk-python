@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Type, Union
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -152,7 +152,7 @@ class Noise(QuantumOperator):
         raise NotImplementedError
 
     @classmethod
-    def register_noise(cls, noise: Noise):
+    def register_noise(cls, noise: Type[Noise]):
         """Register a noise implementation by adding it into the Noise class.
 
         Args:
