@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, Sequence, Tuple
+from typing import Any, List, Optional, Sequence, Tuple, Type
 
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
@@ -136,10 +136,10 @@ class Gate(QuantumOperator):
         return f"{self.name}('qubit_count': {self._qubit_count})"
 
     @classmethod
-    def register_gate(cls, gate: Gate):
+    def register_gate(cls, gate: Type[Gate]):
         """Register a gate implementation by adding it into the Gate class.
 
         Args:
-            gate (Gate): Gate class to register.
+            gate (Type[Gate]): Gate class to register.
         """
         setattr(cls, gate.__name__, gate)

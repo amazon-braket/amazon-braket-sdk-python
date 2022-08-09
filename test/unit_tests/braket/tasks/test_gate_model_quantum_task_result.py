@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import json
-from typing import Counter
+from collections import Counter
 from unittest.mock import patch
 
 import numpy as np
