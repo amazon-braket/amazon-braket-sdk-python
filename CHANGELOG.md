@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.29.0 (2022-08-10)
+
+### Features
+
+ * Pauli strings
+
+### Testing and Release Infrastructure
+
+ * Don't run tests on push to feature branches
+ * Add SF plugin to dependent tests
+
 ## v1.28.1 (2022-08-05)
 
 ### Bug Fixes and Other Changes
