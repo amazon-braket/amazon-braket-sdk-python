@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from numbers import Number
 from typing import List
+from decimal import Decimal
 
 
 class Pattern:
@@ -24,3 +25,17 @@ class Pattern:
     @property
     def series(self) -> List[Number]:
         return self._series
+
+    def discretize(self, res: Decimal) -> Pattern:
+        """Creates a discretized version of the pattern,
+        where each value is rounded to the nearest multiple
+        of the resolution.
+
+        Args:
+            res: Resolution
+
+        Returns:
+            Pattern: The new discretized pattern
+        """
+        discretized_series = [Decimal(num).quantize(res) for num in self.series]
+        return Pattern(discretized_series)

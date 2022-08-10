@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from enum import Enum
 from numbers import Number
 from typing import Iterator, List, Tuple
+from decimal import Decimal
 
 
 class SiteType(Enum):
@@ -72,3 +73,22 @@ class AtomArrangement:
 
     def __len__(self):
         return self._sites.__len__()
+
+    def discretize(self,
+                   position_res: Decimal
+    ) -> AtomArrangement:
+        """Creates a discretized version of the atom arrangement,
+        rounding all site coordinates to the closest multiple of the
+        resolution. The types of the sites are unchanged.
+
+        Args:
+            position_res (Decimal): Position resolution
+
+        Returns:
+            AtomArrangement: A new discretized atom arrangement.
+        """
+        discretized_aa = AtomArrangement()
+        for site in self.register:
+            new_coordinates = tuple((Decimal(c).quantize(position_res) for c in site.coordinate))
+            discretized_aa.add(new_coordinates, site.site_type)
+        return discretized_aa

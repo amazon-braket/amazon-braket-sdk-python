@@ -16,12 +16,20 @@ from __future__ import annotations
 from collections import defaultdict
 from functools import singledispatch
 from typing import Tuple
+from decimal import Decimal
 
 import braket.ir.ahs as ir
+from braket.aws import AwsDevice
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.shifting_field import ShiftingField
+
+
+class DiscretizeError(Exception):
+    """Raised if the discretization of the numerical values of the AHS program fails.
+    """
+    pass
 
 
 class AnalogHamiltonianSimulation:
@@ -61,6 +69,93 @@ class AnalogHamiltonianSimulation:
             terms[term_type].append(term_ir)
         return ir.Hamiltonian(
             drivingFields=terms["driving_fields"], shiftingFields=terms["shifting_fields"]
+        )
+
+    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:
+        """ Creates a new AnalogHamiltonianSimulation with all numerical values represented
+            as Decimal objects with fixed precision based on the capabilities of the device.
+
+            Args:
+                device (AwsDevice): The device for which to discretize the program.
+
+            Returns:
+                AnalogHamiltonianSimulation: A discretized version of this program.
+
+            Raises:
+                DiscretizeError: If unable to discretize the program.
+        """
+
+        # Gather resolution values
+
+        register_position_resolution = device.properties.paradigm.lattice.geometry.positionResolution
+        driving_parameters = device.properties.paradigm.rydberg.rydbergGlobal
+        driving_field_resolutions = {
+            'amplitude': {
+                'time': driving_parameters.timeResolution,
+                'value': driving_parameters.rabiFrequencyResolution
+            },
+            'detuning': {
+                'time': driving_parameters.timeResolution,
+                'value': driving_parameters.detuningResolution
+            },
+            'phase': {
+                'time': driving_parameters.timeResolution,
+                'value': driving_parameters.phaseResolution
+            }
+        }
+        shifting_parameters = device.properties.paradigm.rydberg.rydbergLocal
+        shifting_field_resolutions = {
+            'magnitude': {
+                'time': shifting_parameters.timeResolution,
+                'value': shifting_parameters.commonDetuningResolution,
+                'pattern': shifting_parameters.localDetuningResolution
+            }
+        }
+
+        # Discretize register
+
+        try:
+            discretized_register = self.register.discretize(register_position_resolution)
+        except:
+            raise DiscretizeError(f'Failed to discretize register {self.register}')
+
+        # Discretize Hamiltonian
+
+        discretized_hamiltonian = Hamiltonian()
+        for idx, term in enumerate(self.hamiltonian):
+            if isinstance(term, DrivingField):
+                resolutions = driving_field_resolutions
+                fields = dict(
+                    amplitude=term.amplitude,
+                    phase=term.phase,
+                    detuning=term.detuning
+                )
+            elif isinstance(term, ShiftingField):
+                resolutions = shifting_field_resolutions
+                fields = dict(
+                    magnitude=term.magnitude
+                )
+            else:
+                raise NotImplementedError(
+                    f'Only DrivingField and ShiftingField terms can be discretized.'
+                    f'Hamiltonian term {idx} is of type {type(term)}'
+                )
+
+            for field_name, original_field in fields.items():
+                try:
+                    time_res = resolutions[field_name]['time']
+                    value_res = resolutions[field_name]['value']
+                    pattern_res = resolutions[field_name].get('pattern')
+                    fields[field_name] = original_field.discretize(time_res, value_res, pattern_res)
+                except:
+                    DiscretizeError(f'Failed to discretize {field_name} of Hamiltonian term {idx}: {original_field}')
+
+            discretized_term = type(term)(**fields)
+            discretized_hamiltonian += discretized_term
+
+        return AnalogHamiltonianSimulation(
+            resister=discretized_register,
+            hamiltonian=discretized_hamiltonian
         )
 
 

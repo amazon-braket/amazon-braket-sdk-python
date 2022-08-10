@@ -17,6 +17,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from numbers import Number
 from typing import Iterator, List
+from decimal import Decimal
 
 
 @dataclass
@@ -85,3 +86,26 @@ class TimeSeries:
         if not self._sorted:
             self._series = OrderedDict(sorted(self._series.items()))
             self._sorted = True
+
+    def discretize(self,
+                   time_res: Decimal,
+                   value_res: Decimal
+    ) -> TimeSeries:
+        """Creates a discretized version of the time series,
+        rounding all times and values to the closest multiple of the
+        corresonding resolution.
+
+        Args:
+            time_res (Decimal): Time resolution
+            value_red (Decimal): Value resolution
+
+        Returns:
+            TimeSeries: A new discretized time series.
+        """
+        discretized_ts = TimeSeries()
+        for item in self:
+            discretized_ts.put(
+                time=Decimal(item.time).quantize(time_res),
+                value=Decimal(item.value).quantize(value_res)
+            )
+        return discretized_ts
