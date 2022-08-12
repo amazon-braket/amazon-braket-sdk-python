@@ -36,7 +36,7 @@ class Field:
     def discretize(self,
                    time_res: Decimal,
                    value_res: Decimal,
-                   pattern_res: Decimal
+                   pattern_res: Optional[Decimal] = None
     ) -> Field:
         """Creates a discretized version of the field,
         where time, value and pattern are rounded to the
@@ -45,15 +45,20 @@ class Field:
         Args:
             time_res (Decimal): Time resolution
             value_res (Decimal): Value resolution
-            pattern_res (Decimal): Pattern resolution
+            pattern_res (Decimal or None): Pattern resolution
 
         Returns:
             Field: A new discretized field.
+
+        Raises:
+            ValueError: if pattern_res is None, but there is a Pattern
         """
         discretized_time_series = self.time_series.discretize(time_res, value_res)
         if self.pattern is None:
             discretized_pattern = None
         else:
+            if pattern_res is None:
+                raise ValueError('since pattern is defined, pattern_res must be Decimal')
             discretized_pattern = self.pattern.discretize(pattern_res)
 
         discretized_field = Field(

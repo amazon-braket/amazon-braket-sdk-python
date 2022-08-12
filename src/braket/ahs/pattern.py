@@ -37,5 +37,5 @@ class Pattern:
         Returns:
             Pattern: The new discretized pattern
         """
-        discretized_series = [Decimal(num).quantize(res) for num in self.series]
+        discretized_series = [round(Decimal(num) / res) * res for num in self.series]
         return Pattern(discretized_series)

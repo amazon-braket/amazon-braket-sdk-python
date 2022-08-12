@@ -19,7 +19,6 @@ from typing import Tuple
 from decimal import Decimal
 
 import braket.ir.ahs as ir
-from braket.aws import AwsDevice
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
@@ -71,7 +70,7 @@ class AnalogHamiltonianSimulation:
             drivingFields=terms["driving_fields"], shiftingFields=terms["shifting_fields"]
         )
 
-    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:
+    def discretize(self, device) -> AnalogHamiltonianSimulation:
         """ Creates a new AnalogHamiltonianSimulation with all numerical values represented
             as Decimal objects with fixed precision based on the capabilities of the device.
 

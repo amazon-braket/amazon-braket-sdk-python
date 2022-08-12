@@ -88,7 +88,7 @@ class AtomArrangement:
             AtomArrangement: A new discretized atom arrangement.
         """
         discretized_aa = AtomArrangement()
-        for site in self.register:
-            new_coordinates = tuple((Decimal(c).quantize(position_res) for c in site.coordinate))
+        for site in self._sites:
+            new_coordinates = tuple((round(Decimal(c) / position_res) * position_res for c in site.coordinate))
             discretized_aa.add(new_coordinates, site.site_type)
         return discretized_aa

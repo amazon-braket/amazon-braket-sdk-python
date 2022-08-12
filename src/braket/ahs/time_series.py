@@ -105,7 +105,7 @@ class TimeSeries:
         discretized_ts = TimeSeries()
         for item in self:
             discretized_ts.put(
-                time=Decimal(item.time).quantize(time_res),
-                value=Decimal(item.value).quantize(value_res)
+                time=round(Decimal(item.time) / time_res) * time_res,
+                value=round(Decimal(item.value) / value_res) * value_res
             )
         return discretized_ts

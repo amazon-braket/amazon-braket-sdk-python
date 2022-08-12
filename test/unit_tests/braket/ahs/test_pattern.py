@@ -13,10 +13,38 @@
 
 from decimal import Decimal
 
+import pytest
+
 from braket.ahs.pattern import Pattern
+
+
+@pytest.fixture
+def default_values():
+    return [0, 0.1, 1, 0.5, 0.2, 0.001, 1e-10]
+
+
+@pytest.fixture
+def default_pattern(default_values):
+    return Pattern(series=default_values)
 
 
 def test_create():
     expected_series = [1, 2, Decimal(3.1)]
     pattern = Pattern(expected_series)
     assert expected_series == pattern.series
+
+
+@pytest.mark.parametrize(
+    "res, expected_series", 
+    [
+        # default pattern: [0, 0.1, 1, 0.5, 0.2, 0.001, 1e-10]
+        (Decimal('0.001'), [Decimal('0'), Decimal('0.1'), Decimal('1'), Decimal('0.5'), Decimal('0.2'), Decimal('0.001'), Decimal('0')]),
+        (Decimal('0.1'), [Decimal('0'), Decimal('0.1'), Decimal('1'), Decimal('0.5'), Decimal('0.2'), Decimal('0'), Decimal('0')]),
+        (Decimal('0.5'), [Decimal('0'), Decimal('0'), Decimal('1'), Decimal('0.5'), Decimal('0'), Decimal('0'), Decimal('0')]),
+        (Decimal('0.9'), [Decimal('0'), Decimal('0'), Decimal('0.9'), Decimal('0.9'), Decimal('0'), Decimal('0'), Decimal('0')]),
+    ]
+)
+def test_discretize(default_pattern, res, expected_series):
+    print(default_pattern.series)
+    print(res, default_pattern.discretize(res).series)
+    assert expected_series == default_pattern.discretize(res).series
