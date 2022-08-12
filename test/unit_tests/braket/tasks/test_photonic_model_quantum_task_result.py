@@ -64,9 +64,10 @@ def result_1_str(result_1):
 
 @pytest.fixture
 def empty_result(task_metadata, additional_metadata):
-    task_metadata.id = "empty_arn"
+    updated_metadata = task_metadata.copy()
+    updated_metadata.id = "empty_arn"
     return PhotonicModelTaskResult(
-        taskMetadata=task_metadata, additionalMetadata=additional_metadata
+        taskMetadata=updated_metadata, additionalMetadata=additional_metadata
     )
 
 
