@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.29.0.post0 (2022-08-17)
+
+### Testing and Release Infrastructure
+
+ * Avoid mutation of fixtures
+
 ## v1.29.0 (2022-08-10)
 
 ### Features
