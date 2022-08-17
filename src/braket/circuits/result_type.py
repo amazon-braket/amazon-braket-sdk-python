@@ -58,7 +58,7 @@ class ResultType:
         Returns the name of the result type
 
         Returns:
-            The name of the result type as a string
+            str: The name of the result type as a string
         """
         return self.__class__.__name__
 
@@ -76,10 +76,9 @@ class ResultType:
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
-            **kwargs: Keyword arguments
 
         Returns:
-            IR object of the result type
+            Any: IR object of the result type
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
@@ -118,7 +117,7 @@ class ResultType:
 
     def copy(
         self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
-    ):
+    ) -> ResultType:
         """
         Return a shallow copy of the result type.
 
@@ -127,11 +126,10 @@ class ResultType:
             qubits. This is useful apply an instruction to a circuit and change the target qubits.
 
         Args:
-            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
-                instruction.
+            target (QubitSetInput): Target qubits for the new instruction.
 
         Returns:
             ResultType: A shallow copy of the result type.
@@ -162,7 +160,7 @@ class ResultType:
         return copy
 
     @classmethod
-    def register_result_type(cls, result_type: Type[ResultType]):
+    def register_result_type(cls, result_type: Type[ResultType]) -> None:
         """Register a result type implementation by adding it into the `ResultType` class.
 
         Args:
@@ -192,8 +190,10 @@ class ObservableResultType(ResultType):
     ):
         """
         Args:
+            ascii_symbols (List[str]): ASCII string symbols for the result type. This is used when
+                printing a diagram of circuits.
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+            target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 only operate on 1 qubit and it will be applied to all qubits in parallel
 
@@ -232,6 +232,10 @@ class ObservableResultType(ResultType):
 
     @target.setter
     def target(self, target: QubitSetInput) -> None:
+        """Sets the target.
+        Args:
+            target (QubitSetInput): The new target.
+        """
         self._target = QubitSet(target)
 
     def __eq__(self, other) -> bool:

@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 import numpy
 
@@ -44,19 +45,24 @@ class AnnealingQuantumTaskResult:
     task_metadata: TaskMetadata
     additional_metadata: AdditionalMetadata
 
-    def data(self, selected_fields=None, sorted_by="value", reverse=False):
+    def data(
+        self,
+        selected_fields: Optional[List[str]] = None,
+        sorted_by: str = "value",
+        reverse: bool = False,
+    ) -> Tuple:
         """
         Iterate over the data in record_array
 
         Args:
-            selected_fields (List[str], optional, default=None): selected fields to return.
-                Options are 'solution', 'value', and 'solution_count'
-            sorted_by (str, optional, default='value'): Sorts the data by this field.
-                Options are 'solution', 'value', and 'solution_count'
-            reverse (bool, optional, default=False): If True, returns the data in reverse order.
+            selected_fields (Optional[List[str]]): selected fields to return.
+                Options are 'solution', 'value', and 'solution_count'. Default is None.
+            sorted_by (str): Sorts the data by this field.
+                Options are 'solution', 'value', and 'solution_count'. Default is 'value'.
+            reverse (bool): If True, returns the data in reverse order. Default is False.
 
         Yields:
-            tuple: data in record_array
+            Tuple: data in record_array
         """
         if selected_fields is None:
             selected_fields = ["solution", "value", "solution_count"]
@@ -120,7 +126,7 @@ class AnnealingQuantumTaskResult:
         return AnnealingQuantumTaskResult._from_object(AnnealingTaskResult.parse_raw(result))
 
     @classmethod
-    def _from_object(cls, result: AnnealingTaskResult):
+    def _from_object(cls, result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
         solutions = numpy.asarray(result.solutions, dtype=int)
         values = numpy.asarray(result.values, dtype=float)
         if not result.solutionCounts:

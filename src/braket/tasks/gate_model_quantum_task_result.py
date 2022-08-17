@@ -139,11 +139,11 @@ class GateModelQuantumTaskResult:
         Creates measurement counts from measurements
 
         Args:
-            measurements (numpy.ndarray): 2d array - row is shot and column is qubit.
+            measurements (ndarray): 2d array - row is shot and column is qubit.
 
         Returns:
             Counter: A Counter of measurements. Key is the measurements in a big endian binary
-                string. Value is the number of times that measurement occurred.
+            string. Value is the number of times that measurement occurred.
         """
         bitstrings = []
         for j in range(len(measurements)):
@@ -164,7 +164,7 @@ class GateModelQuantumTaskResult:
 
         Returns:
             Dict[str, float]: A dictionary of probabilistic results. Key is the measurements
-                in a big endian binary string. Value is the probability the measurement occurred.
+            in a big endian binary string. Value is the probability the measurement occurred.
         """
         measurement_probabilities = {}
         shots = sum(measurement_counts.values())
@@ -178,18 +178,18 @@ class GateModelQuantumTaskResult:
         measurement_probabilities: Dict[str, float], shots: int
     ) -> np.ndarray:
         """
-        Creates measurements from measurement probabilities
+        Creates measurements from measurement probabilities.
 
         Args:
             measurement_probabilities (Dict[str, float]): A dictionary of probabilistic results.
                 Key is the measurements in a big endian binary string.
                 Value is the probability the measurement occurred.
-            shots (int): number of iterations on device
+            shots (int): number of iterations on device.
 
         Returns:
-            Dict[str, float]: A dictionary of probabilistic results.
-                Key is the measurements in a big endian binary string.
-                Value is the probability the measurement occurred.
+            ndarray: A dictionary of probabilistic results.
+            Key is the measurements in a big endian binary string.
+            Value is the probability the measurement occurred.
         """
         measurements_list = []
         for bitstring in measurement_probabilities:
@@ -201,7 +201,7 @@ class GateModelQuantumTaskResult:
         return np.asarray(measurements_list, dtype=int)
 
     @staticmethod
-    def from_object(result: GateModelTaskResult):
+    def from_object(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
         """
         Create GateModelQuantumTaskResult from GateModelTaskResult object.
 
@@ -237,7 +237,7 @@ class GateModelQuantumTaskResult:
         return GateModelQuantumTaskResult._from_object_internal(obj)
 
     @classmethod
-    def _from_object_internal(cls, result: GateModelTaskResult):
+    def _from_object_internal(cls, result: GateModelTaskResult) -> GateModelQuantumTaskResult:
         if result.taskMetadata.shots > 0:
             return GateModelQuantumTaskResult._from_object_internal_computational_basis_sampling(
                 result
@@ -246,7 +246,9 @@ class GateModelQuantumTaskResult:
             return GateModelQuantumTaskResult._from_dict_internal_simulator_only(result)
 
     @classmethod
-    def _from_object_internal_computational_basis_sampling(cls, result: GateModelTaskResult):
+    def _from_object_internal_computational_basis_sampling(
+        cls, result: GateModelTaskResult
+    ) -> GateModelQuantumTaskResult:
         task_metadata = result.taskMetadata
         additional_metadata = result.additionalMetadata
         if result.measurements:
@@ -314,7 +316,9 @@ class GateModelQuantumTaskResult:
         )
 
     @classmethod
-    def _from_dict_internal_simulator_only(cls, result: GateModelTaskResult):
+    def _from_dict_internal_simulator_only(
+        cls, result: GateModelTaskResult
+    ) -> GateModelQuantumTaskResult:
         task_metadata = result.taskMetadata
         additional_metadata = result.additionalMetadata
         result_types = result.resultTypes
@@ -490,13 +494,13 @@ class GateModelQuantumTaskResult:
         return observable.eigenvalues[indices].real
 
     @staticmethod
-    def _result_type_hash(rt_type):
+    def _result_type_hash(rt_type: dict) -> str:
         if hasattr(rt_type, "observable") and isinstance(rt_type.observable, list):
             rt_type.observable = GateModelQuantumTaskResult._replace_neg_zero(rt_type.observable)
         return repr(dict(sorted(dict(rt_type).items(), key=lambda x: x[0])))
 
     @staticmethod
-    def _replace_neg_zero(observable_matrix):
+    def _replace_neg_zero(observable_matrix: Union[list, int]) -> Union[list, int]:
         if isinstance(observable_matrix, list):
             return [GateModelQuantumTaskResult._replace_neg_zero(x) for x in observable_matrix]
         else:

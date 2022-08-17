@@ -41,8 +41,8 @@ class Device(ABC):
         Args:
             task_specification (Union[Circuit, Problem]):  Specification of a task
                 to run on device.
-
-            shots (int): The number of times to run the task on the device. Default is `None`.
+            shots (Optional[int]): The number of times to run the task on the device.
+                Default is `None`.
 
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device

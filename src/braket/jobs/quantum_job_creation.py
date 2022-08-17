@@ -52,7 +52,7 @@ def prepare_quantum_job(
     checkpoint_config: CheckpointConfig = None,
     aws_session: AwsSession = None,
     tags: Dict[str, str] = None,
-):
+) -> Dict:
     """Creates a job by invoking the Braket CreateJob API.
 
     Args:
@@ -88,7 +88,7 @@ def prepare_quantum_job(
             For convenience, this accepts other types for keys and values, but `str()`
             is called to convert them before being passed on. Default: None.
 
-        input_data (Union[str, S3DataSourceConfig, dict]): Information about the training
+        input_data (Union[str, Dict, S3DataSourceConfig]): Information about the training
             data. Dictionary maps channel names to local paths or S3 URIs. Contents found
             at any local paths will be uploaded to S3 at
             f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -130,7 +130,7 @@ def prepare_quantum_job(
             Default: {}.
 
     Returns:
-        AwsQuantumJob: Job tracking the execution on Amazon Braket.
+        Dict: Job tracking the execution on Amazon Braket.
 
     Raises:
         ValueError: Raises ValueError if the parameters are not valid.
@@ -226,7 +226,7 @@ def _generate_default_job_name(image_uri: Optional[str]) -> str:
     """
     Generate default job name using the image uri and a timestamp
     Args:
-        image_uri (str, optional): URI for the image container.
+        image_uri (Optional[str]): URI for the image container.
 
     Returns:
         str: Job name.

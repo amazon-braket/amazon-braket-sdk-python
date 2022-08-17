@@ -25,11 +25,11 @@ class Framework(str, Enum):
     PL_PYTORCH = "PL_PYTORCH"
 
 
-def retrieve_image(framework: Framework, region: str):
+def retrieve_image(framework: Framework, region: str) -> str:
     """Retrieves the ECR URI for the Docker image matching the specified arguments.
 
     Args:
-        framework (str): The name of the framework.
+        framework (Framework): The name of the framework.
         region (str): The AWS region for the Docker image.
 
     Returns:
