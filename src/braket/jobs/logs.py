@@ -14,6 +14,7 @@
 import collections
 import os
 import sys
+
 ##############################################################################
 #
 # Support for reading logs
