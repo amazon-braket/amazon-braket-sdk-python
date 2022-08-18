@@ -65,7 +65,7 @@ def test_qpu_tracking():
     with Tracker() as t:
         AwsDevice("arn:aws:braket:::device/qpu/ionq/ionQdevice").run(circuit, shots=10)
         AwsDevice("arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy").run(circuit, shots=10)
-        AwsDevice("arn:aws:braket:::device/qpu/rigetti/Aspen-11").run(circuit, shots=10)
+        AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2").run(circuit, shots=10)
 
     assert t.qpu_tasks_cost() > 0
 
