@@ -33,10 +33,11 @@ class Field:
     def pattern(self) -> Optional[Pattern]:
         return self._pattern
 
-    def discretize(self,
-                   time_res: Decimal,
-                   value_res: Decimal,
-                   pattern_res: Optional[Decimal] = None
+    def discretize(
+        self,
+        time_res: Decimal,
+        value_res: Decimal,
+        pattern_res: Optional[Decimal] = None
     ) -> Field:
         """Creates a discretized version of the field,
         where time, value and pattern are rounded to the
