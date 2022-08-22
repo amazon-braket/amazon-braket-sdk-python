@@ -32,7 +32,7 @@ class Pattern:
         of the resolution.
 
         Args:
-            res: Resolution
+            res (Decimal): Resolution of the discretization
 
         Returns:
             Pattern: The new discretized pattern

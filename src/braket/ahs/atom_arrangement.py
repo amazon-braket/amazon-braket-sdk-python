@@ -74,8 +74,9 @@ class AtomArrangement:
     def __len__(self):
         return self._sites.__len__()
 
-    def discretize(self,
-                   position_res: Decimal
+    def discretize(
+        self,
+        position_res: Decimal
     ) -> AtomArrangement:
         """Creates a discretized version of the atom arrangement,
         rounding all site coordinates to the closest multiple of the
@@ -87,8 +88,8 @@ class AtomArrangement:
         Returns:
             AtomArrangement: A new discretized atom arrangement.
         """
-        discretized_aa = AtomArrangement()
+        discretized_arrangement = AtomArrangement()
         for site in self._sites:
             new_coordinates = tuple((round(Decimal(c) / position_res) * position_res for c in site.coordinate))
-            discretized_aa.add(new_coordinates, site.site_type)
-        return discretized_aa
+            discretized_arrangement.add(new_coordinates, site.site_type)
+        return discretized_arrangement

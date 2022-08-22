@@ -87,9 +87,10 @@ class TimeSeries:
             self._series = OrderedDict(sorted(self._series.items()))
             self._sorted = True
 
-    def discretize(self,
-                   time_res: Decimal,
-                   value_res: Decimal
+    def discretize(
+        self,
+        time_res: Decimal,
+        value_res: Decimal
     ) -> TimeSeries:
         """Creates a discretized version of the time series,
         rounding all times and values to the closest multiple of the

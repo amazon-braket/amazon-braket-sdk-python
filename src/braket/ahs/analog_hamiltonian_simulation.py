@@ -16,7 +16,6 @@ from __future__ import annotations
 from collections import defaultdict
 from functools import singledispatch
 from typing import Tuple
-from decimal import Decimal
 
 import braket.ir.ahs as ir
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
@@ -25,7 +24,7 @@ from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.shifting_field import ShiftingField
 
 
-class DiscretizeError(Exception):
+class DiscretizationError(Exception):
     """Raised if the discretization of the numerical values of the AHS program fails.
     """
     pass
@@ -84,6 +83,13 @@ class AnalogHamiltonianSimulation:
                 DiscretizeError: If unable to discretize the program.
         """
 
+        required_action_schema = 'braket.ir.ahs.program'
+        if (
+            (required_action_schema not in device.properties.action)
+            or (device.properties.action[required_action_schema].actionType != required_action_schema)
+            ):
+            raise DiscretizationError(f"AwsDevice {device} does not accept {required_action_schema} action schema." )
+
         # Gather resolution values
 
         register_position_resolution = device.properties.paradigm.lattice.geometry.positionResolution
@@ -116,7 +122,7 @@ class AnalogHamiltonianSimulation:
         try:
             discretized_register = self.register.discretize(register_position_resolution)
         except:
-            raise DiscretizeError(f'Failed to discretize register {self.register}')
+            raise DiscretizationError(f'Failed to discretize register {self.register}')
 
         # Discretize Hamiltonian
 
@@ -142,12 +148,10 @@ class AnalogHamiltonianSimulation:
 
             for field_name, original_field in fields.items():
                 try:
-                    time_res = resolutions[field_name]['time']
-                    value_res = resolutions[field_name]['value']
-                    pattern_res = resolutions[field_name].get('pattern')
-                    fields[field_name] = original_field.discretize(time_res, value_res, pattern_res)
+                    resolution = resolutions[field_name]
+                    fields[field_name] = original_field.discretize(resolution['time'], resolution['value'], resolution.get('pattern'))
                 except:
-                    DiscretizeError(f'Failed to discretize {field_name} of Hamiltonian term {idx}: {original_field}')
+                    DiscretizationError(f'Failed to discretize {field_name} of Hamiltonian term {idx}: {original_field}')
 
             discretized_term = type(term)(**fields)
             discretized_hamiltonian += discretized_term
