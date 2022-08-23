@@ -85,6 +85,7 @@ testdata = [
     (Gate.XX, "xx", ir.XX, [DoubleTarget, Angle], {}),
     (Gate.YY, "yy", ir.YY, [DoubleTarget, Angle], {}),
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
+    (Gate.GPi, "gpi", None, [SingleTarget, Angle], {}),
     (
         Gate.Unitary,
         "unitary",
@@ -122,6 +123,7 @@ parameterizable_gates = [
     Gate.CPhaseShift00,
     Gate.CPhaseShift01,
     Gate.CPhaseShift10,
+    Gate.GPi,
 ]
 
 invalid_unitary_matrices = [
@@ -272,11 +274,12 @@ def calculate_qubit_count(irsubclasses):
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs):
-    expected = irclass(**create_valid_ir_input(irsubclasses))
-    actual = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)).to_ir(
-        **create_valid_target_input(irsubclasses)
-    )
-    assert actual == expected
+    if irclass is not None:
+        expected = irclass(**create_valid_ir_input(irsubclasses))
+        actual = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)).to_ir(
+            **create_valid_target_input(irsubclasses)
+        )
+        assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -748,6 +751,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket unitary([[1.0, 0], [0, 0.70710678 - 0.70710678im]]) q[4]",
         ),
+        (
+            Gate.GPi(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "gpi(0.17) q[4];",
+        ),
+        (
+            Gate.GPi(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "gpi(0.17) $4;",
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
@@ -761,10 +776,13 @@ def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_ir_instruction_level(testclass, subroutine_name, irclass, irsubclasses, kwargs):
-    expected = irclass(**create_valid_ir_input(irsubclasses))
-    instruction = Instruction(**create_valid_instruction_input(testclass, irsubclasses, **kwargs))
-    actual = instruction.to_ir()
-    assert actual == expected
+    if irclass is not None:
+        expected = irclass(**create_valid_ir_input(irsubclasses))
+        instruction = Instruction(
+            **create_valid_instruction_input(testclass, irsubclasses, **kwargs)
+        )
+        actual = instruction.to_ir()
+        assert actual == expected
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
