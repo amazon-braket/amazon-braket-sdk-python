@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.29.1 (2022-08-18)
+
+### Bug Fixes and Other Changes
+
+ * updating test cost tracking integ test to use M2.
+
+## v1.29.0.post0 (2022-08-17)
+
+### Testing and Release Infrastructure
+
+ * Avoid mutation of fixtures
+
 ## v1.29.0 (2022-08-10)
 
 ### Features
