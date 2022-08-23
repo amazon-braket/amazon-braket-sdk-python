@@ -1938,6 +1938,67 @@ class GPi(AngledGate):
 Gate.register_gate(GPi)
 
 
+class GPi2(AngledGate):
+    """IonQ GPi2 gate.
+
+    Args:
+        angle (Union[FreeParameterExpression, float]): angle in radians.
+    """
+
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
+        super().__init__(
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=[angled_ascii_characters("GPi2", angle)],
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"gpi2({self.angle}) {target_qubit};"
+
+    def to_matrix(self) -> np.ndarray:
+        return np.array(
+            [
+                [1, -1j * np.exp(-1j * self.angle)],
+                [-1j * np.exp(1j * self.angle), 1],
+            ]
+        ) / np.sqrt(2)
+
+    def adjoint(self) -> List[Gate]:
+        return [GPi2(self.angle + np.pi)]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
+
+    def bind_values(self, **kwargs):
+        return get_angle(self, **kwargs)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def gpi2(
+        target: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit or int): Target qubit index.
+            angle (Union[FreeParameterExpression, float]): Angle in radians.
+
+        Returns:
+            Iterable[Instruction]: GPi2 instruction.
+
+        Examples:
+            >>> circ = Circuit().gpi2(0, 0.15)
+        """
+        return [Instruction(GPi2(angle), target=qubit) for qubit in QubitSet(target)]
+
+
+Gate.register_gate(GPi2)
+
+
 class Unitary(Gate):
     """Arbitrary unitary gate
 

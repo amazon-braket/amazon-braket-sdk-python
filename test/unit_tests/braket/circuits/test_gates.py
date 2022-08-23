@@ -86,6 +86,7 @@ testdata = [
     (Gate.YY, "yy", ir.YY, [DoubleTarget, Angle], {}),
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
     (Gate.GPi, "gpi", None, [SingleTarget, Angle], {}),
+    (Gate.GPi2, "gpi2", None, [SingleTarget, Angle], {}),
     (
         Gate.Unitary,
         "unitary",
@@ -124,6 +125,7 @@ parameterizable_gates = [
     Gate.CPhaseShift01,
     Gate.CPhaseShift10,
     Gate.GPi,
+    Gate.GPi2,
 ]
 
 invalid_unitary_matrices = [
@@ -762,6 +764,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "gpi(0.17) $4;",
+        ),
+        (
+            Gate.GPi2(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "gpi2(0.17) q[4];",
+        ),
+        (
+            Gate.GPi2(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "gpi2(0.17) $4;",
         ),
     ],
 )
