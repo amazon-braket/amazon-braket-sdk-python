@@ -210,6 +210,9 @@ class AwsSession(object):
         """
         Create a quantum task.
 
+        Args:
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateQuantumTask` operation.
+
         Returns:
             str: The ARN of the quantum task.
         """
@@ -231,6 +234,9 @@ class AwsSession(object):
     def create_job(self, **boto3_kwargs) -> str:
         """
         Create a quantum job.
+
+        Args:
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateJob` operation.
 
         Returns:
             str: The ARN of the job.
