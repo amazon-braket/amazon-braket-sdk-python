@@ -17,13 +17,13 @@ from typing import Iterable
 import numpy as np
 
 
-def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
+def verify_quantum_operator_matrix_dimensions(matrix: np.ndarray) -> None:
     """
     Verifies matrix is square and matrix dimensions are positive powers of 2,
     raising `ValueError` otherwise.
 
     Args:
-        matrix (array): matrix to verify
+        matrix (ndarray): matrix to verify
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
@@ -39,7 +39,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.array) -> None:
         raise ValueError(f"`matrix` dimension {matrix.shape[0]} is not a positive power of 2")
 
 
-def is_hermitian(matrix: np.array) -> bool:
+def is_hermitian(matrix: np.ndarray) -> bool:
     r"""
     Whether matrix is Hermitian
 
@@ -50,7 +50,7 @@ def is_hermitian(matrix: np.array) -> bool:
     where :math:`U^\dagger` is the conjugate transpose of :math:`U`.
 
     Args:
-        matrix (array): matrix to verify
+        matrix (ndarray): matrix to verify
 
     Returns:
         bool: If matrix is Hermitian
@@ -58,12 +58,12 @@ def is_hermitian(matrix: np.array) -> bool:
     return np.allclose(matrix, matrix.conj().T)
 
 
-def is_square_matrix(matrix: np.array) -> bool:
+def is_square_matrix(matrix: np.ndarray) -> bool:
     """
     Whether matrix is square, meaning it has exactly two dimensions and the dimensions are equal
 
     Args:
-        matrix (array): matrix to verify
+        matrix (ndarray): matrix to verify
 
     Returns:
         bool: If matrix is square
@@ -71,7 +71,7 @@ def is_square_matrix(matrix: np.array) -> bool:
     return len(matrix.shape) == 2 and matrix.shape[0] == matrix.shape[1]
 
 
-def is_unitary(matrix: np.array) -> bool:
+def is_unitary(matrix: np.ndarray) -> bool:
     r"""
     Whether matrix is unitary
 
@@ -83,7 +83,7 @@ def is_unitary(matrix: np.array) -> bool:
     and :math:`I` is the identity matrix.
 
     Args:
-        matrix (array): matrix to verify
+        matrix (ndarray): matrix to verify
 
     Returns:
         bool: If matrix is unitary
@@ -91,7 +91,7 @@ def is_unitary(matrix: np.array) -> bool:
     return np.allclose(np.eye(len(matrix)), matrix.dot(matrix.T.conj()))
 
 
-def is_cptp(matrices: Iterable[np.array]) -> bool:
+def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
     """
     Whether a transformation defined by these matrics as Kraus operators is a
     completely positive trace preserving (CPTP) map. This is the requirement for
@@ -99,7 +99,7 @@ def is_cptp(matrices: Iterable[np.array]) -> bool:
     Reference: Section 8.2.3 in Nielsen & Chuang (2010) 10th edition.
 
     Args:
-        matrices (Iterable[array]): List of matrices representing Kraus operators.
+        matrices (Iterable[ndarray]): List of matrices representing Kraus operators.
 
     Returns:
         bool: If the matrices define a CPTP map.
@@ -112,13 +112,13 @@ def is_cptp(matrices: Iterable[np.array]) -> bool:
 def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
     """
     Get the eigenvalues of Pauli operators and their tensor products as
-    an immutable Numpy array.
+    an immutable Numpy ndarray.
 
     Args:
         num_qubits (int): the number of qubits the operator acts on
 
     Returns:
-        np.ndarray: the eigenvalues of a Pauli product operator of the given size
+        ndarray: the eigenvalues of a Pauli product operator of the given size
     """
     if num_qubits == 1:
         eigs = np.array([1, -1])

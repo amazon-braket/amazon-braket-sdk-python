@@ -444,7 +444,7 @@ class Hermitian(Observable):
         return self._eigenvalues[index]
 
     @staticmethod
-    def _get_eigendecomposition(matrix: np.array) -> Dict[str, np.ndarray]:
+    def _get_eigendecomposition(matrix: np.ndarray) -> Dict[str, np.ndarray]:
         """
         Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
         The eigendecomposition is cached so that if another Hermitian observable
@@ -452,7 +452,7 @@ class Hermitian(Observable):
         be recalculated.
 
         Args:
-            matrix (array): The Hermitian matrix.
+            matrix (ndarray): The Hermitian matrix.
 
         Returns:
             Dict[str, ndarray]: The keys are "eigenvectors_conj_t", mapping to the
