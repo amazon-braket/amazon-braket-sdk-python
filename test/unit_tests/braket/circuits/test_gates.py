@@ -18,7 +18,6 @@ import pytest
 
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, FreeParameter, Gate, Instruction, QubitSet
-from braket.circuits.angled_gate import DoubleAngledGate
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
