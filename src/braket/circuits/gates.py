@@ -2016,7 +2016,7 @@ class MS(DoubleAngledGate):
             angle_1=angle_1,
             angle_2=angle_2,
             qubit_count=None,
-            ascii_symbols=[angled_ascii_characters("MS", [angle_1, angle_2])] * 2,
+            ascii_symbols=[_double_angled_ascii_characters("MS", angle_1, angle_2)] * 2,
         )
 
     def _to_openqasm(
@@ -2044,7 +2044,7 @@ class MS(DoubleAngledGate):
         return 2
 
     def bind_values(self, **kwargs):
-        return get_angles(self, **kwargs)
+        return _get_angles(self, **kwargs)
 
     @staticmethod
     @circuit.subroutine(register=True)
@@ -2162,12 +2162,25 @@ class Unitary(Gate):
 Gate.register_gate(Unitary)
 
 
-def angled_ascii_characters(
+def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, float]) -> str:
+    """
+    Generates a formatted ascii representation of an angled gate.
+
+    Args:
+        gate (str): The name of the gate.
+        angle (Union[FreeParameterExpression, float]): The angle for the gate.
+
+    Returns:
+        str: Returns the ascii representation for an angled gate.
+
+    """
+    return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
+
+
+def _double_angled_ascii_characters(
     gate: str,
-    angle: Union[
-        Union[FreeParameterExpression, float],
-        List[Union[FreeParameterExpression, float]],
-    ],
+    angle_1: Union[FreeParameterExpression, float],
+    angle_2: Union[FreeParameterExpression, float],
 ) -> str:
     """
     Generates a formatted ascii representation of an angled gate.
@@ -2180,11 +2193,11 @@ def angled_ascii_characters(
         str: Returns the ascii representation for an angled gate.
 
     """
-    angles = angle if isinstance(angle, Iterable) else [angle]
-    angles = ", ".join(
-        f'{angle:{".2f" if isinstance(angle, (float, Float)) else ""}}' for angle in angles
+    return (
+        f"{gate}("
+        f'{angle_1:{".2f" if isinstance(angle_1, (float, Float)) else ""}}), '
+        f'{angle_2:{".2f" if isinstance(angle_1, (float, Float)) else ""}})'
     )
-    return f"{gate}({angles})"
 
 
 def get_angle(self, **kwargs):
@@ -2204,7 +2217,7 @@ def get_angle(self, **kwargs):
     return type(self)(angle=new_angle)
 
 
-def get_angles(self, **kwargs):
+def _get_angles(self, **kwargs):
     """
     Gets the angle with all values substituted in that are requested.
 

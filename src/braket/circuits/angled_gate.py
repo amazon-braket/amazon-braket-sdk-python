@@ -144,8 +144,8 @@ class DoubleAngledGate(Gate, Parameterizable):
                 correlate a symbol with that index.
 
         Raises:
-            ValueError: If the `qubit_count` is less than 1, `ascii_symbols` are `None`, or
-                `ascii_symbols` length != `qubit_count`, or `angle` is `None`
+            ValueError: If `qubit_count` is less than 1, `ascii_symbols` are `None`, or
+                `ascii_symbols` length != `qubit_count`, or `angle_1` or `angle_2` is `None`
         """
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         if angle_1 is None or angle_2 is None:
@@ -217,6 +217,7 @@ class DoubleAngledGate(Gate, Parameterizable):
     def __eq__(self, other):
         return (
             isinstance(other, DoubleAngledGate)
+            and self.name == other.name
             and _angles_equal(self.angle_1, other.angle_1)
             and _angles_equal(self.angle_2, other.angle_2)
         )
@@ -234,5 +235,5 @@ def _angles_equal(angle_1, angle_2):
 
 
 @_angles_equal.register
-def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):
+def _(angle_1: FreeParameterExpression, angle_2):
     return angle_1 == angle_2
