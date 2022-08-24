@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -30,7 +32,7 @@ class PhotonicModelQuantumTaskResult:
         return NotImplemented
 
     @staticmethod
-    def from_object(result: PhotonicModelTaskResult):
+    def from_object(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
         """
         Create PhotonicModelQuantumTaskResult from PhotonicModelTaskResult object.
 
@@ -46,13 +48,15 @@ class PhotonicModelQuantumTaskResult:
         return PhotonicModelQuantumTaskResult._from_object_internal(result)
 
     @staticmethod
-    def from_string(result: str):
+    def from_string(result: str) -> PhotonicModelQuantumTaskResult:
         return PhotonicModelQuantumTaskResult._from_object_internal(
             PhotonicModelTaskResult.parse_raw(result)
         )
 
     @classmethod
-    def _from_object_internal(cls, result: PhotonicModelTaskResult):
+    def _from_object_internal(
+        cls, result: PhotonicModelTaskResult
+    ) -> PhotonicModelQuantumTaskResult:
         task_metadata = result.taskMetadata
         additional_metadata = result.additionalMetadata
         if result.measurements is not None:

@@ -39,7 +39,7 @@ def save_job_checkpoint(
         checkpoint_file_suffix (str): str that specifies the file suffix to be used for
             the checkpoint filename. The resulting filename
             `f"{job_name}(_{checkpoint_file_suffix}).json"` is used to save the checkpoints.
-             Default: ""
+            Default: ""
         data_format (PersistedJobDataFormat): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization. Default: PersistedJobDataFormat.PLAINTEXT

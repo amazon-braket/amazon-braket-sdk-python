@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import (
+    Any,
     Dict,
     ItemsView,
     Iterable,
@@ -169,6 +170,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
         Args:
             instructions (Iterable[Instruction]): Instructions to add to self. The instruction is
                 added to the max time slice in which the instruction fits.
+            noise_index (int): the number of noise channels at the same moment. For gates, this
+                is the number of gate_noise channels associated with that gate. For all other noise
+                types, noise_index starts from 0; but for gate noise, it starts from 1.
         """
         for instruction in instructions:
             self._add(instruction, noise_index)
@@ -191,7 +195,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._qubits.update(instruction.target)
             self._depth = max(self._depth, time + 1)
 
-    def _update_qubit_times(self, qubits):
+    def _update_qubit_times(self, qubits: QubitSet) -> int:
         qubit_max_times = [self._max_time_for_qubit(qubit) for qubit in qubits] + [
             self._time_all_qubits
         ]
@@ -204,7 +208,14 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def add_noise(
         self, instruction: Instruction, input_type: str = "noise", noise_index: int = 0
     ) -> None:
-
+        """Adds noise to a moment.
+        Args:
+            instruction (Instruction): Instruction to add.
+            input_type (str): One of MomentType.
+            noise_index (int): The number of noise channels at the same moment. For gates, this
+                is the number of gate_noise channels associated with that gate. For all other noise
+                types, noise_index starts from 0; but for gate noise, it starts from 1.
+        """
         qubit_range = instruction.target
         time = max(0, *[self._max_time_for_qubit(qubit) for qubit in qubit_range])
         if input_type == MomentType.INITIALIZATION_NOISE:
@@ -272,17 +283,20 @@ class Moments(Mapping[MomentsKey, Instruction]):
         return self._moments.items()
 
     def values(self) -> ValuesView[Instruction]:
-        """Return a view of self's instructions."""
+        """Return a view of self's instructions.
+        Returns:
+            ValuesView[Instruction]: The (in-order) instructions.
+        """
         self.sort_moments()
         return self._moments.values()
 
-    def get(self, key: MomentsKey, default=None) -> Instruction:
+    def get(self, key: MomentsKey, default: Any = None) -> Instruction:
         """
         Get the instruction in self by key.
 
         Args:
             key (MomentsKey): Key of the instruction to fetch.
-            default (Any, optional): Value to return if `key` is not in `moments`. Default = `None`.
+            default (Any): Value to return if `key` is not in `moments`. Default = `None`.
 
         Returns:
             Instruction: `moments[key]` if `key` in `moments`, else `default` is returned.

@@ -23,19 +23,25 @@ class QuantumJob(ABC):
     @property
     @abstractmethod
     def arn(self) -> str:
-        """str: The ARN (Amazon Resource Name) of the quantum job."""
+        """The ARN (Amazon Resource Name) of the quantum job.
+        Returns:
+            str: The ARN (Amazon Resource Name) of the quantum job.
+        """
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """str: The name of the quantum job."""
+        """The name of the quantum job.
+        Returns:
+            str: The name of the quantum job.
+        """
 
     @abstractmethod
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the quantum job.
 
         Args:
-            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+            use_cached_value (bool): If `True`, uses the value most recently retrieved
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
@@ -90,7 +96,7 @@ class QuantumJob(ABC):
         """Gets the job metadata defined in Amazon Braket.
 
         Args:
-            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+            use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
@@ -105,13 +111,7 @@ class QuantumJob(ABC):
         statistic: MetricStatistic = MetricStatistic.MAX,
     ) -> Dict[str, List[Any]]:
         """Gets all the metrics data, where the keys are the column names, and the values are a list
-        containing the values in each row. For example, the table:
-            timestamp energy
-              0         0.1
-              1         0.2
-        would be represented as:
-        { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
-        values may be integers, floats, strings or None.
+        containing the values in each row.
 
         Args:
             metric_type (MetricType): The type of metrics to get. Default: MetricType.TIMESTAMP.
@@ -120,7 +120,15 @@ class QuantumJob(ABC):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            Dict[str, List[Any]] : The metrics data.
+
+        Example:
+            timestamp energy
+              0         0.1
+              1         0.2
+            would be represented as:
+            { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
+            values may be integers, floats, strings or None.
         """
 
     @abstractmethod
@@ -161,7 +169,7 @@ class QuantumJob(ABC):
     @abstractmethod
     def download_result(
         self,
-        extract_to=None,
+        extract_to: str = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
@@ -174,10 +182,10 @@ class QuantumJob(ABC):
                 are extracted to a folder titled with the job name within this directory.
                 Default= `Current working directory`.
 
-            poll_timeout_seconds: (float): The polling timeout, in seconds, for `download_result()`.
+            poll_timeout_seconds (float): The polling timeout, in seconds, for `download_result()`.
                 Default: 10 days.
 
-            poll_interval_seconds: (float): The polling interval, in seconds, for
+            poll_interval_seconds (float): The polling interval, in seconds, for
                 `download_result()`.Default: 5 seconds.
 
         Raises:

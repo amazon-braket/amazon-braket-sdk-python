@@ -383,6 +383,8 @@ def _apply_noise_on_observable_result_types(
 
     Args:
         circuit (Circuit): The circuit to apply the readout noise to.
+        readout_noise_instructions (List[NoiseModelInstruction]): The list of readout noise
+            to apply.
 
     Returns:
         Circuit: The passed in circuit, with the readout noise applied.

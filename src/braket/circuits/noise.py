@@ -13,7 +13,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
+
+import numpy as np
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -39,7 +41,7 @@ class Noise(QuantumOperator):
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
         """
         Args:
-            qubit_count (int, optional): Number of qubits this noise channel interacts with.
+            qubit_count (Optional[int]): Number of qubits this noise channel interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for this noise channel. These
                 are used when printing a diagram of circuits. Length must be the same as
                 `qubit_count`, and index ordering is expected to correlate with target ordering
@@ -57,7 +59,7 @@ class Noise(QuantumOperator):
         Returns the name of the quantum operator
 
         Returns:
-            The name of the quantum operator as a string
+            str: The name of the quantum operator as a string
         """
         return self.__class__.__name__
 
@@ -77,7 +79,7 @@ class Noise(QuantumOperator):
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
         Returns:
-            IR object of the quantum operator and target
+            Any: IR object of the quantum operator and target
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
@@ -127,11 +129,11 @@ class Noise(QuantumOperator):
         """
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
-    def to_matrix(self, *args, **kwargs) -> Any:
+    def to_matrix(self, *args, **kwargs) -> Iterable[np.ndarray]:
         """Returns a list of matrices defining the Kraus matrices of the noise channel.
 
         Returns:
-            Iterable[np.ndarray]: list of matrices defining the Kraus matrices of the noise channel.
+            Iterable[ndarray]: list of matrices defining the Kraus matrices of the noise channel.
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
@@ -145,6 +147,15 @@ class Noise(QuantumOperator):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
+        """
+        Converts a dictionary representing an object of this class into an instance of this class.
+
+        Args:
+            noise (dict): A dictionary representation of an object of this class.
+
+        Returns:
+            Noise: An object of this class that corresponds to the passed in dictionary.
+        """
         if "__class__" in noise:
             noise_name = noise["__class__"]
             noise_cls = getattr(cls, noise_name)
@@ -152,11 +163,10 @@ class Noise(QuantumOperator):
         raise NotImplementedError
 
     @classmethod
-    def register_noise(cls, noise: Type[Noise]):
+    def register_noise(cls, noise: Type[Noise]) -> None:
         """Register a noise implementation by adding it into the Noise class.
-
         Args:
-            noise (Noise): Noise class to register.
+            noise (Type[Noise]): Noise class to register.
         """
         setattr(cls, noise.__name__, noise)
 
@@ -178,7 +188,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
-            qubit_count (int, optional): The number of qubits to apply noise.
+            qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -197,9 +207,9 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
     @property
     def probability(self) -> float:
-        """
+        """The probability that parametrizes the noise channel.
         Returns:
-            probability (float): The probability that parametrizes the noise channel.
+            float: The probability that parametrizes the noise channel.
         """
         return self._probability
 
@@ -229,9 +239,6 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
     def bind_values(self, **kwargs) -> SingleProbabilisticNoise:
         """
         Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
 
         Returns:
             SingleProbabilisticNoise: A new Noise object of the same type with the requested
@@ -274,7 +281,7 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
         Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
-            qubit_count (int, optional): The number of qubits to apply noise.
+            qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -308,7 +315,7 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
         Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
-            qubit_count (int, optional): The number of qubits to apply noise.
+            qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -394,7 +401,9 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             )
 
     @classmethod
-    def _validate_pauli_string(cls, pauli_str, qubit_count, allowed_substrings):
+    def _validate_pauli_string(
+        cls, pauli_str: str, qubit_count: int, allowed_substrings: Set[str]
+    ) -> None:
         if not isinstance(pauli_str, str):
             raise TypeError(f"Type of {pauli_str} was not a string.")
         if len(pauli_str) != qubit_count:
@@ -428,8 +437,9 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     @property
     def probabilities(self) -> Dict[str, float]:
-        """
-        Dict[str, float]: A map of a Pauli string to its corresponding probability.
+        """A map of a Pauli string to its corresponding probability.
+        Returns:
+            Dict[str, float]: A map of a Pauli string to its corresponding probability.
         """
         return self._probabilities
 
@@ -452,9 +462,6 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     def bind_values(self, **kwargs) -> MultiQubitPauliNoise:
         """
         Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
 
         Returns:
             MultiQubitPauliNoise: A new Noise object of the same type with the requested
@@ -500,13 +507,13 @@ class PauliNoise(Noise, Parameterizable):
     ):
         """
         Args:
-            probX Union[FreeParameterExpression, float]: The X coefficient of the Kraus operators
+            probX (Union[FreeParameterExpression, float]): The X coefficient of the Kraus operators
                 in the channel.
-            probY Union[FreeParameterExpression, float]: The Y coefficient of the Kraus operators
+            probY (Union[FreeParameterExpression, float]): The Y coefficient of the Kraus operators
                 in the channel.
-            probZ Union[FreeParameterExpression, float]: The Z coefficient of the Kraus operators
+            probZ (Union[FreeParameterExpression, float]): The Z coefficient of the Kraus operators
                 in the channel.
-            qubit_count (int, optional): The number of qubits to apply noise.
+            qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -606,9 +613,6 @@ class PauliNoise(Noise, Parameterizable):
         """
         Takes in parameters and attempts to assign them to values.
 
-        Args:
-            **kwargs: The parameters that are being assigned.
-
         Returns:
             PauliNoise: A new Noise object of the same type with the requested
             parameters bound.
@@ -651,7 +655,7 @@ class DampingNoise(Noise, Parameterizable):
         """
         Args:
             gamma (Union[FreeParameterExpression, float]): Probability of damping.
-            qubit_count (int, optional): The number of qubits to apply noise.
+            qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -672,9 +676,9 @@ class DampingNoise(Noise, Parameterizable):
 
     @property
     def gamma(self) -> float:
-        """
+        """Probability of damping.
         Returns:
-            gamma (float): Probability of damping.
+            float: Probability of damping.
         """
         return self._gamma
 
@@ -704,9 +708,6 @@ class DampingNoise(Noise, Parameterizable):
     def bind_values(self, **kwargs) -> DampingNoise:
         """
         Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
 
         Returns:
             DampingNoise: A new Noise object of the same type with the requested
@@ -751,7 +752,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
             gamma (Union[FreeParameterExpression, float]): Probability of damping.
             probability (Union[FreeParameterExpression, float]): Probability of the system being
                 excited by the environment.
-            qubit_count (int): The number of qubits to apply noise.
+            qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -773,9 +774,9 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     @property
     def probability(self) -> float:
-        """
+        """Probability of the system being excited by the environment.
         Returns:
-            probability (float): Probability of the system being excited by the environment.
+            float: Probability of the system being excited by the environment.
         """
         return self._probability
 
@@ -852,8 +853,8 @@ def _parameter_to_dict(parameter: Union[FreeParameter, float]) -> Union[dict, fl
         parameter(Union[FreeParameter, float]): The parameter to convert.
 
     Returns:
-        A dictionary representation of a FreeParameter if the parameter is a FreeParameter,
-        otherwise returns the float.
+        Union[dict, float]: A dictionary representation of a FreeParameter if the parameter
+        is a FreeParameter, otherwise returns the float.
     """
     if isinstance(parameter, FreeParameter):
         return parameter.to_dict()

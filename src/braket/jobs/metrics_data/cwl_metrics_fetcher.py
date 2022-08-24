@@ -42,7 +42,7 @@ class CwlMetricsFetcher(object):
         self._logs_client = aws_session.logs_client
 
     @staticmethod
-    def _is_metrics_message(message):
+    def _is_metrics_message(message: str) -> bool:
         """
         Returns true if a given message is designated as containing Metrics.
 
@@ -50,7 +50,7 @@ class CwlMetricsFetcher(object):
             message (str): The message to check.
 
         Returns:
-            True if the given message is designated as containing Metrics; False otherwise.
+            bool: True if the given message is designated as containing Metrics; False otherwise.
         """
         if message:
             return "Metrics -" in message
@@ -70,9 +70,6 @@ class CwlMetricsFetcher(object):
             timeout_time (float) : We stop getting metrics if the current time is beyond
                 the timeout time.
             parser (LogMetricsParser) : The CWL metrics parser.
-
-        Returns:
-            None
         """
         kwargs = {
             "logGroupName": self.LOG_GROUP_NAME,
@@ -140,18 +137,19 @@ class CwlMetricsFetcher(object):
                 metrics are retrieved.
             metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
             statistic (MetricStatistic): The statistic to determine which metric value to use
-             when there is a conflict. Default is MetricStatistic.MAX.
+                when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
-             are the column names and the values are a list containing the values in each row.
-              For example, the table:
-                timestamp energy
-                0         0.1
-                1         0.2
-                would be represented as:
-                { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
-                values may be integers, floats, strings or None.
+            are the column names and the values are a list containing the values in each row.
+
+        Example:
+            timestamp energy
+            0         0.1
+            1         0.2
+            would be represented as:
+            { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
+            values may be integers, floats, strings or None.
         """
         timeout_time = time.time() + self._poll_timeout_seconds
 

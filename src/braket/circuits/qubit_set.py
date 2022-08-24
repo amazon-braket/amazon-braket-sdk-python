@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, Union
+from typing import Any, Dict, Iterable, Union
 
 from boltons.setutils import IndexedSet
 
@@ -34,8 +34,7 @@ class QubitSet(IndexedSet):
     def __init__(self, qubits: QubitSetInput = None):
         """
         Args:
-            qubits (int, Qubit, or iterable of int / Qubit, optional): Qubits to be included in
-                the `QubitSet`. Default is `None`.
+            qubits (QubitSetInput): Qubits to be included in the `QubitSet`. Default is `None`.
 
         Examples:
             >>> qubits = QubitSet([0, 1])
@@ -55,7 +54,7 @@ class QubitSet(IndexedSet):
             Qubit(3)
         """
 
-        def _flatten(other):
+        def _flatten(other: Any) -> Any:
             if isinstance(other, Iterable) and not isinstance(other, str):
                 for item in other:
                     yield from _flatten(item)
@@ -71,7 +70,7 @@ class QubitSet(IndexedSet):
         If this instance contains a qubit that is not in the `mapping` that qubit is not modified.
 
         Args:
-            mapping (dictionary[int or Qubit, int or Qubit]): A dictionary of qubit mappings to
+            mapping (Dict[QubitInput, QubitInput]): A dictionary of qubit mappings to
                 apply. Key is the qubit in this instance to target, and the value is what
                 the key will be changed to.
 

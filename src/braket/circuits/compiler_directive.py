@@ -51,7 +51,7 @@ class CompilerDirective(Operator):
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
         **kwargs,
-    ):
+    ) -> Any:
         """Returns IR object of the compiler directive.
 
         Args:
@@ -61,10 +61,9 @@ class CompilerDirective(Operator):
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
-            **kwargs: Keyword arguments
 
         Returns:
-            IR object of the compiler directive.
+            Any: IR object of the compiler directive.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.

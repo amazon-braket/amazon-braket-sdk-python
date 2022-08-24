@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any, Iterable, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Tuple, Type, Union
 
 import numpy as np
 
@@ -29,8 +29,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from braket.circuits.circuit import Circuit
 
 
-def no_noise_applied_warning(noise_applied: bool):
-    "Helper function to give a warning is noise is not applied"
+def no_noise_applied_warning(noise_applied: bool) -> None:
+    """Helper function to give a warning is noise is not applied.
+    Args:
+        noise_applied (bool): True if the noise has been applied.
+    """
     if noise_applied is False:
         warnings.warn(
             "Noise is not applied to any gate, as there is no eligible gate in the circuit"
@@ -39,24 +42,29 @@ def no_noise_applied_warning(noise_applied: bool):
         )
 
 
-def wrap_with_list(an_item: Any):
-    "Helper function to make the input parameter a list"
+def wrap_with_list(an_item: Any) -> List[Any]:
+    """Helper function to make the input parameter a list.
+    Args:
+        an_item (Any): The item to wrap.
+
+    Returns:
+        List[Any]: The item wrapped in a list.
+    """
     if an_item is not None and not isinstance(an_item, list):
         an_item = [an_item]
     return an_item
 
 
-def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
+def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]) -> None:
     """Helper function to check
     1. whether all the elements in target_gates are a Gate type;
     2. if `noise` is multi-qubit noise and `target_gates` contain gates
     with the number of qubits is the same as `noise.qubit_count`.
     Args:
         noise (Noise): A Noise class object to be applied to the circuit.
-        target_gates (Union[Type[Gate], Iterable[Type[Gate]]]): Gate class or
+        target_gates (Iterable[Type[Gate]]): Gate class or
             List of Gate classes which `noise` is applied to.
     """
-
     if not all(isinstance(g, type) and issubclass(g, Gate) for g in target_gates):
         raise TypeError("All elements in target_gates must be an instance of the Gate class")
 
@@ -75,14 +83,14 @@ def check_noise_target_gates(noise: Noise, target_gates: Iterable[Type[Gate]]):
                 )
 
 
-def check_noise_target_unitary(noise: Noise, target_unitary: np.ndarray):
+def check_noise_target_unitary(noise: Noise, target_unitary: np.ndarray) -> None:
     """Helper function to check
     1. whether the input matrix is a np.ndarray type;
     2. whether the target_unitary is a unitary;
 
     Args:
         noise (Noise): A Noise class object to be applied to the circuit.
-        target_unitary (np.ndarray): matrix of the target unitary gates
+        target_unitary (ndarray): matrix of the target unitary gates
     """
 
     if not isinstance(target_unitary, np.ndarray):
@@ -98,9 +106,10 @@ def check_noise_target_qubits(
     """
     Helper function to check whether all the target_qubits are positive integers.
     Args:
-        target_qubits (Optional[QubitSetInput] = None): Index or indices of qubit(s).
+        circuit (Circuit): A ciruit where `noise` is to be checked.
+        target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
     Returns:
-        target_qubits: QubitSet
+        QubitSet: The target qubits.
     """
     if target_qubits is None:
         target_qubits = circuit.qubits
@@ -132,6 +141,8 @@ def apply_noise_to_moments(
         noise (Iterable[Type[Noise]]): Noise channel(s) to be applied
             to the circuit.
         target_qubits (QubitSet): Index or indices of qubits. `noise` is applied to.
+        position (str): The position to add the noise to. May be 'initialization' or
+            'readout_noise'.
 
     Returns:
         Circuit: modified circuit.
@@ -177,7 +188,7 @@ def _apply_noise_to_gates_helper(
     intersection: QubitSet,
     noise_applied: bool,
     new_noise_instruction: Iterable,
-):
+) -> Tuple[Iterable[Instruction], int, bool]:
     """Helper function to work out the noise instructions to be attached to a gate.
 
     Args:
@@ -186,13 +197,14 @@ def _apply_noise_to_gates_helper(
         target_qubits (QubitSet): Index or indices of qubits which `noise` is applied to.
         instruction (Instruction): Instruction of the gate which `noise` is applied to.
         noise_index (int): The number of noise channels applied to the gate.
-            intersection (QubitSet): Intersection of target_qubits and the qubits associated
+        intersection (QubitSet): Intersection of target_qubits and the qubits associated
             with the gate.
         noise_applied (bool): Whether noise is applied or not.
-            new_noise_instruction (Iterable): current new noise instructions to be attached
+        new_noise_instruction (Iterable): current new noise instructions to be attached
             to the circuit.
 
     Returns:
+        Tuple[Iterable[Instruction], int, bool]: A tuple of three values:
         new_noise_instruction: A list of noise intructions
         noise_index: The number of noise channels applied to the gate
         noise_applied: Whether noise is applied or not
@@ -237,7 +249,7 @@ def apply_noise_to_gates(
         circuit (Circuit): A ciruit where `noise` is applied to.
         noise (Iterable[Type[Noise]]): Noise channel(s) to be applied
             to the circuit.
-        target_gates (Union[Iterable[Type[Gate]], np.ndarray]): List of gates, or a unitary matrix
+        target_gates (Union[Iterable[Type[Gate]], ndarray]): List of gates, or a unitary matrix
             which `noise` is applied to.
         target_qubits (QubitSet): Index or indices of qubits which `noise` is applied to.
 

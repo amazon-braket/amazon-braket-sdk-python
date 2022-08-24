@@ -34,7 +34,7 @@ class Gate(QuantumOperator):
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
         """
         Args:
-            qubit_count (int, optional): Number of qubits this gate interacts with.
+            qubit_count (Optional[int]): Number of qubits this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of circuits. Length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with target ordering on the instruction.
@@ -74,7 +74,7 @@ class Gate(QuantumOperator):
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
         Returns:
-            IR object of the quantum operator and target
+            Any: IR object of the quantum operator and target
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
@@ -136,7 +136,7 @@ class Gate(QuantumOperator):
         return f"{self.name}('qubit_count': {self._qubit_count})"
 
     @classmethod
-    def register_gate(cls, gate: Type[Gate]):
+    def register_gate(cls, gate: Type[Gate]) -> None:
         """Register a gate implementation by adding it into the Gate class.
 
         Args:

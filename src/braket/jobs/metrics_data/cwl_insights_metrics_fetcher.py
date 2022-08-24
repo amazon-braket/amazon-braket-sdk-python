@@ -117,7 +117,7 @@ class CwlInsightsMetricsFetcher(object):
                 logs that contain metrics.
             metric_type (MetricType): The type of metrics to get.
             statistic (MetricStatistic): The statistic to determine which metric value to use
-             when there is a conflict.
+                when there is a conflict.
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data.
@@ -143,7 +143,7 @@ class CwlInsightsMetricsFetcher(object):
                 metrics are retrieved.
             metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
             statistic (MetricStatistic): The statistic to determine which metric value to use
-             when there is a conflict. Default is MetricStatistic.MAX.
+                when there is a conflict. Default is MetricStatistic.MAX.
             job_start_time (int): The time when the job started.
                 Default: 3 hours before job_end_time.
             job_end_time (int): If the job is complete, this should be the time at which the
@@ -151,14 +151,15 @@ class CwlInsightsMetricsFetcher(object):
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
-             are the column names and the values are a list containing the values in each row.
-             For example, the table:
-                timestamp energy
-                0         0.1
-                1         0.2
-                would be represented as:
-                { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
-                The values may be integers, floats, strings or None.
+            are the column names and the values are a list containing the values in each row.
+
+        Example:
+            timestamp energy
+            0         0.1
+            1         0.2
+            would be represented as:
+            { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
+            The values may be integers, floats, strings or None.
         """
         query_end_time = job_end_time or int(time.time())
         query_start_time = job_start_time or query_end_time - self.QUERY_DEFAULT_JOB_DURATION

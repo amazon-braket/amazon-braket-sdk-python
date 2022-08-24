@@ -45,19 +45,25 @@ class Tracker:
     def __exit__(self, *args):
         deregister_tracker(self)
 
-    def start(self):
-        """
-        Start tracking resources with this tracker.
+    def start(self) -> Tracker:
+        """Start tracking resources with this tracker.
+        Returns:
+            Tracker: self.
         """
         return self.__enter__()
 
-    def stop(self):
-        """
-        Stop tracking resources with this tracker.
+    def stop(self) -> Tracker:
+        """Stop tracking resources with this tracker.
+        Returns:
+            Tracker: self.
         """
         return self.__exit__()
 
-    def receive_event(self, event):
+    def receive_event(self, event: _TaskCreationEvent) -> None:
+        """Process a Tack Creation Event.
+        Args:
+            event (_TaskCreationEvent): The event to process.
+        """
         _recieve_internal(event, self._resources)
 
     def tracked_resources(self) -> List[str]:
@@ -113,10 +119,10 @@ class Tracker:
 
         Returns:
             Dict[str,Dict[str,Any]] : A dictionary where each key is a device arn, and maps to
-                a dictionary sumarizing the tasks run on the device. The summary includes the
-                total shots sent to the device and the most recent status of the quantum tasks
-                created on this device. For finished tasks on simulator devices, the summary
-                also includes the duration of the simulation.
+            a dictionary sumarizing the tasks run on the device. The summary includes the
+            total shots sent to the device and the most recent status of the quantum tasks
+            created on this device. For finished tasks on simulator devices, the summary
+            also includes the duration of the simulation.
 
         Example:
             >>> tracker.quantum_tasks_statistics()
@@ -252,12 +258,12 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
 
 
 @singledispatch
-def _recieve_internal(event, resources):
+def _recieve_internal(event: _TaskCreationEvent, resources: dict) -> None:
     raise ValueError(f"Event type {type(event)} is not supported")
 
 
 @_recieve_internal.register
-def _(event: _TaskCreationEvent, resources: dict):
+def _(event: _TaskCreationEvent, resources: dict) -> None:
     resources[event.arn] = {
         "shots": event.shots,
         "device": event.device,
@@ -267,14 +273,14 @@ def _(event: _TaskCreationEvent, resources: dict):
 
 
 @_recieve_internal.register
-def _(event: _TaskStatusEvent, resources: dict):
+def _(event: _TaskStatusEvent, resources: dict) -> None:
     # Update task data corresponding to the arn only if it exists in resources
     if event.arn in resources:
         resources[event.arn]["status"] = event.status
 
 
 @_recieve_internal.register
-def _(event: _TaskCompletionEvent, resources: dict):
+def _(event: _TaskCompletionEvent, resources: dict) -> None:
     # Update task completion data corresponding to the arn only if it exists in resources
     if event.arn in resources:
         resources[event.arn]["status"] = event.status

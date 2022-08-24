@@ -42,6 +42,7 @@ class LocalQuantumTask(QuantumTask):
         return str(self._id)
 
     def cancel(self) -> None:
+        """Cancel the quantum task."""
         raise NotImplementedError("Cannot cancel completed local task")
 
     def state(self) -> str:
@@ -55,6 +56,10 @@ class LocalQuantumTask(QuantumTask):
         return self._result
 
     def async_result(self) -> asyncio.Task:
+        """Get the quantum task result asynchronously.
+        Returns:
+            Task: Get the quantum task result asynchronously.
+        """
         # TODO: Allow for asynchronous simulation
         raise NotImplementedError("Asynchronous local simulation unsupported")
 
