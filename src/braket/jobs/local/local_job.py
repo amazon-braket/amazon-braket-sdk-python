@@ -152,21 +152,14 @@ class LocalQuantumJob(QuantumJob):
             container.run_local_job(env_variables)
             container.copy_from("/opt/ml/model", job_name)
             with open(os.path.join(job_name, "log.txt"), "w") as log_file:
-                if isinstance(container.run_result, Exception):
-                    log_file.write("\n--- Errors ---\n")
-                    log_file.write(container.run_result)
-                else:
-                    if container.run_result.stdout:
-                        log_file.write(container.run_result.stdout.decode("utf-8").strip())
-                    if container.run_result.stderr:
-                        log_file.write("\n--- Errors ---\n")
-                        log_file.write(container.run_result.stderr.decode("utf-8").strip())
+                log_file.write(container.run_log)
             if "checkpointConfig" in create_job_kwargs:
                 checkpoint_config = create_job_kwargs["checkpointConfig"]
                 if "localPath" in checkpoint_config:
                     checkpoint_path = checkpoint_config["localPath"]
                     container.copy_from(checkpoint_path, os.path.join(job_name, "checkpoints"))
-        return LocalQuantumJob(f"local:job/{job_name}")
+            run_log = container.run_log
+        return LocalQuantumJob(f"local:job/{job_name}", run_log)
 
     def __init__(self, arn: str, run_log: str = None):
         """
