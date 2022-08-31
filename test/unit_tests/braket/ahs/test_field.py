@@ -11,14 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from decimal import Decimal
 from unittest.mock import Mock
+
 import pytest
 
-from decimal import Decimal
-
+from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.field import Field
-from braket.ahs.time_series import TimeSeries
 from braket.ahs.pattern import Pattern
+from braket.ahs.time_series import TimeSeries
 
 
 @pytest.fixture
@@ -54,17 +55,19 @@ def test_create():
 
 
 @pytest.mark.parametrize(
-    'time_res, value_res, pattern_res',
+    "time_res, value_res, pattern_res",
     [
-        (Decimal('0.1'), Decimal('10'), Decimal('0.5')),
-        (Decimal('10'), Decimal('20'), Decimal('0.1')),
-        (Decimal('100'), Decimal('0.1'), Decimal('1')),
-    ]
+        (Decimal("0.1"), Decimal("10"), Decimal("0.5")),
+        (Decimal("10"), Decimal("20"), Decimal("0.1")),
+        (Decimal("100"), Decimal("0.1"), Decimal("1")),
+    ],
 )
-def test_discretize(default_time_series, default_pattern, default_field, time_res, value_res, pattern_res):
+def test_discretize(
+    default_time_series, default_pattern, default_field, time_res, value_res, pattern_res
+):
     expected = Field(
         time_series=default_time_series.discretize(time_res, value_res),
-        pattern=default_pattern.discretize(pattern_res)
+        pattern=default_pattern.discretize(pattern_res),
     )
     actual = default_field.discretize(time_res, value_res, pattern_res)
     assert expected.pattern.series == actual.pattern.series
@@ -73,32 +76,31 @@ def test_discretize(default_time_series, default_pattern, default_field, time_re
 
 
 @pytest.mark.parametrize(
-    'time_res, value_res, pattern_res',
+    "time_res, value_res, pattern_res",
     [
-        (Decimal('0.1'), Decimal('10'), Decimal('0.5')),
-        (Decimal('10'), Decimal('20'), None),
-        (Decimal('100'), Decimal('0.1'), Decimal('1')),
-    ]
+        (Decimal("0.1"), Decimal("10"), Decimal("0.5")),
+        (Decimal("10"), Decimal("20"), None),
+        (Decimal("100"), Decimal("0.1"), Decimal("1")),
+    ],
 )
-def test_uniform_field(default_time_series, default_uniform_field, time_res, value_res, pattern_res):
-    expected = Field(
-        time_series=default_time_series.discretize(time_res, value_res)
-    )
+def test_uniform_field(
+    default_time_series, default_uniform_field, time_res, value_res, pattern_res
+):
+    expected = Field(time_series=default_time_series.discretize(time_res, value_res))
     actual = default_uniform_field.discretize(time_res, value_res, pattern_res)
     assert (
-        ((expected.pattern is None) and (expected.pattern is None)) 
-        or expected.pattern.series == actual.pattern.series
-    )
+        (expected.pattern is None) and (expected.pattern is None)
+    ) or expected.pattern.series == actual.pattern.series
     assert expected.time_series.times() == actual.time_series.times()
     assert expected.time_series.values() == actual.time_series.values()
 
 
 @pytest.mark.parametrize(
-    'time_res, value_res, pattern_res',
+    "time_res, value_res, pattern_res",
     [
-        (Decimal('10'), Decimal('20'), None),
-    ]
+        (Decimal("10"), Decimal("20"), None),
+    ],
 )
-@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.xfail(raises=DiscretizationError)
 def test_invalid_pattern_res(default_field, time_res, value_res, pattern_res):
     default_field.discretize(time_res, value_res, pattern_res)

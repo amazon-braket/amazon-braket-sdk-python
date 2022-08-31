@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import List, Union
 
+from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.time_series import TimeSeries
@@ -66,3 +67,30 @@ class DrivingField(Hamiltonian):
     @property
     def detuning(self) -> Field:
         return self._detuning
+
+    def discretize(self, properties: DiscretizationProperties) -> DrivingField:
+        """Creates a discretized version of the Hamiltonian.
+
+        Args:
+            properties (DiscretizationProperties): Discretization will be done according to
+                the properties of the device.
+
+        Returns:
+            DrivingField: A new discretized DrivingField.
+        """
+        driving_parameters = properties.rydberg.rydbergGlobal
+        discretized_amplitude = self.amplitude.discretize(
+            time_resolution=driving_parameters.timeResolution,
+            value_resolution=driving_parameters.rabiFrequencyResolution,
+        )
+        discretized_phase = self.phase.discretize(
+            time_resolution=driving_parameters.timeResolution,
+            value_resolution=driving_parameters.phaseResolution,
+        )
+        discretized_detuning = self.detuning.discretize(
+            time_resolution=driving_parameters.timeResolution,
+            value_resolution=driving_parameters.detuningResolution,
+        )
+        return DrivingField(
+            amplitude=discretized_amplitude, phase=discretized_phase, detuning=discretized_detuning
+        )

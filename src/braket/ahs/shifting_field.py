@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import List
 
+from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
 
@@ -45,3 +46,21 @@ class ShiftingField(Hamiltonian):
     @property
     def magnitude(self) -> Field:
         return self._magnitude
+
+    def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
+        """Creates a discretized version of the Hamiltonian.
+
+        Args:
+            properties (DiscretizationProperties): Discretization will be done according to
+                the properties of the device.
+
+        Returns:
+            ShiftingField: A new discretized ShiftingField.
+        """
+        shifting_parameters = properties.rydberg.rydbergLocal
+        discretized_magnitude = self.magnitude.discretize(
+            time_resolution=shifting_parameters.timeResolution,
+            value_resolution=shifting_parameters.commonDetuningResolution,
+            pattern_resolution=shifting_parameters.localDetuningResolution,
+        )
+        return ShiftingField(discretized_magnitude)
