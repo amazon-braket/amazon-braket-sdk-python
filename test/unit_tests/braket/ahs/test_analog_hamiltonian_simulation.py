@@ -15,9 +15,12 @@ from unittest.mock import Mock
 
 import pytest
 
+from decimal import Decimal
+
 from braket.ahs.analog_hamiltonian_simulation import (
     AnalogHamiltonianSimulation,
     AtomArrangement,
+    DiscretizationError,
     DrivingField,
     ShiftingField,
     SiteType,
@@ -96,3 +99,47 @@ def test_to_ir_invalid_hamiltonian(register):
     hamiltonian.terms = [Mock()]
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
     ahs.to_ir()
+
+
+@pytest.mark.xfail(raises=DiscretizationError)
+def test_invalid_action():
+    action = Mock()
+    action.actionType = 'not-a-valid-AHS-action'
+    device = Mock()
+    device.properties.action = {'braket.ir.ahs.program': action}
+
+    AnalogHamiltonianSimulation(register=Mock(), hamiltonian=Mock()).discretize(device)
+
+
+@pytest.mark.xfail(raises=DiscretizationError)
+def test_invalid_action_name():
+    action = Mock()
+    action.actionType = 'braket.ir.ahs.program'
+    device = Mock()
+    device.properties.action = {'not-a-valid-AHS-action': action}
+
+    AnalogHamiltonianSimulation(register=Mock(), hamiltonian=Mock()).discretize(device)
+
+
+def test_discretize(register, driving_field, shifting_field):
+    hamiltonian = driving_field + shifting_field
+    ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
+    
+    action = Mock()
+    action.actionType = 'braket.ir.ahs.program'
+    
+    device = Mock()
+    device.properties.action = {'braket.ir.ahs.program': action}
+    
+    device.properties.paradigm.lattice.geometry.positionResolution = Decimal('1E-7')
+    
+    device.properties.paradigm.rydberg.rydbergGlobal.timeResolution = Decimal('1E-9')
+    device.properties.paradigm.rydberg.rydbergGlobal.rabiFrequencyResolution = Decimal('400')
+    device.properties.paradigm.rydberg.rydbergGlobal.detuningResolution = Decimal('0.2')
+    device.properties.paradigm.rydberg.rydbergGlobal.phaseResolution = Decimal('5E-7')
+    
+    device.properties.paradigm.rydberg.rydbergLocal.timeResolution = Decimal('1E-9')
+    device.properties.paradigm.rydberg.rydbergLocal.commonDetuningResolution = Decimal('2000.0')
+    device.properties.paradigm.rydberg.rydbergLocal.localDetuningResolution = Decimal('0.01')
+
+    ahs.discretize(device)

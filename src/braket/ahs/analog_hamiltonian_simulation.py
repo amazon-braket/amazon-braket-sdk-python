@@ -69,29 +69,7 @@ class AnalogHamiltonianSimulation:
             drivingFields=terms["driving_fields"], shiftingFields=terms["shifting_fields"]
         )
 
-    def discretize(self, device) -> AnalogHamiltonianSimulation:
-        """ Creates a new AnalogHamiltonianSimulation with all numerical values represented
-            as Decimal objects with fixed precision based on the capabilities of the device.
-
-            Args:
-                device (AwsDevice): The device for which to discretize the program.
-
-            Returns:
-                AnalogHamiltonianSimulation: A discretized version of this program.
-
-            Raises:
-                DiscretizeError: If unable to discretize the program.
-        """
-
-        required_action_schema = 'braket.ir.ahs.program'
-        if (
-            (required_action_schema not in device.properties.action)
-            or (device.properties.action[required_action_schema].actionType != required_action_schema)
-            ):
-            raise DiscretizationError(f"AwsDevice {device} does not accept {required_action_schema} action schema." )
-
-        # Gather resolution values
-
+    def _get_resolutions(self, device) -> Tuple[float, dict, dict]:
         register_position_resolution = device.properties.paradigm.lattice.geometry.positionResolution
         driving_parameters = device.properties.paradigm.rydberg.rydbergGlobal
         driving_field_resolutions = {
@@ -117,6 +95,35 @@ class AnalogHamiltonianSimulation:
             }
         }
 
+        return register_position_resolution, driving_field_resolutions, shifting_field_resolutions
+
+    def discretize(self, device) -> AnalogHamiltonianSimulation:
+        """ Creates a new AnalogHamiltonianSimulation with all numerical values represented
+            as Decimal objects with fixed precision based on the capabilities of the device.
+
+            Args:
+                device (AwsDevice): The device for which to discretize the program.
+
+            Returns:
+                AnalogHamiltonianSimulation: A discretized version of this program.
+
+            Raises:
+                DiscretizeError: If unable to discretize the program.
+        """
+
+        required_action_schema = 'braket.ir.ahs.program'
+        if (
+            (required_action_schema not in device.properties.action)
+            or (device.properties.action[required_action_schema].actionType != required_action_schema)
+            ):
+            raise DiscretizationError(f"AwsDevice {device} does not accept {required_action_schema} action schema." )
+
+        # Gather resolution values
+
+        (register_position_resolution, 
+         driving_field_resolutions, 
+         shifting_field_resolutions) = self._get_resolutions(device)
+
         # Discretize register
 
         try:
@@ -127,7 +134,7 @@ class AnalogHamiltonianSimulation:
         # Discretize Hamiltonian
 
         discretized_hamiltonian = Hamiltonian()
-        for idx, term in enumerate(self.hamiltonian):
+        for idx, term in enumerate(self.hamiltonian.terms):
             if isinstance(term, DrivingField):
                 resolutions = driving_field_resolutions
                 fields = dict(
@@ -157,7 +164,7 @@ class AnalogHamiltonianSimulation:
             discretized_hamiltonian += discretized_term
 
         return AnalogHamiltonianSimulation(
-            resister=discretized_register,
+            register=discretized_register,
             hamiltonian=discretized_hamiltonian
         )
 
