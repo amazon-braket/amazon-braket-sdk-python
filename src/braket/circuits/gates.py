@@ -2061,10 +2061,10 @@ class MS(DoubleAngledGate):
             angle (Union[FreeParameterExpression, float]): Angle in radians.
 
         Returns:
-            Iterable[Instruction]: GPi2 instruction.
+            Iterable[Instruction]: MS instruction.
 
         Examples:
-            >>> circ = Circuit().gpi2(0, 0.15)
+            >>> circ = Circuit().ms(0, 1, 0.15, 0.34)
         """
         return [Instruction(MS(angle_1, angle_2), target=[target1, target2])]
 
@@ -2195,8 +2195,8 @@ def _double_angled_ascii_characters(
     """
     return (
         f"{gate}("
-        f'{angle_1:{".2f" if isinstance(angle_1, (float, Float)) else ""}}), '
-        f'{angle_2:{".2f" if isinstance(angle_1, (float, Float)) else ""}})'
+        f'{angle_1:{".2f" if isinstance(angle_1, (float, Float)) else ""}}, '
+        f'{angle_2:{".2f" if isinstance(angle_2, (float, Float)) else ""}})'
     )
 
 
