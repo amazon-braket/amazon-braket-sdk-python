@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import warnings
 from numbers import Number
-from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy as np
 
@@ -80,8 +80,7 @@ class Circuit:
         is the name of `func`.
 
         Args:
-            func (Callable[..., Union[Instruction, Iterable[Instruction], ResultType,
-                Iterable[ResultType]]): The function of the subroutine to add to the class.
+            func (SubroutineCallable): The function of the subroutine to add to the class.
 
         Examples:
             >>> def h_on_all(target):
@@ -113,9 +112,6 @@ class Circuit:
         Args:
             addable (AddableTypes): The item(s) to add to self.
                 Default = None.
-            *args: Variable length argument list. Supports any arguments that `add()` offers.
-            **kwargs: Arbitrary keyword arguments. Supports any keyword arguments that `add()`
-                offers.
 
         Raises:
             TypeError: If `addable` is an unsupported type.
@@ -162,12 +158,15 @@ class Circuit:
 
     @property
     def basis_rotation_instructions(self) -> List[Instruction]:
-        """List[Instruction]: Get a list of basis rotation instructions in the circuit.
-        These basis rotation instructions are added if result types are requested for
-        an observable other than Pauli-Z.
+        """Gets a list of basis rotation instructions.
 
-        This only makes sense if all observables are simultaneously measurable;
-        if not, this method will return an empty list.
+        Returns:
+            List[Instruction]: Get a list of basis rotation instructions in the circuit.
+            These basis rotation instructions are added if result types are requested for
+            an observable other than Pauli-Z.
+
+            This only makes sense if all observables are simultaneously measurable;
+            if not, this method will return an empty list.
         """
         # Note that basis_rotation_instructions can change each time a new instruction
         # is added to the circuit because `self._moments.qubits` would change
@@ -189,7 +188,9 @@ class Circuit:
         return basis_rotation_instructions
 
     @staticmethod
-    def _observable_to_instruction(observable: Observable, target_list: List[int]):
+    def _observable_to_instruction(
+        observable: Observable, target_list: List[int]
+    ) -> List[Instruction]:
         return [Instruction(gate, target_list) for gate in observable.basis_rotation_gates]
 
     @property
@@ -199,7 +200,10 @@ class Circuit:
 
     @property
     def qubit_count(self) -> int:
-        """Get the qubit count for this circuit. Note that this includes observables."""
+        """Get the qubit count for this circuit. Note that this includes observables.
+        Returns:
+            int: The qubit count for this circuit.
+        """
         all_qubits = self._moments.qubits.union(self._qubit_observable_set)
         return len(all_qubits)
 
@@ -229,21 +233,22 @@ class Circuit:
 
         Args:
             result_type (ResultType): `ResultType` to add into `self`.
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
+            target (QubitSetInput): Target qubits for the
                 `result_type`.
                 Default = `None`.
-            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the `result_type.target`. Key is the qubit in
                 `result_type.target` and the value is what the key will be changed to.
                 Default = `None`.
 
 
-        Note: target and target_mapping will only be applied to those requested result types with
-        the attribute `target`. The result_type will be appended to the end of the dict keys of
-        `circuit.result_types` only if it does not already exist in `circuit.result_types`
-
         Returns:
             Circuit: self
+
+        Note:
+            Target and target_mapping will only be applied to those requested result types with
+            the attribute `target`. The result_type will be appended to the end of the dict keys of
+            `circuit.result_types` only if it does not already exist in `circuit.result_types`
 
         Raises:
             TypeError: If both `target_mapping` and `target` are supplied.
@@ -380,11 +385,11 @@ class Circuit:
 
         Args:
             instruction (Instruction): `Instruction` to add into `self`.
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
+            target (QubitSetInput): Target qubits for the
                 `instruction`. If a single qubit gate, an instruction is created for every index
                 in `target`.
                 Default = `None`.
-            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
                 `instruction.target` and the value is what the key will be changed to.
                 Default = `None`.
@@ -450,7 +455,7 @@ class Circuit:
 
         Args:
             instruction (Instruction): The instruction to check for a
-            :class:{FreeParameterExpression}.
+                :class:{FreeParameterExpression}.
 
         Returns:
             bool: Whether an object is parameterized.
@@ -471,11 +476,11 @@ class Circuit:
 
         Args:
             circuit (Circuit): Circuit to add into self.
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
+            target (QubitSetInput): Target qubits for the
                 supplied circuit. This is a macro over `target_mapping`; `target` is converted to
                 a `target_mapping` by zipping together a sorted `circuit.qubits` and `target`.
                 Default = `None`.
-            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
                 to map, and the value is what to change it to. Default = `None`.
 
@@ -548,11 +553,11 @@ class Circuit:
 
         Args:
             verbatim_circuit (Circuit): Circuit to add into self.
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the
+            target (QubitSetInput): Target qubits for the
                 supplied circuit. This is a macro over `target_mapping`; `target` is converted to
                 a `target_mapping` by zipping together a sorted `circuit.qubits` and `target`.
                 Default = `None`.
-            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
                 to map, and the value is what to change it to. Default = `None`.
 
@@ -636,11 +641,11 @@ class Circuit:
 
         Args:
             noise (Union[Type[Noise], Iterable[Type[Noise]]]): Noise channel(s) to be applied
-            to the circuit.
-            target_gates (Union[Type[Gate], Iterable[Type[Gate]], optional]): Gate class or
+                to the circuit.
+            target_gates (Optional[Union[Type[Gate], Iterable[Type[Gate]]]]): Gate class or
                 List of Gate classes which `noise` is applied to. Default=None.
-            target_unitary (np.ndarray): matrix of the target unitary gates. Default=None.
-            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
+            target_unitary (ndarray): matrix of the target unitary gates. Default=None.
+            target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
                 Default=None.
 
         Returns:
@@ -764,8 +769,8 @@ class Circuit:
 
         Args:
             noise (Union[Type[Noise], Iterable[Type[Noise]]]): Noise channel(s) to be applied
-            to the circuit.
-            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
+                to the circuit.
+            target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
                 Default=None.
 
         Returns:
@@ -826,7 +831,7 @@ class Circuit:
         Args:
             param_values (Dict[str, Number]):  A mapping of FreeParameter names
                 to a value to assign to them.
-            strict (bool, optional): If True, raises a ValueError if none of the FreeParameters
+            strict (bool): If True, raises a ValueError if none of the FreeParameters
                 in param_values appear in the circuit. False by default."
 
         Returns:
@@ -837,7 +842,7 @@ class Circuit:
             self._validate_parameters(param_values)
         return self._use_parameter_value(param_values)
 
-    def _validate_parameters(self, parameter_values: Dict[str, Number]):
+    def _validate_parameters(self, parameter_values: Dict[str, Number]) -> None:
         """
         This runs a check to see that the parameters are in the Circuit.
 
@@ -885,12 +890,12 @@ class Circuit:
         return fixed_circ
 
     @staticmethod
-    def _validate_parameter_value(val):
+    def _validate_parameter_value(val: Any) -> None:
         """
         Validates the value being used is a Number.
 
         Args:
-            val: The value be verified.
+            val (Any): The value be verified.
 
         Raises:
             ValueError: If the value is not a Number
@@ -914,8 +919,8 @@ class Circuit:
 
         Args:
             noise (Union[Type[Noise], Iterable[Type[Noise]]]): Noise channel(s) to be applied
-            to the circuit.
-            target_qubits (Union[QubitSetInput, optional]): Index or indices of qubit(s).
+                to the circuit.
+            target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
                 Default=None.
 
         Returns:
@@ -988,8 +993,6 @@ class Circuit:
 
         Args:
             addable (AddableTypes): The item(s) to add to self. Default = `None`.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             Circuit: self
@@ -1017,7 +1020,7 @@ class Circuit:
             >>> circ = Circuit().add(bell_pair, [4,5])
         """
 
-        def _flatten(addable):
+        def _flatten(addable: Union[Iterable, AddableTypes]) -> AddableTypes:
             if isinstance(addable, Iterable):
                 for item in addable:
                     yield from _flatten(item)
@@ -1054,12 +1057,12 @@ class Circuit:
             circ.add_result_type(result_type)
         return circ
 
-    def diagram(self, circuit_diagram_class=AsciiCircuitDiagram) -> str:
+    def diagram(self, circuit_diagram_class: Type = AsciiCircuitDiagram) -> str:
         """
         Get a diagram for the current circuit.
 
         Args:
-            circuit_diagram_class (Class, optional): A `CircuitDiagram` class that builds the
+            circuit_diagram_class (Type): A `CircuitDiagram` class that builds the
                 diagram for this circuit. Default = `AsciiCircuitDiagram`.
 
         Returns:
@@ -1084,12 +1087,7 @@ class Circuit:
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
-            (Union[OpenQasmProgram, JaqcdProgram]): A representation of the circuit in the
-            `ir_type` format.
-
-        Raises:
-            ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
-            properties don't correspond to the `ir_type`.
+            Program: A Braket quantum circuit description program in JSON format.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
@@ -1172,9 +1170,9 @@ class Circuit:
         qubit count > 10.
 
         Returns:
-            np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-                circuit as a unitary. *Note*: For an empty circuit, an empty numpy array is
-                returned (`array([], dtype=complex128)`)
+            ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
+            circuit as a unitary. *Note*: For an empty circuit, an empty numpy array is
+            returned (`array([], dtype=complex128)`)
 
         Warnings:
             This method has been deprecated, please use to_unitary() instead.
@@ -1264,7 +1262,7 @@ class Circuit:
         """
         return self._observables_simultaneously_measurable
 
-    def _encounter_noncommuting_observable(self):
+    def _encounter_noncommuting_observable(self) -> None:
         self._observables_simultaneously_measurable = False
         # No longer simultaneously measurable, so no need to track
         self._qubit_observable_mapping.clear()
@@ -1311,14 +1309,13 @@ class Circuit:
             )
         return NotImplemented
 
-    def __call__(self, arg=None, **kwargs) -> Circuit:
+    def __call__(self, arg: Any = None, **kwargs) -> Circuit:
         """
         Implements the call function to easily make a bound Circuit.
 
         Args:
-            arg: A value to bind to all parameters. Defaults to None and
+            arg (Any): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
-            **kwargs: the named parameters to have their value bound.
 
         Returns:
             Circuit: A circuit with the specified parameters bound.
@@ -1332,13 +1329,16 @@ class Circuit:
         return self.make_bound_circuit(param_values)
 
 
-def subroutine(register=False):
+def subroutine(register: bool = False) -> Callable:
     """
     Subroutine is a function that returns instructions, result types, or circuits.
 
     Args:
-        register (bool, optional): If `True`, adds this subroutine into the `Circuit` class.
+        register (bool): If `True`, adds this subroutine into the `Circuit` class.
             Default = `False`.
+
+    Returns:
+        Callable: The subroutine function.
 
     Examples:
         >>> @circuit.subroutine(register=True)
@@ -1353,9 +1353,9 @@ def subroutine(register=False):
         Instruction('operator': 'H', 'target': QubitSet(Qubit(1),))
     """
 
-    def subroutine_function_wrapper(func: Callable[..., SubroutineReturn]) -> SubroutineReturn:
+    def _subroutine_function_wrapper(func: Callable[..., SubroutineReturn]) -> SubroutineReturn:
         if register:
             Circuit.register_subroutine(func)
         return func
 
-    return subroutine_function_wrapper
+    return _subroutine_function_wrapper

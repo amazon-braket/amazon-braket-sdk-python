@@ -95,6 +95,10 @@ class I(Observable):  # noqa: E742, E261
 
     @property
     def eigenvalues(self) -> np.ndarray:
+        """Returns the eigenvalues of this observable.
+        Returns:
+            np.ndarray: The eigenvalues of this observable.
+        """
         return np.ones(2)
 
     def eigenvalue(self, index: int) -> float:
@@ -280,13 +284,21 @@ class TensorProduct(Observable):
 
     @property
     def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+        """Returns the basis rotation gates for this observable.
+        Returns:
+            Tuple[Gate, ...]: The basis rotation gates for this observable.
+        """
         gates = []
         for obs in self.factors:
             gates.extend(obs.basis_rotation_gates)
         return tuple(gates)
 
     @property
-    def eigenvalues(self):
+    def eigenvalues(self) -> np.ndarray:
+        """Returns the eigenvalues of this observable.
+        Returns:
+            np.ndarray: The eigenvalues of this observable.
+        """
         if self._all_eigenvalues is None:
             self._all_eigenvalues = TensorProduct._compute_eigenvalues(
                 self._factors, self.qubit_count
@@ -294,6 +306,17 @@ class TensorProduct(Observable):
         return self._all_eigenvalues
 
     def eigenvalue(self, index: int) -> float:
+        """Returns the eigenvalue of this observable at the given index.
+
+        The eigenvalues are ordered by their corresponding computational basis state
+        after diagonalization.
+
+        Args:
+            index (int): The index of the desired eigenvalue
+
+        Returns:
+            float: The `index`th eigenvalue of the observable.
+        """
         if index in self._eigenvalue_indices:
             return self._eigenvalue_indices[index]
         dimension = 2**self.qubit_count
@@ -393,7 +416,7 @@ class Hermitian(Observable):
         else:
             return f"hermitian({self._serialized_matrix_openqasm_matrix()}) all"
 
-    def _serialized_matrix_openqasm_matrix(self):
+    def _serialized_matrix_openqasm_matrix(self) -> str:
         serialized = str([[f"{complex(elem)}" for elem in row] for row in self._matrix.tolist()])
         for replacements in [("(", ""), (")", ""), ("'", ""), ("j", "im")]:
             serialized = serialized.replace(replacements[0], replacements[1])
@@ -410,22 +433,29 @@ class Hermitian(Observable):
         return self._diagonalizing_gates
 
     @property
-    def eigenvalues(self):
+    def eigenvalues(self) -> np.ndarray:
+        """Returns the eigenvalues of this observable.
+        Returns:
+            np.ndarray: The eigenvalues of this observable.
+        """
         return self._eigenvalues
 
     def eigenvalue(self, index: int) -> float:
         return self._eigenvalues[index]
 
     @staticmethod
-    def _get_eigendecomposition(matrix) -> Dict[str, np.ndarray]:
+    def _get_eigendecomposition(matrix: np.ndarray) -> Dict[str, np.ndarray]:
         """
         Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
         The eigendecomposition is cached so that if another Hermitian observable
         is created with the same matrix, the eigendecomposition doesn't have to
         be recalculated.
 
+        Args:
+            matrix (ndarray): The Hermitian matrix.
+
         Returns:
-            Dict[str, np.ndarray]: The keys are "eigenvectors_conj_t", mapping to the
+            Dict[str, ndarray]: The keys are "eigenvectors_conj_t", mapping to the
             conjugate transpose of a matrix whose columns are the eigenvectors of the matrix,
             and "eigenvalues", a list of associated eigenvalues in the order of their
             corresponding eigenvectors in the "eigenvectors" matrix. These cached values
@@ -457,7 +487,7 @@ def observable_from_ir(ir_observable: List[Union[str, List[List[List[float]]]]])
     Args:
         ir_observable (List[Union[str, List[List[List[float]]]]]): observable as defined in IR
 
-    Return:
+    Returns:
         Observable: observable object
     """
     if len(ir_observable) == 1:

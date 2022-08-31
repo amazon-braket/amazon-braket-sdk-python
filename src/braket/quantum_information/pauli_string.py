@@ -115,7 +115,7 @@ class PauliString:
         the Pauli string is ignored).
 
         Args:
-            signs (Union[str, List[int], Tuple[int, ...]], optional): The sign of each factor of the
+            signs (Optional[Union[str, List[int], Tuple[int, ...]]]): The sign of each factor of the
                 eigenstate, specified either as a string of "+" and "_", or as a list or tuple of
                 +/-1. The length of signs must be equal to the length of the Pauli string. If not
                 specified, it is assumed to be all +. Default: None.

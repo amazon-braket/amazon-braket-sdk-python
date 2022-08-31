@@ -56,7 +56,10 @@ class Qubit(int):
         else a new `Qubit` is constructed.
 
         Args:
-            qubit (int or Qubit): `Qubit` index. If `type == Qubit` then the `qubit` is returned.
+            qubit (QubitInput): `Qubit` index. If `type == Qubit` then the `qubit` is returned.
+
+        Returns:
+            Qubit: The qubit.
         """
 
         if isinstance(qubit, Qubit):

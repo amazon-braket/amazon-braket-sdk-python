@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Iterable, List, Union
+from typing import Any, Iterable, List, Union
 
 import numpy as np
 from sympy import Float
@@ -52,12 +52,12 @@ class H(Gate):
     def adjoint(self) -> List[Gate]:
         return [H()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.H.construct(target=target[0])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"h {target_qubit};"
 
@@ -74,7 +74,7 @@ class H(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of H instructions.
@@ -98,12 +98,12 @@ class I(Gate):  # noqa: E742, E261
     def adjoint(self) -> List[Gate]:
         return [I()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.I.construct(target=target[0])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"i {target_qubit};"
 
@@ -120,7 +120,7 @@ class I(Gate):  # noqa: E742, E261
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of I instructions.
@@ -144,12 +144,12 @@ class X(Gate):
     def adjoint(self) -> List[Gate]:
         return [X()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.X.construct(target=target[0])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"x {target_qubit};"
 
@@ -166,7 +166,7 @@ class X(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of X instructions.
@@ -190,7 +190,7 @@ class Y(Gate):
     def adjoint(self) -> List[Gate]:
         return [Y()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Y.construct(target=target[0])
 
     def _to_openqasm(
@@ -212,7 +212,7 @@ class Y(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of Y instructions.
@@ -236,7 +236,7 @@ class Z(Gate):
     def adjoint(self) -> List[Gate]:
         return [Z()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Z.construct(target=target[0])
 
     def _to_openqasm(
@@ -258,7 +258,7 @@ class Z(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of Z instructions.
@@ -282,7 +282,7 @@ class S(Gate):
     def adjoint(self) -> List[Gate]:
         return [Si()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.S.construct(target=target[0])
 
     def _to_openqasm(
@@ -304,7 +304,7 @@ class S(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of S instructions.
@@ -328,7 +328,7 @@ class Si(Gate):
     def adjoint(self) -> List[Gate]:
         return [S()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Si.construct(target=target[0])
 
     def _to_openqasm(
@@ -350,7 +350,7 @@ class Si(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: Iterable of Si instructions.
@@ -374,12 +374,12 @@ class T(Gate):
     def adjoint(self) -> List[Gate]:
         return [Ti()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.T.construct(target=target[0])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"t {target_qubit};"
 
@@ -396,7 +396,7 @@ class T(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of T instructions.
@@ -420,12 +420,12 @@ class Ti(Gate):
     def adjoint(self) -> List[Gate]:
         return [T()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Ti.construct(target=target[0])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"ti {target_qubit};"
 
@@ -442,7 +442,7 @@ class Ti(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of Ti instructions.
@@ -466,12 +466,12 @@ class V(Gate):
     def adjoint(self) -> List[Gate]:
         return [Vi()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.V.construct(target=target[0])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"v {target_qubit};"
 
@@ -488,7 +488,7 @@ class V(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of V instructions.
@@ -512,12 +512,12 @@ class Vi(Gate):
     def adjoint(self) -> List[Gate]:
         return [V()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Vi.construct(target=target[0])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"vi {target_qubit};"
 
@@ -534,7 +534,7 @@ class Vi(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit, int, or iterable of Qubit / int): Target qubit(s)
+            target (QubitSetInput): Target qubit(s)
 
         Returns:
             Iterable[Instruction]: `Iterable` of Vi instructions.
@@ -566,16 +566,20 @@ class Rx(AngledGate):
             ascii_symbols=[angled_ascii_characters("Rx", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet, **kwargs):
+    def _to_jaqcd(self, target: QubitSet, **kwargs) -> Any:
         return ir.Rx.construct(target=target[0], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"rx({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
+        """Returns a matrix representation of this gate.
+        Returns:
+            ndarray: The matrix representation of this gate.
+        """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
         return np.array([[cos, -1j * sin], [-1j * sin, cos]], dtype=complex)
@@ -584,7 +588,7 @@ class Rx(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -595,7 +599,7 @@ class Rx(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit or int): Target qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): Angle in radians.
 
         Returns:
@@ -624,16 +628,20 @@ class Ry(AngledGate):
             ascii_symbols=[angled_ascii_characters("Ry", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Ry.construct(target=target[0], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"ry({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
+        """Returns a matrix representation of this gate.
+        Returns:
+            ndarray: The matrix representation of this gate.
+        """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
         return np.array([[cos, -sin], [+sin, cos]], dtype=complex)
@@ -642,7 +650,7 @@ class Ry(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -653,7 +661,7 @@ class Ry(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit or int): Target qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): Angle in radians.
 
         Returns:
@@ -682,12 +690,12 @@ class Rz(AngledGate):
             ascii_symbols=[angled_ascii_characters("Rz", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Rz.construct(target=target[0], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"rz({self.angle}) {target_qubit};"
 
@@ -696,7 +704,7 @@ class Rz(AngledGate):
             [[np.exp(-1j * self.angle / 2), 0], [0, np.exp(1j * self.angle / 2)]], dtype=complex
         )
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -711,7 +719,7 @@ class Rz(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit or int): Target qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -740,12 +748,12 @@ class PhaseShift(AngledGate):
             ascii_symbols=[angled_ascii_characters("PHASE", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.PhaseShift.construct(target=target[0], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         # alternatively, "ctrl @ phase({self.angle}) {target_qubit};"
         return f"phaseshift({self.angle}) {target_qubit};"
@@ -753,7 +761,7 @@ class PhaseShift(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * self.angle)]], dtype=complex)
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -768,7 +776,7 @@ class PhaseShift(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit or int): Target qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -795,12 +803,12 @@ class CNot(Gate):
     def adjoint(self) -> List[Gate]:
         return [CNot()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CNot.construct(control=target[0], target=target[1])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit = serialization_properties.format_target(int(target[0]))
         target_qubit = serialization_properties.format_target(int(target[1]))
         return f"cnot {control_qubit}, {target_qubit};"
@@ -826,8 +834,8 @@ class CNot(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
 
         Returns:
             Instruction: CNot instruction.
@@ -850,12 +858,12 @@ class Swap(Gate):
     def adjoint(self) -> List[Gate]:
         return [Swap()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Swap.construct(targets=[target[0], target[1]])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_0 = serialization_properties.format_target(int(target[0]))
         target_qubit_1 = serialization_properties.format_target(int(target[1]))
         return f"swap {target_qubit_0}, {target_qubit_1};"
@@ -881,8 +889,8 @@ class Swap(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
 
         Returns:
             Instruction: Swap instruction.
@@ -905,12 +913,12 @@ class ISwap(Gate):
     def adjoint(self) -> List[Gate]:
         return [self, self, self]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.ISwap.construct(targets=[target[0], target[1]])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_0 = serialization_properties.format_target(int(target[0]))
         target_qubit_1 = serialization_properties.format_target(int(target[1]))
         return f"iswap {target_qubit_0}, {target_qubit_1};"
@@ -936,8 +944,8 @@ class ISwap(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
 
         Returns:
             Instruction: ISwap instruction.
@@ -968,12 +976,12 @@ class PSwap(AngledGate):
             ],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.PSwap.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_0 = serialization_properties.format_target(int(target[0]))
         target_qubit_1 = serialization_properties.format_target(int(target[1]))
         return f"pswap({self.angle}) {target_qubit_0}, {target_qubit_1};"
@@ -989,7 +997,7 @@ class PSwap(AngledGate):
             dtype=complex,
         )
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -998,12 +1006,14 @@ class PSwap(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def pswap(target1: QubitInput, target2: QubitInput, angle: float) -> Instruction:
+    def pswap(
+        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1037,17 +1047,21 @@ class XY(AngledGate):
             ],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_1 = serialization_properties.format_target(int(target[0]))
         target_qubit_2 = serialization_properties.format_target(int(target[1]))
         return f"xy({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
+        """Returns a matrix representation of this gate.
+        Returns:
+            ndarray: The matrix representation of this gate.
+        """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
         return np.array(
@@ -1060,7 +1074,7 @@ class XY(AngledGate):
             dtype=complex,
         )
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1075,8 +1089,8 @@ class XY(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1105,12 +1119,12 @@ class CPhaseShift(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift.construct(control=target[0], target=target[1], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit = serialization_properties.format_target(int(target[0]))
         target_qubit = serialization_properties.format_target(int(target[1]))
         return f"cphaseshift({self.angle}) {control_qubit}, {target_qubit};"
@@ -1118,7 +1132,7 @@ class CPhaseShift(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, 1.0, np.exp(1j * self.angle)])
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1133,8 +1147,8 @@ class CPhaseShift(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1163,12 +1177,12 @@ class CPhaseShift00(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE00", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift00.construct(control=target[0], target=target[1], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit = serialization_properties.format_target(int(target[0]))
         target_qubit = serialization_properties.format_target(int(target[1]))
         return f"cphaseshift00({self.angle}) {control_qubit}, {target_qubit};"
@@ -1176,7 +1190,7 @@ class CPhaseShift00(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.diag([np.exp(1j * self.angle), 1.0, 1.0, 1.0])
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1191,8 +1205,8 @@ class CPhaseShift00(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1221,12 +1235,12 @@ class CPhaseShift01(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE01", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift01.construct(control=target[0], target=target[1], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit = serialization_properties.format_target(int(target[0]))
         target_qubit = serialization_properties.format_target(int(target[1]))
         return f"cphaseshift01({self.angle}) {control_qubit}, {target_qubit};"
@@ -1234,7 +1248,7 @@ class CPhaseShift01(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, np.exp(1j * self.angle), 1.0, 1.0])
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1249,8 +1263,8 @@ class CPhaseShift01(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1279,12 +1293,12 @@ class CPhaseShift10(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE10", angle)],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift10.construct(control=target[0], target=target[1], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit = serialization_properties.format_target(int(target[0]))
         target_qubit = serialization_properties.format_target(int(target[1]))
         return f"cphaseshift10({self.angle}) {control_qubit}, {target_qubit};"
@@ -1292,7 +1306,7 @@ class CPhaseShift10(AngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, np.exp(1j * self.angle), 1.0])
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1307,8 +1321,8 @@ class CPhaseShift10(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1332,12 +1346,12 @@ class CV(Gate):
     def adjoint(self) -> List[Gate]:
         return [self, self, self]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CV.construct(control=target[0], target=target[1])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit = serialization_properties.format_target(int(target[0]))
         target_qubit = serialization_properties.format_target(int(target[1]))
         return f"cv {control_qubit}, {target_qubit};"
@@ -1363,8 +1377,8 @@ class CV(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
 
         Returns:
             Instruction: CV instruction.
@@ -1387,12 +1401,12 @@ class CY(Gate):
     def adjoint(self) -> List[Gate]:
         return [CY()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CY.construct(control=target[0], target=target[1])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[1]))
         control_qubit = serialization_properties.format_target(int(target[0]))
         return f"cy {control_qubit}, {target_qubit};"
@@ -1418,8 +1432,8 @@ class CY(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
 
         Returns:
             Instruction: CY instruction.
@@ -1442,12 +1456,12 @@ class CZ(Gate):
     def adjoint(self) -> List[Gate]:
         return [CZ()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CZ.construct(control=target[0], target=target[1])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[1]))
         control_qubit = serialization_properties.format_target(int(target[0]))
         return f"cz {control_qubit}, {target_qubit};"
@@ -1465,8 +1479,8 @@ class CZ(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index.
-            target (Qubit or int): Target qubit index.
+            control (QubitInput): Control qubit index.
+            target (QubitInput): Target qubit index.
 
         Returns:
             Instruction: CZ instruction.
@@ -1489,12 +1503,12 @@ class ECR(Gate):
     def adjoint(self) -> List[Gate]:
         return [ECR()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.ECR.construct(targets=[target[0], target[1]])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_0 = serialization_properties.format_target(int(target[0]))
         target_qubit_1 = serialization_properties.format_target(int(target[1]))
         return f"ecr {target_qubit_0}, {target_qubit_1};"
@@ -1519,8 +1533,8 @@ class ECR(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
 
         Returns:
             Instruction: ECR instruction.
@@ -1553,17 +1567,21 @@ class XX(AngledGate):
             ],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_1 = serialization_properties.format_target(int(target[0]))
         target_qubit_2 = serialization_properties.format_target(int(target[1]))
         return f"xx({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
+        """Returns a matrix representation of this gate.
+        Returns:
+            ndarray: The matrix representation of this gate.
+        """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
         return np.array(
@@ -1576,7 +1594,7 @@ class XX(AngledGate):
             dtype=complex,
         )
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1591,8 +1609,8 @@ class XX(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1626,17 +1644,21 @@ class YY(AngledGate):
             ],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_1 = serialization_properties.format_target(int(target[0]))
         target_qubit_2 = serialization_properties.format_target(int(target[1]))
         return f"yy({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
+        """Returns a matrix representation of this gate.
+        Returns:
+            ndarray: The matrix representation of this gate.
+        """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
         return np.array(
@@ -1649,7 +1671,7 @@ class YY(AngledGate):
             dtype=complex,
         )
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1664,8 +1686,8 @@ class YY(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1699,12 +1721,12 @@ class ZZ(AngledGate):
             ],
         )
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.ZZ.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_1 = serialization_properties.format_target(int(target[0]))
         target_qubit_2 = serialization_properties.format_target(int(target[1]))
         return f"zz({self.angle}) {target_qubit_1}, {target_qubit_2};"
@@ -1720,7 +1742,7 @@ class ZZ(AngledGate):
             dtype=complex,
         )
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1735,8 +1757,8 @@ class ZZ(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
@@ -1763,12 +1785,12 @@ class CCNot(Gate):
     def adjoint(self) -> List[Gate]:
         return [CCNot()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CCNot.construct(controls=[target[0], target[1]], target=target[2])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit_0 = serialization_properties.format_target(int(target[0]))
         control_qubit_1 = serialization_properties.format_target(int(target[1]))
         target_qubit = serialization_properties.format_target(int(target[2]))
@@ -1799,9 +1821,9 @@ class CCNot(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control1 (Qubit or int): Control qubit 1 index.
-            control2 (Qubit or int): Control qubit 2 index.
-            target (Qubit or int): Target qubit index.
+            control1 (QubitInput): Control qubit 1 index.
+            control2 (QubitInput): Control qubit 2 index.
+            target (QubitInput): Target qubit index.
 
         Returns:
             Instruction: CCNot instruction.
@@ -1824,12 +1846,12 @@ class CSwap(Gate):
     def adjoint(self) -> List[Gate]:
         return [CSwap()]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         control_qubit = serialization_properties.format_target(int(target[0]))
         target_qubit_0 = serialization_properties.format_target(int(target[1]))
         target_qubit_1 = serialization_properties.format_target(int(target[2]))
@@ -1861,9 +1883,9 @@ class CSwap(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Qubit or int): Control qubit index
-            target1 (Qubit or int): Target qubit 1 index.
-            target2 (Qubit or int): Target qubit 2 index.
+            control (QubitInput): Control qubit index
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
 
         Returns:
             Instruction: CSwap instruction.
@@ -1901,13 +1923,13 @@ class Unitary(Gate):
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
-    def to_matrix(self):
+    def to_matrix(self) -> np.ndarray:
         return np.array(self._matrix)
 
     def adjoint(self) -> List[Gate]:
         return [Unitary(self._matrix.conj().T, display_name=f"({self.ascii_symbols})^†")]
 
-    def _to_jaqcd(self, target: QubitSet):
+    def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Unitary.construct(
             targets=[qubit for qubit in target],
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
@@ -1915,7 +1937,7 @@ class Unitary(Gate):
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
         formatted_matrix = np.array2string(
             self._matrix,
@@ -1932,7 +1954,7 @@ class Unitary(Gate):
         return False
 
     @staticmethod
-    def _transform_matrix_to_ir(matrix: np.ndarray):
+    def _transform_matrix_to_ir(matrix: np.ndarray) -> List:
         return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]
 
     @staticmethod
@@ -1982,16 +2004,16 @@ def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, flo
     return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
 
 
-def get_angle(self, **kwargs):
+def get_angle(self: AngledGate, **kwargs) -> AngledGate:
     """
     Gets the angle with all values substituted in that are requested.
 
     Args:
-        self: The subclass of AngledGate for which the angle is being obtained.
-        **kwargs: The named parameters that are being filled for a particular gate.
+        self (AngledGate): The subclass of AngledGate for which the angle is being obtained.
 
     Returns:
-        A new gate of the type of the AngledGate originally used with all angles updated.
+        AngledGate: A new gate of the type of the AngledGate originally used with all
+        angles updated.
     """
     new_angle = (
         self.angle.subs(kwargs) if isinstance(self.angle, FreeParameterExpression) else self.angle

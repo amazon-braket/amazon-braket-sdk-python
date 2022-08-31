@@ -63,13 +63,11 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem]):
-            shots (int, optional): The number of times to run the circuit or annealing problem.
+            task_specification (Union[Circuit, Problem, Program]): The task specification.
+            shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
                 results based on the task specification.
                 Sampling is not supported for shots=0.
-            *args: Positional args to pass to the `BraketSimulator`
-            **kwargs: Keyword arguments to pass to the `BraketSimulator`
 
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results
@@ -108,7 +106,7 @@ class LocalSimulator(Device):
 
 
 @singledispatch
-def _get_simulator(simulator):
+def _get_simulator(simulator: Union[str, BraketSimulator]) -> LocalSimulator:
     raise TypeError("Simulator must either be a string or a BraketSimulator instance")
 
 
@@ -128,13 +126,17 @@ def _(backend_impl: BraketSimulator):
 
 @singledispatch
 def _run_internal(
-    task_specification, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs
-):
+    task_specification: Union[Circuit, Problem, Program],
+    simulator: BraketSimulator,
+    shots: Optional[int] = None,
+    *args,
+    **kwargs,
+) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
     raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
 
 @_run_internal.register
-def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
+def _(circuit: Circuit, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
     if DeviceActionType.OPENQASM in simulator.properties.action:
         validate_circuit_and_shots(circuit, shots)
         program = circuit.to_ir(ir_type=IRType.OPENQASM)
@@ -150,17 +152,9 @@ def _(circuit: Circuit, simulator: BraketSimulator, shots, *args, **kwargs):
 
 
 @_run_internal.register
-def _(problem: Problem, simulator: BraketSimulator, shots, *args, **kwargs):
+def _(problem: Problem, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
     if DeviceActionType.ANNEALING not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
     ir = problem.to_ir()
     results = simulator.run(ir, shots, *args, *kwargs)
     return AnnealingQuantumTaskResult.from_object(results)
-
-
-@_run_internal.register
-def _(program: Program, simulator: BraketSimulator, shots, *args, **kwargs):
-    if DeviceActionType.OPENQASM not in simulator.properties.action:
-        raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-    results = simulator.run(program, shots, *args, **kwargs)
-    return GateModelQuantumTaskResult.from_object(results)

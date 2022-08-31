@@ -18,10 +18,11 @@ import os
 import os.path
 import re
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import backoff
 import boto3
+from botocore import client
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
@@ -36,12 +37,19 @@ class AwsSession(object):
 
     S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", str)])
 
-    def __init__(self, boto_session=None, braket_client=None, config=None, default_bucket=None):
+    def __init__(
+        self,
+        boto_session: boto3.Session = None,
+        braket_client: client = None,
+        config: Config = None,
+        default_bucket: str = None,
+    ):
         """
         Args:
-            boto_session: A boto3 session object.
-            braket_client: A boto3 Braket client.
-            config: A botocore Config object.
+            boto_session (Session): A boto3 session object.
+            braket_client (client): A boto3 Braket client.
+            config (Config): A botocore Config object.
+            default_bucket (str): The name of the default bucket of the AWS Session.
         """
         if (
             boto_session
@@ -83,44 +91,69 @@ class AwsSession(object):
         self._ecr = None
 
     @property
-    def region(self):
+    def region(self) -> str:
         return self.boto_session.region_name
 
     @property
-    def account_id(self):
+    def account_id(self) -> str:
         return self.sts_client.get_caller_identity()["Account"]
 
     @property
-    def iam_client(self):
+    def iam_client(self) -> client:
+        """Gets the IAM client.
+
+        Returns:
+            client: The IAM Client.
+        """
         if not self._iam:
             self._iam = self.boto_session.client("iam", region_name=self.region)
         return self._iam
 
     @property
-    def s3_client(self):
+    def s3_client(self) -> client:
+        """Gets the S3 client.
+
+        Returns:
+            client: The S3 Client.
+        """
         if not self._s3:
             self._s3 = self.boto_session.client("s3", region_name=self.region)
         return self._s3
 
     @property
-    def sts_client(self):
+    def sts_client(self) -> client:
+        """Gets the STS client.
+
+        Returns:
+            client: The STS Client.
+        """
         if not self._sts:
             self._sts = self.boto_session.client("sts", region_name=self.region)
         return self._sts
 
     @property
-    def logs_client(self):
+    def logs_client(self) -> client:
+        """Gets the CloudWatch logs client.
+
+        Returns:
+            client: The CloudWatch logs Client.
+        """
         if not self._logs:
             self._logs = self.boto_session.client("logs", region_name=self.region)
         return self._logs
 
     @property
-    def ecr_client(self):
+    def ecr_client(self) -> client:
+        """Gets the ECR client.
+
+        Returns:
+            client: The ECR Client.
+        """
         if not self._ecr:
             self._ecr = self.boto_session.client("ecr", region_name=self.region)
         return self._ecr
 
-    def _update_user_agent(self):
+    def _update_user_agent(self) -> None:
         """
         Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
         braket-schemas and the notebook instance version. The header is a string of space delimited
@@ -128,7 +161,7 @@ class AwsSession(object):
         https://botocore.amazonaws.com/v1/documentation/api/latest/reference/config.html#botocore.config.Config
         """
 
-        def _notebook_instance_version():
+        def _notebook_instance_version() -> str:
             # TODO: Replace with lifecycle configuration version once we have a way to access those
             nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
             return "0" if os.path.exists(nbi_metadata_path) else "None"
@@ -212,7 +245,7 @@ class AwsSession(object):
         return response["jobArn"]
 
     @staticmethod
-    def _should_giveup(err):
+    def _should_giveup(err: Exception) -> bool:
         return not (
             isinstance(err, ClientError)
             and err.response["Error"]["Code"]
@@ -250,7 +283,7 @@ class AwsSession(object):
         `AmazonBraketJobsExecutionRole` with a `PathPrefix` of `/service-role/`.
 
         Returns:
-            (str): The ARN for the default IAM role for jobs execution created in the Amazon
+            str: The ARN for the default IAM role for jobs execution created in the Amazon
             Braket console.
 
         Raises:
@@ -314,20 +347,16 @@ class AwsSession(object):
         return obj.get()["Body"].read().decode("utf-8")
 
     def upload_to_s3(self, filename: str, s3_uri: str) -> None:
-        """
-        Upload file to S3
+        """Upload file to S3.
 
         Args:
             filename (str): local file to be uploaded.
             s3_uri (str): The S3 URI where the file will be uploaded.
-
-        Returns:
-            None
         """
         bucket, key = self.parse_s3_uri(s3_uri)
         self.s3_client.upload_file(filename, bucket, key)
 
-    def upload_local_data(self, local_prefix: str, s3_prefix: str):
+    def upload_local_data(self, local_prefix: str, s3_prefix: str) -> None:
         """
         Upload local data matching a prefix to a corresponding location in S3
 
@@ -338,17 +367,18 @@ class AwsSession(object):
                 when the data is uploaded. This will be an S3 URI and should include the bucket
                 (i.e. 's3://my-bucket/my/prefix-')
 
-        For example, local_prefix = "input", s3_prefix = "s3://my-bucket/dir/input" will upload:
-            * 'input.csv' to 's3://my-bucket/dir/input.csv'
-            * 'input-2.csv' to 's3://my-bucket/dir/input-2.csv'
-            * 'input/data.txt' to 's3://my-bucket/dir/input/data.txt'
-            * 'input-dir/data.csv' to 's3://my-bucket/dir/input-dir/data.csv'
-            but will not upload:
-            * 'my-input.csv'
-            * 'my-dir/input.csv'
-        To match all files within the directory "input" and upload them into
-            "s3://my-bucket/input", provide local_prefix = "input/" and
-            s3_prefix = "s3://my-bucket/input/"
+        Example:
+            local_prefix = "input", s3_prefix = "s3://my-bucket/dir/input" will upload:
+                * 'input.csv' to 's3://my-bucket/dir/input.csv'
+                * 'input-2.csv' to 's3://my-bucket/dir/input-2.csv'
+                * 'input/data.txt' to 's3://my-bucket/dir/input/data.txt'
+                * 'input-dir/data.csv' to 's3://my-bucket/dir/input-dir/data.csv'
+                but will not upload:
+                * 'my-input.csv'
+                * 'my-dir/input.csv'
+            To match all files within the directory "input" and upload them into
+                "s3://my-bucket/input", provide local_prefix = "input/" and
+                s3_prefix = "s3://my-bucket/input/"
         """
         # support absolute paths
         if Path(local_prefix).is_absolute():
@@ -374,9 +404,6 @@ class AwsSession(object):
         Args:
             s3_uri (str): The S3 uri from where the file will be downloaded.
             filename (str): filename to save the file to.
-
-        Returns:
-            None
         """
         bucket, key = self.parse_s3_uri(s3_uri)
         self.s3_client.download_file(bucket, key, filename)
@@ -415,7 +442,7 @@ class AwsSession(object):
         Args:
             source_s3_path (str): S3 URI pointing to the directory to be copied.
             destination_s3_path (str): S3 URI where the contents of the source_s3_path
-            directory will be copied to.
+                directory will be copied to.
         """
         if source_s3_path == destination_s3_path:
             return
@@ -461,7 +488,7 @@ class AwsSession(object):
             keys += [obj["Key"] for obj in list_objects["Contents"]]
         return keys
 
-    def default_bucket(self):
+    def default_bucket(self) -> str:
         """
         Returns the name of the default bucket of the AWS Session. In the following order
         of priority, it will return either the parameter `default_bucket` set during
@@ -483,7 +510,7 @@ class AwsSession(object):
         self._default_bucket = default_bucket
         return self._default_bucket
 
-    def _create_s3_bucket_if_it_does_not_exist(self, bucket_name, region):
+    def _create_s3_bucket_if_it_does_not_exist(self, bucket_name: str, region: str) -> None:
         """Creates an S3 Bucket if it does not exist.
         Also swallows a few common exceptions that indicate that the bucket already exists or
         that it is being created.
@@ -560,8 +587,7 @@ class AwsSession(object):
 
     def get_device(self, arn: str) -> Dict[str, Any]:
         """
-        Calls the Amazon Braket `get_device` API to
-        retrieve device metadata.
+        Calls the Amazon Braket `get_device` API to retrieve device metadata.
 
         Args:
             arn (str): The ARN of the device.
@@ -578,20 +604,20 @@ class AwsSession(object):
         types: Optional[List[str]] = None,
         statuses: Optional[List[str]] = None,
         provider_names: Optional[List[str]] = None,
-    ):
+    ) -> List[Dict[str, Any]]:
         """
         Get devices based on filters. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
-            arns (List[str], optional): device ARN list, default is `None`.
-            names (List[str], optional): device name list, default is `None`.
-            types (List[str], optional): device type list, default is `None`.
-            statuses (List[str], optional): device status list, default is `None`.
-            provider_names (List[str], optional): provider name list, default is `None`.
+            arns (Optional[List[str]]): device ARN list, default is `None`.
+            names (Optional[List[str]]): device name list, default is `None`.
+            types (Optional[List[str]]): device type list, default is `None`.
+            statuses (Optional[List[str]]): device status list, default is `None`.
+            provider_names (Optional[List[str]]): provider name list, default is `None`.
 
         Returns:
-            List[Dict[str, Any]: The response from the Amazon Braket `SearchDevices` operation.
+            List[Dict[str, Any]]: The response from the Amazon Braket `SearchDevices` operation.
         """
         filters = []
         if arns:
@@ -613,7 +639,14 @@ class AwsSession(object):
         return results
 
     @staticmethod
-    def is_s3_uri(string: str):
+    def is_s3_uri(string: str) -> bool:
+        """Determines if a given string is an S3 URI.
+        Args:
+            string (str): the string to check.
+
+        Returns:
+            bool: Returns True if the given string is an S3 URI.
+        """
         try:
             AwsSession.parse_s3_uri(string)
         except ValueError:
@@ -621,7 +654,7 @@ class AwsSession(object):
         return True
 
     @staticmethod
-    def parse_s3_uri(s3_uri: str) -> (str, str):
+    def parse_s3_uri(s3_uri: str) -> Tuple[str, str]:
         """
         Parse S3 URI to get bucket and key
 
@@ -629,7 +662,7 @@ class AwsSession(object):
             s3_uri (str): S3 URI.
 
         Returns:
-            (str, str): Bucket and Key tuple.
+            Tuple[str, str]: Bucket and Key tuple.
 
         Raises:
             ValueError: Raises a ValueError if the provided string is not
@@ -649,8 +682,9 @@ class AwsSession(object):
             raise ValueError(f"Not a valid S3 uri: {s3_uri}")
 
     @staticmethod
-    def construct_s3_uri(bucket: str, *dirs: str):
-        """
+    def construct_s3_uri(bucket: str, *dirs: str) -> str:
+        """Create an S3 URI given a bucket and path.
+
         Args:
             bucket (str): S3 URI.
             *dirs (str): directories to be appended in the resulting S3 URI
@@ -679,13 +713,13 @@ class AwsSession(object):
         Args:
             log_group (str): Name of the log group.
             log_stream_prefix (str): Prefix for log streams to include.
-            limit (int, optional): Limit for number of log streams returned.
+            limit (int): Limit for number of log streams returned.
                 default is 50.
-            next_token (optional, str): The token for the next set of items to return.
+            next_token (Optional[str]): The token for the next set of items to return.
                 Would have been received in a previous call.
 
         Returns:
-            dict: Dicionary containing logStreams and nextToken
+            Dict[str, Any]: Dicionary containing logStreams and nextToken
         """
         log_stream_args = {
             "logGroupName": log_group,
@@ -718,11 +752,11 @@ class AwsSession(object):
             start_time (int): Timestamp that indicates a start time to include log events.
             start_from_head (bool): Bool indicating to return oldest events first. default
                 is True.
-            next_token (optional, str): The token for the next set of items to return.
+            next_token (Optional[str]): The token for the next set of items to return.
                 Would have been received in a previous call.
 
         Returns:
-            dict: Dicionary containing events, nextForwardToken, and nextBackwardToken
+            Dict[str, Any]: Dicionary containing events, nextForwardToken, and nextBackwardToken
         """
         log_events_args = {
             "logGroupName": log_group,
@@ -745,9 +779,9 @@ class AwsSession(object):
         Creates a new AwsSession based on the region.
 
         Args:
-            region (str): Name of the region. Default = `None`.
-            max_connections (int): The maximum number of connections in the
-            Boto3 connection pool. Default = `None`.
+            region (Optional[str]): Name of the region. Default = `None`.
+            max_connections (Optional[int]): The maximum number of connections in the
+                Boto3 connection pool. Default = `None`.
 
         Returns:
             AwsSession: based on the region and boto config parameters.

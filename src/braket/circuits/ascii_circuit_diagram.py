@@ -11,8 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import List, Tuple, Union
 
+import braket.circuits.circuit as cir
 from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -26,7 +29,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     """Builds ASCII string circuit diagrams."""
 
     @staticmethod
-    def build_diagram(circuit) -> str:
+    def build_diagram(circuit: cir.Circuit) -> str:
         """
         Build an ASCII string circuit diagram.
 
@@ -106,8 +109,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
             items (List[Union[Instruction, ResultType]]): list of instructions or result types
 
         Returns:
-            List[(QubitSet, List[Union[Instruction, ResultType]])]: list of grouped instructions
-            or result types
+            List[Tuple[QubitSet, List[Instruction]]]: list of grouped instructions or result types.
         """
         groupings = []
         for item in items:
@@ -151,8 +153,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
             result_types (List[ResultType]): list of result types
 
         Returns:
-            Tuple: first element is a list of result types without `target` attribute;
-            second element is a list of result types with `target` attribute
+            Tuple[List[str], List[ResultType]]: first element is a list of result types
+            without `target` attribute; second element is a list of result types with
+            `target` attribute
         """
         additional_result_types = []
         target_result_types = []

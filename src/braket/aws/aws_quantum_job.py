@@ -123,7 +123,7 @@ class AwsQuantumJob(QuantumJob):
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data (Union[str, S3DataSourceConfig, dict]): Information about the training
+            input_data (Union[str, Dict, S3DataSourceConfig]): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
                 f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -208,7 +208,7 @@ class AwsQuantumJob(QuantumJob):
         """
         Args:
             arn (str): The ARN of the job.
-            aws_session (AwsSession, optional): The `AwsSession` for connecting to AWS services.
+            aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the job.
         """
@@ -259,7 +259,7 @@ class AwsQuantumJob(QuantumJob):
         """The state of the quantum job.
 
         Args:
-            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+            use_cached_value (bool): If `True`, uses the value most recently retrieved
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
@@ -350,7 +350,7 @@ class AwsQuantumJob(QuantumJob):
         """Gets the job metadata defined in Amazon Braket.
 
         Args:
-            use_cached_value (bool, optional): If `True`, uses the value most recently retrieved
+            use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
@@ -382,7 +382,7 @@ class AwsQuantumJob(QuantumJob):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            Dict[str, List[Any]] : The metrics data.
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
@@ -417,10 +417,8 @@ class AwsQuantumJob(QuantumJob):
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
                 Default: 10 days.
-
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
-
 
         Returns:
             Dict[str, Any]: Dict specifying the job results.
@@ -443,7 +441,7 @@ class AwsQuantumJob(QuantumJob):
             return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name)
 
     @staticmethod
-    def _read_and_deserialize_results(temp_dir, job_name):
+    def _read_and_deserialize_results(temp_dir: str, job_name: str) -> Dict[str, Any]:
         try:
             with open(f"{temp_dir}/{job_name}/{AwsQuantumJob.RESULTS_FILENAME}", "r") as f:
                 persisted_data = PersistedJobData.parse_raw(f.read())
@@ -456,7 +454,7 @@ class AwsQuantumJob(QuantumJob):
 
     def download_result(
         self,
-        extract_to=None,
+        extract_to: str = None,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
@@ -468,11 +466,9 @@ class AwsQuantumJob(QuantumJob):
             extract_to (str): The directory to which the results are extracted. The results
                 are extracted to a folder titled with the job name within this directory.
                 Default= `Current working directory`.
-
-            poll_timeout_seconds: (float): The polling timeout, in seconds, for `download_result()`.
+            poll_timeout_seconds (float): The polling timeout, in seconds, for `download_result()`.
                 Default: 10 days.
-
-            poll_interval_seconds: (float): The polling interval, in seconds, for
+            poll_interval_seconds (float): The polling interval, in seconds, for
                 `download_result()`.Default: 5 seconds.
 
         Raises:
@@ -503,7 +499,7 @@ class AwsQuantumJob(QuantumJob):
             f"timed out after {poll_timeout_seconds} seconds."
         )
 
-    def _attempt_results_download(self, output_bucket_uri, output_s3_path):
+    def _attempt_results_download(self, output_bucket_uri: str, output_s3_path: str) -> None:
         try:
             self._aws_session.download_from_s3(
                 s3_uri=output_bucket_uri, filename=AwsQuantumJob.RESULTS_TAR_FILENAME
@@ -522,7 +518,7 @@ class AwsQuantumJob(QuantumJob):
                 raise e
 
     @staticmethod
-    def _extract_tar_file(extract_path):
+    def _extract_tar_file(extract_path: str) -> None:
         with tarfile.open(AwsQuantumJob.RESULTS_TAR_FILENAME, "r:gz") as tar:
             tar.extractall(extract_path)
 
@@ -538,7 +534,9 @@ class AwsQuantumJob(QuantumJob):
         return hash(self.arn)
 
     @staticmethod
-    def _initialize_session(session_value, device, logger):
+    def _initialize_session(
+        session_value: AwsSession, device: AwsDevice, logger: Logger
+    ) -> AwsSession:
         aws_session = session_value or AwsSession()
         if device.startswith("local:"):
             return aws_session
@@ -550,7 +548,9 @@ class AwsQuantumJob(QuantumJob):
         )
 
     @staticmethod
-    def _initialize_regional_device_session(aws_session, device, logger):
+    def _initialize_regional_device_session(
+        aws_session: AwsSession, device: AwsDevice, logger: Logger
+    ) -> AwsSession:
         device_region = AwsDevice.get_device_region(device)
         current_region = aws_session.region
         if current_region != device_region:
@@ -565,7 +565,9 @@ class AwsQuantumJob(QuantumJob):
             ] == "ResourceNotFoundException" else e
 
     @staticmethod
-    def _initialize_non_regional_device_session(aws_session, device, logger):
+    def _initialize_non_regional_device_session(
+        aws_session: AwsSession, device: AwsDevice, logger: Logger
+    ) -> AwsSession:
         original_region = aws_session.region
         try:
             aws_session.get_device(device)

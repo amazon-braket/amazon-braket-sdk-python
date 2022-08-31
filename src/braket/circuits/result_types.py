@@ -87,7 +87,7 @@ class DensityMatrix(ResultType):
     def __init__(self, target: QubitSetInput = None):
         """
         Args:
-            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
+            target (QubitSetInput): The target qubits
                 of the reduced density matrix. Default is `None`, and the
                 full density matrix is returned.
 
@@ -104,6 +104,10 @@ class DensityMatrix(ResultType):
 
     @target.setter
     def target(self, target: QubitSetInput) -> None:
+        """Sets the target qubit set.
+        Args:
+            target (QubitSetInput): The target qubit set.
+        """
         self._target = QubitSet(target)
 
     def _to_jaqcd(self) -> ir.DensityMatrix:
@@ -126,7 +130,7 @@ class DensityMatrix(ResultType):
     def density_matrix(target: QubitSetInput = None) -> ResultType:
         """Registers this function into the circuit class.
         Args:
-            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits
+            target (QubitSetInput): The target qubits
                 of the reduced density matrix. Default is `None`, and the
                 full density matrix is returned.
 
@@ -249,7 +253,7 @@ class Probability(ResultType):
     def __init__(self, target: QubitSetInput = None):
         """
         Args:
-            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits that the
+            target (QubitSetInput): The target qubits that the
                 result type is requested for. Default is `None`, which means all qubits for the
                 circuit.
 
@@ -266,6 +270,10 @@ class Probability(ResultType):
 
     @target.setter
     def target(self, target: QubitSetInput) -> None:
+        """Sets the target qubit set.
+        Args:
+            target (QubitSetInput): The target qubit set.
+        """
         self._target = QubitSet(target)
 
     def _to_jaqcd(self) -> ir.Probability:
@@ -289,7 +297,7 @@ class Probability(ResultType):
         """Registers this function into the circuit class.
 
         Args:
-            target (int, Qubit, or iterable of int / Qubit, optional): The target qubits that the
+            target (QubitSetInput): The target qubits that the
                 result type is requested for. Default is `None`, which means all qubits for the
                 circuit.
 
@@ -336,7 +344,7 @@ class Expectation(ObservableResultType):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+            target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -379,7 +387,7 @@ class Expectation(ObservableResultType):
 
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+            target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -411,7 +419,7 @@ class Sample(ObservableResultType):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+            target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -454,7 +462,7 @@ class Sample(ObservableResultType):
 
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+            target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -487,7 +495,7 @@ class Variance(ObservableResultType):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+            target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -530,7 +538,7 @@ class Variance(ObservableResultType):
 
         Args:
             observable (Observable): the observable for the result type
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits that the
+            target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 only operate on 1 qubit and it will be applied to all qubits in parallel
 
