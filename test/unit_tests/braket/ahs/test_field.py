@@ -89,7 +89,7 @@ def test_uniform_field(
     expected = Field(time_series=default_time_series.discretize(time_res, value_res))
     actual = default_uniform_field.discretize(time_res, value_res, pattern_res)
     assert (
-        (expected.pattern is None) and (expected.pattern is None)
+        (expected.pattern is None) and (actual.pattern is None)
     ) or expected.pattern.series == actual.pattern.series
     assert expected.time_series.times() == actual.time_series.times()
     assert expected.time_series.values() == actual.time_series.values()
