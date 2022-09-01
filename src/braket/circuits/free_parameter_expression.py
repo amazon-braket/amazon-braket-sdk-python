@@ -10,10 +10,10 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+from __future__ import annotations
 
 from numbers import Number
-from typing import Dict
+from typing import Dict, Union
 
 from sympy import Expr, sympify
 
@@ -28,7 +28,7 @@ class FreeParameterExpression:
     be substituted prior to execution.
     """
 
-    def __init__(self, expression):
+    def __init__(self, expression: Union[FreeParameterExpression, Number, Expr]):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
@@ -36,7 +36,7 @@ class FreeParameterExpression:
         Below are examples of how FreeParameterExpressions should be made.
 
         Args:
-            expression: The expression to use.
+            expression (Union[FreeParameterExpression, Number, Expr]): The expression to use.
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
@@ -50,24 +50,27 @@ class FreeParameterExpression:
             raise NotImplementedError
 
     @property
-    def expression(self):
-        """
+    def expression(self) -> Union[Number, Expr]:
+        """Gets the expression.
         Returns:
-            The expression for the FreeParameterExpression.
+            Union[Number, Expr]: The expression for the FreeParameterExpression.
         """
         return self._expression
 
-    def subs(self, parameter_values: Dict[str, Number]):
+    def subs(
+        self, parameter_values: Dict[str, Number]
+    ) -> Union[FreeParameterExpression, Number, Expr]:
         """
         Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
 
         Args:
             parameter_values (Dict[str, Number]): A mapping of parameters to their corresponding
-            values to be assigned.
+                values to be assigned.
 
-        Returns: A numerical value if there are no symbols left in the expression otherwise
-            returns a new FreeParameterExpression.
+        Returns:
+            Union[FreeParameterExpression, Number, Expr]: A numerical value if there are no
+            symbols left in the expression otherwise returns a new FreeParameterExpression.
         """
         new_parameter_values = dict()
         for key, val in parameter_values.items():
@@ -131,6 +134,6 @@ class FreeParameterExpression:
         The representation of the :class:'FreeParameterExpression'.
 
         Returns:
-            The expression of the class:'FreeParameterExpression' to represent the class.
+            str: The expression of the class:'FreeParameterExpression' to represent the class.
         """
         return repr(self.expression)

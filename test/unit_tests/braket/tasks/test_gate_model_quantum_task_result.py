@@ -12,14 +12,14 @@
 # language governing permissions and limitations under the License.
 
 import json
-from typing import Counter
+from collections import Counter
 from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from braket.circuits import Observable, ResultType
-from braket.ir import jaqcd
+from braket.ir import jaqcd, openqasm
 from braket.task_result import (
     AdditionalMetadata,
     GateModelTaskResult,
@@ -42,6 +42,22 @@ def task_metadata_zero_shots():
 @pytest.fixture
 def additional_metadata():
     program = jaqcd.Program(instructions=[jaqcd.CNot(control=0, target=1)])
+    return AdditionalMetadata(action=program)
+
+
+@pytest.fixture
+def additional_metadata_openqasm():
+    program = openqasm.Program(
+        source="""
+        qubit[2] q;
+        bit[2] c;
+
+        h q[0];
+        cnot q[0], q[1];
+
+        c = measure q;
+        """
+    )
     return AdditionalMetadata(action=program)
 
 
@@ -165,6 +181,25 @@ def malformatted_results_2(task_metadata_shots, additional_metadata):
         taskMetadata=task_metadata_shots,
         additionalMetadata=additional_metadata,
     ).json()
+
+
+@pytest.fixture
+def openqasm_result_obj_shots(task_metadata_shots, additional_metadata_openqasm):
+    return GateModelTaskResult.construct(
+        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
+        measuredQubits=[0, 1],
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata_openqasm,
+        resultTypes=[jaqcd.Probability()],
+    )
+
+
+def test_openqasm_shots_calculate_result_types(openqasm_result_obj_shots):
+    result = GateModelQuantumTaskResult._from_object_internal_computational_basis_sampling(
+        openqasm_result_obj_shots
+    )
+    assert result.result_types[0].type == jaqcd.Probability()
+    assert np.array_equal(result.result_types[0].value, [0.25, 0.75, 0, 0])
 
 
 test_ir_results = [

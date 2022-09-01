@@ -27,27 +27,34 @@ class _LocalJobContainer(object):
     CONTAINER_CODE_PATH = "/opt/ml/code/"
 
     def __init__(
-        self, image_uri: str, aws_session: AwsSession = None, logger: Logger = getLogger(__name__)
+        self,
+        image_uri: str,
+        aws_session: AwsSession = None,
+        logger: Logger = getLogger(__name__),
+        force_update: bool = False,
     ):
         """Represents and provides functions for interacting with a Braket Jobs docker container.
 
         The function "end_session" must be called when the container is no longer needed.
         Args:
             image_uri (str): The URI of the container image to run.
-            aws_session (AwsSession, Optional): AwsSession for connecting to AWS Services.
+            aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`
+            force_update (bool): Try to update the container, if an update is availble.
+                Default: False
         """
         self._aws_session = aws_session or AwsSession()
         self.image_uri = image_uri
-        self.run_log = None
+        self.run_result = None
         self._container_name = None
         self._logger = logger
+        self._force_update = force_update
 
     def __enter__(self):
         """Creates and starts the local docker container."""
-        self._container_name = self._start_container(self.image_uri)
+        self._container_name = self._start_container(self.image_uri, self._force_update)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -62,7 +69,7 @@ class _LocalJobContainer(object):
 
         Args:
             environment_variables (Dict[str, str]): A dictionary of environment variables and
-             their values.
+                their values.
         Returns:
             List[str]: The list of parameters to use when running a job that will include the
             provided environment variables as part of the runtime.
@@ -82,7 +89,7 @@ class _LocalJobContainer(object):
             command(List[str]): The command to run.
 
         Returns:
-            (str): The UTF-8 encoded output of running the command.
+            str: The UTF-8 encoded output of running the command.
         """
         output = subprocess.check_output(command)
         return output.decode("utf-8").strip()
@@ -127,15 +134,16 @@ class _LocalJobContainer(object):
         self._logger.warning("Pulling docker container image. This may take a while.")
         subprocess.run(["docker", "pull", image_uri])
 
-    def _start_container(self, image_uri: str) -> str:
+    def _start_container(self, image_uri: str, force_update: bool) -> str:
         """Runs a docker container in a busy loop so that it will accept further commands. The
         call to this function must be matched with end_session to stop the container.
 
         Args:
             image_uri(str): The URI of the ECR image to run.
+            force_update(bool): Do a docker pull, even if the image is local, in order to update.
 
         Returns:
-            (str): The name of the running container, which can be used to execute further commands.
+            str: The name of the running container, which can be used to execute further commands.
         """
         image_name = self._check_output_formatted(["docker", "images", "-q", image_uri])
         if not image_name:
@@ -146,6 +154,13 @@ class _LocalJobContainer(object):
                     f"The URL {image_uri} is not available locally and can not be pulled from ECR."
                     " Please pull down the container before proceeding."
                 )
+        elif force_update:
+            try:
+                self._pull_image(image_uri)
+                image_name = self._check_output_formatted(["docker", "images", "-q", image_uri])
+            except ValueError:
+                self._logger.warning(f"Unable to update {image_uri}.")
+
         return self._check_output_formatted(
             ["docker", "run", "-d", "--rm", image_name, "tail", "-f", "/dev/null"]
         )
@@ -215,7 +230,7 @@ class _LocalJobContainer(object):
 
         Args:
             environment_variables (Dict[str, str]): The environment variables to make available
-             as part of running the job.
+                as part of running the job.
         """
         start_program_name = self._check_output_formatted(
             ["docker", "exec", self._container_name, "printenv", "SAGEMAKER_PROGRAM"]
@@ -234,12 +249,15 @@ class _LocalJobContainer(object):
         command.append(start_program_name)
 
         try:
-            self.run_log = self._check_output_formatted(command)
-            print(self.run_log)
-        except subprocess.CalledProcessError as e:
-            self.run_log = e.output.decode("utf-8").strip()
-            self._logger.error(self.run_log)
+            self.run_result = subprocess.run(command, capture_output=True)
+            if self.run_result.stdout:
+                print(self.run_result.stdout.decode("utf-8").strip())
+            if self.run_result.stderr:
+                self._logger.error(self.run_result.stderr.decode("utf-8").strip())
+        except Exception as e:
+            self.run_result = e
+            self._logger.error(e)
 
-    def _end_session(self):
+    def _end_session(self) -> None:
         """Stops and removes the local container."""
         subprocess.run(["docker", "stop", self._container_name])

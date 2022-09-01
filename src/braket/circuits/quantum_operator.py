@@ -26,7 +26,7 @@ class QuantumOperator(Operator):
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
         """
         Args:
-            qubit_count (int, optional): Number of qubits this quantum operator acts on.
+            qubit_count (Optional[int]): Number of qubits this quantum operator acts on.
                 If all instances of the operator act on the same number of qubits, this argument
                 should be ``None``, and ``fixed_qubit_count`` should be implemented to return
                 the qubit count; if ``fixed_qubit_count`` is implemented and an int is passed in,
@@ -106,16 +106,15 @@ class QuantumOperator(Operator):
         Returns the name of the quantum operator
 
         Returns:
-            The name of the quantum operator as a string
+            str: The name of the quantum operator as a string
         """
         return self.__class__.__name__
 
     def to_ir(self, *args, **kwargs) -> Any:
-        """Returns IR representation of quantum operator
+        """Returns IR representation of quantum operator.
 
-        Args:
-            *args: Positional arguments
-            **kwargs: Keyword arguments
+        Returns:
+            Any: The the canonical intermediate representation of the operator.
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
@@ -123,7 +122,7 @@ class QuantumOperator(Operator):
         """Returns a matrix representation of the quantum operator
 
         Returns:
-            np.ndarray: A matrix representation of the quantum operator
+            ndarray: A matrix representation of the quantum operator
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 

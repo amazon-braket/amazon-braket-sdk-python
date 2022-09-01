@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from typing import Any
+
 import braket.ir.jaqcd as ir
 from braket.circuits.compiler_directive import CompilerDirective
 
@@ -27,8 +29,11 @@ class StartVerbatimBox(CompilerDirective):
     def counterpart(self) -> CompilerDirective:
         return EndVerbatimBox()
 
-    def to_ir(self, *args, **kwargs):
+    def _to_jaqcd(self, *args, **kwargs) -> Any:
         return ir.StartVerbatimBox.construct()
+
+    def _to_openqasm(self) -> str:
+        return "#pragma braket verbatim\nbox{"
 
 
 class EndVerbatimBox(CompilerDirective):
@@ -43,5 +48,8 @@ class EndVerbatimBox(CompilerDirective):
     def counterpart(self) -> CompilerDirective:
         return StartVerbatimBox()
 
-    def to_ir(self, *args, **kwargs):
+    def _to_jaqcd(self, *args, **kwargs) -> Any:
         return ir.EndVerbatimBox.construct()
+
+    def _to_openqasm(self) -> str:
+        return "}"

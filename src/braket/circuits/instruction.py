@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -21,6 +21,7 @@ from braket.circuits.operator import Operator
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.circuits.serialization import IRType, SerializationProperties
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
 InstructionOperator = Operator
@@ -37,8 +38,7 @@ class Instruction:
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
-            target (int, Qubit, or iterable of int / Qubit): Target qubits that the operator is
-                applied to.
+            target (QubitSetInput): Target qubits that the operator is applied to. Default is None.
 
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the `Qubit`
@@ -101,12 +101,30 @@ class Instruction:
             return [Instruction(operator.counterpart(), self._target)]
         raise NotImplementedError(f"Adjoint not supported for {operator}")
 
-    def to_ir(self):
+    def to_ir(
+        self,
+        ir_type: IRType = IRType.JAQCD,
+        serialization_properties: SerializationProperties = None,
+    ) -> Any:
         """
         Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
+
+        Args:
+            ir_type(IRType) : The IRType to use for converting the instruction object to its
+                IR representation.
+            serialization_properties (SerializationProperties): The serialization properties to use
+                while serializing the object to the IR representation. The serialization properties
+                supplied must correspond to the supplied `ir_type`. Defaults to None.
+
+        Returns:
+            Any: IR object of the instruction.
         """
-        return self._operator.to_ir([int(qubit) for qubit in self._target])
+        return self._operator.to_ir(
+            [int(qubit) for qubit in self._target],
+            ir_type=ir_type,
+            serialization_properties=serialization_properties,
+        )
 
     @property
     def ascii_symbols(self) -> Tuple[str, ...]:
@@ -124,11 +142,10 @@ class Instruction:
             qubits. This is useful apply an instruction to a circuit and change the target qubits.
 
         Args:
-            target_mapping (dictionary[int or Qubit, int or Qubit], optional): A dictionary of
+            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
-            target (int, Qubit, or iterable of int / Qubit, optional): Target qubits for the new
-                instruction.
+            target (QubitSetInput): Target qubits for the new instruction. Default is None.
 
         Returns:
             Instruction: A shallow copy of the instruction.

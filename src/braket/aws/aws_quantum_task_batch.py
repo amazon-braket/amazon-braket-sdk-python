@@ -61,7 +61,7 @@ class AwsQuantumTaskBatch:
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             device_arn (str): The ARN of the quantum device.
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgramAnalogHamiltonianSimulation]): # noqa
+            task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]]):
                 The specification of the task to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -78,10 +78,6 @@ class AwsQuantumTaskBatch:
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
-            *aws_quantum_task_args: Variable length positional arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
-            **aws_quantum_task_kwargs: Variable length keyword arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
         """
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,
@@ -114,18 +110,18 @@ class AwsQuantumTaskBatch:
 
     @staticmethod
     def _execute(
-        aws_session,
-        device_arn,
-        task_specifications,
-        s3_destination_folder,
-        shots,
-        max_parallel,
-        max_workers,
-        poll_timeout_seconds,
-        poll_interval_seconds,
+        aws_session: AwsSession,
+        device_arn: str,
+        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: int,
+        max_parallel: int,
+        max_workers: int = MAX_CONNECTIONS_DEFAULT,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *args,
         **kwargs,
-    ):
+    ) -> List[AwsQuantumTask]:
         for task_specification in task_specifications:
             if isinstance(task_specification, Circuit) and task_specification.parameters:
                 raise ValueError(
@@ -156,20 +152,20 @@ class AwsQuantumTaskBatch:
 
     @staticmethod
     def _create_task(
-        remaining,
-        aws_session,
-        device_arn,
-        task_specification,
-        s3_destination_folder,
-        shots,
-        poll_interval_seconds,
+        remaining: List[int],
+        aws_session: AwsSession,
+        device_arn: str,
+        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: int,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         *args,
         **kwargs,
-    ):
+    ) -> AwsQuantumTask:
         task = AwsQuantumTask.create(
             aws_session,
             device_arn,
-            task_specification,
+            task_specifications,
             s3_destination_folder,
             shots,
             poll_interval_seconds=poll_interval_seconds,
@@ -187,7 +183,12 @@ class AwsQuantumTaskBatch:
             time.sleep(poll_interval_seconds)
         return task
 
-    def results(self, fail_unsuccessful=False, max_retries=MAX_RETRIES, use_cached_value=True):
+    def results(
+        self,
+        fail_unsuccessful: bool = False,
+        max_retries: int = MAX_RETRIES,
+        use_cached_value: bool = True,
+    ) -> List[AwsQuantumTask]:
         """Retrieves the result of every task in the batch.
 
         Polling for results happens in parallel; this method returns when all tasks
@@ -205,7 +206,7 @@ class AwsQuantumTaskBatch:
 
         Returns:
             List[AwsQuantumTask]: The results of all of the tasks in the batch.
-                `FAILED`, `CANCELLED`, or timed out tasks will have a result of None
+            `FAILED`, `CANCELLED`, or timed out tasks will have a result of None
         """
         if not self._results or not use_cached_value:
             self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
@@ -225,12 +226,12 @@ class AwsQuantumTaskBatch:
         return self._results
 
     @staticmethod
-    def _retrieve_results(tasks, max_workers):
+    def _retrieve_results(tasks: List[AwsQuantumTask], max_workers: int) -> List[AwsQuantumTask]:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             result_futures = [executor.submit(task.result) for task in tasks]
         return [future.result() for future in result_futures]
 
-    def retry_unsuccessful_tasks(self):
+    def retry_unsuccessful_tasks(self) -> bool:
         """Retries any tasks in the batch without valid results.
 
         This method should only be called after `results()` has been called at least once.
@@ -282,7 +283,10 @@ class AwsQuantumTaskBatch:
 
     @property
     def unfinished(self) -> Set[str]:
-        """Set[str]: The IDs of all the tasks in the batch that have yet to complete"""
+        """Gets all the IDs of all the tasks in teh batch that have yet to complete.
+        Returns:
+            Set[str]: The IDs of all the tasks in the batch that have yet to complete.
+        """
         with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
             status_futures = {task.id: executor.submit(task.state) for task in self._tasks}
         unfinished = set()

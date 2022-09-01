@@ -61,7 +61,7 @@ class AwsDevice(Device):
         """
         Args:
             arn (str): The ARN of the device
-            aws_session (AwsSession, optional): An AWS session object. Default is `None`.
+            aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
 
         Note:
             Some devices (QPUs) are physically located in specific AWS Regions. In some cases,
@@ -100,20 +100,16 @@ class AwsDevice(Device):
         Args:
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]): # noqa
                 Specification of task (circuit or annealing problem or program) to run on device.
-            s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
+            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the task's results to. Default is `<default_bucket>/tasks` if evoked
                 outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
                 a Braket Job.
-            shots (int, optional): The number of times to run the circuit or annealing problem.
+            shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Default: 1 second.
-            *aws_quantum_task_args: Variable length positional arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
-            **aws_quantum_task_kwargs: Variable length keyword arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -184,13 +180,13 @@ class AwsDevice(Device):
         Args:
             task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]]):  # noqa
                 List of  circuits or annealing problems to run on device.
-            s3_destination_folder (AwsSession.S3DestinationFolder, optional): The S3 location to
+            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
                 outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
                 a Braket Job.
-            shots (int, optional): The number of times to run the circuit or annealing problem.
+            shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            max_parallel (int, optional): The maximum number of tasks to run on AWS in parallel.
+            max_parallel (Optional[int]): The maximum number of tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent tasks on the device. Default: 10
             max_connections (int): The maximum number of connections in the Boto3 connection pool.
@@ -199,10 +195,6 @@ class AwsDevice(Device):
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
-            *aws_quantum_task_args: Variable length positional arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
-            **aws_quantum_task_kwargs: Variable length keyword arguments for
-                `braket.aws.aws_quantum_task.AwsQuantumTask.create()`.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -236,7 +228,7 @@ class AwsDevice(Device):
         """
         self._populate_properties(self._aws_session)
 
-    def _get_session_and_initialize(self, session):
+    def _get_session_and_initialize(self, session: AwsSession) -> AwsSession:
         device_region = AwsDevice.get_device_region(self._arn)
         return (
             self._get_regional_device_session(session)
@@ -244,7 +236,7 @@ class AwsDevice(Device):
             else self._get_non_regional_device_session(session)
         )
 
-    def _get_regional_device_session(self, session):
+    def _get_regional_device_session(self, session: AwsSession) -> AwsSession:
         device_region = AwsDevice.get_device_region(self._arn)
         region_session = (
             session
@@ -259,7 +251,7 @@ class AwsDevice(Device):
                 "Code"
             ] == "ResourceNotFoundException" else e
 
-    def _get_non_regional_device_session(self, session):
+    def _get_non_regional_device_session(self, session: AwsSession) -> AwsSession:
         current_region = session.region
         try:
             self._populate_properties(session)
@@ -281,15 +273,13 @@ class AwsDevice(Device):
                     raise e
         raise ValueError(f"QPU '{self._arn}' not found")
 
-    def _populate_properties(self, session):
+    def _populate_properties(self, session: AwsSession) -> None:
         metadata = session.get_device(self._arn)
         self._name = metadata.get("deviceName")
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
-        qpu_properties = metadata.get("deviceCapabilities")
-        self._properties = BraketSchemaBase.parse_raw_schema(qpu_properties)
-        self._topology_graph = self._construct_topology_graph()
+        self._properties = metadata.get("deviceCapabilities")
 
     @property
     def type(self) -> str:
@@ -312,7 +302,10 @@ class AwsDevice(Device):
 
     @property
     def is_available(self) -> bool:
-        """bool: Return if the device is currently available"""
+        """Returns true if the device is currently available.
+        Returns:
+            bool: Return if the device is currently available.
+        """
         if self.status != "ONLINE":
             return False
 
@@ -375,7 +368,7 @@ class AwsDevice(Device):
         Please see `braket.device_schema` in amazon-braket-schemas-python_
 
         .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
-        return self._properties
+        return BraketSchemaBase.parse_raw_schema(self._properties)
 
     @property
     def topology_graph(self) -> DiGraph:
@@ -392,7 +385,7 @@ class AwsDevice(Device):
 
             >>> print(device.topology_graph.edges)
         """
-        return self._topology_graph
+        return self._construct_topology_graph()
 
     def _construct_topology_graph(self) -> DiGraph:
         """
@@ -423,13 +416,13 @@ class AwsDevice(Device):
             return None
 
     @property
-    def _default_shots(self):
+    def _default_shots(self) -> int:
         return (
             AwsDevice.DEFAULT_SHOTS_QPU if "qpu" in self.arn else AwsDevice.DEFAULT_SHOTS_SIMULATOR
         )
 
     @property
-    def _default_max_parallel(self):
+    def _default_max_parallel(self) -> int:
         return AwsDevice.DEFAULT_MAX_PARALLEL
 
     def __repr__(self):
@@ -460,16 +453,16 @@ class AwsDevice(Device):
             >>> AwsDevice.get_devices(types=['SIMULATOR'])
 
         Args:
-            arns (List[str], optional): device ARN list, default is `None`
-            names (List[str], optional): device name list, default is `None`
-            types (List[AwsDeviceType], optional): device type list, default is `None`
+            arns (Optional[List[str]]): device ARN list, default is `None`
+            names (Optional[List[str]]): device name list, default is `None`
+            types (Optional[List[AwsDeviceType]]): device type list, default is `None`
                 QPUs will be searched for all regions and simulators will only be
                 searched for the region of the current session.
-            statuses (List[str], optional): device status list, default is `None`
-            provider_names (List[str], optional): provider name list, default is `None`
-            order_by (str, optional): field to order result by, default is `name`.
+            statuses (Optional[List[str]]): device status list, default is `None`
+            provider_names (Optional[List[str]]): provider name list, default is `None`
+            order_by (str): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
-            aws_session (AwsSession, optional) aws_session: An AWS session object.
+            aws_session (Optional[AwsSession]): An AWS session object.
                 Default is `None`.
 
         Returns:
@@ -522,6 +515,13 @@ class AwsDevice(Device):
 
     @staticmethod
     def get_device_region(device_arn: str) -> str:
+        """Gets the region from a device arn.
+        Args:
+            device_arn (str): The device ARN.
+
+        Returns:
+            str: the region of the ARN.
+        """
         try:
             return device_arn.split(":")[3]
         except IndexError:

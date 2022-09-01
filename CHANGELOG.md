@@ -1,5 +1,87 @@
 # Changelog
 
+## v1.29.2 (2022-08-25)
+
+### Bug Fixes and Other Changes
+
+ * Updating documentation and type hints.
+
+## v1.29.1 (2022-08-18)
+
+### Bug Fixes and Other Changes
+
+ * updating test cost tracking integ test to use M2.
+
+## v1.29.0.post0 (2022-08-17)
+
+### Testing and Release Infrastructure
+
+ * Avoid mutation of fixtures
+
+## v1.29.0 (2022-08-10)
+
+### Features
+
+ * Pauli strings
+
+### Testing and Release Infrastructure
+
+ * Don't run tests on push to feature branches
+ * Add SF plugin to dependent tests
+
+## v1.28.1 (2022-08-05)
+
+### Bug Fixes and Other Changes
+
+ * fix future warning
+
+## v1.28.0 (2022-08-05)
+
+### Features
+
+ * OpenQASM default IR and OpenQASM Local Simulator
+
+### Bug Fixes and Other Changes
+
+ * update simulator version
+ * handle -0 edge case in result type hash
+
+## v1.27.1 (2022-07-29)
+
+### Bug Fixes and Other Changes
+
+ * customer script errors not shown when local jobs run from a notebook.
+
+## v1.27.0 (2022-07-26)
+
+### Features
+
+ * provide easy mechanism to update the local container when running local job.
+
+## v1.26.2 (2022-07-21)
+
+### Bug Fixes and Other Changes
+
+ * docs: Update README to include guidance for integrations
+
+## v1.26.1 (2022-07-19)
+
+### Bug Fixes and Other Changes
+
+ * Lazily parse schemas for devices so getDevice calls do not rely …
+
+## v1.26.0 (2022-07-18)
+
+### Features
+
+ * SDK Cost Tracker
+
+## v1.25.2 (2022-06-22)
+
+### Bug Fixes and Other Changes
+
+ * Set the range for amazon-braket-schemas to >= 1.10.0 for the latest device schemas needed.
+
 ## v1.25.1.post0 (2022-06-17)
 
 ### Documentation Changes

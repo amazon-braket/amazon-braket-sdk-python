@@ -31,10 +31,9 @@ def setup_container(
     Args:
         container(_LocalJobContainer): The container that will run the braket job.
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
-        **creation_kwargs: Keyword arguments for the boto3 Amazon Braket `CreateJob` operation.
 
     Returns:
-        (Dict[str, str]): A dictionary of environment variables that reflect Braket Jobs options
+        Dict[str, str]: A dictionary of environment variables that reflect Braket Jobs options
         requested by the customer.
     """
     logger = getLogger(__name__)
@@ -57,7 +56,6 @@ def _create_expected_paths(container: _LocalJobContainer, **creation_kwargs) -> 
 
     Args:
         container(_LocalJobContainer): The container that will run the braket job.
-        **creation_kwargs: Keyword arguments for the boto3 Amazon Braket `CreateJob` operation.
     """
     container.makedir("/opt/ml/model")
     container.makedir(creation_kwargs["checkpointConfig"]["localPath"])
@@ -72,7 +70,7 @@ def _get_env_credentials(aws_session: AwsSession, logger: Logger) -> Dict[str, s
         logger (Logger): Logger object with which to write logs. Default is `getLogger(__name__)`
 
     Returns:
-        (Dict[str, str]): The set of key/value pairs that should be added as environment variables
+        Dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     credentials = aws_session.boto_session.get_credentials()
@@ -97,10 +95,10 @@ def _get_env_script_mode_config(script_mode_config: Dict[str, str]) -> Dict[str,
 
     Args:
         script_mode_config (Dict[str, str]): The values for scriptModeConfig in the boto3 input
-        parameters for running a Braket Job.
+            parameters for running a Braket Job.
 
     Returns:
-        (Dict[str, str]): The set of key/value pairs that should be added as environment variables
+        Dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     result = {
@@ -116,8 +114,11 @@ def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[st
     """This function gets the remaining 'simple' env variables, that don't require any
      additional logic to determine what they are or when they should be added as env variables.
 
+    Args:
+        aws_session (AwsSession): AwsSession for connecting to AWS Services.
+
     Returns:
-        (Dict[str, str]): The set of key/value pairs that should be added as environment variables
+        Dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     job_name = creation_kwargs["jobName"]
@@ -139,7 +140,7 @@ def _get_env_hyperparameters() -> Dict[str, str]:
     provided hyperpameters to the job.
 
     Returns:
-        (Dict[str, str]): The set of key/value pairs that should be added as environment variables
+        Dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     return {
@@ -152,7 +153,7 @@ def _get_env_input_data() -> Dict[str, str]:
     provided input data to the job.
 
     Returns:
-        (Dict[str, str]): The set of key/value pairs that should be added as environment variables
+        Dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     return {
@@ -166,10 +167,9 @@ def _copy_hyperparameters(container: _LocalJobContainer, **creation_kwargs) -> b
 
     Args:
         container(_LocalJobContainer): The container to save hyperparameters to.
-        **creation_kwargs: Keyword arguments for the boto3 Amazon Braket `CreateJob` operation.
 
     Returns:
-        (bool): True if any hyperparameters were copied to the container.
+        bool: True if any hyperparameters were copied to the container.
     """
     if "hyperParameters" not in creation_kwargs:
         return False
@@ -228,7 +228,15 @@ def _download_input_data(
 
 
 def _is_dir(prefix: str, keys: Iterable[str]) -> bool:
-    """determine whether the prefix refers to a directory"""
+    """Determine whether the prefix refers to a directory.
+
+    Args:
+        prefix (str): The prefix to check.
+        keys (Iterable[str]): The set of paths to check.
+
+    Returns:
+        bool: True if the prefix refers to a directory.
+    """
     if prefix.endswith("/"):
         return True
     return all(key.startswith(f"{prefix}/") for key in keys)
@@ -241,12 +249,11 @@ def _copy_input_data_list(
     store them in the container.
 
     Args:
-        container(_LocalJobContainer): The container to save input data to.
+        container (_LocalJobContainer): The container to save input data to.
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
-        **creation_kwargs: Keyword arguments for the boto3 Amazon Braket `CreateJob` operation.
 
     Returns:
-        (bool): True if any input data was copied to the container.
+        bool: True if any input data was copied to the container.
     """
     if "inputDataConfig" not in creation_kwargs:
         return False

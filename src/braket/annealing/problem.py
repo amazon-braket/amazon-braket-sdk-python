@@ -85,7 +85,7 @@ class Problem:
 
         Returns:
             Dict[Tuple[int, int], float]: The quadratic terms of this problem,
-                as a map of variables to coefficient
+            as a map of variables to coefficient
         """
         return self._quadratic
 
@@ -119,7 +119,7 @@ class Problem:
 
         Args:
             term (Tuple[int, int]): The variables of the quadratic term
-            coefficient (flost): The coefficient of the quadratic term
+            coefficient (float): The coefficient of the quadratic term
 
         Returns:
             Problem: This problem object
@@ -139,11 +139,11 @@ class Problem:
         self._quadratic.update(coefficients)
         return self
 
-    def to_ir(self):
+    def to_ir(self) -> Problem:
         """Converts this problem into IR representation.
 
         Returns:
-            ir.Problem: IR representation of this problem object
+            Problem: IR representation of this problem object
         """
         return ir.Problem(
             type=ir.ProblemType[self._problem_type.value],

@@ -105,7 +105,7 @@ class Criteria(ABC):
         raise NotImplementedError
 
     @classmethod
-    def register_criteria(cls, criteria: Type[Criteria]):
+    def register_criteria(cls, criteria: Type[Criteria]) -> None:
         """Register a criteria implementation by adding it into the Criteria class.
 
         Args:
