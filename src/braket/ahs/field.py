@@ -13,9 +13,10 @@
 
 from __future__ import annotations
 
-from typing import Optional
 from decimal import Decimal
+from typing import Optional
 
+from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.pattern import Pattern
 from braket.ahs.time_series import TimeSeries
 
@@ -35,18 +36,18 @@ class Field:
 
     def discretize(
         self,
-        time_res: Decimal,
-        value_res: Decimal,
-        pattern_res: Optional[Decimal] = None
+        time_resolution: Decimal,
+        value_resolution: Decimal,
+        pattern_resolution: Optional[Decimal] = None,
     ) -> Field:
         """Creates a discretized version of the field,
         where time, value and pattern are rounded to the
         closes multiple of their corresponding resolutions.
 
         Args:
-            time_res (Decimal): Time resolution
-            value_res (Decimal): Value resolution
-            pattern_res (Decimal or None): Pattern resolution
+            time_resolution (Decimal): Time resolution
+            value_resolution (Decimal): Value resolution
+            pattern_resolution (Decimal or None): Pattern resolution
 
         Returns:
             Field: A new discretized field.
@@ -54,16 +55,14 @@ class Field:
         Raises:
             ValueError: if pattern_res is None, but there is a Pattern
         """
-        discretized_time_series = self.time_series.discretize(time_res, value_res)
+        discretized_time_series = self.time_series.discretize(time_resolution, value_resolution)
         if self.pattern is None:
             discretized_pattern = None
         else:
-            if pattern_res is None:
-                raise ValueError('since pattern is defined, pattern_res must be Decimal')
-            discretized_pattern = self.pattern.discretize(pattern_res)
-
-        discretized_field = Field(
-            time_series=discretized_time_series,
-            pattern=discretized_pattern
-        )
+            if pattern_resolution is None:
+                raise DiscretizationError(
+                    f"{self.pattern} is defined but has no pattern_resolution defined"
+                )
+            discretized_pattern = self.pattern.discretize(pattern_resolution)
+        discretized_field = Field(time_series=discretized_time_series, pattern=discretized_pattern)
         return discretized_field

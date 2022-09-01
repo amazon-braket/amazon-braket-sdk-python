@@ -14,10 +14,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum
 from numbers import Number
 from typing import Iterator, List, Tuple
-from decimal import Decimal
+
+from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 
 
 class SiteType(Enum):
@@ -74,22 +76,26 @@ class AtomArrangement:
     def __len__(self):
         return self._sites.__len__()
 
-    def discretize(
-        self,
-        position_res: Decimal
-    ) -> AtomArrangement:
+    def discretize(self, properties: DiscretizationProperties) -> AtomArrangement:
         """Creates a discretized version of the atom arrangement,
         rounding all site coordinates to the closest multiple of the
         resolution. The types of the sites are unchanged.
 
         Args:
-            position_res (Decimal): Position resolution
+            properties (DiscretizationProperties): Discretization will be done according to
+                the properties of the device.
 
         Returns:
             AtomArrangement: A new discretized atom arrangement.
         """
-        discretized_arrangement = AtomArrangement()
-        for site in self._sites:
-            new_coordinates = tuple((round(Decimal(c) / position_res) * position_res for c in site.coordinate))
-            discretized_arrangement.add(new_coordinates, site.site_type)
-        return discretized_arrangement
+        try:
+            position_res = properties.lattice.geometry.positionResolution
+            discretized_arrangement = AtomArrangement()
+            for site in self._sites:
+                new_coordinates = tuple(
+                    (round(Decimal(c) / position_res) * position_res for c in site.coordinate)
+                )
+                discretized_arrangement.add(new_coordinates, site.site_type)
+            return discretized_arrangement
+        except Exception as e:
+            raise DiscretizationError(f"Failed to discretize register {e}")

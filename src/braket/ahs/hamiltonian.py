@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+from braket.ahs.discretization_types import DiscretizationProperties
+
 
 class Hamiltonian:
     def __init__(self, terms: Optional[List[Hamiltonian]] = None):
@@ -23,6 +25,19 @@ class Hamiltonian:
     @property
     def terms(self) -> List[Hamiltonian]:
         return self._terms
+
+    def discretize(self, properties: DiscretizationProperties) -> Hamiltonian:
+        """Creates a discretized version of the Hamiltonian.
+
+        Args:
+            properties (DiscretizationProperties): Discretization will be done according to
+                the properties of the device.
+
+        Returns:
+            Hamiltonian: A new discretized Hamiltonian.
+        """
+        terms = [term.discretize(properties) for term in self.terms]
+        return Hamiltonian(terms=terms)
 
     def __iadd__(self, other: Hamiltonian) -> Hamiltonian:
         if type(self) is not Hamiltonian:
