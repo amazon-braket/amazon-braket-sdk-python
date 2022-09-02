@@ -16,6 +16,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from braket.ahs.analog_hamiltonian_simulation import DiscretizationError
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
 
 
@@ -106,3 +107,9 @@ def test_discretize(default_atom_arrangement, position_res, expected_x, expected
     actual = default_atom_arrangement.discretize(properties)
     assert expected_x == actual.coordinate_list(0)
     assert expected_y == actual.coordinate_list(1)
+
+
+@pytest.mark.xfail(raises=DiscretizationError)
+def test_invalid_discretization_properties(default_atom_arrangement):
+    properties = 'not-a-valid-discretization-property'
+    default_atom_arrangement.discretize(properties)
