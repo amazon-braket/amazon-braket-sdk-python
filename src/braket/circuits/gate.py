@@ -106,7 +106,7 @@ class Gate(QuantumOperator):
         Returns:
             Any: JAQCD object representing the gate.
         """
-        raise NotImplementedError("to_jaqcd has not been implemented yet.")
+        raise NotImplementedError("to_jaqcd is not implemented.")
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
