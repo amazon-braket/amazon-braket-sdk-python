@@ -28,7 +28,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-schemas>=1.10.1",
-        "amazon-braket-default-simulator>=1.7.2",
+        "amazon-braket-default-simulator>=1.8.1",
         "backoff",
         "boltons",
         "boto3",
