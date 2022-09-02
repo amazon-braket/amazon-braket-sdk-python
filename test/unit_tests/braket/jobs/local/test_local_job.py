@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 
 import json
-from subprocess import CompletedProcess
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
@@ -47,58 +46,34 @@ def test_envs():
     return {"Test": "Env"}
 
 
-def success_result():
-    return CompletedProcess(None, 0, str.encode("Test Output"), str.encode("Test Error"))
-
-
 @pytest.mark.parametrize(
-    "creation_kwargs, run_result",
+    "creation_kwargs",
     [
         (
             {
                 "jobName": "Test-Job-Name",
                 "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
                 "checkpointConfig": {"localPath": "test/local/path/"},
-            },
-            success_result(),
+            }
         ),
         (
             {
                 "jobName": "Test-Job-Name",
                 "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
                 "checkpointConfig": {},
-            },
-            success_result(),
+            }
         ),
         (
             {
                 "jobName": "Test-Job-Name",
                 "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
-            },
-            success_result(),
+            }
         ),
         (
             {
                 "jobName": "Test-Job-Name",
                 "algorithmSpecification": {},
-            },
-            success_result(),
-        ),
-        (
-            {
-                "jobName": "Test-Job-Name",
-                "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
-                "checkpointConfig": {"localPath": "test/local/path/"},
-            },
-            CompletedProcess(None, 0, None, None),
-        ),
-        (
-            {
-                "jobName": "Test-Job-Name",
-                "algorithmSpecification": {"containerImage": {"uri": "file://test-URI"}},
-                "checkpointConfig": {"localPath": "test/local/path/"},
-            },
-            Exception("Test Exception"),
+            }
         ),
     ],
 )
@@ -115,16 +90,16 @@ def test_create(
     mock_prepare_job,
     aws_session,
     creation_kwargs,
-    run_result,
     job_results,
+    run_log,
     test_envs,
 ):
     with patch("builtins.open", mock_open()) as file_open:
-        mock_dir.side_effect = [False, True]
+        mock_dir.return_value = False
         mock_prepare_job.return_value = creation_kwargs
 
         mock_container_open = mock_container.return_value.__enter__.return_value
-        mock_container_open.run_result = run_result
+        mock_container_open.run_log = run_log
         file_read = file_open()
         file_read.read.return_value = json.dumps(job_results)
         mock_setup.return_value = test_envs
@@ -146,47 +121,19 @@ def test_create(
         assert job.name == "Test-Job-Name"
         assert job.arn == "local:job/Test-Job-Name"
         assert job.state() == "COMPLETED"
+        assert job.run_log == run_log
         assert job.metadata() is None
         assert job.cancel() is None
         assert job.download_result() is None
         assert job.logs() is None
         assert job.result() == job_results["dataDictionary"]
-        mock_setup.assert_called_with(mock_container_open, aws_session, **creation_kwargs)
-        mock_container_open.run_local_job.assert_called_with(test_envs)
-        if isinstance(run_result, Exception):
-            assert file_read.write.call_count == 2
-            file_read.write.assert_called_with(run_result)
-        elif run_result.stdout or run_result.stderr:
-            assert file_read.write.call_count == 3
-            file_read.write.assert_any_call("Test Output")
-            file_read.write.assert_any_call("Test Error")
-        else:
-            file_read.write.assert_not_called()
-
-
-@patch("os.path.isdir")
-def test_run_log(mock_dir, run_log):
-    mock_dir.return_value = True
-    with patch("builtins.open", mock_open()) as file_open:
-        file_read = file_open()
-        file_read.read.return_value = run_log
-        job = LocalQuantumJob("local:job/Test-Job-Name")
-        assert job.run_log == run_log
         assert job.metrics() == {
             "Cost": [-4.034, -3.957],
             "iteration_number": [0.0, 1.0],
             "timestamp": [1633027264.5406773, 1633027288.6284382],
         }
-
-
-def test_parse_run_log(run_log):
-    job = LocalQuantumJob("local:job/Test-Job-Name", run_log)
-    assert job.run_log == run_log
-    assert job.metrics() == {
-        "Cost": [-4.034, -3.957],
-        "iteration_number": [0.0, 1.0],
-        "timestamp": [1633027264.5406773, 1633027288.6284382],
-    }
+        mock_setup.assert_called_with(mock_container_open, aws_session, **creation_kwargs)
+        mock_container_open.run_local_job.assert_called_with(test_envs)
 
 
 def test_create_invalid_arg():
