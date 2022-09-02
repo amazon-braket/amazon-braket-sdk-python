@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.29.2 (2022-08-25)
+
+### Bug Fixes and Other Changes
+
+ * Updating documentation and type hints.
+
 ## v1.29.1 (2022-08-18)
 
 ### Bug Fixes and Other Changes
