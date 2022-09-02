@@ -42,7 +42,7 @@ class Field:
     ) -> Field:
         """Creates a discretized version of the field,
         where time, value and pattern are rounded to the
-        closes multiple of their corresponding resolutions.
+        closest multiple of their corresponding resolutions.
 
         Args:
             time_resolution (Decimal): Time resolution

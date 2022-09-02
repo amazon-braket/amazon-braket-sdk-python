@@ -28,7 +28,7 @@ class Pattern:
 
     def discretize(self, resolution: Decimal) -> Pattern:
         """Creates a discretized version of the pattern,
-        where each value is rounded to the nearest multiple
+        where each value is rounded to the closest multiple
         of the resolution.
 
         Args:

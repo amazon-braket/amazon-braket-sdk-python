@@ -79,16 +79,17 @@ class DrivingField(Hamiltonian):
             DrivingField: A new discretized DrivingField.
         """
         driving_parameters = properties.rydberg.rydbergGlobal
+        time_resolution = driving_parameters.timeResolution
         discretized_amplitude = self.amplitude.discretize(
-            time_resolution=driving_parameters.timeResolution,
+            time_resolution=time_resolution,
             value_resolution=driving_parameters.rabiFrequencyResolution,
         )
         discretized_phase = self.phase.discretize(
-            time_resolution=driving_parameters.timeResolution,
+            time_resolution=time_resolution,
             value_resolution=driving_parameters.phaseResolution,
         )
         discretized_detuning = self.detuning.discretize(
-            time_resolution=driving_parameters.timeResolution,
+            time_resolution=time_resolution,
             value_resolution=driving_parameters.detuningResolution,
         )
         return DrivingField(
