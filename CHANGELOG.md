@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.29.3 (2022-09-05)
+
+### Bug Fixes and Other Changes
+
+ * making local jobs stream output.
+
 ## v1.29.2 (2022-08-25)
 
 ### Bug Fixes and Other Changes
