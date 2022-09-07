@@ -1,4 +1,4 @@
-# Amazon Braket Python SDK
+# Amazon Braket Python SDK Staging
 
 [![Latest Version](https://img.shields.io/pypi/v/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
@@ -6,6 +6,27 @@
 [![codecov](https://codecov.io/gh/aws/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/aws/amazon-braket-sdk-python)
 [![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-sdk-python.svg?logo=read-the-docs)](https://amazon-braket-sdk-python.readthedocs.io/en/latest/?badge=latest)
 [![Code Style: Black](https://img.shields.io/badge/code_style-black-000000.svg)](https://github.com/psf/black)
+
+## Staging Info
+
+This is the staging version of the Amazon Braket default simulator repository. There are two important
+branches in this repo. `public-main` is a mirror of `public/main` and syncs nightly. `main` shares a history
+with `public/main`, but is not necessarily up to date. On top of the public commits, `main` has a single
+commit, tagged `STAGING_SETUP`, which transforms the public repo into a staging version; this includes the
+README content you're reading now, convenience scripts in `staging-scripts/`, and staging testing dependency
+targets.
+
+#### Workflow:
+- use `remote-setup.sh` to set up public and staging remotes
+- use `create-feature-branch <feature-name>` to create a local and remote feature branch
+- branch a dev branch from your local feature branch
+- add commits to your dev branch, merging into the feature branch through PR
+- use `publish-branch.sh` to create a public version of your feature branch
+- create a dry-run PR from your feature branch into `public-main` in the staging repo
+- rename published branch and push to public
+- merge public PR into public main
+
+---
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
 
