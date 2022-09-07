@@ -52,3 +52,33 @@ def test_get_sorted(default_values, default_time_series):
     sorted_values = sorted(default_values)
     assert default_time_series.times() == [item[0] for item in sorted_values]
     assert default_time_series.values() == [item[1] for item in sorted_values]
+
+
+@pytest.mark.parametrize(
+    "time_res, expected_times",
+    [
+        # default_time_series: [(Decimal(0.3), Decimal(0.4), (300, 25.1327), (600, 15.1327), (2700, 25.1327))] # noqa
+        (Decimal(0.5), [Decimal("0.5"), Decimal("300"), Decimal("600"), Decimal("2700")]),
+        (Decimal(1), [Decimal("0"), Decimal("300"), Decimal("600"), Decimal("2700")]),
+        (Decimal(200), [Decimal("0"), Decimal("400"), Decimal("600"), Decimal("2800")]),
+        (Decimal(1000), [Decimal("0"), Decimal("1000"), Decimal("3000")]),
+    ],
+)
+def test_discretize_times(default_time_series, time_res, expected_times):
+    value_res = Decimal("1")
+    assert expected_times == default_time_series.discretize(time_res, value_res).times()
+
+
+@pytest.mark.parametrize(
+    "value_res, expected_values",
+    [
+        # default_time_series: [(Decimal(0.3), Decimal(0.4), (300, 25.1327), (600, 15.1327), (2700, 25.1327))] # noqa
+        (Decimal("0.1"), [Decimal("0.4"), Decimal("25.1"), Decimal("15.1"), Decimal("25.1")]),
+        (Decimal(1), [Decimal("0"), Decimal("25"), Decimal("15"), Decimal("25")]),
+        (Decimal(6), [Decimal("0"), Decimal("24"), Decimal("18"), Decimal("24")]),
+        (Decimal(100), [Decimal("0"), Decimal("0"), Decimal("0"), Decimal("0")]),
+    ],
+)
+def test_discretize_values(default_time_series, value_res, expected_values):
+    time_res = Decimal("0.1")
+    assert expected_values == default_time_series.discretize(time_res, value_res).values()

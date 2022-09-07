@@ -32,3 +32,14 @@ def test_iadd():
     hamiltonian = Hamiltonian([mocks[0]])
     hamiltonian += Hamiltonian([mocks[1], mocks[2], mocks[3]])
     assert hamiltonian.terms == mocks
+
+
+def test_discretize():
+    mocks = [Mock(), Mock(), Mock()]
+    mock_properties = Mock()
+    hamiltonian = Hamiltonian(mocks)
+    discretized_hamiltonian = hamiltonian.discretize(mock_properties)
+    for index in range(len(mocks)):
+        mocks[index].discretize.assert_called_with(mock_properties)
+        assert discretized_hamiltonian.terms[index] == mocks[index].discretize.return_value
+    assert hamiltonian is not discretized_hamiltonian

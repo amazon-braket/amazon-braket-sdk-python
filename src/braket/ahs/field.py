@@ -13,8 +13,10 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Optional
 
+from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.pattern import Pattern
 from braket.ahs.time_series import TimeSeries
 
@@ -31,3 +33,36 @@ class Field:
     @property
     def pattern(self) -> Optional[Pattern]:
         return self._pattern
+
+    def discretize(
+        self,
+        time_resolution: Decimal,
+        value_resolution: Decimal,
+        pattern_resolution: Optional[Decimal] = None,
+    ) -> Field:
+        """Creates a discretized version of the field,
+        where time, value and pattern are rounded to the
+        closest multiple of their corresponding resolutions.
+
+        Args:
+            time_resolution (Decimal): Time resolution
+            value_resolution (Decimal): Value resolution
+            pattern_resolution (Decimal or None): Pattern resolution
+
+        Returns:
+            Field: A new discretized field.
+
+        Raises:
+            ValueError: if pattern_res is None, but there is a Pattern
+        """
+        discretized_time_series = self.time_series.discretize(time_resolution, value_resolution)
+        if self.pattern is None:
+            discretized_pattern = None
+        else:
+            if pattern_resolution is None:
+                raise DiscretizationError(
+                    f"{self.pattern} is defined but has no pattern_resolution defined"
+                )
+            discretized_pattern = self.pattern.discretize(pattern_resolution)
+        discretized_field = Field(time_series=discretized_time_series, pattern=discretized_pattern)
+        return discretized_field

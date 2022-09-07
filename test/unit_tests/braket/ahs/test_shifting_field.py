@@ -63,6 +63,20 @@ def test_iadd_to_other(default_shifting_field):
     assert other.terms == expected
 
 
+def test_discretize():
+    magnitude_mock = Mock()
+    mock_properties = Mock()
+    field = ShiftingField(magnitude=magnitude_mock)
+    discretized_field = field.discretize(mock_properties)
+    magnitude_mock.discretize.assert_called_with(
+        time_resolution=mock_properties.rydberg.rydbergLocal.timeResolution,
+        value_resolution=mock_properties.rydberg.rydbergLocal.commonDetuningResolution,
+        pattern_resolution=mock_properties.rydberg.rydbergLocal.localDetuningResolution,
+    )
+    assert field is not discretized_field
+    assert discretized_field.magnitude == magnitude_mock.discretize.return_value
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_iadd_to_itself(default_shifting_field):
     default_shifting_field += Hamiltonian(Mock())

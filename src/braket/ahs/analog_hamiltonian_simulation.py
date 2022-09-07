@@ -19,6 +19,7 @@ from typing import Tuple
 
 import braket.ir.ahs as ir
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
+from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.shifting_field import ShiftingField
@@ -61,6 +62,37 @@ class AnalogHamiltonianSimulation:
             terms[term_type].append(term_ir)
         return ir.Hamiltonian(
             drivingFields=terms["driving_fields"], shiftingFields=terms["shifting_fields"]
+        )
+
+    def discretize(self, device) -> AnalogHamiltonianSimulation:
+        """Creates a new AnalogHamiltonianSimulation with all numerical values represented
+        as Decimal objects with fixed precision based on the capabilities of the device.
+
+        Args:
+            device (AwsDevice): The device for which to discretize the program.
+
+        Returns:
+            AnalogHamiltonianSimulation: A discretized version of this program.
+
+        Raises:
+            DiscretizeError: If unable to discretize the program.
+        """
+
+        required_action_schema = "braket.ir.ahs.program"
+        if (required_action_schema not in device.properties.action) or (
+            device.properties.action[required_action_schema].actionType != required_action_schema
+        ):
+            raise DiscretizationError(
+                f"AwsDevice {device} does not accept {required_action_schema} action schema."
+            )
+
+        properties = DiscretizationProperties(
+            device.properties.paradigm.lattice, device.properties.paradigm.rydberg
+        )
+        discretized_register = self.register.discretize(properties)
+        discretized_hamiltonian = self.hamiltonian.discretize(properties)
+        return AnalogHamiltonianSimulation(
+            register=discretized_register, hamiltonian=discretized_hamiltonian
         )
 
 

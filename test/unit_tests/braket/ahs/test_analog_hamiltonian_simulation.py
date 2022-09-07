@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import json
+from decimal import Decimal
 from unittest.mock import Mock
 
 import pytest
@@ -18,6 +20,7 @@ import pytest
 from braket.ahs.analog_hamiltonian_simulation import (
     AnalogHamiltonianSimulation,
     AtomArrangement,
+    DiscretizationError,
     DrivingField,
     ShiftingField,
     SiteType,
@@ -96,3 +99,80 @@ def test_to_ir_invalid_hamiltonian(register):
     hamiltonian.terms = [Mock()]
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
     ahs.to_ir()
+
+
+@pytest.mark.xfail(raises=DiscretizationError)
+def test_invalid_action():
+    action = Mock()
+    action.actionType = "not-a-valid-AHS-action"
+    device = Mock()
+    device.properties.action = {"braket.ir.ahs.program": action}
+
+    AnalogHamiltonianSimulation(register=Mock(), hamiltonian=Mock()).discretize(device)
+
+
+@pytest.mark.xfail(raises=DiscretizationError)
+def test_invalid_action_name():
+    action = Mock()
+    action.actionType = "braket.ir.ahs.program"
+    device = Mock()
+    device.properties.action = {"not-a-valid-AHS-action": action}
+
+    AnalogHamiltonianSimulation(register=Mock(), hamiltonian=Mock()).discretize(device)
+
+
+def test_discretize(register, driving_field, shifting_field):
+    hamiltonian = driving_field + shifting_field
+    ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
+
+    action = Mock()
+    action.actionType = "braket.ir.ahs.program"
+
+    device = Mock()
+    device.properties.action = {"braket.ir.ahs.program": action}
+
+    device.properties.paradigm.lattice.geometry.positionResolution = Decimal("1E-7")
+
+    device.properties.paradigm.rydberg.rydbergGlobal.timeResolution = Decimal("1E-9")
+    device.properties.paradigm.rydberg.rydbergGlobal.rabiFrequencyResolution = Decimal("400")
+    device.properties.paradigm.rydberg.rydbergGlobal.detuningResolution = Decimal("0.2")
+    device.properties.paradigm.rydberg.rydbergGlobal.phaseResolution = Decimal("5E-7")
+
+    device.properties.paradigm.rydberg.rydbergLocal.timeResolution = Decimal("1E-9")
+    device.properties.paradigm.rydberg.rydbergLocal.commonDetuningResolution = Decimal("2000.0")
+    device.properties.paradigm.rydberg.rydbergLocal.localDetuningResolution = Decimal("0.01")
+
+    discretized_ahs = ahs.discretize(device)
+    discretized_ir = discretized_ahs.to_ir()
+    discretized_json = json.loads(discretized_ir.json())
+    assert discretized_json["setup"]["atomArray"] == {
+        "filling": [1, 1, 1, 1, 1, 0, 0],
+        "sites": [
+            [0.0, 0.0],
+            [0.0, 3e-06],
+            [0.0, 6e-06],
+            [3e-06, 0.0],
+            [3e-06, 3e-06],
+            [3e-06, 3e-06],
+            [3e-06, 6e-06],
+        ],
+    }
+    assert discretized_json["hamiltonian"]["drivingFields"][0]["amplitude"] == {
+        "pattern": "uniform",
+        "sequence": {"times": [0.0, 3e-07, 2.7e-06, 3e-06], "values": [0, 25132800, 25132800, 0]},
+    }
+    assert discretized_json["hamiltonian"]["drivingFields"][0]["phase"] == {
+        "pattern": "uniform",
+        "sequence": {"times": [0.0, 3e-06], "values": [0.0, 0.0]},
+    }
+    assert discretized_json["hamiltonian"]["drivingFields"][0]["detuning"] == {
+        "pattern": "uniform",
+        "sequence": {
+            "times": [0.0, 3e-07, 2.7e-06, 3e-06],
+            "values": [-125664000.0, -125664000.0, 125664000.0, 125664000.0],
+        },
+    }
+    assert discretized_json["hamiltonian"]["shiftingFields"][0]["magnitude"] == {
+        "pattern": [0.5, 1.0, 0.5, 0.5, 0.5, 0.5],
+        "sequence": {"times": [0.0, 3e-06], "values": [-125664000.0, 125664000.0]},
+    }

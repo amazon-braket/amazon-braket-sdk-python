@@ -79,6 +79,34 @@ def test_iadd_to_other(default_driving_field):
     assert other.terms == expected
 
 
+def test_discretize():
+    amplitude_mock = Mock(spec=Field)
+    amplitude_mock.discretize.return_value = Mock(spec=Field)
+    phase_mock = Mock(spec=Field)
+    phase_mock.discretize.return_value = Mock(spec=Field)
+    detuning_mock = Mock(spec=Field)
+    detuning_mock.discretize.return_value = Mock(spec=Field)
+    mock_properties = Mock()
+    field = DrivingField(amplitude=amplitude_mock, phase=phase_mock, detuning=detuning_mock)
+    discretized_field = field.discretize(mock_properties)
+    amplitude_mock.discretize.assert_called_with(
+        time_resolution=mock_properties.rydberg.rydbergGlobal.timeResolution,
+        value_resolution=mock_properties.rydberg.rydbergGlobal.rabiFrequencyResolution,
+    )
+    phase_mock.discretize.assert_called_with(
+        time_resolution=mock_properties.rydberg.rydbergGlobal.timeResolution,
+        value_resolution=mock_properties.rydberg.rydbergGlobal.phaseResolution,
+    )
+    detuning_mock.discretize.assert_called_with(
+        time_resolution=mock_properties.rydberg.rydbergGlobal.timeResolution,
+        value_resolution=mock_properties.rydberg.rydbergGlobal.detuningResolution,
+    )
+    assert field is not discretized_field
+    assert discretized_field.amplitude == amplitude_mock.discretize.return_value
+    assert discretized_field.phase == phase_mock.discretize.return_value
+    assert discretized_field.detuning == detuning_mock.discretize.return_value
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_iadd_to_itself(default_driving_field):
     default_driving_field += Hamiltonian(Mock())
