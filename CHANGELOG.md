@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.29.4 (2022-09-08)
+
+### Bug Fixes and Other Changes
+
+ * Simultaneous measurement of identity on all qubits
+
 ## v1.29.3 (2022-09-05)
 
 ### Bug Fixes and Other Changes
