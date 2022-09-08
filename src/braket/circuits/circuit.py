@@ -346,7 +346,7 @@ class Circuit:
                     if current_target and current_target != new_targets:
                         return self._encounter_noncommuting_observable()
 
-        if not observable_target:
+        if not observable_target and observable != identity:
             if all_qubits_observable and all_qubits_observable != observable:
                 return self._encounter_noncommuting_observable()
             self._qubit_observable_mapping[Circuit._ALL_QUBITS] = observable

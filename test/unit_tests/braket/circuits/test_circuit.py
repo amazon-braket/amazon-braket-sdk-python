@@ -262,6 +262,17 @@ def test_add_result_type_observable_no_conflict_all():
     assert circ.result_types == expected
 
 
+def test_add_result_type_observable_no_conflict_all_identity():
+    expected = [
+        ResultType.Variance(observable=Observable.Y()),
+        ResultType.Expectation(observable=Observable.I()),
+        ResultType.Expectation(observable=Observable.Y()),
+    ]
+    circ = Circuit(expected)
+    assert circ.observables_simultaneously_measurable
+    assert circ.result_types == expected
+
+
 def test_add_result_type_observable_no_conflict_state_vector_obs_return_value():
     expected = [
         ResultType.StateVector(),
