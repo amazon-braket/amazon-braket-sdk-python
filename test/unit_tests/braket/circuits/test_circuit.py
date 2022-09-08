@@ -256,6 +256,7 @@ def test_add_result_type_observable_no_conflict_all():
     expected = [
         ResultType.Variance(observable=Observable.Y()),
         ResultType.Expectation(observable=Observable.Y()),
+        ResultType.Expectation(observable=Observable.I()),
     ]
     circ = Circuit(expected)
     assert circ.observables_simultaneously_measurable
