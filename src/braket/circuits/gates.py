@@ -2199,7 +2199,6 @@ def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, flo
     return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
 
 
-
 def _double_angled_ascii_characters(
     gate: str,
     angle_1: Union[FreeParameterExpression, float],
