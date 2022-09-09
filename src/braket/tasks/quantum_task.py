@@ -26,7 +26,10 @@ class QuantumTask(ABC):
     @property
     @abstractmethod
     def id(self) -> str:
-        """str: The task ID."""
+        """Get the task ID.
+        Returns:
+            str: The task ID.
+        """
 
     @abstractmethod
     def cancel(self) -> None:
@@ -34,7 +37,10 @@ class QuantumTask(ABC):
 
     @abstractmethod
     def state(self) -> str:
-        """str: State of the quantum task"""
+        """Get the state of the quantum task.
+        Returns:
+            str: State of the quantum task.
+        """
 
     @abstractmethod
     def result(
@@ -42,22 +48,27 @@ class QuantumTask(ABC):
     ) -> Union[
         GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
-        """
-        Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: Get the quantum task result.
-        Call async_result if you want the result in an asynchronous way.
+        """Get the quantum task result.
+        Returns:
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: # noqa
+            Get the quantum task result. Call async_result if you want the result in an
+            asynchronous way.
         """
 
     @abstractmethod
     def async_result(self) -> asyncio.Task:
-        """asyncio.Task: Get the quantum task result asynchronously."""
+        """Get the quantum task result asynchronously.
+        Returns:
+            Task: Get the quantum task result asynchronously.
+        """
 
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
         """
         Get task metadata.
 
         Args:
-            use_cached_value (bool, optional): If True, uses the value retrieved from the previous
-                request.
+            use_cached_value (bool): If True, uses the value retrieved from the previous
+                request. Default is False.
 
         Returns:
             Dict[str, Any]: The metadata regarding the task. If `use_cached_value` is True,

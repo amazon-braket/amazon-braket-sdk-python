@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Dict
+from typing import Dict, Union
 
 from sympy import Symbol
 
@@ -52,17 +52,17 @@ class FreeParameter(FreeParameterExpression):
         """
         return self._name.name
 
-    def subs(self, parameter_values: Dict[str, Number]):
+    def subs(self, parameter_values: Dict[str, Number]) -> Union[FreeParameter, Number]:
         """
         Substitutes a value in if the parameter exists within the mapping.
 
         Args:
             parameter_values (Dict[str, Number]): A mapping of parameter to its
-            corresponding value.
+                corresponding value.
 
-        Returns: The substituted value if this parameter is in parameter_values,
-            otherwise returns self
-
+        Returns:
+            Union[FreeParameter, Number]: The substituted value if this parameter is in
+            parameter_values, otherwise returns self
         """
         return parameter_values[self.name] if self.name in parameter_values else self
 
@@ -77,12 +77,12 @@ class FreeParameter(FreeParameterExpression):
             return self._name == other._name
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         The representation of the :class:'FreeParameter'.
 
         Returns:
-            The name of the class:'FreeParameter' to represent the class.
+            str: The name of the class:'FreeParameter' to represent the class.
         """
         return self.name
 

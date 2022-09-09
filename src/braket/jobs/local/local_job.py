@@ -51,9 +51,9 @@ class LocalQuantumJob(QuantumJob):
         local_container_update: bool = True,
     ) -> LocalQuantumJob:
         """Creates and runs job by setting up and running the customer script in a local
-         docker container.
+        docker container.
 
-         Args:
+        Args:
             device (str): ARN for the AWS device which is primarily accessed for the execution
                 of this job. Alternatively, a string of the format "local:<provider>/<simulator>"
                 for using a local simulator for the job. This string will be available as the
@@ -89,7 +89,7 @@ class LocalQuantumJob(QuantumJob):
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data (Union[str, S3DataSourceConfig, dict]): Information about the training
+            input_data (Union[str, Dict, S3DataSourceConfig]): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
                 f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -152,27 +152,20 @@ class LocalQuantumJob(QuantumJob):
             container.run_local_job(env_variables)
             container.copy_from("/opt/ml/model", job_name)
             with open(os.path.join(job_name, "log.txt"), "w") as log_file:
-                if isinstance(container.run_result, Exception):
-                    log_file.write("\n--- Errors ---\n")
-                    log_file.write(container.run_result)
-                else:
-                    if container.run_result.stdout:
-                        log_file.write(container.run_result.stdout.decode("utf-8").strip())
-                    if container.run_result.stderr:
-                        log_file.write("\n--- Errors ---\n")
-                        log_file.write(container.run_result.stderr.decode("utf-8").strip())
+                log_file.write(container.run_log)
             if "checkpointConfig" in create_job_kwargs:
                 checkpoint_config = create_job_kwargs["checkpointConfig"]
                 if "localPath" in checkpoint_config:
                     checkpoint_path = checkpoint_config["localPath"]
                     container.copy_from(checkpoint_path, os.path.join(job_name, "checkpoints"))
-        return LocalQuantumJob(f"local:job/{job_name}")
+            run_log = container.run_log
+        return LocalQuantumJob(f"local:job/{job_name}", run_log)
 
     def __init__(self, arn: str, run_log: str = None):
         """
         Args:
             arn (str): The ARN of the job.
-            run_log (str, Optional): The container output log of running the job with the given arn.
+            run_log (str): The container output log of running the job with the given arn.
         """
         if not arn.startswith("local:job/"):
             raise ValueError(f"Arn {arn} is not a valid local job arn")
@@ -194,7 +187,11 @@ class LocalQuantumJob(QuantumJob):
 
     @property
     def run_log(self) -> str:
-        """str:  The container output log from running the job."""
+        """Gets the run output log from running the job.
+
+        Returns:
+            str:  The container output log from running the job.
+        """
         if not self._run_log:
             try:
                 with open(os.path.join(self.name, "log.txt"), "r") as log_file:
@@ -204,24 +201,53 @@ class LocalQuantumJob(QuantumJob):
         return self._run_log
 
     def state(self, use_cached_value: bool = False) -> str:
-        """The state of the quantum job."""
+        """The state of the quantum job.
+        Args:
+            use_cached_value (bool): If `True`, uses the value most recently retrieved
+                value from the Amazon Braket `GetJob` operation. If `False`, calls the
+                `GetJob` operation to retrieve metadata, which also updates the cached
+                value. Default = `False`.
+        Returns:
+            str: Returns "COMPLETED".
+        """
         return "COMPLETED"
 
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
-        """When running the quantum job in local mode, the metadata is not available."""
+        """When running the quantum job in local mode, the metadata is not available.
+        Args:
+            use_cached_value (bool): If `True`, uses the value most recently retrieved
+                from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
+                `GetJob` is called to retrieve the metadata. If `False`, always calls
+                `GetJob`, which also updates the cached value. Default: `False`.
+        Returns:
+            Dict[str, Any]: None
+        """
         pass
 
     def cancel(self) -> str:
-        """When running the quantum job in local mode, the cancelling a running is not possible."""
+        """When running the quantum job in local mode, the cancelling a running is not possible.
+        Returns:
+            str: None
+        """
         pass
 
     def download_result(
         self,
-        extract_to=None,
+        extract_to: str = None,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
-        """When running the quantum job in local mode, results are automatically stored locally."""
+        """When running the quantum job in local mode, results are automatically stored locally.
+
+        Args:
+            extract_to (str): The directory to which the results are extracted. The results
+                are extracted to a folder titled with the job name within this directory.
+                Default= `Current working directory`.
+            poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
+                Default: 10 days.
+            poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
+                Default: 5 seconds.
+        """
         pass
 
     def result(
@@ -229,7 +255,17 @@ class LocalQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> Dict[str, Any]:
-        """Retrieves the job result persisted using save_job_result() function."""
+        """Retrieves the job result persisted using save_job_result() function.
+
+        Args:
+            poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
+                Default: 10 days.
+            poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
+                Default: 5 seconds.
+
+        Returns:
+            Dict[str, Any]: Dict specifying the job results.
+        """
         try:
             with open(os.path.join(self.name, "results.json"), "r") as f:
                 persisted_data = PersistedJobData.parse_raw(f.read())
@@ -246,22 +282,23 @@ class LocalQuantumJob(QuantumJob):
         statistic: MetricStatistic = MetricStatistic.MAX,
     ) -> Dict[str, List[Any]]:
         """Gets all the metrics data, where the keys are the column names, and the values are a list
-        containing the values in each row. For example, the table:
-            timestamp energy
-              0         0.1
-              1         0.2
-        would be represented as:
-        { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
-        values may be integers, floats, strings or None.
+        containing the values in each row.
 
         Args:
             metric_type (MetricType): The type of metrics to get. Default: MetricType.TIMESTAMP.
-
             statistic (MetricStatistic): The statistic to determine which metric value to use
                 when there is a conflict. Default: MetricStatistic.MAX.
 
+        Example:
+            timestamp energy
+              0         0.1
+              1         0.2
+            would be represented as:
+            { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
+            values may be integers, floats, strings or None.
+
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            Dict[str, List[Any]]: The metrics data.
         """
         parser = LogMetricsParser()
         current_time = str(time.time())
@@ -271,5 +308,13 @@ class LocalQuantumJob(QuantumJob):
         return parser.get_parsed_metrics(metric_type, statistic)
 
     def logs(self, wait: bool = False, poll_interval_seconds: int = 5) -> None:
-        """Display container logs for a given job"""
+        """Display container logs for a given job
+
+        Args:
+            wait (bool): `True` to keep looking for new log entries until the job completes;
+                otherwise `False`. Default: `False`.
+            poll_interval_seconds (int): The interval of time, in seconds, between polling for
+                new log entries and job completion (default: 5).
+
+        """
         return print(self.run_log)

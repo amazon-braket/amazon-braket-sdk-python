@@ -25,7 +25,8 @@ class Pricing:
     def __init__(self):
         self._price_list = []
 
-    def get_prices(self):
+    def get_prices(self) -> None:
+        """Retrieves the price list."""
         # Using AWS Pricing Bulk API. Format for the response is described at
         # https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/reading-an-offer.html
 
@@ -53,6 +54,10 @@ class Pricing:
 
     @lru_cache()
     def price_search(self, **kwargs) -> List[Dict[str, str]]:
+        """Searches the price list for a given set of parameters.
+        Returns:
+            List[Dict[str, str]]: The price list.
+        """
         if not self._price_list:
             self.get_prices()
         return [

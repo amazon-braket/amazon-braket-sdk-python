@@ -38,7 +38,7 @@ class _LocalJobContainer(object):
         The function "end_session" must be called when the container is no longer needed.
         Args:
             image_uri (str): The URI of the container image to run.
-            aws_session (AwsSession, Optional): AwsSession for connecting to AWS Services.
+            aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`
@@ -47,7 +47,7 @@ class _LocalJobContainer(object):
         """
         self._aws_session = aws_session or AwsSession()
         self.image_uri = image_uri
-        self.run_result = None
+        self.run_log = None
         self._container_name = None
         self._logger = logger
         self._force_update = force_update
@@ -69,7 +69,7 @@ class _LocalJobContainer(object):
 
         Args:
             environment_variables (Dict[str, str]): A dictionary of environment variables and
-             their values.
+                their values.
         Returns:
             List[str]: The list of parameters to use when running a job that will include the
             provided environment variables as part of the runtime.
@@ -89,7 +89,7 @@ class _LocalJobContainer(object):
             command(List[str]): The command to run.
 
         Returns:
-            (str): The UTF-8 encoded output of running the command.
+            str: The UTF-8 encoded output of running the command.
         """
         output = subprocess.check_output(command)
         return output.decode("utf-8").strip()
@@ -143,7 +143,7 @@ class _LocalJobContainer(object):
             force_update(bool): Do a docker pull, even if the image is local, in order to update.
 
         Returns:
-            (str): The name of the running container, which can be used to execute further commands.
+            str: The name of the running container, which can be used to execute further commands.
         """
         image_name = self._check_output_formatted(["docker", "images", "-q", image_uri])
         if not image_name:
@@ -225,12 +225,15 @@ class _LocalJobContainer(object):
             self._logger.error(output)
             raise e
 
-    def run_local_job(self, environment_variables: Dict[str, str]) -> None:
+    def run_local_job(
+        self,
+        environment_variables: Dict[str, str],
+    ) -> None:
         """Runs a Braket job in a local container.
 
         Args:
             environment_variables (Dict[str, str]): The environment variables to make available
-             as part of running the job.
+                as part of running the job.
         """
         start_program_name = self._check_output_formatted(
             ["docker", "exec", self._container_name, "printenv", "SAGEMAKER_PROGRAM"]
@@ -249,15 +252,30 @@ class _LocalJobContainer(object):
         command.append(start_program_name)
 
         try:
-            self.run_result = subprocess.run(command, capture_output=True)
-            if self.run_result.stdout:
-                print(self.run_result.stdout.decode("utf-8").strip())
-            if self.run_result.stderr:
-                self._logger.error(self.run_result.stderr.decode("utf-8").strip())
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.run_log = _stream_output(process)
         except Exception as e:
-            self.run_result = e
+            self.run_log = e
             self._logger.error(e)
 
-    def _end_session(self):
+    def _end_session(self) -> None:
         """Stops and removes the local container."""
         subprocess.run(["docker", "stop", self._container_name])
+
+
+def _stream_output(process: subprocess.Popen) -> str:
+    exit_code = None
+    run_log = ""
+
+    while exit_code is None:
+        stdout = process.stdout.readline().decode("utf-8")
+        print(stdout, end="")
+        run_log += stdout
+        exit_code = process.poll()
+
+    if exit_code != 0:
+        error_message = f"Process exited with code: {exit_code}"
+        print(error_message)
+        run_log += error_message
+
+    return run_log

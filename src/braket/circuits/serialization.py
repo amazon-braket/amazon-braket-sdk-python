@@ -45,6 +45,13 @@ class OpenQASMSerializationProperties:
     qubit_reference_type: QubitReferenceType = QubitReferenceType.VIRTUAL
 
     def format_target(self, target: int) -> str:
+        """Format a target qubit to the appropriate OpenQASM representation.
+        Args:
+            target (int): The target qubit.
+
+        Returns:
+            str: The OpenQASM representation of the target qubit.
+        """
         qubit_reference_format = (
             "q[{}]" if self.qubit_reference_type == QubitReferenceType.VIRTUAL else "${}"
         )

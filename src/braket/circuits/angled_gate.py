@@ -38,7 +38,7 @@ class AngledGate(Gate, Parameterizable):
         Args:
             angle (Union[FreeParameterExpression, float]): The angle of the gate in radians
                 or expression representation.
-            qubit_count (int, optional): The number of qubits that this gate interacts with.
+            qubit_count (Optional[int]): The number of qubits that this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -81,11 +81,7 @@ class AngledGate(Gate, Parameterizable):
         return self._parameters[0]
 
     def bind_values(self, **kwargs) -> AngledGate:
-        """
-        Takes in parameters and attempts to assign them to values.
-
-        Args:
-            **kwargs: The parameters that are being assigned.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             AngledGate: A new Gate of the same type with the requested parameters bound.

@@ -100,12 +100,18 @@ class Observable(QuantumOperator):
 
     @property
     def basis_rotation_gates(self) -> Tuple[Gate, ...]:
-        """Tuple[Gate]: Returns the basis rotation gates for this observable."""
+        """Returns the basis rotation gates for this observable.
+        Returns:
+            Tuple[Gate, ...]: The basis rotation gates for this observable.
+        """
         raise NotImplementedError
 
     @property
     def eigenvalues(self) -> np.ndarray:
-        """np.ndarray: Returns the eigenvalues of this observable."""
+        """Returns the eigenvalues of this observable.
+        Returns:
+            ndarray: The eigenvalues of this observable.
+        """
         raise NotImplementedError
 
     def eigenvalue(self, index: int) -> float:

@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import Any, List, Union
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -29,17 +29,20 @@ class Parameterizable(ABC):
     @property
     @abstractmethod
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameter expressions
-        or bound values. The order of the parameters is determined by the subclass.
+        """Get the parameters.
+
+        Returns:
+            List[Union[FreeParameterExpression, FreeParameter, float]]: The parameters associated
+            with the object, either unbound free parameter expressions or bound values. The order
+            of the parameters is determined by the subclass.
         """
 
     @abstractmethod
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> Any:
         """
         Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
-        Args:
-            **kwargs: The named parameters and the corresponding values.
+        Returns:
+            Any: The result object will depend on the implementation of the object being bound.
         """

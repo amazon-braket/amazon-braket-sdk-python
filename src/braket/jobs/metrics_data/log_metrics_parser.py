@@ -49,7 +49,7 @@ class LogMetricsParser(object):
         Args:
             current_value (Optional[Union[str, float, int]]): The current value.
 
-            new_value: (Union[str, float, int]) The new value.
+            new_value (Union[str, float, int]): The new value.
 
             statistic (MetricStatistic): The statistic to determine which value to use.
 
@@ -120,11 +120,11 @@ class LogMetricsParser(object):
             pivot (str): The name of the pivot column. Must be TIMESTAMP or ITERATION_NUMBER.
 
         Returns:
-            Tuple[Dict[str, List[Any]], Dict[Tuple[int, str], int]]:
-                The Dict[str, List[Any]] is the result table with all the metrics values initialized
-                    to None
-                The Dict[Tuple[int, str], int] is the list of pivot indices, where the value of a
-                    pivot column and node_id is mapped to a row index.
+            Tuple[Dict[str, List[Union[str, float, int]]], Dict[Tuple[int, str], int]]: Contains:
+            The Dict[str, List[Any]] is the result table with all the metrics values initialized
+            to None.
+            The Dict[Tuple[int, str], int] is the list of pivot indices, where the value of a
+            pivot column and node_id is mapped to a row index.
         """
         row_count = 0
         pivot_indices: dict[int, int] = {}
@@ -187,22 +187,24 @@ class LogMetricsParser(object):
     ) -> Dict[str, List[Union[str, float, int]]]:
         """
         Gets all the metrics data, where the keys are the column names and the values are a list
-        containing the values in each row. For example, the table:
-            timestamp energy
-              0         0.1
-              1         0.2
-        would be represented as:
-        { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
-        values may be integers, floats, strings or None.
+        containing the values in each row.
 
         Args:
             metric_type (MetricType): The type of metrics to get.
 
             statistic (MetricStatistic): The statistic to determine which metric value to use
-             when there is a conflict.
+                when there is a conflict.
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data.
+
+        Example:
+            timestamp energy
+              0         0.1
+              1         0.2
+            would be represented as:
+            { "timestamp" : [0, 1], "energy" : [0.1, 0.2] }
+            values may be integers, floats, strings or None.
         """
         if metric_type == MetricType.ITERATION_NUMBER:
             return self.get_metric_data_with_pivot(self.ITERATION_NUMBER, statistic)

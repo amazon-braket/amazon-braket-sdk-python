@@ -20,9 +20,11 @@ import sys
 # Support for reading logs
 #
 ##############################################################################
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from botocore.exceptions import ClientError
+
+from braket.aws.aws_session import AwsSession
 
 
 class ColorWrap(object):
@@ -55,7 +57,7 @@ class ColorWrap(object):
         else:
             print(s)
 
-    def _color_wrap(self, index, s):
+    def _color_wrap(self, index: int, s: str) -> None:
         """Prints the string in a color determined by the index.
 
         Args:
@@ -70,24 +72,23 @@ class ColorWrap(object):
 Position = collections.namedtuple("Position", ["timestamp", "skip"])
 
 
-def multi_stream_iter(aws_session, log_group, streams, positions):
+def multi_stream_iter(
+    aws_session: AwsSession, log_group: str, streams: List[str], positions: Dict[str, Position]
+) -> Tuple[int, Dict]:
     """Iterates over the available events coming from a set of log streams.
     Log streams are in a single log group interleaving the events from each stream,
     so they yield in timestamp order.
 
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
-
         log_group (str): The name of the log group.
-
-        streams (list of str): A list of the log stream names. The the stream number is
+        streams (List[str]): A list of the log stream names. The the stream number is
             the position of the stream in this list.
-
-        positions: (list of Positions): A list of (timestamp, skip) pairs which represent
+        positions (Dict[str, Position]): A list of (timestamp, skip) pairs which represent
             the last record read from each stream.
 
     Yields:
-        A tuple of (stream number, cloudwatch log event).
+        Tuple[int, Dict]: A tuple of (stream number, cloudwatch log event).
     """
     event_iters = [
         log_stream(aws_session, log_group, s, positions[s].timestamp, positions[s].skip)
@@ -109,27 +110,25 @@ def multi_stream_iter(aws_session, log_group, streams, positions):
             events[i] = None
 
 
-def log_stream(aws_session, log_group, stream_name, start_time=0, skip=0):
+def log_stream(
+    aws_session: AwsSession, log_group: str, stream_name: str, start_time: int = 0, skip: int = 0
+) -> Dict:
     """A generator for log items in a single stream.
     This yields all the items that are available at the current moment.
 
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
-
         log_group (str): The name of the log group.
-
         stream_name (str): The name of the specific stream.
-
         start_time (int): The time stamp value to start reading the logs from. Default: 0.
-
         skip (int): The number of log entries to skip at the start. Default: 0 (This is for
             when there are multiple entries at the same timestamp.)
 
     Yields:
-       Dict: A CloudWatch log event with the following key-value pairs:
-           'timestamp' (int): The time of the event.
-           'message' (str): The log event data.
-           'ingestionTime' (int): The time the event was ingested.
+        Dict: A CloudWatch log event with the following key-value pairs:
+        'timestamp' (int): The time of the event.
+        'message' (str): The log event data.
+        'ingestionTime' (int): The time the event was ingested.
     """
 
     next_token = None
@@ -157,7 +156,7 @@ def log_stream(aws_session, log_group, stream_name, start_time=0, skip=0):
 
 
 def flush_log_streams(
-    aws_session,
+    aws_session: AwsSession,
     log_group: str,
     stream_prefix: str,
     stream_names: List[str],
@@ -165,7 +164,7 @@ def flush_log_streams(
     stream_count: int,
     has_streams: bool,
     color_wrap: ColorWrap,
-):
+) -> bool:
     """Flushes log streams to stdout.
 
     Args:
@@ -176,7 +175,7 @@ def flush_log_streams(
             this list is the stream number. If incomplete, the function will check for remaining
             streams and mutate this list to add stream names when available, up to the
             `stream_count` limit.
-        positions: (dict of Positions): A dict mapping stream numbers to (timestamp, skip) pairs
+        positions (Dict[str, Position]): A dict mapping stream numbers to (timestamp, skip) pairs
             which represent the last record read from each stream. The function will update this
             list after being called to represent the new last record read from each stream.
         stream_count (int): The number of streams expected.
@@ -185,8 +184,8 @@ def flush_log_streams(
         color_wrap (ColorWrap): An instance of ColorWrap to potentially color-wrap print statements
             from different streams.
 
-    Yields:
-        A tuple of (stream number, cloudwatch log event).
+    Returns:
+        bool: Returns 'True' if any streams have been flushed.
     """
     if len(stream_names) < stream_count:
         # Log streams are created whenever a container starts writing to stdout/err,

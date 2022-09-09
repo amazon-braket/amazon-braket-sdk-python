@@ -55,7 +55,7 @@ def calculate_unitary(qubit_count: int, instructions: Iterable[Instruction]) -> 
 
     Returns:
         np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-            `instructions` as a unitary.
+        `instructions` as a unitary.
 
     Raises:
         TypeError: If `instructions` is not composed only of `Gate` instances,
@@ -100,7 +100,7 @@ def calculate_unitary_big_endian(
     Args:
         instructions (Iterable[Instruction]): The instructions for which the unitary matrix
             will be calculated.
-        qubits (QubitSet, optional): The actual qubits used by the instructions.
+        qubits (QubitSet): The actual qubits used by the instructions.
 
     Returns:
         np.ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the

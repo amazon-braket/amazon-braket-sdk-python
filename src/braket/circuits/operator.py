@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 
 class Operator(ABC):
@@ -20,15 +21,17 @@ class Operator(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        """str: The name of the operator."""
+        """The name of the operator.
+        Returns:
+            str: The name of the operator.
+        """
 
     @abstractmethod
-    def to_ir(self, *args, **kwargs):
+    def to_ir(self, *args, **kwargs) -> Any:
         """
         Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
 
-        Args:
-            *args: Positional arguments
-            **kwargs: Keyword arguments
+        Returns:
+            Any: The the canonical intermediate representation of the operator.
         """

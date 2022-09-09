@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.29.4 (2022-09-08)
+
+### Bug Fixes and Other Changes
+
+ * Simultaneous measurement of identity on all qubits
+
+## v1.29.3 (2022-09-05)
+
+### Bug Fixes and Other Changes
+
+ * making local jobs stream output.
+
+## v1.29.2 (2022-08-25)
+
+### Bug Fixes and Other Changes
+
+ * Updating documentation and type hints.
+
 ## v1.29.1 (2022-08-18)
 
 ### Bug Fixes and Other Changes
