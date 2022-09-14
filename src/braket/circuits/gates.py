@@ -2004,21 +2004,21 @@ def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, flo
     return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
 
 
-def get_angle(self: AngledGate, **kwargs) -> AngledGate:
+def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
     """
     Gets the angle with all values substituted in that are requested.
 
     Args:
-        self (AngledGate): The subclass of AngledGate for which the angle is being obtained.
+        gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
 
     Returns:
         AngledGate: A new gate of the type of the AngledGate originally used with all
         angles updated.
     """
     new_angle = (
-        self.angle.subs(kwargs) if isinstance(self.angle, FreeParameterExpression) else self.angle
+        gate.angle.subs(kwargs) if isinstance(gate.angle, FreeParameterExpression) else gate.angle
     )
-    return type(self)(angle=new_angle)
+    return type(gate)(angle=new_angle)
 
 
 def format_complex(number: complex) -> str:

@@ -190,7 +190,7 @@ class AwsSession(object):
             self.braket_client._client_config.user_agent = f"{existing_user_agent} {user_agent}"
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request, **kwargs) -> None:
+    def _add_cost_tracker_count_handler(request: Any, **kwargs) -> None:
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
