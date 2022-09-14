@@ -2022,7 +2022,7 @@ Gate.register_gate(GPi2)
 
 
 class MS(DoubleAngledGate):
-    """IonQ MS gate.
+    """IonQ Mølmer-Sørenson gate.
 
     Args:
         angle_1 (Union[FreeParameterExpression, float]): angle in radians.
