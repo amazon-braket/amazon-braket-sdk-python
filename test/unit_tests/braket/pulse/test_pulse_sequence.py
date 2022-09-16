@@ -68,22 +68,27 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         .set_phase(predefined_frame_1, -0.5)
         .shift_phase(predefined_frame_1, 0.1)
         .set_scale(predefined_frame_1, 0.25)
+        .capture_v0(predefined_frame_1)
         .delay([predefined_frame_1, predefined_frame_2], 2e-9)
         .delay(predefined_frame_1, 1e-6)
         .barrier([predefined_frame_1, predefined_frame_2])
+        .capture_v0(predefined_frame_2)
     )
     expected_str = "\n".join(
         [
             "OPENQASM 3.0;",
             "cal {",
+            "    bit[2] b;",
             "    set_frequency(3000000000.0, predefined_frame_1);",
             "    shift_frequency(1000000000.0, predefined_frame_1);",
             "    set_phase(-0.5, predefined_frame_1);",
             "    shift_phase(0.1, predefined_frame_1);",
             "    set_scale(0.25, predefined_frame_1);",
+            "    b[0] = capture_v0(predefined_frame_1);",
             "    delay[2.0ns] predefined_frame_1, predefined_frame_2;",
             "    delay[1000.0ns] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
+            "    b[1] = capture_v0(predefined_frame_2);",
             "}",
         ]
     )
