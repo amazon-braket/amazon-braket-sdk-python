@@ -18,6 +18,7 @@ import pytest
 from pydantic import BaseModel
 
 from braket.circuits import AngledGate, FreeParameter, FreeParameterExpression, Gate
+from braket.circuits.angled_gate import DoubleAngledGate
 
 
 @pytest.fixture
@@ -118,3 +119,42 @@ def test_np_float_angle_json():
     match = re.match(r'\{"target": \[0], "angle": (\d*\.?\d*)}', angled_gate_json)
     angle_value = float(match.group(1))
     assert angle_value == angled_gate.angle
+
+
+def test_double_angle_is_none():
+    with pytest.raises(ValueError, match="angles must not be None"):
+        DoubleAngledGate(qubit_count=1, ascii_symbols=["foo"], angle_1=None, angle_2=1)
+
+
+def test_double_angle_equality():
+    gate = DoubleAngledGate(angle_1=0.15, angle_2=3, qubit_count=1, ascii_symbols=["bar"])
+    equal_gate = DoubleAngledGate(angle_1=0.15, angle_2=3, qubit_count=1, ascii_symbols=["bar"])
+    other_gate = AngledGate(angle=0.3, qubit_count=1, ascii_symbols=["foo"])
+    non_gate = "non gate"
+
+    assert equal_gate == gate
+    assert equal_gate is not gate
+    assert gate != other_gate
+    assert gate != non_gate
+
+
+def test_double_angle_symbolic_equality():
+    symbol1 = FreeParameter("theta")
+    symbol2 = FreeParameter("phi")
+    symbol3 = FreeParameter("theta")
+    gate1 = DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"])
+    gate2 = DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"])
+    gate3 = DoubleAngledGate(angle_1=symbol3, angle_2=1, qubit_count=1, ascii_symbols=["bar"])
+    other_gate = DoubleAngledGate(angle_1=symbol2, angle_2=1, qubit_count=1, ascii_symbols=["foo"])
+
+    assert gate1 == gate2
+    assert gate1 == gate3
+    assert gate1 is not gate2
+    assert gate1 != other_gate
+
+
+def test_double_angle_repr():
+    assert (
+        repr(DoubleAngledGate(qubit_count=1, ascii_symbols=["foo"], angle_1=1, angle_2=2))
+        == "DoubleAngledGate('angles': (1.0, 2.0), 'qubit_count': 1)"
+    )
