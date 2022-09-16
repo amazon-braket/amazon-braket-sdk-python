@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.30.0 (2022-09-16)
+
+### Features
+
+ * IonQ native gates
+
 ## v1.29.4 (2022-09-08)
 
 ### Bug Fixes and Other Changes
