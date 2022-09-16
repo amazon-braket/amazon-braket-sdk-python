@@ -24,6 +24,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -31,8 +34,9 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@main
+        pip install --upgrade git+ssh://git@github.com/aws/amazon-braket-schemas-python-staging.git@feature/braket-pulse-public-main
         pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
+        pip install --upgrade git+ssh://git@github.com/openqasm/oqpy.git
         pip install -e .
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git
