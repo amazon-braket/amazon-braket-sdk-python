@@ -14,7 +14,7 @@ import base64
 import re
 import subprocess
 from logging import Logger, getLogger
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from typing import Dict, List
 
 from braket.aws.aws_session import AwsSession
