@@ -13,7 +13,15 @@
 
 import pytest
 
-from braket.pulse import Frame, Port, PulseSequence
+from braket.pulse import (
+    ArbitraryWaveform,
+    ConstantWaveform,
+    DragGaussianWaveform,
+    Frame,
+    GaussianWaveform,
+    Port,
+    PulseSequence,
+)
 
 
 @pytest.fixture
@@ -72,12 +80,29 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         .delay([predefined_frame_1, predefined_frame_2], 2e-9)
         .delay(predefined_frame_1, 1e-6)
         .barrier([predefined_frame_1, predefined_frame_2])
+        .play(predefined_frame_1, GaussianWaveform(length=1e-3, sigma=0.7, name="gauss_wf"))
+        .play(
+            predefined_frame_2,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, name="drag_gauss_wf"),
+        )
+        .play(
+            predefined_frame_1,
+            ConstantWaveform(length=4e-3, iq=complex(2, 0.3), name="constant_wf"),
+        )
+        .play(
+            predefined_frame_2,
+            ArbitraryWaveform([complex(1, 0.4), 0, 0.3, complex(0.1, 0.2)], name="arb_wf"),
+        )
         .capture_v0(predefined_frame_2)
     )
     expected_str = "\n".join(
         [
             "OPENQASM 3.0;",
             "cal {",
+            "    waveform gauss_wf = gaussian(1000000.0ns, 0.7, 1, true);",
+            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 0.4, 0.2, 1, true);",
+            "    waveform constant_wf = constant(4000000.0ns, 2.0 + 0.3im);",
+            "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] b;",
             "    set_frequency(predefined_frame_1, 3000000000.0);",
             "    shift_frequency(predefined_frame_1, 1000000000.0);",
@@ -88,6 +113,10 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
             "    delay[2.0ns] predefined_frame_1, predefined_frame_2;",
             "    delay[1000.0ns] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
+            "    play(predefined_frame_1, gauss_wf);",
+            "    play(predefined_frame_2, drag_gauss_wf);",
+            "    play(predefined_frame_1, constant_wf);",
+            "    play(predefined_frame_2, arb_wf);",
             "    b[1] = capture_v0(predefined_frame_2);",
             "}",
         ]

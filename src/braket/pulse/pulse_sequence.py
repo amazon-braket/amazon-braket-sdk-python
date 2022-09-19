@@ -21,6 +21,7 @@ from oqpy.vendor.openpulse.printer import dumps
 from oqpy.vendor.openqasm3.visitor import QASMTransformer
 
 from braket.pulse.frame import Frame
+from braket.pulse.waveforms import Waveform
 
 
 class PulseSequence:
@@ -132,6 +133,18 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         self._program.barrier(qubits=frames)
+        return self
+
+    def play(self, frame: Frame, waveform: Waveform) -> PulseSequence:
+        """
+        Adds an instruction to play the specified waveform on the supplied frame.
+
+        Args:
+            frame (Frame): Frame on which the specified waveform signal would be output.
+            waveform (Waveform): Waveform envelope specifying the signal to output on the
+                specified frame.
+        """
+        self._program.play(frame=frame, waveform=waveform)
         return self
 
     def capture_v0(self, frame: Frame) -> PulseSequence:
