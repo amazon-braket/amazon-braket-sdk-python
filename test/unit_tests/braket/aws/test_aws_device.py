@@ -779,7 +779,9 @@ def test_run_env_variables(aws_quantum_task_mock, device, circuit, arn):
 @patch("braket.aws.aws_session.boto3.Session")
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, circuit):
+def test_run_batch_no_extra(
+    aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, circuit
+):
     _run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
@@ -792,7 +794,12 @@ def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, boto_sessio
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_shots(
-    aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    device,
+    circuit,
+    s3_destination_folder,
 ):
     _run_batch_and_assert(
         aws_quantum_task_mock,
@@ -808,7 +815,12 @@ def test_run_batch_with_shots(
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_max_parallel_and_kwargs(
-    aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    device,
+    circuit,
+    s3_destination_folder,
 ):
     _run_batch_and_assert(
         aws_quantum_task_mock,
