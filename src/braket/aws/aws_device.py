@@ -13,10 +13,11 @@
 
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
@@ -28,9 +29,13 @@ from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
+from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
+    PulseDeviceActionProperties,
+)
 from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.pulse import Frame, Port, PulseSequence
 from braket.schema_common import BraketSchemaBase
 
 
@@ -79,10 +84,14 @@ class AwsDevice(Device):
         self._topology_graph = None
         self._type = None
         self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
+        self._ports = None
+        self._frames = None
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram],
+        task_specification: Union[
+            Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence
+        ],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
@@ -95,7 +104,7 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]):
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence]): # noqa
                 Specification of task (circuit or annealing problem or program) to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the task's results to. Default is `<default_bucket>/tasks` if evoked
@@ -160,7 +169,9 @@ class AwsDevice(Device):
 
     def run_batch(
         self,
-        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]],
+        task_specifications: List[
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence]
+        ],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         max_parallel: Optional[int] = None,
@@ -173,7 +184,7 @@ class AwsDevice(Device):
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]]):
+            task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence]]): # noqa
                 List of  circuits or annealing problems to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
@@ -275,6 +286,8 @@ class AwsDevice(Device):
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
         self._properties = metadata.get("deviceCapabilities")
+        self._frames = None
+        self._ports = None
 
     @property
     def type(self) -> str:
@@ -428,6 +441,20 @@ class AwsDevice(Device):
             return self.arn == other.arn
         return NotImplemented
 
+    @property
+    def frames(self) -> Dict[str, Frame]:
+        """Returns a Dict mapping frame ids to the frame objects for predefined frames
+        for this device."""
+        self._update_pulse_properties()
+        return self._frames or dict()
+
+    @property
+    def ports(self) -> Dict[str, Port]:
+        """Returns a Dict mapping port ids to the port objects for predefined ports
+        for this device."""
+        self._update_pulse_properties()
+        return self._ports or dict()
+
     @staticmethod
     def get_devices(
         arns: Optional[List[str]] = None,
@@ -507,6 +534,29 @@ class AwsDevice(Device):
         devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
+
+    def _update_pulse_properties(self) -> None:
+        if hasattr(self.properties, "pulse") and isinstance(
+            self.properties.pulse, PulseDeviceActionProperties
+        ):
+            if self._ports is None:
+                self._ports = dict()
+                port_data = self.properties.pulse.ports
+                for port_id, port in port_data.items():
+                    self._ports[port_id] = Port(port_id=port_id, properties=json.loads(port.json()))
+            if self._frames is None:
+                self._frames = dict()
+                frame_data = self.properties.pulse.frames
+                if frame_data:
+                    for frame_id, frame in frame_data.items():
+                        self._frames[frame_id] = Frame(
+                            frame_id=frame_id,
+                            port=self._ports[frame.portId],
+                            frequency=frame.frequency,
+                            phase=frame.phase,
+                            is_predefined=True,
+                            properties=json.loads(frame.json()),
+                        )
 
     @staticmethod
     def get_device_region(device_arn: str) -> str:
