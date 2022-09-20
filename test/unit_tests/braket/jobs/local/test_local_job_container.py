@@ -13,7 +13,7 @@
 
 import base64
 import subprocess
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from unittest.mock import Mock, patch
 
 import pytest
@@ -321,7 +321,7 @@ def test_copy_to(mock_run, mock_check_output, repo_uri, image_uri, aws_session):
     local_image_name = "LocalImageName"
     running_container_name = "RunningContainer"
     source_path = str(Path("test", "source", "dir", "path", "srcfile.txt"))
-    dest_path = str(Path("test", "dest", "dir", "path", "dstfile.txt"))
+    dest_path = str(PurePosixPath("test", "dest", "dir", "path", "dstfile.txt"))
     mock_check_output.side_effect = [
         str.encode(local_image_name),
         str.encode(running_container_name),
@@ -341,7 +341,7 @@ def test_copy_to(mock_run, mock_check_output, repo_uri, image_uri, aws_session):
             running_container_name,
             "mkdir",
             "-p",
-            str(Path("test", "dest", "dir", "path")),
+            str(PurePosixPath("test", "dest", "dir", "path")),
         ]
     )
     mock_check_output.assert_any_call(

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.30.1 (2022-09-20)
+
+### Bug Fixes and Other Changes
+
+ * update paths within docker image to posix
+
 ## v1.30.0 (2022-09-16)
 
 ### Features

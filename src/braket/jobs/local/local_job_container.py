@@ -14,7 +14,7 @@ import base64
 import re
 import subprocess
 from logging import Logger, getLogger
-from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Dict, List
 
 from braket.aws.aws_session import AwsSession
@@ -193,7 +193,7 @@ class _LocalJobContainer(object):
         Raises:
             subprocess.CalledProcessError: If unable to copy.
         """
-        dirname = str(Path(destination).parent)
+        dirname = str(PurePosixPath(destination).parent)
         try:
             subprocess.check_output(
                 ["docker", "exec", self._container_name, "mkdir", "-p", dirname]
