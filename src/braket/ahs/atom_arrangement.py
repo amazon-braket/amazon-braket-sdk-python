@@ -52,7 +52,7 @@ class AtomArrangement:
         Returns:
             AtomArrangement: returns self (to allow for chaining).
         """
-        self._sites.append(AtomArrangementItem(coord, site_type))
+        self._sites.append(AtomArrangementItem(tuple(coord), site_type))
         return self
 
     def coordinate_list(self, coordinate_index: Number) -> List[Number]:

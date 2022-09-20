@@ -13,6 +13,7 @@
 
 import json
 from decimal import Decimal
+import numpy as np
 from unittest.mock import Mock
 
 import pytest
@@ -176,3 +177,26 @@ def test_discretize(register, driving_field, shifting_field):
         "pattern": [0.5, 1.0, 0.5, 0.5, 0.5, 0.5],
         "sequence": {"times": [0.0, 3e-06], "values": [-125664000.0, 125664000.0]},
     }
+
+
+def test_converting_numpy_array_sites_to_ir(register, driving_field):
+    hamiltonian = driving_field
+
+    sites = np.array([
+        [0.0, 0.0],
+        [0.0, 1.0e-6],
+        [1e-6, 2.0e-6],
+    ])
+    register = AtomArrangement()
+    for site in sites:
+        register.add(site)
+
+    ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
+    sites_in_ir = ahs.to_ir().setup.atomArray.sites
+    expected_sites_in_ir = [
+        [Decimal("0.0"), Decimal("0.0")],
+        [Decimal("0.0"), Decimal("1e-6")],
+        [Decimal("1e-6"), Decimal("2e-6")],
+    ]
+
+    assert sites_in_ir == expected_sites_in_ir
