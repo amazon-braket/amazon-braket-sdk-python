@@ -316,6 +316,7 @@ def circuit(request):
 def aws_session():
     _boto_session = Mock()
     _boto_session.region_name = RIGETTI_REGION
+    _boto_session.profile_name = "test-profile"
 
     creds = Mock()
     creds.method = "other"
@@ -775,9 +776,12 @@ def test_run_env_variables(aws_quantum_task_mock, device, circuit, arn):
     assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 
 
+@patch("braket.aws.aws_session.boto3.Session")
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, device, circuit):
+def test_run_batch_no_extra(
+    aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, circuit
+):
     _run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
@@ -786,10 +790,16 @@ def test_run_batch_no_extra(aws_quantum_task_mock, aws_session_mock, device, cir
     )
 
 
+@patch("braket.aws.aws_session.boto3.Session")
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_shots(
-    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    device,
+    circuit,
+    s3_destination_folder,
 ):
     _run_batch_and_assert(
         aws_quantum_task_mock,
@@ -801,10 +811,16 @@ def test_run_batch_with_shots(
     )
 
 
+@patch("braket.aws.aws_session.boto3.Session")
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_with_max_parallel_and_kwargs(
-    aws_quantum_task_mock, aws_session_mock, device, circuit, s3_destination_folder
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    device,
+    circuit,
+    s3_destination_folder,
 ):
     _run_batch_and_assert(
         aws_quantum_task_mock,
@@ -819,12 +835,13 @@ def test_run_batch_with_max_parallel_and_kwargs(
     )
 
 
+@patch("braket.aws.aws_session.boto3.Session")
 @patch.dict(
     os.environ,
     {"AMZN_BRAKET_TASK_RESULTS_S3_URI": "s3://env_bucket/env/path"},
 )
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_batch_env_variables(aws_quantum_task_mock, device, circuit, arn):
+def test_run_batch_env_variables(aws_quantum_task_mock, boto_session_mock, device, circuit, arn):
     device(arn).run_batch([circuit])
     assert aws_quantum_task_mock.call_args_list[0][0][3] == ("env_bucket", "env/path")
 

@@ -797,9 +797,13 @@ class AwsSession(object):
                 aws_secret_access_key=creds.secret_key,
                 aws_session_token=creds.token,
                 region_name=new_region,
+                profile_name=self.boto_session.profile_name,
             )
         else:
-            boto_session = boto3.Session(region_name=new_region)
+            boto_session = boto3.Session(
+                region_name=new_region,
+                profile_name=self.boto_session.profile_name,
+            )
         copied_session = AwsSession(
             boto_session=boto_session, config=config, default_bucket=default_bucket
         )
