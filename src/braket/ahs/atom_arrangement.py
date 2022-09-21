@@ -13,11 +13,13 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import Iterator, List, Tuple
+from typing import Iterator, List, Tuple, Union
 
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 
@@ -41,18 +43,21 @@ class AtomArrangement:
         self._sites = []
 
     def add(
-        self, coord: Tuple[Number, Number], site_type: SiteType = SiteType.FILLED
+        self,
+        coord: Union[Tuple[Number, Number], np.ndarray],
+        site_type: SiteType = SiteType.FILLED
     ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
 
         Args:
-            coord (Tuple[Number, Number]): The coordinate of the atom (in meters). The coordinates
-                can be int, float or Decimal.
+            coord (Union[Tuple[Number, Number], np.ndarray]): The coordinate of the
+                atom (in meters). The coordinates can be a numpy array of shape (2,)
+                or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
         Returns:
             AtomArrangement: returns self (to allow for chaining).
         """
-        self._sites.append(AtomArrangementItem(coord, site_type))
+        self._sites.append(AtomArrangementItem(tuple(coord), site_type))
         return self
 
     def coordinate_list(self, coordinate_index: Number) -> List[Number]:
