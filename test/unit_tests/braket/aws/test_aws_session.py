@@ -38,6 +38,7 @@ TEST_S3_OBJ_CONTENTS = {
 def boto_session():
     _boto_session = Mock()
     _boto_session.region_name = "us-west-2"
+    _boto_session.profile_name = "test-profile"
     return _boto_session
 
 
@@ -65,6 +66,7 @@ def aws_session(boto_session, braket_client, account_id):
 def aws_explicit_session():
     _boto_session = Mock()
     _boto_session.region_name = "us-test-1"
+    _boto_session.profile_name = "test-profile"
 
     creds = Mock()
     creds.access_key = "access key"
@@ -1254,7 +1256,10 @@ def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock()
     aws_session.braket_client._client_config.user_agent = "foo/bar"
     copied_session = AwsSession.copy_session(aws_session, "us-west-2")
-    boto_session_init.assert_called_with(region_name="us-west-2")
+    boto_session_init.assert_called_with(
+        region_name="us-west-2",
+        profile_name="test-profile",
+    )
     assert copied_session.braket_client._client_config.user_agent == "foo/bar"
     assert copied_session._default_bucket is None
 
@@ -1268,6 +1273,7 @@ def test_copy_explicit_session(boto_session_init, aws_explicit_session):
         aws_secret_access_key="secret key",
         aws_session_token="token",
         region_name="us-west-2",
+        profile_name="test-profile",
     )
 
 
