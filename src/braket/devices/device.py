@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
@@ -33,7 +33,12 @@ class Device(ABC):
 
     @abstractmethod
     def run(
-        self, task_specification: Union[Circuit, Problem], shots: Optional[int], *args, **kwargs
+        self,
+        task_specification: Union[Circuit, Problem],
+        shots: Optional[int],
+        inputs: Optional[Dict[str, float]],
+        *args,
+        **kwargs
     ) -> QuantumTask:
         """Run a quantum task specification on this quantum device. A task can be a circuit
         or an annealing problem.
@@ -43,6 +48,9 @@ class Device(ABC):
                 to run on device.
             shots (Optional[int]): The number of times to run the task on the device.
                 Default is `None`.
+            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+                IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
+                Not all devices and IR formats support inputs. Default: {}.
 
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device

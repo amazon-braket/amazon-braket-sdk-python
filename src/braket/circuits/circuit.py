@@ -1149,12 +1149,14 @@ class Circuit:
                 qubit_target = serialization_properties.format_target(int(qubit))
                 ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
 
-        return OpenQasmProgram.construct(source="\n".join(ir_instructions))
+        return OpenQasmProgram.construct(source="\n".join(ir_instructions), inputs={})
 
     def _create_openqasm_header(
         self, serialization_properties: OpenQASMSerializationProperties
     ) -> List[str]:
         ir_instructions = ["OPENQASM 3.0;"]
+        for parameter in self.parameters:
+            ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
             ir_instructions.append(f"bit[{self.qubit_count}] b;")
 
