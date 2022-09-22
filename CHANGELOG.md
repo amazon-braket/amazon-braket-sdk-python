@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.30.2 (2022-09-22)
+
+### Bug Fixes and Other Changes
+
+ * copy profile name
+
 ## v1.30.1 (2022-09-20)
 
 ### Bug Fixes and Other Changes
