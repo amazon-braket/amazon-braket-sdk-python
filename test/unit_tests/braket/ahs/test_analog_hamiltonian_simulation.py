@@ -191,7 +191,7 @@ def test_converting_numpy_array_sites_to_ir(driving_field):
     register = AtomArrangement()
     for site in sites:
         register.add(site)
-    
+
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
     sites_in_ir = ahs.to_ir().setup.atomArray.sites
     expected_sites_in_ir = [
