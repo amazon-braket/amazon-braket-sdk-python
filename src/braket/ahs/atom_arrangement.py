@@ -52,7 +52,7 @@ class AtomArrangementItem:
        
     def _validate_site_type(self):
         allowed_site_types = {SiteType.FILLED, SiteType.VACANT}
-        if self.site_type not in {SiteType.FILLED, SiteType.VACANT}:
+        if self.site_type not in allowed_site_types:
             raise ValueError(
                     f"{self.site_type} must be one of {allowed_site_types}"
                 )
