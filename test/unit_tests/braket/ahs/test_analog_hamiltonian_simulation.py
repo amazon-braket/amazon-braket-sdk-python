@@ -26,6 +26,7 @@ from braket.ahs.analog_hamiltonian_simulation import (
     ShiftingField,
     SiteType,
 )
+from braket.ahs.atom_arrangement import AtomArrangementItem
 from braket.ahs.field import Field
 from braket.ahs.pattern import Pattern
 from braket.ahs.time_series import TimeSeries
@@ -179,7 +180,7 @@ def test_discretize(register, driving_field, shifting_field):
     }
 
 
-def test_converting_numpy_array_sites_to_ir(register, driving_field):
+def test_converting_numpy_array_sites_to_ir(driving_field):
     hamiltonian = driving_field
 
     sites = np.array([
@@ -190,7 +191,7 @@ def test_converting_numpy_array_sites_to_ir(register, driving_field):
     register = AtomArrangement()
     for site in sites:
         register.add(site)
-
+    
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
     sites_in_ir = ahs.to_ir().setup.atomArray.sites
     expected_sites_in_ir = [
@@ -200,3 +201,26 @@ def test_converting_numpy_array_sites_to_ir(register, driving_field):
     ]
 
     assert sites_in_ir == expected_sites_in_ir
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_site_validation_wrong_length():
+    register = AtomArrangement()
+    register.add(np.array([0.0, 1e-6, -1e-6]))
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_site_validation_non_number():
+    register = AtomArrangement()
+    register.add(['not-a-number', ['also-not-a-number', ]])
+
+
+@pytest.mark.xfail(raises=TypeError)
+def test_site_validation_not_a_tuple():
+    AtomArrangementItem(None, SiteType.FILLED)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_site_validation_invalid_site_type():
+    register = AtomArrangement()
+    register.add([0.0, 0.0], 'not-a-valid-site-type')
