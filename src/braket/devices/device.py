@@ -35,8 +35,8 @@ class Device(ABC):
     def run(
         self,
         task_specification: Union[Circuit, Problem],
-        shots: Optional[int] = 0,
-        inputs: Optional[Dict[str, float]] = None,
+        shots: Optional[int],
+        inputs: Optional[Dict[str, float]],
         *args,
         **kwargs
     ) -> QuantumTask:
