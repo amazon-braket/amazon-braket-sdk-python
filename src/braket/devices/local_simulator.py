@@ -173,7 +173,7 @@ def _(program: Program, simulator: BraketSimulator, shots: Optional[int] = None,
 
 @_run_internal.register
 def _(program: AnalogHamiltonianSimulation, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
-    # if DeviceActionType.OPENQASM not in simulator.properties.action:
-    #     raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-    results = simulator.run(program, shots, *args, **kwargs)
+    if DeviceActionType.AHS not in simulator.properties.action:
+        raise NotImplementedError(f"{type(simulator)} does not support analog Hamiltonian simulation programs")
+    results = simulator.run(program.to_ir(), shots, *args, **kwargs)
     return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
