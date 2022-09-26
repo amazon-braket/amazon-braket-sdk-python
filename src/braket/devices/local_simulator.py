@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from functools import singledispatch
-from typing import Optional, Set, Union
+from typing import Dict, Optional, Set, Union
 
 import pkg_resources
 
@@ -57,6 +57,7 @@ class LocalSimulator(Device):
         self,
         task_specification: Union[Circuit, Problem, Program],
         shots: int = 0,
+        inputs: Optional[Dict[str, float]] = None,
         *args,
         **kwargs,
     ) -> LocalQuantumTask:
@@ -68,6 +69,9 @@ class LocalSimulator(Device):
                 Default is 0, which means that the simulator will compute the exact
                 results based on the task specification.
                 Sampling is not supported for shots=0.
+            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+                IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
+                Default: {}.
 
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results
@@ -82,7 +86,7 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = _run_internal(task_specification, self._delegate, shots, *args, **kwargs)
+        result = _run_internal(task_specification, self._delegate, shots, inputs, *args, **kwargs)
         return LocalQuantumTask(result)
 
     @property
@@ -136,10 +140,18 @@ def _run_internal(
 
 
 @_run_internal.register
-def _(circuit: Circuit, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+def _(
+    circuit: Circuit,
+    simulator: BraketSimulator,
+    shots: Optional[int] = None,
+    inputs: Optional[Dict[str, float]] = None,
+    *args,
+    **kwargs,
+):
     if DeviceActionType.OPENQASM in simulator.properties.action:
         validate_circuit_and_shots(circuit, shots)
         program = circuit.to_ir(ir_type=IRType.OPENQASM)
+        program.inputs.update(inputs or {})
         results = simulator.run(program, shots, *args, **kwargs)
         return GateModelQuantumTaskResult.from_object(results)
     elif DeviceActionType.JAQCD in simulator.properties.action:
