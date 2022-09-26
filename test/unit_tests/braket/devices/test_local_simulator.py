@@ -18,7 +18,7 @@ import pytest
 
 import braket.ir as ir
 from braket.annealing import Problem, ProblemType
-from braket.circuits import Circuit
+from braket.circuits import Circuit, FreeParameter
 from braket.device_schema import DeviceCapabilities
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
@@ -87,7 +87,13 @@ ANNEALING_RESULT = AnnealingTaskResult(
 
 class DummyCircuitSimulator(BraketSimulator):
     def run(
-        self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
+        self,
+        program: ir.jaqcd.Program,
+        qubits: int,
+        shots: Optional[int],
+        inputs: Optional[Dict[str, float]],
+        *args,
+        **kwargs
     ) -> Dict[str, Any]:
         self._shots = shots
         self._qubits = qubits
@@ -249,6 +255,31 @@ def test_run_gate_model():
     dummy = DummyProgramSimulator()
     sim = LocalSimulator(dummy)
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_run_gate_model_inputs():
+    dummy = DummyProgramSimulator()
+    dummy.run = Mock(return_value=GATE_MODEL_RESULT)
+    sim = LocalSimulator(dummy)
+    circuit = Circuit().rx(0, FreeParameter("theta"))
+    task = sim.run(circuit, inputs={"theta": 2}, shots=10)
+    dummy.run.assert_called_with(
+        Program(
+            source="\n".join(
+                (
+                    "OPENQASM 3.0;",
+                    "input float theta;",
+                    "bit[1] b;",
+                    "qubit[1] q;",
+                    "rx(theta) q[0];",
+                    "b[0] = measure q[0];",
+                )
+            ),
+            inputs={"theta": 2},
+        ),
+        10,
+    )
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 

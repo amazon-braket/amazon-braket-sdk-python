@@ -659,7 +659,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "b[0] = measure q[0];",
                         "b[1] = measure q[1];",
                     ]
-                )
+                ),
+                inputs={},
             ),
         ),
         (
@@ -675,7 +676,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "b[0] = measure $0;",
                         "b[1] = measure $4;",
                     ]
-                )
+                ),
+                inputs={},
             ),
         ),
         (
@@ -695,7 +697,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "}",
                         "#pragma braket result expectation i all",
                     ]
-                )
+                ),
+                inputs={},
             ),
         ),
         (
@@ -715,7 +718,27 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "#pragma braket noise bit_flip(0.2) q[3]",
                         "#pragma braket result expectation i(q[0])",
                     ]
-                )
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().rx(0, 0.15).rx(1, FreeParameter("theta")),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "input float theta;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "rx(0.15) q[0];",
+                        "rx(theta) q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
             ),
         ),
     ],
