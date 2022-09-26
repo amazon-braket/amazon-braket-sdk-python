@@ -86,9 +86,7 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = _run_internal(
-            task_specification, self._delegate, shots, inputs, *args, **kwargs
-        )
+        result = _run_internal(task_specification, self._delegate, shots, inputs, *args, **kwargs)
         return LocalQuantumTask(result)
 
     @property
@@ -181,7 +179,7 @@ def _(
     shots: Optional[int] = None,
     inputs: Optional[Dict[str, float]] = None,
     *args,
-    **kwargs
+    **kwargs,
 ):
     if DeviceActionType.OPENQASM not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
