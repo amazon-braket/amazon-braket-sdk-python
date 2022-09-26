@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.31.0 (2022-09-26)
+
+### Features
+
+ * support inputs in the device interface
+
+### Bug Fixes and Other Changes
+
+ * add missing case for input handling
+ * don't provide profile name for default profile
+
 ## v1.30.2 (2022-09-22)
 
 ### Bug Fixes and Other Changes
