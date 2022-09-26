@@ -86,7 +86,9 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = _run_internal(task_specification, self._delegate, shots, inputs, *args, **kwargs)
+        result = _run_internal(
+            task_specification, self._delegate, shots, *args, inputs=inputs, **kwargs
+        )
         return LocalQuantumTask(result)
 
     @property
@@ -144,21 +146,21 @@ def _(
     circuit: Circuit,
     simulator: BraketSimulator,
     shots: Optional[int] = None,
+    *,
     inputs: Optional[Dict[str, float]] = None,
-    *args,
-    **kwargs,
+    batch_size: Optional[int] = 1,
 ):
     if DeviceActionType.OPENQASM in simulator.properties.action:
         validate_circuit_and_shots(circuit, shots)
         program = circuit.to_ir(ir_type=IRType.OPENQASM)
         program.inputs.update(inputs or {})
-        results = simulator.run(program, shots, *args, **kwargs)
+        results = simulator.run(program, shots, batch_size=batch_size)
         return GateModelQuantumTaskResult.from_object(results)
     elif DeviceActionType.JAQCD in simulator.properties.action:
         validate_circuit_and_shots(circuit, shots)
         program = circuit.to_ir(ir_type=IRType.JAQCD)
         qubits = circuit.qubit_count
-        results = simulator.run(program, qubits, shots, *args, **kwargs)
+        results = simulator.run(program, qubits, shots, batch_size=batch_size)
         return GateModelQuantumTaskResult.from_object(results)
     raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
@@ -173,8 +175,16 @@ def _(problem: Problem, simulator: BraketSimulator, shots: Optional[int] = None,
 
 
 @_run_internal.register
-def _(program: Program, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+def _(
+    program: Program,
+    simulator: BraketSimulator,
+    shots: Optional[int] = None,
+    *,
+    batch_size: Optional[int] = 1,
+    inputs: Optional[Dict[str, float]] = None,
+):
     if DeviceActionType.OPENQASM not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-    results = simulator.run(program, shots, *args, **kwargs)
+    program.inputs.update(inputs or {})
+    results = simulator.run(program, shots, batch_size=batch_size)
     return GateModelQuantumTaskResult.from_object(results)
