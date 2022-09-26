@@ -32,6 +32,7 @@ from braket.ir.jaqcd.shared_models import (
     SingleTarget,
     TwoDimensionalMatrix,
 )
+from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 
 testdata = [
     (Gate.H, "h", ir.H, [SingleTarget], {}),
@@ -748,6 +749,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket unitary([[1.0, 0], [0, 0.70710678 - 0.70710678im]]) q[4]",
         ),
+        (
+            Gate.PulseGate(
+                PulseSequence().play(
+                    Frame("user_frame", Port("device_port_x"), 1e9),
+                    ArbitraryWaveform([1, 2], "arb_wf"),
+                ),
+                1,
+            ),
+            [0],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "\n".join(["cal {", "    play(user_frame, arb_wf);", "}"]),
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
@@ -877,3 +890,14 @@ def test_unitary_matrix_target_size_mismatch():
     Circuit().unitary(
         matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
     )
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_pulse_gate_to_matrix():
+    Gate.PulseGate(
+        PulseSequence().play(
+            Frame("user_frame", Port("device_port_x"), 1e9),
+            ArbitraryWaveform([1, 2], "arb_wf"),
+        ),
+        1,
+    ).to_matrix()

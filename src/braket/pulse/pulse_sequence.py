@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import List, Union
+from typing import Any, Dict, List, Union
 
 from oqpy import BitVar, Program
 from oqpy.vendor.openpulse import ast
@@ -33,6 +33,9 @@ class PulseSequence:
     def __init__(self):
         self._capture_v0_count = 0
         self._program = Program()
+        # TODO: Remove once oqpy.Program exposes the frames and waveforms
+        self._frames = {}
+        self._waveforms = {}
 
     def set_frequency(self, frame: Frame, frequency: float) -> PulseSequence:
         """
@@ -45,7 +48,9 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
+        _validate_uniqueness(self._frames, frame)
         self._program.set_frequency(frame=frame, freq=frequency)
+        self._frames[frame.id] = frame
         return self
 
     def shift_frequency(self, frame: Frame, frequency: float) -> PulseSequence:
@@ -60,7 +65,9 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
+        _validate_uniqueness(self._frames, frame)
         self._program.shift_frequency(frame=frame, freq=frequency)
+        self._frames[frame.id] = frame
         return self
 
     def set_phase(self, frame: Frame, phase: float) -> PulseSequence:
@@ -74,7 +81,9 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
+        _validate_uniqueness(self._frames, frame)
         self._program.set_phase(frame=frame, phase=phase)
+        self._frames[frame.id] = frame
         return self
 
     def shift_phase(self, frame: Frame, phase: float) -> PulseSequence:
@@ -88,7 +97,9 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
+        _validate_uniqueness(self._frames, frame)
         self._program.shift_phase(frame=frame, phase=phase)
+        self._frames[frame.id] = frame
         return self
 
     def set_scale(self, frame: Frame, scale: float) -> PulseSequence:
@@ -102,7 +113,9 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
+        _validate_uniqueness(self._frames, frame)
         self._program.set_scale(frame=frame, scale=scale)
+        self._frames[frame.id] = frame
         return self
 
     def delay(self, frames: Union[Frame, List[Frame]], duration: float) -> PulseSequence:
@@ -118,7 +131,10 @@ class PulseSequence:
         """
         if not isinstance(frames, List):
             frames = [frames]
+        _validate_uniqueness(self._frames, frames)
         self._program.delay(time=duration, qubits=frames)
+        for frame in frames:
+            self._frames[frame.id] = frame
         return self
 
     def barrier(self, frames: List[Frame]) -> PulseSequence:
@@ -132,7 +148,10 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
+        _validate_uniqueness(self._frames, frames)
         self._program.barrier(qubits=frames)
+        for frame in frames:
+            self._frames[frame.id] = frame
         return self
 
     def play(self, frame: Frame, waveform: Waveform) -> PulseSequence:
@@ -144,7 +163,11 @@ class PulseSequence:
             waveform (Waveform): Waveform envelope specifying the signal to output on the
                 specified frame.
         """
+        _validate_uniqueness(self._frames, frame)
+        _validate_uniqueness(self._waveforms, waveform)
         self._program.play(frame=frame, waveform=waveform)
+        self._frames[frame.id] = frame
+        self._waveforms[waveform.id] = waveform
         return self
 
     def capture_v0(self, frame: Frame) -> PulseSequence:
@@ -158,15 +181,17 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
+        _validate_uniqueness(self._frames, frame)
         # TODO: Replace with the public method when available.
         self._program._add_function_statement("capture_v0", [frame])
         self._capture_v0_count += 1
+        self._frames[frame.id] = frame
         return self
 
     def to_ir(self) -> str:
         """Returns a str representing the OpenPulse program encoding the PulseSequence."""
         if self._capture_v0_count:
-            register_identifier = "b"
+            register_identifier = "psb"
             self._program.declare(
                 BitVar[self._capture_v0_count](ident=register_identifier), to_beginning=True
             )
@@ -175,6 +200,21 @@ class PulseSequence:
         else:
             tree = self._program.to_ast(encal=True, include_externs=False)
         return dumps(tree, indent="    ").strip()
+
+
+# TODO: Remove once oqpy introduces these validations.
+def _validate_uniqueness(
+    mapping: Dict[str, Any], values: Union[Frame, Waveform, List[Frame], List[Waveform]]
+):
+    if not isinstance(values, list):
+        values = [values]
+
+    for value in values:
+        if value.id in mapping and mapping[value.id] != value:
+            raise ValueError(
+                f"{value.id} has already been used for defining {mapping[value.id]} "
+                f"which differs from {value}"
+            )
 
 
 class _IRQASMTransformer(QASMTransformer):

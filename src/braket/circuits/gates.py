@@ -11,9 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from copy import deepcopy
 from typing import Any, Iterable, List, Union
 
 import numpy as np
+from oqpy import Program
 from sympy import Float
 
 import braket.ir.jaqcd as ir
@@ -29,6 +31,7 @@ from braket.circuits.quantum_operator_helpers import (
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import OpenQASMSerializationProperties
+from braket.pulse.pulse_sequence import PulseSequence
 
 """
 To add a new gate:
@@ -1987,6 +1990,64 @@ class Unitary(Gate):
 
 
 Gate.register_gate(Unitary)
+
+
+class PulseGate(Gate):
+    """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
+       within circuits.
+
+    Args:
+        pulse_sequence (PulseSequence): PulseSequence to embed within the circuit.
+        qubit_count (int): The number of qubits this pulse gate operates on.
+        display_name (str): Name to be used for an instance of this pulse gate
+            for circuit diagrams. Defaults to `PG`.
+    """
+
+    def __init__(self, pulse_sequence: PulseSequence, qubit_count: int, display_name: str = "PG"):
+        self.pulse_sequence = deepcopy(pulse_sequence)
+        super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+
+    def to_matrix(self) -> np.ndarray:
+        raise NotImplementedError("PulseGate does not support conversion to a matrix.")
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ) -> str:
+        new_program = Program(None)
+        new_program += self.pulse_sequence._program
+        # Suppress declaration of frame and waveform vars as they have already been declared
+        for v in list(new_program.undeclared_vars.values()):
+            new_program.mark_var_declared(v)
+        return new_program.to_qasm(include_externs=False, encal=True)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def pulse_gate(
+        targets: QubitSet, pulse_sequence: PulseSequence, display_name: str = "PG"
+    ) -> Instruction:
+        """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
+           within circuits.
+
+        Args:
+            targets (QubitSet): Target qubits. Note: These are only for representational purposes.
+                The actual targets are determined by the frames used in the pulse sequence.
+            pulse_sequence (PulseSequence): PulseSequence to embed within the circuit.
+            display_name (str): Name to be used for an instance of this pulse gate
+                for circuit diagrams. Defaults to `PG`.
+
+        Returns:
+            Instruction: Pulse gate instruction.
+
+        Examples:
+            >>> pulse_seq = PulseSequence().set_frequency(frame, frequency)....
+            >>> circ = Circuit().pulse_gate(pulse_sequence=pulse_seq, targets=[0])
+        """
+        return Instruction(
+            PulseGate(pulse_sequence, len(QubitSet(targets)), display_name), target=targets
+        )
+
+
+Gate.register_gate(PulseGate)
 
 
 def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, float]) -> str:

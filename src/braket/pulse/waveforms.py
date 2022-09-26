@@ -38,45 +38,56 @@ class ArbitraryWaveform(Waveform):
     """An arbitrary waveform with amplitudes at each timestep explicitly specified using
     an array."""
 
-    def __init__(self, amplitudes: List[complex], name: Optional[str] = None):
+    def __init__(self, amplitudes: List[complex], id: Optional[str] = None):
         """
         Args:
             amplitudes (List[complex]): Array of complex values specifying the
                 waveform amplitude at each timestep. The timestep is determined by the sampling rate
                 of the frame to which waveform is applied to.
-            name (Optional[str]): The name used for declaring this waveform. A random string of
+            id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.amplitudes = amplitudes
-        self.name = name or make_identifier_name()
+        self.id = id or make_identifier_name()
+
+    def __eq__(self, other):
+        return isinstance(other, ArbitraryWaveform) and (self.amplitudes, self.id) == (
+            other.amplitudes,
+            other.id,
+        )
 
     def to_oqpy_expression(self) -> OQPyExpression:
-        return WaveformVar(init_expression=self.amplitudes, ident=self.name)
+        return WaveformVar(init_expression=self.amplitudes, ident=self.id)
 
 
 class ConstantWaveform(Waveform):
     """A constant waveform which holds the supplied `iq` value as its amplitude for the
     specified length."""
 
-    def __init__(self, length: float, iq: complex, name: Optional[str] = None):
+    def __init__(self, length: float, iq: complex, id: Optional[str] = None):
         """
         Args:
             length (float): Value (in seconds) specifying the duration of the waveform.
             iq (complex): complex value specifying the amplitude of the waveform.
-            name (Optional[str]): The name used for declaring this waveform. A random string of
+            id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.length = length
         self.iq = iq
-        self.name = name or make_identifier_name()
+        self.id = id or make_identifier_name()
+
+    def __eq__(self, other):
+        return isinstance(other, ConstantWaveform) and (self.length, self.iq, self.id) == (
+            other.length,
+            other.iq,
+            other.id,
+        )
 
     def to_oqpy_expression(self) -> OQPyExpression:
         constant_generator = declare_waveform_generator(
             "constant", [("length", duration), ("iq", complex128)]
         )
-        return WaveformVar(
-            init_expression=constant_generator(self.length, self.iq), ident=self.name
-        )
+        return WaveformVar(init_expression=constant_generator(self.length, self.iq), ident=self.id)
 
 
 class DragGaussianWaveform(Waveform):
@@ -89,7 +100,7 @@ class DragGaussianWaveform(Waveform):
         beta: float,
         amplitude: float = 1,
         zero_at_edges: bool = True,
-        name: Optional[str] = None,
+        id: Optional[str] = None,
     ):
         """
         Args:
@@ -99,7 +110,7 @@ class DragGaussianWaveform(Waveform):
             amplitude (float): The amplitude of the waveform envelope. Defaults to 1.
             zero_at_edges (bool): bool specifying whether the waveform amplitude is clipped to
                 zero at the edges. Defaults to True.
-            name (Optional[str]): The name used for declaring this waveform. A random string of
+            id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.length = length
@@ -107,7 +118,17 @@ class DragGaussianWaveform(Waveform):
         self.beta = beta
         self.amplitude = amplitude
         self.zero_at_edges = zero_at_edges
-        self.name = name or make_identifier_name()
+        self.id = id or make_identifier_name()
+
+    def __eq__(self, other):
+        return isinstance(other, DragGaussianWaveform) and (
+            self.length,
+            self.sigma,
+            self.beta,
+            self.amplitude,
+            self.zero_at_edges,
+            self.id,
+        ) == (other.length, other.sigma, other.beta, other.amplitude, other.zero_at_edges, other.id)
 
     def to_oqpy_expression(self) -> OQPyExpression:
         drag_gaussian_generator = declare_waveform_generator(
@@ -124,7 +145,7 @@ class DragGaussianWaveform(Waveform):
             init_expression=drag_gaussian_generator(
                 self.length, self.sigma, self.beta, self.amplitude, self.zero_at_edges
             ),
-            ident=self.name,
+            ident=self.id,
         )
 
 
@@ -137,7 +158,7 @@ class GaussianWaveform(Waveform):
         sigma: float,
         amplitude: float = 1,
         zero_at_edges: bool = True,
-        name: Optional[str] = None,
+        id: Optional[str] = None,
     ):
         """
         Args:
@@ -146,14 +167,23 @@ class GaussianWaveform(Waveform):
             amplitude (float): The amplitude of the waveform envelope. Defaults to 1.
             zero_at_edges (bool): bool specifying whether the waveform amplitude is clipped to
                 zero at the edges. Defaults to True.
-            name (Optional[str]): The name used for declaring this waveform. A random string of
+            id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
         self.length = length
         self.sigma = sigma
         self.amplitude = amplitude
         self.zero_at_edges = zero_at_edges
-        self.name = name or make_identifier_name()
+        self.id = id or make_identifier_name()
+
+    def __eq__(self, other):
+        return isinstance(other, GaussianWaveform) and (
+            self.length,
+            self.sigma,
+            self.amplitude,
+            self.zero_at_edges,
+            self.id,
+        ) == (other.length, other.sigma, other.amplitude, other.zero_at_edges, other.id)
 
     def to_oqpy_expression(self) -> OQPyExpression:
         gaussian_generator = declare_waveform_generator(
@@ -169,5 +199,5 @@ class GaussianWaveform(Waveform):
             init_expression=gaussian_generator(
                 self.length, self.sigma, self.amplitude, self.zero_at_edges
             ),
-            ident=self.name,
+            ident=self.id,
         )
