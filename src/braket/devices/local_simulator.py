@@ -173,8 +173,17 @@ def _(problem: Problem, simulator: BraketSimulator, shots: Optional[int] = None,
 
 
 @_run_internal.register
-def _(program: Program, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+def _(
+    program: Program,
+    simulator: BraketSimulator,
+    shots: Optional[int] = None,
+    inputs: Optional[Dict[str, float]] = None,
+    *args,
+    **kwargs,
+):
     if DeviceActionType.OPENQASM not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
+    program.inputs = program.inputs or {}
+    program.inputs.update(inputs or {})
     results = simulator.run(program, shots, *args, **kwargs)
     return GateModelQuantumTaskResult.from_object(results)
