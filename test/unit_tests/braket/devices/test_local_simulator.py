@@ -279,6 +279,7 @@ def test_run_gate_model_inputs():
             inputs={"theta": 2},
         ),
         10,
+        batch_size=1,
     )
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
