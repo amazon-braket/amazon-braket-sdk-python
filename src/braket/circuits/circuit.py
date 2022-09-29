@@ -51,7 +51,7 @@ from braket.circuits.serialization import (
 from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.pulse.pulse_sequence import _validate_uniqueness
+from braket.pulse.pulse_sequence import _ast_to_qasm, _validate_uniqueness
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1197,7 +1197,8 @@ class Circuit:
                 program.declare(f.to_oqpy_expression())
             for wf in waveforms.values():
                 program.declare(wf.to_oqpy_expression())
-            return program.to_qasm(encal=True, include_externs=False)
+            ast = program.to_ast(encal=True, include_externs=False)
+            return _ast_to_qasm(ast)
         return None
 
     def as_unitary(self) -> np.ndarray:

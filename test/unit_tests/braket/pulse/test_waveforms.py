@@ -10,14 +10,15 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
-
+import math
 import re
 from copy import deepcopy
 
 from oqpy import Program
 
+from braket.circuits.free_parameter import FreeParameter
 from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
+from braket.pulse.pulse_sequence import _ast_to_qasm
 
 
 def test_arbitrary_waveform():
@@ -57,9 +58,7 @@ def test_constant_waveform():
     assert wf.iq == iq
     assert wf.id == id
 
-    p = Program(None)
-    p.declare(wf.to_oqpy_expression())
-    assert p.to_qasm(include_externs=False) == "waveform const_wf_x = constant(4000000.0ns, 4);"
+    _assert_wf_qasm(wf, "waveform const_wf_x = constant(4000000.0ns, 4);")
 
 
 def test_constant_waveform_default_params():
@@ -79,6 +78,23 @@ def test_constant_wf_eq():
         assert wf != wfc
 
 
+def test_constant_wf_free_params():
+    wf = ConstantWaveform(
+        FreeParameter("length_v") + FreeParameter("length_w"), iq=complex(2, -3), id="const_wf"
+    )
+    assert wf.parameters == [FreeParameter("length_v") + FreeParameter("length_w")]
+    _assert_wf_qasm(
+        wf,
+        "waveform const_wf = "
+        "constant((1000000000.0*length_v + 1000000000.0*length_w)ns, 2.0 - 3.0im);",
+    )
+
+    wf_2 = wf.bind_values(length_v=2e-6, length_w=4e-6)
+    assert len(wf_2.parameters) == 1
+    assert math.isclose(wf_2.parameters[0], 6e-6)
+    _assert_wf_qasm(wf_2, "waveform const_wf = constant(6000.0ns, 2.0 - 3.0im);")
+
+
 def test_drag_gaussian_waveform():
     length = 4e-9
     sigma = 0.3
@@ -94,12 +110,7 @@ def test_drag_gaussian_waveform():
     assert wf.sigma == sigma
     assert wf.length == length
 
-    p = Program(None)
-    p.declare(wf.to_oqpy_expression())
-    assert (
-        p.to_qasm(include_externs=False)
-        == "waveform drag_gauss_wf = drag_gaussian(4.0ns, 0.3, 0.6, 0.4, false);"
-    )
+    _assert_wf_qasm(wf, "waveform drag_gauss_wf = drag_gaussian(4.0ns, 0.3, 0.6, 0.4, false);")
 
 
 def test_drag_gaussian_waveform_default_params():
@@ -138,10 +149,45 @@ def test_gaussian_waveform():
     assert wf.sigma == sigma
     assert wf.length == length
 
-    p = Program(None)
-    p.declare(wf.to_oqpy_expression())
-    assert (
-        p.to_qasm(include_externs=False) == "waveform gauss_wf = gaussian(4.0ns, 0.3, 0.4, false);"
+    _assert_wf_qasm(wf, "waveform gauss_wf = gaussian(4.0ns, 0.3, 0.4, false);")
+
+
+def test_drag_gaussian_wf_free_params():
+    wf = DragGaussianWaveform(
+        FreeParameter("length_v"),
+        FreeParameter("sigma_a") + FreeParameter("sigma_b"),
+        FreeParameter("beta_y"),
+        FreeParameter("amp_z"),
+        id="d_gauss_wf",
+    )
+    assert wf.parameters == [
+        FreeParameter("length_v"),
+        FreeParameter("sigma_a") + FreeParameter("sigma_b"),
+        FreeParameter("beta_y"),
+        FreeParameter("amp_z"),
+    ]
+    _assert_wf_qasm(
+        wf,
+        "waveform d_gauss_wf = "
+        "drag_gaussian((1000000000.0*length_v)ns, sigma_a + sigma_b, beta_y, amp_z, true);",
+    )
+
+    wf_2 = wf.bind_values(length_v=0.6, sigma_a=0.4)
+    assert wf_2.parameters == [
+        0.6,
+        0.4 + FreeParameter("sigma_b"),
+        FreeParameter("beta_y"),
+        FreeParameter("amp_z"),
+    ]
+    _assert_wf_qasm(
+        wf_2,
+        "waveform d_gauss_wf = drag_gaussian(600000000.0ns, sigma_b + 0.4, beta_y, amp_z, true);",
+    )
+
+    wf_3 = wf.bind_values(length_v=0.6, sigma_a=0.3, sigma_b=0.1, beta_y=0.2, amp_z=0.1)
+    assert wf_3.parameters == [0.6, 0.4, 0.2, 0.1]
+    _assert_wf_qasm(
+        wf_3, "waveform d_gauss_wf = drag_gaussian(600000000.0ns, 0.4, 0.2, 0.1, true);"
     )
 
 
@@ -164,3 +210,31 @@ def test_gaussian_wf_eq():
         wfc = deepcopy(wf_2)
         setattr(wfc, att, "wrong_value")
         assert wf != wfc
+
+
+def test_gaussian_wf_free_params():
+    wf = GaussianWaveform(
+        FreeParameter("length_v"), FreeParameter("sigma_x"), FreeParameter("amp_z"), id="gauss_wf"
+    )
+    assert wf.parameters == [
+        FreeParameter("length_v"),
+        FreeParameter("sigma_x"),
+        FreeParameter("amp_z"),
+    ]
+    _assert_wf_qasm(
+        wf, "waveform gauss_wf = gaussian((1000000000.0*length_v)ns, sigma_x, amp_z, true);"
+    )
+
+    wf_2 = wf.bind_values(length_v=0.6, sigma_x=0.4)
+    assert wf_2.parameters == [0.6, 0.4, FreeParameter("amp_z")]
+    _assert_wf_qasm(wf_2, "waveform gauss_wf = gaussian(600000000.0ns, 0.4, amp_z, true);")
+
+    wf_3 = wf.bind_values(length_v=0.6, sigma_x=0.3, amp_z=0.1)
+    assert wf_3.parameters == [0.6, 0.3, 0.1]
+    _assert_wf_qasm(wf_3, "waveform gauss_wf = gaussian(600000000.0ns, 0.3, 0.1, true);")
+
+
+def _assert_wf_qasm(waveform, expected_qasm):
+    p = Program(None)
+    p.declare(waveform.to_oqpy_expression())
+    assert _ast_to_qasm(p.to_ast(include_externs=False)) == expected_qasm

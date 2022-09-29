@@ -2261,3 +2261,71 @@ def test_pulse_circuit_conflicting_frame(user_defined_frame):
                 qubit_reference_type=QubitReferenceType.PHYSICAL
             ),
         )
+
+
+def test_parametrized_pulse_circuit(user_defined_frame):
+    frequency_parameter = FreeParameter("frequency")
+    length = FreeParameter("length")
+    theta = FreeParameter("theta")
+    pulse_sequence = (
+        PulseSequence()
+        .set_frequency(user_defined_frame, frequency_parameter)
+        .play(user_defined_frame, GaussianWaveform(length=length, sigma=0.7, id="gauss_wf"))
+    )
+
+    circuit = (
+        Circuit().rx(angle=theta, target=0).pulse_gate(pulse_sequence=pulse_sequence, targets=1)
+    )
+
+    assert circuit.parameters == set([frequency_parameter, length, theta])
+
+    bound_half = circuit(theta=0.5, length=1e-5)
+    assert bound_half.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "bit[2] b;",
+            "cal {",
+            "    port device_port_x0;",
+            "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
+            "    waveform gauss_wf = gaussian(10000.0ns, 0.7, 1, true);",
+            "}",
+            "rx(0.5) $0;",
+            "cal {",
+            "    set_frequency(user_defined_frame_0, frequency);",
+            "    play(user_defined_frame_0, gauss_wf);",
+            "}",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
+        ]
+    )
+
+    bound = bound_half(frequency=1e7)
+
+    assert bound.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "bit[2] b;",
+            "cal {",
+            "    port device_port_x0;",
+            "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
+            "    waveform gauss_wf = gaussian(10000.0ns, 0.7, 1, true);",
+            "}",
+            "rx(0.5) $0;",
+            "cal {",
+            "    set_frequency(user_defined_frame_0, 10000000.0);",
+            "    play(user_defined_frame_0, gauss_wf);",
+            "}",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
+        ]
+    )

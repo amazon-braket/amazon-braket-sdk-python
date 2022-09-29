@@ -879,6 +879,46 @@ def test_bind_values(gate):
     )
 
 
+def test_bind_values_pulse_gate():
+    qubit_count = 1
+    frame = Frame("user_frame", Port("device_port_x"), 1e9)
+    gate = Gate.PulseGate(
+        PulseSequence()
+        .set_frequency(frame, FreeParameter("a") + FreeParameter("b"))
+        .delay(frame, FreeParameter("c")),
+        qubit_count,
+    )
+
+    def to_ir(pulse_gate):
+        return pulse_gate.to_ir(range(pulse_gate.qubit_count), IRType.OPENQASM)
+
+    a = 3
+    a_bound = gate.bind_values(a=a)
+    a_bound_ir = to_ir(a_bound)
+
+    assert a_bound_ir == "\n".join(
+        [
+            "cal {",
+            "    set_frequency(user_frame, b + 3);",
+            "    delay[(1000000000.0*c)ns] user_frame;",
+            "}",
+        ]
+    )
+
+    assert a_bound_ir == to_ir(
+        Gate.PulseGate(gate.pulse_sequence.make_bound_pulse_sequence({"a": a}), qubit_count)
+    )
+    assert a_bound_ir != to_ir(gate)
+
+    c = 4e-6
+    ac_bound = a_bound.bind_values(c=c)
+    ac_bound_ir = to_ir(ac_bound)
+    assert ac_bound_ir == to_ir(
+        Gate.PulseGate(a_bound.pulse_sequence.make_bound_pulse_sequence({"c": c}), qubit_count)
+    )
+    assert ac_bound_ir != a_bound_ir
+
+
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):

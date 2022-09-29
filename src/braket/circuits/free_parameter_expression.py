@@ -10,11 +10,13 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 from numbers import Number
-from typing import Dict, Union
+from typing import Any, Dict, Union
 
+from oqpy.vendor.openpulse import ast
 from sympy import Expr, sympify
 
 
@@ -137,3 +139,20 @@ class FreeParameterExpression:
             str: The expression of the class:'FreeParameterExpression' to represent the class.
         """
         return repr(self.expression)
+
+
+def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
+    return parameter.subs(kwargs) if isinstance(parameter, FreeParameterExpression) else parameter
+
+
+# TODO: Consider if this should live here.
+class FreeParameterExpressionIdentifier(ast.Identifier):
+    """Dummy AST node with FreeParameterExpression instance attached"""
+
+    def __init__(self, expression: FreeParameterExpression):
+        super().__init__(name=f"FreeParameterExpression({expression})")
+        self._expression = expression
+
+    @property
+    def expression(self) -> FreeParameterExpression:
+        return self._expression
