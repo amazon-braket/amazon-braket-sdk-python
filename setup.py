@@ -36,6 +36,7 @@ setup(
         "nest-asyncio",
         "networkx",
         "numpy",
+        "openqasm3",
         "sympy",
     ],
     extras_require={

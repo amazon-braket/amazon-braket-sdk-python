@@ -16,6 +16,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
+import numpy as np
 import sympy
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQDurationLiteral, OQPyExpression, make_identifier_name
@@ -44,6 +45,15 @@ class Waveform(ABC):
     def to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform."""
 
+    @abstractmethod
+    def sample(self, dt: float) -> np.ndarray:
+        """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+        Args:
+            dt (float): The time resolution.
+        Returns:
+            ndarray: The sample amplitudes for this waveform.
+        """
+
 
 class ArbitraryWaveform(Waveform):
     """An arbitrary waveform with amplitudes at each timestep explicitly specified using
@@ -68,7 +78,20 @@ class ArbitraryWaveform(Waveform):
         )
 
     def to_oqpy_expression(self) -> OQPyExpression:
+        """Returns an OQPyExpression defining this waveform.
+        Returns:
+            OQPyExpression: The OQPyExpression.
+        """
         return WaveformVar(init_expression=self.amplitudes, ident=self.id)
+
+    def sample(self, dt: float) -> np.ndarray:
+        """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+        Args:
+            dt (float): The time resolution.
+        Returns:
+            ndarray: The sample amplitudes for this waveform.
+        """
+        raise NotImplementedError
 
 
 class ConstantWaveform(Waveform, Parameterizable):
@@ -118,6 +141,10 @@ class ConstantWaveform(Waveform, Parameterizable):
         )
 
     def to_oqpy_expression(self) -> OQPyExpression:
+        """Returns an OQPyExpression defining this waveform.
+        Returns:
+            OQPyExpression: The OQPyExpression.
+        """
         constant_generator = declare_waveform_generator(
             "constant", [("length", duration), ("iq", complex128)]
         )
@@ -125,6 +152,18 @@ class ConstantWaveform(Waveform, Parameterizable):
             init_expression=constant_generator(_map_to_oqpy_type(self.length, True), self.iq),
             ident=self.id,
         )
+
+    def sample(self, dt: float) -> np.ndarray:
+        """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+        Args:
+            dt (float): The time resolution.
+        Returns:
+            ndarray: The sample amplitudes for this waveform.
+        """
+        # Amplitudes should be gated by [0:self.length]
+        sample_range = np.arange(0, self.length, dt)
+        samples = self.iq * np.ones_like(sample_range)
+        return samples
 
 
 class DragGaussianWaveform(Waveform, Parameterizable):
@@ -194,6 +233,10 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         ) == (other.length, other.sigma, other.beta, other.amplitude, other.zero_at_edges, other.id)
 
     def to_oqpy_expression(self) -> OQPyExpression:
+        """Returns an OQPyExpression defining this waveform.
+        Returns:
+            OQPyExpression: The OQPyExpression.
+        """
         drag_gaussian_generator = declare_waveform_generator(
             "drag_gaussian",
             [
@@ -214,6 +257,29 @@ class DragGaussianWaveform(Waveform, Parameterizable):
             ),
             ident=self.id,
         )
+
+    def sample(self, dt: float) -> np.ndarray:
+        """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+        Args:
+            dt (float): The time resolution.
+        Returns:
+            ndarray: The sample amplitudes for this waveform.
+        """
+        sample_range = np.arange(0, self.length, dt)
+        t0 = self.length / 2
+        zero_at_edges_int = int(self.zero_at_edges)
+        samples = (
+            (1 - (1.0j * self.beta * ((sample_range - t0) / self.sigma**2)))
+            * (
+                self.amplitude
+                / (1 - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2)))
+            )
+            * (
+                np.exp(-0.5 * (((sample_range - t0) / self.sigma) ** 2))
+                - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2))
+            )
+        )
+        return samples
 
 
 class GaussianWaveform(Waveform, Parameterizable):
@@ -278,6 +344,10 @@ class GaussianWaveform(Waveform, Parameterizable):
         ) == (other.length, other.sigma, other.amplitude, other.zero_at_edges, other.id)
 
     def to_oqpy_expression(self) -> OQPyExpression:
+        """Returns an OQPyExpression defining this waveform.
+        Returns:
+            OQPyExpression: The OQPyExpression.
+        """
         gaussian_generator = declare_waveform_generator(
             "gaussian",
             [
@@ -296,6 +366,25 @@ class GaussianWaveform(Waveform, Parameterizable):
             ),
             ident=self.id,
         )
+
+    def sample(self, dt: float) -> np.ndarray:
+        """Generates a sample of amplitudes for this Waveform based on the given time resolution.
+        Args:
+            dt (float): The time resolution.
+        Returns:
+            ndarray: The sample amplitudes for this waveform.
+        """
+        sample_range = np.arange(0, self.length, dt)
+        t0 = self.length / 2
+        zero_at_edges_int = int(self.zero_at_edges)
+        samples = (
+            self.amplitude
+            / (1 - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2)))
+        ) * (
+            np.exp(-0.5 * (((sample_range - t0) / self.sigma) ** 2))
+            - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2))
+        )
+        return samples
 
 
 # TODO: Reconcile handling of FreeParameterExpressionIdentifier and OQDurationLiteral in oqpy

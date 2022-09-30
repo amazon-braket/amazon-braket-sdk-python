@@ -32,6 +32,8 @@ from braket.circuits.free_parameter_expression import (
 )
 from braket.circuits.parameterizable import Parameterizable
 from braket.pulse.frame import Frame
+from braket.pulse.pulse_sequence_approximation import PulseSequenceApproximation
+from braket.pulse.pulse_sequence_program_parser import _PulseSequenceProgramParser
 from braket.pulse.waveforms import Waveform
 
 
@@ -48,6 +50,16 @@ class PulseSequence:
         self._frames = {}
         self._waveforms = {}
         self._free_parameters = set()
+
+    def generate_approximation(self) -> PulseSequenceApproximation:
+        """Generate an approximation of this PulseSequence.
+        Returns:
+            PulseSequenceApproximation: The approximation.
+        """
+        parser = _PulseSequenceProgramParser(self._program, self._frames)
+        return PulseSequenceApproximation(
+            amplitudes=parser.amplitudes, frequencies=parser.frequencies, phases=parser.phases
+        )
 
     @property
     def parameters(self) -> Set[FreeParameter]:

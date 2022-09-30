@@ -27,7 +27,7 @@ from braket.pulse import (
 
 @pytest.fixture
 def port():
-    return Port(port_id="device_port_x0", properties={})
+    return Port(port_id="device_port_x0", dt=1e-9, properties={})
 
 
 @pytest.fixture
@@ -58,7 +58,7 @@ def user_defined_frame(port):
 def conflicting_user_defined_frame():
     return Frame(
         frame_id="user_defined_frame_0",
-        port=Port("wrong_port"),
+        port=Port("wrong_port", dt=1e-9),
         frequency=1e7,
         phase=3.14,
         is_predefined=False,

@@ -20,7 +20,7 @@ from braket.pulse import Frame, Port
 
 @pytest.fixture
 def port():
-    return Port("test_port_ff")
+    return Port("test_port_ff", dt=1e-9)
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ def test_frame_equality(frame_id, port):
     f = Frame(frame_id, port, 1e4, 0.57)
     uneqs = [
         Frame("wrong_id", port, f.frequency, f.phase, {"foo": "bar"}),
-        Frame(f.id, Port("foo"), f.frequency, f.phase),
+        Frame(f.id, Port("foo", dt=1e-9), f.frequency, f.phase),
         Frame(f.id, f.port, 1e5, f.phase),
         Frame(f.id, f.port, f.frequency, 0.23),
     ]

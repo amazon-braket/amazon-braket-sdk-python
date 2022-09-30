@@ -23,20 +23,27 @@ class Port:
     a device. See https://openqasm.com/language/openpulse.html#ports for more details.
     """
 
-    def __init__(self, port_id: str, properties: Optional[Dict[str, Any]] = None):
+    def __init__(self, port_id: str, dt: float, properties: Optional[Dict[str, Any]] = None):
         """
         Args:
             port_id (str): str identifying a unique port on the device.
+            dt (float): The smallest time step that may be used on the control hardware.
             properties (Optional[Dict[str, Any]]): Dict containing properties of
                 this port. Defaults to None.
         """
         self._port_id = port_id
+        self._dt = dt
         self.properties = properties
 
     @property
     def id(self) -> str:
         """Returns a str indicating the port id."""
         return self._port_id
+
+    @property
+    def dt(self) -> float:
+        """Returns the smallest time step that may be used on the control hardware."""
+        return self._dt
 
     def __eq__(self, other) -> bool:
         return self.id == other.id if isinstance(other, Port) else False

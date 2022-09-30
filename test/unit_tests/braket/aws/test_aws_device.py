@@ -589,12 +589,14 @@ def test_device_pulse_metadata(pulse_device_capabilities):
     mock_session.get_device.return_value = get_pulse_model(pulse_device_capabilities)
     mock_session.region = RIGETTI_REGION
     device = AwsDevice("arn:aws:braket:us-west-1::TestName", mock_session)
-    assert device.ports == {"q0_ff": Port("q0_ff")}
+    assert device.ports == {"q0_ff": Port("q0_ff", 1e-9)}
     port = device.ports["q0_ff"]
     assert port.properties == pulse_device_capabilities["ports"]["q0_ff"]
     if "frames" in pulse_device_capabilities:
         assert device.frames == {
-            "q0_q1_cphase_frame": Frame("q0_q1_cphase_frame", Port("q0_ff"), 4276236.85736918, 1.0)
+            "q0_q1_cphase_frame": Frame(
+                "q0_q1_cphase_frame", Port("q0_ff", 1e-9), 4276236.85736918, 1.0
+            )
         }
         frame = device.frames["q0_q1_cphase_frame"]
         assert frame.is_predefined is True

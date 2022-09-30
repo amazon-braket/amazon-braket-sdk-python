@@ -752,7 +752,7 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
         (
             Gate.PulseGate(
                 PulseSequence().play(
-                    Frame("user_frame", Port("device_port_x"), 1e9),
+                    Frame("user_frame", Port("device_port_x", 1e-9), 1e9),
                     ArbitraryWaveform([1, 2], "arb_wf"),
                 ),
                 1,
@@ -881,7 +881,7 @@ def test_bind_values(gate):
 
 def test_bind_values_pulse_gate():
     qubit_count = 1
-    frame = Frame("user_frame", Port("device_port_x"), 1e9)
+    frame = Frame("user_frame", Port("device_port_x", 1e-9), 1e9)
     gate = Gate.PulseGate(
         PulseSequence()
         .set_frequency(frame, FreeParameter("a") + FreeParameter("b"))
@@ -922,7 +922,7 @@ def test_bind_values_pulse_gate():
 @pytest.mark.xfail(raises=ValueError)
 def test_pulse_gate_capture_throws():
     Circuit().pulse_gate(
-        0, PulseSequence().capture_v0(Frame("user_frame", Port("device_port_x"), 1e9))
+        0, PulseSequence().capture_v0(Frame("user_frame", Port("device_port_x", dt=1e-9), 1e9))
     )
 
 
@@ -943,7 +943,7 @@ def test_unitary_matrix_target_size_mismatch():
 def test_pulse_gate_to_matrix():
     Gate.PulseGate(
         PulseSequence().play(
-            Frame("user_frame", Port("device_port_x"), 1e9),
+            Frame("user_frame", Port("device_port_x", 1e-9), 1e9),
             ArbitraryWaveform([1, 2], "arb_wf"),
         ),
         1,

@@ -83,7 +83,7 @@ def bell_pair(prob):
 
 @pytest.fixture
 def port():
-    return Port(port_id="device_port_x0", properties={})
+    return Port(port_id="device_port_x0", dt=1e-9, properties={})
 
 
 @pytest.fixture
@@ -2229,7 +2229,7 @@ def test_pulse_circuit_conflicting_wf(predefined_frame_1, user_defined_frame):
 def test_pulse_circuit_conflicting_frame(user_defined_frame):
     user_defined_frame_x = Frame(
         user_defined_frame.id,
-        Port("wrong_port"),
+        Port("wrong_port", 1e-9),
         user_defined_frame.frequency,
         user_defined_frame.phase,
     )

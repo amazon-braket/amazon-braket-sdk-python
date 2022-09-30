@@ -543,7 +543,9 @@ class AwsDevice(Device):
                 self._ports = dict()
                 port_data = self.properties.pulse.ports
                 for port_id, port in port_data.items():
-                    self._ports[port_id] = Port(port_id=port_id, properties=json.loads(port.json()))
+                    self._ports[port_id] = Port(
+                        port_id=port_id, dt=port.dt, properties=json.loads(port.json())
+                    )
             if self._frames is None:
                 self._frames = dict()
                 frame_data = self.properties.pulse.frames

@@ -23,18 +23,24 @@ def port_id():
 
 
 @pytest.fixture
+def port_time_resolution():
+    return 1e-9
+
+
+@pytest.fixture
 def port_properties():
     return {"dt": 1e-6, "direction": "tx"}
 
 
 @pytest.fixture
-def port(port_id, port_properties):
-    return Port(port_id, port_properties)
+def port(port_id, port_time_resolution, port_properties):
+    return Port(port_id, port_time_resolution, port_properties)
 
 
-def test_port_no_properties(port_id):
-    port = Port(port_id)
+def test_port_no_properties(port_id, port_time_resolution):
+    port = Port(port_id, port_time_resolution)
     assert port.id == port_id
+    assert port.dt == port_time_resolution
     assert port.properties is None
 
 
@@ -43,10 +49,12 @@ def test_port_to_oqpy_expression(port, port_id):
     assert port.to_oqpy_expression() == expected_expression
 
 
-def test_port_equality(port):
-    p2 = Port(port.id)
-    p3 = Port("random_id", port.properties)
-    p4 = Port(port.id, {"random_property": "foo"})
+def test_port_equality(port, port_time_resolution):
+    p2 = Port(port.id, port_time_resolution)
+    p3 = Port("random_id", port_time_resolution, properties=port.properties)
+    p4 = Port(port.id, port_time_resolution, properties={"random_property": "foo"})
+    p5 = Port(port.id, 0)
     assert port == p2
     assert port == p4
+    assert port == p5
     assert port != p3
