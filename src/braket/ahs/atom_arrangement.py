@@ -13,13 +13,13 @@
 
 from __future__ import annotations
 
-import numpy as np
-
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
 from typing import Iterator, List, Tuple, Union
+
+import numpy as np
 
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 
@@ -35,26 +35,16 @@ class AtomArrangementItem:
     site_type: SiteType
 
     def _validate_coordinate(self):
-        if (self.coordinate != tuple(self.coordinate)):
-            raise TypeError(
-                f"{self.coordinate} must be a tuple of numbers"
-            )
         if len(self.coordinate) != 2:
-            raise ValueError(
-                f"{self.coordinate} must be of length 2"
-            )
+            raise ValueError(f"{self.coordinate} must be of length 2")
         for idx, num in enumerate(self.coordinate):
             if not isinstance(num, Number):
-                raise TypeError(
-                    f"{num} at position {idx} must be a number"
-                )
-       
+                raise TypeError(f"{num} at position {idx} must be a number")
+
     def _validate_site_type(self):
         allowed_site_types = {SiteType.FILLED, SiteType.VACANT}
         if self.site_type not in allowed_site_types:
-            raise ValueError(
-                    f"{self.site_type} must be one of {allowed_site_types}"
-                )
+            raise ValueError(f"{self.site_type} must be one of {allowed_site_types}")
 
     def __post_init__(self):
         self._validate_coordinate()
@@ -69,9 +59,7 @@ class AtomArrangement:
         self._sites = []
 
     def add(
-        self,
-        coord: Union[Tuple[Number, Number], np.ndarray],
-        site_type: SiteType = SiteType.FILLED
+        self, coord: Union[Tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED
     ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
 

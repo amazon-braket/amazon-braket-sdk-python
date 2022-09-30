@@ -46,11 +46,12 @@ class AnalogHamiltonianSimulation:
 
     def to_ir(self) -> ir.Program:
         return ir.Program(
-            setup=ir.Setup(atomArray=self._register_to_ir()), hamiltonian=self._hamiltonian_to_ir()
+            setup=ir.Setup(ahs_register=self._register_to_ir()),
+            hamiltonian=self._hamiltonian_to_ir(),
         )
 
-    def _register_to_ir(self) -> ir.AtomArray:
-        return ir.AtomArray(
+    def _register_to_ir(self) -> ir.AtomArrangement:
+        return ir.AtomArrangement(
             sites=[site.coordinate for site in self.register],
             filling=[1 if site.site_type == SiteType.FILLED else 0 for site in self.register],
         )
@@ -107,7 +108,7 @@ def _get_term_ir(
 def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
     return "shifting_fields", ir.ShiftingField(
         magnitude=ir.PhysicalField(
-            sequence=ir.Waveform(
+            time_series=ir.TimeSeries(
                 times=term.magnitude.time_series.times(),
                 values=term.magnitude.time_series.values(),
             ),
@@ -120,21 +121,21 @@ def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
 def _(term: DrivingField) -> Tuple[str, ir.DrivingField]:
     return "driving_fields", ir.DrivingField(
         amplitude=ir.PhysicalField(
-            sequence=ir.Waveform(
+            time_series=ir.TimeSeries(
                 times=term.amplitude.time_series.times(),
                 values=term.amplitude.time_series.values(),
             ),
             pattern="uniform",
         ),
         phase=ir.PhysicalField(
-            sequence=ir.Waveform(
+            time_series=ir.TimeSeries(
                 times=term.phase.time_series.times(),
                 values=term.phase.time_series.values(),
             ),
             pattern="uniform",
         ),
         detuning=ir.PhysicalField(
-            sequence=ir.Waveform(
+            time_series=ir.TimeSeries(
                 times=term.detuning.time_series.times(),
                 values=term.detuning.time_series.values(),
             ),

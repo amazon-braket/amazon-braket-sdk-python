@@ -111,5 +111,5 @@ def test_discretize(default_atom_arrangement, position_res, expected_x, expected
 
 @pytest.mark.xfail(raises=DiscretizationError)
 def test_invalid_discretization_properties(default_atom_arrangement):
-    properties = 'not-a-valid-discretization-property'
+    properties = "not-a-valid-discretization-property"
     default_atom_arrangement.discretize(properties)
