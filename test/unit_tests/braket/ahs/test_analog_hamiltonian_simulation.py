@@ -13,9 +13,9 @@
 
 import json
 from decimal import Decimal
-import numpy as np
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 
 from braket.ahs.analog_hamiltonian_simulation import (
@@ -147,53 +147,61 @@ def test_discretize(register, driving_field, shifting_field):
     discretized_ahs = ahs.discretize(device)
     discretized_ir = discretized_ahs.to_ir()
     discretized_json = json.loads(discretized_ir.json())
-    assert discretized_json["setup"]["atomArray"] == {
+    assert discretized_json["setup"]["ahs_register"] == {
         "filling": [1, 1, 1, 1, 1, 0, 0],
         "sites": [
-            [0.0, 0.0],
-            [0.0, 3e-06],
-            [0.0, 6e-06],
-            [3e-06, 0.0],
-            [3e-06, 3e-06],
-            [3e-06, 3e-06],
-            [3e-06, 6e-06],
+            ["0E-7", "0E-7"],
+            ["0E-7", "0.0000030"],
+            ["0E-7", "0.0000060"],
+            ["0.0000030", "0E-7"],
+            ["0.0000030", "0.0000030"],
+            ["0.0000030", "0.0000030"],
+            ["0.0000030", "0.0000060"],
         ],
     }
     assert discretized_json["hamiltonian"]["drivingFields"][0]["amplitude"] == {
         "pattern": "uniform",
-        "sequence": {"times": [0.0, 3e-07, 2.7e-06, 3e-06], "values": [0, 25132800, 25132800, 0]},
+        "time_series": {
+            "times": ["0E-9", "3.00E-7", "0.000002700", "0.000003000"],
+            "values": ["0", "25132800", "25132800", "0"],
+        },
     }
     assert discretized_json["hamiltonian"]["drivingFields"][0]["phase"] == {
         "pattern": "uniform",
-        "sequence": {"times": [0.0, 3e-06], "values": [0.0, 0.0]},
+        "time_series": {"times": ["0E-9", "0.000003000"], "values": ["0E-7", "0E-7"]},
     }
     assert discretized_json["hamiltonian"]["drivingFields"][0]["detuning"] == {
         "pattern": "uniform",
-        "sequence": {
-            "times": [0.0, 3e-07, 2.7e-06, 3e-06],
-            "values": [-125664000.0, -125664000.0, 125664000.0, 125664000.0],
+        "time_series": {
+            "times": ["0E-9", "3.00E-7", "0.000002700", "0.000003000"],
+            "values": ["-125664000.0", "-125664000.0", "125664000.0", "125664000.0"],
         },
     }
     assert discretized_json["hamiltonian"]["shiftingFields"][0]["magnitude"] == {
-        "pattern": [0.5, 1.0, 0.5, 0.5, 0.5, 0.5],
-        "sequence": {"times": [0.0, 3e-06], "values": [-125664000.0, 125664000.0]},
+        "pattern": ["0.50", "1.00", "0.50", "0.50", "0.50", "0.50"],
+        "time_series": {
+            "times": ["0E-9", "0.000003000"],
+            "values": ["-125664000.0", "125664000.0"],
+        },
     }
 
 
 def test_converting_numpy_array_sites_to_ir(driving_field):
     hamiltonian = driving_field
 
-    sites = np.array([
-        [0.0, 0.0],
-        [0.0, 1.0e-6],
-        [1e-6, 2.0e-6],
-    ])
+    sites = np.array(
+        [
+            [0.0, 0.0],
+            [0.0, 1.0e-6],
+            [1e-6, 2.0e-6],
+        ]
+    )
     register = AtomArrangement()
     for site in sites:
         register.add(site)
 
     ahs = AnalogHamiltonianSimulation(register=register, hamiltonian=hamiltonian)
-    sites_in_ir = ahs.to_ir().setup.atomArray.sites
+    sites_in_ir = ahs.to_ir().setup.ahs_register.sites
     expected_sites_in_ir = [
         [Decimal("0.0"), Decimal("0.0")],
         [Decimal("0.0"), Decimal("1e-6")],
@@ -212,7 +220,14 @@ def test_site_validation_wrong_length():
 @pytest.mark.xfail(raises=TypeError)
 def test_site_validation_non_number():
     register = AtomArrangement()
-    register.add(['not-a-number', ['also-not-a-number', ]])
+    register.add(
+        [
+            "not-a-number",
+            [
+                "also-not-a-number",
+            ],
+        ]
+    )
 
 
 @pytest.mark.xfail(raises=TypeError)
@@ -223,4 +238,4 @@ def test_site_validation_not_a_tuple():
 @pytest.mark.xfail(raises=ValueError)
 def test_site_validation_invalid_site_type():
     register = AtomArrangement()
-    register.add([0.0, 0.0], 'not-a-valid-site-type')
+    register.add([0.0, 0.0], "not-a-valid-site-type")
