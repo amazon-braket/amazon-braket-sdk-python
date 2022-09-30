@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from functools import singledispatch
+from multiprocessing.sharedctypes import Value
 from typing import Dict, Optional, Set, Union
 
 import pkg_resources
@@ -193,8 +194,17 @@ def _(
 
 
 @_run_internal.register
-def _(program: AnalogHamiltonianSimulation, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+def _(
+    program: AnalogHamiltonianSimulation, 
+    simulator: BraketSimulator, 
+    shots: Optional[int] = None, 
+    inputs: Optional[Dict[str, float]] = None, 
+    *args, 
+    **kwargs
+):
     if DeviceActionType.AHS not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support analog Hamiltonian simulation programs")
+    if inputs is not None:
+        raise ValueError(f"{type(simulator)} should have `inputs` as `None`")
     results = simulator.run(program.to_ir(), shots, *args, **kwargs)
     return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
