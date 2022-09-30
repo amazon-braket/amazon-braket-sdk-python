@@ -2008,6 +2008,11 @@ class PulseGate(Gate, Parameterizable):
     """
 
     def __init__(self, pulse_sequence: PulseSequence, qubit_count: int, display_name: str = "PG"):
+        if pulse_sequence._capture_v0_count > 0:
+            raise ValueError(
+                "The supplied pulse sequence contains capture instructions which "
+                "can not be embedded in a PulseGate."
+            )
         self._pulse_sequence = deepcopy(pulse_sequence)
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 

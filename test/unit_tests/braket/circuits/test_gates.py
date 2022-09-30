@@ -920,6 +920,13 @@ def test_bind_values_pulse_gate():
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_pulse_gate_capture_throws():
+    Circuit().pulse_gate(
+        0, PulseSequence().capture_v0(Frame("user_frame", Port("device_port_x"), 1e9))
+    )
+
+
+@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):
     Gate.Unitary(matrix=matrix)
