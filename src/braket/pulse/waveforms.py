@@ -143,7 +143,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds)
                 specifying the duration of the waveform.
-            sigma (Union[float, FreeParameterExpression]): A measure of
+            sigma (Union[float, FreeParameterExpression]): A measure (in seconds) of
                 how wide or narrow the Gaussian peak is.
             beta (Union[float, FreeParameterExpression]): The correction amplitude.
             amplitude (Union[float, FreeParameterExpression]): The amplitude of the
@@ -198,7 +198,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
             "drag_gaussian",
             [
                 ("length", duration),
-                ("sigma", float64),
+                ("sigma", duration),
                 ("beta", float64),
                 ("amplitude", float64),
                 ("zero_at_edges", bool_),
@@ -207,7 +207,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         return WaveformVar(
             init_expression=drag_gaussian_generator(
                 _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma),
+                _map_to_oqpy_type(self.sigma, True),
                 _map_to_oqpy_type(self.beta),
                 _map_to_oqpy_type(self.amplitude),
                 self.zero_at_edges,
@@ -231,8 +231,8 @@ class GaussianWaveform(Waveform, Parameterizable):
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds) specifying the
                 duration of the waveform.
-            sigma (Union[float, FreeParameterExpression]): A measure of how wide or narrow
-                the Gaussian peak is.
+            sigma (Union[float, FreeParameterExpression]): A measure (in seconds) of how wide
+                or narrow the Gaussian peak is.
             amplitude (Union[float, FreeParameterExpression]): The amplitude of the waveform
                 envelope. Defaults to 1.
             zero_at_edges (bool): bool specifying whether the waveform amplitude is clipped to
@@ -282,7 +282,7 @@ class GaussianWaveform(Waveform, Parameterizable):
             "gaussian",
             [
                 ("length", duration),
-                ("sigma", float64),
+                ("sigma", duration),
                 ("amplitude", float64),
                 ("zero_at_edges", bool_),
             ],
@@ -290,7 +290,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         return WaveformVar(
             init_expression=gaussian_generator(
                 _map_to_oqpy_type(self.length, True),
-                _map_to_oqpy_type(self.sigma),
+                _map_to_oqpy_type(self.sigma, True),
                 _map_to_oqpy_type(self.amplitude),
                 self.zero_at_edges,
             ),

@@ -124,9 +124,10 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         [
             "OPENQASM 3.0;",
             "cal {",
-            "    waveform gauss_wf = gaussian((1000000000.0*length_g)ns, sigma_g, 1, true);",
+            "    waveform gauss_wf = gaussian((1000000000.0*length_g)ns, (1000000000.0*sigma_g)ns, "
+            "1, true);",
             "    waveform drag_gauss_wf = "
-            "drag_gaussian((1000000000.0*length_dg)ns, sigma_dg, 0.2, 1, true);",
+            "drag_gaussian((1000000000.0*length_dg)ns, (1000000000.0*sigma_dg)ns, 0.2, 1, true);",
             "    waveform constant_wf = constant((1000000000.0*length_c)ns, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
@@ -169,8 +170,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         [
             "OPENQASM 3.0;",
             "cal {",
-            "    waveform gauss_wf = gaussian(1000000.0ns, sigma_g, 1, true);",
-            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 0.4, 0.2, 1, true);",
+            "    waveform gauss_wf = gaussian(1000000.0ns, (1000000000.0*sigma_g)ns, 1, true);",
+            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 400000000.0ns, 0.2, 1, true);",
             "    waveform constant_wf = constant(4000000.0ns, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
@@ -199,8 +200,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         [
             "OPENQASM 3.0;",
             "cal {",
-            "    waveform gauss_wf = gaussian(1000000.0ns, 0.7, 1, true);",
-            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 0.4, 0.2, 1, true);",
+            "    waveform gauss_wf = gaussian(1000000.0ns, 700000000.0ns, 1, true);",
+            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 400000000.0ns, 0.2, 1, true);",
             "    waveform constant_wf = constant(4000000.0ns, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
@@ -291,8 +292,8 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         [
             "OPENQASM 3.0;",
             "cal {",
-            "    waveform gauss_wf = gaussian(1000000.0ns, 0.7, 1, true);",
-            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 0.4, 0.2, 1, true);",
+            "    waveform gauss_wf = gaussian(1000000.0ns, 700000000.0ns, 1, true);",
+            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 400000000.0ns, 0.2, 1, true);",
             "    waveform constant_wf = constant(4000000.0ns, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
