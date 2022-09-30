@@ -11,10 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.circuits import Circuit
+from braket.circuits import Circuit, FreeParameter
 from braket.devices import LocalSimulator
 
 device = LocalSimulator()
 
-bell = Circuit().h(0).cnot(0, 1)
-print(device.run(bell, shots=100).result().measurement_counts)
+theta = FreeParameter("theta")
+bell = Circuit().rx(0, theta)
+print(device.run(bell, shots=100, inputs={"theta": 2}).result().measurement_counts)
