@@ -17,7 +17,7 @@ from numbers import Number
 from typing import Any, Dict, Union
 
 from oqpy.vendor.openpulse import ast
-from sympy import Expr, sympify
+from sympy import Expr, Float, sympify
 
 
 class FreeParameterExpression:
@@ -142,7 +142,12 @@ class FreeParameterExpression:
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
-    return parameter.subs(kwargs) if isinstance(parameter, FreeParameterExpression) else parameter
+    if isinstance(parameter, FreeParameterExpression):
+        substituted = parameter.subs(kwargs)
+        if isinstance(substituted, Float):
+            substituted = float(substituted)
+        return substituted
+    return parameter
 
 
 # TODO: Consider if this should live here.
