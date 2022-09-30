@@ -391,6 +391,11 @@ class _PulsePrinter(Printer):
         else:
             super().visit_DurationLiteral(node, context)
 
+    def visit_ClassicalDeclaration(self, node: ast.ClassicalDeclaration, context: PrinterState):
+        # Skip port declarations in output
+        if not isinstance(node.type, ast.PortType):
+            super().visit_ClassicalDeclaration(node, context)
+
 
 # TODO: Refactor printing functionality to a separate module
 def _ast_to_qasm(ast: ast.Program) -> str:

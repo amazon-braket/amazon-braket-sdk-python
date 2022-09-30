@@ -72,7 +72,6 @@ def test_pulse_sequence_with_user_defined_frame(user_defined_frame):
         [
             "OPENQASM 3.0;",
             "cal {",
-            "    port device_port_x0;",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    set_frequency(user_defined_frame_0, 6000000.0);",
             "}",
