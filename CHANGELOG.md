@@ -1,5 +1,46 @@
 # Changelog
 
+## v1.31.0 (2022-09-26)
+
+### Features
+
+ * support inputs in the device interface
+
+### Bug Fixes and Other Changes
+
+ * add missing case for input handling
+ * don't provide profile name for default profile
+
+## v1.30.2 (2022-09-22)
+
+### Bug Fixes and Other Changes
+
+ * copy profile name
+
+## v1.30.1 (2022-09-20)
+
+### Bug Fixes and Other Changes
+
+ * update paths within docker image to posix
+
+## v1.30.0 (2022-09-16)
+
+### Features
+
+ * IonQ native gates
+
+## v1.29.4 (2022-09-08)
+
+### Bug Fixes and Other Changes
+
+ * Simultaneous measurement of identity on all qubits
+
+## v1.29.3 (2022-09-05)
+
+### Bug Fixes and Other Changes
+
+ * making local jobs stream output.
+
 ## v1.29.2 (2022-08-25)
 
 ### Bug Fixes and Other Changes

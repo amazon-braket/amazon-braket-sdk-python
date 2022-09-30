@@ -14,7 +14,7 @@ import base64
 import re
 import subprocess
 from logging import Logger, getLogger
-from pathlib import Path
+from pathlib import PurePosixPath
 from typing import Dict, List
 
 from braket.aws.aws_session import AwsSession
@@ -47,7 +47,7 @@ class _LocalJobContainer(object):
         """
         self._aws_session = aws_session or AwsSession()
         self.image_uri = image_uri
-        self.run_result = None
+        self.run_log = None
         self._container_name = None
         self._logger = logger
         self._force_update = force_update
@@ -193,7 +193,7 @@ class _LocalJobContainer(object):
         Raises:
             subprocess.CalledProcessError: If unable to copy.
         """
-        dirname = str(Path(destination).parent)
+        dirname = str(PurePosixPath(destination).parent)
         try:
             subprocess.check_output(
                 ["docker", "exec", self._container_name, "mkdir", "-p", dirname]
@@ -225,7 +225,10 @@ class _LocalJobContainer(object):
             self._logger.error(output)
             raise e
 
-    def run_local_job(self, environment_variables: Dict[str, str]) -> None:
+    def run_local_job(
+        self,
+        environment_variables: Dict[str, str],
+    ) -> None:
         """Runs a Braket job in a local container.
 
         Args:
@@ -249,15 +252,30 @@ class _LocalJobContainer(object):
         command.append(start_program_name)
 
         try:
-            self.run_result = subprocess.run(command, capture_output=True)
-            if self.run_result.stdout:
-                print(self.run_result.stdout.decode("utf-8").strip())
-            if self.run_result.stderr:
-                self._logger.error(self.run_result.stderr.decode("utf-8").strip())
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.run_log = _stream_output(process)
         except Exception as e:
-            self.run_result = e
+            self.run_log = e
             self._logger.error(e)
 
     def _end_session(self) -> None:
         """Stops and removes the local container."""
         subprocess.run(["docker", "stop", self._container_name])
+
+
+def _stream_output(process: subprocess.Popen) -> str:
+    exit_code = None
+    run_log = ""
+
+    while exit_code is None:
+        stdout = process.stdout.readline().decode("utf-8")
+        print(stdout, end="")
+        run_log += stdout
+        exit_code = process.poll()
+
+    if exit_code != 0:
+        error_message = f"Process exited with code: {exit_code}"
+        print(error_message)
+        run_log += error_message
+
+    return run_log

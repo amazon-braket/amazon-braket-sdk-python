@@ -33,6 +33,11 @@ from braket.ir.jaqcd.shared_models import (
     TwoDimensionalMatrix,
 )
 
+
+class DoubleAngle:
+    pass
+
+
 testdata = [
     (Gate.H, "h", ir.H, [SingleTarget], {}),
     (Gate.I, "i", ir.I, [SingleTarget], {}),
@@ -85,6 +90,9 @@ testdata = [
     (Gate.XX, "xx", ir.XX, [DoubleTarget, Angle], {}),
     (Gate.YY, "yy", ir.YY, [DoubleTarget, Angle], {}),
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
+    (Gate.GPi, "gpi", None, [SingleTarget, Angle], {}),
+    (Gate.GPi2, "gpi2", None, [SingleTarget, Angle], {}),
+    (Gate.MS, "ms", None, [DoubleTarget, DoubleAngle], {}),
     (
         Gate.Unitary,
         "unitary",
@@ -122,6 +130,9 @@ parameterizable_gates = [
     Gate.CPhaseShift00,
     Gate.CPhaseShift01,
     Gate.CPhaseShift10,
+    Gate.GPi,
+    Gate.GPi2,
+    Gate.MS,
 ]
 
 invalid_unitary_matrices = [
@@ -149,6 +160,10 @@ def double_target_valid_input(**kwargs):
 
 def angle_valid_input(**kwargs):
     return {"angle": 0.123}
+
+
+def double_angle_valid_input(**kwargs):
+    return {"angle_1": 0.123, "angle_2": 4.567}
 
 
 def single_control_valid_input(**kwargs):
@@ -180,6 +195,7 @@ valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
+    "DoubleAngle": double_angle_valid_input,
     "SingleControl": single_control_valid_input,
     "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
@@ -192,7 +208,7 @@ valid_subroutine_switcher = dict(
         "TwoDimensionalMatrix": two_dimensional_matrix_valid_input,
         "DoubleTarget": double_target_valid_input,
         "DoubleControl": double_control_valid_input,
-    }
+    },
 )
 
 
@@ -227,7 +243,7 @@ def create_valid_target_input(irsubclasses):
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif subclass == Angle or subclass == TwoDimensionalMatrix:
+        elif subclass in (Angle, TwoDimensionalMatrix, DoubleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -239,6 +255,8 @@ def create_valid_gate_class_input(irsubclasses, **kwargs):
     input = {}
     if Angle in irsubclasses:
         input.update(angle_valid_input())
+    if DoubleAngle in irsubclasses:
+        input.update(double_angle_valid_input())
     if TwoDimensionalMatrix in irsubclasses:
         input.update(two_dimensional_matrix_valid_input(**kwargs))
     return input
@@ -263,7 +281,7 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif subclass == Angle or subclass == TwoDimensionalMatrix:
+        elif subclass in (Angle, TwoDimensionalMatrix, DoubleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -272,11 +290,12 @@ def calculate_qubit_count(irsubclasses):
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs):
-    expected = irclass(**create_valid_ir_input(irsubclasses))
-    actual = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)).to_ir(
-        **create_valid_target_input(irsubclasses)
-    )
-    assert actual == expected
+    if irclass is not None:
+        expected = irclass(**create_valid_ir_input(irsubclasses))
+        actual = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs)).to_ir(
+            **create_valid_target_input(irsubclasses)
+        )
+        assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -748,6 +767,42 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket unitary([[1.0, 0], [0, 0.70710678 - 0.70710678im]]) q[4]",
         ),
+        (
+            Gate.GPi(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "gpi(0.17) q[4];",
+        ),
+        (
+            Gate.GPi(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "gpi(0.17) $4;",
+        ),
+        (
+            Gate.GPi2(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "gpi2(0.17) q[4];",
+        ),
+        (
+            Gate.GPi2(angle=0.17),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "gpi2(0.17) $4;",
+        ),
+        (
+            Gate.MS(angle_1=0.17, angle_2=3.45),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "ms(0.17, 3.45) q[4], q[5];",
+        ),
+        (
+            Gate.MS(angle_1=0.17, angle_2=3.45),
+            [4, 5],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "ms(0.17, 3.45) $4, $5;",
+        ),
     ],
 )
 def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir):
@@ -761,10 +816,13 @@ def test_gate_to_ir_openqasm(gate, target, serialization_properties, expected_ir
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_ir_instruction_level(testclass, subroutine_name, irclass, irsubclasses, kwargs):
-    expected = irclass(**create_valid_ir_input(irsubclasses))
-    instruction = Instruction(**create_valid_instruction_input(testclass, irsubclasses, **kwargs))
-    actual = instruction.to_ir()
-    assert actual == expected
+    if irclass is not None:
+        expected = irclass(**create_valid_ir_input(irsubclasses))
+        instruction = Instruction(
+            **create_valid_instruction_input(testclass, irsubclasses, **kwargs)
+        )
+        actual = instruction.to_ir()
+        assert actual == expected
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
@@ -797,7 +855,7 @@ def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irs
     matrices = [elem.to_matrix() for elem in gate.adjoint()]
     matrices.append(gate.to_matrix())
     identity = np.eye(2**gate.qubit_count)
-    assert np.isclose(functools.reduce(lambda a, b: a @ b, matrices), identity).all()
+    assert np.allclose(functools.reduce(lambda a, b: a @ b, matrices), identity)
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
@@ -854,16 +912,20 @@ def test_large_unitary():
 
 @pytest.mark.parametrize("gate", parameterizable_gates)
 def test_bind_values(gate):
-    theta = FreeParameter("theta")
-    param_gate = gate(theta)
-    new_gate = param_gate.bind_values(theta=1)
-    expected = gate(1)
+    double_angled = gate.__name__ in ("MS",)
+    num_params = 2 if double_angled else 1
+    thetas = [FreeParameter(f"theta_{i}") for i in range(num_params)]
+    mapping = dict((f"theta_{i}", i) for i in range(num_params))
+    param_gate = gate(*thetas)
+    new_gate = param_gate.bind_values(**mapping)
+    expected = gate(*range(num_params))
 
-    assert (
-        type(new_gate.angle) == float
-        and type(new_gate) == type(param_gate)
-        and new_gate == expected
-    )
+    assert type(new_gate) == type(param_gate) and new_gate == expected
+    if double_angled:
+        for angle in new_gate.angle_1, new_gate.angle_2:
+            assert type(angle) == float
+    else:
+        assert type(new_gate.angle) == float
 
 
 @pytest.mark.xfail(raises=ValueError)
