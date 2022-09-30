@@ -27,6 +27,9 @@ from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
+from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import AnalogHamiltonianSimulationQuantumTaskResult
+
 _simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
 }
@@ -55,7 +58,7 @@ class LocalSimulator(Device):
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem, Program],
+        task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
         shots: int = 0,
         inputs: Optional[Dict[str, float]] = None,
         *args,
@@ -130,7 +133,7 @@ def _(backend_impl: BraketSimulator):
 
 @singledispatch
 def _run_internal(
-    task_specification: Union[Circuit, Problem, Program],
+    task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
     simulator: BraketSimulator,
     shots: Optional[int] = None,
     *args,
@@ -187,3 +190,11 @@ def _(
     program.inputs.update(inputs or {})
     results = simulator.run(program, shots, *args, **kwargs)
     return GateModelQuantumTaskResult.from_object(results)
+
+
+@_run_internal.register
+def _(program: AnalogHamiltonianSimulation, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+    if DeviceActionType.AHS not in simulator.properties.action:
+        raise NotImplementedError(f"{type(simulator)} does not support analog Hamiltonian simulation programs")
+    results = simulator.run(program.to_ir(), shots, *args, **kwargs)
+    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
