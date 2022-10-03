@@ -27,6 +27,7 @@ from braket.circuits import Instruction
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.compiler_directives import StartVerbatimBox
+from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
@@ -50,6 +51,7 @@ from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.pulse.pulse_sequence import PulseSequence
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
 from braket.tasks import (
@@ -79,7 +81,9 @@ class AwsQuantumTask(QuantumTask):
     def create(
         aws_session: AwsSession,
         device_arn: str,
-        task_specification: Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram],
+        task_specification: Union[
+            Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence
+        ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         device_parameters: Dict[str, Any] = None,
@@ -453,6 +457,22 @@ def _create_internal(
 
 @_create_internal.register
 def _(
+    pulse_sequence: PulseSequence,
+    aws_session: AwsSession,
+    create_task_kwargs: Dict[str, Any],
+    device_arn: str,
+    _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
+    _disable_qubit_rewiring: bool,
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    create_task_kwargs.update({"action": OpenQasmProgram(source=pulse_sequence.to_ir()).json()})
+    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+@_create_internal.register
+def _(
     open_qasm_program: OpenQasmProgram,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
@@ -517,7 +537,11 @@ def _(
 
     qubit_reference_type = QubitReferenceType.VIRTUAL
 
-    if disable_qubit_rewiring or Instruction(StartVerbatimBox()) in circuit.instructions:
+    if (
+        disable_qubit_rewiring
+        or Instruction(StartVerbatimBox()) in circuit.instructions
+        or any(isinstance(instruction.operator, PulseGate) for instruction in circuit.instructions)
+    ):
         qubit_reference_type = QubitReferenceType.PHYSICAL
 
     serialization_properties = OpenQASMSerializationProperties(
