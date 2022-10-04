@@ -13,8 +13,8 @@
 
 import pytest
 
-from braket.circuits import FreeParameter, FreeParameterExpression
-from braket.circuits.free_parameter_expression import subs_if_free_parameter
+from braket.parametric import FreeParameter, FreeParameterExpression
+from braket.parametric.free_parameter_expression import subs_if_free_parameter
 
 
 @pytest.fixture

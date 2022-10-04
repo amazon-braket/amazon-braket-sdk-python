@@ -25,12 +25,12 @@ from oqpy.vendor.openqasm3.ast import DurationLiteral
 from oqpy.vendor.openqasm3.printer import PrinterState
 from oqpy.vendor.openqasm3.visitor import QASMTransformer
 
-from braket.circuits.free_parameter import FreeParameter
-from braket.circuits.free_parameter_expression import (
+from braket.parametric.free_parameter import FreeParameter
+from braket.parametric.free_parameter_expression import (
     FreeParameterExpression,
     FreeParameterExpressionIdentifier,
 )
-from braket.circuits.parameterizable import Parameterizable
+from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_approximation import PulseSequenceApproximation
 from braket.pulse.pulse_sequence_program_parser import _PulseSequenceProgramParser

@@ -21,13 +21,13 @@ import sympy
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQDurationLiteral, OQPyExpression, make_identifier_name
 
-from braket.circuits.free_parameter import FreeParameter
-from braket.circuits.free_parameter_expression import (
+from braket.parametric.free_parameter import FreeParameter
+from braket.parametric.free_parameter_expression import (
     FreeParameterExpression,
     FreeParameterExpressionIdentifier,
     subs_if_free_parameter,
 )
-from braket.circuits.parameterizable import Parameterizable
+from braket.parametric.parameterizable import Parameterizable
 
 
 class Waveform(ABC):
