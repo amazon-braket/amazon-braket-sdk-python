@@ -10,7 +10,6 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, KeysView, List, Optional, Union
@@ -46,7 +45,7 @@ class _ParseState:
     frame_data: Dict[str, _FrameState]
 
 
-class _PulseSequenceProgramParser(QASMVisitor[_ParseState]):
+class _ApproximationParser(QASMVisitor[_ParseState]):
     """Walk the AST and build the output signal amplitude, frequency and phases
     for each channel."""
 

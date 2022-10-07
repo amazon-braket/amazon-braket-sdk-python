@@ -16,7 +16,6 @@ from __future__ import annotations
 from numbers import Number
 from typing import Any, Dict, Union
 
-from oqpy.vendor.openpulse import ast
 from sympy import Expr, Float, sympify
 
 
@@ -148,16 +147,3 @@ def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
             substituted = float(substituted)
         return substituted
     return parameter
-
-
-# TODO: Consider if this should live here.
-class FreeParameterExpressionIdentifier(ast.Identifier):
-    """Dummy AST node with FreeParameterExpression instance attached"""
-
-    def __init__(self, expression: FreeParameterExpression):
-        super().__init__(name=f"FreeParameterExpression({expression})")
-        self._expression = expression
-
-    @property
-    def expression(self) -> FreeParameterExpression:
-        return self._expression

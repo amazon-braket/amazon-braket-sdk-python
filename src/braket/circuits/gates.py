@@ -35,7 +35,8 @@ from braket.circuits.quantum_operator_helpers import (
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import OpenQASMSerializationProperties
-from braket.pulse.pulse_sequence import PulseSequence, _ast_to_qasm
+from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.pulse_sequence import PulseSequence
 
 """
 To add a new gate:
@@ -2047,7 +2048,7 @@ class PulseGate(Gate, Parameterizable):
         # Suppress declaration of frame and waveform vars as they have already been declared
         for v in list(new_program.undeclared_vars.values()):
             new_program.mark_var_declared(v)
-        return _ast_to_qasm(new_program.to_ast(include_externs=False, encal=True))
+        return ast_to_qasm(new_program.to_ast(include_externs=False, encal=True))
 
     @staticmethod
     @circuit.subroutine(register=True)

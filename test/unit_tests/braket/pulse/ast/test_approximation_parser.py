@@ -20,10 +20,10 @@ from oqpy import IntVar
 from oqpy.vendor.openpulse import ast
 
 from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
+from braket.pulse.ast.approximation_parser import _ApproximationParser
 from braket.pulse.frame import Frame
 from braket.pulse.port import Port
 from braket.pulse.pulse_sequence import PulseSequence
-from braket.pulse.pulse_sequence_program_parser import _PulseSequenceProgramParser
 from braket.timings.time_series import TimeSeries, _all_close
 
 
@@ -52,7 +52,7 @@ def test_delay(port):
     expected_frequencies["frame1"].put(0, 1e8).put(2e-9, 1e8)
     expected_phases["frame1"].put(0, 0).put(2e-9, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -74,7 +74,7 @@ def test_predefined_frame(port):
     for statement in pulse_seq._program.state.body:
         assert type(statement) != ast.FrameType
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -106,7 +106,7 @@ def test_set_shift_phase(port):
     expected_frequencies["frame1"].put(2e-9, 1e8).put(6e-9, 1e8)
     expected_phases["frame1"].put(2e-9, 3).put(6e-9, 3)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -140,7 +140,7 @@ def test_set_shift_frequency(port):
     expected_frequencies["frame1"].put(20e-9, 1.9e8).put(29e-9, 1.9e8)
     expected_phases["frame1"].put(20e-9, 0).put(29e-9, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -161,7 +161,7 @@ def test_play_arbitrary_waveforms(port):
         expected_frequencies["frame1"].put(t, 1e8)
         expected_phases["frame1"].put(t, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -182,7 +182,7 @@ def test_play_literal(port):
         expected_frequencies["frame1"].put(t, 1e8)
         expected_phases["frame1"].put(t, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -194,7 +194,7 @@ def test_classical_variable_declaration(port):
     pulse_seq._program.increment(i, 1)
 
     with pytest.raises(NotImplementedError):
-        _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+        _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
 
 def test_play_constant_waveforms(port):
@@ -213,7 +213,7 @@ def test_play_constant_waveforms(port):
         expected_frequencies["frame1"].put(t, 1e8)
         expected_phases["frame1"].put(t, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -246,7 +246,7 @@ def test_set_scale(port):
         expected_frequencies["frame1"].put(shift_time + t, 1e8)
         expected_phases["frame1"].put(shift_time + t, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -323,7 +323,7 @@ def test_play_gaussian_waveforms(port):
         expected_frequencies["frame1"].put(t + shift_time, 1e8)
         expected_phases["frame1"].put(t + shift_time, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame1))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame1))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -401,7 +401,7 @@ def test_play_drag_gaussian_waveforms(port):
         expected_frequencies["frame1"].put(t + shift_time, 1e8)
         expected_phases["frame1"].put(t + shift_time, 0)
 
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames=to_dict(frame1))
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame1))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -476,9 +476,7 @@ def test_barrier_same_dt(port):
     # )
     # expected_phases["frame2"].put(shift_time_frame2, 0).put(last_time_frame1 + port.dt, 0)
 
-    parser = _PulseSequenceProgramParser(
-        program=pulse_seq._program, frames=to_dict([frame1, frame2])
-    )
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
     # Array retrievable with
@@ -558,9 +556,7 @@ def test_barrier_different_dt(port):
     # expected_frequencies["frame2"].put(shift_time_frame2, 1e8).put(last_time, 1e8)
     # expected_phases["frame2"].put(shift_time_frame2, 0).put(last_time, 0)
 
-    parser = _PulseSequenceProgramParser(
-        program=pulse_seq._program, frames=to_dict([frame1, frame2])
-    )
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -613,9 +609,7 @@ def test_pad_different_dt(port):
     # expected_frequencies["frame2"].put(last_time_frame2 + port2.dt, 1e8).put(last_time, 1e8) # noqa
     # expected_phases["frame2"].put(last_time_frame2 + port2.dt, 0).put(last_time, 0)
 
-    parser = _PulseSequenceProgramParser(
-        program=pulse_seq._program, frames=to_dict([frame1, frame2])
-    )
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
@@ -651,7 +645,7 @@ def test_binary_operations(literal_type, lhs, operator, rhs, expected_result):
         rhs=literal_type(rhs),
     )
     pulse_seq = PulseSequence()
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames={})
+    parser = _ApproximationParser(program=pulse_seq._program, frames={})
     result = parser.visit_BinaryExpression(expression, Mock())
     assert result == expected_result
 
@@ -669,7 +663,7 @@ def test_unary_operations(literal_type, operator, literal, expected_result):
         op=ast.UnaryOperator[operator], expression=literal_type(literal)
     )
     pulse_seq = PulseSequence()
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames={})
+    parser = _ApproximationParser(program=pulse_seq._program, frames={})
     result = parser.visit_UnaryExpression(expression, Mock())
     assert result == expected_result
 
@@ -678,7 +672,7 @@ def test_unary_operations(literal_type, operator, literal, expected_result):
 def test_duration_literal():
     literal = Mock()
     pulse_seq = PulseSequence()
-    parser = _PulseSequenceProgramParser(program=pulse_seq._program, frames={})
+    parser = _ApproximationParser(program=pulse_seq._program, frames={})
     parser.visit_DurationLiteral(literal, Mock())
 
 

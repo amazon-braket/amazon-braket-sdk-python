@@ -24,10 +24,10 @@ from oqpy.base import OQDurationLiteral, OQPyExpression, make_identifier_name
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
     FreeParameterExpression,
-    FreeParameterExpressionIdentifier,
     subs_if_free_parameter,
 )
 from braket.parametric.parameterizable import Parameterizable
+from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
 
 
 class Waveform(ABC):
@@ -390,13 +390,13 @@ class GaussianWaveform(Waveform, Parameterizable):
 # TODO: Reconcile handling of FreeParameterExpressionIdentifier and OQDurationLiteral in oqpy
 def _map_to_oqpy_type(
     parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
-) -> Union[FreeParameterExpressionIdentifier, OQPyExpression]:
+) -> Union[_FreeParameterExpressionIdentifier, OQPyExpression]:
     if isinstance(parameter, sympy.core.numbers.Float):
         return float(parameter)
     if isinstance(parameter, FreeParameterExpression):
         return (
             OQDurationLiteral(parameter)
             if is_duration_type
-            else FreeParameterExpressionIdentifier(parameter)
+            else _FreeParameterExpressionIdentifier(parameter)
         )
     return parameter

@@ -18,7 +18,7 @@ from oqpy import Program
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
-from braket.pulse.pulse_sequence import _ast_to_qasm
+from braket.pulse.ast.qasm_parser import ast_to_qasm
 
 
 def test_arbitrary_waveform():
@@ -245,4 +245,4 @@ def test_gaussian_wf_free_params():
 def _assert_wf_qasm(waveform, expected_qasm):
     p = Program(None)
     p.declare(waveform.to_oqpy_expression())
-    assert _ast_to_qasm(p.to_ast(include_externs=False)) == expected_qasm
+    assert ast_to_qasm(p.to_ast(include_externs=False)) == expected_qasm

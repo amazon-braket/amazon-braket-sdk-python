@@ -13,27 +13,25 @@
 
 from __future__ import annotations
 
-import io
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Set, Union
 
 from oqpy import BitVar, Program
 from oqpy.base import OQDurationLiteral
 from oqpy.vendor.openpulse import ast
-from oqpy.vendor.openpulse.printer import Printer
-from oqpy.vendor.openqasm3.ast import DurationLiteral
-from oqpy.vendor.openqasm3.printer import PrinterState
-from oqpy.vendor.openqasm3.visitor import QASMTransformer
 
 from braket.parametric.free_parameter import FreeParameter
-from braket.parametric.free_parameter_expression import (
-    FreeParameterExpression,
-    FreeParameterExpressionIdentifier,
-)
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
+from braket.pulse.ast.approximation_parser import _ApproximationParser
+from braket.pulse.ast.free_parameters import (
+    _FreeParameterExpressionIdentifier,
+    _FreeParameterTransformer,
+)
+from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_approximation import PulseSequenceApproximation
-from braket.pulse.pulse_sequence_program_parser import _PulseSequenceProgramParser
 from braket.pulse.waveforms import Waveform
 
 
@@ -56,7 +54,7 @@ class PulseSequence:
         Returns:
             PulseSequenceApproximation: The approximation.
         """
-        parser = _PulseSequenceProgramParser(self._program, self._frames)
+        parser = _ApproximationParser(self._program, self._frames)
         return PulseSequenceApproximation(
             amplitudes=parser.amplitudes, frequencies=parser.frequencies, phases=parser.phases
         )
@@ -259,7 +257,7 @@ class PulseSequence:
         """
         program = deepcopy(self._program)
         tree: ast.Program = program.to_ast(include_externs=False, ignore_undeclared=True)
-        new_tree: ast.Program = _FreeParameterWalker(param_values).visit(tree)
+        new_tree: ast.Program = _FreeParameterTransformer(param_values).visit(tree)
 
         new_program = Program()
         new_program.declared_vars = program.declared_vars
@@ -302,36 +300,14 @@ class PulseSequence:
             tree = _IRQASMTransformer(register_identifier).visit(tree)
         else:
             tree = program.to_ast(encal=True, include_externs=False)
-        return _ast_to_qasm(tree)
+        return ast_to_qasm(tree)
 
     def _format_parameter_ast(self, parameter):
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
-            return FreeParameterExpressionIdentifier(parameter)
+            return _FreeParameterExpressionIdentifier(parameter)
         return parameter
-
-
-# TODO: See if this can be merged with the visualization parser.
-class _FreeParameterWalker(QASMTransformer):
-    """Walk the AST and evaluate FreeParameterExpressions."""
-
-    def __init__(self, param_values: Dict[str, float]):
-        self.param_values = param_values
-        super().__init__()
-
-    def visit_FreeParameterExpressionIdentifier(self, identifier: ast.Identifier):
-        new_value = identifier.expression.subs(self.param_values)
-        if isinstance(new_value, FreeParameterExpression):
-            return FreeParameterExpressionIdentifier(new_value)
-        else:
-            return ast.FloatLiteral(new_value)
-
-    def visit_DurationLiteral(self, duration_literal: DurationLiteral):
-        duration = duration_literal.value
-        if not isinstance(duration, FreeParameterExpression):
-            return duration_literal
-        return DurationLiteral(duration.subs(self.param_values), duration_literal.unit)
 
 
 # TODO: Remove once oqpy introduces these validations.
@@ -347,70 +323,3 @@ def _validate_uniqueness(
                 f"{value.id} has already been used for defining {mapping[value.id]} "
                 f"which differs from {value}"
             )
-
-
-class _IRQASMTransformer(QASMTransformer):
-    """
-    QASMTransformer which walks the AST and makes the necessary modifications needed
-    for IR generation. Currently, it performs the following operations:
-      * Replaces capture_v0 function calls with assignment statements, assigning the
-        readout value to a bit register element.
-    """
-
-    def __init__(self, register_identifier: Optional[str] = None):
-        self._register_identifier = register_identifier
-        self._capture_v0_count = 0
-        super().__init__()
-
-    def visit_ExpressionStatement(self, expression_statement: ast.ExpressionStatement):
-        if (
-            isinstance(expression_statement.expression, ast.FunctionCall)
-            and expression_statement.expression.name.name == "capture_v0"
-            and self._register_identifier
-        ):
-            # For capture_v0 nodes, it replaces it with classical assignment statements
-            # of the form:
-            # b[0] = capture_v0(...)
-            # b[1] = capture_v0(...)
-            new_val = ast.ClassicalAssignment(
-                # Ideally should use IndexedIdentifier here, but this works since it is just
-                # for printing.
-                ast.Identifier(name=f"{self._register_identifier}[{self._capture_v0_count}]"),
-                ast.AssignmentOperator["="],
-                expression_statement.expression,
-            )
-            self._capture_v0_count += 1
-            return new_val
-        else:
-            return expression_statement
-
-
-class _PulsePrinter(Printer):
-    """Walks the AST and prints it to an OpenQASM3 string."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def visit_FreeParameterExpressionIdentifier(
-        self, node: ast.Identifier, context: PrinterState
-    ) -> None:
-        self.stream.write(str(node.expression.expression))
-
-    def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState):
-        duration = node.value
-        if isinstance(duration, FreeParameterExpression):
-            self.stream.write(f"({duration.expression}){node.unit.name}")
-        else:
-            super().visit_DurationLiteral(node, context)
-
-    def visit_ClassicalDeclaration(self, node: ast.ClassicalDeclaration, context: PrinterState):
-        # Skip port declarations in output
-        if not isinstance(node.type, ast.PortType):
-            super().visit_ClassicalDeclaration(node, context)
-
-
-# TODO: Refactor printing functionality to a separate module
-def _ast_to_qasm(ast: ast.Program) -> str:
-    out = io.StringIO()
-    _PulsePrinter(out, indent="    ").visit(ast)
-    return out.getvalue().strip()
