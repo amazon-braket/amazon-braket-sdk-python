@@ -48,6 +48,5 @@ class Port:
     def __eq__(self, other) -> bool:
         return self.id == other.id if isinstance(other, Port) else False
 
-    # TODO: Convert to private once Oqpy changes are done
-    def to_oqpy_expression(self) -> OQPyExpression:
-        return PortVar(ident=self.id)
+    def _to_oqpy_expression(self) -> OQPyExpression:
+        return PortVar(name=self.id)

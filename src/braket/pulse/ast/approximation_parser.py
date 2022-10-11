@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, KeysView, List, Optional, Union
 
 import numpy as np
-import oqpy.vendor.openpulse.ast as ast
+from openpulse import ast
 from openqasm3.visitor import QASMVisitor
 from oqpy import Program
 

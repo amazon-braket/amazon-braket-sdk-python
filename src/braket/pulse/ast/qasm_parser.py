@@ -12,10 +12,10 @@
 # language governing permissions and limitations under the License.
 import io
 
-from oqpy.vendor.openpulse import ast
-from oqpy.vendor.openpulse.printer import Printer
-from oqpy.vendor.openqasm3.ast import DurationLiteral
-from oqpy.vendor.openqasm3.printer import PrinterState
+from openpulse import ast
+from openpulse.printer import Printer
+from openqasm3.ast import DurationLiteral
+from openqasm3.printer import PrinterState
 
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 

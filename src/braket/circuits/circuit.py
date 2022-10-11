@@ -1180,7 +1180,6 @@ class Circuit:
         waveforms = {}
         from braket.circuits.gates import PulseGate
 
-        # TODO: Switch to using oqpy program.frame and waveforms when they become available
         for instruction in self.instructions:
             if isinstance(instruction.operator, PulseGate):
                 for frame in instruction.operator.pulse_sequence._frames.values():
@@ -1195,9 +1194,9 @@ class Circuit:
         if declarable_frames or waveforms:
             program = OqpyProgram(None)
             for f in declarable_frames:
-                program.declare(f.to_oqpy_expression())
+                program.declare(f._to_oqpy_expression())
             for wf in waveforms.values():
-                program.declare(wf.to_oqpy_expression())
+                program.declare(wf._to_oqpy_expression())
             ast = program.to_ast(encal=True, include_externs=False)
             return ast_to_qasm(ast)
         return None

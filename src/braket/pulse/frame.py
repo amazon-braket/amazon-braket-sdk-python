@@ -14,7 +14,7 @@
 import math
 from typing import Any, Dict, Optional
 
-from oqpy import Frame as OQFrame
+from oqpy import FrameVar as OQFrame
 from oqpy.base import OQPyExpression
 
 from braket.pulse.port import Port
@@ -70,12 +70,11 @@ class Frame:
             else False
         )
 
-    # TODO: Convert to private once Oqpy changes are done
-    def to_oqpy_expression(self) -> OQPyExpression:
+    def _to_oqpy_expression(self) -> OQPyExpression:
         return OQFrame(
-            port=self.port.to_oqpy_expression(),
+            port=self.port._to_oqpy_expression(),
             frequency=self.frequency,
             phase=self.phase,
-            ident=self.id,
+            name=self.id,
             needs_declaration=not self.is_predefined,
         )

@@ -12,8 +12,8 @@
 # language governing permissions and limitations under the License.
 from typing import Optional
 
-from oqpy.vendor.openpulse import ast
-from oqpy.vendor.openqasm3.visitor import QASMTransformer
+from openpulse import ast
+from openqasm3.visitor import QASMTransformer
 
 
 class _IRQASMTransformer(QASMTransformer):

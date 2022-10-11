@@ -13,13 +13,15 @@
 
 from __future__ import annotations
 
+import random
+import string
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union
 
 import numpy as np
-import sympy
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
-from oqpy.base import OQDurationLiteral, OQPyExpression, make_identifier_name
+from oqpy.base import OQPyExpression
+from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
@@ -41,8 +43,7 @@ class Waveform(ABC):
     """
 
     @abstractmethod
-    # TODO: Make this private once oqpy changes are done.
-    def to_oqpy_expression(self) -> OQPyExpression:
+    def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform."""
 
     @abstractmethod
@@ -69,7 +70,7 @@ class ArbitraryWaveform(Waveform):
                 ascii characters is assigned by default.
         """
         self.amplitudes = amplitudes
-        self.id = id or make_identifier_name()
+        self.id = id or _make_identifier_name()
 
     def __eq__(self, other):
         return isinstance(other, ArbitraryWaveform) and (self.amplitudes, self.id) == (
@@ -77,12 +78,12 @@ class ArbitraryWaveform(Waveform):
             other.id,
         )
 
-    def to_oqpy_expression(self) -> OQPyExpression:
+    def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
         Returns:
             OQPyExpression: The OQPyExpression.
         """
-        return WaveformVar(init_expression=self.amplitudes, ident=self.id)
+        return WaveformVar(init_expression=self.amplitudes, name=self.id)
 
     def sample(self, dt: float) -> np.ndarray:
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
@@ -111,7 +112,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         """
         self.length = length
         self.iq = iq
-        self.id = id or make_identifier_name()
+        self.id = id or _make_identifier_name()
 
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
@@ -140,7 +141,7 @@ class ConstantWaveform(Waveform, Parameterizable):
             other.id,
         )
 
-    def to_oqpy_expression(self) -> OQPyExpression:
+    def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
         Returns:
             OQPyExpression: The OQPyExpression.
@@ -150,7 +151,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         )
         return WaveformVar(
             init_expression=constant_generator(_map_to_oqpy_type(self.length, True), self.iq),
-            ident=self.id,
+            name=self.id,
         )
 
     def sample(self, dt: float) -> np.ndarray:
@@ -197,7 +198,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self.beta = beta
         self.amplitude = amplitude
         self.zero_at_edges = zero_at_edges
-        self.id = id or make_identifier_name()
+        self.id = id or _make_identifier_name()
 
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
@@ -232,7 +233,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
             self.id,
         ) == (other.length, other.sigma, other.beta, other.amplitude, other.zero_at_edges, other.id)
 
-    def to_oqpy_expression(self) -> OQPyExpression:
+    def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
         Returns:
             OQPyExpression: The OQPyExpression.
@@ -255,7 +256,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
                 _map_to_oqpy_type(self.amplitude),
                 self.zero_at_edges,
             ),
-            ident=self.id,
+            name=self.id,
         )
 
     def sample(self, dt: float) -> np.ndarray:
@@ -310,7 +311,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         self.sigma = sigma
         self.amplitude = amplitude
         self.zero_at_edges = zero_at_edges
-        self.id = id or make_identifier_name()
+        self.id = id or _make_identifier_name()
 
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
@@ -343,7 +344,7 @@ class GaussianWaveform(Waveform, Parameterizable):
             self.id,
         ) == (other.length, other.sigma, other.amplitude, other.zero_at_edges, other.id)
 
-    def to_oqpy_expression(self) -> OQPyExpression:
+    def _to_oqpy_expression(self) -> OQPyExpression:
         """Returns an OQPyExpression defining this waveform.
         Returns:
             OQPyExpression: The OQPyExpression.
@@ -364,7 +365,7 @@ class GaussianWaveform(Waveform, Parameterizable):
                 _map_to_oqpy_type(self.amplitude),
                 self.zero_at_edges,
             ),
-            ident=self.id,
+            name=self.id,
         )
 
     def sample(self, dt: float) -> np.ndarray:
@@ -387,12 +388,14 @@ class GaussianWaveform(Waveform, Parameterizable):
         return samples
 
 
+def _make_identifier_name() -> str:
+    return "".join([random.choice(string.ascii_letters) for _ in range(10)])
+
+
 # TODO: Reconcile handling of FreeParameterExpressionIdentifier and OQDurationLiteral in oqpy
 def _map_to_oqpy_type(
     parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
 ) -> Union[_FreeParameterExpressionIdentifier, OQPyExpression]:
-    if isinstance(parameter, sympy.core.numbers.Float):
-        return float(parameter)
     if isinstance(parameter, FreeParameterExpression):
         return (
             OQDurationLiteral(parameter)

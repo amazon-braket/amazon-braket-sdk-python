@@ -2047,7 +2047,7 @@ class PulseGate(Gate, Parameterizable):
         new_program += self._pulse_sequence._program
         # Suppress declaration of frame and waveform vars as they have already been declared
         for v in list(new_program.undeclared_vars.values()):
-            new_program.mark_var_declared(v)
+            new_program._mark_var_declared(v)
         return ast_to_qasm(new_program.to_ast(include_externs=False, encal=True))
 
     @staticmethod

@@ -16,8 +16,8 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
+from openpulse import ast
 from oqpy import IntVar
-from oqpy.vendor.openpulse import ast
 
 from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
 from braket.pulse.ast.approximation_parser import _ApproximationParser
@@ -71,7 +71,7 @@ def test_predefined_frame(port):
     expected_frequencies["frame1"].put(0, 1e8).put(2e-9, 1e8)
     expected_phases["frame1"].put(0, 0).put(2e-9, 0)
 
-    for statement in pulse_seq._program.state.body:
+    for statement in pulse_seq._program._state.body:
         assert type(statement) != ast.FrameType
 
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
@@ -148,7 +148,7 @@ def test_set_shift_frequency(port):
 def test_play_arbitrary_waveforms(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     my_arb_wf = ArbitraryWaveform([0.4 + 0.1j, -0.8 + 0.1j, 1 + 0.2j])
-    pulse_seq = PulseSequence().play(frame, my_arb_wf)
+    pulse_seq = PulseSequence().play(frame, my_arb_wf).capture_v0(frame)
     # 3 datapoints for arb wf play
 
     expected_amplitudes = {"frame1": TimeSeries()}

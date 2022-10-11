@@ -27,7 +27,7 @@ def test_arbitrary_waveform():
     wf = ArbitraryWaveform(amps, id)
     assert wf.amplitudes == amps
     assert wf.id == id
-    oq_exp = wf.to_oqpy_expression()
+    oq_exp = wf._to_oqpy_expression()
     assert oq_exp.init_expression == amps
     assert oq_exp.name == wf.id
 
@@ -244,5 +244,5 @@ def test_gaussian_wf_free_params():
 
 def _assert_wf_qasm(waveform, expected_qasm):
     p = Program(None)
-    p.declare(waveform.to_oqpy_expression())
+    p.declare(waveform._to_oqpy_expression())
     assert ast_to_qasm(p.to_ast(include_externs=False)) == expected_qasm

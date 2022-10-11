@@ -16,9 +16,9 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Dict, List, Set, Union
 
+from openpulse import ast
 from oqpy import BitVar, Program
-from oqpy.base import OQDurationLiteral
-from oqpy.vendor.openpulse import ast
+from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
@@ -44,7 +44,6 @@ class PulseSequence:
     def __init__(self):
         self._capture_v0_count = 0
         self._program = Program()
-        # TODO: Remove once oqpy.Program exposes the frames and waveforms
         self._frames = {}
         self._waveforms = {}
         self._free_parameters = set()
@@ -181,7 +180,7 @@ class PulseSequence:
                 self._free_parameters.add(FreeParameter(p.name))
             duration = OQDurationLiteral(duration)
         _validate_uniqueness(self._frames, frames)
-        self._program.delay(time=duration, qubits=frames)
+        self._program.delay(time=duration, qubits_or_frames=frames)
         for frame in frames:
             self._frames[frame.id] = frame
         return self
@@ -198,7 +197,7 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frames)
-        self._program.barrier(qubits=frames)
+        self._program.barrier(qubits_or_frames=frames)
         for frame in frames:
             self._frames[frame.id] = frame
         return self
@@ -236,8 +235,7 @@ class PulseSequence:
             PulseSequence: self, with the instruction added.
         """
         _validate_uniqueness(self._frames, frame)
-        # TODO: Replace with the public method when available.
-        self._program._add_function_statement("capture_v0", [frame])
+        self._program.function_call("capture_v0", [frame])
         self._capture_v0_count += 1
         self._frames[frame.id] = frame
         return self
@@ -256,14 +254,14 @@ class PulseSequence:
             their respective values.
         """
         program = deepcopy(self._program)
-        tree: ast.Program = program.to_ast(include_externs=False, ignore_undeclared=True)
+        tree: ast.Program = program.to_ast(include_externs=False, ignore_needs_declaration=True)
         new_tree: ast.Program = _FreeParameterTransformer(param_values).visit(tree)
 
         new_program = Program()
         new_program.declared_vars = program.declared_vars
         new_program.undeclared_vars = program.undeclared_vars
         for x in new_tree.statements:
-            new_program.add_statement(x)
+            new_program._add_statement(x)
 
         new_pulse_sequence = PulseSequence()
         new_pulse_sequence._program = new_program
@@ -278,7 +276,7 @@ class PulseSequence:
             if v in self._waveforms:
                 new_program.undeclared_vars[v] = new_pulse_sequence._waveforms[
                     v
-                ].to_oqpy_expression()
+                ]._to_oqpy_expression()
 
         new_pulse_sequence._capture_v0_count = self._capture_v0_count
         new_pulse_sequence._free_parameters = set(
@@ -294,7 +292,7 @@ class PulseSequence:
         if self._capture_v0_count:
             register_identifier = "psb"
             program.declare(
-                BitVar[self._capture_v0_count](ident=register_identifier), to_beginning=True
+                BitVar[self._capture_v0_count](name=register_identifier), to_beginning=True
             )
             tree = program.to_ast(encal=True, include_externs=False)
             tree = _IRQASMTransformer(register_identifier).visit(tree)

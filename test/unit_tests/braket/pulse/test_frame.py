@@ -12,8 +12,9 @@
 # language governing permissions and limitations under the License.
 
 import pytest
-from oqpy import Frame as OQpyFrame
+from oqpy import FrameVar as OQpyFrame
 from oqpy import PortVar
+from oqpy.base import expr_matches
 
 from braket.pulse import Frame, Port
 
@@ -46,10 +47,11 @@ def test_frame_to_oqpy_expression(port, frame_id):
         port=PortVar(port.id),
         frequency=frequency,
         phase=phase,
-        ident=frame_id,
+        name=frame_id,
         needs_declaration=False,
     )
-    assert frame.to_oqpy_expression() == expected_expression
+    oq_expression = frame._to_oqpy_expression()
+    assert expr_matches(oq_expression, expected_expression)
 
 
 def test_frame_equality(frame_id, port):

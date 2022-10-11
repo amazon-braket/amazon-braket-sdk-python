@@ -12,9 +12,9 @@
 # language governing permissions and limitations under the License.
 from typing import Dict
 
-from oqpy.vendor.openpulse import ast
-from oqpy.vendor.openqasm3.ast import DurationLiteral
-from oqpy.vendor.openqasm3.visitor import QASMTransformer
+from openpulse import ast
+from openqasm3.ast import DurationLiteral
+from openqasm3.visitor import QASMTransformer
 
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 

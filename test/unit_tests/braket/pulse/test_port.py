@@ -13,6 +13,7 @@
 
 import pytest
 from oqpy import PortVar
+from oqpy.base import expr_matches
 
 from braket.pulse import Port
 
@@ -46,7 +47,7 @@ def test_port_no_properties(port_id, port_time_resolution):
 
 def test_port_to_oqpy_expression(port, port_id):
     expected_expression = PortVar(port_id)
-    assert port.to_oqpy_expression() == expected_expression
+    assert expr_matches(port._to_oqpy_expression(), expected_expression)
 
 
 def test_port_equality(port, port_time_resolution):

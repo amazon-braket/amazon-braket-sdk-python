@@ -92,6 +92,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         .capture_v0(predefined_frame_1)
         .delay([predefined_frame_1, predefined_frame_2], param)
         .delay(predefined_frame_1, param)
+        .delay(predefined_frame_1, 1e-3)
         .barrier([predefined_frame_1, predefined_frame_2])
         .play(
             predefined_frame_1,
@@ -142,6 +143,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
                 " predefined_frame_1, predefined_frame_2;"
             ),
             "    delay[(1000000000.0*a + 2000000000.0*b)ns] predefined_frame_1;",
+            "    delay[1000000.0ns] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
             "    play(predefined_frame_2, drag_gauss_wf);",
@@ -183,6 +185,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[(1000000000.0*a + 4000000000.0)ns] predefined_frame_1, predefined_frame_2;",
             "    delay[(1000000000.0*a + 4000000000.0)ns] predefined_frame_1;",
+            "    delay[1000000.0ns] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
             "    play(predefined_frame_2, drag_gauss_wf);",
@@ -213,6 +216,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[5000000000.00000ns] predefined_frame_1, predefined_frame_2;",
             "    delay[5000000000.00000ns] predefined_frame_1;",
+            "    delay[1000000.0ns] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
             "    play(predefined_frame_2, drag_gauss_wf);",
