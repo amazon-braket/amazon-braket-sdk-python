@@ -307,6 +307,25 @@ class PulseSequence:
             return _FreeParameterExpressionIdentifier(parameter)
         return parameter
 
+    def __call__(self, arg: Any = None, **kwargs) -> PulseSequence:
+        """
+        Implements the call function to easily make a bound PulseSequence.
+
+        Args:
+            arg (Any): A value to bind to all parameters. Defaults to None and
+                can be overridden if the parameter is in kwargs.
+
+        Returns:
+            PulseSequence: A pulse sequence with the specified parameters bound.
+        """
+        param_values = dict()
+        if arg is not None:
+            for param in self.parameters:
+                param_values[str(param)] = arg
+        for key, val in kwargs.items():
+            param_values[str(key)] = val
+        return self.make_bound_pulse_sequence(param_values)
+
 
 # TODO: Remove once oqpy introduces these validations.
 def _validate_uniqueness(

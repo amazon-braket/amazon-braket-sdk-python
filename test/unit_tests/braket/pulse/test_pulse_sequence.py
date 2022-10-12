@@ -168,6 +168,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     b_bound = pulse_sequence.make_bound_pulse_sequence(
         {"b": 2, "length_g": 1e-3, "length_dg": 3e-3, "sigma_dg": 0.4, "length_c": 4e-3}
     )
+    b_bound_call = pulse_sequence(b=2, length_g=1e-3, length_dg=3e-3, sigma_dg=0.4, length_c=4e-3)
     expected_str_b_bound = "\n".join(
         [
             "OPENQASM 3.0;",
@@ -195,10 +196,11 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "}",
         ]
     )
-    assert b_bound.to_ir() == expected_str_b_bound
+    assert b_bound.to_ir() == b_bound_call.to_ir() == expected_str_b_bound
     assert pulse_sequence.to_ir() == expected_str_unbound
     assert b_bound.parameters == set([FreeParameter("sigma_g"), FreeParameter("a")])
     both_bound = b_bound.make_bound_pulse_sequence({"a": 1, "sigma_g": 0.7})
+    both_bound_call = b_bound_call(1, sigma_g=0.7)  # use arg 1 for a
     expected_str_both_bound = "\n".join(
         [
             "OPENQASM 3.0;",
@@ -226,8 +228,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "}",
         ]
     )
-    assert both_bound.to_ir() == expected_str_both_bound
-    assert b_bound.to_ir() == expected_str_b_bound
+    assert both_bound.to_ir() == both_bound_call.to_ir() == expected_str_both_bound
+    assert b_bound.to_ir() == b_bound_call.to_ir() == expected_str_b_bound
     assert pulse_sequence.to_ir() == expected_str_unbound
 
 
