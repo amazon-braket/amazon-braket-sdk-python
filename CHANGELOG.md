@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.31.1 (2022-10-12)
+
+### Bug Fixes and Other Changes
+
+ * update inputs on program's copy
+
 ## v1.31.0 (2022-09-26)
 
 ### Features
