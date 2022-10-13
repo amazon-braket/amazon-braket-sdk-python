@@ -84,7 +84,7 @@ def test_register_gate():
 @pytest.mark.parametrize(
     "ir_type, serialization_properties, expected_exception, expected_message",
     [
-        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd has not been implemented yet."),
+        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd is not implemented."),
         (IRType.OPENQASM, None, NotImplementedError, "to_openqasm has not been implemented yet."),
         ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
         (

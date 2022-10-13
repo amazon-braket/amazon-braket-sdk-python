@@ -488,7 +488,7 @@ def test_create_pulse_gate_circuit(
             "b[1] = measure $1;",
         )
     )
-    expected_program = OpenQasmProgram(source=expected_openqasm)
+    expected_program = OpenQasmProgram(source=expected_openqasm, inputs={})
 
     aws_session.create_quantum_task.return_value = arn
     AwsQuantumTask.create(aws_session, device_arn, pulse_gate_circuit, S3_TARGET, 10)

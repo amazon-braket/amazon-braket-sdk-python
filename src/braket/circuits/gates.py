@@ -22,7 +22,7 @@ from sympy import Float
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
-from braket.circuits.angled_gate import AngledGate
+from braket.circuits.angled_gate import AngledGate, DoubleAngledGate
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -1907,6 +1907,201 @@ class CSwap(Gate):
 Gate.register_gate(CSwap)
 
 
+class GPi(AngledGate):
+    """IonQ GPi gate.
+
+    Args:
+        angle (Union[FreeParameterExpression, float]): angle in radians.
+    """
+
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
+        super().__init__(
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=[angled_ascii_characters("GPi", angle)],
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"gpi({self.angle}) {target_qubit};"
+
+    def to_matrix(self) -> np.ndarray:
+        return np.array(
+            [
+                [0, np.exp(-1j * self.angle)],
+                [np.exp(1j * self.angle), 0],
+            ]
+        )
+
+    def adjoint(self) -> List[Gate]:
+        return [GPi(self.angle)]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
+
+    def bind_values(self, **kwargs):
+        return get_angle(self, **kwargs)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def gpi(
+        target: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit or int): Target qubit index.
+            angle (Union[FreeParameterExpression, float]): Angle in radians.
+
+        Returns:
+            Iterable[Instruction]: GPi instruction.
+
+        Examples:
+            >>> circ = Circuit().gpi(0, 0.15)
+        """
+        return [Instruction(GPi(angle), target=qubit) for qubit in QubitSet(target)]
+
+
+Gate.register_gate(GPi)
+
+
+class GPi2(AngledGate):
+    """IonQ GPi2 gate.
+
+    Args:
+        angle (Union[FreeParameterExpression, float]): angle in radians.
+    """
+
+    def __init__(self, angle: Union[FreeParameterExpression, float]):
+        super().__init__(
+            angle=angle,
+            qubit_count=None,
+            ascii_symbols=[angled_ascii_characters("GPi2", angle)],
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit = serialization_properties.format_target(int(target[0]))
+        return f"gpi2({self.angle}) {target_qubit};"
+
+    def to_matrix(self) -> np.ndarray:
+        return np.array(
+            [
+                [1, -1j * np.exp(-1j * self.angle)],
+                [-1j * np.exp(1j * self.angle), 1],
+            ]
+        ) / np.sqrt(2)
+
+    def adjoint(self) -> List[Gate]:
+        return [GPi2(self.angle + np.pi)]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
+
+    def bind_values(self, **kwargs):
+        return get_angle(self, **kwargs)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def gpi2(
+        target: QubitInput, angle: Union[FreeParameterExpression, float]
+    ) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit or int): Target qubit index.
+            angle (Union[FreeParameterExpression, float]): Angle in radians.
+
+        Returns:
+            Iterable[Instruction]: GPi2 instruction.
+
+        Examples:
+            >>> circ = Circuit().gpi2(0, 0.15)
+        """
+        return [Instruction(GPi2(angle), target=qubit) for qubit in QubitSet(target)]
+
+
+Gate.register_gate(GPi2)
+
+
+class MS(DoubleAngledGate):
+    """IonQ Mølmer-Sørenson gate.
+
+    Args:
+        angle_1 (Union[FreeParameterExpression, float]): angle in radians.
+        angle_2 (Union[FreeParameterExpression, float]): angle in radians.
+    """
+
+    def __init__(
+        self,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+    ):
+        super().__init__(
+            angle_1=angle_1,
+            angle_2=angle_2,
+            qubit_count=None,
+            ascii_symbols=[_double_angled_ascii_characters("MS", angle_1, angle_2)] * 2,
+        )
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ):
+        target_qubit_1 = serialization_properties.format_target(int(target[0]))
+        target_qubit_2 = serialization_properties.format_target(int(target[1]))
+        return f"ms({self.angle_1}, {self.angle_2}) {target_qubit_1}, {target_qubit_2};"
+
+    def to_matrix(self) -> np.ndarray:
+        return np.array(
+            [
+                [1, 0, 0, -1j * np.exp(-1j * (self.angle_1 + self.angle_2))],
+                [0, 1, -1j * np.exp(-1j * (self.angle_1 - self.angle_2)), 0],
+                [0, -1j * np.exp(1j * (self.angle_1 - self.angle_2)), 1, 0],
+                [-1j * np.exp(1j * (self.angle_1 + self.angle_2)), 0, 0, 1],
+            ]
+        ) / np.sqrt(2)
+
+    def adjoint(self) -> List[Gate]:
+        return [MS(self.angle_1 + np.pi, self.angle_2)]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 2
+
+    def bind_values(self, **kwargs):
+        return _get_angles(self, **kwargs)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def ms(
+        target1: QubitInput,
+        target2: QubitInput,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+    ) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target (Qubit or int): Target qubit index.
+            angle (Union[FreeParameterExpression, float]): Angle in radians.
+
+        Returns:
+            Iterable[Instruction]: MS instruction.
+
+        Examples:
+            >>> circ = Circuit().ms(0, 1, 0.15, 0.34)
+        """
+        return [Instruction(MS(angle_1, angle_2), target=[target1, target2])]
+
+
+Gate.register_gate(MS)
+
+
 class Unitary(Gate):
     """Arbitrary unitary gate
 
@@ -2095,6 +2290,29 @@ def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, flo
     return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
 
 
+def _double_angled_ascii_characters(
+    gate: str,
+    angle_1: Union[FreeParameterExpression, float],
+    angle_2: Union[FreeParameterExpression, float],
+) -> str:
+    """
+    Generates a formatted ascii representation of an angled gate.
+
+    Args:
+        gate (str): The name of the gate.
+        angle (Union[FreeParameterExpression, float]): The angle for the gate.
+
+    Returns:
+        str: Returns the ascii representation for an angled gate.
+
+    """
+    return (
+        f"{gate}("
+        f'{angle_1:{".2f" if isinstance(angle_1, (float, Float)) else ""}}, '
+        f'{angle_2:{".2f" if isinstance(angle_2, (float, Float)) else ""}})'
+    )
+
+
 def get_angle(self: AngledGate, **kwargs) -> AngledGate:
     """
     Gets the angle with all values substituted in that are requested.
@@ -2110,6 +2328,28 @@ def get_angle(self: AngledGate, **kwargs) -> AngledGate:
         self.angle.subs(kwargs) if isinstance(self.angle, FreeParameterExpression) else self.angle
     )
     return type(self)(angle=new_angle)
+
+
+def _get_angles(self, **kwargs):
+    """
+    Gets the angle with all values substituted in that are requested.
+
+    Args:
+        self: The subclass of AngledGate for which the angle is being obtained.
+        **kwargs: The named parameters that are being filled for a particular gate.
+
+    Returns:
+        A new gate of the type of the AngledGate originally used with all angles updated.
+    """
+    new_angles = [
+        (
+            getattr(self, angle).subs(kwargs)
+            if isinstance(getattr(self, angle), FreeParameterExpression)
+            else getattr(self, angle)
+        )
+        for angle in ("angle_1", "angle_2")
+    ]
+    return type(self)(angle_1=new_angles[0], angle_2=new_angles[1])
 
 
 def format_complex(number: complex) -> str:

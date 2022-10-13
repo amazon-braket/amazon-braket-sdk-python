@@ -482,7 +482,7 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    if open_qasm_program.inputs is not None:
+    if open_qasm_program.inputs:
         raise ValueError(
             "OpenQASM Program inputs are only currently supported in the LocalSimulator."
         )

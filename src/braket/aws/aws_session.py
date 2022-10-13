@@ -791,15 +791,21 @@ class AwsSession(object):
         new_region = region or session_region
         creds = self.boto_session.get_credentials()
         default_bucket = self._default_bucket if self._custom_default_bucket else None
+        profile_name = self.boto_session.profile_name
+        profile_name = profile_name if profile_name != "default" else None
         if creds.method == "explicit":
             boto_session = boto3.Session(
                 aws_access_key_id=creds.access_key,
                 aws_secret_access_key=creds.secret_key,
                 aws_session_token=creds.token,
                 region_name=new_region,
+                profile_name=profile_name,
             )
         else:
-            boto_session = boto3.Session(region_name=new_region)
+            boto_session = boto3.Session(
+                region_name=new_region,
+                profile_name=profile_name,
+            )
         copied_session = AwsSession(
             boto_session=boto_session, config=config, default_bucket=default_bucket
         )

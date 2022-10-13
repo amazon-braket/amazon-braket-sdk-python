@@ -287,6 +287,17 @@ def test_add_result_type_observable_no_conflict_all():
     assert circ.result_types == expected
 
 
+def test_add_result_type_observable_no_conflict_all_identity():
+    expected = [
+        ResultType.Variance(observable=Observable.Y()),
+        ResultType.Expectation(observable=Observable.I()),
+        ResultType.Expectation(observable=Observable.Y()),
+    ]
+    circ = Circuit(expected)
+    assert circ.observables_simultaneously_measurable
+    assert circ.result_types == expected
+
+
 def test_add_result_type_observable_no_conflict_state_vector_obs_return_value():
     expected = [
         ResultType.StateVector(),
@@ -673,7 +684,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "b[0] = measure q[0];",
                         "b[1] = measure q[1];",
                     ]
-                )
+                ),
+                inputs={},
             ),
         ),
         (
@@ -689,7 +701,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "b[0] = measure $0;",
                         "b[1] = measure $4;",
                     ]
-                )
+                ),
+                inputs={},
             ),
         ),
         (
@@ -709,7 +722,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "}",
                         "#pragma braket result expectation i all",
                     ]
-                )
+                ),
+                inputs={},
             ),
         ),
         (
@@ -729,7 +743,27 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "#pragma braket noise bit_flip(0.2) q[3]",
                         "#pragma braket result expectation i(q[0])",
                     ]
-                )
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().rx(0, 0.15).rx(1, FreeParameter("theta")),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "input float theta;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "rx(0.15) q[0];",
+                        "rx(theta) q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
             ),
         ),
     ],
@@ -2288,6 +2322,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
     ).source == "\n".join(
         [
             "OPENQASM 3.0;",
+            "input float frequency;",
             "bit[2] b;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
