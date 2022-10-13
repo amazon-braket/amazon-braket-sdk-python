@@ -267,6 +267,14 @@ def test_pulse_sequence_conflicting_wf(user_defined_frame):
         ps.play(user_defined_frame, conflicting_wf)
 
 
+def test_pulse_sequence_to_time_trace_program_mutation(user_defined_frame):
+    wf = ConstantWaveform(1e-3, complex(1, 2), "wf_id")
+    ps = PulseSequence().play(user_defined_frame, wf)
+    initial_vars = dict(ps._program.undeclared_vars)
+    ps.to_time_trace()
+    assert initial_vars == ps._program.undeclared_vars
+
+
 def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
     pulse_sequence = (
         PulseSequence()

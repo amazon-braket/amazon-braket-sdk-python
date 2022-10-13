@@ -58,7 +58,7 @@ class PulseSequence:
             (amplitude, frequency and phase) mapping a str (frame id) to a TimeSeries
             (containing the time evolution of that attribute).
         """
-        parser = _ApproximationParser(self._program, self._frames)
+        parser = _ApproximationParser(deepcopy(self._program), self._frames)
         return PulseSequenceTrace(
             amplitudes=parser.amplitudes, frequencies=parser.frequencies, phases=parser.phases
         )
