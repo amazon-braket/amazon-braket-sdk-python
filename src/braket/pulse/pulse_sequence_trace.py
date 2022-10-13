@@ -20,8 +20,10 @@ from braket.timings.time_series import TimeSeries
 
 
 @dataclass
-class PulseSequenceApproximation:
-    """This class represents an approximation of a PulseSequence.
+class PulseSequenceTrace:
+    """This class encapsulates the data representing the PulseSequence execution. It contains
+    the trace of amplitude, frequency and phase information for each frame in the
+    PulseSequence.
 
     Args:
         amplitudes (dict): A dictionary of frame ID to a TimeSeries of complex values specifying

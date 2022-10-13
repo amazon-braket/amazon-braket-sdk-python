@@ -34,7 +34,7 @@ def port():
 
 def test_bare_pulsequence():
     pulse_seq = PulseSequence()
-    results = pulse_seq.generate_approximation()
+    results = pulse_seq.to_time_trace()
     verify_results(results, {}, {}, {})
 
 

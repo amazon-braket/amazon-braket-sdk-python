@@ -31,7 +31,7 @@ from braket.pulse.ast.free_parameters import (
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
-from braket.pulse.pulse_sequence_approximation import PulseSequenceApproximation
+from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
 from braket.pulse.waveforms import Waveform
 
 
@@ -48,13 +48,18 @@ class PulseSequence:
         self._waveforms = {}
         self._free_parameters = set()
 
-    def generate_approximation(self) -> PulseSequenceApproximation:
-        """Generate an approximation of this PulseSequence.
+    def to_time_trace(self) -> PulseSequenceTrace:
+        """Generate an approximate trace of the amplitude, frequency, phase for each frame
+        contained in the PulseSequence, under the action of the instructions contained in
+        the pulse sequence.
+
         Returns:
-            PulseSequenceApproximation: The approximation.
+            PulseSequenceTrace: The approximation information with each attribute
+            (amplitude, frequency and phase) mapping a str (frame id) to a TimeSeries
+            (containing the time evolution of that attribute).
         """
         parser = _ApproximationParser(self._program, self._frames)
-        return PulseSequenceApproximation(
+        return PulseSequenceTrace(
             amplitudes=parser.amplitudes, frequencies=parser.frequencies, phases=parser.phases
         )
 
