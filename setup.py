@@ -31,7 +31,7 @@ setup(
         "amazon-braket-default-simulator>=1.8.1",
         "backoff",
         "boltons",
-        "boto3",
+        "boto3>=1.22.3",
         "nest-asyncio",
         "networkx",
         "numpy",
