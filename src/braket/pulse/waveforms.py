@@ -176,7 +176,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         sigma: Union[float, FreeParameterExpression],
         beta: Union[float, FreeParameterExpression],
         amplitude: Union[float, FreeParameterExpression] = 1,
-        zero_at_edges: bool = True,
+        zero_at_edges: bool = False,
         id: Optional[str] = None,
     ):
         """
@@ -189,7 +189,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
             amplitude (Union[float, FreeParameterExpression]): The amplitude of the
                 waveform envelope. Defaults to 1.
             zero_at_edges (bool): bool specifying whether the waveform amplitude is clipped to
-                zero at the edges. Defaults to True.
+                zero at the edges. Defaults to False.
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
@@ -291,7 +291,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         length: Union[float, FreeParameterExpression],
         sigma: Union[float, FreeParameterExpression],
         amplitude: Union[float, FreeParameterExpression] = 1,
-        zero_at_edges: bool = True,
+        zero_at_edges: bool = False,
         id: Optional[str] = None,
     ):
         """
@@ -303,7 +303,7 @@ class GaussianWaveform(Waveform, Parameterizable):
             amplitude (Union[float, FreeParameterExpression]): The amplitude of the waveform
                 envelope. Defaults to 1.
             zero_at_edges (bool): bool specifying whether the waveform amplitude is clipped to
-                zero at the edges. Defaults to True.
+                zero at the edges. Defaults to False.
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """

@@ -339,7 +339,7 @@ def test_play_drag_gaussian_waveforms(port):
         length=1e-8, sigma=1.69e-9, amplitude=1.0, beta=1e-9, zero_at_edges=False
     )
     drag_gaussian_wf_ZaE_True = DragGaussianWaveform(
-        length=1e-8, sigma=1.69e-9, amplitude=1.0, beta=1e-9
+        length=1e-8, sigma=1.69e-9, amplitude=1.0, beta=1e-9, zero_at_edges=True
     )
     pulse_seq = (
         PulseSequence()
