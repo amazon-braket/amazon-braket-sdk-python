@@ -16,6 +16,7 @@ from typing import Dict, Optional, Set, Union
 
 import pkg_resources
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
@@ -25,10 +26,10 @@ from braket.devices.device import Device
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
+from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
+)
 from braket.tasks.local_quantum_task import LocalQuantumTask
-
-from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
-from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import AnalogHamiltonianSimulationQuantumTaskResult
 
 _simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
@@ -89,7 +90,9 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = _run_internal(task_specification, self._delegate, shots, inputs=inputs, *args, **kwargs)
+        result = _run_internal(
+            task_specification, self._delegate, shots, inputs=inputs, *args, **kwargs
+        )
         return LocalQuantumTask(result)
 
     @property
@@ -193,8 +196,16 @@ def _(
 
 
 @_run_internal.register
-def _(program: AnalogHamiltonianSimulation, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
+def _(
+    program: AnalogHamiltonianSimulation,
+    simulator: BraketSimulator,
+    shots: Optional[int] = None,
+    *args,
+    **kwargs,
+):
     if DeviceActionType.AHS not in simulator.properties.action:
-        raise NotImplementedError(f"{type(simulator)} does not support analog Hamiltonian simulation programs")
+        raise NotImplementedError(
+            f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+        )
     results = simulator.run(program.to_ir(), shots, *args, **kwargs)
     return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
