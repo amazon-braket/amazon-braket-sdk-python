@@ -9,7 +9,7 @@ from braket.pulse import ArbitraryWaveform, PulseSequence
 
 @pytest.fixture
 def device():
-    return AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2-pulse")
+    return AwsDevice("arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2")
 
 
 @pytest.fixture

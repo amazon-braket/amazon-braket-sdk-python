@@ -29,7 +29,7 @@ setup(
     install_requires=[
         "amazon-braket-schemas>=1.10.1",
         "amazon-braket-default-simulator>=1.9.0",
-        "oqpy @ git+ssh://git@github.com/openqasm/oqpy.git",
+        "oqpy==0.1.0",
         "backoff",
         "boltons",
         "boto3",

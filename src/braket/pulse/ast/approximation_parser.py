@@ -73,8 +73,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
     def _get_frame_parameters(
         self, parameters: List[ast.Expression], context: _ParseState
     ) -> Union[KeysView, List[str]]:
-        if not parameters:
-            return self.amplitudes.keys()
         frame_ids = []
         for expression in parameters:
             frame_ids.append(self.visit(expression, context))
@@ -335,16 +333,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         return multiplier * node.value
 
     # The following are function call declarations supported by the parser.
-
-    def newframe(self, node: ast.FunctionCall, context: _ParseState) -> Any:
-        """A 'newframe' Function call.
-        Args:
-            node (ast.FunctionCall): The function call node.
-            context (_ParseState): The parse state.
-        Returns:
-            The results of parsing the frame.
-        """
-        return [self.visit(arg, context) for arg in node.arguments]
 
     def set_frequency(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_frequency' Function call.

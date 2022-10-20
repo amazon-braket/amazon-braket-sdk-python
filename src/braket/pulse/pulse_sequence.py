@@ -332,7 +332,6 @@ class PulseSequence:
         return self.make_bound_pulse_sequence(param_values)
 
 
-# TODO: Remove once oqpy introduces these validations.
 def _validate_uniqueness(
     mapping: Dict[str, Any], values: Union[Frame, Waveform, List[Frame], List[Waveform]]
 ):

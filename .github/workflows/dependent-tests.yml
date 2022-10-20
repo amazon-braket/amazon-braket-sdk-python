@@ -36,7 +36,6 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade git+ssh://git@github.com/aws/amazon-braket-schemas-python-staging.git@feature/braket-pulse-public-main
         pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
-        pip install --upgrade git+ssh://git@github.com/openqasm/oqpy.git
         pip install -e .
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git

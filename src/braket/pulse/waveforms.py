@@ -392,7 +392,6 @@ def _make_identifier_name() -> str:
     return "".join([random.choice(string.ascii_letters) for _ in range(10)])
 
 
-# TODO: Reconcile handling of FreeParameterExpressionIdentifier and OQDurationLiteral in oqpy
 def _map_to_oqpy_type(
     parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
 ) -> Union[_FreeParameterExpressionIdentifier, OQPyExpression]:
