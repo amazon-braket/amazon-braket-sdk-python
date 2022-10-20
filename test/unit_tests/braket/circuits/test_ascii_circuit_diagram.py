@@ -22,6 +22,7 @@ from braket.circuits import (
     Observable,
     Operator,
 )
+from braket.pulse import Frame, Port, PulseSequence
 
 
 def test_empty_circuit():
@@ -646,6 +647,40 @@ def test_noise_multi_probabilities_with_parameter():
         "T  : |     0     |",
         "",
         "Unassigned parameters: [a, b, c].",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_pulse_gate_1_qubit_circuit():
+    circ = (
+        Circuit()
+        .h(0)
+        .pulse_gate(0, PulseSequence().set_phase(Frame("x", Port("px", 1e-9), 1e9, 0), 0))
+    )
+    expected = (
+        "T  : |0|1 |",
+        "           ",
+        "q0 : -H-PG-",
+        "",
+        "T  : |0|1 |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_pulse_gate_multi_qubit_circuit():
+    circ = (
+        Circuit()
+        .h(0)
+        .pulse_gate([0, 1], PulseSequence().set_phase(Frame("x", Port("px", 1e-9), 1e9, 0), 0))
+    )
+    expected = (
+        "T  : |0|1 |",
+        "           ",
+        "q0 : -H-PG-",
+        "        |  ",
+        "q1 : ---PG-",
+        "",
+        "T  : |0|1 |",
     )
     _assert_correct_diagram(circ, expected)
 

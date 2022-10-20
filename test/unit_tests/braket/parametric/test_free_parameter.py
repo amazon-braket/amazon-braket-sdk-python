@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import FreeParameter
+from braket.parametric import FreeParameter
 
 
 @pytest.fixture

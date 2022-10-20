@@ -35,9 +35,13 @@ from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask, AwsQuantumTaskB
 from braket.circuits import Circuit, FreeParameter
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
+from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
+    PulseDeviceActionProperties,
+)
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.pulse import Frame, Port
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -479,6 +483,129 @@ def test_device_refresh_metadata(arn):
     _assert_device_fields(device, MOCK_GATE_MODEL_QPU_CAPABILITIES_2, MOCK_GATE_MODEL_QPU_2)
 
 
+MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.pulse.pulse_device_action_properties",
+        "version": "1",
+    },
+    "supportedQhpTemplateWaveforms": {},
+    "supportedFunctions": {},
+    "ports": {
+        "q0_ff": {
+            "portId": "q0_ff",
+            "direction": "tx",
+            "portType": "ff",
+            "dt": 1e-09,
+            "qubitMappings": None,
+            "centerFrequencies": [375000000.0],
+            "qhpSpecificProperties": None,
+        }
+    },
+    "frames": {
+        "q0_q1_cphase_frame": {
+            "frameId": "q0_q1_cphase_frame",
+            "portId": "q0_ff",
+            "frequency": 4276236.85736918,
+            "centerFrequency": 375000000.0,
+            "phase": 1.0,
+            "associatedGate": "cphase",
+            "qubitMappings": [0, 1],
+            "qhpSpecificProperties": None,
+        }
+    },
+}
+
+
+MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
+    "braketSchemaHeader": {
+        "name": "braket.device_schema.pulse.pulse_device_action_properties",
+        "version": "1",
+    },
+    "supportedQhpTemplateWaveforms": {},
+    "supportedFunctions": {},
+    "ports": {
+        "q0_ff": {
+            "portId": "q0_ff",
+            "direction": "tx",
+            "portType": "ff",
+            "dt": 1e-09,
+            "qubitMappings": None,
+            "centerFrequencies": [375000000.0],
+            "qhpSpecificProperties": None,
+        }
+    },
+}
+
+
+def get_pulse_model(capabilities_json):
+    device_json = {
+        "braketSchemaHeader": {
+            "name": "braket.device_schema.rigetti.rigetti_device_capabilities",
+            "version": "1",
+        },
+        "service": {
+            "executionWindows": [
+                {
+                    "executionDay": "Everyday",
+                    "windowStartHour": "11:00",
+                    "windowEndHour": "12:00",
+                }
+            ],
+            "shotsRange": [1, 10],
+        },
+        "action": {
+            "braket.ir.jaqcd.program": {
+                "actionType": "braket.ir.jaqcd.program",
+                "version": ["1"],
+                "supportedOperations": ["H"],
+            }
+        },
+        "paradigm": {
+            "qubitCount": 30,
+            "nativeGateSet": ["ccnot", "cy"],
+            "connectivity": {"fullyConnected": False, "connectivityGraph": {"1": ["2", "3"]}},
+        },
+        "deviceParameters": {},
+        "pulse": capabilities_json,
+    }
+    device_obj = RigettiDeviceCapabilities.parse_obj(device_json)
+    return {
+        "deviceName": "M-2-Pulse",
+        "deviceType": "QPU",
+        "providerName": "provider1",
+        "deviceStatus": "OFFLINE",
+        "deviceCapabilities": device_obj.json(),
+    }
+
+
+@pytest.mark.parametrize(
+    "pulse_device_capabilities",
+    [
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1,
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2,
+    ],
+)
+def test_device_pulse_metadata(pulse_device_capabilities):
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(pulse_device_capabilities)
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice("arn:aws:braket:us-west-1::TestName", mock_session)
+    assert device.ports == {"q0_ff": Port("q0_ff", 1e-9)}
+    port = device.ports["q0_ff"]
+    assert port.properties == pulse_device_capabilities["ports"]["q0_ff"]
+    if "frames" in pulse_device_capabilities:
+        assert device.frames == {
+            "q0_q1_cphase_frame": Frame(
+                "q0_q1_cphase_frame", Port("q0_ff", 1e-9), 4276236.85736918, 1.0
+            )
+        }
+        frame = device.frames["q0_q1_cphase_frame"]
+        assert frame.is_predefined is True
+        assert frame.properties == pulse_device_capabilities["frames"]["q0_q1_cphase_frame"]
+    else:
+        assert device.frames == {}
+
+
 def test_equality(arn):
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
@@ -916,6 +1043,8 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
     assert device.type == AwsDeviceType(expected_device_data.get("deviceType"))
     if device.topology_graph:
         assert device.topology_graph.edges == device._construct_topology_graph().edges
+    assert device.frames == {}
+    assert device.ports == {}
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")

@@ -26,6 +26,7 @@ from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
+from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
@@ -43,6 +44,7 @@ from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.pulse import Frame, Port, PulseSequence
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
@@ -115,6 +117,25 @@ def openqasm_program():
 @pytest.fixture
 def blackbird_program():
     return BlackbirdProgram(source="Vac | q[0]")
+
+
+@pytest.fixture
+def pulse_sequence():
+    return PulseSequence().set_frequency(
+        Frame(
+            frame_id="predefined_frame_1",
+            frequency=2e9,
+            port=Port(port_id="device_port_x0", dt=1e-9, properties={}),
+            phase=0,
+            is_predefined=True,
+        ),
+        6e6,
+    )
+
+
+@pytest.fixture
+def pulse_gate(pulse_sequence):
+    return PulseGate(pulse_sequence, 1, "my_PG")
 
 
 def test_equality(arn, aws_session):
@@ -425,6 +446,64 @@ def test_create_blackbird_program(aws_session, arn, blackbird_program):
         blackbird_program.json(),
         S3_TARGET,
         shots,
+    )
+
+
+def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
+    expected_openqasm = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    set_frequency(predefined_frame_1, 6000000.0);",
+            "}",
+        ]
+    )
+    expected_program = OpenQasmProgram(source=expected_openqasm)
+
+    aws_session.create_quantum_task.return_value = arn
+    AwsQuantumTask.create(aws_session, SIMULATOR_ARN, pulse_sequence, S3_TARGET, 10)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        expected_program.json(),
+        S3_TARGET,
+        10,
+    )
+
+
+@pytest.mark.parametrize("device_arn,device_parameters_class", DEVICE_PARAMETERS)
+def test_create_pulse_gate_circuit(
+    aws_session, arn, pulse_sequence, device_arn, device_parameters_class
+):
+    pulse_gate_circuit = Circuit().pulse_gate([0, 1], pulse_sequence, "my_PG")
+    expected_openqasm = "\n".join(
+        (
+            "OPENQASM 3.0;",
+            "bit[2] b;",
+            "cal {",
+            "    set_frequency(predefined_frame_1, 6000000.0);",
+            "}",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
+        )
+    )
+    expected_program = OpenQasmProgram(source=expected_openqasm, inputs={})
+
+    aws_session.create_quantum_task.return_value = arn
+    AwsQuantumTask.create(aws_session, device_arn, pulse_gate_circuit, S3_TARGET, 10)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        device_arn,
+        expected_program.json(),
+        S3_TARGET,
+        10,
+        device_parameters_class(
+            paradigmParameters=GateModelParameters(
+                qubitCount=pulse_gate_circuit.qubit_count, disableQubitRewiring=False
+            )
+        ),
     )
 
 

@@ -11,38 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from __future__ import annotations
-
-from abc import ABC, abstractmethod
-from typing import Any, List, Union
-
-from braket.circuits.free_parameter import FreeParameter
-from braket.circuits.free_parameter_expression import FreeParameterExpression
-
-
-class Parameterizable(ABC):
-    """
-    A parameterized object is the abstract definition of an object
-    that can take in FreeParameterExpressions.
-    """
-
-    @property
-    @abstractmethod
-    def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
-        """Get the parameters.
-
-        Returns:
-            List[Union[FreeParameterExpression, FreeParameter, float]]: The parameters associated
-            with the object, either unbound free parameter expressions or bound values. The order
-            of the parameters is determined by the subclass.
-        """
-
-    @abstractmethod
-    def bind_values(self, **kwargs) -> Any:
-        """
-        Takes in parameters and returns an object with specified parameters
-        replaced with their values.
-
-        Returns:
-            Any: The result object will depend on the implementation of the object being bound.
-        """
+from braket.parametric.parameterizable import Parameterizable  # noqa: F401

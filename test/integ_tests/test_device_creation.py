@@ -20,10 +20,11 @@ RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
+PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2-pulse"
 
 
 @pytest.mark.parametrize(
-    "arn", [(RIGETTI_ARN), (IONQ_ARN), (DWAVE_ARN), (OQC_ARN), (SIMULATOR_ARN)]
+    "arn", [(RIGETTI_ARN), (IONQ_ARN), (DWAVE_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
 )
 def test_device_creation(arn, aws_session):
     device = AwsDevice(arn, aws_session=aws_session)
@@ -33,6 +34,13 @@ def test_device_creation(arn, aws_session):
     assert device.type
     assert device.provider_name
     assert device.properties
+
+
+@pytest.mark.parametrize("arn", [(PULSE_ARN)])
+def test_device_pulse_properties(arn, aws_session):
+    device = AwsDevice(arn, aws_session=aws_session)
+    assert device.ports
+    assert device.frames
 
 
 def test_device_across_regions(aws_session):
