@@ -32,7 +32,7 @@ jobs:
       run: |
         pip install --upgrade pip
         # Before merging to main, change these two to the main branch.
-        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@ahs
+        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@quera
         pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@feature/neutral-atom-simulator
         pip install -e .
         cd ..
