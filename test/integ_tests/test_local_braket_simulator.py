@@ -152,6 +152,7 @@ def test_result_types_observable_not_in_instructions(shots, caplog):
         ("default", "StateVectorSimulator"),
         ("braket_sv", "StateVectorSimulator"),
         ("braket_dm", "DensityMatrixSimulator"),
+        ("braket_ahs", "RydbergAtomSimulator"),
     ],
 )
 def test_local_simulator_device_names(backend, device_name, caplog):
