@@ -32,7 +32,7 @@ setup(
         "oqpy==0.1.0",
         "backoff",
         "boltons",
-        "boto3",
+        "boto3>=1.22.3",
         "nest-asyncio",
         "networkx",
         "numpy",
