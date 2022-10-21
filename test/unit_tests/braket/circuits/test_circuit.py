@@ -38,6 +38,7 @@ from braket.circuits.serialization import (
     QubitReferenceType,
 )
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 
 
 @pytest.fixture
@@ -77,6 +78,30 @@ def bell_pair(prob):
         .add_instruction(Instruction(Gate.H(), 0))
         .add_instruction(Instruction(Gate.CNot(), [0, 1]))
         .add_result_type(prob)
+    )
+
+
+@pytest.fixture
+def port():
+    return Port(port_id="device_port_x0", dt=1e-9, properties={})
+
+
+@pytest.fixture
+def predefined_frame_1(port):
+    return Frame(
+        frame_id="predefined_frame_1", frequency=2e9, port=port, phase=0, is_predefined=True
+    )
+
+
+@pytest.fixture
+def user_defined_frame(port):
+    return Frame(
+        frame_id="user_defined_frame_0",
+        port=port,
+        frequency=1e7,
+        phase=3.14,
+        is_predefined=False,
+        properties={"associatedGate": "rz"},
     )
 
 
@@ -2143,3 +2168,198 @@ def test_circuit_with_expr_not_fully_bound():
         .ry(angle=alpha, target=3)
     )
     assert new_circ == expected
+
+
+def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
+    pulse_sequence_1 = (
+        PulseSequence()
+        .set_frequency(predefined_frame_1, 3e9)
+        .play(predefined_frame_1, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
+    )
+
+    pulse_sequence_2 = (
+        PulseSequence()
+        .set_frequency(predefined_frame_1, 3e9)
+        .play(user_defined_frame, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf_2"),
+        )
+    )
+
+    circuit = (
+        Circuit().h(0).pulse_gate(0, pulse_sequence_1).x(1).pulse_gate(1, pulse_sequence_2).h(1)
+    )
+
+    pulse_sequence_2.play(
+        user_defined_frame, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf_ignore")
+    )
+
+    assert circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "bit[2] b;",
+            "cal {",
+            "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
+            "    waveform gauss_wf = gaussian(1000000.0ns, 700000000.0ns, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(3000000.0ns, 400000000.0ns, 0.2, 1,"
+            " false);",
+            "    waveform drag_gauss_wf_2 = drag_gaussian(3000000.0ns, 400000000.0ns, "
+            "0.2, 1, false);",
+            "}",
+            "h $0;",
+            "cal {",
+            "    set_frequency(predefined_frame_1, 3000000000.0);",
+            "    play(predefined_frame_1, gauss_wf);",
+            "    play(predefined_frame_1, drag_gauss_wf);",
+            "}",
+            "x $1;",
+            "cal {",
+            "    set_frequency(predefined_frame_1, 3000000000.0);",
+            "    play(user_defined_frame_0, gauss_wf);",
+            "    play(predefined_frame_1, drag_gauss_wf_2);",
+            "}",
+            "h $1;",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
+        ]
+    )
+
+
+def test_pulse_circuit_conflicting_wf(predefined_frame_1, user_defined_frame):
+    pulse_sequence_1 = (
+        PulseSequence()
+        .set_frequency(predefined_frame_1, 3e9)
+        .play(predefined_frame_1, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
+    )
+
+    pulse_sequence_2 = (
+        PulseSequence()
+        .set_frequency(predefined_frame_1, 3e9)
+        .play(user_defined_frame, GaussianWaveform(length=1e-3, sigma=0.3, id="gauss_wf"))
+    )
+
+    circuit = (
+        Circuit().h(0).pulse_gate(0, pulse_sequence_1).x(1).pulse_gate(1, pulse_sequence_2).h(1)
+    )
+
+    with pytest.raises(ValueError):
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=OpenQASMSerializationProperties(
+                qubit_reference_type=QubitReferenceType.PHYSICAL
+            ),
+        )
+
+
+def test_pulse_circuit_conflicting_frame(user_defined_frame):
+    user_defined_frame_x = Frame(
+        user_defined_frame.id,
+        Port("wrong_port", 1e-9),
+        user_defined_frame.frequency,
+        user_defined_frame.phase,
+    )
+    pulse_sequence_user_defined_frame_x = (
+        PulseSequence()
+        .set_frequency(user_defined_frame_x, 3e9)
+        .play(user_defined_frame_x, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
+    )
+
+    pulse_sequence_user_defined_frame = (
+        PulseSequence()
+        .set_frequency(user_defined_frame, 3e9)
+        .play(user_defined_frame, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
+    )
+
+    circuit = (
+        Circuit()
+        .h(0)
+        .pulse_gate(0, pulse_sequence_user_defined_frame)
+        .x(1)
+        .pulse_gate(1, pulse_sequence_user_defined_frame_x)
+        .h(1)
+    )
+
+    with pytest.raises(ValueError):
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=OpenQASMSerializationProperties(
+                qubit_reference_type=QubitReferenceType.PHYSICAL
+            ),
+        )
+
+
+def test_parametrized_pulse_circuit(user_defined_frame):
+    frequency_parameter = FreeParameter("frequency")
+    length = FreeParameter("length")
+    theta = FreeParameter("theta")
+    pulse_sequence = (
+        PulseSequence()
+        .set_frequency(user_defined_frame, frequency_parameter)
+        .play(user_defined_frame, GaussianWaveform(length=length, sigma=0.7, id="gauss_wf"))
+    )
+
+    circuit = (
+        Circuit().rx(angle=theta, target=0).pulse_gate(pulse_sequence=pulse_sequence, targets=1)
+    )
+
+    assert circuit.parameters == set([frequency_parameter, length, theta])
+
+    bound_half = circuit(theta=0.5, length=1e-5)
+    assert bound_half.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "input float frequency;",
+            "bit[2] b;",
+            "cal {",
+            "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
+            "    waveform gauss_wf = gaussian(10000.0ns, 700000000.0ns, 1, false);",
+            "}",
+            "rx(0.5) $0;",
+            "cal {",
+            "    set_frequency(user_defined_frame_0, frequency);",
+            "    play(user_defined_frame_0, gauss_wf);",
+            "}",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
+        ]
+    )
+
+    bound = bound_half(frequency=1e7)
+
+    assert bound.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "bit[2] b;",
+            "cal {",
+            "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
+            "    waveform gauss_wf = gaussian(10000.0ns, 700000000.0ns, 1, false);",
+            "}",
+            "rx(0.5) $0;",
+            "cal {",
+            "    set_frequency(user_defined_frame_0, 10000000.0);",
+            "    play(user_defined_frame_0, gauss_wf);",
+            "}",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
+        ]
+    )

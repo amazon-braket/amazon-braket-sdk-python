@@ -11,17 +11,23 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
+from copy import deepcopy
 from typing import Any, Iterable, List, Union
 
 import numpy as np
+from oqpy import Program
 from sympy import Float
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import AngledGate, DoubleAngledGate
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.quantum_operator_helpers import (
     is_unitary,
     verify_quantum_operator_matrix_dimensions,
@@ -29,6 +35,8 @@ from braket.circuits.quantum_operator_helpers import (
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import OpenQASMSerializationProperties
+from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.pulse_sequence import PulseSequence
 
 """
 To add a new gate:
@@ -2182,6 +2190,89 @@ class Unitary(Gate):
 
 
 Gate.register_gate(Unitary)
+
+
+class PulseGate(Gate, Parameterizable):
+    """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
+       within circuits.
+
+    Args:
+        pulse_sequence (PulseSequence): PulseSequence to embed within the circuit.
+        qubit_count (int): The number of qubits this pulse gate operates on.
+        display_name (str): Name to be used for an instance of this pulse gate
+            for circuit diagrams. Defaults to `PG`.
+    """
+
+    def __init__(self, pulse_sequence: PulseSequence, qubit_count: int, display_name: str = "PG"):
+        if pulse_sequence._capture_v0_count > 0:
+            raise ValueError(
+                "The supplied pulse sequence contains capture instructions which "
+                "can not be embedded in a PulseGate."
+            )
+        self._pulse_sequence = deepcopy(pulse_sequence)
+        super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
+
+    @property
+    def pulse_sequence(self) -> PulseSequence:
+        """PulseSequence: The underlying PulseSequence of this gate."""
+        return self._pulse_sequence
+
+    @property
+    def parameters(self) -> List[FreeParameter]:
+        """Returns the list of `FreeParameter`s associated with the gate."""
+        return list(self._pulse_sequence.parameters)
+
+    def bind_values(self, **kwargs) -> PulseGate:
+        """Takes in parameters and returns an object with specified parameters
+        replaced with their values.
+
+        Returns:
+            PulseGate: A copy of this gate with the requested parameters bound.
+        """
+        new_pulse_sequence = self._pulse_sequence.make_bound_pulse_sequence(kwargs)
+        return PulseGate(new_pulse_sequence, self.qubit_count, self.ascii_symbols[0])
+
+    def to_matrix(self) -> np.ndarray:
+        raise NotImplementedError("PulseGate does not support conversion to a matrix.")
+
+    def _to_openqasm(
+        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
+    ) -> str:
+        new_program = Program(None)
+        new_program += self._pulse_sequence._program
+        # Suppress declaration of frame and waveform vars as they have already been declared
+        for v in list(new_program.undeclared_vars.values()):
+            new_program._mark_var_declared(v)
+        return ast_to_qasm(new_program.to_ast(include_externs=False, encal=True))
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def pulse_gate(
+        targets: QubitSet, pulse_sequence: PulseSequence, display_name: str = "PG"
+    ) -> Instruction:
+        """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
+           within circuits.
+
+        Args:
+            targets (QubitSet): Target qubits. Note: These are only for representational purposes.
+                The actual targets are determined by the frames used in the pulse sequence.
+            pulse_sequence (PulseSequence): PulseSequence to embed within the circuit.
+            display_name (str): Name to be used for an instance of this pulse gate
+                for circuit diagrams. Defaults to `PG`.
+
+        Returns:
+            Instruction: Pulse gate instruction.
+
+        Examples:
+            >>> pulse_seq = PulseSequence().set_frequency(frame, frequency)....
+            >>> circ = Circuit().pulse_gate(pulse_sequence=pulse_seq, targets=[0])
+        """
+        return Instruction(
+            PulseGate(pulse_sequence, len(QubitSet(targets)), display_name), target=targets
+        )
+
+
+Gate.register_gate(PulseGate)
 
 
 def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, float]) -> str:
