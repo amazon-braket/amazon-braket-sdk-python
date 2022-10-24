@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.32.1 (2022-10-24)
+
+### Bug Fixes and Other Changes
+
+ * require boto containing latest API changes
+
 ## v1.32.0 (2022-10-20)
 
 ### Features
