@@ -27,8 +27,15 @@ class FreeParameter(FreeParameterExpression):
 
     Free parameters can be used in parameterized circuits. Objects that can take a parameter
     all inherit from :class:'Parameterizable'. The FreeParameter can be swapped in to a circuit
-    for a numerical value later on. Circuits with FreeParameters present will NOT run. Values must
-    be substituted prior to execution.
+    for a numerical value later on. Circuits with FreeParameters must have all the inputs
+    provided at execution or substituted prior to execution.
+
+    Examples:
+        >>> alpha, beta = FreeParameter("alpha"), FreeParameter("beta")
+        >>> circuit = Circuit().rx(target=0, angle=alpha).ry(target=1, angle=beta)
+        >>> circuit = circuit(alpha=0.3)
+        >>> device = LocalSimulator()
+        >>> device.run(circuit, inputs={'beta': 0.5} shots=10)
     """
 
     def __init__(self, name: str):
