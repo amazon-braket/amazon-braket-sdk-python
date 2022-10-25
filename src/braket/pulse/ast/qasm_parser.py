@@ -1,0 +1,50 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+import io
+
+from openpulse import ast
+from openpulse.printer import Printer
+from openqasm3.ast import DurationLiteral
+from openqasm3.printer import PrinterState
+
+from braket.parametric.free_parameter_expression import FreeParameterExpression
+
+
+class _PulsePrinter(Printer):
+    """Walks the AST and prints it to an OpenQASM3 string."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def visit__FreeParameterExpressionIdentifier(
+        self, node: ast.Identifier, context: PrinterState
+    ) -> None:
+        self.stream.write(str(node.expression.expression))
+
+    def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState):
+        duration = node.value
+        if isinstance(duration, FreeParameterExpression):
+            self.stream.write(f"({duration.expression}){node.unit.name}")
+        else:
+            super().visit_DurationLiteral(node, context)
+
+    def visit_ClassicalDeclaration(self, node: ast.ClassicalDeclaration, context: PrinterState):
+        # Skip port declarations in output
+        if not isinstance(node.type, ast.PortType):
+            super().visit_ClassicalDeclaration(node, context)
+
+
+def ast_to_qasm(ast: ast.Program) -> str:
+    out = io.StringIO()
+    _PulsePrinter(out, indent="    ").visit(ast)
+    return out.getvalue().strip()

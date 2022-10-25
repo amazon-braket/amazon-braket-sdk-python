@@ -13,7 +13,8 @@
 
 import pytest
 
-from braket.circuits import FreeParameter, FreeParameterExpression
+from braket.parametric import FreeParameter, FreeParameterExpression
+from braket.parametric.free_parameter_expression import subs_if_free_parameter
 
 
 @pytest.fixture
@@ -124,3 +125,23 @@ def test_sub_return_expression():
     expected = FreeParameter("theta") + 2
 
     assert subbed_expr == expected
+
+
+@pytest.mark.parametrize(
+    "param, kwargs, expected_value, expected_type",
+    [
+        (FreeParameter("a") + 2 * FreeParameter("b"), {"a": 0.1, "b": 0.3}, 0.7, float),
+        (FreeParameter("x"), {"y": 1}, FreeParameter("x"), FreeParameter),
+        (FreeParameter("y"), {"y": -0.1}, -0.1, float),
+        (
+            FreeParameter("a") + 2 * FreeParameter("x"),
+            {"a": 0.4, "b": 0.4},
+            0.4 + 2 * FreeParameter("x"),
+            FreeParameterExpression,
+        ),
+    ],
+)
+def test_subs_if_free_parameter(param, kwargs, expected_value, expected_type):
+    value = subs_if_free_parameter(param, **kwargs)
+    assert value == expected_value
+    assert type(value) == expected_type
