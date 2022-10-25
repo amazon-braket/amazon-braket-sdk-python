@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.32.1.post0 (2022-10-25)
+
+### Documentation Changes
+
+ * update FreeParameter class with example
+
 ## v1.32.1 (2022-10-24)
 
 ### Bug Fixes and Other Changes
