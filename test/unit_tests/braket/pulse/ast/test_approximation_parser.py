@@ -111,6 +111,36 @@ def test_set_shift_phase(port):
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
 
+def test_set_shift_phase_beyond_2_pi(port):
+    frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
+    pulse_seq = (
+        PulseSequence()
+        .set_phase(frame, 5*np.pi/2)
+        .delay(frame, 2e-9)
+        .shift_phase(frame, -np.pi)
+        .delay(frame, 5e-9)
+        .set_phase(frame, 0)
+    )
+    expected_amplitudes = {"frame1": TimeSeries()}
+    expected_frequencies = {"frame1": TimeSeries()}
+    expected_phases = {"frame1": TimeSeries()}
+
+    # 2 datapoints for first delay
+    # 5pi/2 is reduced to pi/2
+    expected_amplitudes["frame1"].put(0, 0).put(1e-9, 0)
+    expected_frequencies["frame1"].put(0, 1e8).put(1e-9, 1e8)
+    expected_phases["frame1"].put(0, np.pi/2).put(1e-9, np.pi/2)
+
+    # set_shift_phase should be instantaneous (result on current or next datapoint?)
+    # shift_phase adds -pi to the phase of the last point -> 3pi/2
+    expected_amplitudes["frame1"].put(2e-9, 0).put(6e-9, 0)
+    expected_frequencies["frame1"].put(2e-9, 1e8).put(6e-9, 1e8)
+    expected_phases["frame1"].put(2e-9, 3*np.pi/2).put(6e-9, 3*np.pi/2)
+
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
+
+    verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
+
 def test_set_shift_frequency(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     pulse_seq = (
