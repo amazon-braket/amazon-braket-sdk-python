@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from braket.ahs.time_series import TimeSeries
+from braket.timings.time_series import TimeSeries, _all_close
 
 
 @pytest.fixture
@@ -82,3 +82,19 @@ def test_discretize_times(default_time_series, time_res, expected_times):
 def test_discretize_values(default_time_series, value_res, expected_values):
     time_res = Decimal("0.1")
     assert expected_values == default_time_series.discretize(time_res, value_res).values()
+
+
+@pytest.mark.parametrize(
+    "first_series, second_series, expected_result",
+    [
+        (TimeSeries(), TimeSeries(), True),
+        (TimeSeries().put(0.1, 0.2), TimeSeries(), False),
+        (TimeSeries().put(float(0.1), float(0.2)), TimeSeries().put(float(0.1), float(0.2)), True),
+        (TimeSeries().put(float(1), float(0.2)), TimeSeries().put(int(1), float(0.2)), True),
+        (TimeSeries().put(float(0.1), float(0.2)), TimeSeries().put(float(0.2), float(0.2)), False),
+        (TimeSeries().put(float(0.1), float(0.3)), TimeSeries().put(float(0.1), float(0.2)), False),
+    ],
+)
+def test_all_close(first_series, second_series, expected_result):
+    result = _all_close(first_series, second_series)
+    assert result == expected_result

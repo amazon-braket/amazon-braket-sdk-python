@@ -336,6 +336,28 @@ def test_run_gate_model_inputs():
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
+def test_run_program_model_inputs():
+    dummy = DummyProgramSimulator()
+    dummy.run = Mock(return_value=GATE_MODEL_RESULT)
+    sim = LocalSimulator(dummy)
+    inputs = {"theta": 2}
+    source_string = (
+        "OPENQASM 3.0;",
+        "input float theta;",
+        "bit[1] b;",
+        "qubit[1] q;",
+        "rx(theta) q[0];",
+        "b[0] = measure q[0];",
+    )
+    program = Program.construct(source="\n".join(source_string), inputs=inputs)
+    update_inputs = {"beta": 3}
+    task = sim.run(program, inputs=update_inputs, shots=10)
+    assert program.inputs == inputs
+    program.inputs.update(update_inputs)
+    dummy.run.assert_called_with(program, 10)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
 def test_run_jaqcd_only():
     dummy = DummyJaqcdSimulator()
     sim = LocalSimulator(dummy)

@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.32.1.post0 (2022-10-25)
+
+### Documentation Changes
+
+ * update FreeParameter class with example
+
+## v1.32.1 (2022-10-24)
+
+### Bug Fixes and Other Changes
+
+ * require boto containing latest API changes
+
+## v1.32.0 (2022-10-20)
+
+### Features
+
+ * Add support for pulse control
+
+## v1.31.1 (2022-10-12)
+
+### Bug Fixes and Other Changes
+
+ * update inputs on program's copy
+
 ## v1.31.0 (2022-09-26)
 
 ### Features

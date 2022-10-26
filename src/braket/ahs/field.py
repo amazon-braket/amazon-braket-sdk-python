@@ -18,7 +18,7 @@ from typing import Optional
 
 from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.pattern import Pattern
-from braket.ahs.time_series import TimeSeries
+from braket.timings.time_series import TimeSeries
 
 
 class Field:

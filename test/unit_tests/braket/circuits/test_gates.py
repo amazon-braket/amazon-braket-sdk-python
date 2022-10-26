@@ -32,6 +32,7 @@ from braket.ir.jaqcd.shared_models import (
     SingleTarget,
     TwoDimensionalMatrix,
 )
+from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 
 
 class DoubleAngle:
@@ -768,6 +769,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             "#pragma braket unitary([[1.0, 0], [0, 0.70710678 - 0.70710678im]]) q[4]",
         ),
         (
+            Gate.PulseGate(
+                PulseSequence().play(
+                    Frame("user_frame", Port("device_port_x", 1e-9), 1e9),
+                    ArbitraryWaveform([1, 2], "arb_wf"),
+                ),
+                1,
+            ),
+            [0],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "\n".join(["cal {", "    play(user_frame, arb_wf);", "}"]),
+        ),
+        (
             Gate.GPi(angle=0.17),
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
@@ -928,6 +941,53 @@ def test_bind_values(gate):
         assert type(new_gate.angle) == float
 
 
+def test_bind_values_pulse_gate():
+    qubit_count = 1
+    frame = Frame("user_frame", Port("device_port_x", 1e-9), 1e9)
+    gate = Gate.PulseGate(
+        PulseSequence()
+        .set_frequency(frame, FreeParameter("a") + FreeParameter("b"))
+        .delay(frame, FreeParameter("c")),
+        qubit_count,
+    )
+
+    def to_ir(pulse_gate):
+        return pulse_gate.to_ir(range(pulse_gate.qubit_count), IRType.OPENQASM)
+
+    a = 3
+    a_bound = gate.bind_values(a=a)
+    a_bound_ir = to_ir(a_bound)
+
+    assert a_bound_ir == "\n".join(
+        [
+            "cal {",
+            "    set_frequency(user_frame, b + 3);",
+            "    delay[(1000000000.0*c)ns] user_frame;",
+            "}",
+        ]
+    )
+
+    assert a_bound_ir == to_ir(
+        Gate.PulseGate(gate.pulse_sequence.make_bound_pulse_sequence({"a": a}), qubit_count)
+    )
+    assert a_bound_ir != to_ir(gate)
+
+    c = 4e-6
+    ac_bound = a_bound.bind_values(c=c)
+    ac_bound_ir = to_ir(ac_bound)
+    assert ac_bound_ir == to_ir(
+        Gate.PulseGate(a_bound.pulse_sequence.make_bound_pulse_sequence({"c": c}), qubit_count)
+    )
+    assert ac_bound_ir != a_bound_ir
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_pulse_gate_capture_throws():
+    Circuit().pulse_gate(
+        0, PulseSequence().capture_v0(Frame("user_frame", Port("device_port_x", dt=1e-9), 1e9))
+    )
+
+
 @pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):
@@ -939,3 +999,14 @@ def test_unitary_matrix_target_size_mismatch():
     Circuit().unitary(
         matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
     )
+
+
+@pytest.mark.xfail(raises=NotImplementedError)
+def test_pulse_gate_to_matrix():
+    Gate.PulseGate(
+        PulseSequence().play(
+            Frame("user_frame", Port("device_port_x", 1e-9), 1e9),
+            ArbitraryWaveform([1, 2], "arb_wf"),
+        ),
+        1,
+    ).to_matrix()

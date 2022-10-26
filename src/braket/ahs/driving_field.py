@@ -18,7 +18,7 @@ from typing import List, Union
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.ahs.time_series import TimeSeries
+from braket.timings.time_series import TimeSeries
 
 
 class DrivingField(Hamiltonian):
