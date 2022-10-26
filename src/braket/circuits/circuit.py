@@ -18,6 +18,7 @@ from numbers import Number
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy as np
+from oqpy import Program as OqpyProgram
 
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
@@ -50,6 +51,8 @@ from braket.circuits.serialization import (
 from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.pulse_sequence import _validate_uniqueness
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1163,7 +1166,37 @@ class Circuit:
                 f"Invalid qubit_reference_type "
                 f"{serialization_properties.qubit_reference_type} supplied."
             )
+
+        frame_wf_declarations = self._generate_frame_wf_declarations()
+        if frame_wf_declarations:
+            ir_instructions.append(frame_wf_declarations)
         return ir_instructions
+
+    def _generate_frame_wf_declarations(self) -> Optional[str]:
+        frames = {}
+        waveforms = {}
+        from braket.circuits.gates import PulseGate
+
+        for instruction in self.instructions:
+            if isinstance(instruction.operator, PulseGate):
+                for frame in instruction.operator.pulse_sequence._frames.values():
+                    _validate_uniqueness(frames, frame)
+                    frames[frame.id] = frame
+                for waveform in instruction.operator.pulse_sequence._waveforms.values():
+                    _validate_uniqueness(waveforms, waveform)
+                    waveforms[waveform.id] = waveform
+
+        # Declare the frames and waveforms across all pulse sequences
+        declarable_frames = [f for f in frames.values() if not f.is_predefined]
+        if declarable_frames or waveforms:
+            program = OqpyProgram(None)
+            for f in declarable_frames:
+                program.declare(f._to_oqpy_expression())
+            for wf in waveforms.values():
+                program.declare(wf._to_oqpy_expression())
+            ast = program.to_ast(encal=True, include_externs=False)
+            return ast_to_qasm(ast)
+        return None
 
     def as_unitary(self) -> np.ndarray:
         r"""

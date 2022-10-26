@@ -74,7 +74,7 @@ class LocalSimulator(Device):
                 results based on the task specification.
                 Sampling is not supported for shots=0.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
-                IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
+                IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
         Returns:
@@ -189,8 +189,13 @@ def _(
 ):
     if DeviceActionType.OPENQASM not in simulator.properties.action:
         raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-    program.inputs = program.inputs or {}
-    program.inputs.update(inputs or {})
+    if inputs:
+        inputs_copy = program.inputs.copy() if program.inputs is not None else {}
+        inputs_copy.update(inputs)
+        program = Program(
+            source=program.source,
+            inputs=inputs_copy,
+        )
     results = simulator.run(program, shots, *args, **kwargs)
     return GateModelQuantumTaskResult.from_object(results)
 

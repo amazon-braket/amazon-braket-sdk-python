@@ -18,7 +18,7 @@ import pytest
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.ahs.time_series import TimeSeries
+from braket.timings.time_series import TimeSeries
 
 
 @pytest.fixture

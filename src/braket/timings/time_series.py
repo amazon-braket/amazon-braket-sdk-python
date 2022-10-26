@@ -82,7 +82,7 @@ class TimeSeries:
     def __len__(self):
         return self._series.values().__len__()
 
-    def _ensure_sorted(self):
+    def _ensure_sorted(self) -> None:
         if not self._sorted:
             self._series = OrderedDict(sorted(self._series.items()))
             self._sorted = True
@@ -106,3 +106,38 @@ class TimeSeries:
                 value=round(Decimal(item.value) / value_resolution) * value_resolution,
             )
         return discretized_ts
+
+
+# TODO: Verify if this belongs here.
+def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) -> bool:
+    """
+    Returns True if the times and values in two time series are all within (less than)
+    a given tolerance range. The values in the TimeSeries must be numbers that can be
+    subtracted from each-other, support getting the absolute value, and can be compared
+    against the tolerance.
+
+
+    Args:
+        first (TimeSeries): A time series.
+        second (TimeSeries): A time series.
+        tolerance (Number): The tolerance value.
+
+    Returns:
+        bool: True if the times and values in two time series are all within (less than)
+        a given tolerance range. If the time series are not the same size, this function
+        will return False.
+    """
+    if len(first) != len(second):
+        return False
+    if len(first) == 0:
+        return True
+    first_times = first.times()
+    second_times = second.times()
+    first_values = first.values()
+    second_values = second.values()
+    for index in range(len(first)):
+        if abs(first_times[index] - second_times[index]) >= tolerance:
+            return False
+        if abs(first_values[index] - second_values[index]) >= tolerance:
+            return False
+    return True

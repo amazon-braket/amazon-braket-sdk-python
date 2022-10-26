@@ -29,8 +29,8 @@ from braket.ahs.analog_hamiltonian_simulation import (
 from braket.ahs.atom_arrangement import AtomArrangementItem
 from braket.ahs.field import Field
 from braket.ahs.pattern import Pattern
-from braket.ahs.time_series import TimeSeries
 from braket.ir.ahs.program_v1 import Program
+from braket.timings.time_series import TimeSeries
 
 
 @pytest.fixture

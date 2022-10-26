@@ -19,7 +19,7 @@ import pytest
 from braket.ahs.discretization_types import DiscretizationError
 from braket.ahs.field import Field
 from braket.ahs.pattern import Pattern
-from braket.ahs.time_series import TimeSeries
+from braket.timings.time_series import TimeSeries
 
 
 @pytest.fixture
