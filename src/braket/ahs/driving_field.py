@@ -44,11 +44,11 @@ class DrivingField(Hamiltonian):
           :math:`h.c.`: Hermitian conjugate of the preceding term.
 
         Args:
-            amplitude (Union[Field, TimeSeries]): global amplitude (Omega(t).
+            amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`.
                 Time is in s, and value is in rad/s.
-            phase (Union[Field, TimeSeries]): global phase (phi(t)).
+            phase (Union[Field, TimeSeries]): global phase (:math:`\phi(t)`).
                 Time is in s, and value is in rad/s.
-            detuning (Union[Field, TimeSeries]): global detuning (Delta(t)).
+            detuning (Union[Field, TimeSeries]): global detuning (:math:`\Delta(t)`).
                 Time is in s, and value is in rad/s.
         """
         super().__init__()
