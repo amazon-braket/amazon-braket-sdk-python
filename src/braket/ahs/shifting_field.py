@@ -48,7 +48,7 @@ class ShiftingField(Hamiltonian):
         return self._magnitude
 
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
-        """Creates a discretized version of the Hamiltonian.
+        """Creates a discretized version of the ShiftingField.
 
         Args:
             properties (DiscretizationProperties): Discretization properties of a device.
