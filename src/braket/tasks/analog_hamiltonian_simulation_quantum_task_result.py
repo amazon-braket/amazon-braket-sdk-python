@@ -85,7 +85,6 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
     @classmethod
     def _get_measurements(cls, result: AnalogHamiltonianSimulationTaskResult) -> List[ShotResult]:
         measurements = []
-        # TODO: Note: I'm not actually sure if we should be combining the data this way.
         for measurement in result.measurements:
             status = AnalogHamiltonianSimulationShotStatus(measurement.shotMetadata.shotStatus)
             if measurement.shotResult.preSequence:
