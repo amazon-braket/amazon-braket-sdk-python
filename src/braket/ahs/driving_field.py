@@ -32,16 +32,19 @@ class DrivingField(Hamiltonian):
         from the ground state to the Rydberg state in an AnalogHamiltonianSimulation.
 
         formula:
+
         .. math::
-            \frac{\Omega(t)}{2} \exp(i \phi(t)) \left( \sum_k |g_k \rangle \langle r_k| + h.c. \right)
-            - \Delta(t) \sum_k{| r_k \rangle \langle r_k |}
-  
+            \frac{\Omega(t)}{2} e^{i \phi(t)} \left(
+                \sum_k |g_k \rangle \langle r_k| + |r_k \rangle \langle g_k|
+            \right) - \Delta(t) \sum_k{| r_k \rangle \langle r_k |}
+
         states:
           :math:`|g_k \rangle`: ground state of atom k.
+
           :math:`|r_k \rangle`: Rydberg state of atom k.
+
         other symbols:
           :math:`\sum_k`: summation over all target atoms.
-          :math:`h.c.`: Hermitian conjugate of the preceding term.
 
         Args:
             amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`.
