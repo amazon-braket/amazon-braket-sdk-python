@@ -28,23 +28,22 @@ class DrivingField(Hamiltonian):
         phase: Union[Field, TimeSeries],
         detuning: Union[Field, TimeSeries],
     ) -> None:
-        r"""Creates Hamiltonian Term for the Driving Field that coherently transfer atoms
-        from the ground state to the Rydberg state in an AnalogHamiltonianSimulation.
-
-        formula:
+        r"""Creates a Hamiltonian term :math:`H_{drive}` for the driving field
+        that coherently transfers atoms from the ground state to the Rydberg state
+        in an AnalogHamiltonianSimulation, defined by the formula
 
         .. math::
-            \frac{\Omega(t)}{2} e^{i \phi(t)} \left(
+            H_{drive} (t) := \frac{\Omega(t)}{2} e^{i \phi(t)} \left(
                 \sum_k |g_k \rangle \langle r_k| + |r_k \rangle \langle g_k|
             \right) - \Delta(t) \sum_k{| r_k \rangle \langle r_k |}
 
-        states:
-          :math:`|g_k \rangle`: ground state of atom k.
+        States:
+          :math:`|g_k \rangle`: Ground state of atom k.
 
           :math:`|r_k \rangle`: Rydberg state of atom k.
 
-        other symbols:
-          :math:`\sum_k`: summation over all target atoms.
+        Other symbols:
+          :math:`\sum_k`: Sum over all target atoms.
 
         Args:
             amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`.

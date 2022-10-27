@@ -22,14 +22,18 @@ from braket.ahs.hamiltonian import Hamiltonian
 
 class ShiftingField(Hamiltonian):
     def __init__(self, magnitude: Field) -> None:
-        """Creates Hamiltonian Term for representing the Shifting Field that changes
-        the energy of the Rydberg level in an AnalogHamiltonianSimulation.
+        r"""Creates a Hamiltonian term :math:`H_{shift}` representing the shifting field
+        that changes the energy of the Rydberg level in an AnalogHamiltonianSimulation,
+        defined by the formula
 
-        formula: - Delta(t) * Sum_k h_k |r_k><r_k|
-        states:
-          |r_k> : Rydberg state of atom k.
-        other symbols:
-          Sum_k : summation over all target atoms.
+        .. math::
+            H_{shift} (t) := -\Delta(t) \sum_k h_k | r_k \rangle \langle r_k |
+
+        States:
+          :math:`|r_k \rangle`: Rydberg state of atom k.
+
+        Other symbols:
+          :math:`\sum_k`: Sum over all target atoms.
 
         Args:
             magnitude (Field): containing the global magnitude time series (Delta(t)),
