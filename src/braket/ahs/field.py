@@ -53,7 +53,7 @@ class Field:
             Field: A new discretized field.
 
         Raises:
-            ValueError: if pattern_res is None, but there is a Pattern
+            ValueError: if pattern_resolution is None, but there is a Pattern
         """
         discretized_time_series = self.time_series.discretize(time_resolution, value_resolution)
         if self.pattern is None:

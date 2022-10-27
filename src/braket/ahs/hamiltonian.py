@@ -30,8 +30,7 @@ class Hamiltonian:
         """Creates a discretized version of the Hamiltonian.
 
         Args:
-            properties (DiscretizationProperties): Discretization will be done according to
-                the properties of the device.
+            properties (DiscretizationProperties): Discretization properties of a device.
 
         Returns:
             Hamiltonian: A new discretized Hamiltonian.

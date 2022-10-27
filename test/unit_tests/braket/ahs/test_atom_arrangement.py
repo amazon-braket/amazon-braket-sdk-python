@@ -36,7 +36,7 @@ def default_atom_arrangement():
 def test_add_chaining():
     atom_arrangement = (
         AtomArrangement()
-        .add(coord=(0, 0), site_type=SiteType.FILLED)
+        .add(coordinate=(0, 0), site_type=SiteType.FILLED)
         .add((0, 3), SiteType.FILLED)
         .add((0, 6))
         .add((3, 0))

@@ -59,19 +59,21 @@ class AtomArrangement:
         self._sites = []
 
     def add(
-        self, coord: Union[Tuple[Number, Number], np.ndarray], site_type: SiteType = SiteType.FILLED
+        self,
+        coordinate: Union[Tuple[Number, Number], np.ndarray],
+        site_type: SiteType = SiteType.FILLED,
     ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
 
         Args:
-            coord (Union[Tuple[Number, Number], np.ndarray]): The coordinate of the
+            coordinate (Union[Tuple[Number, Number], np.ndarray]): The coordinate of the
                 atom (in meters). The coordinates can be a numpy array of shape (2,)
                 or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
         Returns:
             AtomArrangement: returns self (to allow for chaining).
         """
-        self._sites.append(AtomArrangementItem(tuple(coord), site_type))
+        self._sites.append(AtomArrangementItem(tuple(coordinate), site_type))
         return self
 
     def coordinate_list(self, coordinate_index: Number) -> List[Number]:
@@ -101,8 +103,7 @@ class AtomArrangement:
         resolution. The types of the sites are unchanged.
 
         Args:
-            properties (DiscretizationProperties): Discretization will be done according to
-                the properties of the device.
+            properties (DiscretizationProperties): Discretization properties of a device.
 
         Returns:
             AtomArrangement: A new discretized atom arrangement.

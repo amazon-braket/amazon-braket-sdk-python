@@ -1090,7 +1090,12 @@ class Circuit:
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
-            Program: A Braket quantum circuit description program in JSON format.
+            Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
+            `ir_type` format.
+
+        Raises:
+            ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
+            properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()

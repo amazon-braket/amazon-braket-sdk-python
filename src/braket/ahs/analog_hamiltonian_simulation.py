@@ -23,9 +23,13 @@ from braket.ahs.discretization_types import DiscretizationError, DiscretizationP
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.shifting_field import ShiftingField
+from braket.device_schema import DeviceActionType
 
 
 class AnalogHamiltonianSimulation:
+    SHIFTING_FIELDS_PROPERTY = "shifting_fields"
+    DRIVING_FIELDS_PROPERTY = "driving_fields"
+
     def __init__(self, register: AtomArrangement, hamiltonian: Hamiltonian) -> None:
         """Creates an AnalogHamiltonianSimulation with a given setup, and terms.
 
@@ -62,7 +66,8 @@ class AnalogHamiltonianSimulation:
             term_type, term_ir = _get_term_ir(term)
             terms[term_type].append(term_ir)
         return ir.Hamiltonian(
-            drivingFields=terms["driving_fields"], shiftingFields=terms["shifting_fields"]
+            drivingFields=terms[AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY],
+            shiftingFields=terms[AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY],
         )
 
     def discretize(self, device) -> AnalogHamiltonianSimulation:
@@ -79,7 +84,7 @@ class AnalogHamiltonianSimulation:
             DiscretizeError: If unable to discretize the program.
         """
 
-        required_action_schema = "braket.ir.ahs.program"
+        required_action_schema = DeviceActionType.AHS
         if (required_action_schema not in device.properties.action) or (
             device.properties.action[required_action_schema].actionType != required_action_schema
         ):
@@ -106,7 +111,7 @@ def _get_term_ir(
 
 @_get_term_ir.register
 def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
-    return "shifting_fields", ir.ShiftingField(
+    return AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY, ir.ShiftingField(
         magnitude=ir.PhysicalField(
             time_series=ir.TimeSeries(
                 times=term.magnitude.time_series.times(),
@@ -119,7 +124,7 @@ def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
 
 @_get_term_ir.register
 def _(term: DrivingField) -> Tuple[str, ir.DrivingField]:
-    return "driving_fields", ir.DrivingField(
+    return AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY, ir.DrivingField(
         amplitude=ir.PhysicalField(
             time_series=ir.TimeSeries(
                 times=term.amplitude.time_series.times(),
