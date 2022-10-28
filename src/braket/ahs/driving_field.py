@@ -45,11 +45,11 @@ class DrivingField(Hamiltonian):
 
             :math:`\Delta(t)` is the global detuning in rad/s,
 
-            :math:`|g_k \rangle` is the ground state of atom k,
+            :math:`|g_k \rangle` is the ground state of atom :math:`k`,
 
-            :math:`|r_k \rangle` is the Rydberg state of atom k.
+            :math:`|r_k \rangle` is the Rydberg state of atom :math:`k`.
 
-        and the sum :math:`\sum_k` is taken over all target atoms.
+        with the sum :math:`\sum_k` taken over all target atoms.
 
         Args:
             amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`).

@@ -33,15 +33,16 @@ class ShiftingField(Hamiltonian):
 
             :math:`\Delta(t)` is the magnitude of the frequency shift in rad/s,
 
-            :math:`h_k` is the site coefficient, a dimensionless real number between 0 and 1,
+            :math:`h_k` is the site coefficient of atom :math:`k`,
+            a dimensionless real number between 0 and 1,
 
-            :math:`|r_k \rangle` is the Rydberg state of atom k.
+            :math:`|r_k \rangle` is the Rydberg state of atom :math:`k`.
 
-        and the sum :math:`\sum_k` is taken over all target atoms.
+        with the sum :math:`\sum_k` taken over all target atoms.
 
         Args:
-            magnitude (Field): containing the global magnitude time series (:math:`\Delta(t)`),
-                where time is measured in seconds (s) and values are measured in rad/s) and the
+            magnitude (Field): containing the global magnitude time series :math:`\Delta(t)`,
+                where time is measured in seconds (s) and values are measured in rad/s, and the
                 local pattern :math:`h_k` of dimensionless real numbers between 0 and 1.
         """
         super().__init__()
@@ -53,9 +54,9 @@ class ShiftingField(Hamiltonian):
 
     @property
     def magnitude(self) -> Field:
-        r"""Field: containing the global magnitude time series (Delta(t)), where time is measured in
-        seconds (s) and values measured in rad/s) and the local pattern :math:`h_k` of dimensionless
-        real numbers between 0 and 1."""
+        r"""Field: containing the global magnitude time series :math:`\Delta(t)`,
+        where time is measured in seconds (s) and values measured in rad/s)
+        and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
         return self._magnitude
 
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
