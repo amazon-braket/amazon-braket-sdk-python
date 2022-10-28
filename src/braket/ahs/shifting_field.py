@@ -31,17 +31,17 @@ class ShiftingField(Hamiltonian):
 
         where
 
-            :math:`\Delta(t)` is the frequency shift in rad/s,
+            :math:`\Delta(t)` is the magnitude of the frequency shift in rad/s,
 
-            :math:`h_k` is the site coefficient,
+            :math:`h_k` is the site coefficient, a dimensionless real number between 0 and 1,
 
             :math:`|r_k \rangle` is the Rydberg state of atom k.
 
         and the sum :math:`\sum_k` is taken over all target atoms.
 
         Args:
-            magnitude (Field): containing the global magnitude time series (Delta(t)),
-                where time measured in seconds (s) and values measured in rad/s) and the
+            magnitude (Field): containing the global magnitude time series (:math:`\Delta(t)`),
+                where time is measured in seconds (s) and values are measured in rad/s) and the
                 local pattern :math:`h_k` of dimensionless real numbers between 0 and 1.
         """
         super().__init__()
