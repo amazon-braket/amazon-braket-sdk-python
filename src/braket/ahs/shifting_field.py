@@ -29,16 +29,16 @@ class ShiftingField(Hamiltonian):
         .. math::
             H_{shift} (t) := -\Delta(t) \sum_k h_k | r_k \rangle \langle r_k |
 
-        States:
-          :math:`|r_k \rangle`: Rydberg state of atom k.
+        where
 
-        Other symbols:
-          :math:`\sum_k`: Sum over all target atoms.
+            :math:`|r_k \rangle` is the Rydberg state of atom k.
+
+        and the sum :math:`\sum_k` is taken over all target atoms.
 
         Args:
             magnitude (Field): containing the global magnitude time series (Delta(t)),
                 where time measured in seconds (s) and values measured in rad/s) and the
-                local pattern of unitless real numbers between 0 and 1 (h_k).
+                local pattern of dimensionless real numbers between 0 and 1 (h_k).
         """
         super().__init__()
         self._magnitude = magnitude
@@ -49,9 +49,9 @@ class ShiftingField(Hamiltonian):
 
     @property
     def magnitude(self) -> Field:
-        """Field: containing the global magnitude time series (Delta(t)), where time measured in
-        seconds (s) and values measured in rad/s) and the local pattern of unitless real numbers
-        between 0 and 1 (h_k)."""
+        r"""Field: containing the global magnitude time series (Delta(t)), where time is measured in
+        seconds (s) and values measured in rad/s) and the local pattern :math:`h_k` of dimensionless
+        real numbers between 0 and 1 (h_k)."""
         return self._magnitude
 
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:

@@ -20,6 +20,13 @@ from braket.ahs.discretization_types import DiscretizationProperties
 
 class Hamiltonian:
     def __init__(self, terms: Optional[List[Hamiltonian]] = None):
+        r"""A Hamiltonian representing a system to be simulated.
+
+        A Hamiltonian :math:`H` may be expressed as a sum of multiple terms
+
+        .. math::
+            H = \sum_i H_i
+        """
         self._terms = terms or []
 
     @property

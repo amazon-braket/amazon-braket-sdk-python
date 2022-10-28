@@ -37,13 +37,13 @@ class DrivingField(Hamiltonian):
                 \sum_k |g_k \rangle \langle r_k| + |r_k \rangle \langle g_k|
             \right) - \Delta(t) \sum_k{| r_k \rangle \langle r_k |}
 
-        States:
-          :math:`|g_k \rangle`: Ground state of atom k.
+        where
 
-          :math:`|r_k \rangle`: Rydberg state of atom k.
+            :math:`|g_k \rangle` is the ground state of atom k.
 
-        Other symbols:
-          :math:`\sum_k`: Sum over all target atoms.
+            :math:`|r_k \rangle` is the Rydberg state of atom k.
+
+        and the sum :math:`\sum_k` is taken over all target atoms.
 
         Args:
             amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`.
@@ -64,17 +64,17 @@ class DrivingField(Hamiltonian):
 
     @property
     def amplitude(self) -> Field:
-        """Field: global amplitude (Omega(t). Time is in s, and value is in rad/s."""
+        r"""Field: The global amplitude (:math:`\Omega(t)`). Time is in s, and value is in rad/s."""
         return self._amplitude
 
     @property
     def phase(self) -> Field:
-        """Field: global phase (phi(t)). Time is in s, and value is in rad/s."""
+        r"""Field: The global phase (:math:`\pmega(t)`). Time is in s, and value is in rad/s."""
         return self._phase
 
     @property
     def detuning(self) -> Field:
-        """Field: global detuning (Delta(t)). Time is in s, and value is in rad/s."""
+        r"""Field: global detuning (:math:`\Delta(t)`). Time is in s, and value is in rad/s."""
         return self._detuning
 
     def discretize(self, properties: DiscretizationProperties) -> DrivingField:

@@ -24,8 +24,8 @@ class Pattern:
 
     @property
     def series(self) -> List[Number]:
-        """List[Number]: A series of numbers representing the the local
-        pattern of real numbers between 0 and 1 (h_k)."""
+        r"""List[Number]: A series :math:`h_k` of numbers representing the local
+        pattern of real numbers between 0 and 1."""
         return self._series
 
     def discretize(self, resolution: Decimal) -> Pattern:

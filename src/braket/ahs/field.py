@@ -33,7 +33,8 @@ class Field:
 
     @property
     def pattern(self) -> Optional[Pattern]:
-        """Optional[Pattern]: The local pattern of real numbers between 0 and 1 (h_k)."""
+        r"""Optional[Pattern]: The local pattern of real numbers between 0 and 1,
+        denoted by :math:`h_k`(h_k) in the Rydberg Hamiltonian."""
         return self._pattern
 
     def discretize(
