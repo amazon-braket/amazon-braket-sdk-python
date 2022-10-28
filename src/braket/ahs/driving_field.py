@@ -64,14 +64,17 @@ class DrivingField(Hamiltonian):
 
     @property
     def amplitude(self) -> Field:
+        """Field: global amplitude (Omega(t). Time is in s, and value is in rad/s."""
         return self._amplitude
 
     @property
     def phase(self) -> Field:
+        """Field: global phase (phi(t)). Time is in s, and value is in rad/s."""
         return self._phase
 
     @property
     def detuning(self) -> Field:
+        """Field: global detuning (Delta(t)). Time is in s, and value is in rad/s."""
         return self._detuning
 
     def discretize(self, properties: DiscretizationProperties) -> DrivingField:

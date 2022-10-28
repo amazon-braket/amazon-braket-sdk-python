@@ -10,5 +10,7 @@ class DiscretizationError(Exception):
 
 @dataclass
 class DiscretizationProperties:
+    """These properties can be used to discretize a problem to the capabilities of a device."""
+
     lattice: Any
     rydberg: Any

@@ -31,6 +31,8 @@ class SiteType(Enum):
 
 @dataclass
 class AtomArrangementItem:
+    """Represents an item (coordinate and metadata) in an atom arrangement."""
+
     coordinate: Tuple[Number, Number]
     site_type: SiteType
 

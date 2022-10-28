@@ -28,10 +28,12 @@ class Field:
 
     @property
     def time_series(self) -> TimeSeries:
+        """TimeSeries: The time series representing this field."""
         return self._time_series
 
     @property
     def pattern(self) -> Optional[Pattern]:
+        """Optional[Pattern]: The local pattern of real numbers between 0 and 1 (h_k)."""
         return self._pattern
 
     def discretize(

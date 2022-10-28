@@ -49,6 +49,9 @@ class ShiftingField(Hamiltonian):
 
     @property
     def magnitude(self) -> Field:
+        """Field: containing the global magnitude time series (Delta(t)), where time measured in
+        seconds (s) and values measured in rad/s) and the local pattern of unitless real numbers
+        between 0 and 1 (h_k)."""
         return self._magnitude
 
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:

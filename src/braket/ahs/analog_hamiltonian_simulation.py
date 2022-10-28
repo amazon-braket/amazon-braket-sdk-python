@@ -42,13 +42,21 @@ class AnalogHamiltonianSimulation:
 
     @property
     def register(self) -> AtomArrangement:
+        """AtomArrangement: The initial atom arrangement for the simulation."""
         return self._register
 
     @property
     def hamiltonian(self) -> Hamiltonian:
+        """Hamiltonian: The hamiltonian to simulate."""
         return self._hamiltonian
 
     def to_ir(self) -> ir.Program:
+        """Converts the Analog Hamiltonian Simulation into the canonical intermediate
+        representation.
+
+        Returns:
+            Program: A representation of the circuit in the IR format.
+        """
         return ir.Program(
             setup=ir.Setup(ahs_register=self._register_to_ir()),
             hamiltonian=self._hamiltonian_to_ir(),

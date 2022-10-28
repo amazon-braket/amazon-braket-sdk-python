@@ -24,6 +24,7 @@ class Hamiltonian:
 
     @property
     def terms(self) -> List[Hamiltonian]:
+        """List[Hamiltonian]: The list of terms in this Hamiltonian."""
         return self._terms
 
     def discretize(self, properties: DiscretizationProperties) -> Hamiltonian:
