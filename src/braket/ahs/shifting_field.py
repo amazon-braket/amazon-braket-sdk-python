@@ -31,7 +31,7 @@ class ShiftingField(Hamiltonian):
 
         where
 
-            :math:`\Delta(t)` is the frequency shift,
+            :math:`\Delta(t)` is the frequency shift in rad/s,
 
             :math:`h_k` is the site coefficient,
 
@@ -42,7 +42,7 @@ class ShiftingField(Hamiltonian):
         Args:
             magnitude (Field): containing the global magnitude time series (Delta(t)),
                 where time measured in seconds (s) and values measured in rad/s) and the
-                local pattern of dimensionless real numbers between 0 and 1 (h_k).
+                local pattern :math:`h_k` of dimensionless real numbers between 0 and 1.
         """
         super().__init__()
         self._magnitude = magnitude
@@ -55,7 +55,7 @@ class ShiftingField(Hamiltonian):
     def magnitude(self) -> Field:
         r"""Field: containing the global magnitude time series (Delta(t)), where time is measured in
         seconds (s) and values measured in rad/s) and the local pattern :math:`h_k` of dimensionless
-        real numbers between 0 and 1 (h_k)."""
+        real numbers between 0 and 1."""
         return self._magnitude
 
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:

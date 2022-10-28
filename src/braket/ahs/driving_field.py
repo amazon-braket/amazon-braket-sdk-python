@@ -39,11 +39,11 @@ class DrivingField(Hamiltonian):
 
         where
 
-            :math:`\Omega(t)` is the global Rabi frequency,
+            :math:`\Omega(t)` is the global Rabi frequency in rad/s,
 
-            :math:`\phi(t)` is the global phase,
+            :math:`\phi(t)` is the global phase in rad/s,
 
-            :math:`\Delta(t)` is the global detuning,
+            :math:`\Delta(t)` is the global detuning in rad/s,
 
             :math:`|g_k \rangle` is the ground state of atom k,
 
@@ -52,7 +52,7 @@ class DrivingField(Hamiltonian):
         and the sum :math:`\sum_k` is taken over all target atoms.
 
         Args:
-            amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`.
+            amplitude (Union[Field, TimeSeries]): global amplitude (:math:`\Omega(t)`).
                 Time is in s, and value is in rad/s.
             phase (Union[Field, TimeSeries]): global phase (:math:`\phi(t)`).
                 Time is in s, and value is in rad/s.
@@ -75,7 +75,7 @@ class DrivingField(Hamiltonian):
 
     @property
     def phase(self) -> Field:
-        r"""Field: The global phase (:math:`\pmega(t)`). Time is in s, and value is in rad/s."""
+        r"""Field: The global phase (:math:`\phi(t)`). Time is in s, and value is in rad/s."""
         return self._phase
 
     @property
