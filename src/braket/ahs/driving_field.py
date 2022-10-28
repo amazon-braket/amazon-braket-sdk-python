@@ -39,7 +39,13 @@ class DrivingField(Hamiltonian):
 
         where
 
-            :math:`|g_k \rangle` is the ground state of atom k.
+            :math:`\Omega(t)` is the global Rabi frequency,
+
+            :math:`\phi(t)` is the global phase,
+
+            :math:`\Delta(t)` is the global detuning,
+
+            :math:`|g_k \rangle` is the ground state of atom k,
 
             :math:`|r_k \rangle` is the Rydberg state of atom k.
 

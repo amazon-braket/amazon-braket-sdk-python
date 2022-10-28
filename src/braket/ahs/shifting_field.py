@@ -31,6 +31,10 @@ class ShiftingField(Hamiltonian):
 
         where
 
+            :math:`\Delta(t)` is the frequency shift,
+
+            :math:`h_k` is the site coefficient,
+
             :math:`|r_k \rangle` is the Rydberg state of atom k.
 
         and the sum :math:`\sum_k` is taken over all target atoms.
