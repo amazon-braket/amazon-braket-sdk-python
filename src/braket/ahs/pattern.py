@@ -20,12 +20,18 @@ from typing import List
 
 class Pattern:
     def __init__(self, series: List[Number]):
+        """Represents the spatial dependence of a Field.
+
+        Args:
+            series (List[Number]): A series of numbers representing the the local
+                pattern of real numbers.
+        """
         self._series = series
 
     @property
     def series(self) -> List[Number]:
-        r"""List[Number]: A series :math:`h_k` of numbers representing the local
-        pattern of real numbers between 0 and 1."""
+        """List[Number]: A series of numbers representing the local
+        pattern of real numbers."""
         return self._series
 
     def discretize(self, resolution: Decimal) -> Pattern:

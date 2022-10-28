@@ -23,6 +23,12 @@ from braket.timings.time_series import TimeSeries
 
 class Field:
     def __init__(self, time_series: TimeSeries, pattern: Optional[Pattern] = None) -> None:
+        """A space and time dependent parameter of a program.
+
+        Args:
+            time_series (TimeSeries): The time series representing this field.
+            pattern (Optional[Pattern]): The local pattern of real numbers.
+        """
         self._time_series = time_series
         self._pattern = pattern
 
@@ -33,8 +39,7 @@ class Field:
 
     @property
     def pattern(self) -> Optional[Pattern]:
-        r"""Optional[Pattern]: The local pattern of real numbers between 0 and 1,
-        denoted by :math:`h_k` in the Rydberg Hamiltonian."""
+        """Optional[Pattern]: The local pattern of real numbers."""
         return self._pattern
 
     def discretize(

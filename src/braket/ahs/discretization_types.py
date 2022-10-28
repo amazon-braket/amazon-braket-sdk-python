@@ -10,7 +10,18 @@ class DiscretizationError(Exception):
 
 @dataclass
 class DiscretizationProperties:
-    """These properties can be used to discretize a problem to the capabilities of a device."""
+    """Capabilities of a device that represent the resolution with which the device can
+    implement the parameters.
+
+    lattice (Any): configuration values for discretization of the lattice geometry,
+        including the position resolution.
+    rydberg (Any): configuration values for discretization of Rydberg fields.
+
+    Examples:
+        lattice.geometry.positionResolution = Decimal("1E-7")
+        rydberg.rydbergGlobal.timeResolution = Decimal("1E-9")
+        rydberg.rydbergGlobal.phaseResolution = Decimal("5E-7")
+    """
 
     lattice: Any
     rydberg: Any

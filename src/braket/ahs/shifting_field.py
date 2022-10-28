@@ -63,7 +63,8 @@ class ShiftingField(Hamiltonian):
         """Creates a discretized version of the ShiftingField.
 
         Args:
-            properties (DiscretizationProperties): Discretization properties of a device.
+            properties (DiscretizationProperties): Capabilities of a device that represent the
+                resolution with which the device can implement the parameters.
 
         Returns:
             ShiftingField: A new discretized ShiftingField.

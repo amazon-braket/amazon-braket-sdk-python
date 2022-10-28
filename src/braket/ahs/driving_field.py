@@ -87,7 +87,8 @@ class DrivingField(Hamiltonian):
         """Creates a discretized version of the Hamiltonian.
 
         Args:
-            properties (DiscretizationProperties): Discretization properties of a device.
+            properties (DiscretizationProperties): Capabilities of a device that represent the
+                resolution with which the device can implement the parameters.
 
         Returns:
             DrivingField: A new discretized DrivingField.
