@@ -37,7 +37,7 @@ jobs:
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git
         cd ${{ matrix.dependent }}
-        python ${{ GITHUB_WORKSPACE }}/.github/scripts/update_dependency.py
+        python ${GITHUB_WORKSPACE}/.github/scripts/update_dependency.py
         pip install -e .[test]
     - name: Run unit tests
       run: |
