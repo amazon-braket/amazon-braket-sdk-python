@@ -5,6 +5,11 @@ from pathlib import Path
 package = 'amazon-braket-sdk'
 path = Path.cwd().parent.resolve()
 print(f"Current path is {path}")
+
+print("Contents are")
+for p in Path(path).iterdir():
+    print(p)
+
 for line in fileinput.input('setup.py', inplace=True):
 	replaced_line = line if package not in line else f'\"{package} @ file://{path}\",\n'
 	print(replaced_line, end='')
