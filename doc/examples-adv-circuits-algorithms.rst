@@ -18,7 +18,7 @@ gates that are not part of the basic gate set provided by the SDK. A custom gate
 as a core quantum gate by registering it as a subroutine.
 
 *******************************
-`Quantum amplitude amplification <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QAA/QAA_tutorial.ipynb>`_
+`Quantum amplitude amplification <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/Quantum_Amplitude_Amplification/Quantum_Amplitude_Amplification.ipynb>`_
 *******************************
 
 This tutorial provides a detailed discussion and implementation of the Quantum Amplitude Amplification (QAA) 
@@ -30,7 +30,7 @@ quadratic speedup over several classical algorithms.
 
 
 *************************
-`Quantum Fourier transform <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QFT/QFT.ipynb>`_
+`Quantum Fourier transform <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/Quantum_Fourier_Transform/Quantum_Fourier_Transform.ipynb>`_
 *************************
 
 This tutorial provides a detailed implementation of the Quantum Fourier Transform (QFT) and 
@@ -39,7 +39,7 @@ most famously Shor's algorithm for factoring and the quantum phase estimation (Q
 for estimating the eigenvalues of a unitary operator. 
 
 ************************
-`Quantum phase estimation <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/QPE/QPE.ipynb>`_
+`Quantum phase estimation <https://github.com/aws/amazon-braket-examples/blob/main/examples/advanced_circuits_algorithms/Quantum_Phase_Estimation/Quantum_Phase_Estimation.ipynb>`_
 ************************
 
 This tutorial provides a detailed implementation of the Quantum Phase Estimation (QPE) 
