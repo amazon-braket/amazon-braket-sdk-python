@@ -152,6 +152,40 @@ class MockS3:
         }
     )
 
+    MOCK_S3_RESULT_ANALOG_HAMILTONIAN_SIMULTION = json.dumps(
+        {
+            "braketSchemaHeader": {
+                "name": "braket.task_result.analog_hamiltonian_simulation_task_result",
+                "version": "1",
+            },
+            "taskMetadata": {
+                "id": "task_arn",
+                "shots": 3,
+                "deviceId": "mock_arn",
+            },
+            "measurements": [
+                {
+                    "shotMetadata": {"shotStatus": "Success"},
+                    "shotResult": {
+                        "preSequence": [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                        "postSequence": [0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0],
+                    },
+                },
+                {
+                    "shotMetadata": {"shotStatus": "Partial Success"},
+                    "shotResult": {
+                        "preSequence": [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+                        "postSequence": None,
+                    },
+                },
+                {
+                    "shotMetadata": {"shotStatus": "Failure"},
+                    "shotResult": {"preSequence": None, "postSequence": None},
+                },
+            ],
+        }
+    )
+
 
 def run_and_assert(
     aws_quantum_task_mock,

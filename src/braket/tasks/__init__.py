@@ -12,6 +12,10 @@
 # language governing permissions and limitations under the License.
 
 import braket.ipython_utils as ipython_utils
+from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (  # noqa: F401
+    AnalogHamiltonianSimulationQuantumTaskResult,
+    AnalogHamiltonianSimulationShotStatus,
+)
 from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult  # noqa: F401
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult  # noqa: F401
 from braket.tasks.photonic_model_quantum_task_result import (  # noqa: F401

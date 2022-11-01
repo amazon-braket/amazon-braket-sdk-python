@@ -21,6 +21,7 @@ from typing import Any, Dict, Union
 
 import boto3
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Instruction
@@ -53,8 +54,14 @@ from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.schema_common import BraketSchemaBase
-from braket.task_result import AnnealingTaskResult, GateModelTaskResult, PhotonicModelTaskResult
+from braket.task_result import (
+    AnalogHamiltonianSimulationTaskResult,
+    AnnealingTaskResult,
+    GateModelTaskResult,
+    PhotonicModelTaskResult,
+)
 from braket.tasks import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
@@ -82,7 +89,12 @@ class AwsQuantumTask(QuantumTask):
         aws_session: AwsSession,
         device_arn: str,
         task_specification: Union[
-            Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence
+            Circuit,
+            Problem,
+            OpenQasmProgram,
+            BlackbirdProgram,
+            PulseSequence,
+            AnalogHamiltonianSimulation,
         ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
@@ -101,8 +113,8 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]): The
-                specification of the task to run on device.
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
+                The specification of the task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -589,6 +601,22 @@ def _(
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
 
+@_create_internal.register
+def _(
+    analog_hamiltonian_simulation: AnalogHamiltonianSimulation,
+    aws_session: AwsSession,
+    create_task_kwargs: Dict[str, Any],
+    device_arn: str,
+    device_parameters: dict,
+    _,
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    create_task_kwargs.update({"action": analog_hamiltonian_simulation.to_ir().json()})
+    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
 def _create_annealing_device_params(
     device_params: Dict[str, Any], device_arn: str
 ) -> Union[DwaveAdvantageDeviceParameters, Dwave2000QDeviceParameters]:
@@ -664,3 +692,10 @@ def _(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
 @_format_result.register
 def _(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
     return PhotonicModelQuantumTaskResult.from_object(result)
+
+
+@_format_result.register
+def _(
+    result: AnalogHamiltonianSimulationTaskResult,
+) -> AnalogHamiltonianSimulationQuantumTaskResult:
+    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(result)
