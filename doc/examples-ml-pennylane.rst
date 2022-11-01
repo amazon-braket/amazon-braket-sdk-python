@@ -37,7 +37,7 @@ the Amazon Braket SV1 simulator to speed up gradient calculations and hence trai
 using around 1-2 minutes per iteration.
 
 **************************
-`Hydrogen geometry with VQE <https://github.com/aws/amazon-braket-examples/blob/main/examples/pennylane/3_Hydrogen_geometry_with_VQE/3_Hydrogen_geometry_with_VQE.ipynb>`_
+`Hydrogen Molecule geometry with VQE <https://github.com/aws/amazon-braket-examples/blob/main/examples/pennylane/3_Hydrogen_Molecule_geometry_with_VQE/3_Hydrogen_Molecule_geometry_with_VQE.ipynb>`_
 **************************
 
 In this tutorial, you will learn how PennyLane and Amazon Braket can be combined to solve an 
