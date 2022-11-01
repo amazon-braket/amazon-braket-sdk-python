@@ -14,12 +14,13 @@
 import fileinput
 from pathlib import Path
 
-package = 'amazon-braket-sdk'
+package = "amazon-braket-sdk"
 path = Path.cwd().parent.resolve()
 
-for line in fileinput.input('setup.py', inplace=True):
+for line in fileinput.input("setup.py", inplace=True):
     # Update the `package` dependency to use the local path. This would help catch conflicts during
     # the installation process
-    replaced_line = line if package not in line else f'\"{package} @ file://{path}/{package}-python\",\n'
-    print(replaced_line, end='')
-
+    replaced_line = (
+        line if package not in line else f'"{package} @ file://{path}/{package}-python",\n'
+    )
+    print(replaced_line, end="")
