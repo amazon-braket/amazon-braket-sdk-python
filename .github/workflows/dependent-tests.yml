@@ -18,8 +18,8 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.7, 3.8, 3.9]
         dependent:
-                #- amazon-braket-ocean-plugin-python
-                #- amazon-braket-pennylane-plugin-python
+          - amazon-braket-ocean-plugin-python
+          - amazon-braket-pennylane-plugin-python
           - amazon-braket-strawberryfields-plugin-python
 
     steps:
