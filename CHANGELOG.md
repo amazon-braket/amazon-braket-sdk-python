@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.33.0 (2022-11-01)
+
+### Features
+
+ * Support analog Hamiltonian simulations
+
 ## v1.32.1.post0 (2022-10-25)
 
 ### Documentation Changes
