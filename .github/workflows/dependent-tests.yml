@@ -37,16 +37,7 @@ jobs:
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git
         cd ${{ matrix.dependent }}
-        python -c """
-        import fileinput
-        from pathlib import Path
-
-        package = 'amazon-braket-sdk'
-        path = Path.cwd().parent.resolve()
-        for line in fileinput.input('setup.py', inplace=True):
-                replaced_line = line if package not in line else f'\"{package} \@ file://{path}\"\n'
-                print(replaced_line, end='')
-        """
+        python ./.github/scripts/update_dependency.py
         pip install -e .[test]
     - name: Run unit tests
       run: |
