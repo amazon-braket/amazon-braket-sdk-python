@@ -8,13 +8,13 @@ Learn more about hybrid jobs on Amazon Braket.
     :maxdepth: 2
 
 **************************
-`Getting Started <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_jobs/0_Getting_started/Getting_started.ipynb>`_
+`Creating your first Hybrid Job <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_jobs/0_Creating_your_first_Hybrid_Job/Creating_your_first_Hybrid_Job.ipynb>`_
 **************************
 
 This tutorial shows how to run your first Amazon Braket Hybrid Job.
 
 **************************
-`Hyperparameter Tuning <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_jobs/1_Hyperparameter_tuning/Hyperparameter_tuning.ipynb>`_
+`Quantum machine learning in Amazon Braket Hybrid Jobs <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_jobs/1_Quantum_machine_learning_in_Amazon_Braket_Hybrid_Jobs/Quantum_machine_learning_in_Amazon_Braket_Hybrid_Jobs.ipynb>`_
 **************************
 
 This notebook demonstrates a typical quantum machine learning workflow, including uploading data, monitoring training, and tuning hyperparameters.
