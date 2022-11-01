@@ -28,7 +28,8 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-schemas>=1.12.0",
-        "amazon-braket-default-simulator>=1.10.0",
+        #"amazon-braket-default-simulator>=1.10.0",
+        "antlr4-python3-runtime==4.11.1",
         "oqpy==0.1.0",
         "backoff",
         "boltons",
