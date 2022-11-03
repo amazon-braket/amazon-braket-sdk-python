@@ -55,7 +55,7 @@ class Field:
         Args:
             time_resolution (Decimal): Time resolution
             value_resolution (Decimal): Value resolution
-            pattern_resolution (Decimal or None): Pattern resolution
+            pattern_resolution (Optional[Decimal]): Pattern resolution
 
         Returns:
             Field: A new discretized field.

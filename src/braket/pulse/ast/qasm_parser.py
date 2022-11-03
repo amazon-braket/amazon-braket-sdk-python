@@ -29,22 +29,53 @@ class _PulsePrinter(Printer):
     def visit__FreeParameterExpressionIdentifier(
         self, node: ast.Identifier, context: PrinterState
     ) -> None:
+        """Visit a FreeParameterExpressionIdentifier.
+        Args:
+            node (ast.Identifier): The identifier.
+            context (PrinterState): The printer state context.
+        """
         self.stream.write(str(node.expression.expression))
 
-    def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState):
+    def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState) -> None:
+        """Visit Duration Literal.
+            node.value, node.unit (node.unit.name, node.unit.value)
+            1
+        Args:
+            node (ast.DurationLiteral): The duration literal.
+            context (PrinterState): The printer state context.
+        """
         duration = node.value
         if isinstance(duration, FreeParameterExpression):
             self.stream.write(f"({duration.expression}){node.unit.name}")
         else:
             super().visit_DurationLiteral(node, context)
 
-    def visit_ClassicalDeclaration(self, node: ast.ClassicalDeclaration, context: PrinterState):
+    def visit_ClassicalDeclaration(
+        self, node: ast.ClassicalDeclaration, context: PrinterState
+    ) -> None:
+        """Visit a Classical Declaration.
+            node.type, node.identifier, node.init_expression
+            angle[20] a = 1+2;
+            waveform wf = [];
+            port a;
+        Args:
+            node (ast.ClassicalDeclaration): The classical declaration.
+            context (PrinterState): The printer state context.
+        """
         # Skip port declarations in output
         if not isinstance(node.type, ast.PortType):
             super().visit_ClassicalDeclaration(node, context)
 
 
 def ast_to_qasm(ast: ast.Program) -> str:
+    """Converts an AST program to OpenQASM
+
+    Args:
+        ast (Program): The AST program.
+
+    Returns:
+        str: a str representing the OpenPulse program encoding the program.
+    """
     out = io.StringIO()
     _PulsePrinter(out, indent="    ").visit(ast)
     return out.getvalue().strip()

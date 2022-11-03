@@ -99,7 +99,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         return measurements
 
 
-def _equal_sequences(sequence0, sequence1) -> bool:
+def _equal_sequences(sequence0: np.ndarray, sequence1: np.ndarray) -> bool:
     if sequence0 is None and sequence1 is None:
         return True
     if sequence0 is None or sequence1 is None:
