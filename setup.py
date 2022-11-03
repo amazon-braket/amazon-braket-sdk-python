@@ -42,6 +42,7 @@ setup(
     ],
     extras_require={
         "test": [
+            "amazon-braket-build-tools",
             "black",
             "botocore",
             "coverage==5.5",
