@@ -2316,12 +2316,16 @@ def _double_angled_ascii_characters(
     )
 
 
-def get_angle(gate: AngledGate, **kwargs):
+def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
     """
     Gets the angle with all values substituted in that are requested.
 
     Args:
         gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
+
+    Returns:
+        AngledGate: A new gate of the type of the AngledGate originally used with all
+        angles updated.
     """
     new_angle = (
         gate.angle.subs(kwargs) if isinstance(gate.angle, FreeParameterExpression) else gate.angle
@@ -2329,7 +2333,7 @@ def get_angle(gate: AngledGate, **kwargs):
     return type(gate)(angle=new_angle)
 
 
-def _get_angles(gate: DoubleAngledGate, **kwargs):
+def _get_angles(gate: DoubleAngledGate, **kwargs) -> DoubleAngledGate:
     """
     Gets the angle with all values substituted in that are requested.
 
@@ -2337,6 +2341,10 @@ def _get_angles(gate: DoubleAngledGate, **kwargs):
         gate (DoubleAngledGate): The subclass of DoubleAngledGate for which the angle is being
             obtained.
         **kwargs: The named parameters that are being filled for a particular gate.
+
+    Returns:
+        DoubleAngledGate: A new gate of the type of the AngledGate originally used with all angles
+        updated.
     """
     new_angles = [
         (

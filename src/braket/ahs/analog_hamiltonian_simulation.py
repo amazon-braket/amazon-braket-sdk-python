@@ -78,7 +78,7 @@ class AnalogHamiltonianSimulation:
             shiftingFields=terms[AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY],
         )
 
-    def discretize(self, device) -> AnalogHamiltonianSimulation:
+    def discretize(self, device) -> AnalogHamiltonianSimulation:  # noqa
         """Creates a new AnalogHamiltonianSimulation with all numerical values represented
         as Decimal objects with fixed precision based on the capabilities of the device.
 

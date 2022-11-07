@@ -36,7 +36,6 @@ jobs:
         # stop the build if there are Python format errors or undefined names
         black --check .
         flake8
-        flake8 --enable-extensions=BCS src
     - name: Run unit tests
       run: |
         tox -e unit-tests
