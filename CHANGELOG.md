@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.33.0.post0 (2022-11-02)
+
+### Documentation Changes
+
+ * update example notebook links
+
 ## v1.33.0 (2022-11-01)
 
 ### Features
