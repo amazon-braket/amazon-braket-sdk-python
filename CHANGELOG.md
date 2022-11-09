@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.33.1 (2022-11-08)
+
+### Bug Fixes and Other Changes
+
+ * bump oqpy version
+
 ## v1.33.0.post0 (2022-11-02)
 
 ### Documentation Changes
