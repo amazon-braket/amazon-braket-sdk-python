@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from typing import Optional
+from typing import Any, Optional
 
 from openpulse import ast
 from openqasm3.visitor import QASMTransformer
@@ -29,7 +29,13 @@ class _IRQASMTransformer(QASMTransformer):
         self._capture_v0_count = 0
         super().__init__()
 
-    def visit_ExpressionStatement(self, expression_statement: ast.ExpressionStatement):
+    def visit_ExpressionStatement(self, expression_statement: ast.ExpressionStatement) -> Any:
+        """Visit an Expression.
+        Args:
+            expression_statement (ast.ExpressionStatement): The expression statement.
+        Returns:
+            Any: The expression statement.
+        """
         if (
             isinstance(expression_statement.expression, ast.FunctionCall)
             and expression_statement.expression.name.name == "capture_v0"

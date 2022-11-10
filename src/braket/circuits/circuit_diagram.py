@@ -10,8 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
 
 from abc import ABC, abstractmethod
+
+import braket.circuits.circuit as cir
 
 
 class CircuitDiagram(ABC):
@@ -19,7 +22,7 @@ class CircuitDiagram(ABC):
 
     @staticmethod
     @abstractmethod
-    def build_diagram(circuit) -> str:
+    def build_diagram(circuit: cir.Circuit) -> str:
         """
         Build a diagram for the specified `circuit`.
 
