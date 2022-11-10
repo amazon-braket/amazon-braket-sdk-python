@@ -37,6 +37,8 @@ jobs:
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git
         cd ${{ matrix.dependent }}
+        # Update the amazon-braket-sdk dependency to reference the current commit
+        python ${GITHUB_WORKSPACE}/.github/scripts/update_dependency.py
         pip install -e .[test]
     - name: Run unit tests
       run: |
