@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.34.0 (2022-11-14)
+
+### Features
+
+ * adding Braket checkstyle checks.
+
 ## v1.33.2 (2022-11-10)
 
 ### Bug Fixes and Other Changes
