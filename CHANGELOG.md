@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.34.1 (2022-11-15)
+
+### Bug Fixes and Other Changes
+
+ * update import path in error message
+
 ## v1.34.0 (2022-11-14)
 
 ### Features
