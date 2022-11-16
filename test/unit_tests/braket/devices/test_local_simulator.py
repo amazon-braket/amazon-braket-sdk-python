@@ -15,8 +15,12 @@ from typing import Any, Dict, Optional
 from unittest.mock import Mock
 
 import pytest
+from pydantic import create_model  # This is temporary for defining properties below
 
 import braket.ir as ir
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
+from braket.ahs.atom_arrangement import AtomArrangement
+from braket.ahs.hamiltonian import Hamiltonian
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit, FreeParameter
 from braket.device_schema import DeviceCapabilities
@@ -24,7 +28,13 @@ from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.task_result import AnnealingTaskResult, GateModelTaskResult
+from braket.task_result.analog_hamiltonian_simulation_task_result_v1 import (
+    AnalogHamiltonianSimulationTaskResult,
+)
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
+from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
+)
 
 GATE_MODEL_RESULT = GateModelTaskResult(
     **{
@@ -80,6 +90,16 @@ ANNEALING_RESULT = AnnealingTaskResult(
                     "readoutTimePerRun": 274,
                 },
             },
+        },
+    }
+)
+
+AHS_RESULT = AnalogHamiltonianSimulationTaskResult(
+    **{
+        "taskMetadata": {
+            "id": "rydberg",
+            "shots": 100,
+            "deviceId": "rydbergLocalSimulator",
         },
     }
 )
@@ -232,6 +252,35 @@ class DummyAnnealingSimulator(BraketSimulator):
         )
 
 
+class DummyRydbergSimulator(BraketSimulator):
+    def run(
+        self, program: AnalogHamiltonianSimulation, *args, **kwargs
+    ) -> AnalogHamiltonianSimulationTaskResult:
+        return AHS_RESULT
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        properties = {
+            "service": {
+                "executionWindows": [
+                    {
+                        "executionDay": "Everyday",
+                        "windowStartHour": "00:00",
+                        "windowEndHour": "23:59:59",
+                    }
+                ],
+                "shotsRange": [0, 10],
+            },
+            "action": {"braket.ir.ahs.program": {}},
+        }
+
+        RydbergSimulatorDeviceCapabilities = create_model(
+            "RydbergSimulatorDeviceCapabilities", **properties
+        )
+
+        return RydbergSimulatorDeviceCapabilities.parse_obj(properties)
+
+
 mock_circuit_entry = Mock()
 mock_program_entry = Mock()
 mock_jaqcd_entry = Mock()
@@ -243,6 +292,10 @@ local_simulator._simulator_devices = {
     "dummy_oq3": mock_program_entry,
     "dummy_jaqcd": mock_jaqcd_entry,
 }
+
+mock_ahs_program = AnalogHamiltonianSimulation(
+    register=AtomArrangement(), hamiltonian=Hamiltonian()
+)
 
 
 def test_load_from_entry_point():
@@ -344,6 +397,12 @@ def test_run_annealing():
     sim = LocalSimulator(DummyAnnealingSimulator())
     task = sim.run(Problem(ProblemType.ISING))
     assert task.result() == AnnealingQuantumTaskResult.from_object(ANNEALING_RESULT)
+
+
+def test_run_ahs():
+    sim = LocalSimulator(DummyRydbergSimulator())
+    task = sim.run(mock_ahs_program)
+    assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(AHS_RESULT)
 
 
 def test_registered_backends():

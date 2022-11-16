@@ -1,5 +1,47 @@
 # Changelog
 
+## v1.34.1 (2022-11-15)
+
+### Bug Fixes and Other Changes
+
+ * update import path in error message
+
+## v1.34.0 (2022-11-14)
+
+### Features
+
+ * adding Braket checkstyle checks.
+
+## v1.33.2 (2022-11-10)
+
+### Bug Fixes and Other Changes
+
+ * Reference code from the current commit for dependent tests
+
+## v1.33.1 (2022-11-08)
+
+### Bug Fixes and Other Changes
+
+ * bump oqpy version
+
+## v1.33.0.post0 (2022-11-02)
+
+### Documentation Changes
+
+ * update example notebook links
+
+## v1.33.0 (2022-11-01)
+
+### Features
+
+ * Support analog Hamiltonian simulations
+
+## v1.32.1.post0 (2022-10-25)
+
+### Documentation Changes
+
+ * update FreeParameter class with example
+
 ## v1.32.1 (2022-10-24)
 
 ### Bug Fixes and Other Changes

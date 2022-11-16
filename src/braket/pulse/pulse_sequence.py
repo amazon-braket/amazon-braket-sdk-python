@@ -208,13 +208,15 @@ class PulseSequence:
         return self
 
     def play(self, frame: Frame, waveform: Waveform) -> PulseSequence:
-        """
-        Adds an instruction to play the specified waveform on the supplied frame.
+        """Adds an instruction to play the specified waveform on the supplied frame.
 
         Args:
             frame (Frame): Frame on which the specified waveform signal would be output.
             waveform (Waveform): Waveform envelope specifying the signal to output on the
                 specified frame.
+
+        Returns:
+            PulseSequence: returns self.
         """
         _validate_uniqueness(self._frames, frame)
         _validate_uniqueness(self._waveforms, waveform)
@@ -251,7 +253,7 @@ class PulseSequence:
         share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
-            param_values (Dict[str, Number]):  A mapping of FreeParameter names
+            param_values (Dict[str, float]):  A mapping of FreeParameter names
                 to a value to assign to them.
 
         Returns:
@@ -291,8 +293,11 @@ class PulseSequence:
         return new_pulse_sequence
 
     def to_ir(self) -> str:
-        """Returns a str representing the OpenPulse program encoding the PulseSequence."""
+        """Converts this OpenPulse problem into IR representation.
 
+        Returns:
+            str: a str representing the OpenPulse program encoding the PulseSequence.
+        """
         program = deepcopy(self._program)
         if self._capture_v0_count:
             register_identifier = "psb"
@@ -305,7 +310,9 @@ class PulseSequence:
             tree = program.to_ast(encal=True, include_externs=False)
         return ast_to_qasm(tree)
 
-    def _format_parameter_ast(self, parameter):
+    def _format_parameter_ast(
+        self, parameter: Union[float, FreeParameterExpression]
+    ) -> Union[float, _FreeParameterExpressionIdentifier]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
@@ -334,7 +341,7 @@ class PulseSequence:
 
 def _validate_uniqueness(
     mapping: Dict[str, Any], values: Union[Frame, Waveform, List[Frame], List[Waveform]]
-):
+) -> None:
     if not isinstance(values, list):
         values = [values]
 

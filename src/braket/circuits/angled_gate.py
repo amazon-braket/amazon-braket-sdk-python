@@ -131,7 +131,7 @@ class DoubleAngledGate(Gate, Parameterizable):
                 radians or expression representation.
             angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
                 radians or expression representation.
-            qubit_count (int, optional): The number of qubits that this gate interacts with.
+            qubit_count (Optional[int]): The number of qubits that this gate interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for the gate. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
@@ -226,10 +226,12 @@ class DoubleAngledGate(Gate, Parameterizable):
 
 
 @singledispatch
-def _angles_equal(angle_1, angle_2):
+def _angles_equal(
+    angle_1: Union[FreeParameterExpression, float], angle_2: Union[FreeParameterExpression, float]
+) -> bool:
     return math.isclose(angle_1, angle_2)
 
 
 @_angles_equal.register
-def _(angle_1: FreeParameterExpression, angle_2):
+def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):
     return angle_1 == angle_2

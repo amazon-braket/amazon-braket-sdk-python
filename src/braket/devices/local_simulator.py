@@ -16,6 +16,7 @@ from typing import Dict, Optional, Set, Union
 
 import pkg_resources
 
+from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
@@ -25,6 +26,9 @@ from braket.devices.device import Device
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
+from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
+    AnalogHamiltonianSimulationQuantumTaskResult,
+)
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 _simulator_devices = {
@@ -55,7 +59,7 @@ class LocalSimulator(Device):
 
     def run(
         self,
-        task_specification: Union[Circuit, Problem, Program],
+        task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
         shots: int = 0,
         inputs: Optional[Dict[str, float]] = None,
         *args,
@@ -64,7 +68,8 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem, Program]): The task specification.
+            task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]): The
+                task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
                 results based on the task specification.
@@ -86,7 +91,9 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = _run_internal(task_specification, self._delegate, shots, inputs, *args, **kwargs)
+        result = _run_internal(
+            task_specification, self._delegate, shots, inputs=inputs, *args, **kwargs
+        )
         return LocalQuantumTask(result)
 
     @property
@@ -130,7 +137,7 @@ def _(backend_impl: BraketSimulator):
 
 @singledispatch
 def _run_internal(
-    task_specification: Union[Circuit, Problem, Program],
+    task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
     simulator: BraketSimulator,
     shots: Optional[int] = None,
     *args,
@@ -192,3 +199,19 @@ def _(
         )
     results = simulator.run(program, shots, *args, **kwargs)
     return GateModelQuantumTaskResult.from_object(results)
+
+
+@_run_internal.register
+def _(
+    program: AnalogHamiltonianSimulation,
+    simulator: BraketSimulator,
+    shots: Optional[int] = None,
+    *args,
+    **kwargs,
+):
+    if DeviceActionType.AHS not in simulator.properties.action:
+        raise NotImplementedError(
+            f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+        )
+    results = simulator.run(program.to_ir(), shots, *args, **kwargs)
+    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)

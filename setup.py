@@ -27,9 +27,9 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.11.0",
-        "amazon-braket-default-simulator>=1.9.0",
-        "oqpy==0.1.0",
+        "amazon-braket-schemas>=1.12.0",
+        "amazon-braket-default-simulator>=1.10.0",
+        "oqpy==0.1.1",
         "backoff",
         "boltons",
         "boto3>=1.22.3",
