@@ -129,10 +129,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         elif type(node.type) == ast.PortType:
             pass
         else:
-            # Only Classical type?
-            # for instance: type(node.type) == ast.IntType:
             raise NotImplementedError
-            # context.variables[identifier] = self.visit(node.init_expression, context)
 
     def visit_DelayInstruction(self, node: ast.DelayInstruction, context: _ParseState) -> None:
         """Visit a Delay Instruction.
@@ -199,7 +196,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             node (ast.UnaryExpression): The unary expression.
             context (_ParseState): The parse state context.
         """
-        # context.print(node.op.name)
         if node.op == ast.UnaryOperator["-"]:
             return -1 * self.visit(node.expression, context)
         elif node.op == ast.UnaryOperator["!"]:
@@ -264,9 +260,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         elif node.op == op[">>"]:
             return lhs >> rhs
         else:
-            # Need more
-            # if node.op == ast.BinaryOperator["."]:
-            # What to do?
             raise NotImplementedError
 
     def visit_ArrayLiteral(self, node: ast.ArrayLiteral, context: _ParseState) -> Any:
@@ -362,7 +355,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """
         frame = self.visit(node.arguments[0], context)
         value = self.visit(node.arguments[1], context)
-        context.frame_data[frame].phase = value
+        context.frame_data[frame].phase = value % (2 * np.pi)
 
     def shift_phase(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'shift_phase' Function call.
@@ -373,6 +366,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         frame = self.visit(node.arguments[0], context)
         value = self.visit(node.arguments[1], context)
         context.frame_data[frame].phase += value
+        context.frame_data[frame].phase %= 2 * np.pi
 
     def set_scale(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_scale' Function call.
@@ -453,14 +447,17 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 def _init_frame_data(frames: Dict[str, Frame]) -> Dict[str, _FrameState]:
     frame_states = dict()
     for frameId, frame in frames.items():
-        frame_states[frameId] = _FrameState(frame.port.dt, frame.frequency, frame.phase)
+        frame_states[frameId] = _FrameState(
+            frame.port.dt, frame.frequency, frame.phase % (2 * np.pi)
+        )
     return frame_states
 
 
 def _lcm_floats(*dts: List[float]) -> float:
     """Return the least common multiple of time increments of a list of frames
         A time increment is the inverse of the corresponding sample rate which is considered
-        an integer LCM of rational numbers is lcm = (LCM of numerators) / (GCD of denominators)
+        an integer.
+        LCM of rational numbers is lcm = (LCM of numerators) / (GCD of denominators)
         Hence the LCM of dts is 1/gcd([sample rates])
 
     Args:
