@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.34.3 (2022-11-17)
+
+### Bug Fixes and Other Changes
+
+ * remove d-wave content
+
 ## v1.34.2 (2022-11-17)
 
 ### Bug Fixes and Other Changes
