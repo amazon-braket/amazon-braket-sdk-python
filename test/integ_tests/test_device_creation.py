@@ -15,7 +15,6 @@ import pytest
 
 from braket.aws import AwsDevice
 
-DWAVE_ARN = "arn:aws:braket:::device/qpu/d-wave/DW_2000Q_6"
 RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
@@ -24,7 +23,7 @@ PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2-pulse"
 
 
 @pytest.mark.parametrize(
-    "arn", [(RIGETTI_ARN), (IONQ_ARN), (DWAVE_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
+    "arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
 )
 def test_device_creation(arn, aws_session):
     device = AwsDevice(arn, aws_session=aws_session)
@@ -50,9 +49,7 @@ def test_device_across_regions(aws_session):
     AwsDevice(OQC_ARN, aws_session)
 
 
-@pytest.mark.parametrize(
-    "arn", [(RIGETTI_ARN), (IONQ_ARN), (DWAVE_ARN), (OQC_ARN), (SIMULATOR_ARN)]
-)
+@pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN)])
 def test_get_devices_arn(arn):
     results = AwsDevice.get_devices(arns=[arn])
     assert results[0].arn == arn
@@ -72,5 +69,5 @@ def test_get_devices_others():
 
 def test_get_devices_all():
     result_arns = [result.arn for result in AwsDevice.get_devices()]
-    for arn in [DWAVE_ARN, RIGETTI_ARN, IONQ_ARN, SIMULATOR_ARN, OQC_ARN]:
+    for arn in [RIGETTI_ARN, IONQ_ARN, SIMULATOR_ARN, OQC_ARN]:
         assert arn in result_arns
