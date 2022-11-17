@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.34.2 (2022-11-17)
+
+### Bug Fixes and Other Changes
+
+ * Plot the phase between 0 and 2*pi
+
 ## v1.34.1 (2022-11-15)
 
 ### Bug Fixes and Other Changes
