@@ -137,9 +137,7 @@ def test_abort(mock_submit):
         future_mock.result.side_effect = [task_mock, KeyboardInterrupt()]
 
         batch_size = 10
-        batch = AwsQuantumTaskBatch(
-            Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=1
-        )
+        AwsQuantumTaskBatch(Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=1)
 
     assert future_mock.result.call_count == 2
     assert future_mock.cancel.call_count == 10
