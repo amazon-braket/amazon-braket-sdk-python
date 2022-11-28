@@ -128,5 +128,22 @@ def test_retry(mock_create):
         batch.retry_unsuccessful_tasks()
 
 
+@patch("concurrent.futures.ThreadPoolExecutor.submit")
+def test_abort(mock_submit):
+    with pytest.raises(KeyboardInterrupt):
+        future_mock = Mock()
+        task_mock = Mock()
+        mock_submit.return_value = future_mock
+        future_mock.result.side_effect = [task_mock, KeyboardInterrupt()]
+
+        batch_size = 10
+        batch = AwsQuantumTaskBatch(
+            Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=1
+        )
+
+    assert future_mock.result.call_count == 2
+    assert future_mock.cancel.call_count == 10
+
+
 def _circuits(batch_size):
     return [Circuit().h(0).cnot(0, 1) for _ in range(batch_size)]

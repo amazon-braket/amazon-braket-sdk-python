@@ -130,24 +130,30 @@ class AwsQuantumTaskBatch:
                 )
         max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in task_specifications]
-        with ThreadPoolExecutor(max_workers=max_threads) as executor:
-            task_futures = [
-                executor.submit(
-                    AwsQuantumTaskBatch._create_task,
-                    remaining,
-                    aws_session,
-                    device_arn,
-                    task,
-                    s3_destination_folder,
-                    shots,
-                    poll_timeout_seconds=poll_timeout_seconds,
-                    poll_interval_seconds=poll_interval_seconds,
-                    *args,
-                    **kwargs,
-                )
-                for task in task_specifications
-            ]
-        tasks = [future.result() for future in task_futures]
+        try:
+            with ThreadPoolExecutor(max_workers=max_threads) as executor:
+                task_futures = [
+                    executor.submit(
+                        AwsQuantumTaskBatch._create_task,
+                        remaining,
+                        aws_session,
+                        device_arn,
+                        task,
+                        s3_destination_folder,
+                        shots,
+                        poll_timeout_seconds=poll_timeout_seconds,
+                        poll_interval_seconds=poll_interval_seconds,
+                        *args,
+                        **kwargs,
+                    )
+                    for task in task_specifications
+                ]
+            tasks = [future.result() for future in task_futures]
+        except:
+            # If we are unable to return the tasks, attempt to cancel any pending tasks
+            for future in task_futures:
+                future.cancel()
+            raise
         return tasks
 
     @staticmethod
