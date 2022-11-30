@@ -150,7 +150,8 @@ class AwsQuantumTaskBatch:
                 ]
             tasks = [future.result() for future in task_futures]
         except:  # noqa: E722
-            # If we are unable to return the tasks, attempt to cancel any pending tasks
+            # If we are unable to return the tasks,
+            # attempt to prevent any quantum tasks that have not yet been created from being created
             for future in task_futures:
                 future.cancel()
             raise
