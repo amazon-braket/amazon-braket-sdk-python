@@ -14,6 +14,7 @@
 import os
 import random
 import signal
+import sys
 import time
 import uuid
 from unittest.mock import Mock, PropertyMock, patch
@@ -143,8 +144,14 @@ def test_abort(mock_create):
     def create_effect(*args, **kwargs):
         nonlocal counter
         counter = counter + 1
+
+        # Replace this logic with signal.raise_signal when python3.7 is gone
+        if sys.platform == "win32":
+            ctrl_c_signal = signal.CTRL_C_EVENT
+        else:
+            ctrl_c_signal = signal.SIGINT
         if counter == 4:
-            os.kill(os.getpid(), signal.SIGINT)
+            os.kill(os.getpid(), ctrl_c_signal)
         return task_mock
 
     mock_create.side_effect = create_effect
