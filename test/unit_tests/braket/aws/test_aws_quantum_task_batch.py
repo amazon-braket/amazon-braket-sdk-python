@@ -11,7 +11,10 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import os
 import random
+import signal
+import time
 import uuid
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -128,19 +131,50 @@ def test_retry(mock_create):
         batch.retry_unsuccessful_tasks()
 
 
-@patch("concurrent.futures.ThreadPoolExecutor.submit")
-def test_abort(mock_submit):
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_abort(mock_create):
+    batch_size = 10
+    num_workers = 2
+    task_mock = Mock()
+    task_mock.state.side_effect = ["COMPLETED", "RUNNING"] * batch_size
+
+    counter = 0
+
+    def create_effect(*args, **kwargs):
+        nonlocal counter
+        counter = counter + 1
+        if counter == 4:
+            os.kill(os.getpid(), signal.SIGINT)
+        return task_mock
+
+    mock_create.side_effect = create_effect
+
     with pytest.raises(KeyboardInterrupt):
-        future_mock = Mock()
-        task_mock = Mock()
-        mock_submit.return_value = future_mock
-        future_mock.result.side_effect = [task_mock, KeyboardInterrupt()]
+        AwsQuantumTaskBatch(
+            Mock(),
+            "foo",
+            _circuits(batch_size),
+            S3_TARGET,
+            1000,
+            max_parallel=num_workers,
+            poll_interval_seconds=0.1,
+        )
 
-        batch_size = 10
-        AwsQuantumTaskBatch(Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=1)
+    num_created = mock_create.call_count
+    time.sleep(1)  # delay to check no new tasks are created in the background
+    assert mock_create.call_count == num_created
 
-    assert future_mock.result.call_count == 2
-    assert future_mock.cancel.call_count == 10
+
+@patch("concurrent.futures.ThreadPoolExecutor.submit")
+def test_early_abort(mock_submit):
+    batch_size = 10
+    num_workers = 2
+    mock_submit.side_effect = [Mock(), KeyboardInterrupt()]
+
+    with pytest.raises(KeyboardInterrupt):
+        AwsQuantumTaskBatch(
+            Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=num_workers
+        )
 
 
 def _circuits(batch_size):

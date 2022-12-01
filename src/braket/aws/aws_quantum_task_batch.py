@@ -148,13 +148,18 @@ class AwsQuantumTaskBatch:
                     )
                     for task in task_specifications
                 ]
-            tasks = [future.result() for future in task_futures]
-        except:  # noqa: E722
-            # If we are unable to return the tasks,
-            # attempt to prevent any quantum tasks that have not yet been created from being created
-            for future in task_futures:
-                future.cancel()
+        except KeyboardInterrupt:
+            # If an exception is thrown before the thread pool has finished,
+            # clean up the tasks which have not yet been created before reraising it.
+            if "task_futures" in locals():
+                for future in task_futures:
+                    future.cancel()
+
+            # Signal to the workers that there is no mork work to do
+            remaining.clear()
+
             raise
+        tasks = [future.result() for future in task_futures]
         return tasks
 
     @staticmethod
