@@ -45,7 +45,7 @@ setup(
             "black",
             "botocore",
             "coverage==5.5",
-            "flake8",
+            "flake8<=5.0.4",
             "isort",
             "jsonschema==3.2.0",
             "pre-commit",
