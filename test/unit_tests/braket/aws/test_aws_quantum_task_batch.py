@@ -132,6 +132,9 @@ def test_retry(mock_create):
         batch.retry_unsuccessful_tasks()
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Sending signals to test interrupt does not work on windows"
+)
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_abort(mock_create):
     batch_size = 10
@@ -144,14 +147,8 @@ def test_abort(mock_create):
     def create_effect(*args, **kwargs):
         nonlocal counter
         counter = counter + 1
-
-        # Replace this logic with signal.raise_signal when python3.7 is gone
-        if sys.platform == "win32":
-            ctrl_c_signal = signal.CTRL_C_EVENT
-        else:
-            ctrl_c_signal = signal.SIGINT
         if counter == 4:
-            os.kill(os.getpid(), ctrl_c_signal)
+            os.kill(os.getpid(), signal.SIGINT)
         return task_mock
 
     mock_create.side_effect = create_effect
