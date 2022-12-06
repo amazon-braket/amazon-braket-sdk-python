@@ -29,7 +29,7 @@ setup(
     install_requires=[
         "amazon-braket-schemas>=1.12.0",
         "amazon-braket-default-simulator>=1.10.0",
-        "oqpy==0.1.1",
+        "oqpy~=0.1.1",
         "backoff",
         "boltons",
         "boto3>=1.22.3",
@@ -45,7 +45,7 @@ setup(
             "black",
             "botocore",
             "coverage==5.5",
-            "flake8",
+            "flake8<=5.0.4",
             "isort",
             "jsonschema==3.2.0",
             "pre-commit",
