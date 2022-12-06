@@ -687,3 +687,54 @@ def test_pulse_gate_multi_qubit_circuit():
 
 def _assert_correct_diagram(circ, expected):
     assert AsciiCircuitDiagram.build_diagram(circ) == "\n".join(expected)
+
+
+def test_circuit_with_nested_target_list():
+    circ = (
+        Circuit()
+        .h(0)
+        .h(1)
+        .expectation(
+            observable=(2 * Observable.Y()) @ (-3 * Observable.I())
+            - 0.75 * Observable.Y() @ Observable.Z(),
+            target=[[0, 1], [0, 1]],
+        )
+    )
+
+    expected = (
+        "T  : |0|       Result Types       |",
+        "                                   ",
+        "q0 : -H-Expectation(-6Y@I-0.75Y@Z)-",
+        "        |                          ",
+        "q1 : -H-Expectation(-6Y@I-0.75Y@Z)-",
+        "",
+        "T  : |0|       Result Types       |",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_hamiltonian():
+    circ = (
+        Circuit()
+        .h(0)
+        .cnot(0, 1)
+        .rx(0, FreeParameter("theta"))
+        .adjoint_gradient(
+            4 * (2e-5 * Observable.Z() + 2 * (3 * Observable.X() @ (2 * Observable.Y()))),
+            [[0], [1, 2]],
+        )
+    )
+    expected = (
+        "T  : |0|1|    2    |        Result Types         |",
+        "                                                  ",
+        "q0 : -H-C-Rx(theta)-AdjointGradient(8e-05Z+48X@Y)-",
+        "        |           |                             ",
+        "q1 : ---X-----------AdjointGradient(8e-05Z+48X@Y)-",
+        "                    |                             ",
+        "q2 : ---------------AdjointGradient(8e-05Z+48X@Y)-",
+        "",
+        "T  : |0|1|    2    |        Result Types         |",
+        "",
+        "Unassigned parameters: [theta].",
+    )
+    _assert_correct_diagram(circ, expected)

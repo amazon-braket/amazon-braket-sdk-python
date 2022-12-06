@@ -51,7 +51,7 @@ from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import (
@@ -91,7 +91,7 @@ class AwsQuantumTask(QuantumTask):
         task_specification: Union[
             Circuit,
             Problem,
-            OpenQasmProgram,
+            OpenQASMProgram,
             BlackbirdProgram,
             PulseSequence,
             AnalogHamiltonianSimulation,
@@ -101,6 +101,7 @@ class AwsQuantumTask(QuantumTask):
         device_parameters: Dict[str, Any] = None,
         disable_qubit_rewiring: bool = False,
         tags: Dict[str, str] = None,
+        inputs: Dict[str, float] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -113,8 +114,9 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
-                The specification of the task to run on device.
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
+                PulseSequence, AnalogHamiltonianSimulation]): The specification of the task to run
+                on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -136,6 +138,10 @@ class AwsQuantumTask(QuantumTask):
             tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
                 An example would be:
                 `{"state": "washington"}`
+
+            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+                IR. If the IR supports inputs, the inputs will be updated with this value.
+                Default: {}.
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
@@ -160,13 +166,19 @@ class AwsQuantumTask(QuantumTask):
             s3_destination_folder,
             shots if shots is not None else AwsQuantumTask.DEFAULT_SHOTS,
         )
+
         if tags is not None:
             create_task_kwargs.update({"tags": tags})
-        if isinstance(task_specification, Circuit) and task_specification.parameters:
-            raise ValueError(
-                f"Cannot execute circuit with unbound parameters: "
-                f"{task_specification.parameters}"
-            )
+        inputs = inputs or {}
+
+        if isinstance(task_specification, Circuit):
+            param_names = {param.name for param in task_specification.parameters}
+            unbounded_parameters = param_names - set(inputs.keys())
+            if unbounded_parameters:
+                raise ValueError(
+                    f"Cannot execute circuit with unbound parameters: " f"{unbounded_parameters}"
+                )
+
         return _create_internal(
             task_specification,
             aws_session,
@@ -174,6 +186,7 @@ class AwsQuantumTask(QuantumTask):
             device_arn,
             device_parameters or {},
             disable_qubit_rewiring,
+            inputs,
             *args,
             **kwargs,
         )
@@ -411,7 +424,7 @@ class AwsQuantumTask(QuantumTask):
         # Timed out
         self._logger.warning(
             f"Task {self._arn}: polling for task completion timed out after "
-            + f"{time.time()-start_time} seconds. Please increase the timeout; "
+            + f"{time.time() - start_time} seconds. Please increase the timeout; "
             + "this can be done by creating a new AwsQuantumTask with this task's ARN "
             + "and a higher value for the `poll_timeout_seconds` parameter."
         )
@@ -459,6 +472,7 @@ def _create_internal(
     device_arn: str,
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
+    inputs: Dict[str, float],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -473,30 +487,35 @@ def _(
     device_arn: str,
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
+    inputs: Dict[str, float],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    create_task_kwargs.update({"action": OpenQasmProgram(source=pulse_sequence.to_ir()).json()})
+    create_task_kwargs.update({"action": OpenQASMProgram(source=pulse_sequence.to_ir()).json()})
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
 
 @_create_internal.register
 def _(
-    open_qasm_program: OpenQasmProgram,
+    openqasm_program: OpenQASMProgram,
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
     device_arn: str,
-    _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
+    _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQASMProgram
     _disable_qubit_rewiring: bool,
+    inputs: Dict[str, float],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    if open_qasm_program.inputs:
-        raise ValueError(
-            "OpenQASM Program inputs are only currently supported in the LocalSimulator."
+    if inputs:
+        inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
+        inputs_copy.update(inputs)
+        openqasm_program = OpenQASMProgram(
+            source=openqasm_program.source,
+            inputs=inputs_copy,
         )
-    create_task_kwargs.update({"action": open_qasm_program.json()})
+    create_task_kwargs.update({"action": openqasm_program.json()})
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -509,6 +528,7 @@ def _(
     device_arn: str,
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
+    inputs: Dict[str, float],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -525,6 +545,7 @@ def _(
     device_arn: str,
     device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for circuits
     disable_qubit_rewiring: bool,
+    inputs: Dict[str, float],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -558,12 +579,21 @@ def _(
         qubit_reference_type=qubit_reference_type
     )
 
+    openqasm_program = circuit.to_ir(
+        ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+    )
+
+    if inputs:
+        inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
+        inputs_copy.update(inputs)
+        openqasm_program = OpenQASMProgram(
+            source=openqasm_program.source,
+            inputs=inputs_copy,
+        )
+
     create_task_kwargs.update(
         {
-            "action": circuit.to_ir(
-                ir_type=IRType.OPENQASM,
-                serialization_properties=serialization_properties,
-            ).json(),
+            "action": openqasm_program.json(),
             "deviceParameters": device_parameters.json(),
         }
     )
@@ -584,6 +614,7 @@ def _(
         Dwave2000QDeviceParameters,
     ],
     _,
+    inputs: Dict[str, float],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -607,6 +638,7 @@ def _(
     device_arn: str,
     device_parameters: dict,
     _,
+    inputs: Dict[str, float],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
