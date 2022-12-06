@@ -36,19 +36,19 @@ class AtomArrangementItem:
     coordinate: Tuple[Number, Number]
     site_type: SiteType
 
-    def _validate_coordinate(self):
+    def _validate_coordinate(self) -> None:
         if len(self.coordinate) != 2:
             raise ValueError(f"{self.coordinate} must be of length 2")
         for idx, num in enumerate(self.coordinate):
             if not isinstance(num, Number):
                 raise TypeError(f"{num} at position {idx} must be a number")
 
-    def _validate_site_type(self):
+    def _validate_site_type(self) -> None:
         allowed_site_types = {SiteType.FILLED, SiteType.VACANT}
         if self.site_type not in allowed_site_types:
             raise ValueError(f"{self.site_type} must be one of {allowed_site_types}")
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self._validate_coordinate()
         self._validate_site_type()
 
@@ -68,7 +68,7 @@ class AtomArrangement:
         """Add a coordinate to the atom arrangement.
 
         Args:
-            coordinate (Union[Tuple[Number, Number], np.ndarray]): The coordinate of the
+            coordinate (Union[Tuple[Number, Number], ndarray]): The coordinate of the
                 atom (in meters). The coordinates can be a numpy array of shape (2,)
                 or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.

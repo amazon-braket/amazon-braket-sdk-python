@@ -126,8 +126,6 @@ class AwsQuantumTask(QuantumTask):
                 will compute the exact results based on the task specification.
 
             device_parameters (Dict[str, Any]): Additional parameters to send to the device.
-                For example, for D-Wave:
-                `{"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}`
 
             disable_qubit_rewiring (bool): Whether to run the circuit with the exact qubits chosen,
                 without any rewiring downstream, if this is supported by the device.
@@ -624,8 +622,6 @@ def _create_annealing_device_params(
 
     Args:
         device_params (Dict[str, Any]): Additional parameters for the device.
-            For example, for D-Wave:
-            `{"providerLevelParameters": {"postprocessingType": "OPTIMIZATION"}}`
         device_arn (str): The ARN of the quantum device.
 
     Returns:

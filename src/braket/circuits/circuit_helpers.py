@@ -32,7 +32,7 @@ def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
         raise ValueError("Circuit must have instructions to run on a device")
     if not shots and not circuit.result_types:
         raise ValueError(
-            "No result types specified for circuit and shots=0. See `braket.circuit.result_types`"
+            "No result types specified for circuit and shots=0. See `braket.circuits.result_types`"
         )
     elif shots and circuit.result_types:
         if not circuit.observables_simultaneously_measurable:

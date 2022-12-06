@@ -1923,7 +1923,7 @@ class GPi(AngledGate):
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"gpi({self.angle}) {target_qubit};"
 
@@ -1942,7 +1942,7 @@ class GPi(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> GPi:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -1953,7 +1953,7 @@ class GPi(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit or int): Target qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): Angle in radians.
 
         Returns:
@@ -1984,7 +1984,7 @@ class GPi2(AngledGate):
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit = serialization_properties.format_target(int(target[0]))
         return f"gpi2({self.angle}) {target_qubit};"
 
@@ -2003,7 +2003,7 @@ class GPi2(AngledGate):
     def fixed_qubit_count() -> int:
         return 1
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> GPi2:
         return get_angle(self, **kwargs)
 
     @staticmethod
@@ -2014,7 +2014,7 @@ class GPi2(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit or int): Target qubit index.
+            target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): Angle in radians.
 
         Returns:
@@ -2051,7 +2051,7 @@ class MS(DoubleAngledGate):
 
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ):
+    ) -> str:
         target_qubit_1 = serialization_properties.format_target(int(target[0]))
         target_qubit_2 = serialization_properties.format_target(int(target[1]))
         return f"ms({self.angle_1}, {self.angle_2}) {target_qubit_1}, {target_qubit_2};"
@@ -2073,7 +2073,7 @@ class MS(DoubleAngledGate):
     def fixed_qubit_count() -> int:
         return 2
 
-    def bind_values(self, **kwargs):
+    def bind_values(self, **kwargs) -> MS:
         return _get_angles(self, **kwargs)
 
     @staticmethod
@@ -2087,8 +2087,10 @@ class MS(DoubleAngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target (Qubit or int): Target qubit index.
-            angle (Union[FreeParameterExpression, float]): Angle in radians.
+            target1 (QubitInput): Target qubit 1 index.
+            target2 (QubitInput): Target qubit 2 index.
+            angle_1 (Union[FreeParameterExpression, float]): angle in radians.
+            angle_2 (Union[FreeParameterExpression, float]): angle in radians.
 
         Returns:
             Iterable[Instruction]: MS instruction.
@@ -2300,7 +2302,8 @@ def _double_angled_ascii_characters(
 
     Args:
         gate (str): The name of the gate.
-        angle (Union[FreeParameterExpression, float]): The angle for the gate.
+        angle_1 (Union[FreeParameterExpression, float]): angle in radians.
+        angle_2 (Union[FreeParameterExpression, float]): angle in radians.
 
     Returns:
         str: Returns the ascii representation for an angled gate.
@@ -2313,43 +2316,45 @@ def _double_angled_ascii_characters(
     )
 
 
-def get_angle(self: AngledGate, **kwargs) -> AngledGate:
+def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
     """
     Gets the angle with all values substituted in that are requested.
 
     Args:
-        self (AngledGate): The subclass of AngledGate for which the angle is being obtained.
+        gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
 
     Returns:
         AngledGate: A new gate of the type of the AngledGate originally used with all
         angles updated.
     """
     new_angle = (
-        self.angle.subs(kwargs) if isinstance(self.angle, FreeParameterExpression) else self.angle
+        gate.angle.subs(kwargs) if isinstance(gate.angle, FreeParameterExpression) else gate.angle
     )
-    return type(self)(angle=new_angle)
+    return type(gate)(angle=new_angle)
 
 
-def _get_angles(self, **kwargs):
+def _get_angles(gate: DoubleAngledGate, **kwargs) -> DoubleAngledGate:
     """
     Gets the angle with all values substituted in that are requested.
 
     Args:
-        self: The subclass of AngledGate for which the angle is being obtained.
+        gate (DoubleAngledGate): The subclass of DoubleAngledGate for which the angle is being
+            obtained.
         **kwargs: The named parameters that are being filled for a particular gate.
 
     Returns:
-        A new gate of the type of the AngledGate originally used with all angles updated.
+        DoubleAngledGate: A new gate of the type of the AngledGate originally used with all angles
+        updated.
     """
     new_angles = [
         (
-            getattr(self, angle).subs(kwargs)
-            if isinstance(getattr(self, angle), FreeParameterExpression)
-            else getattr(self, angle)
+            getattr(gate, angle).subs(kwargs)
+            if isinstance(getattr(gate, angle), FreeParameterExpression)
+            else getattr(gate, angle)
         )
         for angle in ("angle_1", "angle_2")
     ]
-    return type(self)(angle_1=new_angles[0], angle_2=new_angles[1])
+    return type(gate)(angle_1=new_angles[0], angle_2=new_angles[1])
 
 
 def format_complex(number: complex) -> str:

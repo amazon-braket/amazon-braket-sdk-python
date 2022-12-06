@@ -211,7 +211,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         replaced with their values.
 
         Returns:
-            ConstantWaveform: A copy of this waveform with the requested parameters bound.
+            DragGaussianWaveform: A copy of this waveform with the requested parameters bound.
         """
         constructor_kwargs = {
             "length": subs_if_free_parameter(self.length, **kwargs),
@@ -324,7 +324,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         replaced with their values.
 
         Returns:
-            ConstantWaveform: A copy of this waveform with the requested parameters bound.
+            GaussianWaveform: A copy of this waveform with the requested parameters bound.
         """
         constructor_kwargs = {
             "length": subs_if_free_parameter(self.length, **kwargs),

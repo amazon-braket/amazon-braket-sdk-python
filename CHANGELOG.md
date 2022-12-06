@@ -1,5 +1,41 @@
 # Changelog
 
+## v1.34.3.post0 (2022-11-21)
+
+### Testing and Release Infrastructure
+
+ * Remove Ocean plugin from dependent tests
+
+## v1.34.3 (2022-11-17)
+
+### Bug Fixes and Other Changes
+
+ * remove d-wave content
+
+## v1.34.2 (2022-11-17)
+
+### Bug Fixes and Other Changes
+
+ * Plot the phase between 0 and 2*pi
+
+## v1.34.1 (2022-11-15)
+
+### Bug Fixes and Other Changes
+
+ * update import path in error message
+
+## v1.34.0 (2022-11-14)
+
+### Features
+
+ * adding Braket checkstyle checks.
+
+## v1.33.2 (2022-11-10)
+
+### Bug Fixes and Other Changes
+
+ * Reference code from the current commit for dependent tests
+
 ## v1.33.1 (2022-11-08)
 
 ### Bug Fixes and Other Changes
