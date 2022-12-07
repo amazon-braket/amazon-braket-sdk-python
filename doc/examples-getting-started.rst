@@ -24,6 +24,8 @@ It is often used as a performance benchmark for today's hardware. In many quantu
 protocols it is used as a resource for quantum error correction, quantum communication, 
 and quantum metrology.
 
+**Note:** When a circuit is ran using a simulator, customers are required to use contiguous qubits/indices.
+
 ***************
 `Running quantum circuits on QPU devices <https://github.com/aws/amazon-braket-examples/tree/main/examples/getting_started/2_Running_quantum_circuits_on_QPU_devices/2_Running_quantum_circuits_on_QPU_devices.ipynb>`_
 ***************
