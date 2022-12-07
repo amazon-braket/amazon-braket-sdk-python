@@ -102,6 +102,7 @@ class AwsDevice(Device):
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        inputs: Optional[Dict[str, float]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -122,6 +123,9 @@ class AwsDevice(Device):
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Default: 1 second.
+            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+                IR. If the IR supports inputs, the inputs will be updated with this value.
+                Default: {}.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -169,13 +173,14 @@ class AwsDevice(Device):
             shots if shots is not None else self._default_shots,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
+            inputs=inputs,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
 
     def run_batch(
         self,
-        task_specifications: List[
+        task_specifications: Union[
             Union[
                 Circuit,
                 Problem,
@@ -183,7 +188,17 @@ class AwsDevice(Device):
                 BlackbirdProgram,
                 PulseSequence,
                 AnalogHamiltonianSimulation,
-            ]
+            ],
+            List[
+                Union[
+                    Circuit,
+                    Problem,
+                    OpenQasmProgram,
+                    BlackbirdProgram,
+                    PulseSequence,
+                    AnalogHamiltonianSimulation,
+                ]
+            ],
         ],
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
@@ -191,14 +206,18 @@ class AwsDevice(Device):
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]): # noqa
-                List of  circuits or annealing problems to run on device.
+            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
+                PulseSequence, AnalogHamiltonianSimulation], List[Union[ Circuit,
+                Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence,
+                AnalogHamiltonianSimulation]]]): Single instance or list of circuits, annealing
+                problems, pulse sequences, or photonics program to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
                 outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
@@ -214,6 +233,9 @@ class AwsDevice(Device):
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
+            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+                IR. If the IR supports inputs, the inputs will be updated with this value.
+                Default: {}.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -237,6 +259,7 @@ class AwsDevice(Device):
             max_workers=max_connections,
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds,
+            inputs=inputs,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )

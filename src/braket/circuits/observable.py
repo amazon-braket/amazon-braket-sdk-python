@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+import numbers
+from copy import deepcopy
 from typing import List, Sequence, Tuple, Union
 
 import numpy as np
@@ -37,6 +39,10 @@ class Observable(QuantumOperator):
 
     def __init__(self, qubit_count: int, ascii_symbols: Sequence[str]):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+        self._coef = 1
+
+    def _unscaled(self):
+        return Observable(qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols)
 
     def to_ir(
         self,
@@ -99,6 +105,10 @@ class Observable(QuantumOperator):
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
     @property
+    def coefficient(self):
+        return self._coef
+
+    @property
     def basis_rotation_gates(self) -> Tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
         Returns:
@@ -143,6 +153,29 @@ class Observable(QuantumOperator):
 
         raise ValueError("Can only perform tensor products between observables.")
 
+    def __mul__(self, other) -> Observable:
+        """Scalar multiplication"""
+        if isinstance(other, numbers.Number):
+            observable_copy = deepcopy(self)
+            observable_copy._coef *= other
+            return observable_copy
+        raise TypeError("Observable coefficients must be numbers.")
+
+    def __rmul__(self, other) -> Observable:
+        return self * other
+
+    def __add__(self, other):
+        if not isinstance(other, Observable):
+            raise ValueError("Can only perform addition between observables.")
+
+        return Observable.Sum([self, other])
+
+    def __sub__(self, other):
+        if not isinstance(other, Observable):
+            raise ValueError("Can only perform subtraction between observables.")
+
+        return self + (-1 * other)
+
     def __repr__(self) -> str:
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
@@ -162,9 +195,19 @@ class StandardObservable(Observable):
         super().__init__(qubit_count=1, ascii_symbols=ascii_symbols)
         self._eigenvalues = (1.0, -1.0)  # immutable
 
+    def _unscaled(self):
+        return StandardObservable(ascii_symbols=self.ascii_symbols)
+
     @property
     def eigenvalues(self) -> np.ndarray:
-        return np.array(self._eigenvalues)
+        return self.coefficient * np.array(self._eigenvalues)
 
     def eigenvalue(self, index: int) -> float:
-        return self._eigenvalues[index]
+        return self.coefficient * self._eigenvalues[index]
+
+    @property
+    def ascii_symbols(self) -> Tuple[str, ...]:
+        return tuple(
+            f"{self.coefficient if self.coefficient != 1 else ''}{ascii_symbol}"
+            for ascii_symbol in self._ascii_symbols
+        )

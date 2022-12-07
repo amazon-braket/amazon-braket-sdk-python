@@ -199,6 +199,7 @@ def run_and_assert(
     shots,  # Treated as positional arg
     poll_timeout_seconds,  # Treated as positional arg
     poll_interval_seconds,  # Treated as positional arg
+    inputs,  # Treated as positional arg
     extra_args,
     extra_kwargs,
 ):
@@ -214,6 +215,8 @@ def run_and_assert(
         run_args.append(poll_timeout_seconds)
     if poll_interval_seconds is not None:
         run_args.append(poll_interval_seconds)
+    if inputs is not None:
+        run_args.append(inputs)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
 
@@ -229,6 +232,7 @@ def run_and_assert(
         shots,
         poll_timeout_seconds,
         poll_interval_seconds,
+        inputs,
         extra_args,
         extra_kwargs,
     )
@@ -253,6 +257,7 @@ def run_batch_and_assert(
     max_connections,
     poll_timeout_seconds,
     poll_interval_seconds,
+    inputs,
     extra_args,
     extra_kwargs,
 ):
@@ -275,6 +280,8 @@ def run_batch_and_assert(
         run_args.append(poll_timeout_seconds)
     if poll_interval_seconds is not None:
         run_args.append(poll_interval_seconds)
+    if inputs is not None:
+        run_args.append(inputs)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
 
@@ -290,6 +297,7 @@ def run_batch_and_assert(
         shots,
         poll_timeout_seconds,
         poll_interval_seconds,
+        inputs,
         extra_args,
         extra_kwargs,
     )
@@ -298,8 +306,11 @@ def run_batch_and_assert(
 
     # aws_session_mock.call_args.kwargs syntax is newer than Python 3.7
     assert aws_session_mock.call_args[1]["config"].max_pool_connections == max_pool_connections
-    aws_quantum_task_mock.assert_called_with(
+    aws_quantum_task_mock.assert_any_call(
         new_session_mock, device.arn, circuits[0], *create_args, **create_kwargs
+    )
+    aws_quantum_task_mock.assert_any_call(
+        new_session_mock, device.arn, circuits[1], *create_args, **create_kwargs
     )
 
 
@@ -312,6 +323,7 @@ def _create_task_args_and_kwargs(
     shots,
     poll_timeout_seconds,
     poll_interval_seconds,
+    inputs,
     extra_args,
     extra_kwargs,
 ):
@@ -329,6 +341,7 @@ def _create_task_args_and_kwargs(
             "poll_interval_seconds": poll_interval_seconds
             if poll_interval_seconds is not None
             else default_poll_interval,
+            "inputs": inputs,
         }
     )
     return create_args, create_kwargs

@@ -44,7 +44,7 @@ from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.ir.blackbird import Program as BlackbirdProgram
-from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse import Frame, Port, PulseSequence
 from braket.tasks import (
     AnalogHamiltonianSimulationQuantumTaskResult,
@@ -113,7 +113,7 @@ def problem():
 
 @pytest.fixture
 def openqasm_program():
-    return OpenQasmProgram(source="OPENQASM 3.0; h $0;")
+    return OpenQASMProgram(source="OPENQASM 3.0; h $0;")
 
 
 @pytest.fixture
@@ -497,7 +497,7 @@ def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
             "}",
         ]
     )
-    expected_program = OpenQasmProgram(source=expected_openqasm)
+    expected_program = OpenQASMProgram(source=expected_openqasm)
 
     aws_session.create_quantum_task.return_value = arn
     AwsQuantumTask.create(aws_session, SIMULATOR_ARN, pulse_sequence, S3_TARGET, 10)
@@ -527,7 +527,8 @@ def test_create_pulse_gate_circuit(
             "b[1] = measure $1;",
         )
     )
-    expected_program = OpenQasmProgram(source=expected_openqasm, inputs={})
+
+    expected_program = OpenQASMProgram(source=expected_openqasm, inputs={})
 
     aws_session.create_quantum_task.return_value = arn
     AwsQuantumTask.create(aws_session, device_arn, pulse_gate_circuit, S3_TARGET, 10)
@@ -554,11 +555,40 @@ def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_sessio
 
     task = AwsQuantumTask.create(aws_session, device_arn, circuit, S3_TARGET, shots)
     assert task == AwsQuantumTask(mocked_task_arn, aws_session)
+    program = circuit.to_ir(ir_type=IRType.OPENQASM)
+    assert program.inputs == {}
 
     _assert_create_quantum_task_called_with(
         aws_session,
         device_arn,
-        circuit.to_ir(ir_type=IRType.OPENQASM).json(),
+        program.json(),
+        S3_TARGET,
+        shots,
+        device_parameters_class(
+            paradigmParameters=GateModelParameters(
+                qubitCount=circuit.qubit_count, disableQubitRewiring=False
+            )
+        ),
+    )
+
+
+@pytest.mark.parametrize("device_arn,device_parameters_class", DEVICE_PARAMETERS)
+def test_from_circuit_with_input_params(device_arn, device_parameters_class, aws_session, circuit):
+    mocked_task_arn = "task-arn-1"
+    aws_session.create_quantum_task.return_value = mocked_task_arn
+    shots = 53
+    inputs = {"beta": 3}
+
+    task = AwsQuantumTask.create(aws_session, device_arn, circuit, S3_TARGET, shots, inputs=inputs)
+    assert task == AwsQuantumTask(mocked_task_arn, aws_session)
+    program = circuit.to_ir(ir_type=IRType.OPENQASM)
+    assert program.inputs == {}
+    program.inputs.update(inputs)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        device_arn,
+        program.json(),
         S3_TARGET,
         shots,
         device_parameters_class(
@@ -962,7 +992,13 @@ def _init_and_add_to_list(aws_session, arn, task_list):
 
 
 def _assert_create_quantum_task_called_with(
-    aws_session, arn, task_description, s3_results_prefix, shots, device_parameters=None, tags=None
+    aws_session,
+    arn,
+    task_description,
+    s3_results_prefix,
+    shots,
+    device_parameters=None,
+    tags=None,
 ):
     test_kwargs = {
         "deviceArn": arn,
@@ -971,6 +1007,7 @@ def _assert_create_quantum_task_called_with(
         "action": task_description,
         "shots": shots,
     }
+
     if device_parameters is not None:
         test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
     if tags is not None:
@@ -990,18 +1027,35 @@ def _mock_s3(aws_session, result):
     aws_session.retrieve_s3_object_body.return_value = result
 
 
-def test_no_program_inputs(aws_session):
-    openqasm_program = OpenQasmProgram(
-        source="""
-        qubit q;
-        h q;
-        """,
-        inputs={"x": 1},
-    )
+@pytest.mark.parametrize("source_input", [{}, {"gamma": 0.15}, None])
+@pytest.mark.parametrize("device_arn", DEVICE_PARAMETERS[0])
+def test_program_inputs(aws_session, device_arn, source_input):
+    bell_qasm = """
+    OPENQASM 3;
+    input float theta;
+    qubit[2] q;
+    bit[2] c;
+    h q[0];
+    cnot q[0], q[1];
+    c = measure q;
+    """
+    openqasm_program = OpenQASMProgram(source=bell_qasm, inputs=source_input)
     aws_session.create_quantum_task.return_value = arn
     shots = 21
-    only_for_local_sim = (
-        "OpenQASM Program inputs are only currently supported in the LocalSimulator."
+    inputs = {"theta": 0.2}
+    AwsQuantumTask.create(
+        aws_session, device_arn, openqasm_program, S3_TARGET, shots, inputs=inputs
     )
-    with pytest.raises(ValueError, match=only_for_local_sim):
-        AwsQuantumTask.create(aws_session, SIMULATOR_ARN, openqasm_program, S3_TARGET, shots)
+
+    assert openqasm_program.inputs == source_input
+    inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
+    inputs_copy.update(inputs)
+    openqasm_program = OpenQASMProgram(source=openqasm_program.source, inputs=inputs_copy)
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        device_arn,
+        openqasm_program.json(),
+        S3_TARGET,
+        shots,
+    )

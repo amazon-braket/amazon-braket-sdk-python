@@ -73,7 +73,6 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "deviceParameters": {},
 }
 
-
 MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
     MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1
 )
@@ -256,36 +255,6 @@ MOCK_DEFAULT_S3_DESTINATION_FOLDER = (
 )
 
 
-@pytest.fixture
-def parameterized_quantum_task(aws_session, s3_destination_folder):
-    theta = FreeParameter("theta")
-    circ = Circuit().ry(angle=theta, target=0)
-    return AwsQuantumTask.create(
-        device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        aws_session=aws_session,
-        poll_timeout_seconds=2,
-        task_specification=circ,
-        shots=10,
-        s3_destination_folder=s3_destination_folder,
-    )
-
-
-@pytest.fixture
-def parameterized_quantum_task_batch(aws_session, s3_destination_folder):
-    theta = FreeParameter("theta")
-    circ_1 = Circuit().ry(angle=3, target=0)
-    circ_2 = Circuit().ry(angle=theta, target=0)
-    return AwsQuantumTaskBatch(
-        device_arn="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        aws_session=aws_session,
-        poll_timeout_seconds=2,
-        task_specifications=[circ_1, circ_2],
-        shots=1,
-        s3_destination_folder=s3_destination_folder,
-        max_parallel=100,
-    )
-
-
 @pytest.fixture(
     params=[
         "arn:aws:braket:us-west-1::device/quantum-simulator/amazon/sim",
@@ -314,6 +283,19 @@ def openqasm_program():
 @pytest.fixture(params=["bell_circuit", "openqasm_program"])
 def circuit(request):
     return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def multiple_circuit_inputs():
+    theta = FreeParameter("theta")
+    beta = FreeParameter("beta")
+    return Circuit().ry(angle=theta, target=0).rx(angle=beta, target=1)
+
+
+@pytest.fixture()
+def single_circuit_input():
+    theta = FreeParameter("theta")
+    return Circuit().ry(angle=theta, target=0)
 
 
 @pytest.fixture
@@ -745,36 +727,271 @@ def test_run_no_extra(aws_quantum_task_mock, device, circuit):
     )
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_run_param_circuit(parameterized_quantum_task, device, s3_destination_folder):
-    theta = FreeParameter("theta")
-    circ = Circuit().ry(angle=theta, target=0)
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask")
+def test_run_param_circuit_with_no_inputs(
+    aws_quantum_task_mock, single_circuit_input, device, s3_destination_folder
+):
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        _run_and_assert(
+            aws_quantum_task_mock,
+            device,
+            single_circuit_input,
+            s3_destination_folder,
+            10,
+            86400,
+            0.25,
+            {},
+        )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_param_circuit_with_inputs(
+    aws_quantum_task_mock, single_circuit_input, device, s3_destination_folder
+):
+    inputs = {"theta": 0.2}
+
     _run_and_assert(
-        parameterized_quantum_task,
+        aws_quantum_task_mock,
         device,
-        circ,
+        single_circuit_input,
         s3_destination_folder,
-        shots=10,
+        10,
+        86400,
+        0.25,
+        inputs,
     )
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_run_batch_param_circuit(
-    parameterized_quantum_task_batch, aws_session, device, s3_destination_folder
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_param_circuit_with_inputs_batch_task(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    single_circuit_input,
+    device,
+    s3_destination_folder,
 ):
-    theta = FreeParameter("theta")
-    circ_1 = Circuit().ry(angle=3, target=0)
-    circ_2 = Circuit().ry(angle=theta, target=0)
-    circuits = [circ_1, circ_2]
+    inputs = {"theta": 0.2}
+    circ_1 = Circuit().rx(angle=0.2, target=0)
+    circuits = [circ_1, single_circuit_input]
 
     _run_batch_and_assert(
-        parameterized_quantum_task_batch,
-        aws_session,
+        aws_quantum_task_mock,
+        aws_session_mock,
         device,
         circuits,
         s3_destination_folder,
-        shots=10,
+        10,
+        20,
+        50,
+        43200,
+        0.25,
+        inputs,
     )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask")
+def test_run_param_circuit_with_invalid_input(
+    aws_quantum_task_mock, single_circuit_input, device, s3_destination_folder
+):
+    inputs = {"beta": 0.2}
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        _run_and_assert(
+            aws_quantum_task_mock,
+            device,
+            single_circuit_input,
+            s3_destination_folder,
+            10,
+            86400,
+            0.25,
+            inputs,
+        )
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_batch_param_circuit_with_no_inputs(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    single_circuit_input,
+    device,
+    s3_destination_folder,
+):
+    circ_1 = Circuit().ry(angle=3, target=0)
+    circuits = [circ_1, single_circuit_input]
+
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        _run_batch_and_assert(
+            aws_quantum_task_mock,
+            aws_session_mock,
+            device,
+            circuits,
+            s3_destination_folder,
+            1000,
+            20,
+            50,
+            43200,
+            0.25,
+            {},
+        )
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task_batch.AwsQuantumTask.create")
+def test_run_multi_param_batch_circuit_with_input(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    multiple_circuit_inputs,
+    device,
+    s3_destination_folder,
+):
+    inputs = {"beta": 0.2}
+    circ_1 = Circuit().ry(angle=3, target=0)
+    circuits = [circ_1, multiple_circuit_inputs]
+
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        _run_batch_and_assert(
+            aws_quantum_task_mock,
+            aws_session_mock,
+            device,
+            circuits,
+            s3_destination_folder,
+            1000,
+            20,
+            50,
+            43200,
+            0.25,
+            inputs,
+        )
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_param_batch_circuit_with_invalid_input(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    single_circuit_input,
+    aws_session,
+    device,
+    s3_destination_folder,
+):
+    inputs = {"beta": 0.2}
+    circ_1 = Circuit().ry(angle=3, target=0)
+    circuits = [circ_1, single_circuit_input]
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        _run_batch_and_assert(
+            aws_quantum_task_mock,
+            aws_session_mock,
+            device,
+            circuits,
+            s3_destination_folder,
+            1000,
+            20,
+            50,
+            43200,
+            0.25,
+            inputs,
+        )
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_batch_circuit_with_task_and_input_mismatch(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    single_circuit_input,
+    openqasm_program,
+    device,
+    s3_destination_folder,
+):
+    inputs = [{"beta": 0.2}, {"gamma": 0.1}, {"theta": 0.2}]
+    circ_1 = Circuit().ry(angle=3, target=0)
+    task_specifications = [[circ_1, single_circuit_input], openqasm_program]
+    wrong_number_of_inputs = "Multiple inputs and task specifications must " "be equal in number."
+
+    with pytest.raises(ValueError, match=wrong_number_of_inputs):
+        _run_batch_and_assert(
+            aws_quantum_task_mock,
+            aws_session_mock,
+            device,
+            task_specifications,
+            s3_destination_folder,
+            1000,
+            20,
+            50,
+            43200,
+            0.25,
+            inputs,
+        )
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_multiple_task_multiple_batch_inputs_invalid_config(
+    aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, s3_destination_folder
+):
+    theta = FreeParameter("theta")
+    multiple_task = [Circuit().rx(angle=theta, target=1)] * 2
+    multiple_inputs = [{"theta": 0.2}, {"beta": 0.3}]
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        _run_batch_and_assert(
+            aws_quantum_task_mock,
+            aws_session_mock,
+            device,
+            multiple_task,
+            s3_destination_folder,
+            1000,
+            20,
+            50,
+            43200,
+            0.25,
+            multiple_inputs,
+        )
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_single_task_single_input_batch_missing_input(
+    aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, s3_destination_folder
+):
+    theta = FreeParameter("theta")
+    task = Circuit().rx(angle=theta, target=0)
+    inputs = {"beta": 0.2}
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        _run_batch_and_assert(
+            aws_quantum_task_mock,
+            aws_session_mock,
+            device,
+            task,
+            s3_destination_folder,
+            1000,
+            20,
+            50,
+            43200,
+            0.25,
+            inputs,
+        )
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
@@ -836,26 +1053,6 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
         None,
         None,
         None,
-    )
-    device._aws_session.default_bucket.assert_not_called()
-
-
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_destination_folder):
-    device = device(RIGETTI_ARN)
-    run_and_assert(
-        aws_quantum_task_mock,
-        device,
-        MOCK_DEFAULT_S3_DESTINATION_FOLDER,
-        AwsDevice.DEFAULT_SHOTS_QPU,
-        AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
-        AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        circuit,
-        s3_destination_folder,
-        None,
-        None,
-        None,
-        None,
         None,
     )
     device._aws_session.default_bucket.assert_not_called()
@@ -888,6 +1085,7 @@ def test_run_with_positional_args_and_kwargs(
         100,
         86400,
         0.25,
+        {},
         ["foo"],
         {"bar": 1, "baz": 2},
     )
@@ -907,13 +1105,25 @@ def test_run_env_variables(aws_quantum_task_mock, device, circuit, arn):
 @patch("braket.aws.aws_session.AwsSession")
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_batch_no_extra(
-    aws_quantum_task_mock, aws_session_mock, boto_session_mock, device, circuit
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    device,
+    circuit,
+    s3_destination_folder,
 ):
     _run_batch_and_assert(
         aws_quantum_task_mock,
         aws_session_mock,
         device,
         [circuit for _ in range(10)],
+        s3_destination_folder,
+        1000,
+        20,
+        50,
+        43200,
+        0.25,
+        {},
     )
 
 
@@ -935,6 +1145,11 @@ def test_run_batch_with_shots(
         [circuit for _ in range(10)],
         s3_destination_folder,
         1000,
+        20,
+        50,
+        43200,
+        0.25,
+        {},
     )
 
 
@@ -958,6 +1173,9 @@ def test_run_batch_with_max_parallel_and_kwargs(
         1000,
         20,
         50,
+        43200,
+        0.25,
+        inputs={"theta": 0.2},
         extra_kwargs={"bar": 1, "baz": 2},
     )
 
@@ -981,6 +1199,7 @@ def _run_and_assert(
     shots=None,  # Treated as positional arg
     poll_timeout_seconds=None,  # Treated as positional arg
     poll_interval_seconds=None,  # Treated as positional arg
+    inputs=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -996,6 +1215,7 @@ def _run_and_assert(
         shots,
         poll_timeout_seconds,
         poll_interval_seconds,
+        inputs,
         extra_args,
         extra_kwargs,
     )
@@ -1012,6 +1232,7 @@ def _run_batch_and_assert(
     max_connections=None,  # Treated as positional arg
     poll_timeout_seconds=None,  # Treated as a positional arg
     poll_interval_seconds=None,  # Treated as positional arg
+    inputs=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1030,6 +1251,7 @@ def _run_batch_and_assert(
         max_connections,
         poll_timeout_seconds,
         poll_interval_seconds,
+        inputs,
         extra_args,
         extra_kwargs,
     )
