@@ -14,6 +14,7 @@
 import math
 
 import numpy as np
+import numpy.testing as npt
 import pytest
 
 from braket.circuits import Gate, Observable
@@ -212,6 +213,74 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
             "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) $0, $1",
         ),
+        (
+            (2 * Observable.Z()) @ (3 * Observable.H()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 3],
+            "6 * z($3) @ h($3)",
+        ),
+        (
+            (2 * Observable.Z()) @ (3 * Observable.H()) @ (2 * Observable.Y()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 3, 1],
+            "12 * z($3) @ h($3) @ y($1)",
+        ),
+        (
+            3 * (2 * Observable.Z()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3],
+            "6 * z($3)",
+        ),
+        (
+            (2 * Observable.I()) @ (2 * Observable.Hermitian(np.eye(4))),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [3, 0, 1],
+            "4 * i($3) @ "
+            "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) $0, $1",
+        ),
+        (
+            Observable.Z() + 2 * Observable.H(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[3], [4]],
+            "z($3) + 2 * h($4)",
+        ),
+        (
+            3 * (Observable.H() + 2 * Observable.X()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[3], [0]],
+            "3 * h($3) + 6 * x($0)",
+        ),
+        (
+            3 * (Observable.H() + 2 * Observable.H()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[3], [3]],
+            "3 * h($3) + 6 * h($3)",
+        ),
+        (
+            3 * (Observable.H() + 2 * Observable.H()),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[3], [5]],
+            "3 * h($3) + 6 * h($5)",
+        ),
+        (
+            (2 * Observable.Y()) @ (3 * Observable.I()) + 0.75 * Observable.Y() @ Observable.Z(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[0, 1], [0, 1]],
+            "6 * y($0) @ i($1) + 0.75 * y($0) @ z($1)",
+        ),
+        (
+            (-2 * Observable.Y()) @ (3 * Observable.I()) + -0.75 * Observable.Y() @ Observable.Z(),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[0, 1], [0, 1]],
+            "-6 * y($0) @ i($1) - 0.75 * y($0) @ z($1)",
+        ),
+        (
+            4 * (2 * Observable.Z() + 2 * (3 * Observable.X() @ (2 * Observable.Y()))),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            [[0], [1, 2]],
+            "8 * z($0) + 48 * x($1) @ y($2)",
+        ),
     ],
 )
 def test_observables_to_ir_openqasm(observable, serialization_properties, target, expected_ir):
@@ -221,6 +290,100 @@ def test_observables_to_ir_openqasm(observable, serialization_properties, target
         )
         == expected_ir
     )
+
+
+@pytest.mark.parametrize(
+    "observable",
+    [
+        2 * Observable.H(),
+        3 * Observable.Z(),
+        2 * Observable.I(),
+        3 * Observable.X(),
+        2 * Observable.Y(),
+        2 * Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]])),
+        2 * Observable.TensorProduct([Observable.Z(), Observable.H()]),
+    ],
+)
+def test_observable_coef_jaqcd(observable):
+    coef_not_supported_with_jaqcd = "Observable coefficients not supported with Jaqcd"
+    with pytest.raises(ValueError, match=coef_not_supported_with_jaqcd):
+        observable.to_ir(target=0, ir_type=IRType.JAQCD)
+
+
+@pytest.mark.parametrize(
+    "expression, observable",
+    [
+        ([], Observable.X()),
+        ([2], Observable.Y()),
+        ([2, "invalid_str"], Observable.Z()),
+        ([2.0], Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]]))),
+        ([2], Observable.Sum([Observable.X() + Observable.Y()])),
+        ([2], Observable.Y() + 0.75 * Observable.Y() @ Observable.Z()),
+    ],
+)
+def test_invalid_scalar_multiplication(expression, observable):
+    with pytest.raises(TypeError, match="Observable coefficients must be numbers."):
+        expression * observable
+
+
+@pytest.mark.parametrize(
+    "observable, matrix",
+    [
+        (
+            (-3 * Observable.H()).to_matrix(),
+            np.array(
+                [[-2.12132034 + 0.0j, -2.12132034 + 0.0j], [-2.12132034 + 0.0j, 2.12132034 - 0.0j]]
+            ),
+        ),
+        (
+            (3 * Observable.Z()).to_matrix(),
+            np.array([[3.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, -3.0 + 0.0j]]),
+        ),
+        (
+            (2 * Observable.I()).to_matrix(),
+            np.array([[2.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 2.0 + 0.0j]]),
+        ),
+        (
+            (1.2 * Observable.X()).to_matrix(),
+            np.array([[0.0 + 0.0j, 1.2 + 0.0j], [1.2 + 0.0j, 0.0 + 0.0j]]),
+        ),
+        (
+            (1e-2 * Observable.Y()).to_matrix(),
+            np.array([[0.0 + 0.0j, 0.0 - 0.01j], [0 + 0.01j, 0.0 + 0.0j]]),
+        ),
+        (
+            (np.array(1.3) * Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]]))).to_matrix(),
+            np.array([[0.0 + 0.0j, 1.3 + 0.0j], [1.3 + 0.0j, 0.0 + 0.0j]]),
+        ),
+        (
+            (2 * Observable.TensorProduct([Observable.Z(), Observable.H()])).to_matrix(),
+            np.array(
+                [
+                    [1.41421356 + 0.0j, 1.41421356 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
+                    [1.41421356 + 0.0j, -1.41421356 + 0.0j, 0.0 + 0.0j, -0.0 + 0.0j],
+                    [0.0 + 0.0j, 0.0 + 0.0j, -1.41421356 + 0.0j, -1.41421356 + 0.0j],
+                    [0.0 + 0.0j, -0.0 + 0.0j, -1.41421356 + 0.0j, 1.41421356 + 0.0j],
+                ],
+            ),
+        ),
+    ],
+)
+def test_valid_scaled_matrix(observable, matrix):
+    npt.assert_allclose(observable, matrix)
+
+
+@pytest.mark.parametrize(
+    "observable, eigenvalue",
+    [
+        (-2 * Observable.I().eigenvalues, np.array([-2.0, -2.0])),
+        (
+            3e-2 * Observable.Hermitian(matrix=np.array([[0, 1], [1, 0]])).eigenvalues,
+            np.array([-0.03, 0.03]),
+        ),
+    ],
+)
+def test_valid_scaled_eigenvalues(observable, eigenvalue):
+    npt.assert_allclose(observable, eigenvalue)
 
 
 @pytest.mark.parametrize(
@@ -466,3 +629,90 @@ def compare_eigenvalues(observable, expected):
         np.array([observable.eigenvalue(i) for i in range(2**observable.qubit_count)]),
         expected,
     )
+
+
+def test_sum_not_allowed_in_tensor_product():
+    sum_not_allowed_in_tensor_product = "Sum observables not allowed in TensorProduct"
+    with pytest.raises(TypeError, match=sum_not_allowed_in_tensor_product):
+        Observable.TensorProduct([Observable.X() + Observable.Y()])
+
+
+# Sum of observables
+
+
+@pytest.mark.parametrize(
+    "observable,basis_rotation_gates",
+    [
+        (Observable.X() + Observable.Y(), tuple([Gate.H(), Gate.Z(), Gate.S(), Gate.H()])),
+    ],
+)
+def test_no_basis_rotation_support_for_sum(observable, basis_rotation_gates):
+    no_basis_rotation_support_for_sum = "Basis rotation calculation not supported for Sum"
+    with pytest.raises(NotImplementedError, match=no_basis_rotation_support_for_sum):
+        observable.basis_rotation_gates
+
+
+def test_no_eigenvalues_support_for_sum():
+    no_eigen_value_support = "Eigenvalue calculation not supported for Sum"
+    with pytest.raises(NotImplementedError, match=no_eigen_value_support):
+        (Observable.X() + Observable.Y()).eigenvalues
+
+
+def test_matrix_not_supported_for_sum():
+    matrix_not_supported = "Matrix operation is not supported for Sum"
+    with pytest.raises(NotImplementedError, match=matrix_not_supported):
+        (Observable.X() + Observable.Y()).to_matrix()
+
+
+def test_invalid_targets_config_for_sum_obs():
+    observable, serialization_properties = (
+        2 * Observable.X() @ Observable.Y() + 0.75 * Observable.Y() @ Observable.Z(),
+        OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+    )
+    target = [[0, 1]]
+
+    target_len_mismatch_for_sum_terms = "Invalid target of length 1 for Sum with 2 terms"
+
+    with pytest.raises(ValueError, match=target_len_mismatch_for_sum_terms):
+        observable.to_ir(
+            target, ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        )
+
+
+def test_sum_obs_str():
+    assert (
+        str(Observable.Sum([2 * Observable.X() + 3 * Observable.Y()]))
+        == "Sum(X('qubit_count': 1), Y('qubit_count': 1))"
+    )
+
+
+def test_str_equality_sum_obs():
+    t1 = Observable.Sum([2 * Observable.X() + 3 * Observable.Y()])
+    t2 = Observable.Sum([2 * Observable.X() + 3 * Observable.Y()])
+    t3 = Observable.Sum([2 * Observable.Z() + 3 * Observable.H()])
+    t4 = Observable.Sum([Observable.Z() + Observable.H()])
+    assert t1 == t2
+    assert t2 != t3
+    assert t1 != t3
+    assert t3 == t4
+
+
+def test_invalid_target_length_for_sum_obs_term():
+    observable, serialization_properties = (
+        2 * Observable.Y() + 0.75 * Observable.Y() @ Observable.Z(),
+        OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+    )
+    target = [[0, 1], [0, 1]]
+
+    invalid_target_len_for_term = "Invalid target for term 0 of Sum. Expected 1 targets, got 2"
+
+    with pytest.raises(ValueError, match=invalid_target_len_for_term):
+        observable.to_ir(
+            target, ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        )
+
+
+def test_unscaled_tensor_product():
+    observable = 3 * ((2 * Observable.X()) @ (5 * Observable.Y()))
+    assert observable == 30 * (Observable.X() @ Observable.Y())
+    assert observable._unscaled() == Observable.X() @ Observable.Y()

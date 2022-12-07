@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from functools import reduce
 from typing import List, Tuple, Union
 
 import braket.circuits.circuit as cir
@@ -124,7 +125,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
             ):
                 qubit_range = circuit_qubits
             else:
-                qubit_range = QubitSet(range(min(item.target), max(item.target) + 1))
+                if isinstance(item.target, list):
+                    target = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
+                else:
+                    target = item.target
+                qubit_range = QubitSet(range(min(target), max(target) + 1))
 
             found_grouping = False
             for group in groupings:
@@ -242,9 +247,12 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
                 ascii_symbols = [ascii_symbol] + after
             else:
-                target_qubits = item.target
+                if isinstance(item.target, list):
+                    target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
+                else:
+                    target_qubits = item.target
                 qubits = circuit_qubits.intersection(
-                    set(range(min(item.target), max(item.target) + 1))
+                    set(range(min(target_qubits), max(target_qubits) + 1))
                 )
                 ascii_symbols = item.ascii_symbols
 

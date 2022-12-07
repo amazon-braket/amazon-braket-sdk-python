@@ -10,10 +10,13 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import re
 
 import pytest
 
 from braket.circuits import Observable, ObservableResultType, ResultType
+from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.result_type import ObservableParameterResultType
 from braket.circuits.serialization import IRType
 
 
@@ -186,3 +189,63 @@ def test_result_type_to_ir(
     with pytest.raises(expected_exception) as exc:
         result_type.to_ir(ir_type, serialization_properties=serialization_properties)
     assert exc.value.args[0] == expected_message
+
+
+# Observable Result Type with Params
+
+
+def test_expectation_init_value_error_target_adjoint_gradient():
+    tensor_operation_error = re.escape(
+        "Observable TensorProduct(X('qubit_count': 1), "
+        "Y('qubit_count': 1)) must only operate on 1 qubit for target=None"
+    )
+    with pytest.raises(ValueError, match=tensor_operation_error):
+        ObservableParameterResultType(
+            ascii_symbols=["Obs", "Obs"],
+            observable=Observable.X() @ Observable.Y(),
+            target=[],
+            parameters=["alpha"],
+        )
+
+
+def test_expectation_init_value_error_ascii_symbols_adjoint_gradient():
+    ascii_and_obs_qubit_count_mismatch = (
+        "Observable's qubit count and the number of ASCII symbols must be equal"
+    )
+    with pytest.raises(ValueError, match=ascii_and_obs_qubit_count_mismatch):
+        ObservableParameterResultType(
+            ascii_symbols=["Obs"],
+            observable=Observable.X() @ Observable.Y(),
+            target=[1, 2],
+            parameters=[],
+        )
+
+
+def test_obs_rt_init_value_error_qubit_count_adjoint_gradient():
+    obs_and_target_count_mismatch = re.escape(
+        "Observable's qubit count 1 and the size of the target "
+        "qubit set QubitSet([Qubit(0), Qubit(1)]) must be equal"
+    )
+    with pytest.raises(ValueError, match=obs_and_target_count_mismatch):
+        ObservableParameterResultType(
+            ascii_symbols=["Obs"], observable=Observable.X(), target=[0, 1]
+        )
+
+
+def test_valid_result_type_for__adjoint_gradient():
+    ObservableParameterResultType(
+        ascii_symbols=["Obs", "Obs"],
+        observable=Observable.X() @ Observable.Y(),
+        target=[0, 1],
+        parameters=["alpha", FreeParameter("beta")],
+    )
+
+
+def test_obs_rt_repr_adjoint_gradient():
+    a1 = ObservableParameterResultType(
+        ascii_symbols=["Obs"], observable=Observable.X(), target=0, parameters=["alpha"]
+    )
+    assert (
+        str(a1) == "ObservableParameterResultType(observable=X('qubit_count': 1), "
+        "target=QubitSet([Qubit(0)]), parameters=['alpha'])"
+    )
