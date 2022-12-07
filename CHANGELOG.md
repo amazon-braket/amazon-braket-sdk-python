@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.35.0 (2022-12-07)
+
+### Features
+
+ * adjoint gradient
+
+### Bug Fixes and Other Changes
+
+ * docs: Update examples-getting-started.rst
+ * loosen oqpy requirement
+
 ## v1.34.3.post0 (2022-11-21)
 
 ### Testing and Release Infrastructure
