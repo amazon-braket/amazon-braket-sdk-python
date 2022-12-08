@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.35.0 (2022-12-07)
+
+### Features
+
+ * adjoint gradient
+
+### Bug Fixes and Other Changes
+
+ * docs: Update examples-getting-started.rst
+ * loosen oqpy requirement
+
 ## v1.34.3.post0 (2022-11-21)
 
 ### Testing and Release Infrastructure
@@ -93,301 +104,301 @@
 
 ### Bug Fixes and Other Changes
 
- * copy profile name
+- copy profile name
 
 ## v1.30.1 (2022-09-20)
 
 ### Bug Fixes and Other Changes
 
- * update paths within docker image to posix
+- update paths within docker image to posix
 
 ## v1.30.0 (2022-09-16)
 
 ### Features
 
- * IonQ native gates
+- IonQ native gates
 
 ## v1.29.4 (2022-09-08)
 
 ### Bug Fixes and Other Changes
 
- * Simultaneous measurement of identity on all qubits
+- Simultaneous measurement of identity on all qubits
 
 ## v1.29.3 (2022-09-05)
 
 ### Bug Fixes and Other Changes
 
- * making local jobs stream output.
+- making local jobs stream output.
 
 ## v1.29.2 (2022-08-25)
 
 ### Bug Fixes and Other Changes
 
- * Updating documentation and type hints.
+- Updating documentation and type hints.
 
 ## v1.29.1 (2022-08-18)
 
 ### Bug Fixes and Other Changes
 
- * updating test cost tracking integ test to use M2.
+- updating test cost tracking integ test to use M2.
 
 ## v1.29.0.post0 (2022-08-17)
 
 ### Testing and Release Infrastructure
 
- * Avoid mutation of fixtures
+- Avoid mutation of fixtures
 
 ## v1.29.0 (2022-08-10)
 
 ### Features
 
- * Pauli strings
+- Pauli strings
 
 ### Testing and Release Infrastructure
 
- * Don't run tests on push to feature branches
- * Add SF plugin to dependent tests
+- Don't run tests on push to feature branches
+- Add SF plugin to dependent tests
 
 ## v1.28.1 (2022-08-05)
 
 ### Bug Fixes and Other Changes
 
- * fix future warning
+- fix future warning
 
 ## v1.28.0 (2022-08-05)
 
 ### Features
 
- * OpenQASM default IR and OpenQASM Local Simulator
+- OpenQASM default IR and OpenQASM Local Simulator
 
 ### Bug Fixes and Other Changes
 
- * update simulator version
- * handle -0 edge case in result type hash
+- update simulator version
+- handle -0 edge case in result type hash
 
 ## v1.27.1 (2022-07-29)
 
 ### Bug Fixes and Other Changes
 
- * customer script errors not shown when local jobs run from a notebook.
+- customer script errors not shown when local jobs run from a notebook.
 
 ## v1.27.0 (2022-07-26)
 
 ### Features
 
- * provide easy mechanism to update the local container when running local job.
+- provide easy mechanism to update the local container when running local job.
 
 ## v1.26.2 (2022-07-21)
 
 ### Bug Fixes and Other Changes
 
- * docs: Update README to include guidance for integrations
+- docs: Update README to include guidance for integrations
 
 ## v1.26.1 (2022-07-19)
 
 ### Bug Fixes and Other Changes
 
- * Lazily parse schemas for devices so getDevice calls do not rely …
+- Lazily parse schemas for devices so getDevice calls do not rely …
 
 ## v1.26.0 (2022-07-18)
 
 ### Features
 
- * SDK Cost Tracker
+- SDK Cost Tracker
 
 ## v1.25.2 (2022-06-22)
 
 ### Bug Fixes and Other Changes
 
- * Set the range for amazon-braket-schemas to >= 1.10.0 for the latest device schemas needed.
+- Set the range for amazon-braket-schemas to >= 1.10.0 for the latest device schemas needed.
 
 ## v1.25.1.post0 (2022-06-17)
 
 ### Documentation Changes
 
- * remove s3 references from README
+- remove s3 references from README
 
 ## v1.25.1 (2022-06-16)
 
 ### Bug Fixes and Other Changes
 
- * change failureReason string check to let test pass
+- change failureReason string check to let test pass
 
 ## v1.25.0 (2022-06-08)
 
 ### Features
 
- * Add method for updating the user agent for braket client
+- Add method for updating the user agent for braket client
 
 ## v1.24.0 (2022-06-02)
 
 ### Features
 
- * Add support for photonic computations
+- Add support for photonic computations
 
 ## v1.23.2 (2022-05-24)
 
 ### Bug Fixes and Other Changes
 
- * pin coverage dependency only for test extra
+- pin coverage dependency only for test extra
 
 ## v1.23.1 (2022-05-20)
 
 ### Bug Fixes and Other Changes
 
- * removing validation for disable_qubit_rewiring
+- removing validation for disable_qubit_rewiring
 
 ## v1.23.0 (2022-05-19)
 
 ### Features
 
- * allow job role to be set via env variable
- * allow user to set region+endpoint through env variables
+- allow job role to be set via env variable
+- allow user to set region+endpoint through env variables
 
 ## v1.22.0 (2022-05-18)
 
 ### Features
 
- * Noise models
+- Noise models
 
 ## v1.21.1 (2022-05-17)
 
 ### Bug Fixes and Other Changes
 
- * broken links for examples
+- broken links for examples
 
 ## v1.21.0 (2022-05-10)
 
 ### Features
 
- * Gate and Circuit inversion
+- Gate and Circuit inversion
 
 ## v1.20.0 (2022-05-04)
 
 ### Features
 
- * support local simulators for jobs
+- support local simulators for jobs
 
 ## v1.19.0 (2022-04-19)
 
 ### Deprecations and Removals
 
- * use to_unitary rather than as_unitary.
+- use to_unitary rather than as_unitary.
 
 ### Bug Fixes and Other Changes
 
- * align ECR gate definition with OQC
- * add device arn error handling for badly formed ARNs
+- align ECR gate definition with OQC
+- add device arn error handling for badly formed ARNs
 
 ## v1.18.2 (2022-04-18)
 
 ### Bug Fixes and Other Changes
 
- * stringify hyperparameters automatically
+- stringify hyperparameters automatically
 
 ## v1.18.1 (2022-04-14)
 
 ### Bug Fixes and Other Changes
 
- * add exception handling to local job test
- * Run github workflows on feature branches
+- add exception handling to local job test
+- Run github workflows on feature branches
 
 ## v1.18.0.post0 (2022-04-06)
 
 ### Documentation Changes
 
- * Specify DEVICE_REGIONS docs.
+- Specify DEVICE_REGIONS docs.
 
 ## v1.18.0 (2022-03-07)
 
 ### Features
 
- * Add support for running OpenQASM programs
+- Add support for running OpenQASM programs
 
 ## v1.17.0 (2022-03-02)
 
 ### Features
 
- * Add parameterized circuits
+- Add parameterized circuits
 
 ## v1.16.1 (2022-03-01)
 
 ### Bug Fixes and Other Changes
 
- * Add the OQC ARN to the integ tests
+- Add the OQC ARN to the integ tests
 
 ## v1.16.0 (2022-02-27)
 
 ### Features
 
- * LHR region configuration
+- LHR region configuration
 
 ### Bug Fixes and Other Changes
 
- * Oqc release
+- Oqc release
 
 ## v1.15.0 (2022-02-15)
 
 ### Features
 
- * Update region switching for regional device arns (#169)
+- Update region switching for regional device arns (#169)
 
 ## v1.14.0.post0 (2022-02-11)
 
 ### Documentation Changes
 
- * fix documentation on environment variable to match the code.
+- fix documentation on environment variable to match the code.
 
 ## v1.14.0 (2022-02-02)
 
 ### Features
 
- * adding TwoQubitPauliChannel
+- adding TwoQubitPauliChannel
 
 ## v1.13.0 (2022-01-27)
 
 ### Features
 
- * added controlled-sqrt-not gate
+- added controlled-sqrt-not gate
 
 ## v1.12.0 (2022-01-25)
 
 ### Features
 
- * Added is_available property to AwsDevice
- * optimize IAM role retrieval
+- Added is_available property to AwsDevice
+- optimize IAM role retrieval
 
 ### Bug Fixes and Other Changes
 
- * Enable jobs integration tests
+- Enable jobs integration tests
 
 ## v1.11.1 (2021-12-09)
 
 ### Bug Fixes and Other Changes
 
- * remove extraneous reference from local job container setup
+- remove extraneous reference from local job container setup
 
 ## v1.11.0 (2021-12-02)
 
 ### Features
 
- * Adding integration tests for DM1
+- Adding integration tests for DM1
 
 ## v1.10.0 (2021-11-29)
 
 ### Features
 
- * Add support for jobs
+- Add support for jobs
 
 ### Bug Fixes and Other Changes
 
- * Skip jobs integration tests
+- Skip jobs integration tests
 
 ## v1.9.5.post0 (2021-11-04)
 
 ### Testing and Release Infrastructure
 
- * Pin docutils<0.18 in doc requirements
+- Pin docutils<0.18 in doc requirements
 
 ## v1.9.5 (2021-10-05)
 

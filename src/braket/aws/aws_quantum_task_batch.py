@@ -15,7 +15,8 @@ from __future__ import annotations
 
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
-from typing import List, Set, Union
+from itertools import repeat
+from typing import Dict, List, Set, Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -44,8 +45,13 @@ class AwsQuantumTaskBatch:
         self,
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: List[
-            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]
+        task_specifications: Union[
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
+            List[
+                Union[
+                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
+                ]
+            ],
         ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
@@ -53,6 +59,7 @@ class AwsQuantumTaskBatch:
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ):
@@ -61,8 +68,13 @@ class AwsQuantumTaskBatch:
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             device_arn (str): The ARN of the quantum device.
-            task_specifications (List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation]]): # noqa
-                The specification of the task to run on device.
+            task_specifications (
+                Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
+                AnalogHamiltonianSimulation], List[Union[Circuit,
+                Problem, OpenQasmProgram, BlackbirdProgram,
+                AnalogHamiltonianSimulation]]): Single instance or list of circuits, annealing
+                problems, pulse sequences, or photonics program as specification of task
+                to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
                 to store task results in.
@@ -78,6 +90,9 @@ class AwsQuantumTaskBatch:
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
+            inputs ([Dict[str, float]]): Inputs to be passed along with the
+                IR. If the IR supports inputs, the inputs will be updated with this value.
+                Default: {}.
         """
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,
@@ -89,6 +104,7 @@ class AwsQuantumTaskBatch:
             max_workers,
             poll_timeout_seconds,
             poll_interval_seconds,
+            inputs,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -105,6 +121,7 @@ class AwsQuantumTaskBatch:
         self._max_workers = max_workers
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
+        self._inputs = inputs
         self._aws_quantum_task_args = aws_quantum_task_args
         self._aws_quantum_task_kwargs = aws_quantum_task_kwargs
 
@@ -112,24 +129,62 @@ class AwsQuantumTaskBatch:
     def _execute(
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]],
+        task_specifications: Union[
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
+            List[
+                Union[
+                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
+                ]
+            ],
+        ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         max_parallel: int,
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
         *args,
         **kwargs,
     ) -> List[AwsQuantumTask]:
-        for task_specification in task_specifications:
-            if isinstance(task_specification, Circuit) and task_specification.parameters:
+        inputs = inputs or {}
+
+        single_task = isinstance(
+            task_specifications,
+            (Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation),
+        )
+        single_input = isinstance(inputs, dict)
+
+        if not single_task and not single_input:
+            if len(task_specifications) != len(inputs):
                 raise ValueError(
-                    f"Cannot execute circuit with unbound parameters: "
-                    f"{task_specification.parameters}"
+                    "Multiple inputs and task specifications must " "be equal in number."
                 )
+        if single_task:
+            task_specifications = repeat(task_specifications)
+
+        if single_input:
+            inputs = repeat(inputs)
+
+        tasks_and_inputs = zip(task_specifications, inputs)
+
+        if single_task and single_input:
+            tasks_and_inputs = [next(tasks_and_inputs)]
+
+        tasks_and_inputs = list(tasks_and_inputs)
+
+        for task_specification, input_map in tasks_and_inputs:
+            if isinstance(task_specification, Circuit):
+                param_names = {param.name for param in task_specification.parameters}
+                unbounded_parameters = param_names - set(input_map.keys())
+                if unbounded_parameters:
+                    raise ValueError(
+                        f"Cannot execute circuit with unbound parameters: "
+                        f"{unbounded_parameters}"
+                    )
+
         max_threads = min(max_parallel, max_workers)
-        remaining = [0 for _ in task_specifications]
+        remaining = [0 for _ in tasks_and_inputs]
         with ThreadPoolExecutor(max_workers=max_threads) as executor:
             task_futures = [
                 executor.submit(
@@ -142,10 +197,11 @@ class AwsQuantumTaskBatch:
                     shots,
                     poll_timeout_seconds=poll_timeout_seconds,
                     poll_interval_seconds=poll_interval_seconds,
+                    inputs=input_map,
                     *args,
                     **kwargs,
                 )
-                for task in task_specifications
+                for task, input_map in tasks_and_inputs
             ]
         tasks = [future.result() for future in task_futures]
         return tasks
@@ -155,20 +211,24 @@ class AwsQuantumTaskBatch:
         remaining: List[int],
         aws_session: AwsSession,
         device_arn: str,
-        task_specifications: List[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram]],
+        task_specification: Union[
+            Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
+        ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        inputs: Dict[str, float] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
         task = AwsQuantumTask.create(
             aws_session,
             device_arn,
-            task_specifications,
+            task_specification,
             s3_destination_folder,
             shots,
             poll_interval_seconds=poll_interval_seconds,
+            inputs=inputs,
             *args,
             **kwargs,
         )

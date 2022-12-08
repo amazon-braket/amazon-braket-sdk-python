@@ -41,7 +41,11 @@ from braket.circuits.observables import TensorProduct
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
-from braket.circuits.result_type import ObservableResultType, ResultType
+from braket.circuits.result_type import (
+    ObservableParameterResultType,
+    ObservableResultType,
+    ResultType,
+)
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
@@ -292,9 +296,21 @@ class Circuit:
 
         if result_type_to_add not in self._result_types:
             observable = Circuit._extract_observable(result_type_to_add)
-            if observable and self._observables_simultaneously_measurable:
+            # We can skip this for now for AdjointGradient (the only subtype of this
+            # type) because AdjointGradient can only be used when `shots=0`, and the
+            # qubit_observable_mapping is used to generate basis rotation instrunctions
+            # and make sure the observables are simultaneously commuting for `shots>0` mode.
+            supports_basis_rotation_instructions = not isinstance(
+                result_type_to_add, ObservableParameterResultType
+            )
+            if (
+                observable
+                and self._observables_simultaneously_measurable
+                and supports_basis_rotation_instructions
+            ):
                 # Only check if all observables can be simultaneously measured
                 self._add_to_qubit_observable_mapping(observable, result_type_to_add.target)
+
             self._add_to_qubit_observable_set(result_type_to_add)
             # using dict as an ordered set, value is arbitrary
             self._result_types[result_type_to_add] = None

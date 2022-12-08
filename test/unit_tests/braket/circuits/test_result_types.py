@@ -15,6 +15,8 @@ import pytest
 
 import braket.ir.jaqcd as ir
 from braket.circuits import Circuit, Observable, ResultType
+from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.result_type import ObservableParameterResultType
 from braket.circuits.result_types import ObservableResultType
 from braket.circuits.serialization import (
     IRType,
@@ -103,14 +105,48 @@ testdata = [
         {"observable": Observable.Z(), "target": None},
         {"observable": ["z"]},
     ),
+    (
+        ResultType.AdjointGradient,
+        "adjoint_gradient",
+        ir.AdjointGradient,
+        {"observable": Observable.Z(), "target": None, "parameters": None},
+        {"observable": ["z"]},
+    ),
+    (
+        ResultType.AdjointGradient,
+        "adjoint_gradient",
+        ir.AdjointGradient,
+        {"observable": Observable.Z(), "target": [0], "parameters": ["alpha", "beta"]},
+        {"observable": ["z"], "targets": [0], "parameters": ["alpha", FreeParameter("beta")]},
+    ),
+    (
+        ResultType.AdjointGradient,
+        "adjoint_gradient",
+        ir.AdjointGradient,
+        {
+            "observable": Observable.Hermitian(matrix=Observable.Z().to_matrix()),
+            "target": [0],
+            "parameters": ["alpha", "beta"],
+        },
+        {
+            "observable": [[[[1.0, 0], [0, 0]], [[0, 0], [-1.0, 0]]]],
+            "targets": [0],
+            "parameters": ["alpha", "beta"],
+        },
+    ),
 ]
 
 
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,input,ir_input", testdata)
 def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
-    expected = irclass(**ir_input)
-    actual = testclass(**input).to_ir()
-    assert actual == expected
+    if testclass == ResultType.AdjointGradient:
+        jaqcd_not_implemented = "to_jaqcd has not been implemented yet."
+        with pytest.raises(NotImplementedError, match=jaqcd_not_implemented):
+            testclass(**input).to_ir()
+    else:
+        expected = irclass(**ir_input)
+        actual = testclass(**input).to_ir()
+        assert actual == expected
 
 
 @pytest.mark.parametrize(
@@ -185,6 +221,56 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
             ResultType.Variance(Observable.I()),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket result variance i all",
+        ),
+        (
+            ResultType.AdjointGradient(Observable.I(), target=0, parameters=["alpha", "beta"]),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(i(q[0])) alpha, beta",
+        ),
+        (
+            ResultType.AdjointGradient(Observable.I(), target=0, parameters=["alpha"]),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(i(q[0])) alpha",
+        ),
+        (
+            ResultType.AdjointGradient(
+                Observable.H() @ Observable.I(),
+                target=[0, 1],
+                parameters=[FreeParameter("alpha"), "beta", FreeParameter("gamma")],
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(h(q[0]) @ i(q[1])) "
+            "alpha, beta, gamma",
+        ),
+        (
+            ResultType.AdjointGradient(
+                Observable.H() @ Observable.I() + 2 * Observable.Z(),
+                target=[[0, 1], [2]],
+                parameters=[FreeParameter("alpha"), "beta", FreeParameter("gamma")],
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(h(q[0]) @ i(q[1]) + 2 * z(q[2])) "
+            "alpha, beta, gamma",
+        ),
+        (
+            ResultType.AdjointGradient(Observable.I(), target=0, parameters=[]),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(i(q[0])) all",
+        ),
+        (
+            ResultType.AdjointGradient(
+                Observable.X() @ Observable.Y(), target=[0, 1], parameters=[]
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(x(q[0]) @ y(q[1])) all",
+        ),
+        (
+            ResultType.AdjointGradient(
+                Observable.Hermitian(matrix=Observable.I().to_matrix()), target=0, parameters=[]
+            ),
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "#pragma braket result adjoint_gradient expectation(hermitian([[1+0im, 0im], "
+            "[0im, 1+0im]]) q[0]) all",
         ),
     ],
 )
@@ -267,3 +353,34 @@ def test_variance_parent_class():
     assert isinstance(
         ResultType.Variance(observable=Observable.X(), target=0), ObservableResultType
     )
+
+
+# AdjointGradient
+
+
+def test_adjoint_gradient_parent_class():
+    assert isinstance(
+        ResultType.AdjointGradient(
+            observable=Observable.X(), target=0, parameters=["alpha", FreeParameter("beta")]
+        ),
+        ObservableParameterResultType,
+    )
+
+
+@pytest.mark.parametrize(
+    "target",
+    (
+        [[0], [0, 1], [2]],
+        [[0, 1], [0, 1]],
+    ),
+)
+def test_incorrect_target_adjoint_gradient(target):
+    match = (
+        "Sum observable's target shape must be a nested list "
+        "where each term's target length is equal to the observable term's qubits count."
+    )
+    with pytest.raises(ValueError, match=match):
+        ResultType.AdjointGradient(
+            2 * Observable.Z() + 3 * Observable.X() @ Observable.Y(),
+            target,
+        )

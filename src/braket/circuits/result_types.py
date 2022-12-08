@@ -14,13 +14,18 @@
 from __future__ import annotations
 
 import re
-from typing import List
+from typing import List, Union
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
-from braket.circuits.result_type import ObservableResultType, ResultType
+from braket.circuits.result_type import (
+    ObservableParameterResultType,
+    ObservableResultType,
+    ResultType,
+)
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
 
 """
@@ -160,6 +165,107 @@ class DensityMatrix(ResultType):
 
 
 ResultType.register_result_type(DensityMatrix)
+
+
+class AdjointGradient(ObservableParameterResultType):
+    """
+    The gradient of the expectation value of the provided observable, applied to target,
+    with respect to the given parameter.
+    """
+
+    def __init__(
+        self,
+        observable: Observable,
+        target: List[QubitSetInput] = None,
+        parameters: List[Union[str, FreeParameter]] = None,
+    ):
+        """
+        Args:
+            observable (Observable): The expectation value of this observable is the function
+                against which parameters in the gradient are differentiated.
+            target (List[QubitSetInput]): Target qubits that the result type is requested for.
+                Each term in the target list should have the same number of qubits as the
+                corresponding term in the observable. Default is `None`, which means the
+                observable must operate only on 1 qubit and it is applied to all qubits
+                in parallel.
+            parameters (List[Union[str, FreeParameter]]): The free parameters in the circuit to
+                differentiate with respect to. Default: `all`.
+
+        Raises:
+            ValueError: If the observable's qubit count does not equal the number of target
+                qubits, or if `target=None` and the observable's qubit count is not 1.
+
+        Examples:
+            >>> ResultType.AdjointGradient(observable=Observable.Z(),
+                                        target=0, parameters=["alpha", "beta"])
+
+            >>> tensor_product = Observable.Y() @ Observable.Z()
+            >>> hamiltonian = Observable.Y() @ Observable.Z() + Observable.H()
+            >>> ResultType.AdjointGradient(
+            >>>     observable=tensor_product,
+            >>>     target=[[0, 1], [2]],
+            >>>     parameters=["alpha", "beta"],
+            >>> )
+        """
+
+        super().__init__(
+            ascii_symbols=[
+                f"AdjointGradient({obs_ascii})" for obs_ascii in observable.ascii_symbols
+            ],
+            observable=observable,
+            target=target,
+            parameters=parameters,
+        )
+
+    def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
+        observable_ir = self.observable.to_ir(
+            target=self.target,
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+        )
+
+        pragma_parameters = ", ".join(self.parameters) if self.parameters else "all"
+
+        return (
+            f"#pragma braket result adjoint_gradient "
+            f"expectation({observable_ir}) {pragma_parameters}"
+        )
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def adjoint_gradient(
+        observable: Observable,
+        target: List[QubitSetInput] = None,
+        parameters: List[Union[str, FreeParameter]] = None,
+    ) -> ResultType:
+        """Registers this function into the circuit class.
+
+        Args:
+            observable (Observable): The expectation value of this observable is the function
+                against which parameters in the gradient are differentiated.
+            target (List[QubitSetInput]): Target qubits that the result type is requested for.
+                Each term in the target list should have the same number of qubits as the
+                corresponding term in the observable. Default is `None`, which means the
+                observable must operate only on 1 qubit and it is applied to all qubits
+                in parallel.
+            parameters (List[Union[str, FreeParameter]]): The free parameters in the circuit to
+                differentiate with respect to. Default: `all`.
+
+        Returns:
+            ResultType: gradient computed via adjoint differentiation as a requested result type
+
+        Examples:
+            >>> alpha, beta = FreeParameter('alpha'), FreeParameter('beta')
+            >>> circ = Circuit().h(0).h(1).rx(0, alpha).yy(0, 1, beta).adjoint_gradient(
+            >>>     observable=Observable.Z(), target=[0], parameters=[alpha, beta]
+            >>> )
+        """
+        return ResultType.AdjointGradient(
+            observable=observable, target=target, parameters=parameters
+        )
+
+
+ResultType.register_result_type(AdjointGradient)
 
 
 class Amplitude(ResultType):

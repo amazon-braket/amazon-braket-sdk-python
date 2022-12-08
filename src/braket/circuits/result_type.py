@@ -13,9 +13,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Type, Union
 
+from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
+from braket.circuits.observables import Sum
 from braket.circuits.qubit import QubitInput
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import (
@@ -212,7 +214,20 @@ class ObservableResultType(ResultType):
                     f"Observable {self._observable} must only operate on 1 qubit for target=None"
                 )
         else:
-            if self._observable.qubit_count != len(self._target):
+            if isinstance(observable, Sum):  # nested target
+                if len(target) != len(observable.summands):
+                    raise ValueError(
+                        "Sum observable's target shape must be a nested list where each term's "
+                        "target length is equal to the observable term's qubits count."
+                    )
+                self._target = [QubitSet(term_target) for term_target in target]
+                for term_target, obs in zip(target, observable.summands):
+                    if obs.qubit_count != len(term_target):
+                        raise ValueError(
+                            "Sum observable's target shape must be a nested list where each term's "
+                            "target length is equal to the observable term's qubits count."
+                        )
+            elif self._observable.qubit_count != len(self._target):
                 raise ValueError(
                     f"Observable's qubit count {self._observable.qubit_count} and "
                     f"the size of the target qubit set {self._target} must be equal"
@@ -255,3 +270,64 @@ class ObservableResultType(ResultType):
 
     def __hash__(self) -> int:
         return super().__hash__()
+
+
+class ObservableParameterResultType(ObservableResultType):
+    """
+    Result types with observables, targets and parameters.
+    If no targets are specified, the observable must only operate on 1 qubit and it
+    will be applied to all qubits in parallel. Otherwise, the number of specified targets
+    must be equivalent to the number of qubits the observable can be applied to.
+    If no parameters are specified, observable will be applied to all the free parameters.
+
+    See :mod:`braket.circuits.observables` module for all of the supported observables.
+    """
+
+    def __init__(
+        self,
+        ascii_symbols: List[str],
+        observable: Observable,
+        target: QubitSetInput = None,
+        parameters: List[Union[str, FreeParameter]] = None,
+    ):
+        super().__init__(ascii_symbols, observable, target)
+
+        self._parameters = (
+            [(param.name if isinstance(param, FreeParameter) else param) for param in parameters]
+            if parameters
+            else parameters
+        )
+
+        """
+        Args:
+            ascii_symbols (List[str]): ASCII string symbols for the result type. This is used when
+                printing a diagram of circuits.
+            observable (Observable): the observable for the result type.
+            target (QubitSetInput): Target qubits that the result type is requested for.
+                Default is `None`, which means the observable must only operate on 1
+                qubit and it will be applied to all qubits in parallel.
+            parameters (List[Union[str, FreeParameter]]): List of string inputs or
+                FreeParameter objects. These inputs will be used as parameters for
+                gradient calculation. Default: `all`.
+
+        Raises:
+            ValueError: if target=None and the observable's qubit count is not 1.
+                Or, if `target!=None` and the observable's qubit count and the number of target
+                qubits are not equal. Or, if `target!=None` and the observable's qubit count and
+                the number of `ascii_symbols` are not equal.
+        """
+
+    @property
+    def parameters(self) -> List[str]:
+        return self._parameters
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.name}(observable={self.observable}, target={self.target}, "
+            f"parameters={self.parameters})"
+        )
+
+    def __copy__(self) -> ObservableResultType:
+        return type(self)(
+            observable=self.observable, target=self.target, parameters=self.parameters
+        )

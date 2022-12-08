@@ -28,6 +28,16 @@ def standard_observable():
     return StandardObservable(ascii_symbols=["foo"])
 
 
+@pytest.fixture
+def unscaled_observable(observable):
+    return observable._unscaled()
+
+
+@pytest.fixture
+def unscaled_standard_observable(standard_observable):
+    return standard_observable._unscaled()
+
+
 def test_is_operator(observable):
     assert isinstance(observable, QuantumOperator)
 
@@ -122,6 +132,7 @@ def test_eigenvalue_not_implemented_by_default(observable):
 def test_str(observable):
     expected = "{}('qubit_count': {})".format(observable.name, observable.qubit_count)
     assert str(observable) == expected
+    assert observable.coefficient == 1
 
 
 def test_register_observable():
@@ -162,5 +173,44 @@ def test_standard_observable_subclass_of_observable(standard_observable):
     assert isinstance(standard_observable, Observable)
 
 
+def test_unscaled_standard_observable_subclass_of_observable(unscaled_standard_observable):
+    assert isinstance(unscaled_standard_observable, Observable)
+
+
 def test_standard_observable_eigenvalues(standard_observable):
     assert np.allclose(standard_observable.eigenvalues, np.array([1, -1]))
+
+
+def test_unscaled_standard_observable_eigenvalues(unscaled_standard_observable):
+    assert np.allclose(unscaled_standard_observable.eigenvalues, np.array([1, -1]))
+
+
+def test_observable_coeffs(observable):
+    observable = 2 * observable
+    assert observable.coefficient == 2
+    unscaled_observable = observable._unscaled()
+    assert unscaled_observable.coefficient == 1
+    assert isinstance(unscaled_observable, Observable)
+
+
+@pytest.mark.parametrize("parameter", ["foo", 1.2, -3])
+def test_only_observables_sum_allowed(observable, parameter):
+    add_observables_only = "Can only perform addition between observables."
+    with pytest.raises(ValueError, match=add_observables_only):
+        2 * observable + parameter
+
+
+@pytest.mark.parametrize("parameter", ["foo", 1.2, -3])
+def test_only_observables_subtraction_allowed(observable, parameter):
+    add_observables_only = "Can only perform subtraction between observables."
+    with pytest.raises(ValueError, match=add_observables_only):
+        2 * observable - parameter
+
+
+def test_sum_observable_with_subtraction():
+    obs1 = 6 * Observable.X()
+    obs2 = -4 * Observable.Y()
+    result = obs1 - obs2
+    assert isinstance(result, Observable.Sum)
+    assert result.qubit_count == 2
+    assert result.ascii_symbols == ("6X+4Y", "6X+4Y")
