@@ -212,5 +212,5 @@ def test_sum_observable_with_subtraction():
     obs2 = -4 * Observable.Y()
     result = obs1 - obs2
     assert isinstance(result, Observable.Sum)
-    assert result.qubit_count == 2
-    assert result.ascii_symbols == ("6X+4Y", "6X+4Y")
+    assert result.qubit_count == 1
+    assert result.ascii_symbols == ("6X+4Y",)
