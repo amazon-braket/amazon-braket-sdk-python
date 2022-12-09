@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.35.1 (2022-12-08)
+
+### Bug Fixes and Other Changes
+
+ * Hamiltonian ascii simplification
+
 ## v1.35.0 (2022-12-07)
 
 ### Features
