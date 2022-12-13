@@ -456,10 +456,7 @@ class Sum(Observable):
 
     @property
     def ascii_symbols(self) -> Tuple[str, ...]:
-        return tuple(
-            "+".join([obs.ascii_symbols[0] for obs in self.summands]).replace("+-", "-")
-            for _ in range(self.qubit_count)
-        )
+        return tuple("Hamiltonian" for _ in range(self.qubit_count))
 
     def __mul__(self, other) -> Observable:
         """Scalar multiplication"""
