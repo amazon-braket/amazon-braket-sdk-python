@@ -454,13 +454,6 @@ class Sum(Observable):
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
-    @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        return tuple(
-            "+".join([obs.ascii_symbols[0] for obs in self.summands]).replace("+-", "-")
-            for _ in range(self.qubit_count)
-        )
-
     def __mul__(self, other) -> Observable:
         """Scalar multiplication"""
         if isinstance(other, numbers.Number):

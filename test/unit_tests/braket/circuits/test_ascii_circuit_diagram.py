@@ -702,13 +702,13 @@ def test_circuit_with_nested_target_list():
     )
 
     expected = (
-        "T  : |0|       Result Types       |",
-        "                                   ",
-        "q0 : -H-Expectation(-6Y@I-0.75Y@Z)-",
-        "        |                          ",
-        "q1 : -H-Expectation(-6Y@I-0.75Y@Z)-",
+        "T  : |0|      Result Types      |",
+        "                                 ",
+        "q0 : -H-Expectation(Hamiltonian)-",
+        "        |                        ",
+        "q1 : -H-Expectation(Hamiltonian)-",
         "",
-        "T  : |0|       Result Types       |",
+        "T  : |0|      Result Types      |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -725,15 +725,15 @@ def test_hamiltonian():
         )
     )
     expected = (
-        "T  : |0|1|    2    |        Result Types         |",
-        "                                                  ",
-        "q0 : -H-C-Rx(theta)-AdjointGradient(8e-05Z+48X@Y)-",
-        "        |           |                             ",
-        "q1 : ---X-----------AdjointGradient(8e-05Z+48X@Y)-",
-        "                    |                             ",
-        "q2 : ---------------AdjointGradient(8e-05Z+48X@Y)-",
+        "T  : |0|1|    2    |        Result Types        |",
+        "                                                 ",
+        "q0 : -H-C-Rx(theta)-AdjointGradient(Hamiltonian)-",
+        "        |           |                            ",
+        "q1 : ---X-----------AdjointGradient(Hamiltonian)-",
+        "                    |                            ",
+        "q2 : ---------------AdjointGradient(Hamiltonian)-",
         "",
-        "T  : |0|1|    2    |        Result Types         |",
+        "T  : |0|1|    2    |        Result Types        |",
         "",
         "Unassigned parameters: [theta].",
     )

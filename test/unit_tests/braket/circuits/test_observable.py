@@ -213,4 +213,4 @@ def test_sum_observable_with_subtraction():
     result = obs1 - obs2
     assert isinstance(result, Observable.Sum)
     assert result.qubit_count == 1
-    assert result.ascii_symbols == ("6X+4Y",)
+    assert np.array_equal(result.summands, (6 * Observable.X(), -4 * Observable.Y()))
