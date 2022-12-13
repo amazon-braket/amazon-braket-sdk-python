@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Dict, List, Set, Union
+from typing import Dict, List, Set, Tuple, Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -126,9 +126,7 @@ class AwsQuantumTaskBatch:
         self._aws_quantum_task_kwargs = aws_quantum_task_kwargs
 
     @staticmethod
-    def _execute(
-        aws_session: AwsSession,
-        device_arn: str,
+    def _tasks_and_inputs(
         task_specifications: Union[
             Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
             List[
@@ -137,16 +135,13 @@ class AwsQuantumTaskBatch:
                 ]
             ],
         ],
-        s3_destination_folder: AwsSession.S3DestinationFolder,
-        shots: int,
-        max_parallel: int,
-        max_workers: int = MAX_CONNECTIONS_DEFAULT,
-        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
-        *args,
-        **kwargs,
-    ) -> List[AwsQuantumTask]:
+    ) -> List[
+        Tuple[
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
+            Dict[str, float],
+        ]
+    ]:
         inputs = inputs or {}
 
         single_task = isinstance(
@@ -183,26 +178,63 @@ class AwsQuantumTaskBatch:
                         f"{unbounded_parameters}"
                     )
 
+        return tasks_and_inputs
+
+    @staticmethod
+    def _execute(
+        aws_session: AwsSession,
+        device_arn: str,
+        task_specifications: Union[
+            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
+            List[
+                Union[
+                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
+                ]
+            ],
+        ],
+        s3_destination_folder: AwsSession.S3DestinationFolder,
+        shots: int,
+        max_parallel: int,
+        max_workers: int = MAX_CONNECTIONS_DEFAULT,
+        poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
+        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
+        *args,
+        **kwargs,
+    ) -> List[AwsQuantumTask]:
+        tasks_and_inputs = AwsQuantumTaskBatch._tasks_and_inputs(task_specifications, inputs)
         max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in tasks_and_inputs]
-        with ThreadPoolExecutor(max_workers=max_threads) as executor:
-            task_futures = [
-                executor.submit(
-                    AwsQuantumTaskBatch._create_task,
-                    remaining,
-                    aws_session,
-                    device_arn,
-                    task,
-                    s3_destination_folder,
-                    shots,
-                    poll_timeout_seconds=poll_timeout_seconds,
-                    poll_interval_seconds=poll_interval_seconds,
-                    inputs=input_map,
-                    *args,
-                    **kwargs,
-                )
-                for task, input_map in tasks_and_inputs
-            ]
+        try:
+            with ThreadPoolExecutor(max_workers=max_threads) as executor:
+                task_futures = [
+                    executor.submit(
+                        AwsQuantumTaskBatch._create_task,
+                        remaining,
+                        aws_session,
+                        device_arn,
+                        task,
+                        s3_destination_folder,
+                        shots,
+                        poll_timeout_seconds=poll_timeout_seconds,
+                        poll_interval_seconds=poll_interval_seconds,
+                        inputs=input_map,
+                        *args,
+                        **kwargs,
+                    )
+                    for task, input_map in tasks_and_inputs
+                ]
+        except KeyboardInterrupt:
+            # If an exception is thrown before the thread pool has finished,
+            # clean up the tasks which have not yet been created before reraising it.
+            if "task_futures" in locals():
+                for future in task_futures:
+                    future.cancel()
+
+            # Signal to the workers that there is no mork work to do
+            remaining.clear()
+
+            raise
         tasks = [future.result() for future in task_futures]
         return tasks
 
