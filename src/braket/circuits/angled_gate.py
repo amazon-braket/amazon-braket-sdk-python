@@ -101,10 +101,9 @@ class AngledGate(Gate, Parameterizable):
         """
         gate_ascii_name_index = self.ascii_symbols[0].find("(")
         gate_ascii_name = self.ascii_symbols[0][:gate_ascii_name_index]
-        new_ascii_symbols = (
-            [angled_ascii_characters(gate_ascii_name, -self.angle)]
-            * self.qubit_count
-        )
+        new_ascii_symbols = [
+            angled_ascii_characters(gate_ascii_name, -self.angle)
+        ] * self.qubit_count
         new = copy.copy(self)
         new._parameters = [-angle for angle in self._parameters]
         new._ascii_symbols = new_ascii_symbols
