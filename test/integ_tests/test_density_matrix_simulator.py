@@ -2,6 +2,7 @@ import math
 
 import pytest
 from gate_model_device_testing_utils import get_tol
+import numpy as np
 
 from braket.aws import AwsDevice
 from braket.circuits import Circuit, Noise, Observable
@@ -40,3 +41,14 @@ def _mixed_states(n_qubits: int) -> Circuit:
     circ.expectation(observable=Observable.Z(), target=0)
 
     return circ
+
+
+@pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
+def test_density_matrix_result_type(simulator_arn):
+    circ = Circuit().bit_flip(0, 0.2).density_matrix()
+    device = AwsDevice(simulator_arn)
+    density_matrix_result = device.run(circ).result().result_types[0].value
+    assert np.allclose(
+        density_matrix_result,
+        [[[0.8, 0.0], [0.0, 0.0]], [[0.0, 0.0], [0.2, 0.0]]],
+    )

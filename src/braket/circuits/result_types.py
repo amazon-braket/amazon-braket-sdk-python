@@ -126,7 +126,7 @@ class DensityMatrix(ResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         if not self.target:
-            return "#pragma braket result density_matrix"
+            return "#pragma braket result density_matrix all"
         targets = ", ".join(
             serialization_properties.format_target(int(target)) for target in self.target
         )

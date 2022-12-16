@@ -170,7 +170,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.DensityMatrix(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result density_matrix",
+            "#pragma braket result density_matrix all",
         ),
         (
             ResultType.DensityMatrix([0, 2]),
