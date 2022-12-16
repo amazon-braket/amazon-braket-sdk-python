@@ -18,11 +18,17 @@ from typing import Any, Iterable, List, Union
 
 import numpy as np
 from oqpy import Program
-from sympy import Float
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
-from braket.circuits.angled_gate import AngledGate, DoubleAngledGate
+from braket.circuits.angled_gate import (
+    AngledGate,
+    DoubleAngledGate,
+    _double_angled_ascii_characters,
+    _get_angles,
+    angled_ascii_characters,
+    get_angle,
+)
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -2275,86 +2281,6 @@ class PulseGate(Gate, Parameterizable):
 
 
 Gate.register_gate(PulseGate)
-
-
-def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, float]) -> str:
-    """
-    Generates a formatted ascii representation of an angled gate.
-
-    Args:
-        gate (str): The name of the gate.
-        angle (Union[FreeParameterExpression, float]): The angle for the gate.
-
-    Returns:
-        str: Returns the ascii representation for an angled gate.
-
-    """
-    return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
-
-
-def _double_angled_ascii_characters(
-    gate: str,
-    angle_1: Union[FreeParameterExpression, float],
-    angle_2: Union[FreeParameterExpression, float],
-) -> str:
-    """
-    Generates a formatted ascii representation of an angled gate.
-
-    Args:
-        gate (str): The name of the gate.
-        angle_1 (Union[FreeParameterExpression, float]): angle in radians.
-        angle_2 (Union[FreeParameterExpression, float]): angle in radians.
-
-    Returns:
-        str: Returns the ascii representation for an angled gate.
-
-    """
-    return (
-        f"{gate}("
-        f'{angle_1:{".2f" if isinstance(angle_1, (float, Float)) else ""}}, '
-        f'{angle_2:{".2f" if isinstance(angle_2, (float, Float)) else ""}})'
-    )
-
-
-def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
-    """
-    Gets the angle with all values substituted in that are requested.
-
-    Args:
-        gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
-
-    Returns:
-        AngledGate: A new gate of the type of the AngledGate originally used with all
-        angles updated.
-    """
-    new_angle = (
-        gate.angle.subs(kwargs) if isinstance(gate.angle, FreeParameterExpression) else gate.angle
-    )
-    return type(gate)(angle=new_angle)
-
-
-def _get_angles(gate: DoubleAngledGate, **kwargs) -> DoubleAngledGate:
-    """
-    Gets the angle with all values substituted in that are requested.
-
-    Args:
-        gate (DoubleAngledGate): The subclass of DoubleAngledGate for which the angle is being
-            obtained.
-        **kwargs: The named parameters that are being filled for a particular gate.
-
-    Returns:
-        DoubleAngledGate: A new gate of the type of the AngledGate originally used with all angles
-        updated.
-    """
-    new_angles = [
-        (
-            getattr(gate, angle).subs(kwargs)
-            if isinstance(getattr(gate, angle), FreeParameterExpression)
-            else getattr(gate, angle)
-        )
-        for angle in ("angle_1", "angle_2")
-    ]
-    return type(gate)(angle_1=new_angles[0], angle_2=new_angles[1])
 
 
 def format_complex(number: complex) -> str:
