@@ -128,5 +128,34 @@ def test_retry(mock_create):
         batch.retry_unsuccessful_tasks()
 
 
+@patch("braket.aws.aws_quantum_task_batch.ThreadPoolExecutor")
+def test_abort(mock_threadpool):
+    batch_size = 10
+    num_workers = 2
+    mock_threadpool().__exit__.side_effect = KeyboardInterrupt()
+
+    with pytest.raises(KeyboardInterrupt):
+        AwsQuantumTaskBatch(
+            Mock(),
+            "foo",
+            _circuits(batch_size),
+            S3_TARGET,
+            1000,
+            max_parallel=num_workers,
+        )
+
+
+@patch("concurrent.futures.ThreadPoolExecutor.submit")
+def test_early_abort(mock_submit):
+    batch_size = 10
+    num_workers = 2
+    mock_submit.side_effect = [Mock(), KeyboardInterrupt()]
+
+    with pytest.raises(KeyboardInterrupt):
+        AwsQuantumTaskBatch(
+            Mock(), "foo", _circuits(batch_size), S3_TARGET, 1000, max_parallel=num_workers
+        )
+
+
 def _circuits(batch_size):
     return [Circuit().h(0).cnot(0, 1) for _ in range(batch_size)]

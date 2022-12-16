@@ -18,6 +18,8 @@ import math
 from functools import singledispatch
 from typing import List, Optional, Sequence, Union
 
+from sympy import Float
+
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
 from braket.circuits.parameterizable import Parameterizable
@@ -97,8 +99,14 @@ class AngledGate(Gate, Parameterizable):
         Returns:
             List[Gate]: A list containing the gate with negated angle.
         """
+        gate_ascii_name_index = self.ascii_symbols[0].find("(")
+        gate_ascii_name = self.ascii_symbols[0][:gate_ascii_name_index]
+        new_ascii_symbols = [
+            angled_ascii_characters(gate_ascii_name, -self.angle)
+        ] * self.qubit_count
         new = copy.copy(self)
         new._parameters = [-angle for angle in self._parameters]
+        new._ascii_symbols = new_ascii_symbols
         return [new]
 
     def __eq__(self, other):
@@ -235,3 +243,83 @@ def _angles_equal(
 @_angles_equal.register
 def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):
     return angle_1 == angle_2
+
+
+def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, float]) -> str:
+    """
+    Generates a formatted ascii representation of an angled gate.
+
+    Args:
+        gate (str): The name of the gate.
+        angle (Union[FreeParameterExpression, float]): The angle for the gate.
+
+    Returns:
+        str: Returns the ascii representation for an angled gate.
+
+    """
+    return f'{gate}({angle:{".2f" if isinstance(angle, (float, Float)) else ""}})'
+
+
+def _double_angled_ascii_characters(
+    gate: str,
+    angle_1: Union[FreeParameterExpression, float],
+    angle_2: Union[FreeParameterExpression, float],
+) -> str:
+    """
+    Generates a formatted ascii representation of an angled gate.
+
+    Args:
+        gate (str): The name of the gate.
+        angle_1 (Union[FreeParameterExpression, float]): angle in radians.
+        angle_2 (Union[FreeParameterExpression, float]): angle in radians.
+
+    Returns:
+        str: Returns the ascii representation for an angled gate.
+
+    """
+    return (
+        f"{gate}("
+        f'{angle_1:{".2f" if isinstance(angle_1, (float, Float)) else ""}}, '
+        f'{angle_2:{".2f" if isinstance(angle_2, (float, Float)) else ""}})'
+    )
+
+
+def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
+    """
+    Gets the angle with all values substituted in that are requested.
+
+    Args:
+        gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
+
+    Returns:
+        AngledGate: A new gate of the type of the AngledGate originally used with all
+        angles updated.
+    """
+    new_angle = (
+        gate.angle.subs(kwargs) if isinstance(gate.angle, FreeParameterExpression) else gate.angle
+    )
+    return type(gate)(angle=new_angle)
+
+
+def _get_angles(gate: DoubleAngledGate, **kwargs) -> DoubleAngledGate:
+    """
+    Gets the angle with all values substituted in that are requested.
+
+    Args:
+        gate (DoubleAngledGate): The subclass of DoubleAngledGate for which the angle is being
+            obtained.
+        **kwargs: The named parameters that are being filled for a particular gate.
+
+    Returns:
+        DoubleAngledGate: A new gate of the type of the AngledGate originally used with all angles
+        updated.
+    """
+    new_angles = [
+        (
+            getattr(gate, angle).subs(kwargs)
+            if isinstance(getattr(gate, angle), FreeParameterExpression)
+            else getattr(gate, angle)
+        )
+        for angle in ("angle_1", "angle_2")
+    ]
+    return type(gate)(angle_1=new_angles[0], angle_2=new_angles[1])
