@@ -431,7 +431,7 @@ Observable.register_observable(TensorProduct)
 class Sum(Observable):
     """Sum of observables"""
 
-    def __init__(self, observables: List[Observable]):
+    def __init__(self, observables: List[Observable], display_name: str = "Hamiltonian"):
         """
         Args:
             observables (List[Observable]): List of observables for Sum
@@ -451,16 +451,8 @@ class Sum(Observable):
                 flattened_observables.append(obs)
 
         self._summands = tuple(flattened_observables)
-        qubit_count = sum(obs.qubit_count for obs in flattened_observables)
-        display_name = "+".join([obs.ascii_symbols[0] for obs in flattened_observables])
+        qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
-
-    @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        return tuple(
-            "+".join([obs.ascii_symbols[0] for obs in self.summands]).replace("+-", "-")
-            for _ in range(self.qubit_count)
-        )
 
     def __mul__(self, other) -> Observable:
         """Scalar multiplication"""

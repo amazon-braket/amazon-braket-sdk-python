@@ -14,12 +14,14 @@
 from __future__ import annotations
 
 import re
+from functools import reduce
 from typing import List, Union
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
+from braket.circuits.observables import Sum
 from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import (
     ObservableParameterResultType,
@@ -124,7 +126,7 @@ class DensityMatrix(ResultType):
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
         if not self.target:
-            return "#pragma braket result density_matrix"
+            return "#pragma braket result density_matrix all"
         targets = ", ".join(
             serialization_properties.format_target(int(target)) for target in self.target
         )
@@ -208,10 +210,13 @@ class AdjointGradient(ObservableParameterResultType):
             >>> )
         """
 
+        if isinstance(observable, Sum):
+            target_qubits = reduce(QubitSet.union, map(QubitSet, target), QubitSet())
+        else:
+            target_qubits = QubitSet(target)
+
         super().__init__(
-            ascii_symbols=[
-                f"AdjointGradient({obs_ascii})" for obs_ascii in observable.ascii_symbols
-            ],
+            ascii_symbols=[f"AdjointGradient({observable.ascii_symbols[0]})"] * len(target_qubits),
             observable=observable,
             target=target,
             parameters=parameters,
