@@ -181,6 +181,8 @@ def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
         device_name = "2000Q"
     elif "Advantage_system" in device_name:
         device_name = "Advantage_system"
+    elif "Aspen-M-" in device_name:
+        device_name = "Aspen-M"
 
     if details["job_task"]:
         search_dict["Device Name"] = device_name
