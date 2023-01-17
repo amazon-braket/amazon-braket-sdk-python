@@ -19,7 +19,7 @@ RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:::device/qpu/ionq/ionQdevice"
 SIMULATOR_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
-PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-2-pulse"
+PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 
 
 @pytest.mark.parametrize(
