@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.35.3 (2023-01-17)
+
+### Bug Fixes and Other Changes
+
+ * update: updating for Aspen-M3
+
 ## v1.35.2 (2023-01-04)
 
 ### Bug Fixes and Other Changes
