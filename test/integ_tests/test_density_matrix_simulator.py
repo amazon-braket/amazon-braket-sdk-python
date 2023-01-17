@@ -1,8 +1,8 @@
 import math
 
+import numpy as np
 import pytest
 from gate_model_device_testing_utils import get_tol
-import numpy as np
 
 from braket.aws import AwsDevice
 from braket.circuits import Circuit, Noise, Observable

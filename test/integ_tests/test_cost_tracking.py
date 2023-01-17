@@ -13,8 +13,8 @@
 
 from datetime import timedelta
 
-import pytest
 import boto3
+import pytest
 
 from braket.aws import AwsDevice, AwsSession
 from braket.circuits import Circuit
@@ -22,12 +22,13 @@ from braket.tracking import Tracker
 from braket.tracking.tracker import MIN_SIMULATOR_DURATION
 
 
-@pytest.mark.parametrize('qpu',
+@pytest.mark.parametrize(
+    "qpu",
     [
         "arn:aws:braket:::device/qpu/ionq/ionQdevice",
         "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
-        "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
-    ]
+        "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3",
+    ],
 )
 def test_qpu_tracking(qpu):
     circuit = Circuit().h(0)
