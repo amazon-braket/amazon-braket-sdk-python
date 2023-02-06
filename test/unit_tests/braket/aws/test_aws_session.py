@@ -86,6 +86,26 @@ def aws_explicit_session():
 
 
 @pytest.fixture
+def aws_env_session():
+    _boto_session = Mock()
+    _boto_session.region_name = "us-test-1"
+    _boto_session.profile_name = "test-profile"
+
+    creds = Mock()
+    creds.method = "env"
+    _boto_session.get_credentials.return_value = creds
+
+    _aws_session = Mock()
+    _aws_session.boto_session = _boto_session
+    _aws_session._default_bucket = "amazon-braket-us-test-1-00000000"
+    _aws_session.default_bucket.return_value = _aws_session._default_bucket
+    _aws_session._custom_default_bucket = False
+    _aws_session.account_id = "00000000"
+    _aws_session.region = "us-test-1"
+    return _aws_session
+
+
+@pytest.fixture
 def account_id():
     return "000000000"
 
@@ -1274,6 +1294,15 @@ def test_copy_explicit_session(boto_session_init, aws_explicit_session):
         aws_session_token="token",
         region_name="us-west-2",
         profile_name="test-profile",
+    )
+
+
+@patch("boto3.Session")
+def test_copy_env_session(boto_session_init, aws_env_session):
+    boto_session_init.return_value = Mock()
+    AwsSession.copy_session(aws_env_session, "us-west-2")
+    boto_session_init.assert_called_with(
+        region_name="us-west-2",
     )
 
 
