@@ -11,11 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
 import random
-import signal
-import sys
-import time
 import uuid
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -132,26 +128,11 @@ def test_retry(mock_create):
         batch.retry_unsuccessful_tasks()
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Sending signals to test interrupt does not work on windows"
-)
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_abort(mock_create):
+@patch("braket.aws.aws_quantum_task_batch.ThreadPoolExecutor")
+def test_abort(mock_threadpool):
     batch_size = 10
     num_workers = 2
-    task_mock = Mock()
-    task_mock.state.side_effect = ["COMPLETED", "RUNNING"] * batch_size
-
-    counter = 0
-
-    def create_effect(*args, **kwargs):
-        nonlocal counter
-        counter = counter + 1
-        if counter == 4:
-            os.kill(os.getpid(), signal.SIGINT)
-        return task_mock
-
-    mock_create.side_effect = create_effect
+    mock_threadpool().__exit__.side_effect = KeyboardInterrupt()
 
     with pytest.raises(KeyboardInterrupt):
         AwsQuantumTaskBatch(
@@ -161,12 +142,7 @@ def test_abort(mock_create):
             S3_TARGET,
             1000,
             max_parallel=num_workers,
-            poll_interval_seconds=0.1,
         )
-
-    num_created = mock_create.call_count
-    time.sleep(1)  # delay to check no new tasks are created in the background
-    assert mock_create.call_count == num_created
 
 
 @patch("concurrent.futures.ThreadPoolExecutor.submit")

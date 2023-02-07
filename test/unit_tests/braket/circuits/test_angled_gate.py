@@ -97,6 +97,19 @@ def test_mixed_angle_equality():
     assert gate1 != gate2
 
 
+def test_angle_adjoint():
+    symbol1 = FreeParameter("theta")
+    gate1 = AngledGate(angle=symbol1, qubit_count=1, ascii_symbols=["bar(theta)"])
+    gate2 = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["foo(0.15)"])
+
+    gate1_adj = gate1.adjoint()
+    gate2_adj = gate2.adjoint()
+
+    assert len(gate1_adj) == len(gate2_adj) == 1
+    assert np.array_equal(gate1_adj[0].ascii_symbols, ["bar(-theta)"])
+    assert np.array_equal(gate2_adj[0].ascii_symbols, ["foo(-0.15)"])
+
+
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_bind_values():
     theta = FreeParameter("theta")
