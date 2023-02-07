@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.35.3 (2023-01-17)
+
+### Bug Fixes and Other Changes
+
+ * update: updating for Aspen-M3
+
+## v1.35.2 (2023-01-04)
+
+### Bug Fixes and Other Changes
+
+ * specify all for density matrix target
+ * remove OS signaling from run_batch unit test
+ * update ascii symbols for angled gate adjoint
+ * remove ascii_characters dynamic property for sum observables
+ * abort batch task submission on interrupt
+
 ## v1.35.1 (2022-12-08)
 
 ### Bug Fixes and Other Changes
