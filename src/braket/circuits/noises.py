@@ -1315,7 +1315,6 @@ class Kraus(Noise):
     """
 
     def __init__(self, matrices: Iterable[np.ndarray], display_name: str = "KR"):
-
         for matrix in matrices:
             verify_quantum_operator_matrix_dimensions(matrix)
             if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
