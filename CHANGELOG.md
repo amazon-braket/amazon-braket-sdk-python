@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.35.4 (2023-02-09)
+
+### Bug Fixes and Other Changes
+
+ * update: adding build for python 3.10
+ * copy session with env and profile.
+
 ## v1.35.3 (2023-01-17)
 
 ### Bug Fixes and Other Changes
