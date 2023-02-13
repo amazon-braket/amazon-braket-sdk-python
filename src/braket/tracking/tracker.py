@@ -140,7 +140,6 @@ class Tracker:
         """
         stats = {}
         for _, details in self._resources.items():
-
             device_stats = stats.get(details["device"], {})
 
             shots = device_stats.get("shots", 0) + details["shots"]

@@ -801,6 +801,8 @@ class AwsSession(object):
                 region_name=new_region,
                 profile_name=profile_name,
             )
+        elif creds.method == "env":
+            boto_session = boto3.Session(region_name=new_region)
         else:
             boto_session = boto3.Session(
                 region_name=new_region,
