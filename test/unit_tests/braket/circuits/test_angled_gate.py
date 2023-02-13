@@ -95,6 +95,7 @@ def test_mixed_angle_equality():
     gate2 = AngledGate(angle=0.15, qubit_count=1, ascii_symbols=["foo"])
 
     assert gate1 != gate2
+    assert gate2 != gate1
 
 
 def test_angle_adjoint():
