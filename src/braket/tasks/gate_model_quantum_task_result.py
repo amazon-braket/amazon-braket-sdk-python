@@ -131,7 +131,7 @@ class GateModelQuantumTaskResult:
     def __eq__(self, other) -> bool:
         if isinstance(other, GateModelQuantumTaskResult):
             return self.task_metadata.id == other.task_metadata.id
-        return NotImplemented
+        return False
 
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:

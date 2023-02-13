@@ -318,13 +318,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def __eq__(self, other):
         if isinstance(other, Moments):
             return self._moments == other._moments
-        return NotImplemented
-
-    def __ne__(self, other):
-        result = self.__eq__(other)
-        if result is not NotImplemented:
-            return not result
-        return NotImplemented
+        return False
 
     def __repr__(self):
         return self._moments.__repr__()

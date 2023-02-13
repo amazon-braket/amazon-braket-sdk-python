@@ -178,4 +178,4 @@ class Instruction:
     def __eq__(self, other):
         if isinstance(other, Instruction):
             return (self._operator, self._target) == (other._operator, other._target)
-        return NotImplemented
+        return False

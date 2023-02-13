@@ -41,7 +41,7 @@ class ShotResult:
                 and _equal_sequences(self.pre_sequence, other.pre_sequence)
                 and _equal_sequences(self.post_sequence, other.post_sequence)
             )
-        return NotImplemented
+        return False
 
 
 @dataclass
@@ -55,7 +55,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                 self.task_metadata.id == other.task_metadata.id
                 and self.measurements == other.measurements
             )
-        return NotImplemented
+        return False
 
     @staticmethod
     def from_object(

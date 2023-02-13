@@ -29,7 +29,7 @@ class PhotonicModelQuantumTaskResult:
     def __eq__(self, other) -> bool:
         if isinstance(other, PhotonicModelQuantumTaskResult):
             return self.task_metadata.id == other.task_metadata.id
-        return NotImplemented
+        return False
 
     @staticmethod
     def from_object(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:

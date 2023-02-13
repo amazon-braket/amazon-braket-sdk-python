@@ -260,7 +260,7 @@ class ObservableResultType(ResultType):
                 and self.target == other.target
                 and self.observable == other.observable
             )
-        return NotImplemented
+        return False
 
     def __repr__(self) -> str:
         return f"{self.name}(observable={self.observable}, target={self.target})"

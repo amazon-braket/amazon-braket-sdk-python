@@ -70,7 +70,7 @@ class Criteria(ABC):
 
     def __eq__(self, other: Criteria):
         if not isinstance(other, Criteria):
-            return NotImplemented
+            return False
         if self.applicable_key_types() != other.applicable_key_types():
             return False
         for key_type in self.applicable_key_types():

@@ -182,7 +182,7 @@ class Observable(QuantumOperator):
     def __eq__(self, other) -> bool:
         if isinstance(other, Observable):
             return self.name == other.name
-        return NotImplemented
+        return False
 
 
 class StandardObservable(Observable):

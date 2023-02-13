@@ -1363,7 +1363,7 @@ class Circuit:
             return (
                 self.instructions == other.instructions and self.result_types == other.result_types
             )
-        return NotImplemented
+        return False
 
     def __call__(self, arg: Any = None, **kwargs) -> Circuit:
         """

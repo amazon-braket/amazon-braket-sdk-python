@@ -475,7 +475,7 @@ class AwsDevice(Device):
     def __eq__(self, other):
         if isinstance(other, AwsDevice):
             return self.arn == other.arn
-        return NotImplemented
+        return False
 
     @property
     def frames(self) -> Dict[str, Frame]:

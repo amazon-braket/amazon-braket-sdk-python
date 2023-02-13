@@ -96,7 +96,7 @@ class AnnealingQuantumTaskResult:
                 other.additional_metadata,
             )
             return (self.record_array == other.record_array).all() and self_fields == other_fields
-        return NotImplemented
+        return False
 
     @staticmethod
     def from_object(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
