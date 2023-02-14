@@ -98,6 +98,10 @@ class Tracker:
         """
         Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
 
+        Note: The cost of a simulator task is not available until after the results for the task
+        have been fetched. Call `result()` on an `AwsQuantumTask` before estimating its cost
+        to ensure that the simulator usage is included in the cost estimate.
+
         Note: Charges shown are estimates based on your Amazon Braket simulator and quantum
         processing unit (QPU) task usage. Estimated charges shown may differ from your actual
         charges. Estimated charges do not factor in any discounts or credits, and you may
