@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.35.4.post0 (2023-02-15)
+
+### Documentation Changes
+
+ * Add note to call result to estimate sim tasks
+
+### Testing and Release Infrastructure
+
+ * update github workflows for node12 retirement
+
 ## v1.35.4 (2023-02-09)
 
 ### Bug Fixes and Other Changes
