@@ -110,12 +110,11 @@ class AngledGate(Gate, Parameterizable):
         return [new]
 
     def __eq__(self, other):
-        if isinstance(other, AngledGate):
-            if isinstance(self.angle, FreeParameterExpression):
-                return self.name == other.name and self.angle == other.angle
-            else:
-                return self.name == other.name and math.isclose(self.angle, other.angle)
-        return False
+        return (
+            isinstance(other, AngledGate)
+            and self.name == other.name
+            and _angles_equal(self.angle, other.angle)
+        )
 
     def __repr__(self):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
@@ -237,7 +236,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 def _angles_equal(
     angle_1: Union[FreeParameterExpression, float], angle_2: Union[FreeParameterExpression, float]
 ) -> bool:
-    return math.isclose(angle_1, angle_2)
+    return isinstance(angle_2, float) and math.isclose(angle_1, angle_2)
 
 
 @_angles_equal.register
