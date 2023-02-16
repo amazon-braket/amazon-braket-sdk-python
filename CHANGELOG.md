@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.35.5 (2023-02-16)
+
+### Bug Fixes and Other Changes
+
+ * Prevent float-FreeParameter comparison
+ * build(deps): bump aws-actions/stale-issue-cleanup from 3 to 6
+
+### Documentation Changes
+
+ * Remove black badge
+
+### Testing and Release Infrastructure
+
+ * add dependabot updates for GH actions
+ * change publish to pypi wf to use release/v1
+
 ## v1.35.4.post0 (2023-02-15)
 
 ### Documentation Changes
