@@ -83,6 +83,65 @@ class DrivingField(Hamiltonian):
         r"""Field: global detuning (:math:`\Delta(t)`). Time is in s, and value is in rad/s."""
         return self._detuning
 
+    @staticmethod
+    def from_lists(
+        times: List[float], amplitudes: List[float], detunings: List[float], phases: List[float]
+    ) -> DrivingField:
+        """
+        Builds DrivingField Hamiltonian from lists defining time evolution of Hamiltonian parameters (Rabi frequency, detuning, phase).
+        The values of the parameters at each time points are global for all atoms.
+
+        Args:
+            times (List[float]): The time points of the driving field
+            amplitudes (List[float]): The values of the amplitude
+            detunings (List[float]): The values of the detuning
+            phases (List[float]): The values of the phase
+        """
+        assert len(times) == len(amplitudes)
+        assert len(times) == len(detunings)
+        assert len(times) == len(phases)
+
+        amplitude = TimeSeries()
+        detuning = TimeSeries()
+        phase = TimeSeries()
+
+        for t, amplitude_value, detuning_value, phase_value in zip(
+            times, amplitudes, detunings, phases
+        ):
+            amplitude.put(t, amplitude_value)
+            detuning.put(t, detuning_value)
+            phase.put(t, phase_value)
+
+        drive = DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
+
+        return drive
+
+    def concatenate(self, other: DrivingField) -> DrivingField:
+        """Concatenate two driving fields to a single driving field
+        Args:
+            other (DrivingField): The driving field to be concatenated
+        Returns:
+            DrivingField: The concatenated driving field
+        """
+        return DrivingField(
+            amplitude=self.amplitude.time_series.concatenate(other.amplitude.time_series),
+            detuning=self.detuning.time_series.concatenate(other.detuning.time_series),
+            phase=self.phase.time_series.concatenate(other.phase.time_series),
+        )
+
+    @staticmethod
+    def concatenate_list(driving_fields: List[DrivingField]) -> DrivingField:
+        """Concatenate a list of driving fields to a single driving field
+        Args:
+            driving_fields (List[DrivingField]): The list of driving field time series to be concatenated
+        Returns:
+            DrivingField: The concatenated driving field
+        """
+        drive = driving_fields[0]
+        for dr in driving_fields[1:]:
+            drive = drive.concatenate(dr)
+        return drive
+
     def discretize(self, properties: DiscretizationProperties) -> DrivingField:
         """Creates a discretized version of the Hamiltonian.
 

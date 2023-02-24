@@ -18,6 +18,8 @@ from typing import List
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
+from braket.ahs.pattern import Pattern
+from braket.timings.time_series import TimeSeries
 
 
 class ShiftingField(Hamiltonian):
@@ -58,6 +60,51 @@ class ShiftingField(Hamiltonian):
         where time is measured in seconds (s) and values measured in rad/s)
         and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
         return self._magnitude
+
+    @staticmethod
+    def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
+        """Get the shifting field from a set of time points, values and pattern
+        Args:
+            times (List[float]): The time points of the shifting field
+            values (List[float]): The values of the shifting field
+            pattern (List[float]): The pattern of the shifting field
+        Returns:
+            ShiftingField: The shifting field obtained
+        """
+        assert len(times) == len(values)
+
+        magnitude = TimeSeries()
+        for t, v in zip(times, values):
+            magnitude.put(t, v)
+        shift = ShiftingField(Field(magnitude, Pattern(pattern)))
+
+        return shift
+
+    def concatenate(self, other: ShiftingField) -> ShiftingField:
+        """Concatenate two driving fields to a single driving field.
+        Assumes that the spatial modulation pattern is the same for the both driving fields.
+            Args:
+                other (ShiftingField): The second shifting field to be concatenated
+            Returns:
+                ShiftingField: The concatenated shifting field
+        """
+        assert self.magnitude.pattern.series == other.magnitude.pattern.series
+
+        new_magnitude = self.magnitude.time_series.concatenate(other.magnitude.time_series)
+        return ShiftingField(Field(new_magnitude, other.magnitude.pattern))
+
+    @staticmethod
+    def concatenate_list(shift_fields: List[ShiftingField]) -> ShiftingField:
+        """Concatenate a list of shifting fields to a single driving field
+        Args:
+            shift_fields (List[ShiftingField]): The list of shifting fields to be concatenated
+        Returns:
+            ShiftingField: The concatenated shifting field
+        """
+        shift = shift_fields[0]
+        for sf in shift_fields[1:]:
+            shift = shift.concatenate(sf)
+        return shift
 
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
         """Creates a discretized version of the ShiftingField.

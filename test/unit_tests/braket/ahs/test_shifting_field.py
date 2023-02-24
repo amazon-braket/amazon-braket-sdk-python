@@ -16,7 +16,9 @@ from unittest.mock import Mock
 import pytest
 
 from braket.ahs.hamiltonian import Hamiltonian
+from braket.ahs.pattern import Pattern
 from braket.ahs.shifting_field import ShiftingField
+from braket.timings.time_series import TimeSeries
 
 
 @pytest.fixture
@@ -61,6 +63,64 @@ def test_iadd_to_other(default_shifting_field):
     other = Hamiltonian([expected[0], expected[1], expected[2]])
     other += expected[3]
     assert other.terms == expected
+
+
+def test_from_lists():
+    times = [0, 0.1, 0.2, 0.3]
+    glob_amplitude = [0.5, 0.8, 0.9, 1.0]
+    pattern = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    sh_field = ShiftingField.from_lists(times, glob_amplitude, pattern)
+    assert sh_field.magnitude.time_series.values() == glob_amplitude
+    assert sh_field.magnitude.pattern.series == pattern
+
+    assert sh_field.magnitude.time_series.times() == times
+
+
+def test_concatenate():
+    times_1 = [0, 0.1, 0.2, 0.3]
+    glob_amplitude_1 = [0.5, 0.8, 0.9, 1.0]
+    pattern_1 = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    times_2 = [0.4, 0.5, 0.6, 0.7]
+    glob_amplitude_2 = [0.5, 0.8, 0.9, 1.0]
+    pattern_2 = pattern_1
+
+    sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
+    sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
+
+    new_sh_field = sh_field_1.concatenate(sh_field_2)
+
+    assert new_sh_field.magnitude.time_series.times() == times_1 + times_2
+    assert new_sh_field.magnitude.time_series.values() == glob_amplitude_1 + glob_amplitude_2
+    assert new_sh_field.magnitude.pattern.series == pattern_1
+
+
+def test_concatenate_list():
+    times_1 = [0, 0.1, 0.2, 0.3]
+    glob_amplitude_1 = [0.5, 0.8, 0.9, 1.0]
+    pattern_1 = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    times_2 = [0.4, 0.5, 0.6, 0.7]
+    glob_amplitude_2 = [0.5, 0.8, 0.9, 1.0]
+    pattern_2 = pattern_1
+
+    times_3 = [0.8, 0.9, 1.0]
+    glob_amplitude_3 = [-0.5, -0.8, -0.9]
+    pattern_3 = pattern_1
+
+    sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
+    sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
+    sh_field_3 = ShiftingField.from_lists(times_3, glob_amplitude_3, pattern_3)
+
+    new_sh_field = ShiftingField.concatenate_list([sh_field_1, sh_field_2, sh_field_3])
+
+    assert new_sh_field.magnitude.time_series.times() == times_1 + times_2 + times_3
+    assert (
+        new_sh_field.magnitude.time_series.values()
+        == glob_amplitude_1 + glob_amplitude_2 + glob_amplitude_3
+    )
+    assert new_sh_field.magnitude.pattern.series == pattern_1
 
 
 def test_discretize():

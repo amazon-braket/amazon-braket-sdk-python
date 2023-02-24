@@ -107,6 +107,111 @@ def test_discretize():
     assert discretized_field.detuning == detuning_mock.discretize.return_value
 
 
+def test_from_lists():
+    times = [0, 0.1, 0.2]
+    amplitudes = [0.5, 0.8, 0.9]
+    detunings = [0.3, 0.7, 0.6]
+    phases = [0.2, 0.4, 0.6]
+
+    dr_field = DrivingField.from_lists(times, amplitudes, detunings, phases)
+    assert dr_field.amplitude.time_series.values() == amplitudes
+    assert dr_field.detuning.time_series.values() == detunings
+    assert dr_field.phase.time_series.values() == phases
+
+    assert dr_field.amplitude.time_series.times() == times
+    assert dr_field.detuning.time_series.times() == times
+    assert dr_field.phase.time_series.times() == times
+
+
+def test_concatenate():
+    dr_field_1 = DrivingField.from_lists(
+        times=[0, 0.1, 0.2],
+        amplitudes=[1, 2, 3.5],
+        detunings=[1.2, 3.4, 5.6],
+        phases=[2.1, 4.2, 1.3],
+    )
+    dr_field_2 = DrivingField.from_lists(
+        times=[0.4, 0.5, 0.6],
+        amplitudes=[0.11, 0.22, 0.35],
+        detunings=[1.12, 3.14, 5.16],
+        phases=[2.11, 4.12, 1.13],
+    )
+
+    new_dr = dr_field_1.concatenate(dr_field_2)
+
+    times_1 = dr_field_1.amplitude.time_series.times()
+    times_2 = dr_field_2.amplitude.time_series.times()
+    new_times = new_dr.amplitude.time_series.times()
+
+    amplitudes_1 = dr_field_1.amplitude.time_series.values()
+    amplitudes_2 = dr_field_2.amplitude.time_series.values()
+    new_amplitudes = new_dr.amplitude.time_series.values()
+
+    detunings_1 = dr_field_1.detuning.time_series.values()
+    detunings_2 = dr_field_2.detuning.time_series.values()
+    new_detunings = new_dr.detuning.time_series.values()
+
+    phases_1 = dr_field_1.phase.time_series.values()
+    phases_2 = dr_field_2.phase.time_series.values()
+    new_phases = new_dr.phase.time_series.values()
+
+    assert len(new_times) == len(times_1) + len(times_2)
+    assert new_times[-1] == times_2[-1]
+    assert new_times[len(times_1) - 1] == times_1[-1]
+
+    assert new_amplitudes[0] == amplitudes_1[0]
+    assert new_amplitudes[-1] == amplitudes_2[-1]
+
+    assert new_detunings[0] == detunings_1[0]
+    assert new_detunings[-1] == detunings_2[-1]
+
+    assert new_phases[0] == phases_1[0]
+    assert new_phases[-1] == phases_2[-1]
+
+
+def test_concatenate_list():
+    amplitudes_1 = [1.3, 3.4, 0.04]
+    amplitudes_2 = [0.11, 0.22, 0.35]
+    amplitudes_3 = [0.33, 0.44, 0.55, 0.66]
+
+    detunings_1 = [1.2, 3.4, 5.6]
+    detunings_2 = [1.12, 3.14, 5.16]
+    detunings_3 = [1.1, 3.3, 5.5, 7.7]
+
+    phases_1 = [2.1, 4.2, 1.3]
+    phases_2 = [2.11, 4.12, 1.13]
+    phases_3 = [2.2, 4.4, 0.0, -3.3]
+
+    dr_field_1 = DrivingField.from_lists(
+        times=[0, 0.1, 0.2],
+        amplitudes=amplitudes_1,
+        detunings=detunings_1,
+        phases=phases_1,
+    )
+    dr_field_2 = DrivingField.from_lists(
+        times=[0.4, 0.5, 0.6],
+        amplitudes=amplitudes_2,
+        detunings=detunings_2,
+        phases=phases_2,
+    )
+    dr_field_3 = DrivingField.from_lists(
+        times=[0.7, 0.8, 0.9, 1.0],
+        amplitudes=amplitudes_3,
+        detunings=detunings_3,
+        phases=phases_3,
+    )
+    new_dr = DrivingField.concatenate_list([dr_field_1, dr_field_2, dr_field_3])
+    new_times = new_dr.amplitude.time_series.times()
+    times_1 = dr_field_1.amplitude.time_series.times()
+    times_2 = dr_field_2.amplitude.time_series.times()
+    times_3 = dr_field_3.amplitude.time_series.times()
+
+    assert len(new_times) == len(times_1) + len(times_2) + len(times_3)
+    assert new_dr.amplitude.time_series.values() == amplitudes_1 + amplitudes_2 + amplitudes_3
+    assert new_dr.detuning.time_series.values() == detunings_1 + detunings_2 + detunings_3
+    assert new_dr.phase.time_series.values() == phases_1 + phases_2 + phases_3
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_iadd_to_itself(default_driving_field):
     default_driving_field += Hamiltonian(Mock())

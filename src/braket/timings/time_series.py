@@ -87,6 +87,37 @@ class TimeSeries:
             self._series = OrderedDict(sorted(self._series.items()))
             self._sorted = True
 
+    @staticmethod
+    def constant_like(other_time_series: TimeSeries, constant: float = 0.0) -> TimeSeries:
+        """Obtain a constant time series with the same time points as the given time series
+        Args:
+            other_time_series (TimeSeries): The given time series
+        Returns:
+            TimeSeries: A constant time series with the same time points as the given time series
+        """
+        ts = TimeSeries()
+        for t in other_time_series.times():
+            ts.put(t, constant)
+        return ts
+
+    def concatenate(self, other: TimeSeries) -> TimeSeries:
+        """Concatenate two time series to a single time series
+        Args:
+            other (TimeSeries): The second time series to be concatenated
+        Returns:
+            TimeSeries: The concatenated time series.
+            The time points in the second time series are shifted by the total duration of the first time series.
+        """
+        assert other.times()[0] > self.times()[-1]
+
+        new_time_series = TimeSeries()
+        new_times = self.times() + other.times()
+        new_values = self.values() + other.values()
+        for t, v in zip(new_times, new_values):
+            new_time_series.put(t, v)
+
+        return new_time_series
+
     def discretize(self, time_resolution: Decimal, value_resolution: Decimal) -> TimeSeries:
         """Creates a discretized version of the time series,
         rounding all times and values to the closest multiple of the
