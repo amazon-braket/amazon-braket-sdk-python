@@ -100,17 +100,17 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
 
     @staticmethod
     def get_counts(result: AnalogHamiltonianSimulationQuantumTaskResult) -> Dict[str, int]:
-    """Aggregate state counts from AHS shot results
-        Args:
-            result (AnalogHamiltonianSimulationQuantumTaskResult): The result
-                from which the aggregated state counts are obtained
-        Returns:
-            Dict[str, int]: number of times each state configuration is measured
-        Notes: We use the following convention to denote the state of an atom (site):
-            e: empty site
-            r: Rydberg state atom
-            g: ground state atom
-    """
+        """Aggregate state counts from AHS shot results
+            Args:
+                result (AnalogHamiltonianSimulationQuantumTaskResult): The result
+                    from which the aggregated state counts are obtained
+            Returns:
+                Dict[str, int]: number of times each state configuration is measured
+            Notes: We use the following convention to denote the state of an atom (site):
+                e: empty site
+                r: Rydberg state atom
+                g: ground state atom
+        """
 
         state_counts = Counter()
         states = ['e', 'r', 'g']
