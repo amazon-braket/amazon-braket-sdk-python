@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from numbers import Number
 from typing import Iterator, List
-
+import math
 
 @dataclass
 class TimeSeriesItem:
@@ -139,7 +139,7 @@ class TimeSeries:
 
         phase_threshold = omega_max**2 / omega_slew_rate_max
         if rabi_pulse_area <= phase_threshold:
-            t_ramp = np.sqrt(rabi_pulse_area / omega_slew_rate_max)
+            t_ramp = math.sqrt(rabi_pulse_area / omega_slew_rate_max)
             t_plateau = 0
         else:
             t_ramp = omega_max / omega_slew_rate_max
