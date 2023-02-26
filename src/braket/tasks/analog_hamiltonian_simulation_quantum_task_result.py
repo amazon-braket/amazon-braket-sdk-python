@@ -18,10 +18,10 @@ from enum import Enum
 from typing import List
 from collections import Counter
 
+from typing import Dict, List, Tuple
 import numpy as np
 
 from braket.task_result import AnalogHamiltonianSimulationTaskResult, TaskMetadata
-
 
 class AnalogHamiltonianSimulationShotStatus(str, Enum):
     SUCCESS = "Success"

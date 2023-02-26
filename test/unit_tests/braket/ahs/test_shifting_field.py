@@ -16,9 +16,7 @@ from unittest.mock import Mock
 import pytest
 
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.ahs.pattern import Pattern
 from braket.ahs.shifting_field import ShiftingField
-from braket.timings.time_series import TimeSeries
 
 
 @pytest.fixture
