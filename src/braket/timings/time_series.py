@@ -20,6 +20,7 @@ from numbers import Number
 from typing import Iterator, List
 import math
 
+
 @dataclass
 class TimeSeriesItem:
     time: Number
@@ -120,9 +121,7 @@ class TimeSeries:
 
     @staticmethod
     def rabi_pulse(
-        rabi_pulse_area: float,
-        omega_max: float,
-        omega_slew_rate_max: float
+        rabi_pulse_area: float, omega_max: float, omega_slew_rate_max: float
     ) -> Tuple[List[float], List[float]]:
         """Get a time series for Rabi frequency with specified Rabi phase, maximum amplitude
         and maximum slew rate
