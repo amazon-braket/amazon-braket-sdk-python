@@ -147,7 +147,11 @@ class TimeSeries:
         time_points = [0, t_ramp, t_ramp + t_plateau, t_pules]
         amplitude_values = [0, t_ramp * omega_slew_rate_max, t_ramp * omega_slew_rate_max, 0]
 
-        return time_points, amplitude_values
+        ts = TimeSeries()
+        for t, v in zip(time_points, amplitude_values):
+            ts.put(t, v)
+
+        return ts
 
     def discretize(self, time_resolution: Decimal, value_resolution: Decimal) -> TimeSeries:
         """Creates a discretized version of the time series,
