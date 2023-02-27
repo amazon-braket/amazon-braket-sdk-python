@@ -88,7 +88,8 @@ class DrivingField(Hamiltonian):
         times: List[float], amplitudes: List[float], detunings: List[float], phases: List[float]
     ) -> DrivingField:
         """
-        Builds DrivingField Hamiltonian from lists defining time evolution of Hamiltonian parameters (Rabi frequency, detuning, phase).
+        Builds DrivingField Hamiltonian from lists defining time evolution
+        of Hamiltonian parameters (Rabi frequency, detuning, phase).
         The values of the parameters at each time points are global for all atoms.
 
         Args:
@@ -133,7 +134,8 @@ class DrivingField(Hamiltonian):
     def concatenate_list(driving_fields: List[DrivingField]) -> DrivingField:
         """Concatenate a list of driving fields to a single driving field
         Args:
-            driving_fields (List[DrivingField]): The list of driving field time series to be concatenated
+            driving_fields (List[DrivingField]):
+            The list of driving field time series to be concatenated
         Returns:
             DrivingField: The concatenated driving field
         """
