@@ -107,7 +107,8 @@ class TimeSeries:
             other (TimeSeries): The second time series to be concatenated
         Returns:
             TimeSeries: The concatenated time series.
-            The time points in the second time series are shifted by the total duration of the first time series.
+            The time points in the second time series are shifted
+            by the total duration of the first time series.
         """
         assert other.times()[0] > self.times()[-1]
 
@@ -133,8 +134,7 @@ class TimeSeries:
                 Tuple[List[float], List[float]]: A tuple containing the time points and values
                     of the time series for the time dependent Rabi frequency
             Notes: Rabi phase is equal to the integral of the amplitude of a time-dependent
-                Rabi frequency:
-                :math:`\int_0^T\Omega(t)dt`, where T is the pulse duration.
+                Rabi frequency Omega(t).
         """
 
         phase_threshold = omega_max**2 / omega_slew_rate_max
@@ -144,8 +144,8 @@ class TimeSeries:
         else:
             t_ramp = omega_max / omega_slew_rate_max
             t_plateau = (rabi_pulse_area / omega_max) - t_ramp
-        t_pules = 2 * t_ramp + t_plateau
-        time_points = [0, t_ramp, t_ramp + t_plateau, t_pules]
+        t_pulse = 2 * t_ramp + t_plateau
+        time_points = [0, t_ramp, t_ramp + t_plateau, t_pulse]
         amplitude_values = [0, t_ramp * omega_slew_rate_max, t_ramp * omega_slew_rate_max, 0]
 
         ts = TimeSeries()
