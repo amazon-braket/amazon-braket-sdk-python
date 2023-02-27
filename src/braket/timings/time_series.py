@@ -133,7 +133,7 @@ class TimeSeries:
                 Tuple[List[float], List[float]]: A tuple containing the time points and values
                     of the time series for the time dependent Rabi frequency
             Notes: By Rabi phase, it means the integral of the amplitude of a time-dependent
-                Rabi frequency, \int_0^T\Omega(t)dt, where T is the duration.
+                Rabi frequency :math:`\int_0^T\Omega(t)dt` where T is the duration.
         """
 
         phase_threshold = omega_max**2 / omega_slew_rate_max
