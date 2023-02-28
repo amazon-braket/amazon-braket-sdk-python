@@ -1138,9 +1138,7 @@ class Circuit:
                     "serialization_properties must be of type OpenQASMSerializationProperties "
                     "for IRType.OPENQASM."
                 )
-            qasm = self._to_openqasm(
-                serialization_properties or OpenQASMSerializationProperties()
-            )
+            qasm = self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
             self._cached_openqasm = qasm
             return qasm
         else:
