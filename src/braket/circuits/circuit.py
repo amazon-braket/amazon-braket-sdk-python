@@ -1129,20 +1129,20 @@ class Circuit:
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
         elif ir_type == IRType.OPENQASM:
-            if recompute or not self._cached_openqasm:
-                if serialization_properties and not isinstance(
-                    serialization_properties, OpenQASMSerializationProperties
-                ):
-                    raise ValueError(
-                        "serialization_properties must be of type OpenQASMSerializationProperties "
-                        "for IRType.OPENQASM."
-                    )
-                qasm = self._to_openqasm(
-                    serialization_properties or OpenQASMSerializationProperties()
+            if self._cached_openqasm and not recompute:
+                return self._cached_openqasm
+            if serialization_properties and not isinstance(
+                serialization_properties, OpenQASMSerializationProperties
+            ):
+                raise ValueError(
+                    "serialization_properties must be of type OpenQASMSerializationProperties "
+                    "for IRType.OPENQASM."
                 )
-                self._cached_openqasm = qasm
-                return qasm
-            return self._cached_openqasm
+            qasm = self._to_openqasm(
+                serialization_properties or OpenQASMSerializationProperties()
+            )
+            self._cached_openqasm = qasm
+            return qasm
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 

@@ -2182,7 +2182,20 @@ def test_to_openqasm_recompute():
     circ = Circuit().h(0).cnot(0, 1)
     circ.to_ir(IRType.OPENQASM)
     circ._cached_openqasm = "foo"
-    assert circ.to_ir(IRType.OPENQASM, recompute=True) == Circuit(circ).to_ir(IRType.OPENQASM)
+    assert circ.to_ir(IRType.OPENQASM, recompute=True) == OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[2] b;",
+                "qubit[2] q;",
+                "h q[0];",
+                "cnot q[0], q[1];",
+                "b[0] = measure q[0];",
+                "b[1] = measure q[1];",
+            ]
+        ),
+        inputs={},
+    )
 
 
 def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
