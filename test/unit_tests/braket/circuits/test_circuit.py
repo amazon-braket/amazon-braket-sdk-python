@@ -2170,6 +2170,21 @@ def test_circuit_with_expr_not_fully_bound():
     assert new_circ == expected
 
 
+def test_to_openqasm_cached():
+    circ = Circuit().h(0).cnot(0, 1)
+    circ.to_ir(IRType.OPENQASM)
+    fake = "foo"
+    circ._cached_openqasm = fake
+    assert circ.to_ir(IRType.OPENQASM) == fake
+
+
+def test_to_openqasm_recompute():
+    circ = Circuit().h(0).cnot(0, 1)
+    circ.to_ir(IRType.OPENQASM)
+    circ._cached_openqasm = "foo"
+    assert circ.to_ir(IRType.OPENQASM, recompute=True) == Circuit(circ).to_ir(IRType.OPENQASM)
+
+
 def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
     pulse_sequence_1 = (
         PulseSequence()

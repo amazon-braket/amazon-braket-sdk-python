@@ -144,6 +144,7 @@ class Circuit:
         self._parameters = set()
         self._observables_simultaneously_measurable = True
         self._has_compiler_directives = False
+        self._cached_openqasm = None
 
         if addable is not None:
             self.add(addable, *args, **kwargs)
@@ -248,7 +249,6 @@ class Circuit:
                 `result_type.target` and the value is what the key will be changed to.
                 Default = `None`.
 
-
         Returns:
             Circuit: self
 
@@ -281,6 +281,7 @@ class Circuit:
             >>> print(circ.result_types[0])
             StateVector()
         """
+        self._cached_openqasm = None
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
@@ -442,6 +443,7 @@ class Circuit:
             >>> print(circ.instructions[1])
             Instruction('operator': 'H', 'target': QubitSet(Qubit(11),))
         """
+        self._cached_openqasm = None
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
 
@@ -545,6 +547,7 @@ class Circuit:
             >>> print(instructions[1])
             Instruction('operator': 'CNOT', 'target': QubitSet(Qubit(10), Qubit(11)))
         """
+        self._cached_openqasm = None
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
         elif target is not None:
@@ -612,6 +615,7 @@ class Circuit:
              Instruction('operator': H('qubit_count': 1), 'target': QubitSet([Qubit(11)])),
              Instruction('operator': EndVerbatimBox, 'target': QubitSet([]))]
         """
+        self._cached_openqasm = None
         if target_mapping and target is not None:
             raise TypeError("Only one of 'target_mapping' or 'target' can be supplied.")
         elif target is not None:
@@ -737,6 +741,7 @@ class Circuit:
             T  : |     0     |     1     |2|
 
         """
+        self._cached_openqasm = None
         # check whether gate noise is applied to an empty circuit
         if not self.qubits:
             raise IndexError("Gate noise cannot be applied to an empty circuit.")
@@ -820,6 +825,7 @@ class Circuit:
             >>> print(circ.apply_initialization_noise(noise, target_qubits = [0, 1]))
 
         """
+        self._cached_openqasm = None
         if (len(self.qubits) == 0) and (target_qubits is None):
             raise IndexError(
                 "target_qubits must be provided in order to"
@@ -971,6 +977,7 @@ class Circuit:
             >>> print(circ.apply_initialization_noise(noise, target_qubits = [0, 1]))
 
         """
+        self._cached_openqasm = None
         if (len(self.qubits) == 0) and (target_qubits is None):
             raise IndexError(
                 "target_qubits must be provided in order to"
@@ -1093,10 +1100,14 @@ class Circuit:
         self,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
+        recompute: bool = False,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """
         Converts the circuit into the canonical intermediate representation.
         If the circuit is sent over the wire, this method is called before it is sent.
+        If the requested intermediate representation is OpenQASM, the translated result is
+        cached with the circuit and reused the next time this method is called,
+        unless `recompute=True`.
 
         Args:
             ir_type (IRType): The IRType to use for converting the circuit object to its
@@ -1104,6 +1115,8 @@ class Circuit:
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
+            recompute (bool): Whether to translate to OpenQASM again, rather than using the cached
+                translation. Only applies when ir_type=IRType.OPENQASM. Default: False.
 
         Returns:
             Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
@@ -1116,14 +1129,20 @@ class Circuit:
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
         elif ir_type == IRType.OPENQASM:
-            if serialization_properties and not isinstance(
-                serialization_properties, OpenQASMSerializationProperties
-            ):
-                raise ValueError(
-                    "serialization_properties must be of type OpenQASMSerializationProperties "
-                    "for IRType.OPENQASM."
+            if recompute or not self._cached_openqasm:
+                if serialization_properties and not isinstance(
+                    serialization_properties, OpenQASMSerializationProperties
+                ):
+                    raise ValueError(
+                        "serialization_properties must be of type OpenQASMSerializationProperties "
+                        "for IRType.OPENQASM."
+                    )
+                qasm = self._to_openqasm(
+                    serialization_properties or OpenQASMSerializationProperties()
                 )
-            return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
+                self._cached_openqasm = qasm
+                return qasm
+            return self._cached_openqasm
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
