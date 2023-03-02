@@ -30,6 +30,7 @@ setup(
         "amazon-braket-schemas>=1.14.0",
         "amazon-braket-default-simulator>=1.11.0",
         "oqpy~=0.1.1",
+        "setuptools",
         "backoff",
         "boltons",
         "boto3>=1.22.3",
