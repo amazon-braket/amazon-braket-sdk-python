@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
-from functools import singledispatch
+from functools import singledispatchmethod
 from typing import Any, Dict, List
 
 from braket.tracking.pricing import price_search
@@ -64,7 +64,7 @@ class Tracker:
         Args:
             event (_TaskCreationEvent): The event to process.
         """
-        _recieve_internal(event, self._resources)
+        self._recieve_internal(event)
 
     def tracked_resources(self) -> List[str]:
         """
@@ -170,6 +170,37 @@ class Tracker:
 
         return stats
 
+    @singledispatchmethod
+    def _recieve_internal(self, event: _TaskCreationEvent) -> None:
+        raise ValueError(f"Event type {type(event)} is not supported")
+
+    @_recieve_internal.register
+    def _(self, event: _TaskCreationEvent) -> None:
+        self._resources[event.arn] = {
+            "shots": event.shots,
+            "device": event.device,
+            "status": "CREATED",
+            "job_task": event.is_job_task,
+        }
+
+    @_recieve_internal.register
+    def _(self, event: _TaskStatusEvent) -> None:
+        resources = self._resources
+        # Update task data corresponding to the arn only if it exists in resources
+        if event.arn in resources:
+            resources[event.arn]["status"] = event.status
+
+    @_recieve_internal.register
+    def _(self, event: _TaskCompletionEvent) -> None:
+        resources = self._resources
+        # Update task completion data corresponding to the arn only if it exists in resources
+        if event.arn in resources:
+            resources[event.arn]["status"] = event.status
+            if event.execution_duration:
+                duration = timedelta(milliseconds=event.execution_duration)
+                resources[event.arn]["execution_duration"] = duration
+                resources[event.arn]["billed_duration"] = max(duration, MIN_SIMULATOR_DURATION)
+
 
 def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
     if details["status"] in ["FAILED", "CANCELLED"]:
@@ -258,36 +289,3 @@ def _get_simulator_task_cost(task_arn: str, details: dict) -> Decimal:
     )
 
     return duration_cost
-
-
-@singledispatch
-def _recieve_internal(event: _TaskCreationEvent, resources: dict) -> None:
-    raise ValueError(f"Event type {type(event)} is not supported")
-
-
-@_recieve_internal.register
-def _(event: _TaskCreationEvent, resources: dict) -> None:
-    resources[event.arn] = {
-        "shots": event.shots,
-        "device": event.device,
-        "status": "CREATED",
-        "job_task": event.is_job_task,
-    }
-
-
-@_recieve_internal.register
-def _(event: _TaskStatusEvent, resources: dict) -> None:
-    # Update task data corresponding to the arn only if it exists in resources
-    if event.arn in resources:
-        resources[event.arn]["status"] = event.status
-
-
-@_recieve_internal.register
-def _(event: _TaskCompletionEvent, resources: dict) -> None:
-    # Update task completion data corresponding to the arn only if it exists in resources
-    if event.arn in resources:
-        resources[event.arn]["status"] = event.status
-        if event.execution_duration:
-            duration = timedelta(milliseconds=event.execution_duration)
-            resources[event.arn]["execution_duration"] = duration
-            resources[event.arn]["billed_duration"] = max(duration, MIN_SIMULATOR_DURATION)
