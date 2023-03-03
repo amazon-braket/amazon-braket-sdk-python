@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.36.0 (2023-03-03)
+
+### Deprecations and Removals
+
+ * deprecate python 3.7
+
+### Bug Fixes and Other Changes
+
+ * Take advantage of some nice Python 3.8 features
+ * Include setuptools in requirements
+
 ## v1.35.5 (2023-02-16)
 
 ### Bug Fixes and Other Changes
