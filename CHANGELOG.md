@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.36.1 (2023-03-07)
+
+### Bug Fixes and Other Changes
+
+ * test: make simulator tracking integ test more robust
+
 ## v1.36.0 (2023-03-03)
 
 ### Deprecations and Removals
