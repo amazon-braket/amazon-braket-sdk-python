@@ -14,6 +14,7 @@
 from datetime import timedelta
 
 import boto3
+from botocore.exceptions import ClientError
 import pytest
 
 from braket.aws import AwsDevice, AwsSession
@@ -54,7 +55,13 @@ def test_simulator_tracking():
         task0.result()
         task1.result()
 
-        device.run(circuit, shots=100).cancel()
+        try:
+            device.run(circuit, shots=100).cancel()
+        except ClientError as e:
+            if not e.response["Error"]["Message"].startswith(
+                "Amazon Braket cannot cancel a quantum task in the COMPLETED status"
+            ):
+                raise e
 
     quantum_stats = t.quantum_tasks_statistics()[device.arn]
     assert quantum_stats["shots"] == 300
