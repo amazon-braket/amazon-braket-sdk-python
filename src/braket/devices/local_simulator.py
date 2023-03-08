@@ -11,7 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from functools import singledispatch
+from __future__ import annotations
+
+from functools import singledispatchmethod
 from typing import Dict, Optional, Set, Union
 
 import pkg_resources
@@ -50,7 +52,7 @@ class LocalSimulator(Device):
                 the actual simulator instance to use for simulation. Defaults to the
                 `default` simulator backend name.
         """
-        delegate = _get_simulator(backend)
+        delegate = self._get_simulator(backend)
         super().__init__(
             name=delegate.__class__.__name__,
             status="AVAILABLE",
@@ -91,9 +93,7 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = _run_internal(
-            task_specification, self._delegate, shots, inputs=inputs, *args, **kwargs
-        )
+        result = self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
         return LocalQuantumTask(result)
 
     @property
@@ -115,103 +115,103 @@ class LocalSimulator(Device):
         """
         return set(_simulator_devices.keys())
 
+    @singledispatchmethod
+    def _get_simulator(self, simulator: Union[str, BraketSimulator]) -> LocalSimulator:
+        raise TypeError("Simulator must either be a string or a BraketSimulator instance")
 
-@singledispatch
-def _get_simulator(simulator: Union[str, BraketSimulator]) -> LocalSimulator:
-    raise TypeError("Simulator must either be a string or a BraketSimulator instance")
+    @_get_simulator.register
+    def _(self, backend_name: str):
+        if backend_name in _simulator_devices:
+            device_class = _simulator_devices[backend_name].load()
+            return device_class()
+        else:
+            raise ValueError(
+                f"Only the following devices are available {_simulator_devices.keys()}"
+            )
 
+    @_get_simulator.register
+    def _(self, backend_impl: BraketSimulator):
+        return backend_impl
 
-@_get_simulator.register
-def _(backend_name: str):
-    if backend_name in _simulator_devices:
-        device_class = _simulator_devices[backend_name].load()
-        return device_class()
-    else:
-        raise ValueError(f"Only the following devices are available {_simulator_devices.keys()}")
+    @singledispatchmethod
+    def _run_internal(
+        self,
+        task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+        raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
+    @_run_internal.register
+    def _(
+        self,
+        circuit: Circuit,
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+        *args,
+        **kwargs,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.OPENQASM in simulator.properties.action:
+            validate_circuit_and_shots(circuit, shots)
+            program = circuit.to_ir(ir_type=IRType.OPENQASM)
+            program.inputs.update(inputs or {})
+            results = simulator.run(program, shots, *args, **kwargs)
+            return GateModelQuantumTaskResult.from_object(results)
+        elif DeviceActionType.JAQCD in simulator.properties.action:
+            validate_circuit_and_shots(circuit, shots)
+            program = circuit.to_ir(ir_type=IRType.JAQCD)
+            qubits = circuit.qubit_count
+            results = simulator.run(program, qubits, shots, *args, **kwargs)
+            return GateModelQuantumTaskResult.from_object(results)
+        raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
-@_get_simulator.register
-def _(backend_impl: BraketSimulator):
-    return backend_impl
+    @_run_internal.register
+    def _(self, problem: Problem, shots: Optional[int] = None, *args, **kwargs):
+        simulator = self._delegate
+        if DeviceActionType.ANNEALING not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support quantum annealing problems"
+            )
+        ir = problem.to_ir()
+        results = simulator.run(ir, shots, *args, *kwargs)
+        return AnnealingQuantumTaskResult.from_object(results)
 
-
-@singledispatch
-def _run_internal(
-    task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
-    simulator: BraketSimulator,
-    shots: Optional[int] = None,
-    *args,
-    **kwargs,
-) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
-    raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
-
-
-@_run_internal.register
-def _(
-    circuit: Circuit,
-    simulator: BraketSimulator,
-    shots: Optional[int] = None,
-    inputs: Optional[Dict[str, float]] = None,
-    *args,
-    **kwargs,
-):
-    if DeviceActionType.OPENQASM in simulator.properties.action:
-        validate_circuit_and_shots(circuit, shots)
-        program = circuit.to_ir(ir_type=IRType.OPENQASM)
-        program.inputs.update(inputs or {})
+    @_run_internal.register
+    def _(
+        self,
+        program: Program,
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+        *args,
+        **kwargs,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.OPENQASM not in simulator.properties.action:
+            raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
+        if inputs:
+            inputs_copy = program.inputs.copy() if program.inputs is not None else {}
+            inputs_copy.update(inputs)
+            program = Program(
+                source=program.source,
+                inputs=inputs_copy,
+            )
         results = simulator.run(program, shots, *args, **kwargs)
         return GateModelQuantumTaskResult.from_object(results)
-    elif DeviceActionType.JAQCD in simulator.properties.action:
-        validate_circuit_and_shots(circuit, shots)
-        program = circuit.to_ir(ir_type=IRType.JAQCD)
-        qubits = circuit.qubit_count
-        results = simulator.run(program, qubits, shots, *args, **kwargs)
-        return GateModelQuantumTaskResult.from_object(results)
-    raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
-
-@_run_internal.register
-def _(problem: Problem, simulator: BraketSimulator, shots: Optional[int] = None, *args, **kwargs):
-    if DeviceActionType.ANNEALING not in simulator.properties.action:
-        raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
-    ir = problem.to_ir()
-    results = simulator.run(ir, shots, *args, *kwargs)
-    return AnnealingQuantumTaskResult.from_object(results)
-
-
-@_run_internal.register
-def _(
-    program: Program,
-    simulator: BraketSimulator,
-    shots: Optional[int] = None,
-    inputs: Optional[Dict[str, float]] = None,
-    *args,
-    **kwargs,
-):
-    if DeviceActionType.OPENQASM not in simulator.properties.action:
-        raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-    if inputs:
-        inputs_copy = program.inputs.copy() if program.inputs is not None else {}
-        inputs_copy.update(inputs)
-        program = Program(
-            source=program.source,
-            inputs=inputs_copy,
-        )
-    results = simulator.run(program, shots, *args, **kwargs)
-    return GateModelQuantumTaskResult.from_object(results)
-
-
-@_run_internal.register
-def _(
-    program: AnalogHamiltonianSimulation,
-    simulator: BraketSimulator,
-    shots: Optional[int] = None,
-    *args,
-    **kwargs,
-):
-    if DeviceActionType.AHS not in simulator.properties.action:
-        raise NotImplementedError(
-            f"{type(simulator)} does not support analog Hamiltonian simulation programs"
-        )
-    results = simulator.run(program.to_ir(), shots, *args, **kwargs)
-    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
+    @_run_internal.register
+    def _(
+        self,
+        program: AnalogHamiltonianSimulation,
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.AHS not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+            )
+        results = simulator.run(program.to_ir(), shots, *args, **kwargs)
+        return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
