@@ -119,7 +119,6 @@ class TimeSeries:
 
         return new_time_series
 
-
     def discretize(self, time_resolution: Decimal, value_resolution: Decimal) -> TimeSeries:
         """Creates a discretized version of the time series,
         rounding all times and values to the closest multiple of the
