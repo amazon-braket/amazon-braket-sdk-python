@@ -139,6 +139,28 @@ class TimeSeries:
             )
         return discretized_ts
 
+    @staticmethod
+    def periodic_signal(values: List[float], dt: float, num_repeat: int = 1):
+        """Create a periodic time series by repeating the same block multiple times.
+        Args:
+            values (float): Values for the time series in a single block
+            dt (float): Spacing between the time points
+            num_repeat (int): Number of block repeatitions
+
+        Returns:
+            TimeSeries: A new periodic time series.
+        """
+
+        new_time_series = TimeSeries()
+
+        num_points_new = len(values) * num_repeat
+        new_times = [i * dt for i in range(num_points_new)]
+        new_values = values * num_repeat
+        for t, v in zip(new_times, new_values):
+            new_time_series.put(t, v)
+
+        return new_time_series
+
 
 # TODO: Verify if this belongs here.
 def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) -> bool:

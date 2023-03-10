@@ -61,6 +61,16 @@ def test_constant_like():
     assert constant_ts.values() == [3.14] * len(times)
 
 
+def test_periodic_signal():
+    values = [0.5, 1, 1, 0]
+    new_ts = TimeSeries.periodic_signal(values=values, dt=1, num_repeat=3)
+    expected_times = list(range(12))
+    expected_values = values * 3
+
+    assert new_ts.times() == expected_times
+    assert new_ts.values() == expected_values
+
+
 @pytest.mark.parametrize(
     "time_res, expected_times",
     [
