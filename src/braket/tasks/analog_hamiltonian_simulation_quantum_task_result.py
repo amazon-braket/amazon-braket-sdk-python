@@ -113,9 +113,15 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             g: ground state atom
         """
 
+        if result.state() != "COMPLETED":
+            raise RuntimeError("The task is not completed.")
+
         state_counts = Counter()
         states = ["e", "r", "g"]
         for shot in result.measurements:
+            status = AnalogHamiltonianSimulationShotStatus(shot.shotMetadata.shotStatus)
+            if status != "Success":
+                raise RuntimeWarning("Shot status: {}. Skipping.".format(status))
             pre = shot.pre_sequence
             post = shot.post_sequence
             # converting presequence and postsequence measurements to state_idx
@@ -136,7 +142,9 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         Returns:
             ndarray: The average densities from the result
         """
-
+        if result.state() != "COMPLETED":
+            raise RuntimeError("The task is not completed.")
+            
         measurements = result.measurements
         postSeqs = np.array([m.post_sequence for m in measurements])
 
