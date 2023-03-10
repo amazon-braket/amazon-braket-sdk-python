@@ -17,7 +17,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from decimal import Decimal
 from numbers import Number
-from typing import Iterator, List, Tuple
+from typing import Iterator, List
 
 
 @dataclass
