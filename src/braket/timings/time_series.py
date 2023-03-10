@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from numbers import Number
 from typing import Iterator, List, Tuple
-import math
 
 
 @dataclass
@@ -89,15 +88,15 @@ class TimeSeries:
             self._sorted = True
 
     @staticmethod
-    def constant_like(other_time_series: TimeSeries, constant: float = 0.0) -> TimeSeries:
-        """Obtain a constant time series with the same time points as the given time series
+    def constant_like(times: List[float], constant: float = 0.0) -> TimeSeries:
+        """Obtain a constant time series given the list of time points and the constant values
         Args:
-            other_time_series (TimeSeries): The given time series
+            times (List[float]): list of time points
         Returns:
-            TimeSeries: A constant time series with the same time points as the given time series
+            TimeSeries: A constant time series
         """
         ts = TimeSeries()
-        for t in other_time_series.times():
+        for t in times:
             ts.put(t, constant)
         return ts
 
@@ -120,39 +119,6 @@ class TimeSeries:
 
         return new_time_series
 
-    @staticmethod
-    def rabi_pulse(
-        rabi_pulse_area: float, omega_max: float, omega_slew_rate_max: float
-    ) -> Tuple[List[float], List[float]]:
-        """Get a time series for Rabi frequency with specified Rabi phase, maximum amplitude
-        and maximum slew rate
-            Args:
-                rabi_pulse_area (float): Total area under the Rabi frequency time series
-                omega_max (float): The maximum amplitude
-                omega_slew_rate_max (float): The maximum slew rate
-            Returns:
-                Tuple[List[float], List[float]]: A tuple containing the time points and values
-                    of the time series for the time dependent Rabi frequency
-            Notes: Rabi phase is equal to the integral of the amplitude of a time-dependent
-                Rabi frequency Omega(t).
-        """
-
-        phase_threshold = omega_max**2 / omega_slew_rate_max
-        if rabi_pulse_area <= phase_threshold:
-            t_ramp = math.sqrt(rabi_pulse_area / omega_slew_rate_max)
-            t_plateau = 0
-        else:
-            t_ramp = omega_max / omega_slew_rate_max
-            t_plateau = (rabi_pulse_area / omega_max) - t_ramp
-        t_pulse = 2 * t_ramp + t_plateau
-        time_points = [0, t_ramp, t_ramp + t_plateau, t_pulse]
-        amplitude_values = [0, t_ramp * omega_slew_rate_max, t_ramp * omega_slew_rate_max, 0]
-
-        ts = TimeSeries()
-        for t, v in zip(time_points, amplitude_values):
-            ts.put(t, v)
-
-        return ts
 
     def discretize(self, time_resolution: Decimal, value_resolution: Decimal) -> TimeSeries:
         """Creates a discretized version of the time series,

@@ -155,18 +155,10 @@ def test_concatenate():
     phases_2 = dr_field_2.phase.time_series.values()
     new_phases = new_dr.phase.time_series.values()
 
-    assert len(new_times) == len(times_1) + len(times_2)
-    assert new_times[-1] == times_2[-1]
-    assert new_times[len(times_1) - 1] == times_1[-1]
-
-    assert new_amplitudes[0] == amplitudes_1[0]
-    assert new_amplitudes[-1] == amplitudes_2[-1]
-
-    assert new_detunings[0] == detunings_1[0]
-    assert new_detunings[-1] == detunings_2[-1]
-
-    assert new_phases[0] == phases_1[0]
-    assert new_phases[-1] == phases_2[-1]
+    assert new_times == times_1 + times_2
+    assert new_amplitudes == amplitudes_1 + amplitudes_2
+    assert new_detunings == detunings_1 + detunings_2
+    assert new_phases == phases_1 + phases_2
 
 
 def test_concatenate_list():
@@ -206,7 +198,7 @@ def test_concatenate_list():
     times_2 = dr_field_2.amplitude.time_series.times()
     times_3 = dr_field_3.amplitude.time_series.times()
 
-    assert len(new_times) == len(times_1) + len(times_2) + len(times_3)
+    assert new_times == times_1 + times_2 + times_3
     assert new_dr.amplitude.time_series.values() == amplitudes_1 + amplitudes_2 + amplitudes_3
     assert new_dr.detuning.time_series.values() == detunings_1 + detunings_2 + detunings_3
     assert new_dr.phase.time_series.values() == phases_1 + phases_2 + phases_3

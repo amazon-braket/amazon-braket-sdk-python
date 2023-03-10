@@ -118,7 +118,8 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         for shot in result.measurements:
             pre = shot.pre_sequence
             post = shot.post_sequence
-            state_idx = np.array(pre) * (1 + np.array(post))
+            # converting presequence and postsequence measurements to state_idx
+            state_idx = [ 0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i,post_i in zip(pre, post) ]
             state = "".join(map(lambda s_idx: states[s_idx], state_idx))
             state_counts.update((state,))
 
@@ -135,10 +136,9 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         """
 
         measurements = result.measurements
-        postSeqs = [measurement.post_sequence for measurement in measurements]
-        postSeqs = 1 - np.array(postSeqs)
+        postSeqs = np.array([m.post_sequence for m in measurements])
 
-        avg_density = np.sum(postSeqs, axis=0) / len(postSeqs)
+        avg_density = np.sum(1 - postSeqs, axis=0) / len(postSeqs)
 
         return avg_density
 

@@ -55,10 +55,10 @@ def test_get_sorted(default_values, default_time_series):
 
 
 def test_constant_like():
-    time_series = TimeSeries().put(time=0, value=0).put(1, 25.1327).put(3, 0).put(5, 25.1327)
-    constant_ts = TimeSeries.constant_like(time_series, constant=3.14)
-    assert time_series.times() == constant_ts.times()
-    assert constant_ts.values() == [3.14] * 4
+    times = list(range(10))
+    constant_ts = TimeSeries.constant_like(times, constant=3.14)
+    assert times == constant_ts.times()
+    assert constant_ts.values() == [3.14] * len(times)
 
 
 @pytest.mark.parametrize(
