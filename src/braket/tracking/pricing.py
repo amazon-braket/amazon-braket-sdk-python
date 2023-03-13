@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 from functools import lru_cache
 from typing import Dict, List
 
@@ -31,8 +32,9 @@ class Pricing:
         # https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/reading-an-offer.html
 
         http = urllib3.PoolManager()
-        price_url = (
-            "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv"
+        price_url = os.environ.get(
+            "BRAKET_PRICE_OFFERS_URL",
+            "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv",  # noqa: E501
         )
         response = http.request(
             "GET",

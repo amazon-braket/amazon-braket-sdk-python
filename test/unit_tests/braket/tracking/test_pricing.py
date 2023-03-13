@@ -15,13 +15,16 @@
 import io
 from unittest.mock import patch
 
+import pytest
+
 from braket.tracking.pricing import Pricing
 
 
-@patch("urllib3.PoolManager")
-def test_search_prices(mock_http):
-    mock_http().request.return_value = io.BytesIO(
-        b"""line1
+@pytest.fixture
+def mock_http():
+    with patch("urllib3.PoolManager") as http_mock:
+        http_mock().request.return_value = io.BytesIO(
+            b"""line1
 line2
 line3
 line4
@@ -30,8 +33,20 @@ A,B
 1,1
 1,2
 """
-    )
+        )
+        yield http_mock()
+
+
+def test_search_prices(mock_http):
     pricer = Pricing()
     assert pricer.price_search(A="0") == []
     assert pricer.price_search(A="1", B="1") == [{"A": "1", "B": "1"}]
     assert pricer.price_search(A="1") == [{"A": "1", "B": "1"}, {"A": "1", "B": "2"}]
+
+
+@patch.dict("os.environ", {"BRAKET_PRICE_OFFERS_URL": "https://myurl"})
+def test_price_offer_env_var(mock_http):
+    pricer = Pricing()
+    pricer.get_prices()
+
+    mock_http.request.assert_called_with("GET", "https://myurl", preload_content=False)
