@@ -13,8 +13,8 @@
 
 from __future__ import annotations
 
-from typing import List, Union
 import math
+from typing import List, Union
 
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field

@@ -13,11 +13,11 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
-from collections import Counter
-
 from typing import Dict, List
+
 import numpy as np
 
 from braket.task_result import AnalogHamiltonianSimulationTaskResult, TaskMetadata
@@ -106,49 +106,53 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             result (AnalogHamiltonianSimulationQuantumTaskResult): The result
                 from which the aggregated state counts are obtained
         Returns:
-            Dict[str, int]: number of times each state configuration is measured
+            Dict[str, int]: number of times each state configuration is measured.
+            Returns None if the shot measurements are not successfull.
         Notes: We use the following convention to denote the state of an atom (site):
             e: empty site
             r: Rydberg state atom
             g: ground state atom
         """
 
-        if result.state() != "COMPLETED":
-            raise RuntimeError("The task is not completed.")
-
         state_counts = Counter()
         states = ["e", "r", "g"]
         for shot in result.measurements:
-            status = AnalogHamiltonianSimulationShotStatus(shot.shotMetadata.shotStatus)
-            if status != "Success":
-                raise RuntimeWarning("Shot status: {}. Skipping.".format(status))
-            pre = shot.pre_sequence
-            post = shot.post_sequence
-            # converting presequence and postsequence measurements to state_idx
-            state_idx = [
-                0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
-            ]
-            state = "".join(map(lambda s_idx: states[s_idx], state_idx))
+            if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
+                state = None
+                raise RuntimeWarning("Shot status: {}. Skipping.".format(shot.status))
+            else:
+                pre = shot.pre_sequence
+                post = shot.post_sequence
+                # converting presequence and postsequence measurements to state_idx
+                state_idx = [
+                    0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
+                ]
+                state = "".join(map(lambda s_idx: states[s_idx], state_idx))
             state_counts.update((state,))
 
         return dict(state_counts)
 
     @staticmethod
     def get_avg_density(result: AnalogHamiltonianSimulationQuantumTaskResult) -> np.ndarray:
-        """Get the average Rydberg densities from the result
+        """Get the average Rydberg state densities from the result
         Args:
             result (AnalogHamiltonianSimulationQuantumTaskResult): The result
                 from which the aggregated state counts are obtained
         Returns:
-            ndarray: The average densities from the result
+            ndarray (float): The average densities from the result
+        Notes:
+            Shot result '0' corresponds to the Rydberg state (r) and contributes to the density.
+            Shot result '1' corresponds to the ground state and does not contribute to the density.
         """
-        if result.state() != "COMPLETED":
-            raise RuntimeError("The task is not completed.")
-            
-        measurements = result.measurements
-        postSeqs = np.array([m.post_sequence for m in measurements])
 
-        avg_density = np.sum(1 - postSeqs, axis=0) / len(postSeqs)
+        postSeqs = []
+        for shot in result.measurements:
+            if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
+                raise RuntimeWarning("Shot status: {}. Skipping.".format(shot.status))
+            else:
+                postSeqs.append(shot.post_sequence)
+        print("postSeqs", postSeqs)
+        avg_density = np.sum(1 - np.array(postSeqs), axis=0) / len(postSeqs)
 
         return avg_density
 
