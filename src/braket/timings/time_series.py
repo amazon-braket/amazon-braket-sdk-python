@@ -108,7 +108,9 @@ class TimeSeries:
             TimeSeries: The concatenated time series.
         """
         if not min(other.times()) > max(self.times()):
-            raise ValueError("The time points in the first TimeSeries must be smaller then the time points in the second TimeSeries.")
+            raise ValueError(
+                "The time points in the first TimeSeries must be smaller then the time points in the second TimeSeries."
+            )
 
         new_time_series = TimeSeries()
         new_times = self.times() + other.times()
