@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.36.2 (2023-03-14)
+
+### Bug Fixes and Other Changes
+
+ * update job test for python3.8
+ * Look for price offer url in env variable
+
 ## v1.36.1 (2023-03-07)
 
 ### Bug Fixes and Other Changes
