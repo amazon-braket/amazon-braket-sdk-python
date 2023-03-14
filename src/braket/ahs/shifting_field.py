@@ -71,7 +71,8 @@ class ShiftingField(Hamiltonian):
         Returns:
             ShiftingField: The shifting field obtained
         """
-        assert len(times) == len(values)
+        if len(times) != len(values):
+            raise ValueError("The length of the times and values lists must be equal.")
 
         magnitude = TimeSeries()
         for t, v in zip(times, values):
@@ -88,7 +89,8 @@ class ShiftingField(Hamiltonian):
             Returns:
                 ShiftingField: The concatenated shifting field
         """
-        assert self.magnitude.pattern.series == other.magnitude.pattern.series
+        if self.magnitude.pattern.series != other.magnitude.pattern.series:
+            raise ValueError("The patterns in the first and second TimeSeries must be equal.")
 
         new_magnitude = self.magnitude.time_series.concatenate(other.magnitude.time_series)
         return ShiftingField(Field(new_magnitude, other.magnitude.pattern))

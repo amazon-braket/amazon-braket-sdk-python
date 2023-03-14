@@ -106,10 +106,9 @@ class TimeSeries:
             other (TimeSeries): The second time series to be concatenated
         Returns:
             TimeSeries: The concatenated time series.
-            The time points in the second time series are shifted
-            by the total duration of the first time series.
         """
-        assert other.times()[0] > self.times()[-1]
+        if not min(other.times()) > max(self.times()):
+            raise ValueError("The time points in the first TimeSeries must be smaller then the time points in the second TimeSeries.")
 
         new_time_series = TimeSeries()
         new_times = self.times() + other.times()
