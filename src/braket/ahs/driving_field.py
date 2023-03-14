@@ -141,6 +141,10 @@ class DrivingField(Hamiltonian):
         Returns:
             DrivingField: The concatenated driving field
         """
+
+        if len(driving_fields) == 0:
+            raise ValueError("The list must not be empty.")
+
         drive = driving_fields[0]
         for dr in driving_fields[1:]:
             drive = drive.concatenate(dr)

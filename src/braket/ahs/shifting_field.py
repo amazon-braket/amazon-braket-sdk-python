@@ -103,6 +103,9 @@ class ShiftingField(Hamiltonian):
         Returns:
             ShiftingField: The concatenated shifting field
         """
+        if len(shift_fields) == 0:
+            raise ValueError("The list must not be empty.")
+
         shift = shift_fields[0]
         for sf in shift_fields[1:]:
             shift = shift.concatenate(sf)
