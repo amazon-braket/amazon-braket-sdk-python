@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.36.2 (2023-03-14)
+
+### Bug Fixes and Other Changes
+
+ * update job test for python3.8
+ * Look for price offer url in env variable
+
+## v1.36.1 (2023-03-07)
+
+### Bug Fixes and Other Changes
+
+ * test: make simulator tracking integ test more robust
+
+## v1.36.0 (2023-03-03)
+
+### Deprecations and Removals
+
+ * deprecate python 3.7
+
+### Bug Fixes and Other Changes
+
+ * Take advantage of some nice Python 3.8 features
+ * Include setuptools in requirements
+
 ## v1.35.5 (2023-02-16)
 
 ### Bug Fixes and Other Changes

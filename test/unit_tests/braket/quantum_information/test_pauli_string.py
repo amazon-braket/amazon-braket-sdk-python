@@ -102,12 +102,7 @@ def test_weight_n_substrings(string, weight):
         substrings.append(PauliString(f"{string[0]}{''.join(factors)}"))
     actual = pauli_string.weight_n_substrings(weight)
     assert actual == tuple(substrings)
-    assert len(actual) == n_choose_k(len(nontrivial), weight)
-
-
-def n_choose_k(n, k):
-    m = min(k, n - k)
-    return functools.reduce(lambda x, y: x * y, range(m + 1, n + 1)) // (math.factorial(n - m))
+    assert len(actual) == math.comb(len(nontrivial), weight)
 
 
 @pytest.mark.parametrize(
