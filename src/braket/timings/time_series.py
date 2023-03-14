@@ -154,11 +154,10 @@ class TimeSeries:
 
         new_time_series = TimeSeries()
 
-        num_points_new = len(values) * num_repeat
-        new_times = [i * dt for i in range(num_points_new)]
-        new_values = values * num_repeat
-        for t, v in zip(new_times, new_values):
-            new_time_series.put(t, v)
+        num_values = len(values)
+        for index in range(num_values * num_repeat):
+            value = values[index % num_values]
+            new_time_series.put(index * dt, value)
 
         return new_time_series
 

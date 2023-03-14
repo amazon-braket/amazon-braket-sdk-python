@@ -151,7 +151,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                 raise RuntimeWarning("Shot status: {}. Skipping.".format(shot.status))
             else:
                 postSeqs.append(shot.post_sequence)
-        print("postSeqs", postSeqs)
+
         avg_density = np.sum(1 - np.array(postSeqs), axis=0) / len(postSeqs)
 
         return avg_density
