@@ -96,7 +96,7 @@ def test_concatenate_not_ordered():
     values_2 = [-0.5, -1, -1, 0]
     time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
 
-    new_ts = time_series_1.concatenate(time_series_2)
+    time_series_1.concatenate(time_series_2)
 
 
 def test_from_lists():
@@ -111,7 +111,7 @@ def test_from_lists():
 def test_from_lists_not_equal_size():
     times = list(range(4))
     values = [0.5, 1, 1]
-    ts = TimeSeries.from_lists(times=times, values=values)
+    TimeSeries.from_lists(times=times, values=values)
 
 
 @pytest.mark.parametrize(
