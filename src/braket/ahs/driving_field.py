@@ -140,10 +140,11 @@ class DrivingField(Hamiltonian):
             The list of driving field time series to be concatenated
         Returns:
             DrivingField: The concatenated driving field
+            For the empty input list returns empty DrivingField object.
         """
 
         if len(driving_fields) == 0:
-            raise ValueError("The list must not be empty.")
+            return DrivingField(amplitude=TimeSeries(), detuning=TimeSeries(), phase=TimeSeries())
 
         drive = driving_fields[0]
         for dr in driving_fields[1:]:

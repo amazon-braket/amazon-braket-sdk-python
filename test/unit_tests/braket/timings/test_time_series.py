@@ -71,6 +71,49 @@ def test_periodic_signal():
     assert new_ts.values() == expected_values
 
 
+def test_concatenate():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4, 8))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    new_ts = time_series_1.concatenate(time_series_2)
+
+    assert new_ts.times() == times_1 + times_2
+    assert new_ts.values() == values_1 + values_2
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_concatenate_not_ordered():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    new_ts = time_series_1.concatenate(time_series_2)
+
+
+def test_from_lists():
+    times = list(range(4))
+    values = [0.5, 1, 1, 0]
+    ts = TimeSeries.from_lists(times=times, values=values)
+    assert ts.times() == times
+    assert ts.values() == values
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_from_lists_not_equal_size():
+    times = list(range(4))
+    values = [0.5, 1, 1]
+    ts = TimeSeries.from_lists(times=times, values=values)
+
+
 @pytest.mark.parametrize(
     "time_res, expected_times",
     [

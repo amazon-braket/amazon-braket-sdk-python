@@ -204,6 +204,14 @@ def test_concatenate_list():
     assert new_dr.phase.time_series.values() == phases_1 + phases_2 + phases_3
 
 
+def test_concatenate_empty_list():
+    new_dr = DrivingField.concatenate_list([])
+    assert isinstance(new_dr, DrivingField)
+    assert len(new_dr.amplitude.time_series.values()) == 0
+    assert len(new_dr.detuning.time_series.values()) == 0
+    assert len(new_dr.phase.time_series.values()) == 0
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_iadd_to_itself(default_driving_field):
     default_driving_field += Hamiltonian(Mock())

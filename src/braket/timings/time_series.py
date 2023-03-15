@@ -88,6 +88,23 @@ class TimeSeries:
             self._sorted = True
 
     @staticmethod
+    def from_lists(times: List[float], values: List[float]) -> TimeSeries:
+        """Create a time series from the list of time and value points
+        Args:
+            times (List[float]): list of time points
+            values (List[float]): list of value points
+        Returns:
+            TimeSeries: time series constructed from lists
+        """
+        if len(times) != len(values):
+            raise ValueError("The length of the times and values lists are not equal.")
+
+        ts = TimeSeries()
+        for t, v in zip(times, values):
+            ts.put(t, v)
+        return ts
+
+    @staticmethod
     def constant_like(times: List[float], constant: float = 0.0) -> TimeSeries:
         """Obtain a constant time series given the list of time points and the constant values
         Args:
@@ -109,7 +126,8 @@ class TimeSeries:
         """
         if not min(other.times()) > max(self.times()):
             raise ValueError(
-                "The time points in the first TimeSeries must be smaller then the time points in the second TimeSeries."
+                "The time points in the first TimeSeries must be strictly smaller \
+                then the time points in the second TimeSeries."
             )
 
         new_time_series = TimeSeries()

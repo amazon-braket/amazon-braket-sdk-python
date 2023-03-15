@@ -101,10 +101,11 @@ class ShiftingField(Hamiltonian):
         Args:
             shift_fields (List[ShiftingField]): The list of shifting fields to be concatenated
         Returns:
-            ShiftingField: The concatenated shifting field
+            ShiftingField: The concatenated shifting field.
+            For the empty input list returns empty ShiftingField object.
         """
         if len(shift_fields) == 0:
-            raise ValueError("The list must not be empty.")
+            return ShiftingField(magnitude=TimeSeries())
 
         shift = shift_fields[0]
         for sf in shift_fields[1:]:
