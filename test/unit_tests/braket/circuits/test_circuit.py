@@ -891,6 +891,14 @@ def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
     )
 
 
+def test_as_unitary_with_compiler_directives_returns_expected_unitary():
+    circuit = Circuit().add_verbatim_box(Circuit().cphaseshift(2, 1, 0.15).si(3))
+    assert np.allclose(
+        circuit.as_unitary(),
+        np.kron(gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))),
+    )
+
+
 @pytest.mark.parametrize(
     "circuit,expected_unitary",
     [
