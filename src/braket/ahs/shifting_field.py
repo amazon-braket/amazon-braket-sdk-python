@@ -61,25 +61,6 @@ class ShiftingField(Hamiltonian):
         and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
         return self._magnitude
 
-    @staticmethod
-    def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
-        """Get the shifting field from a set of time points, values and pattern
-        Args:
-            times (List[float]): The time points of the shifting field
-            values (List[float]): The values of the shifting field
-            pattern (List[float]): The pattern of the shifting field
-        Returns:
-            ShiftingField: The shifting field obtained
-        """
-        if len(times) != len(values):
-            raise ValueError("The length of the times and values lists must be equal.")
-
-        magnitude = TimeSeries()
-        for t, v in zip(times, values):
-            magnitude.put(t, v)
-        shift = ShiftingField(Field(magnitude, Pattern(pattern)))
-
-        return shift
 
     def concatenate(self, other: ShiftingField) -> ShiftingField:
         """Concatenate two driving fields to a single driving field.
@@ -112,6 +93,26 @@ class ShiftingField(Hamiltonian):
             shift = shift.concatenate(sf)
         return shift
 
+    @staticmethod
+    def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
+        """Get the shifting field from a set of time points, values and pattern
+        Args:
+            times (List[float]): The time points of the shifting field
+            values (List[float]): The values of the shifting field
+            pattern (List[float]): The pattern of the shifting field
+        Returns:
+            ShiftingField: The shifting field obtained
+        """
+        if len(times) != len(values):
+            raise ValueError("The length of the times and values lists must be equal.")
+
+        magnitude = TimeSeries()
+        for t, v in zip(times, values):
+            magnitude.put(t, v)
+        shift = ShiftingField(Field(magnitude, Pattern(pattern)))
+
+        return shift
+        
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
         """Creates a discretized version of the ShiftingField.
 

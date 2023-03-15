@@ -84,6 +84,47 @@ class DrivingField(Hamiltonian):
         r"""Field: global detuning (:math:`\Delta(t)`). Time is in s, and value is in rad/s."""
         return self._detuning
 
+    def concatenate(self, other: DrivingField) -> DrivingField:
+        """Concatenate two driving fields to a single driving field
+        Args:
+            other (DrivingField): The driving field to be concatenated
+        Returns:
+            DrivingField: The concatenated driving field
+        """
+        return DrivingField(
+            amplitude=self.amplitude.time_series.concatenate(other.amplitude.time_series),
+            detuning=self.detuning.time_series.concatenate(other.detuning.time_series),
+            phase=self.phase.time_series.concatenate(other.phase.time_series),
+        )
+
+    def discretize(self, properties: DiscretizationProperties) -> DrivingField:
+        """Creates a discretized version of the Hamiltonian.
+
+        Args:
+            properties (DiscretizationProperties): Capabilities of a device that represent the
+                resolution with which the device can implement the parameters.
+
+        Returns:
+            DrivingField: A new discretized DrivingField.
+        """
+        driving_parameters = properties.rydberg.rydbergGlobal
+        time_resolution = driving_parameters.timeResolution
+        discretized_amplitude = self.amplitude.discretize(
+            time_resolution=time_resolution,
+            value_resolution=driving_parameters.rabiFrequencyResolution,
+        )
+        discretized_phase = self.phase.discretize(
+            time_resolution=time_resolution,
+            value_resolution=driving_parameters.phaseResolution,
+        )
+        discretized_detuning = self.detuning.discretize(
+            time_resolution=time_resolution,
+            value_resolution=driving_parameters.detuningResolution,
+        )
+        return DrivingField(
+            amplitude=discretized_amplitude, phase=discretized_phase, detuning=discretized_detuning
+        )
+
     @staticmethod
     def from_lists(
         times: List[float], amplitudes: List[float], detunings: List[float], phases: List[float]
@@ -119,19 +160,6 @@ class DrivingField(Hamiltonian):
 
         return drive
 
-    def concatenate(self, other: DrivingField) -> DrivingField:
-        """Concatenate two driving fields to a single driving field
-        Args:
-            other (DrivingField): The driving field to be concatenated
-        Returns:
-            DrivingField: The concatenated driving field
-        """
-        return DrivingField(
-            amplitude=self.amplitude.time_series.concatenate(other.amplitude.time_series),
-            detuning=self.detuning.time_series.concatenate(other.detuning.time_series),
-            phase=self.phase.time_series.concatenate(other.phase.time_series),
-        )
-
     @staticmethod
     def concatenate_list(driving_fields: List[DrivingField]) -> DrivingField:
         """Concatenate a list of driving fields to a single driving field
@@ -150,35 +178,7 @@ class DrivingField(Hamiltonian):
         for dr in driving_fields[1:]:
             drive = drive.concatenate(dr)
         return drive
-
-    def discretize(self, properties: DiscretizationProperties) -> DrivingField:
-        """Creates a discretized version of the Hamiltonian.
-
-        Args:
-            properties (DiscretizationProperties): Capabilities of a device that represent the
-                resolution with which the device can implement the parameters.
-
-        Returns:
-            DrivingField: A new discretized DrivingField.
-        """
-        driving_parameters = properties.rydberg.rydbergGlobal
-        time_resolution = driving_parameters.timeResolution
-        discretized_amplitude = self.amplitude.discretize(
-            time_resolution=time_resolution,
-            value_resolution=driving_parameters.rabiFrequencyResolution,
-        )
-        discretized_phase = self.phase.discretize(
-            time_resolution=time_resolution,
-            value_resolution=driving_parameters.phaseResolution,
-        )
-        discretized_detuning = self.detuning.discretize(
-            time_resolution=time_resolution,
-            value_resolution=driving_parameters.detuningResolution,
-        )
-        return DrivingField(
-            amplitude=discretized_amplitude, phase=discretized_phase, detuning=discretized_detuning
-        )
-
+        
     @staticmethod
     def rabi_pulse(
         rabi_pulse_area: float, omega_max: float, omega_slew_rate_max: float
