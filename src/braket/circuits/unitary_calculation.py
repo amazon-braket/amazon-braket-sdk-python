@@ -15,6 +15,7 @@ from typing import Iterable
 
 import numpy as np
 
+from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.qubit_set import QubitSet
@@ -60,11 +61,16 @@ def calculate_unitary(qubit_count: int, instructions: Iterable[Instruction]) -> 
     Raises:
         TypeError: If `instructions` is not composed only of `Gate` instances,
             i.e. a circuit with `Noise` operators will raise this error.
+            Any `CompilerDirective` instructions will be ignored, as these should
+            not affect the unitary representation of the circuit.
     """
     unitary = np.eye(2**qubit_count, dtype=complex)
     un_tensor = np.reshape(unitary, qubit_count * [2, 2])
 
     for instr in instructions:
+        if isinstance(instr.operator, CompilerDirective):
+            continue
+
         if not isinstance(instr.operator, Gate):
             raise TypeError("Only Gate operators are supported to build the unitary")
 
@@ -109,6 +115,8 @@ def calculate_unitary_big_endian(
     Raises:
         TypeError: If `instructions` is not composed only of `Gate` instances,
             i.e. a circuit with `Noise` operators will raise this error.
+            Any `CompilerDirective` instructions will be ignored, as these should
+            not affect the unitary representation of the circuit.
     """
     qubits_sorted = sorted(qubits)
     qubit_count = len(qubits_sorted)
@@ -119,6 +127,8 @@ def calculate_unitary_big_endian(
     unitary = np.eye(rank).reshape([2] * 2 * qubit_count)
 
     for instruction in instructions:
+        if isinstance(instruction.operator, CompilerDirective):
+            continue
         if not isinstance(instruction.operator, Gate):
             raise TypeError("Only Gate operators are supported to build the unitary")
         unitary = multiply_matrix(
