@@ -17,6 +17,7 @@ from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List
+import logging
 
 import numpy as np
 
@@ -119,7 +120,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         for shot in result.measurements:
             if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
                 state = None
-                raise RuntimeWarning("Shot status: {}. Skipping.".format(shot.status))
+                raise logging.warning(f"Shot status: {shot.status}. Skipping.")
             else:
                 pre = shot.pre_sequence
                 post = shot.post_sequence
@@ -148,12 +149,11 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         postSeqs = []
         for shot in result.measurements:
             if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
-                raise RuntimeWarning("Shot status: {}. Skipping.".format(shot.status))
+                raise logging.warning(f"Shot status: {shot.status}. Skipping.")
             else:
                 postSeqs.append(shot.post_sequence)
 
         avg_density = np.sum(1 - np.array(postSeqs), axis=0) / len(postSeqs)
-
         return avg_density
 
 
