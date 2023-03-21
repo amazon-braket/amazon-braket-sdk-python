@@ -13,11 +13,11 @@
 
 from __future__ import annotations
 
+import logging
 from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List
-import logging
 
 import numpy as np
 

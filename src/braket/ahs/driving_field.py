@@ -178,7 +178,7 @@ class DrivingField(Hamiltonian):
         for dr in driving_fields[1:]:
             drive = drive.concatenate(dr)
         return drive
-        
+
     @staticmethod
     def rabi_pulse(
         rabi_pulse_area: float, omega_max: float, omega_slew_rate_max: float

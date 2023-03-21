@@ -61,7 +61,6 @@ class ShiftingField(Hamiltonian):
         and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
         return self._magnitude
 
-
     def concatenate(self, other: ShiftingField) -> ShiftingField:
         """Concatenate two driving fields to a single driving field.
         Assumes that the spatial modulation pattern is the same for the both driving fields.
@@ -112,7 +111,7 @@ class ShiftingField(Hamiltonian):
         shift = ShiftingField(Field(magnitude, Pattern(pattern)))
 
         return shift
-        
+
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
         """Creates a discretized version of the ShiftingField.
 
