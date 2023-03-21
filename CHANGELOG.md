@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.36.3 (2023-03-21)
+
+### Bug Fixes and Other Changes
+
+ * ignore CompilerDirective when calculating unitary
+ * add DoubleAngledGate as exported symbol
+
 ## v1.36.2.post0 (2023-03-16)
 
 ### Documentation Changes
