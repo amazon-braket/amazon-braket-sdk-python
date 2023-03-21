@@ -141,7 +141,7 @@ def test_concatenate_not_equal_patterns():
     sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
     sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
 
-    new_sh_field = sh_field_1.concatenate(sh_field_2)
+    sh_field_1.concatenate(sh_field_2)
 
 
 def test_discretize():
