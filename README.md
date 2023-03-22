@@ -11,8 +11,8 @@ The Amazon Braket Python SDK is an open source library that provides a framework
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
-### Python 3.7.2 or greater
-Download and install Python 3.7.2 or greater from [Python.org](https://www.python.org/downloads/).
+### Python 3.8 or greater
+Download and install Python 3.8 or greater from [Python.org](https://www.python.org/downloads/).
 
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
@@ -234,7 +234,7 @@ tox -e integ-tests -- your-arguments
 
 If you encounter bugs or face issues while using the SDK, please let us know by posting 
 the issue on our [Github issue tracker](https://github.com/aws/amazon-braket-sdk-python/issues/).  
-For issues with the Amazon Braket service in general, please use the [Developer Forum](https://forums.aws.amazon.com/forum.jspa?forumID=370).
+For other issues or general questions, please ask on the [Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/questions/ask) and add the tag amazon-braket.
 
 ### Feedback and Feature Requests
 
