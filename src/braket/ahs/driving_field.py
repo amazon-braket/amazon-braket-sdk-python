@@ -174,7 +174,7 @@ class DrivingField(Hamiltonian):
         if len(driving_fields) == 0:
             return DrivingField(amplitude=TimeSeries(), detuning=TimeSeries(), phase=TimeSeries())
 
-        drive = driving_fields[0]
+        drive = driving_fields[0].deepcopy()        
         for dr in driving_fields[1:]:
             drive = drive.concatenate(dr)
         return drive
