@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-import math
 from collections import OrderedDict
 from dataclasses import dataclass
 from decimal import Decimal
