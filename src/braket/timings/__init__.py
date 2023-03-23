@@ -11,8 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-   Version number (major.minor.patch[-label])
-"""
-
-__version__ = "1.36.4.dev0"
+from braket.timings.time_series import TimeSeries, TimeSeriesItem  # noqa: F401
