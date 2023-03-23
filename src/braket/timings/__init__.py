@@ -11,4 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.timings.time_series import TimeSeries, TimeSeriesItem
+from braket.timings.time_series import TimeSeries, TimeSeriesItem  # noqa: F401
