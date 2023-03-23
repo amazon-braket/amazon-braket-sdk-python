@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import math
 from collections import OrderedDict
 from dataclasses import dataclass
 from decimal import Decimal
@@ -123,6 +124,10 @@ class TimeSeries:
             other (TimeSeries): The second time series to be concatenated
         Returns:
             TimeSeries: The concatenated time series.
+        Notes:
+            Keeps the time points in both time series unchanged.
+            Assumes that the time points in the first TimeSeries
+            are at earler times then the time points in the second TimeSeries.
         """
         if not min(other.times()) > max(self.times()):
             raise ValueError(
@@ -133,6 +138,45 @@ class TimeSeries:
         new_time_series = TimeSeries()
         new_times = self.times() + other.times()
         new_values = self.values() + other.values()
+        for t, v in zip(new_times, new_values):
+            new_time_series.put(t, v)
+
+        return new_time_series
+
+    def merge(self, other: TimeSeries, gap_t: float = 0, boundary: str = "mean") -> TimeSeries:
+        """Merge two time series to a single time series and shifts the time points accordingly.
+        Args:
+            other (TimeSeries): The second time series to be concatenated
+            gap_t (float): The relative time shift between the first and the second time series.
+            boundary (str): {"mean", "left", "right"}. Boundary point handler.
+            Possible options are
+                * "mean" - take the average of the boundary value points of the first
+                and the second time series.
+                * "left" - use the last value from the left time series as the boundary point.
+                * "right" - use the first value from the right time series as the boundary point.
+        Returns:
+            TimeSeries: The merged time series.
+        """
+
+        new_time_series = TimeSeries()
+        other_times = [t + gap_t + self.times()[-1] for t in other.times()]
+        new_times = self.times() + other_times
+
+        left, right = self.values()[-1], other.values()[0]
+        if boundary == "mean":
+            bndry_val = 0.5 * sum([left, right])
+        elif boundary == "left":
+            bndry_val = left
+        elif boundary == "right":
+            bndry_val = right
+        else:
+            raise ValueError(
+                f"Boundary handler value {boundary} is not allowed. \
+                Possible options are: 'mean', 'left', 'right'."
+            )
+
+        new_values = self.values()[:-1] + [bndry_val] + other.values()[1:]
+
         for t, v in zip(new_times, new_values):
             new_time_series.put(t, v)
 

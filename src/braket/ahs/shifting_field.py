@@ -87,7 +87,7 @@ class ShiftingField(Hamiltonian):
         if len(shift_fields) == 0:
             return ShiftingField(magnitude=TimeSeries())
 
-        shift = shift_fields[0].deepcopy()
+        shift = ShiftingField(magnitude=shift_fields[0].magnitude)
         for sf in shift_fields[1:]:
             shift = shift.concatenate(sf)
         return shift

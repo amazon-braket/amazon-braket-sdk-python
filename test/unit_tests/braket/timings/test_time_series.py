@@ -114,6 +114,42 @@ def test_from_lists_not_equal_size():
     TimeSeries.from_lists(times=times, values=values)
 
 
+def test_merge():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    new_ts_mean = time_series_1.merge(time_series_2, gap_t=1, boundary="mean")
+    new_ts_left = time_series_1.merge(time_series_2, gap_t=1, boundary="left")
+    new_ts_right = time_series_1.merge(time_series_2, gap_t=1, boundary="right")
+
+    excepted_times = list(range(4)) + list(range(4, 7))
+    assert new_ts_mean.times() == excepted_times
+    assert new_ts_left.times() == excepted_times
+    assert new_ts_right.times() == excepted_times
+
+    assert new_ts_mean.values() == [0.5, 1, 1, -0.25, -1, -1, 0]
+    assert new_ts_left.values() == [0.5, 1, 1, 0, -1, -1, 0]
+    assert new_ts_right.values() == [0.5, 1, 1, -0.5, -1, -1, 0]
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_merge_wrong_bndry_value():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    time_series_1.merge(time_series_2, gap_t=1, boundary="average")
+
+
 @pytest.mark.parametrize(
     "time_res, expected_times",
     [
