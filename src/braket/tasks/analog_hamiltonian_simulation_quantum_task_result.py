@@ -100,12 +100,8 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             measurements.append(ShotResult(status, pre_sequence, post_sequence))
         return measurements
 
-    @staticmethod
-    def get_counts(result: AnalogHamiltonianSimulationQuantumTaskResult) -> Dict[str, int]:
+    def get_counts(self) -> Dict[str, int]:
         """Aggregate state counts from AHS shot results
-        Args:
-            result (AnalogHamiltonianSimulationQuantumTaskResult): The result
-                from which the aggregated state counts are obtained
         Returns:
             Dict[str, int]: number of times each state configuration is measured.
             Returns None if the shot measurements are not successfull.
@@ -117,10 +113,10 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
 
         state_counts = Counter()
         states = ["e", "r", "g"]
-        for shot in result.measurements:
+        for shot in self.measurements:
             if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
-                state = None
-                raise logging.warning(f"Shot status: {shot.status}. Skipping.")
+                # raise logging.warning(f"Shot status: {shot.status}. Skipping.")
+                pass
             else:
                 pre = shot.pre_sequence
                 post = shot.post_sequence
@@ -129,16 +125,12 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                     0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
                 ]
                 state = "".join(map(lambda s_idx: states[s_idx], state_idx))
-            state_counts.update((state,))
+                state_counts.update((state,))
 
         return dict(state_counts)
 
-    @staticmethod
-    def get_avg_density(result: AnalogHamiltonianSimulationQuantumTaskResult) -> np.ndarray:
+    def get_avg_density(self) -> np.ndarray:
         """Get the average Rydberg state densities from the result
-        Args:
-            result (AnalogHamiltonianSimulationQuantumTaskResult): The result
-                from which the aggregated state counts are obtained
         Returns:
             ndarray (float): The average densities from the result
         Notes:
@@ -147,12 +139,14 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         """
 
         postSeqs = []
-        for shot in result.measurements:
+        for shot in self.measurements:
             if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
-                raise logging.warning(f"Shot status: {shot.status}. Skipping.")
+                # raise logging.warning(f"Shot status: {shot.status}. Skipping.")
+                pass
             else:
                 postSeqs.append(shot.post_sequence)
-
+        if postSeqs == []:
+            raise ValueError("The list of measurements is empty. Average desnity is not defined.")
         avg_density = np.sum(1 - np.array(postSeqs), axis=0) / len(postSeqs)
         return avg_density
 

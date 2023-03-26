@@ -55,7 +55,7 @@ def partial_success_measurement():
 
 
 @pytest.fixture
-def error_measurement():
+def failed_measurement():
     return AnalogHamiltonianSimulationShotMeasurement(
         shotMetadata=AnalogHamiltonianSimulationShotMetadata(shotStatus="Failure"),
         shotResult=AnalogHamiltonianSimulationShotResult(preSequence=None, postSequence=None),
@@ -74,8 +74,19 @@ def success_measurement_extended():
 
 
 @pytest.fixture
-def measurements(success_measurement, partial_success_measurement, error_measurement):
-    return [success_measurement, partial_success_measurement, error_measurement]
+def measurements(success_measurement, partial_success_measurement, failed_measurement):
+    return [success_measurement, partial_success_measurement, failed_measurement]
+
+
+@pytest.fixture
+def measurements_extended(
+    success_measurement,
+    success_measurement_extended,
+):
+    return [
+        success_measurement,
+        success_measurement_extended,
+    ]
 
 
 @pytest.fixture
@@ -168,19 +179,38 @@ def test_equality(task_metadata, result_str_1, result_str_2):
 def test_get_counts(result_str_3):
     result = AnalogHamiltonianSimulationQuantumTaskResult.from_string(result_str_3)
 
-    counts = result.get_counts(result)
+    counts = result.get_counts()
     # Partial Success and Failure result status are mapped to counts = None
     expected_counts = {"rrrgeggrrgr": 1, "grggrgrrrrg": 1}
+    assert counts == expected_counts
+
+
+def test_get_counts_failed_task(task_metadata):
+    measurement = ShotResult(AnalogHamiltonianSimulationShotStatus.FAILURE, [], [])
+    result = AnalogHamiltonianSimulationQuantumTaskResult(
+        task_metadata=task_metadata, measurements=[measurement]
+    )
+
+    counts = result.get_counts()
+    expected_counts = {}
     assert counts == expected_counts
 
 
 def test_avg_density(result_str_3):
     result = AnalogHamiltonianSimulationQuantumTaskResult.from_string(result_str_3)
 
-    density = result.get_avg_density(result)
+    density = result.get_avg_density()
     expected_density = [0.5, 1, 0.5, 0, 1, 0, 0.5, 1, 1, 0.5, 0.5]
     np.testing.assert_equal(density, expected_density)
 
+@pytest.mark.xfail(raises=ValueError)
+def test_get_avg_density_failed_task(task_metadata):
+    measurement = ShotResult(AnalogHamiltonianSimulationShotStatus.FAILURE, [], [])
+    result = AnalogHamiltonianSimulationQuantumTaskResult(
+        task_metadata=task_metadata, measurements=[measurement]
+    )
+
+    result.get_avg_density()
 
 @pytest.mark.parametrize(
     "shot0, shot1",
