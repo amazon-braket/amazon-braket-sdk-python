@@ -90,17 +90,6 @@ def measurements_extended(
 
 
 @pytest.fixture
-def measurements_extended(
-    success_measurement,
-    success_measurement_extended,
-):
-    return [
-        success_measurement,
-        success_measurement_extended,
-    ]
-
-
-@pytest.fixture
 def result_str_1(task_metadata, measurements):
     result = AnalogHamiltonianSimulationTaskResult(
         taskMetadata=task_metadata,
