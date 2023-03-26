@@ -122,6 +122,7 @@ def test_from_lists():
     assert dr_field.detuning.time_series.times() == times
     assert dr_field.phase.time_series.times() == times
 
+
 @pytest.mark.xfail(raises=ValueError)
 def test_from_lists_not_eq_length():
     times = [0, 0.1]
@@ -130,6 +131,7 @@ def test_from_lists_not_eq_length():
     phases = [0.2, 0.4, 0.6]
 
     DrivingField.from_lists(times, amplitudes, detunings, phases)
+
 
 def test_concatenate():
     dr_field_1 = DrivingField.from_lists(
