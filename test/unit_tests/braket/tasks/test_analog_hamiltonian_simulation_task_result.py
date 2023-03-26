@@ -203,6 +203,7 @@ def test_avg_density(result_str_3):
     expected_density = [0.5, 1, 0.5, 0, 1, 0, 0.5, 1, 1, 0.5, 0.5]
     np.testing.assert_equal(density, expected_density)
 
+
 @pytest.mark.xfail(raises=ValueError)
 def test_get_avg_density_failed_task(task_metadata):
     measurement = ShotResult(AnalogHamiltonianSimulationShotStatus.FAILURE, [], [])
@@ -211,6 +212,7 @@ def test_get_avg_density_failed_task(task_metadata):
     )
 
     result.get_avg_density()
+
 
 @pytest.mark.parametrize(
     "shot0, shot1",

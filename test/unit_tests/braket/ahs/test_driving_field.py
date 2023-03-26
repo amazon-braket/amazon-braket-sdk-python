@@ -215,5 +215,3 @@ def test_concatenate_empty_list():
 @pytest.mark.xfail(raises=ValueError)
 def test_iadd_to_itself(default_driving_field):
     default_driving_field += Hamiltonian(Mock())
-
-
