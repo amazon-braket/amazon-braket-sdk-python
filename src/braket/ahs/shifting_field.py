@@ -70,6 +70,8 @@ class ShiftingField(Hamiltonian):
                 ShiftingField: The concatenated shifting field
             Note: In case if self.magnitude.pattern is empty creates pattern from the second
             ShiftingField
+            Raises:
+                ValueError: if the patterns of the two shifting fields are not identical.
         """
         current_pattern = self.magnitude.pattern.series
         if current_pattern != other.magnitude.pattern.series and len(current_pattern) > 0:
