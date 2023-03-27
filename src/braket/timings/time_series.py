@@ -142,11 +142,11 @@ class TimeSeries:
 
         return new_time_series
 
-    def merge(self, other: TimeSeries, padding: float = 0, boundary: str = "mean") -> TimeSeries:
+    def stitch(self, other: TimeSeries, padding: float = 0, boundary: str = "mean") -> TimeSeries:
         """Merge two time series to a single time series and shifts the time points accordingly.
         Args:
             other (TimeSeries): The second time series to be concatenated
-            gap_t (float): The relative time shift between the first and the second time series.
+            padding (float): The relative time shift between the first and the second time series.
             boundary (str): {"mean", "left", "right"}. Boundary point handler.
             Possible options are
                 * "mean" - take the average of the boundary value points of the first
@@ -158,7 +158,7 @@ class TimeSeries:
         """
 
         new_time_series = TimeSeries()
-        other_times = [t + gap_t + self.times()[-1] for t in other.times()]
+        other_times = [t + padding + self.times()[-1] for t in other.times()]
         new_times = self.times() + other_times
 
         left, right = self.values()[-1], other.values()[0]
@@ -202,23 +202,26 @@ class TimeSeries:
         return discretized_ts
 
     @staticmethod
-    def periodic_signal(values: List[float], dt: float, num_repeat: int = 1):
+    def periodic_signal(times: List[float], values: List[float], num_repeat: int = 1):
         """Create a periodic time series by repeating the same block multiple times.
         Args:
+            times (float): List of time points in a single block
             values (float): Values for the time series in a single block
-            dt (float): Spacing between the time points
             num_repeat (int): Number of block repeatitions
 
         Returns:
             TimeSeries: A new periodic time series.
         """
-
+        if not (len(times) == len(values)):
+            raise ValueError(
+                "The length of the list for times and values must be equal"
+            )
         new_time_series = TimeSeries()
 
         num_values = len(values)
         for index in range(num_values * num_repeat):
             value = values[index % num_values]
-            new_time_series.put(index * dt, value)
+            new_time_series.put(times[index % num_values], value)
 
         return new_time_series
 

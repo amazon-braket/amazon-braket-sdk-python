@@ -68,8 +68,11 @@ class ShiftingField(Hamiltonian):
                 other (ShiftingField): The second shifting field to be concatenated
             Returns:
                 ShiftingField: The concatenated shifting field
+            Note: In case if self.magnitude.pattern is empty creates pattern from the second
+            ShiftingField
         """
-        if self.magnitude.pattern.series != other.magnitude.pattern.series:
+        current_pattern = self.magnitude.pattern.series
+        if current_pattern != other.magnitude.pattern.series and len(current_pattern) > 0:
             raise ValueError("The patterns in the first and second TimeSeries must be equal.")
 
         new_magnitude = self.magnitude.time_series.concatenate(other.magnitude.time_series)

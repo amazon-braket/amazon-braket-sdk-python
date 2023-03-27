@@ -62,13 +62,21 @@ def test_constant_like():
 
 
 def test_periodic_signal():
+    times = list(range(4))
     values = [0.5, 1, 1, 0]
-    new_ts = TimeSeries.periodic_signal(values=values, dt=1, num_repeat=3)
+    new_ts = TimeSeries.periodic_signal(times=times, values=values, num_repeat=3)
     expected_times = list(range(12))
     expected_values = values * 3
 
     assert new_ts.times() == expected_times
     assert new_ts.values() == expected_values
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_periodic_signal_not_eq_length():
+    times = list(range(5))
+    values = [0.5, 1, 1, 0]
+    TimeSeries.periodic_signal(times=times, values=values, num_repeat=3)
 
 
 def test_concatenate():
