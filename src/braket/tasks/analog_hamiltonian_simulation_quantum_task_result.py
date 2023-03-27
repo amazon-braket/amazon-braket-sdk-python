@@ -103,7 +103,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         """Aggregate state counts from AHS shot results
         Returns:
             Dict[str, int]: number of times each state configuration is measured.
-            Returns None if the shot measurements are not successfull.
+            Returns None if none of shot measurements are successful.
         Notes: We use the following convention to denote the state of an atom (site):
             e: empty site
             r: Rydberg state atom
