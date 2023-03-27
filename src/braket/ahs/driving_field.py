@@ -170,10 +170,11 @@ class DrivingField(Hamiltonian):
             For the empty input list returns empty DrivingField object.
         """
 
-        if len(driving_fields) == 0:
-            return DrivingField(amplitude=TimeSeries(), detuning=TimeSeries(), phase=TimeSeries())
-
         drive = DrivingField(amplitude=TimeSeries(), detuning=TimeSeries(), phase=TimeSeries())
+
+        if len(driving_fields) == 0:
+            return drive
+
         for dr in driving_fields:
             drive = drive.concatenate(dr)
         return drive

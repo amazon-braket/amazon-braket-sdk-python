@@ -128,7 +128,10 @@ class TimeSeries:
             Assumes that the time points in the first TimeSeries
             are at earler times then the time points in the second TimeSeries.
         """
-        if not min(other.times()) > max(self.times()):
+
+        if len(other.times()) * len(self.times()) == 0:
+            pass
+        elif not min(other.times()) > max(self.times()):
             raise ValueError(
                 "The time points in the first TimeSeries must be strictly smaller \
                 then the time points in the second TimeSeries."
@@ -142,11 +145,10 @@ class TimeSeries:
 
         return new_time_series
 
-    def stitch(self, other: TimeSeries, padding: float = 0, boundary: str = "mean") -> TimeSeries:
-        """Merge two time series to a single time series and shifts the time points accordingly.
+    def stitch(self, other: TimeSeries, boundary: str = "mean") -> TimeSeries:
+        """Stitch two time series to a single time series and shifts the time points accordingly.
         Args:
             other (TimeSeries): The second time series to be concatenated
-            padding (float): The relative time shift between the first and the second time series.
             boundary (str): {"mean", "left", "right"}. Boundary point handler.
             Possible options are
                 * "mean" - take the average of the boundary value points of the first
@@ -154,12 +156,18 @@ class TimeSeries:
                 * "left" - use the last value from the left time series as the boundary point.
                 * "right" - use the first value from the right time series as the boundary point.
         Returns:
-            TimeSeries: The merged time series.
+            TimeSeries: The stitched time series.
         """
 
+        if len(self.times()) == 0:
+            return TimeSeries.from_lists(times=other.times(), values=other.values())
+        if len(other.times()) == 0:
+            return TimeSeries.from_lists(times=self.times(), values=self.values())
+
         new_time_series = TimeSeries()
-        other_times = [t + padding + self.times()[-1] for t in other.times()]
-        new_times = self.times() + other_times
+        left_t, right_t = self.times()[-1], other.times()[0]
+        other_times = [t - right_t + left_t for t in other.times()]
+        new_times = self.times() + other_times[1:]
 
         left, right = self.values()[-1], other.values()[0]
         if boundary == "mean":
@@ -212,16 +220,14 @@ class TimeSeries:
         Returns:
             TimeSeries: A new periodic time series.
         """
-        if not (len(times) == len(values)):
-            raise ValueError(
-                "The length of the list for times and values must be equal"
-            )
+
+        if not (values[0] == values[-1]):
+            raise ValueError("The first and last values must coinscide to guarantee periodicity")
         new_time_series = TimeSeries()
 
-        num_values = len(values)
-        for index in range(num_values * num_repeat):
-            value = values[index % num_values]
-            new_time_series.put(times[index % num_values], value)
+        repeating_block = TimeSeries.from_lists(times=times, values=values)
+        for index in range(num_repeat):
+            new_time_series = new_time_series.stitch(repeating_block)
 
         return new_time_series
 

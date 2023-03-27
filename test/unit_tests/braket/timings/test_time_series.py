@@ -63,10 +63,10 @@ def test_constant_like():
 
 def test_periodic_signal():
     times = list(range(4))
-    values = [0.5, 1, 1, 0]
+    values = [0, 1, 3, 0]
     new_ts = TimeSeries.periodic_signal(times=times, values=values, num_repeat=3)
-    expected_times = list(range(12))
-    expected_values = values * 3
+    expected_times = list(range(10))
+    expected_values = [0, 1, 3, 0, 1, 3, 0, 1, 3, 0]
 
     assert new_ts.times() == expected_times
     assert new_ts.values() == expected_values
@@ -122,7 +122,7 @@ def test_from_lists_not_equal_size():
     TimeSeries.from_lists(times=times, values=values)
 
 
-def test_merge():
+def test_stitch():
     times_1 = list(range(4))
     values_1 = [0.5, 1, 1, 0]
     time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
@@ -131,11 +131,11 @@ def test_merge():
     values_2 = [-0.5, -1, -1, 0]
     time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
 
-    new_ts_mean = time_series_1.merge(time_series_2, gap_t=1, boundary="mean")
-    new_ts_left = time_series_1.merge(time_series_2, gap_t=1, boundary="left")
-    new_ts_right = time_series_1.merge(time_series_2, gap_t=1, boundary="right")
+    new_ts_mean = time_series_1.stitch(time_series_2, boundary="mean")
+    new_ts_left = time_series_1.stitch(time_series_2, boundary="left")
+    new_ts_right = time_series_1.stitch(time_series_2, boundary="right")
 
-    excepted_times = list(range(4)) + list(range(4, 7))
+    excepted_times = list(range(7))
     assert new_ts_mean.times() == excepted_times
     assert new_ts_left.times() == excepted_times
     assert new_ts_right.times() == excepted_times
@@ -146,7 +146,7 @@ def test_merge():
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_merge_wrong_bndry_value():
+def test_stitch_wrong_bndry_value():
     times_1 = list(range(4))
     values_1 = [0.5, 1, 1, 0]
     time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
@@ -155,7 +155,7 @@ def test_merge_wrong_bndry_value():
     values_2 = [-0.5, -1, -1, 0]
     time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
 
-    time_series_1.merge(time_series_2, gap_t=1, boundary="average")
+    time_series_1.stitch(time_series_2, boundary="average")
 
 
 @pytest.mark.parametrize(
