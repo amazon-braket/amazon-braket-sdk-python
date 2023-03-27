@@ -142,7 +142,7 @@ class TimeSeries:
 
         return new_time_series
 
-    def merge(self, other: TimeSeries, gap_t: float = 0, boundary: str = "mean") -> TimeSeries:
+    def merge(self, other: TimeSeries, padding: float = 0, boundary: str = "mean") -> TimeSeries:
         """Merge two time series to a single time series and shifts the time points accordingly.
         Args:
             other (TimeSeries): The second time series to be concatenated
