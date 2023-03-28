@@ -144,9 +144,16 @@ def test_stitch():
     assert new_ts_left.values() == [0.5, 1, 1, 0, -1, -1, 0]
     assert new_ts_right.values() == [0.5, 1, 1, -0.5, -1, -1, 0]
 
-    new_ts = time_series_1.concatenate(TimeSeries())
-    assert new_ts.times() == times_1
-    assert new_ts.values() == values_1
+
+def test_stitch_empty_ts():
+    times = list(range(4))
+    values = [0.5, 1, 1, 0]
+    time_series = TimeSeries.from_lists(times=times, values=values)
+
+    other_ts = TimeSeries.from_lists(times=[], values=[])
+    new_ts = time_series.concatenate(other_ts)
+    assert new_ts.times() == times
+    assert new_ts.values() == values
 
 
 @pytest.mark.xfail(raises=ValueError)
