@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.36.4 (2023-03-27)
+
+### Bug Fixes and Other Changes
+
+ * Export from ahs and timings modules
+
 ## v1.36.3 (2023-03-21)
 
 ### Bug Fixes and Other Changes
