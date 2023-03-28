@@ -144,6 +144,10 @@ def test_stitch():
     assert new_ts_left.values() == [0.5, 1, 1, 0, -1, -1, 0]
     assert new_ts_right.values() == [0.5, 1, 1, -0.5, -1, -1, 0]
 
+    new_ts = time_series_1.concatenate(TimeSeries())
+    assert new_ts.times() == times_1
+    assert new_ts.values() == values_1
+
 
 @pytest.mark.xfail(raises=ValueError)
 def test_stitch_wrong_bndry_value():
