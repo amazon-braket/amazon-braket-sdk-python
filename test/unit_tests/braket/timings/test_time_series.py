@@ -149,9 +149,7 @@ def test_stitch_empty_ts():
     times = list(range(4))
     values = [0.5, 1, 1, 0]
     time_series = TimeSeries.from_lists(times=times, values=values)
-
-    other_ts = TimeSeries.from_lists(times=[], values=[])
-    new_ts = time_series.concatenate(other_ts)
+    new_ts = time_series.stitch(TimeSeries())
     assert new_ts.times() == times
     assert new_ts.values() == values
 
