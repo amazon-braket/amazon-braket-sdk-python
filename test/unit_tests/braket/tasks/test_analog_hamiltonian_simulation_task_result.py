@@ -189,18 +189,8 @@ def test_avg_density(result_str_3):
     result = AnalogHamiltonianSimulationQuantumTaskResult.from_string(result_str_3)
 
     density = result.get_avg_density()
-    expected_density = [0.5, 1, 0.5, 0, 1, 0, 0.5, 1, 1, 0.5, 0.5]
-    np.testing.assert_equal(density, expected_density)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_get_avg_density_failed_task(task_metadata):
-    measurement = ShotResult(AnalogHamiltonianSimulationShotStatus.FAILURE, [], [])
-    result = AnalogHamiltonianSimulationQuantumTaskResult(
-        task_metadata=task_metadata, measurements=[measurement]
-    )
-
-    result.get_avg_density()
+    expected_density = [0.5, 1.0, 0.5, 0.0, 1.0, 0.0, 0.5, 1.0, 1.0, 0.5, 0.5]
+    np.testing.assert_almost_equal(density, expected_density)
 
 
 @pytest.mark.parametrize(

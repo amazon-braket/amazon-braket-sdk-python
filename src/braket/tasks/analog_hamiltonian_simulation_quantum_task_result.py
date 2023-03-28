@@ -114,7 +114,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         states = ["e", "r", "g"]
         for shot in self.measurements:
             if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
-                pass
+                continue
             else:
                 pre = shot.pre_sequence
                 post = shot.post_sequence
@@ -131,20 +131,20 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         """Get the average Rydberg state densities from the result
         Returns:
             ndarray (float): The average densities from the result
-        Notes:
-            Shot result '0' corresponds to the Rydberg state (r) and contributes to the density.
-            Shot result '1' corresponds to the ground state and does not contribute to the density.
         """
 
-        postSeqs = []
-        for shot in self.measurements:
-            if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
-                pass
-            else:
-                postSeqs.append(shot.post_sequence)
-        if postSeqs == []:
-            raise ValueError("The list of measurements is empty. Average desnity is not defined.")
-        avg_density = np.sum(1 - np.array(postSeqs), axis=0) / len(postSeqs)
+        counts = self.get_counts()
+
+        Nr, Ng = [], []
+        for shot, count in counts.items():
+            Nr.append([count if s == "r" else 0 for s in shot])
+            Ng.append([count if s == "g" else 0 for s in shot])
+
+        Nr_count = np.sum(Nr, axis=0)
+        Ng_count = np.sum(Ng, axis=0)
+
+        avg_density = Nr_count / (Nr_count + Ng_count)
+
         return avg_density
 
 
