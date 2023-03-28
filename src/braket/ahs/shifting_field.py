@@ -117,6 +117,26 @@ class ShiftingField(Hamiltonian):
 
         return shift
 
+    def stitch(self, other: ShiftingField, boundary: str = "mean") -> ShiftingField:
+        """Stitches two shifting fields based on TimeSeries.stitch method.
+        Shifts time points in the second ShiftingField to align with the first ShiftingField.
+        Args:
+            other (ShiftingField): The second shifting field to be stitched
+            boundary (str): {"mean", "left", "right"}. Boundary point handler.
+            Possible options are
+                * "mean" - take the average of the boundary value points of the first
+                and the second time series.
+                * "left" - use the last value from the left time series as the boundary point.
+                * "right" - use the first value from the right time series as the boundary point.
+        Returns:
+            ShiftingField: The stitched ShiftingField object.
+        """
+        if not (self.magnitude.pattern.series == other.magnitude.pattern.series):
+            raise ValueError("The ShiftingField pattern for both fields must be equal.")
+
+        new_ts = self.magnitude.time_series.stitch(other.magnitude.time_series, boundary)
+        return ShiftingField(Field(new_ts, self.magnitude.pattern))
+
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
         """Creates a discretized version of the ShiftingField.
 

@@ -96,6 +96,27 @@ class DrivingField(Hamiltonian):
             phase=self.phase.time_series.concatenate(other.phase.time_series),
         )
 
+    def stitch(self, other: DrivingField, boundary: str = "mean") -> DrivingField:
+        """Stitches two driving fields based on TimeSeries.stitch method.
+        Shifts time points in the second DrivingField to align with the first DrivingField.
+        Args:
+            other (DrivingField): The second shifting field to be stitched
+            boundary (str): {"mean", "left", "right"}. Boundary point handler.
+            Possible options are
+                * "mean" - take the average of the boundary value points of the first
+                and the second time series.
+                * "left" - use the last value from the left time series as the boundary point.
+                * "right" - use the first value from the right time series as the boundary point.
+        Returns:
+            DrivingField: The stitched DrivingField object.
+        """
+
+        amplitude = self.amplitude.time_series.stitch(other.amplitude.time_series, boundary)
+        detuning = self.detuning.time_series.stitch(other.detuning.time_series, boundary)
+        phase = self.phase.time_series.stitch(other.phase.time_series, boundary)
+
+        return DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
+
     def discretize(self, properties: DiscretizationProperties) -> DrivingField:
         """Creates a discretized version of the Hamiltonian.
 

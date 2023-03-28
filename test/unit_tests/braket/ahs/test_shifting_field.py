@@ -153,6 +153,43 @@ def test_concatenate_not_equal_patterns():
     sh_field_1.concatenate(sh_field_2)
 
 
+def test_stitch():
+    times_1 = [0, 0.1, 0.2, 0.3]
+    glob_amplitude_1 = [0.5, 0.8, 0.9, 1.0]
+    pattern_1 = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    times_2 = [0, 0.1, 0.2, 0.3]
+    glob_amplitude_2 = [0.5, 0.8, 0.9, 1.0]
+    pattern_2 = pattern_1
+
+    sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
+    sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
+
+    new_sh_field = sh_field_1.stitch(sh_field_2, boundary="left")
+
+    expected_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    expected_amplitude = glob_amplitude_1 + glob_amplitude_2[1:]
+    assert new_sh_field.magnitude.time_series.times() == expected_times
+    assert new_sh_field.magnitude.time_series.values() == expected_amplitude
+    assert new_sh_field.magnitude.pattern == sh_field_1.magnitude.pattern
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_stitch_not_eq_pattern():
+    times_1 = [0, 0.1, 0.2, 0.3]
+    glob_amplitude_1 = [0.5, 0.8, 0.9, 1.0]
+    pattern_1 = [0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    times_2 = [0.4, 0.5, 0.6, 0.7]
+    glob_amplitude_2 = [0.5, 0.8, 0.9, 1.0]
+    pattern_2 = [-0.3, 0.7, 0.6, -0.5, 0, 1.6]
+
+    sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
+    sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
+
+    sh_field_1.stitch(sh_field_2)
+
+
 def test_discretize():
     magnitude_mock = Mock()
     mock_properties = Mock()
