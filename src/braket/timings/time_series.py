@@ -97,7 +97,7 @@ class TimeSeries:
             TimeSeries: time series constructed from lists
         """
         if len(times) != len(values):
-            raise ValueError("The length of the times and values lists are not equal.")
+            raise ValueError("The lengths of the times({len(times)}) and values({len(values)}) lists are not equal.")
 
         ts = TimeSeries()
         for t, v in zip(times, values):
