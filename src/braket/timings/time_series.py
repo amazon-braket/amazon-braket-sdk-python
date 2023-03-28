@@ -98,7 +98,8 @@ class TimeSeries:
         """
         if len(times) != len(values):
             raise ValueError(
-                "The lengths of the times({len(times)}) and values({len(values)}) lists are not equal."
+                f"The lengths of the times({len(times)})\
+                      and values({len(values)}) lists are not equal."
             )
 
         ts = TimeSeries()
