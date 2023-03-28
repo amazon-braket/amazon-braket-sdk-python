@@ -61,42 +61,6 @@ class ShiftingField(Hamiltonian):
         and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
         return self._magnitude
 
-    def concatenate(self, other: ShiftingField) -> ShiftingField:
-        """Concatenate two driving fields to a single driving field.
-        Assumes that the spatial modulation pattern is the same for the both driving fields.
-            Args:
-                other (ShiftingField): The second shifting field to be concatenated
-            Returns:
-                ShiftingField: The concatenated shifting field
-            Note: In case if self.magnitude.pattern is empty creates pattern from the second
-            ShiftingField
-            Raises:
-                ValueError: if the patterns of the two shifting fields are not identical.
-        """
-        current_pattern = self.magnitude.pattern.series
-        if current_pattern != other.magnitude.pattern.series and len(current_pattern) > 0:
-            raise ValueError("The patterns in the first and second TimeSeries must be equal.")
-
-        new_magnitude = self.magnitude.time_series.concatenate(other.magnitude.time_series)
-        return ShiftingField(Field(new_magnitude, other.magnitude.pattern))
-
-    @staticmethod
-    def concatenate_list(shift_fields: List[ShiftingField]) -> ShiftingField:
-        """Concatenate a list of shifting fields to a single driving field
-        Args:
-            shift_fields (List[ShiftingField]): The list of shifting fields to be concatenated
-        Returns:
-            ShiftingField: The concatenated shifting field.
-            For the empty input list returns empty ShiftingField object.
-        """
-        if len(shift_fields) == 0:
-            return ShiftingField(magnitude=TimeSeries())
-
-        shift = ShiftingField(magnitude=shift_fields[0].magnitude)
-        for sf in shift_fields[1:]:
-            shift = shift.concatenate(sf)
-        return shift
-
     @staticmethod
     def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
         """Get the shifting field from a set of time points, values and pattern

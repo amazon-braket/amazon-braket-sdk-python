@@ -83,19 +83,6 @@ class DrivingField(Hamiltonian):
         r"""Field: global detuning (:math:`\Delta(t)`). Time is in s, and value is in rad/s."""
         return self._detuning
 
-    def concatenate(self, other: DrivingField) -> DrivingField:
-        """Concatenate two driving fields to a single driving field
-        Args:
-            other (DrivingField): The driving field to be concatenated
-        Returns:
-            DrivingField: The concatenated driving field
-        """
-        return DrivingField(
-            amplitude=self.amplitude.time_series.concatenate(other.amplitude.time_series),
-            detuning=self.detuning.time_series.concatenate(other.detuning.time_series),
-            phase=self.phase.time_series.concatenate(other.phase.time_series),
-        )
-
     def stitch(self, other: DrivingField, boundary: str = "mean") -> DrivingField:
         """Stitches two driving fields based on TimeSeries.stitch method.
         Shifts time points in the second DrivingField to align with the first DrivingField.
@@ -179,21 +166,4 @@ class DrivingField(Hamiltonian):
 
         drive = DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
 
-        return drive
-
-    @staticmethod
-    def concatenate_list(driving_fields: List[DrivingField]) -> DrivingField:
-        """Concatenate a list of driving fields to a single driving field
-        Args:
-            driving_fields (List[DrivingField]):
-            The list of driving field time series to be concatenated
-        Returns:
-            DrivingField: The concatenated driving field
-            For the empty input list returns empty DrivingField object.
-        """
-
-        drive = DrivingField(amplitude=TimeSeries(), detuning=TimeSeries(), phase=TimeSeries())
-
-        for dr in driving_fields:
-            drive = drive.concatenate(dr)
         return drive
