@@ -141,7 +141,8 @@ class DrivingField(Hamiltonian):
         """
         if not (len(times) == len(amplitudes) == len(detunings) == len(phases)):
             raise ValueError(
-                f"The lengths of the lists for times({len(times)}), amplitudes({len(amplitudes)}), detunings({len(detunings)}) and phases({len(phases)}) are not equal"
+                f"The lengths of the lists for times({len(times)}), amplitudes({len(amplitudes)}),\
+                detunings({len(detunings)}) and phases({len(phases)}) are not equal"
             )
 
         amplitude = TimeSeries()
