@@ -105,7 +105,7 @@ class TimeSeries:
         return ts
 
     @staticmethod
-    def constant_like(times: List[float], constant: float = 0.0) -> TimeSeries:
+    def constant_like(times: Union[List[float], TimeSeries], constant: float = 0.0) -> TimeSeries:
         """Obtain a constant time series given the list of time points and the constant values
         Args:
             times (List[float]): list of time points
