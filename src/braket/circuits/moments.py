@@ -24,6 +24,7 @@ from typing import (
     Mapping,
     NamedTuple,
     OrderedDict,
+    Union,
     ValuesView,
 )
 
@@ -163,17 +164,21 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
         return time_slices
 
-    def add(self, instructions: Iterable[Instruction], noise_index: int = 0) -> None:
+    def add(
+        self, instructions: Union[Iterable[Instruction], Instruction], noise_index: int = 0
+    ) -> None:
         """
-        Add instructions to self.
+        Add one or more instructions to self.
 
         Args:
-            instructions (Iterable[Instruction]): Instructions to add to self. The instruction is
-                added to the max time slice in which the instruction fits.
+            instructions (Union[Iterable[Instruction], Instruction]): Instructions to add to self.
+            The instruction is added to the max time slice in which the instruction fits.
             noise_index (int): the number of noise channels at the same moment. For gates, this
-                is the number of gate_noise channels associated with that gate. For all other noise
-                types, noise_index starts from 0; but for gate noise, it starts from 1.
+            is the number of gate_noise channels associated with that gate. For all other noise
+            types, noise_index starts from 0; but for gate noise, it starts from 1.
         """
+        if isinstance(instructions, Instruction):
+            instructions = [instructions]
         for instruction in instructions:
             self._add(instruction, noise_index)
 
