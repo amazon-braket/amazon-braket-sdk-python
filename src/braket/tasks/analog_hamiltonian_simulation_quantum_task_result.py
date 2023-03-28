@@ -114,7 +114,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         states = ["e", "r", "g"]
         for shot in self.measurements:
             if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
-                pass
+                continue
             else:
                 pre = shot.pre_sequence
                 post = shot.post_sequence
