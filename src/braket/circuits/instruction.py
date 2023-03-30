@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -32,13 +32,20 @@ class Instruction:
     An instruction is a quantum directive that describes the task to perform on a quantum device.
     """
 
-    def __init__(self, operator: InstructionOperator, target: QubitSetInput = None):
+    def __init__(
+        self,
+        operator: InstructionOperator,
+        target: QubitSetInput = None,
+        control: Optional[QubitSetInput] = None,
+    ):
         """
         InstructionOperator includes objects of type `Gate` and `Noise` only.
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
             target (QubitSetInput): Target qubits that the operator is applied to. Default is None.
+            control (QubitSetInput): Target qubits that the operator is controlled on.
+                Default is None.
 
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the `Qubit`
@@ -56,10 +63,17 @@ class Instruction:
             Instruction('operator': H, 'target': QubitSet(Qubit(0),))
             >>> instr = Instruction(Gate.Rx(0.12), 0)
             Instruction('operator': Rx, 'target': QubitSet(Qubit(0),))
+            >>> instr = Instruction(Gate.Rx(0.12, control=1), 0)
+            Instruction(
+                'operator': Rx,
+                'target': QubitSet(Qubit(0),),
+                'control': QubitSet(Qubit(1),),
+            )
         """
         if not operator:
             raise ValueError("Operator cannot be empty")
         target_set = QubitSet(target)
+        control_set = QubitSet(control)
         if isinstance(operator, QuantumOperator) and len(target_set) != operator.qubit_count:
             raise ValueError(
                 f"Operator qubit count {operator.qubit_count} must be equal to"
@@ -67,6 +81,7 @@ class Instruction:
             )
         self._operator = operator
         self._target = target_set
+        self._control = control_set
 
     @property
     def operator(self) -> InstructionOperator:
@@ -83,6 +98,16 @@ class Instruction:
         """
         return self._target
 
+    @property
+    def control(self) -> QubitSet:
+        """
+        QubitSet: Target qubits that the operator is controlled on.
+
+        Note:
+            Don't mutate this property, any mutations can have unexpected consequences.
+        """
+        return self._control
+
     def adjoint(self) -> List[Instruction]:
         """Returns a list of Instructions implementing adjoint of this instruction's own operator
 
@@ -96,7 +121,7 @@ class Instruction:
         """
         operator = self._operator
         if isinstance(operator, Gate):
-            return [Instruction(gate, self._target) for gate in operator.adjoint()]
+            return [Instruction(gate, self._target, self._control) for gate in operator.adjoint()]
         elif isinstance(operator, CompilerDirective):
             return [Instruction(operator.counterpart(), self._target)]
         raise NotImplementedError(f"Adjoint not supported for {operator}")
@@ -120,10 +145,14 @@ class Instruction:
         Returns:
             Any: IR object of the instruction.
         """
+        kwargs = {}
+        if self.control:
+            kwargs["control"] = self.control
         return self._operator.to_ir(
             [int(qubit) for qubit in self._target],
             ir_type=ir_type,
             serialization_properties=serialization_properties,
+            **kwargs,
         )
 
     @property
@@ -132,7 +161,11 @@ class Instruction:
         return self._operator.ascii_symbols
 
     def copy(
-        self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
+        self,
+        target_mapping: Dict[QubitInput, QubitInput] = None,
+        target: QubitSetInput = None,
+        control_mapping: Dict[QubitInput, QubitInput] = None,
+        control: QubitSetInput = None,
     ) -> Instruction:
         """
         Return a shallow copy of the instruction.
@@ -140,12 +173,17 @@ class Instruction:
         Note:
             If `target_mapping` is specified, then `self.target` is mapped to the specified
             qubits. This is useful apply an instruction to a circuit and change the target qubits.
+            Same relationship holds for `control_mapping`.
 
         Args:
             target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
             target (QubitSetInput): Target qubits for the new instruction. Default is None.
+            control_mapping (Dict[QubitInput, QubitInput]): A dictionary of
+                qubit mappings to apply to the control. Key is the qubit in this `control` and the
+                value is what the key is changed to. Default = `None`.
+            control (QubitSetInput): Control qubits for the new instruction. Default is None.
 
         Returns:
             Instruction: A shallow copy of the instruction.
@@ -168,14 +206,29 @@ class Instruction:
         if target_mapping and target is not None:
             raise TypeError("Only 'target_mapping' or 'target' can be supplied, but not both.")
         elif target is not None:
-            return Instruction(self._operator, target)
+            new_target = target
         else:
-            return Instruction(self._operator, self._target.map(target_mapping or {}))
+            new_target = self._target.map(target_mapping or {})
+        if control_mapping and control is not None:
+            raise TypeError("Only 'control_mapping' or 'control' can be supplied, but not both.")
+        elif control is not None:
+            new_control = control
+        else:
+            new_control = self._control.map(control_mapping or {})
+        return Instruction(self._operator, new_target, new_control)
 
     def __repr__(self):
-        return f"Instruction('operator': {self._operator}, 'target': {self._target})"
+        return (
+            f"Instruction('operator': {self._operator}, "
+            f"'target': {self._target}, "
+            f"'control': {self._control})"
+        )
 
     def __eq__(self, other):
         if isinstance(other, Instruction):
-            return (self._operator, self._target) == (other._operator, other._target)
+            return (self._operator, self._target, self._control) == (
+                other._operator,
+                other._target,
+                self._control,
+            )
         return NotImplemented

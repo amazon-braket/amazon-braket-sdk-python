@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import Gate, QuantumOperator
+from braket.circuits import Gate, QuantumOperator, QubitSet
 from braket.circuits.serialization import IRType
 
 
@@ -82,21 +82,38 @@ def test_register_gate():
 
 
 @pytest.mark.parametrize(
-    "ir_type, serialization_properties, expected_exception, expected_message",
+    "ir_type, serialization_properties, expected_exception, expected_message, control",
     [
-        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd is not implemented."),
-        (IRType.OPENQASM, None, NotImplementedError, "to_openqasm has not been implemented yet."),
-        ("invalid-ir-type", None, ValueError, "Supplied ir_type invalid-ir-type is not supported."),
+        (IRType.JAQCD, None, NotImplementedError, "to_jaqcd is not implemented.", None),
+        (
+            IRType.JAQCD,
+            None,
+            ValueError,
+            "Gate modifiers are not supported with Jaqcd.",
+            QubitSet(0),
+        ),
+        (
+            "invalid-ir-type",
+            None,
+            ValueError,
+            "Supplied ir_type invalid-ir-type is not supported.",
+            None,
+        ),
         (
             IRType.OPENQASM,
             "invalid-property-type",
             ValueError,
             "serialization_properties must be of type OpenQASMSerializationProperties for "
             "IRType.OPENQASM.",
+            None,
         ),
     ],
 )
-def test_gate_to_ir(ir_type, serialization_properties, expected_exception, expected_message, gate):
+def test_gate_to_ir(
+    ir_type, serialization_properties, expected_exception, expected_message, gate, control
+):
     with pytest.raises(expected_exception) as exc:
-        gate.to_ir(0, ir_type, serialization_properties=serialization_properties)
+        gate.to_ir(
+            QubitSet(0), ir_type, serialization_properties=serialization_properties, control=control
+        )
     assert exc.value.args[0] == expected_message

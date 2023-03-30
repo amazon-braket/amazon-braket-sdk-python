@@ -766,6 +766,24 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 inputs={},
             ),
         ),
+        (
+            Circuit().rx(0, 0.15, control=2).rx(1, 0.3, control=[2, 3]),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "ctrl @ rx(0.15) q[2], q[0];",
+                        "ctrl(2) @ rx(0.3) q[2], q[3], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
 def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
