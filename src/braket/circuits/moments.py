@@ -189,9 +189,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         else:
             qubit_range = instruction.target.union(instruction.control)
             time = self._update_qubit_times(qubit_range)
-            self._moments[
-                MomentsKey(time, qubit_range, MomentType.GATE, noise_index)
-            ] = instruction
+            self._moments[MomentsKey(time, qubit_range, MomentType.GATE, noise_index)] = instruction
             self._qubits.update(qubit_range)
             self._depth = max(self._depth, time + 1)
 

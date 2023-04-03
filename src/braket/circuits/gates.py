@@ -854,10 +854,8 @@ class CNot(Gate):
         Examples:
             >>> circ = Circuit().cnot(0, 1)
         """
-        control_qubits = list(QubitSet(control))
-        absorbed_control = control_qubits[-1]
-        other_control = control_qubits[:-1]
-        return Instruction(CNot(), target=[absorbed_control, target], control=other_control)
+        control_qubits = QubitSet(control)
+        return Instruction(CNot(), target=[control_qubits.pop(), target], control=control_qubits)
 
 
 Gate.register_gate(CNot)
@@ -1155,12 +1153,12 @@ class CPhaseShift(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s).
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1170,8 +1168,10 @@ class CPhaseShift(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift(0, 1, 0.15)
         """
-        # todo handle controlled gate
-        return Instruction(CPhaseShift(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        return Instruction(
+            CPhaseShift(angle), target=[control_qubits.pop(), target], control=control_qubits
+        )
 
 
 Gate.register_gate(CPhaseShift)
@@ -1211,12 +1211,12 @@ class CPhaseShift00(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift00(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s).
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1226,8 +1226,10 @@ class CPhaseShift00(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift00(0, 1, 0.15)
         """
-        # todo handle controlled gate
-        return Instruction(CPhaseShift00(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        return Instruction(
+            CPhaseShift00(angle), target=[control_qubits.pop(), target], control=control_qubits
+        )
 
 
 Gate.register_gate(CPhaseShift00)
@@ -1267,12 +1269,12 @@ class CPhaseShift01(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift01(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s).
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1282,8 +1284,10 @@ class CPhaseShift01(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift01(0, 1, 0.15)
         """
-        # todo handle controlled gate
-        return Instruction(CPhaseShift01(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        return Instruction(
+            CPhaseShift01(angle), target=[control_qubits.pop(), target], control=control_qubits
+        )
 
 
 Gate.register_gate(CPhaseShift01)
@@ -1323,12 +1327,12 @@ class CPhaseShift10(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift10(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s).
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1338,8 +1342,10 @@ class CPhaseShift10(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift10(0, 1, 0.15)
         """
-        # todo handle controlled gate
-        return Instruction(CPhaseShift10(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        return Instruction(
+            CPhaseShift10(angle), target=[control_qubits.pop(), target], control=control_qubits
+        )
 
 
 Gate.register_gate(CPhaseShift10)
@@ -1378,11 +1384,11 @@ class CV(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cv(control: QubitInput, target: QubitInput) -> Instruction:
+    def cv(control: QubitSetInput, target: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s).
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1391,8 +1397,8 @@ class CV(Gate):
         Examples:
             >>> circ = Circuit().cv(0, 1)
         """
-        # todo handle controlled gate
-        return Instruction(CV(), target=[control, target])
+        control_qubits = QubitSet(control)
+        return Instruction(CV(), target=[control_qubits.pop(), target], control=control_qubits)
 
 
 Gate.register_gate(CV)
@@ -1431,11 +1437,11 @@ class CY(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cy(control: QubitInput, target: QubitInput) -> Instruction:
+    def cy(control: QubitSetInput, target: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s).
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1444,8 +1450,8 @@ class CY(Gate):
         Examples:
             >>> circ = Circuit().cy(0, 1)
         """
-        # todo handle controlled gate
-        return Instruction(CY(), target=[control, target])
+        control_qubits = QubitSet(control)
+        return Instruction(CY(), target=[control_qubits.pop(), target], control=control_qubits)
 
 
 Gate.register_gate(CY)
@@ -1476,11 +1482,11 @@ class CZ(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cz(control: QubitInput, target: QubitInput) -> Instruction:
+    def cz(control: QubitSetInput, target: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s).
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1489,8 +1495,8 @@ class CZ(Gate):
         Examples:
             >>> circ = Circuit().cz(0, 1)
         """
-        # todo handle controlled gate
-        return Instruction(CZ(), target=[control, target])
+        control_qubits = QubitSet(control)
+        return Instruction(CZ(), target=[control_qubits.pop(), target], control=control_qubits)
 
 
 Gate.register_gate(CZ)
@@ -1818,7 +1824,12 @@ class CCNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def ccnot(control1: QubitInput, control2: QubitInput, target: QubitInput) -> Instruction:
+    def ccnot(
+        control1: QubitInput,
+        control2: QubitInput,
+        target: QubitInput,
+        control: Optional[QubitSetInput] = None,
+    ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
@@ -1832,8 +1843,7 @@ class CCNot(Gate):
         Examples:
             >>> circ = Circuit().ccnot(0, 1, 2)
         """
-        # todo: handle controlled gate
-        return Instruction(CCNot(), target=[control1, control2, target])
+        return Instruction(CCNot(), target=[control1, control2, target], control=control)
 
 
 Gate.register_gate(CCNot)
@@ -1876,11 +1886,11 @@ class CSwap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cswap(control: QubitInput, target1: QubitInput, target2: QubitInput) -> Instruction:
+    def cswap(control: QubitSetInput, target1: QubitInput, target2: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index
+            control (QubitSetInput): Control qubit(s)
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
 
@@ -1890,8 +1900,10 @@ class CSwap(Gate):
         Examples:
             >>> circ = Circuit().cswap(0, 1, 2)
         """
-        # todo: handle controlled gate
-        return Instruction(CSwap(), target=[control, target1, target2])
+        control_qubits = QubitSet(control)
+        return Instruction(
+            CSwap(), target=[control_qubits.pop(), target1, target2], control=control_qubits
+        )
 
 
 Gate.register_gate(CSwap)
@@ -2246,7 +2258,10 @@ class PulseGate(Gate, Parameterizable):
     @staticmethod
     @circuit.subroutine(register=True)
     def pulse_gate(
-        targets: QubitSet, pulse_sequence: PulseSequence, display_name: str = "PG"
+        targets: QubitSet,
+        pulse_sequence: PulseSequence,
+        display_name: str = "PG",
+        control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
            within circuits.
@@ -2257,6 +2272,7 @@ class PulseGate(Gate, Parameterizable):
             pulse_sequence (PulseSequence): PulseSequence to embed within the circuit.
             display_name (str): Name to be used for an instance of this pulse gate
                 for circuit diagrams. Defaults to `PG`.
+            control (Optional[QubitSetInput]): Control qubit(s).
 
         Returns:
             Instruction: Pulse gate instruction.
@@ -2266,7 +2282,9 @@ class PulseGate(Gate, Parameterizable):
             >>> circ = Circuit().pulse_gate(pulse_sequence=pulse_seq, targets=[0])
         """
         return Instruction(
-            PulseGate(pulse_sequence, len(QubitSet(targets)), display_name), target=targets
+            PulseGate(pulse_sequence, len(QubitSet(targets)), display_name),
+            target=targets,
+            control=control,
         )
 
 
