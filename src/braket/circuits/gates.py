@@ -880,7 +880,8 @@ class CNot(Gate):
             >>> circ = Circuit().cnot(0, 1)
         """
         control_qubits = QubitSet(control)
-        return Instruction(CNot(), target=[control_qubits.pop(), target], control=control_qubits)
+        absorbed_control = control_qubits.pop()
+        return Instruction(CNot(), target=[absorbed_control, target], control=control_qubits)
 
 
 Gate.register_gate(CNot)
@@ -1196,8 +1197,9 @@ class CPhaseShift(AngledGate):
             >>> circ = Circuit().cphaseshift(0, 1, 0.15)
         """
         control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
         return Instruction(
-            CPhaseShift(angle), target=[control_qubits.pop(), target], control=control_qubits
+            CPhaseShift(angle), target=[absorbed_control, target], control=control_qubits
         )
 
 
@@ -1254,8 +1256,9 @@ class CPhaseShift00(AngledGate):
             >>> circ = Circuit().cphaseshift00(0, 1, 0.15)
         """
         control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
         return Instruction(
-            CPhaseShift00(angle), target=[control_qubits.pop(), target], control=control_qubits
+            CPhaseShift00(angle), target=[absorbed_control, target], control=control_qubits
         )
 
 
@@ -1312,8 +1315,9 @@ class CPhaseShift01(AngledGate):
             >>> circ = Circuit().cphaseshift01(0, 1, 0.15)
         """
         control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
         return Instruction(
-            CPhaseShift01(angle), target=[control_qubits.pop(), target], control=control_qubits
+            CPhaseShift01(angle), target=[absorbed_control, target], control=control_qubits
         )
 
 
@@ -1370,8 +1374,9 @@ class CPhaseShift10(AngledGate):
             >>> circ = Circuit().cphaseshift10(0, 1, 0.15)
         """
         control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
         return Instruction(
-            CPhaseShift10(angle), target=[control_qubits.pop(), target], control=control_qubits
+            CPhaseShift10(angle), target=[absorbed_control, target], control=control_qubits
         )
 
 
@@ -1425,7 +1430,8 @@ class CV(Gate):
             >>> circ = Circuit().cv(0, 1)
         """
         control_qubits = QubitSet(control)
-        return Instruction(CV(), target=[control_qubits.pop(), target], control=control_qubits)
+        absorbed_control = control_qubits.pop()
+        return Instruction(CV(), target=[absorbed_control, target], control=control_qubits)
 
 
 Gate.register_gate(CV)
@@ -1478,7 +1484,8 @@ class CY(Gate):
             >>> circ = Circuit().cy(0, 1)
         """
         control_qubits = QubitSet(control)
-        return Instruction(CY(), target=[control_qubits.pop(), target], control=control_qubits)
+        absorbed_control = control_qubits.pop()
+        return Instruction(CY(), target=[absorbed_control, target], control=control_qubits)
 
 
 Gate.register_gate(CY)
@@ -1523,7 +1530,8 @@ class CZ(Gate):
             >>> circ = Circuit().cz(0, 1)
         """
         control_qubits = QubitSet(control)
-        return Instruction(CZ(), target=[control_qubits.pop(), target], control=control_qubits)
+        absorbed_control = control_qubits.pop()
+        return Instruction(CZ(), target=[absorbed_control, target], control=control_qubits)
 
 
 Gate.register_gate(CZ)
@@ -1932,8 +1940,9 @@ class CSwap(Gate):
             >>> circ = Circuit().cswap(0, 1, 2)
         """
         control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
         return Instruction(
-            CSwap(), target=[control_qubits.pop(), target1, target2], control=control_qubits
+            CSwap(), target=[absorbed_control, target1, target2], control=control_qubits
         )
 
 

@@ -205,16 +205,12 @@ class Instruction:
         """
         if target_mapping and target is not None:
             raise TypeError("Only 'target_mapping' or 'target' can be supplied, but not both.")
-        elif target is not None:
-            new_target = target
-        else:
-            new_target = self._target.map(target_mapping or {})
         if control_mapping and control is not None:
             raise TypeError("Only 'control_mapping' or 'control' can be supplied, but not both.")
-        elif control is not None:
-            new_control = control
-        else:
-            new_control = self._control.map(control_mapping or {})
+
+        new_target = self._target.map(target_mapping or {}) if target is None else target
+        new_control = self._control.map(control_mapping or {}) if control is None else control
+
         return Instruction(self._operator, new_target, new_control)
 
     def __repr__(self):
