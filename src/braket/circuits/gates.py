@@ -84,6 +84,7 @@ class H(Gate):
     @circuit.subroutine(register=True)
     def h(
         target: QubitSetInput,
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -130,7 +131,9 @@ class I(Gate):  # noqa: E742, E261
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def i(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def i(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -175,7 +178,9 @@ class X(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def x(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def x(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -220,7 +225,9 @@ class Y(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def y(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def y(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -265,7 +272,9 @@ class Z(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def z(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def z(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -310,7 +319,9 @@ class S(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def s(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def s(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -355,7 +366,9 @@ class Si(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def si(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def si(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -400,7 +413,9 @@ class T(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def t(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def t(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -445,7 +460,9 @@ class Ti(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def ti(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def ti(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -490,7 +507,9 @@ class V(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def v(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def v(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -535,7 +554,9 @@ class Vi(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def vi(target: QubitSetInput, control: Optional[QubitSetInput] = None) -> Iterable[Instruction]:
+    def vi(
+        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -600,6 +621,7 @@ class Rx(AngledGate):
     def rx(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -663,6 +685,7 @@ class Ry(AngledGate):
     def ry(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -722,6 +745,7 @@ class Rz(AngledGate):
     def rz(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -779,6 +803,7 @@ class PhaseShift(AngledGate):
     def phaseshift(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -895,7 +920,7 @@ class Swap(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def swap(
-        target1: QubitInput, target2: QubitInput, control: Optional[QubitSetInput] = None
+        target1: QubitInput, target2: QubitInput, *, control: Optional[QubitSetInput] = None
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -950,7 +975,7 @@ class ISwap(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def iswap(
-        target1: QubitInput, target2: QubitInput, control: Optional[QubitSetInput] = None
+        target1: QubitInput, target2: QubitInput, *, control: Optional[QubitSetInput] = None
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1019,6 +1044,7 @@ class PSwap(AngledGate):
         target1: QubitInput,
         target2: QubitInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
@@ -1097,6 +1123,7 @@ class XY(AngledGate):
         target1: QubitInput,
         target2: QubitInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
@@ -1535,7 +1562,7 @@ class ECR(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def ecr(
-        target1: QubitInput, target2: QubitInput, control: Optional[QubitSetInput] = None
+        target1: QubitInput, target2: QubitInput, *, control: Optional[QubitSetInput] = None
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1612,6 +1639,7 @@ class XX(AngledGate):
         target1: QubitInput,
         target2: QubitInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
@@ -1690,6 +1718,7 @@ class YY(AngledGate):
         target1: QubitInput,
         target2: QubitInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
@@ -1762,6 +1791,7 @@ class ZZ(AngledGate):
         target1: QubitInput,
         target2: QubitInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
@@ -1828,6 +1858,7 @@ class CCNot(Gate):
         control1: QubitInput,
         control2: QubitInput,
         target: QubitInput,
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
@@ -1950,6 +1981,7 @@ class GPi(AngledGate):
     def gpi(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -2014,6 +2046,7 @@ class GPi2(AngledGate):
     def gpi2(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -2088,6 +2121,7 @@ class MS(DoubleAngledGate):
         target2: QubitInput,
         angle_1: Union[FreeParameterExpression, float],
         angle_2: Union[FreeParameterExpression, float],
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
@@ -2261,6 +2295,7 @@ class PulseGate(Gate, Parameterizable):
         targets: QubitSet,
         pulse_sequence: PulseSequence,
         display_name: str = "PG",
+        *,
         control: Optional[QubitSetInput] = None,
     ) -> Instruction:
         """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
