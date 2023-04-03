@@ -59,7 +59,7 @@ def test_failed_quantum_job(aws_session, capsys):
     assert errors == ""
     logs_to_validate = [
         "Invoking script with the following command:",
-        "/usr/local/bin/python3.8 braket_container.py",
+        "/usr/local/bin/python3.9 braket_container.py",
         "Running Code As Process",
         "Test job started!!!!!",
         "AssertionError",
