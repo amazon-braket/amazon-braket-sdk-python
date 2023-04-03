@@ -46,6 +46,7 @@ class Gate(QuantumOperator):
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`
         """
+        # todo: implement ascii symbols for control modifier
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     @property

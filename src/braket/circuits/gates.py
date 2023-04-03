@@ -839,11 +839,13 @@ class CNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cnot(control: QubitInput, target: QubitInput) -> Instruction:
+    def cnot(control: QubitSetInput, target: QubitInput) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit is absorbed
+                into the cnot gate. The result is equivalent to an x gate applied to
+                the target qubit and controlled by all control qubits.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -852,8 +854,10 @@ class CNot(Gate):
         Examples:
             >>> circ = Circuit().cnot(0, 1)
         """
-        # todo: handle control for already controlled gates
-        return Instruction(CNot(), target=[control, target])
+        control_qubits = list(QubitSet(control))
+        absorbed_control = control_qubits[-1]
+        other_control = control_qubits[:-1]
+        return Instruction(CNot(), target=[absorbed_control, target], control=other_control)
 
 
 Gate.register_gate(CNot)
