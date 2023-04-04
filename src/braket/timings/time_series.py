@@ -90,6 +90,7 @@ class TimeSeries:
     @staticmethod
     def from_lists(times: List[float], values: List[float]) -> TimeSeries:
         """Create a time series from the list of time and value points
+
         Args:
             times (List[float]): list of time points
             values (List[float]): list of value points
@@ -110,6 +111,7 @@ class TimeSeries:
     @staticmethod
     def constant_like(times: Union[List[float], TimeSeries], constant: float = 0.0) -> TimeSeries:
         """Obtain a constant time series given the list of time points and the constant values
+
         Args:
             times (List[float]): list of time points
         Returns:
@@ -122,6 +124,7 @@ class TimeSeries:
 
     def concatenate(self, other: TimeSeries) -> TimeSeries:
         """Concatenate two time series to a single time series
+
         Args:
             other (TimeSeries): The second time series to be concatenated
         Returns:
@@ -150,6 +153,7 @@ class TimeSeries:
 
     def stitch(self, other: TimeSeries, boundary: str = "mean") -> TimeSeries:
         """Stitch two time series to a single time series and shifts the time points accordingly.
+
         Args:
             other (TimeSeries): The second time series to be concatenated
             boundary (str): {"mean", "left", "right"}. Boundary point handler.
@@ -215,6 +219,7 @@ class TimeSeries:
     @staticmethod
     def periodic_signal(times: List[float], values: List[float], num_repeat: int = 1):
         """Create a periodic time series by repeating the same block multiple times.
+
         Args:
             times (float): List of time points in a single block
             values (float): Values for the time series in a single block
@@ -242,7 +247,6 @@ def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) 
     a given tolerance range. The values in the TimeSeries must be numbers that can be
     subtracted from each-other, support getting the absolute value, and can be compared
     against the tolerance.
-
 
     Args:
         first (TimeSeries): A time series.
