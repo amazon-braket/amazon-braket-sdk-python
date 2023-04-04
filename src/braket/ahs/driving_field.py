@@ -86,6 +86,7 @@ class DrivingField(Hamiltonian):
     def stitch(self, other: DrivingField, boundary: str = "mean") -> DrivingField:
         """Stitches two driving fields based on TimeSeries.stitch method.
         Shifts time points in the second DrivingField to align with the first DrivingField.
+
         Args:
             other (DrivingField): The second shifting field to be stitched
             boundary (str): {"mean", "left", "right"}. Boundary point handler.

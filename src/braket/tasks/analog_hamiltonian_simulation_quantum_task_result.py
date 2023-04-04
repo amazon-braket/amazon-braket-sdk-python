@@ -113,9 +113,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         state_counts = Counter()
         states = ["e", "r", "g"]
         for shot in self.measurements:
-            if shot.status != AnalogHamiltonianSimulationShotStatus.SUCCESS:
-                continue
-            else:
+            if shot.status == AnalogHamiltonianSimulationShotStatus.SUCCESS:
                 pre = shot.pre_sequence
                 post = shot.post_sequence
                 # converting presequence and postsequence measurements to state_idx

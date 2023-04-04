@@ -64,6 +64,7 @@ class ShiftingField(Hamiltonian):
     @staticmethod
     def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
         """Get the shifting field from a set of time points, values and pattern
+        
         Args:
             times (List[float]): The time points of the shifting field
             values (List[float]): The values of the shifting field
@@ -84,6 +85,7 @@ class ShiftingField(Hamiltonian):
     def stitch(self, other: ShiftingField, boundary: str = "mean") -> ShiftingField:
         """Stitches two shifting fields based on TimeSeries.stitch method.
         Shifts time points in the second ShiftingField to align with the first ShiftingField.
+
         Args:
             other (ShiftingField): The second shifting field to be stitched
             boundary (str): {"mean", "left", "right"}. Boundary point handler.
