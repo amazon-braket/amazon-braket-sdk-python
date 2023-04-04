@@ -94,6 +94,7 @@ class TimeSeries:
         Args:
             times (List[float]): list of time points
             values (List[float]): list of value points
+
         Returns:
             TimeSeries: time series constructed from lists
         """
@@ -114,6 +115,7 @@ class TimeSeries:
 
         Args:
             times (List[float]): list of time points
+
         Returns:
             TimeSeries: A constant time series
         """
@@ -127,8 +129,10 @@ class TimeSeries:
 
         Args:
             other (TimeSeries): The second time series to be concatenated
+
         Returns:
             TimeSeries: The concatenated time series.
+
         Notes:
             Keeps the time points in both time series unchanged.
             Assumes that the time points in the first TimeSeries
