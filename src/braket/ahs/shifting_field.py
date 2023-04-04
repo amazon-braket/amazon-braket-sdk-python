@@ -64,7 +64,7 @@ class ShiftingField(Hamiltonian):
     @staticmethod
     def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
         """Get the shifting field from a set of time points, values and pattern
-        
+
         Args:
             times (List[float]): The time points of the shifting field
             values (List[float]): The values of the shifting field
