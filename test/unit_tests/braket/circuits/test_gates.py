@@ -1010,3 +1010,32 @@ def test_pulse_gate_to_matrix():
         ),
         1,
     ).to_matrix()
+
+
+@pytest.mark.parametrize(
+    "gate, target, control, expected_ir",
+    (
+        (Gate.H(), QubitSet(0), QubitSet(1), "ctrl @ h q[1], q[0];"),
+        (Gate.H(), QubitSet(0), QubitSet([1, 2]), "ctrl(2) @ h q[1], q[2], q[0];"),
+        (Gate.Ry(angle=1.23), QubitSet(0), QubitSet([2]), "ctrl @ ry(1.23) q[2], q[0];"),
+        (
+            Gate.MS(angle_1=0.17, angle_2=3.45),
+            QubitSet(0),
+            QubitSet([1, 2]),
+            "ctrl(2) @ ms(0.17, 3.45) q[1], q[2], q[0];",
+        ),
+    ),
+)
+def test_gate_control(gate, target, control, expected_ir):
+    serialization_properties = OpenQASMSerializationProperties(
+        qubit_reference_type=QubitReferenceType.VIRTUAL
+    )
+    assert (
+        gate.to_ir(
+            target,
+            control=control,
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+        )
+        == expected_ir
+    )

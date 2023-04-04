@@ -46,7 +46,12 @@ class Gate(QuantumOperator):
             ValueError: `qubit_count` is less than 1, `ascii_symbols` are `None`, or
                 `ascii_symbols` length != `qubit_count`
         """
+        # todo: implement ascii symbols for control modifier
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
+
+    @property
+    def _qasm_name(self):
+        raise NotImplementedError()
 
     def adjoint(self) -> List[Gate]:
         """Returns a list of gates that implement the adjoint of this gate.
@@ -63,6 +68,8 @@ class Gate(QuantumOperator):
         target: QubitSet,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
+        *,
+        control: Optional[QubitSet] = None,
     ) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -73,14 +80,18 @@ class Gate(QuantumOperator):
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
+            control (Optional[QubitSet]): control qubit(s). Only supported for OpenQASM.
         Returns:
             Any: IR object of the quantum operator and target
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
             properties don't correspond to the `ir_type`.
+            ValueError: If gate modifiers are supplied with `ir_type` Jaqcd.
         """
         if ir_type == IRType.JAQCD:
+            if control:
+                raise ValueError("Gate modifiers are not supported with Jaqcd.")
             return self._to_jaqcd(target)
         elif ir_type == IRType.OPENQASM:
             if serialization_properties and not isinstance(
@@ -91,7 +102,9 @@ class Gate(QuantumOperator):
                     "for IRType.OPENQASM."
                 )
             return self._to_openqasm(
-                target, serialization_properties or OpenQASMSerializationProperties()
+                target,
+                serialization_properties or OpenQASMSerializationProperties(),
+                control=control,
             )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
@@ -109,7 +122,11 @@ class Gate(QuantumOperator):
         raise NotImplementedError("to_jaqcd is not implemented.")
 
     def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
+        self,
+        target: QubitSet,
+        serialization_properties: OpenQASMSerializationProperties,
+        *,
+        control: Optional[QubitSet] = None,
     ) -> str:
         """
         Returns the openqasm string representation of the gate.
@@ -122,7 +139,23 @@ class Gate(QuantumOperator):
         Returns:
             str: Representing the openqasm representation of the gate.
         """
-        raise NotImplementedError("to_openqasm has not been implemented yet.")
+        target_qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
+        if control:
+            control_qubits = [
+                serialization_properties.format_target(int(qubit)) for qubit in control
+            ]
+            control_prefix = (
+                "ctrl @ " if (num_control := len(control)) == 1 else f"ctrl({num_control}) @ "
+            )
+            qubits = control_qubits + target_qubits
+        else:
+            control_prefix = ""
+            qubits = target_qubits
+        param_string = (
+            f"({', '.join(map(str, self.parameters))})" if hasattr(self, "parameters") else ""
+        )
+
+        return f"{control_prefix}{self._qasm_name}{param_string} {', '.join(qubits)};"
 
     @property
     def ascii_symbols(self) -> Tuple[str, ...]:

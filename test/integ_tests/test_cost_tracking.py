@@ -14,8 +14,8 @@
 from datetime import timedelta
 
 import boto3
-from botocore.exceptions import ClientError
 import pytest
+from botocore.exceptions import ClientError
 
 from braket.aws import AwsDevice, AwsSession
 from braket.circuits import Circuit

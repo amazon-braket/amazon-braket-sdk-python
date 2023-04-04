@@ -766,6 +766,55 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 inputs={},
             ),
         ),
+        (
+            Circuit()
+            .rx(0, 0.15, control=2)
+            .rx(1, 0.3, control=[2, 3])
+            .cnot(target=0, control=[2, 3, 4]),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[5] b;",
+                        "qubit[5] q;",
+                        "ctrl @ rx(0.15) q[2], q[0];",
+                        "ctrl(2) @ rx(0.3) q[2], q[3], q[1];",
+                        "ctrl(2) @ cnot q[2], q[3], q[4], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().cnot(0, 1).cnot(target=2, control=3).cnot(target=4, control=[5, 6]),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[7] b;",
+                        "qubit[7] q;",
+                        "cnot q[0], q[1];",
+                        "cnot q[3], q[2];",
+                        "ctrl @ cnot q[5], q[6], q[4];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
+                        "b[5] = measure q[5];",
+                        "b[6] = measure q[6];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
 def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
