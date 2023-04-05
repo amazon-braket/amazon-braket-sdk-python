@@ -68,6 +68,21 @@ class PulseSequence:
         """Returns the set of `FreeParameter`s in the PulseSequence."""
         return self._free_parameters.copy()
 
+    @property
+    def waveforms(self):
+        """Returns the map of `Waveform` IDs to `Waveform`s in the PulseSequence."""
+        return self._waveforms
+
+    @property
+    def frames(self):
+        """Returns the map of `Frame` IDs to `Frame`s in the PulseSequence."""
+        return self._frames
+
+    @property
+    def program(self):
+        """Returns the `Program` in the PulseSequence."""
+        return self._program
+
     def set_frequency(
         self, frame: Frame, frequency: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
@@ -298,7 +313,7 @@ class PulseSequence:
         Returns:
             str: a str representing the OpenPulse program encoding the PulseSequence.
         """
-        program = deepcopy(self._program)
+        program = deepcopy(self.program)
         if self._capture_v0_count:
             register_identifier = "psb"
             program.declare(
