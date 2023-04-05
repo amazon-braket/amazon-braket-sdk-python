@@ -1013,20 +1013,52 @@ def test_pulse_gate_to_matrix():
 
 
 @pytest.mark.parametrize(
-    "gate, target, control, expected_ir",
+    "gate, target, control, control_state, expected_ir",
     (
-        (Gate.H(), QubitSet(0), QubitSet(1), "ctrl @ h q[1], q[0];"),
-        (Gate.H(), QubitSet(0), QubitSet([1, 2]), "ctrl(2) @ h q[1], q[2], q[0];"),
-        (Gate.Ry(angle=1.23), QubitSet(0), QubitSet([2]), "ctrl @ ry(1.23) q[2], q[0];"),
+        (Gate.H(), QubitSet(0), QubitSet(1), None, "ctrl @ h q[1], q[0];"),
+        (Gate.H(), QubitSet(0), QubitSet([1, 2]), None, "ctrl(2) @ h q[1], q[2], q[0];"),
+        (Gate.Ry(angle=1.23), QubitSet(0), QubitSet([2]), None, "ctrl @ ry(1.23) q[2], q[0];"),
         (
             Gate.MS(angle_1=0.17, angle_2=3.45),
             QubitSet(0),
             QubitSet([1, 2]),
+            None,
             "ctrl(2) @ ms(0.17, 3.45) q[1], q[2], q[0];",
+        ),
+        (
+            Gate.CCNot(),
+            QubitSet([0, 1, 2]),
+            QubitSet([3, 4]),
+            None,
+            "ctrl(2) @ ccnot q[3], q[4], q[0], q[1], q[2];",
+        ),
+        (
+            Gate.Z(),
+            QubitSet([0]),
+            QubitSet([1, 2, 3, 4, 5, 6, 7]),
+            [1, 1, 1, 0, 0, 1, 0],
+            "ctrl(3) @ negctrl(2) @ ctrl @ negctrl @ "
+            "z q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[0];",
+        ),
+        (
+            Gate.Z(),
+            QubitSet([0]),
+            QubitSet([1, 2, 3, 4, 5, 6, 7]),
+            "1110010",
+            "ctrl(3) @ negctrl(2) @ ctrl @ negctrl @ "
+            "z q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[0];",
+        ),
+        (
+            Gate.Z(),
+            QubitSet([0]),
+            QubitSet([1, 2, 3, 4, 5, 6, 7]),
+            114,
+            "ctrl(3) @ negctrl(2) @ ctrl @ negctrl @ "
+            "z q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[0];",
         ),
     ),
 )
-def test_gate_control(gate, target, control, expected_ir):
+def test_gate_control(gate, target, control, control_state, expected_ir):
     serialization_properties = OpenQASMSerializationProperties(
         qubit_reference_type=QubitReferenceType.VIRTUAL
     )
@@ -1034,8 +1066,53 @@ def test_gate_control(gate, target, control, expected_ir):
         gate.to_ir(
             target,
             control=control,
+            control_state=control_state,
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
         )
         == expected_ir
     )
+
+
+@pytest.mark.parametrize(
+    "control, control_state, error_string",
+    (
+        (
+            [0, 1],
+            [1, 0, 1],
+            "Control state must be the same length as the number of control qubits.",
+        ),
+        (
+            [0, 1],
+            [0],
+            "Control state must be the same length as the number of control qubits.",
+        ),
+        (
+            [0, 1],
+            "101",
+            "Control state must be the same length as the number of control qubits.",
+        ),
+        (
+            [0, 1],
+            "0",
+            "Control state must be the same length as the number of control qubits.",
+        ),
+        (
+            [0, 1],
+            5,
+            "Control state value represents a binary sequence of length greater "
+            "than the number of control qubits.",
+        ),
+    ),
+)
+def test_gate_control_invalid_state(control, control_state, error_string):
+    with pytest.raises(ValueError, match=error_string):
+        Gate.X().to_ir(
+            target=[0],
+            control=control,
+            control_state=control_state,
+            ir_type=IRType.OPENQASM,
+            serialization_properties=OpenQASMSerializationProperties(
+                qubit_reference_type=QubitReferenceType.VIRTUAL
+            ),
+        )
