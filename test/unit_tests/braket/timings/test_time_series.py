@@ -105,6 +105,7 @@ def test_concatenate():
     assert new_ts.times() == []
     assert new_ts.values() == []
 
+
 @pytest.mark.xfail(raises=ValueError)
 def test_concatenate_not_ordered():
     times_1 = list(range(4))
