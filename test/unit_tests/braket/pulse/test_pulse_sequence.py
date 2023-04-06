@@ -86,14 +86,14 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         length=FreeParameter("length_g"), sigma=FreeParameter("sigma_g"), id="gauss_wf"
     )
     drag_guass_wf = DragGaussianWaveform(
-                length=FreeParameter("length_dg"),
-                sigma=FreeParameter("sigma_dg"),
-                beta=0.2,
-                id="drag_gauss_wf",
-            )
+        length=FreeParameter("length_dg"),
+        sigma=FreeParameter("sigma_dg"),
+        beta=0.2,
+        id="drag_gauss_wf",
+    )
     constant_wf = ConstantWaveform(
-                length=FreeParameter("length_c"), iq=complex(2, 0.3), id="constant_wf"
-            )
+        length=FreeParameter("length_c"), iq=complex(2, 0.3), id="constant_wf"
+    )
     arb_wf = ArbitraryWaveform([complex(1, 0.4), 0, 0.3, complex(0.1, 0.2)], id="arb_wf")
 
     pulse_sequence = (
@@ -172,7 +172,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     )
     assert pulse_sequence.frames == {
         predefined_frame_1.id: predefined_frame_1,
-        predefined_frame_2.id: predefined_frame_2
+        predefined_frame_2.id: predefined_frame_2,
     }
     assert pulse_sequence.waveforms == {
         gauss_wf.id: gauss_wf,
