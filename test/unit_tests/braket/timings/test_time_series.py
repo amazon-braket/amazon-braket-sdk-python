@@ -97,6 +97,13 @@ def test_concatenate():
     assert new_ts.times() == times_1
     assert new_ts.values() == values_1
 
+    new_ts = TimeSeries().concatenate(time_series_1)
+    assert new_ts.times() == times_1
+    assert new_ts.values() == values_1
+
+    new_ts = TimeSeries().concatenate(TimeSeries())
+    assert new_ts.times() == []
+    assert new_ts.values() == []
 
 @pytest.mark.xfail(raises=ValueError)
 def test_concatenate_not_ordered():
