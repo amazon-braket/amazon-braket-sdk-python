@@ -19,7 +19,7 @@ import pytest
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.timings.time_series import TimeSeries
+from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 
 
 @pytest.fixture
@@ -148,7 +148,7 @@ def test_stitch():
         phases=[2.11, 4.12, 1.13],
     )
 
-    new_dr = dr_field_1.stitch(dr_field_2, boundary="right")
+    new_dr = dr_field_1.stitch(dr_field_2, boundary=StitchBoundaryCondition.RIGHT)
     new_times = new_dr.amplitude.time_series.times()
 
     amplitudes_1 = dr_field_1.amplitude.time_series.values()

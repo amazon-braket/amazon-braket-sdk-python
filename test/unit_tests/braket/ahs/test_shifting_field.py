@@ -17,6 +17,7 @@ import pytest
 
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.shifting_field import ShiftingField
+from braket.timings.time_series import StitchBoundaryCondition
 
 
 @pytest.fixture
@@ -96,7 +97,7 @@ def test_stitch():
     sh_field_1 = ShiftingField.from_lists(times_1, glob_amplitude_1, pattern_1)
     sh_field_2 = ShiftingField.from_lists(times_2, glob_amplitude_2, pattern_2)
 
-    new_sh_field = sh_field_1.stitch(sh_field_2, boundary="left")
+    new_sh_field = sh_field_1.stitch(sh_field_2, boundary=StitchBoundaryCondition.LEFT)
 
     expected_times = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
     expected_amplitude = glob_amplitude_1 + glob_amplitude_2[1:]

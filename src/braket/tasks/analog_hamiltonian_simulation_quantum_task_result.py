@@ -100,11 +100,12 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         return measurements
 
     def get_counts(self) -> Dict[str, int]:
-        """Aggregate state counts from AHS shot results
+        """Aggregate state counts from AHS shot results.
 
         Returns:
             Dict[str, int]: number of times each state configuration is measured.
             Returns None if none of shot measurements are successful.
+            Only succesful shots contribute to the state count.
 
         Notes: We use the following convention to denote the state of an atom (site):
             e: empty site
@@ -136,15 +137,15 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
 
         counts = self.get_counts()
 
-        Nr, Ng = [], []
+        N_ryd, N_ground = [], []
         for shot, count in counts.items():
-            Nr.append([count if s == "r" else 0 for s in shot])
-            Ng.append([count if s == "g" else 0 for s in shot])
+            N_ryd.append([count if s == "r" else 0 for s in shot])
+            N_ground.append([count if s == "g" else 0 for s in shot])
 
-        Nr_count = np.sum(Nr, axis=0)
-        Ng_count = np.sum(Ng, axis=0)
+        N_ryd_cnt = np.sum(N_ryd, axis=0)
+        N_ground_cnt = np.sum(N_ground, axis=0)
 
-        avg_density = Nr_count / (Nr_count + Ng_count)
+        avg_density = N_ryd_cnt / (N_ryd_cnt + N_ground_cnt)
 
         return avg_density
 

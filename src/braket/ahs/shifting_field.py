@@ -19,7 +19,7 @@ from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.pattern import Pattern
-from braket.timings.time_series import TimeSeries
+from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 
 
 class ShiftingField(Hamiltonian):
@@ -83,13 +83,15 @@ class ShiftingField(Hamiltonian):
 
         return shift
 
-    def stitch(self, other: ShiftingField, boundary: str = "mean") -> ShiftingField:
+    def stitch(
+        self, other: ShiftingField, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
+    ) -> ShiftingField:
         """Stitches two shifting fields based on TimeSeries.stitch method.
         Shifts time points in the second ShiftingField to align with the first ShiftingField.
 
         Args:
-            other (ShiftingField): The second shifting field to be stitched
-            boundary (str): {"mean", "left", "right"}. Boundary point handler.
+            other (ShiftingField): The second shifting field to be stitched with.
+            boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
                 Possible options are
                     * "mean" - take the average of the boundary value points of the first
                     and the second time series.

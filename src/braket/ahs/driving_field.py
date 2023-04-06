@@ -18,7 +18,7 @@ from typing import List, Union
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.timings.time_series import TimeSeries
+from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 
 
 class DrivingField(Hamiltonian):
@@ -83,13 +83,15 @@ class DrivingField(Hamiltonian):
         r"""Field: global detuning (:math:`\Delta(t)`). Time is in s, and value is in rad/s."""
         return self._detuning
 
-    def stitch(self, other: DrivingField, boundary: str = "mean") -> DrivingField:
+    def stitch(
+        self, other: DrivingField, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
+    ) -> DrivingField:
         """Stitches two driving fields based on TimeSeries.stitch method.
         Shifts time points in the second DrivingField to align with the first DrivingField.
 
         Args:
-            other (DrivingField): The second shifting field to be stitched
-            boundary (str): {"mean", "left", "right"}. Boundary point handler.
+            other (DrivingField): The second shifting field to be stitched with.
+            boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
                 Possible options are
                     * "mean" - take the average of the boundary value points of the first
                     and the second time series.

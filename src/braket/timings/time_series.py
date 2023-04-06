@@ -16,6 +16,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from dataclasses import dataclass
 from decimal import Decimal
+from enum import Enum
 from numbers import Number
 from typing import Iterator, List, Union
 
@@ -24,6 +25,12 @@ from typing import Iterator, List, Union
 class TimeSeriesItem:
     time: Number
     value: Number
+
+
+class StitchBoundaryCondition(str, Enum):
+    MEAN = "mean"
+    LEFT = "left"
+    RIGHT = "right"
 
 
 class TimeSeries:
@@ -125,7 +132,11 @@ class TimeSeries:
         return ts
 
     def concatenate(self, other: TimeSeries) -> TimeSeries:
-        """Concatenate two time series to a single time series
+        """Concatenates two time series ino to a single time series.
+        The time points in the final time series are obtained by concatenating
+        two lists of time points from the first and the second time series.
+        Similarly, the values in the final time series is a concatenated list
+        of the values in the first and the second time series.
 
         Args:
             other (TimeSeries): The second time series to be concatenated
@@ -137,11 +148,20 @@ class TimeSeries:
             Keeps the time points in both time series unchanged.
             Assumes that the time points in the first TimeSeries
             are at earler times then the time points in the second TimeSeries.
+
+        Example:
+            time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
+            time_series_2 = TimeSeries.from_lists(times=[0.2, 0.3], values=[4, 5])
+
+            concat_ts = time_series_1.concatenate(time_series_2)
+
+            Result:
+                concat_ts.times() = [0, 0.1, 0.2, 0.3]
+                concat_ts.values() = [1, 2, 4, 5]
         """
 
-        if len(other.times()) * len(self.times()) == 0:
-            pass
-        elif not min(other.times()) > max(self.times()):
+        not_empty_ts = len(other.times()) * len(self.times()) != 0
+        if not_empty_ts and min(other.times()) <= max(self.times()):
             raise ValueError(
                 "The time points in the first TimeSeries must be strictly smaller \
                 then the time points in the second TimeSeries."
@@ -155,20 +175,51 @@ class TimeSeries:
 
         return new_time_series
 
-    def stitch(self, other: TimeSeries, boundary: str = "mean") -> TimeSeries:
-        """Stitch two time series to a single time series and shifts the time points accordingly.
+    def stitch(
+        self, other: TimeSeries, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
+    ) -> TimeSeries:
+        """Stitch two time series to a single time series. The time points of the
+        second time series are shifted such that the first time point of the second series
+        coincides with the last time point of the first series.
+        The boundary point value is handled according to StitchBoundaryCondition argument value.
 
         Args:
-            other (TimeSeries): The second time series to be concatenated
-            boundary (str): {"mean", "left", "right"}. Boundary point handler.
+            other (TimeSeries): The second time series to be stitched with.
+            boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
                 Possible options are
                     * "mean" - take the average of the boundary value points of the first
                     and the second time series.
                     * "left" - use the last value from the left time series as the boundary point.
                     * "right" - use the first value from the right time series as the boundary
                     point.
+
         Returns:
             TimeSeries: The stitched time series.
+
+        Example (StitchBoundaryCondition.MEAN):
+            time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
+            time_series_2 = TimeSeries.from_lists(times=[0.2, 0.4], values=[4, 5])
+
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.MEAN)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 3, 5]
+
+        Example (StitchBoundaryCondition.LEFT):
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.LEFT)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 2, 5]
+
+        Example (StitchBoundaryCondition.RIGHT):
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.RIGHT)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 4, 5]
+
         """
 
         if len(self.times()) == 0:
@@ -182,11 +233,11 @@ class TimeSeries:
         new_times = self.times() + other_times[1:]
 
         left, right = self.values()[-1], other.values()[0]
-        if boundary == "mean":
+        if boundary == StitchBoundaryCondition.MEAN:
             bndry_val = 0.5 * sum([left, right])
-        elif boundary == "left":
+        elif boundary == StitchBoundaryCondition.LEFT:
             bndry_val = left
-        elif boundary == "right":
+        elif boundary == StitchBoundaryCondition.RIGHT:
             bndry_val = right
         else:
             raise ValueError(

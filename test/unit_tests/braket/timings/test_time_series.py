@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from braket.timings.time_series import TimeSeries, _all_close
+from braket.timings.time_series import StitchBoundaryCondition, TimeSeries, _all_close
 
 
 @pytest.fixture
@@ -135,9 +135,9 @@ def test_stitch():
     values_2 = [-0.5, -1, -1, 0]
     time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
 
-    new_ts_mean = time_series_1.stitch(time_series_2, boundary="mean")
-    new_ts_left = time_series_1.stitch(time_series_2, boundary="left")
-    new_ts_right = time_series_1.stitch(time_series_2, boundary="right")
+    new_ts_mean = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.MEAN)
+    new_ts_left = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.LEFT)
+    new_ts_right = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.RIGHT)
 
     excepted_times = list(range(7))
     assert new_ts_mean.times() == excepted_times
@@ -156,6 +156,14 @@ def test_stitch_empty_ts():
     new_ts = time_series.stitch(TimeSeries())
     assert new_ts.times() == times
     assert new_ts.values() == values
+
+    new_ts = TimeSeries().stitch(TimeSeries())
+    assert new_ts.times() == []
+    assert new_ts.values() == []
+
+    new_ts = TimeSeries().stitch(time_series)
+    assert new_ts.times() == time_series.times()
+    assert new_ts.values() == time_series.values()
 
 
 @pytest.mark.xfail(raises=ValueError)
