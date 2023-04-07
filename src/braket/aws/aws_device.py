@@ -83,7 +83,6 @@ class AwsDevice(Device):
         self._properties = None
         self._provider_name = None
         self._poll_interval_seconds = None
-        self._topology_graph = None
         self._type = None
         self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
         self._ports = None
