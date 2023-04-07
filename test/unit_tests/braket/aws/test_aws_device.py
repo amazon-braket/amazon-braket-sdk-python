@@ -1059,6 +1059,33 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
 
 
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_device_poll_interval_kwargs(
+    aws_quantum_task_mock, aws_session, circuit, s3_destination_folder
+):
+    poll_interval_seconds = 200
+    capabilities = MOCK_GATE_MODEL_QPU_CAPABILITIES_1
+    capabilities.service.getTaskPollIntervalMillis = poll_interval_seconds
+    properties = {
+        "deviceName": "Aspen-10",
+        "deviceType": "QPU",
+        "providerName": "provider1",
+        "deviceStatus": "OFFLINE",
+        "deviceCapabilities": capabilities.json(),
+    }
+    aws_session.get_device.return_value = properties
+    _run_and_assert(
+        aws_quantum_task_mock,
+        lambda arn: AwsDevice(arn, aws_session),
+        circuit,
+        s3_destination_folder,
+        100,
+        86400,
+        poll_interval_seconds / 1000.0,
+        extra_kwargs={"bar": 1, "baz": 2},
+    )
+
+
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
 def test_run_with_shots_poll_timeout_kwargs(
     aws_quantum_task_mock, device, circuit, s3_destination_folder
 ):
