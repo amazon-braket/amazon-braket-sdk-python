@@ -42,6 +42,15 @@ def test_add():
     assert OrderedDict(moments) == expected
 
 
+def test_add_single_insturction():
+    moments = Moments()
+    moments.add(h(0))
+
+    expected = OrderedDict()
+    expected[MomentsKey(0, QubitSet(0), "gate", 0)] = h(0)
+    assert OrderedDict(moments) == expected
+
+
 def test_default_constructor():
     moments = Moments()
     assert OrderedDict(moments) == OrderedDict()
