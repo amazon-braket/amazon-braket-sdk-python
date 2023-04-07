@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from braket.timings.time_series import TimeSeries, _all_close
+from braket.timings.time_series import StitchBoundaryCondition, TimeSeries, _all_close
 
 
 @pytest.fixture
@@ -52,6 +52,139 @@ def test_get_sorted(default_values, default_time_series):
     sorted_values = sorted(default_values)
     assert default_time_series.times() == [item[0] for item in sorted_values]
     assert default_time_series.values() == [item[1] for item in sorted_values]
+
+
+def test_constant_like():
+    times = list(range(10))
+    constant_ts = TimeSeries.constant_like(times, constant=3.14)
+    assert times == constant_ts.times()
+    assert constant_ts.values() == [3.14] * len(times)
+
+
+def test_periodic_signal():
+    times = list(range(4))
+    values = [0, 1, 3, 0]
+    new_ts = TimeSeries.periodic_signal(times=times, values=values, num_repeat=3)
+    expected_times = list(range(10))
+    expected_values = [0, 1, 3, 0, 1, 3, 0, 1, 3, 0]
+
+    assert new_ts.times() == expected_times
+    assert new_ts.values() == expected_values
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_periodic_signal_not_eq_length():
+    times = list(range(5))
+    values = [0.5, 1, 1, 0]
+    TimeSeries.periodic_signal(times=times, values=values, num_repeat=3)
+
+
+def test_concatenate():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4, 8))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    new_ts = time_series_1.concatenate(time_series_2)
+
+    assert new_ts.times() == times_1 + times_2
+    assert new_ts.values() == values_1 + values_2
+
+    new_ts = time_series_1.concatenate(TimeSeries())
+    assert new_ts.times() == times_1
+    assert new_ts.values() == values_1
+
+    new_ts = TimeSeries().concatenate(time_series_1)
+    assert new_ts.times() == times_1
+    assert new_ts.values() == values_1
+
+    new_ts = TimeSeries().concatenate(TimeSeries())
+    assert new_ts.times() == []
+    assert new_ts.values() == []
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_concatenate_not_ordered():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    time_series_1.concatenate(time_series_2)
+
+
+def test_from_lists():
+    times = list(range(4))
+    values = [0.5, 1, 1, 0]
+    ts = TimeSeries.from_lists(times=times, values=values)
+    assert ts.times() == times
+    assert ts.values() == values
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_from_lists_not_equal_size():
+    times = list(range(4))
+    values = [0.5, 1, 1]
+    TimeSeries.from_lists(times=times, values=values)
+
+
+def test_stitch():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    new_ts_mean = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.MEAN)
+    new_ts_left = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.LEFT)
+    new_ts_right = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.RIGHT)
+
+    excepted_times = list(range(7))
+    assert new_ts_mean.times() == excepted_times
+    assert new_ts_left.times() == excepted_times
+    assert new_ts_right.times() == excepted_times
+
+    assert new_ts_mean.values() == [0.5, 1, 1, -0.25, -1, -1, 0]
+    assert new_ts_left.values() == [0.5, 1, 1, 0, -1, -1, 0]
+    assert new_ts_right.values() == [0.5, 1, 1, -0.5, -1, -1, 0]
+
+
+def test_stitch_empty_ts():
+    times = list(range(4))
+    values = [0.5, 1, 1, 0]
+    time_series = TimeSeries.from_lists(times=times, values=values)
+    new_ts = time_series.stitch(TimeSeries())
+    assert new_ts.times() == times
+    assert new_ts.values() == values
+
+    new_ts = TimeSeries().stitch(TimeSeries())
+    assert new_ts.times() == []
+    assert new_ts.values() == []
+
+    new_ts = TimeSeries().stitch(time_series)
+    assert new_ts.times() == time_series.times()
+    assert new_ts.values() == time_series.values()
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_stitch_wrong_bndry_value():
+    times_1 = list(range(4))
+    values_1 = [0.5, 1, 1, 0]
+    time_series_1 = TimeSeries.from_lists(times=times_1, values=values_1)
+
+    times_2 = list(range(4))
+    values_2 = [-0.5, -1, -1, 0]
+    time_series_2 = TimeSeries.from_lists(times=times_2, values=values_2)
+
+    time_series_1.stitch(time_series_2, boundary="average")
 
 
 @pytest.mark.parametrize(

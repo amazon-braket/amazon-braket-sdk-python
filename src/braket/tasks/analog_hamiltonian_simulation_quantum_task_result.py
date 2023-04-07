@@ -13,9 +13,10 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 
@@ -97,6 +98,56 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                 post_sequence = None
             measurements.append(ShotResult(status, pre_sequence, post_sequence))
         return measurements
+
+    def get_counts(self) -> Dict[str, int]:
+        """Aggregate state counts from AHS shot results.
+
+        Returns:
+            Dict[str, int]: number of times each state configuration is measured.
+            Returns None if none of shot measurements are successful.
+            Only succesful shots contribute to the state count.
+
+        Notes: We use the following convention to denote the state of an atom (site):
+            e: empty site
+            r: Rydberg state atom
+            g: ground state atom
+        """
+
+        state_counts = Counter()
+        states = ["e", "r", "g"]
+        for shot in self.measurements:
+            if shot.status == AnalogHamiltonianSimulationShotStatus.SUCCESS:
+                pre = shot.pre_sequence
+                post = shot.post_sequence
+                # converting presequence and postsequence measurements to state_idx
+                state_idx = [
+                    0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
+                ]
+                state = "".join(map(lambda s_idx: states[s_idx], state_idx))
+                state_counts.update((state,))
+
+        return dict(state_counts)
+
+    def get_avg_density(self) -> np.ndarray:
+        """Get the average Rydberg state densities from the result
+
+        Returns:
+            ndarray (float): The average densities from the result
+        """
+
+        counts = self.get_counts()
+
+        N_ryd, N_ground = [], []
+        for shot, count in counts.items():
+            N_ryd.append([count if s == "r" else 0 for s in shot])
+            N_ground.append([count if s == "g" else 0 for s in shot])
+
+        N_ryd_cnt = np.sum(N_ryd, axis=0)
+        N_ground_cnt = np.sum(N_ground, axis=0)
+
+        avg_density = N_ryd_cnt / (N_ryd_cnt + N_ground_cnt)
+
+        return avg_density
 
 
 def _equal_sequences(sequence0: np.ndarray, sequence1: np.ndarray) -> bool:
