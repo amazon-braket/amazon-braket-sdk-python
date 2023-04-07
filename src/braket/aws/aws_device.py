@@ -331,7 +331,7 @@ class AwsDevice(Device):
             if device_poll_interval
             else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
         )
-        self._topology_graph = self._construct_topology_graph()
+        self._topology_graph = None
         self._frames = None
         self._ports = None
 
@@ -439,6 +439,8 @@ class AwsDevice(Device):
 
             >>> print(device.topology_graph.edges)
         """
+        if not self._topology_graph:
+            self._topology_graph = self._construct_topology_graph()
         return self._topology_graph
 
     def _construct_topology_graph(self) -> DiGraph:

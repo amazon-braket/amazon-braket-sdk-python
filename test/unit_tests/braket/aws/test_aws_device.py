@@ -1566,3 +1566,6 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
     assert nx.is_isomorphic(device.topology_graph, expected_graph)
+    new_val = "new_val"
+    device._topology_graph = new_val
+    assert device.topology_graph == new_val
