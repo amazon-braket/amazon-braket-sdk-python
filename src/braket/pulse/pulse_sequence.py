@@ -78,11 +78,6 @@ class PulseSequence:
         """Returns the map of `Frame` IDs to `Frame`s in the PulseSequence."""
         return self._frames
 
-    @property
-    def program(self):
-        """Returns the `Program` in the PulseSequence."""
-        return self._program
-
     def set_frequency(
         self, frame: Frame, frequency: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
@@ -313,7 +308,7 @@ class PulseSequence:
         Returns:
             str: a str representing the OpenPulse program encoding the PulseSequence.
         """
-        program = deepcopy(self.program)
+        program = deepcopy(self._program)
         if self._capture_v0_count:
             register_identifier = "psb"
             program.declare(
