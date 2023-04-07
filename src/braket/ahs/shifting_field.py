@@ -87,7 +87,9 @@ class ShiftingField(Hamiltonian):
         self, other: ShiftingField, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
     ) -> ShiftingField:
         """Stitches two shifting fields based on TimeSeries.stitch method.
-        Shifts time points in the second ShiftingField to align with the first ShiftingField.
+        The time points of the second ShiftingField are shifted such that the first time point of
+        the second ShiftingField coincides with the last time point of the first ShiftingField.
+        The boundary point value is handled according to StitchBoundaryCondition argument value.
 
         Args:
             other (ShiftingField): The second shifting field to be stitched with.

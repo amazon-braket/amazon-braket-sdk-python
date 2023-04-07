@@ -87,7 +87,9 @@ class DrivingField(Hamiltonian):
         self, other: DrivingField, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
     ) -> DrivingField:
         """Stitches two driving fields based on TimeSeries.stitch method.
-        Shifts time points in the second DrivingField to align with the first DrivingField.
+        The time points of the second DrivingField are shifted such that the first time point of
+        the second DrifingField coincides with the last time point of the first DrivingField.
+        The boundary point value is handled according to StitchBoundaryCondition argument value.
 
         Args:
             other (DrivingField): The second shifting field to be stitched with.
