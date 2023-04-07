@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.36.5 (2023-04-03)
+
+### Bug Fixes and Other Changes
+
+ * support adding a single instruction to moments
+ * typo in noise_model.py
+
 ## v1.36.4 (2023-03-27)
 
 ### Bug Fixes and Other Changes
