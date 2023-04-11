@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.37.0 (2023-04-11)
+
+### Features
+
+ * Introduce AHS-related utils from examples repo
+ * upgrade container URIs for python 3.9
+
+### Bug Fixes and Other Changes
+
+ * correct the python version in the container integ tests to the correct one
+ * Use device-specific poll interval if provided
+
 ## v1.36.5 (2023-04-03)
 
 ### Bug Fixes and Other Changes
