@@ -16,7 +16,7 @@ from __future__ import annotations
 from itertools import groupby
 from typing import Any, List, Optional, Sequence, Tuple, Type
 
-from braket.circuits.gate_modifiers import ControlState, _as_list
+from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.quantum_operator import QuantumOperator
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import (
@@ -72,7 +72,7 @@ class Gate(QuantumOperator):
         serialization_properties: SerializationProperties = None,
         *,
         control: Optional[QubitSet] = None,
-        control_state: Optional[ControlState] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -84,12 +84,12 @@ class Gate(QuantumOperator):
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
             control (Optional[QubitSet]): Control qubit(s). Only supported for OpenQASM.
-            control_state (Optional[ControlState]): Quantum state on which to control the operation.
-                Must be a binary sequence of same length as number of qubits in `control`. Will be
-                ignored if `control` is not present. May be represented as a string, list, or int.
-                For example "0101", [0, 1, 0, 1], 5 all represent controlling on qubits 0 and 2
-                being in the |0⟩ state and qubits 1 and 3 being in the |1⟩ state.
-                Default "1" * len(control).
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
         Returns:
             Any: IR object of the quantum operator and target
 
@@ -137,7 +137,7 @@ class Gate(QuantumOperator):
         serialization_properties: OpenQASMSerializationProperties,
         *,
         control: Optional[QubitSet] = None,
-        control_state: Optional[ControlState] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> str:
         """
         Returns the openqasm string representation of the gate.
@@ -147,33 +147,37 @@ class Gate(QuantumOperator):
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
             control (Optional[QubitSet]): Control qubit(s).
-            control_state (Optional[ControlState]): Quantum state on which to control the operation.
-                Must be a binary sequence of same length as number of qubits in `control`. Will be
-                ignored if `control` is not present. May be represented as a string, list, or int.
-                For example "0101", [0, 1, 0, 1], 5 all represent controlling on qubits 0 and 2
-                being in the |0⟩ state and qubits 1 and 3 being in the |1⟩ state.
-                Default "1" * len(control).
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             str: Representing the openqasm representation of the gate.
         """
         target_qubits = [serialization_properties.format_target(int(qubit)) for qubit in target]
-        control_prefix = ""
         if control:
             control_qubits = [
                 serialization_properties.format_target(int(qubit)) for qubit in control
             ]
-            control_state_list = _as_list(control_state, len(control))
-            for state, group in groupby(control_state_list):
+            control_state = (1,) * len(control) if control_state is None else control_state
+            control_basis_state = BasisState(control_state, len(control))
+            control_modifiers = []
+            for state, group in groupby(control_basis_state.as_tuple):
                 modifier_name = "neg" * (not state) + "ctrl"
-                control_prefix += (
-                    f"{modifier_name} @ "
+                control_modifiers += [
+                    f"{modifier_name}"
                     if (num_control := len(list(group))) == 1
-                    else f"{modifier_name}({num_control}) @ "
-                )
+                    else f"{modifier_name}({num_control})"
+                ]
+            control_modifiers.append("")
             qubits = control_qubits + target_qubits
+            control_prefix = " @ ".join(control_modifiers)
         else:
             qubits = target_qubits
+            control_prefix = ""
         param_string = (
             f"({', '.join(map(str, self.parameters))})" if hasattr(self, "parameters") else ""
         )

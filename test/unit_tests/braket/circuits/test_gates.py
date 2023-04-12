@@ -1056,6 +1056,20 @@ def test_pulse_gate_to_matrix():
             "ctrl(3) @ negctrl(2) @ ctrl @ negctrl @ "
             "z q[1], q[2], q[3], q[4], q[5], q[6], q[7], q[0];",
         ),
+        (
+            Gate.Z(),
+            QubitSet([0]),
+            QubitSet([1, 2, 3]),
+            [1, 0],
+            "negctrl @ ctrl @ negctrl @ " "z q[1], q[2], q[3], q[0];",
+        ),
+        (
+            Gate.Z(),
+            QubitSet([0]),
+            QubitSet([1, 2, 3]),
+            "10",
+            "negctrl @ ctrl @ negctrl @ " "z q[1], q[2], q[3], q[0];",
+        ),
     ),
 )
 def test_gate_control(gate, target, control, control_state, expected_ir):
@@ -1080,28 +1094,20 @@ def test_gate_control(gate, target, control, control_state, expected_ir):
         (
             [0, 1],
             [1, 0, 1],
-            "Control state must be the same length as the number of control qubits.",
-        ),
-        (
-            [0, 1],
-            [0],
-            "Control state must be the same length as the number of control qubits.",
+            "State value represents a binary sequence of length greater "
+            "than the specified number of qubits.",
         ),
         (
             [0, 1],
             "101",
-            "Control state must be the same length as the number of control qubits.",
-        ),
-        (
-            [0, 1],
-            "0",
-            "Control state must be the same length as the number of control qubits.",
+            "State value represents a binary sequence of length greater "
+            "than the specified number of qubits.",
         ),
         (
             [0, 1],
             5,
-            "Control state value represents a binary sequence of length greater "
-            "than the number of control qubits.",
+            "State value represents a binary sequence of length greater "
+            "than the specified number of qubits.",
         ),
     ),
 )
