@@ -84,6 +84,7 @@ class Gate(QuantumOperator):
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
             control (Optional[QubitSet]): Control qubit(s). Only supported for OpenQASM.
+                Default None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
@@ -146,7 +147,7 @@ class Gate(QuantumOperator):
             target (QubitSet): target qubit(s).
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
-            control (Optional[QubitSet]): Control qubit(s).
+            control (Optional[QubitSet]): Control qubit(s). Default None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
