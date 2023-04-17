@@ -29,6 +29,7 @@ from braket.circuits.angled_gate import (
     angled_ascii_characters,
     get_angle,
 )
+from braket.circuits.basis_state import BasisStateInput
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -86,12 +87,19 @@ class H(Gate):
         target: QubitSetInput,
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of H instructions.
@@ -100,7 +108,10 @@ class H(Gate):
             >>> circ = Circuit().h(0)
             >>> circ = Circuit().h([0, 1, 2])
         """
-        return [Instruction(H(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(H(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(H)
@@ -132,13 +143,22 @@ class I(Gate):  # noqa: E742, E261
     @staticmethod
     @circuit.subroutine(register=True)
     def i(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of I instructions.
@@ -147,7 +167,10 @@ class I(Gate):  # noqa: E742, E261
             >>> circ = Circuit().i(0)
             >>> circ = Circuit().i([0, 1, 2])
         """
-        return [Instruction(I(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(I(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(I)
@@ -179,13 +202,22 @@ class X(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def x(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of X instructions.
@@ -194,7 +226,10 @@ class X(Gate):
             >>> circ = Circuit().x(0)
             >>> circ = Circuit().x([0, 1, 2])
         """
-        return [Instruction(X(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(X(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(X)
@@ -226,13 +261,22 @@ class Y(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def y(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of Y instructions.
@@ -241,7 +285,10 @@ class Y(Gate):
             >>> circ = Circuit().y(0)
             >>> circ = Circuit().y([0, 1, 2])
         """
-        return [Instruction(Y(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Y(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Y)
@@ -273,13 +320,22 @@ class Z(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def z(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of Z instructions.
@@ -288,7 +344,10 @@ class Z(Gate):
             >>> circ = Circuit().z(0)
             >>> circ = Circuit().z([0, 1, 2])
         """
-        return [Instruction(Z(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Z(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Z)
@@ -320,13 +379,22 @@ class S(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def s(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of S instructions.
@@ -335,7 +403,10 @@ class S(Gate):
             >>> circ = Circuit().s(0)
             >>> circ = Circuit().s([0, 1, 2])
         """
-        return [Instruction(S(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(S(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(S)
@@ -367,13 +438,22 @@ class Si(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def si(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: Iterable of Si instructions.
@@ -382,7 +462,10 @@ class Si(Gate):
             >>> circ = Circuit().si(0)
             >>> circ = Circuit().si([0, 1, 2])
         """
-        return [Instruction(Si(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Si(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Si)
@@ -414,13 +497,22 @@ class T(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def t(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of T instructions.
@@ -429,7 +521,10 @@ class T(Gate):
             >>> circ = Circuit().t(0)
             >>> circ = Circuit().t([0, 1, 2])
         """
-        return [Instruction(T(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(T(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(T)
@@ -461,13 +556,22 @@ class Ti(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def ti(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of Ti instructions.
@@ -476,7 +580,10 @@ class Ti(Gate):
             >>> circ = Circuit().ti(0)
             >>> circ = Circuit().ti([0, 1, 2])
         """
-        return [Instruction(Ti(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Ti(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Ti)
@@ -508,13 +615,22 @@ class V(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def v(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of V instructions.
@@ -523,7 +639,10 @@ class V(Gate):
             >>> circ = Circuit().v(0)
             >>> circ = Circuit().v([0, 1, 2])
         """
-        return [Instruction(V(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(V(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(V)
@@ -555,13 +674,22 @@ class Vi(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def vi(
-        target: QubitSetInput, *, control: Optional[QubitSetInput] = None
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
-            control (QubitSetInput): Control qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: `Iterable` of Vi instructions.
@@ -570,7 +698,10 @@ class Vi(Gate):
             >>> circ = Circuit().vi(0)
             >>> circ = Circuit().vi([0, 1, 2])
         """
-        return [Instruction(Vi(), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Vi(), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Vi)
@@ -623,13 +754,20 @@ class Rx(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -637,7 +775,10 @@ class Rx(AngledGate):
         Examples:
             >>> circ = Circuit().rx(0, 0.15)
         """
-        return [Instruction(Rx(angle), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Rx(angle), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Rx)
@@ -687,13 +828,20 @@ class Ry(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -701,7 +849,10 @@ class Ry(AngledGate):
         Examples:
             >>> circ = Circuit().ry(0, 0.15)
         """
-        return [Instruction(Ry(angle), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Ry(angle), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Ry)
@@ -747,13 +898,20 @@ class Rz(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -761,7 +919,10 @@ class Rz(AngledGate):
         Examples:
             >>> circ = Circuit().rz(0, 0.15)
         """
-        return [Instruction(Rz(angle), target=qubit, control=control) for qubit in QubitSet(target)]
+        return [
+            Instruction(Rz(angle), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Rz)
@@ -805,13 +966,20 @@ class PhaseShift(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: PhaseShift instruction.
@@ -820,7 +988,9 @@ class PhaseShift(AngledGate):
             >>> circ = Circuit().phaseshift(0, 0.15)
         """
         return [
-            Instruction(PhaseShift(angle), target=qubit, control=control)
+            Instruction(
+                PhaseShift(angle), target=qubit, control=control, control_state=control_state
+            )
             for qubit in QubitSet(target)
         ]
 
@@ -868,9 +1038,8 @@ class CNot(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s). The last control qubit is absorbed
-                into the cnot gate. The result is equivalent to an x gate applied to
-                the target qubit and controlled by all control qubits.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -921,14 +1090,24 @@ class Swap(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def swap(
-        target1: QubitInput, target2: QubitInput, *, control: Optional[QubitSetInput] = None
+        target1: QubitInput,
+        target2: QubitInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: Swap instruction.
@@ -936,7 +1115,9 @@ class Swap(Gate):
         Examples:
             >>> circ = Circuit().swap(0, 1)
         """
-        return Instruction(Swap(), target=[target1, target2], control=control)
+        return Instruction(
+            Swap(), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(Swap)
@@ -976,14 +1157,24 @@ class ISwap(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def iswap(
-        target1: QubitInput, target2: QubitInput, *, control: Optional[QubitSetInput] = None
+        target1: QubitInput,
+        target2: QubitInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
-            control (Optional[QubitSetInput]): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: ISwap instruction.
@@ -991,7 +1182,9 @@ class ISwap(Gate):
         Examples:
             >>> circ = Circuit().iswap(0, 1)
         """
-        return Instruction(ISwap(), target=[target1, target2], control=control)
+        return Instruction(
+            ISwap(), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(ISwap)
@@ -1047,6 +1240,7 @@ class PSwap(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1054,7 +1248,13 @@ class PSwap(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: PSwap instruction.
@@ -1062,7 +1262,9 @@ class PSwap(AngledGate):
         Examples:
             >>> circ = Circuit().pswap(0, 1, 0.15)
         """
-        return Instruction(PSwap(angle), target=[target1, target2], control=control)
+        return Instruction(
+            PSwap(angle), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(PSwap)
@@ -1126,6 +1328,7 @@ class XY(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1133,7 +1336,13 @@ class XY(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
-            control (QubitSetInput): Controlqubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: XY instruction.
@@ -1141,7 +1350,9 @@ class XY(AngledGate):
         Examples:
             >>> circ = Circuit().xy(0, 1, 0.15)
         """
-        return Instruction(XY(angle), target=[target1, target2], control=control)
+        return Instruction(
+            XY(angle), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(XY)
@@ -1186,7 +1397,8 @@ class CPhaseShift(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s).
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1245,7 +1457,8 @@ class CPhaseShift00(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s).
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1304,7 +1517,8 @@ class CPhaseShift01(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s).
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1363,7 +1577,8 @@ class CPhaseShift10(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s).
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1420,7 +1635,8 @@ class CV(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s).
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1474,7 +1690,8 @@ class CY(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s).
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1520,7 +1737,8 @@ class CZ(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s).
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1570,14 +1788,24 @@ class ECR(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def ecr(
-        target1: QubitInput, target2: QubitInput, *, control: Optional[QubitSetInput] = None
+        target1: QubitInput,
+        target2: QubitInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: ECR instruction.
@@ -1585,7 +1813,9 @@ class ECR(Gate):
         Examples:
             >>> circ = Circuit().ecr(0, 1)
         """
-        return Instruction(ECR(), target=[target1, target2], control=control)
+        return Instruction(
+            ECR(), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(ECR)
@@ -1649,6 +1879,7 @@ class XX(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1656,7 +1887,13 @@ class XX(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: XX instruction.
@@ -1664,7 +1901,9 @@ class XX(AngledGate):
         Examples:
             >>> circ = Circuit().xx(0, 1, 0.15)
         """
-        return Instruction(XX(angle), target=[target1, target2], control=control)
+        return Instruction(
+            XX(angle), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(XX)
@@ -1728,6 +1967,7 @@ class YY(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1735,7 +1975,13 @@ class YY(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: YY instruction.
@@ -1743,7 +1989,9 @@ class YY(AngledGate):
         Examples:
             >>> circ = Circuit().yy(0, 1, 0.15)
         """
-        return Instruction(YY(angle), target=[target1, target2], control=control)
+        return Instruction(
+            YY(angle), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(YY)
@@ -1801,6 +2049,7 @@ class ZZ(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1808,7 +2057,13 @@ class ZZ(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: ZZ instruction.
@@ -1816,7 +2071,9 @@ class ZZ(AngledGate):
         Examples:
             >>> circ = Circuit().zz(0, 1, 0.15)
         """
-        return Instruction(ZZ(angle), target=[target1, target2], control=control)
+        return Instruction(
+            ZZ(angle), target=[target1, target2], control=control, control_state=control_state
+        )
 
 
 Gate.register_gate(ZZ)
@@ -1868,6 +2125,7 @@ class CCNot(Gate):
         target: QubitInput,
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1875,6 +2133,15 @@ class CCNot(Gate):
             control1 (QubitInput): Control qubit 1 index.
             control2 (QubitInput): Control qubit 2 index.
             target (QubitInput): Target qubit index.
+            control (Optional[QubitSetInput]): Control qubit(s), in addition to
+                control1 and control2. Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Control state only applies to control qubits specified with
+                the control argument, not control1 and control2. Default "1" * len(control).
 
         Returns:
             Instruction: CCNot instruction.
@@ -1882,7 +2149,12 @@ class CCNot(Gate):
         Examples:
             >>> circ = Circuit().ccnot(0, 1, 2)
         """
-        return Instruction(CCNot(), target=[control1, control2, target], control=control)
+        return Instruction(
+            CCNot(),
+            target=[control1, control2, target],
+            control=control,
+            control_state=control_state,
+        )
 
 
 Gate.register_gate(CCNot)
@@ -1929,7 +2201,8 @@ class CSwap(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitSetInput): Control qubit(s)
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
 
@@ -1992,13 +2265,20 @@ class GPi(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: GPi instruction.
@@ -2007,7 +2287,8 @@ class GPi(AngledGate):
             >>> circ = Circuit().gpi(0, 0.15)
         """
         return [
-            Instruction(GPi(angle), target=qubit, control=control) for qubit in QubitSet(target)
+            Instruction(GPi(angle), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
         ]
 
 
@@ -2057,13 +2338,20 @@ class GPi2(AngledGate):
         angle: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
-            control (QubitSetInput): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: GPi2 instruction.
@@ -2072,7 +2360,8 @@ class GPi2(AngledGate):
             >>> circ = Circuit().gpi2(0, 0.15)
         """
         return [
-            Instruction(GPi2(angle), target=qubit, control=control) for qubit in QubitSet(target)
+            Instruction(GPi2(angle), target=qubit, control=control, control_state=control_state)
+            for qubit in QubitSet(target)
         ]
 
 
@@ -2132,6 +2421,7 @@ class MS(DoubleAngledGate):
         angle_2: Union[FreeParameterExpression, float],
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -2140,7 +2430,13 @@ class MS(DoubleAngledGate):
             target2 (QubitInput): Target qubit 2 index.
             angle_1 (Union[FreeParameterExpression, float]): angle in radians.
             angle_2 (Union[FreeParameterExpression, float]): angle in radians.
-            control (Optional[QubitSetInput]): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: MS instruction.
@@ -2148,7 +2444,14 @@ class MS(DoubleAngledGate):
         Examples:
             >>> circ = Circuit().ms(0, 1, 0.15, 0.34)
         """
-        return [Instruction(MS(angle_1, angle_2), target=[target1, target2], control=control)]
+        return [
+            Instruction(
+                MS(angle_1, angle_2),
+                target=[target1, target2],
+                control=control,
+                control_state=control_state,
+            )
+        ]
 
 
 Gate.register_gate(MS)
@@ -2306,6 +2609,7 @@ class PulseGate(Gate, Parameterizable):
         display_name: str = "PG",
         *,
         control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
     ) -> Instruction:
         """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
            within circuits.
@@ -2316,7 +2620,13 @@ class PulseGate(Gate, Parameterizable):
             pulse_sequence (PulseSequence): PulseSequence to embed within the circuit.
             display_name (str): Name to be used for an instance of this pulse gate
                 for circuit diagrams. Defaults to `PG`.
-            control (Optional[QubitSetInput]): Control qubit(s).
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: Pulse gate instruction.
@@ -2329,6 +2639,7 @@ class PulseGate(Gate, Parameterizable):
             PulseGate(pulse_sequence, len(QubitSet(targets)), display_name),
             target=targets,
             control=control,
+            control_state=control_state,
         )
 
 
