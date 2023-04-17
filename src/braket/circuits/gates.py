@@ -768,12 +768,6 @@ class Rx(AngledGate):
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
                 in the |1⟩ state. Default "1" * len(control).
-            control_state (Optional[BasisStateInput]): Quantum state on which to control the
-                operation. Must be a binary sequence of same length as number of qubits in
-                `control`. Will be ignored if `control` is not present. May be represented as a
-                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -1044,8 +1038,8 @@ class CNot(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). The last control qubit
-                is absorbed into the target of the instruction. Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1175,6 +1169,12 @@ class ISwap(Gate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Default "1" * len(control).
 
         Returns:
             Instruction: ISwap instruction.
@@ -1397,7 +1397,8 @@ class CPhaseShift(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1456,7 +1457,8 @@ class CPhaseShift00(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1515,7 +1517,8 @@ class CPhaseShift01(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1574,7 +1577,8 @@ class CPhaseShift10(AngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
 
@@ -1631,7 +1635,8 @@ class CV(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1685,7 +1690,8 @@ class CY(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -1731,7 +1737,8 @@ class CZ(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
 
         Returns:
@@ -2126,6 +2133,15 @@ class CCNot(Gate):
             control1 (QubitInput): Control qubit 1 index.
             control2 (QubitInput): Control qubit 2 index.
             target (QubitInput): Target qubit index.
+            control (Optional[QubitSetInput]): Control qubit(s), in addition to
+                control1 and control2. Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
+                in the |1⟩ state. Control state only applies to control qubits specified with
+                the control argument, not control1 and control2. Default "1" * len(control).
 
         Returns:
             Instruction: CCNot instruction.
@@ -2185,7 +2201,8 @@ class CSwap(Gate):
         """Registers this function into the circuit class.
 
         Args:
-            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
 
