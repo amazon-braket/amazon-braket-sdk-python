@@ -18,6 +18,8 @@ from typing import List
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
+from braket.ahs.pattern import Pattern
+from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 
 
 class ShiftingField(Hamiltonian):
@@ -58,6 +60,55 @@ class ShiftingField(Hamiltonian):
         where time is measured in seconds (s) and values measured in rad/s)
         and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
         return self._magnitude
+
+    @staticmethod
+    def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
+        """Get the shifting field from a set of time points, values and pattern
+
+        Args:
+            times (List[float]): The time points of the shifting field
+            values (List[float]): The values of the shifting field
+            pattern (List[float]): The pattern of the shifting field
+
+        Returns:
+            ShiftingField: The shifting field obtained
+        """
+        if len(times) != len(values):
+            raise ValueError("The length of the times and values lists must be equal.")
+
+        magnitude = TimeSeries()
+        for t, v in zip(times, values):
+            magnitude.put(t, v)
+        shift = ShiftingField(Field(magnitude, Pattern(pattern)))
+
+        return shift
+
+    def stitch(
+        self, other: ShiftingField, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
+    ) -> ShiftingField:
+        """Stitches two shifting fields based on TimeSeries.stitch method.
+        The time points of the second ShiftingField are shifted such that the first time point of
+        the second ShiftingField coincides with the last time point of the first ShiftingField.
+        The boundary point value is handled according to StitchBoundaryCondition argument value.
+
+        Args:
+            other (ShiftingField): The second shifting field to be stitched with.
+            boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
+                Possible options are
+                    * "mean" - take the average of the boundary value points of the first
+                    and the second time series.
+                    * "left" - use the last value from the left time series as the boundary point.
+                    * "right" - use the first value from the right time series as the boundary
+                    point.
+
+        Returns:
+            ShiftingField: The stitched ShiftingField object.
+        """
+        if not (self.magnitude.pattern.series == other.magnitude.pattern.series):
+            raise ValueError("The ShiftingField pattern for both fields must be equal.")
+
+        new_ts = self.magnitude.time_series.stitch(other.magnitude.time_series, boundary)
+        return ShiftingField(Field(new_ts, self.magnitude.pattern))
 
     def discretize(self, properties: DiscretizationProperties) -> ShiftingField:
         """Creates a discretized version of the ShiftingField.
