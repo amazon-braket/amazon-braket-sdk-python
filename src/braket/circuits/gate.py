@@ -103,7 +103,7 @@ class Gate(QuantumOperator):
             ValueError: If gate modifiers are supplied with `ir_type` Jaqcd.
         """
         if ir_type == IRType.JAQCD:
-            if control or power:
+            if control or power is not None:
                 raise ValueError("Gate modifiers are not supported with Jaqcd.")
             return self._to_jaqcd(target)
         elif ir_type == IRType.OPENQASM:
@@ -186,16 +186,8 @@ class Gate(QuantumOperator):
         else:
             qubits = target_qubits
             control_prefix = ""
-        inv_prefix = (
-            "inv @ "
-            if power and power < 0
-            else ""
-        )
-        power_prefix = (
-            f"pow({abs(power)}) @ "
-            if power is not None
-            else ""
-        )
+        inv_prefix = "inv @ " if power and power < 0 else ""
+        power_prefix = f"pow({abs(power)}) @ " if power is not None else ""
         param_string = (
             f"({', '.join(map(str, self.parameters))})" if hasattr(self, "parameters") else ""
         )

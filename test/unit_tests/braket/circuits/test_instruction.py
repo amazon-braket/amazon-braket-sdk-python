@@ -106,10 +106,15 @@ def test_adjoint_unsupported():
 
 
 def test_str(instr):
-    expected = "Instruction('operator': {}, 'target': {}, 'control': {})".format(
+    expected = (
+        "Instruction('operator': {}, 'target': {}, "
+        "'control': {}, 'control_state': {}, 'power': {})"
+    ).format(
         instr.operator,
         instr.target,
         instr.control,
+        instr.control_state.as_tuple,
+        instr.power,
     )
     assert str(instr) == expected
 
