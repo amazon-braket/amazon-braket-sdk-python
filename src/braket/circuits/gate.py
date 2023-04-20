@@ -73,6 +73,7 @@ class Gate(QuantumOperator):
         *,
         control: Optional[QubitSet] = None,
         control_state: Optional[BasisStateInput] = None,
+        power: Optional[float] = None,
     ) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -91,6 +92,8 @@ class Gate(QuantumOperator):
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
                 in the |1⟩ state. Default "1" * len(control).
+            power (Optional[float]): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
         Returns:
             Any: IR object of the quantum operator and target
 
@@ -100,7 +103,7 @@ class Gate(QuantumOperator):
             ValueError: If gate modifiers are supplied with `ir_type` Jaqcd.
         """
         if ir_type == IRType.JAQCD:
-            if control:
+            if control or power:
                 raise ValueError("Gate modifiers are not supported with Jaqcd.")
             return self._to_jaqcd(target)
         elif ir_type == IRType.OPENQASM:
@@ -116,6 +119,7 @@ class Gate(QuantumOperator):
                 serialization_properties or OpenQASMSerializationProperties(),
                 control=control,
                 control_state=control_state,
+                power=power,
             )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
@@ -139,6 +143,7 @@ class Gate(QuantumOperator):
         *,
         control: Optional[QubitSet] = None,
         control_state: Optional[BasisStateInput] = None,
+        power: Optional[float] = None,
     ) -> str:
         """
         Returns the openqasm string representation of the gate.
@@ -154,6 +159,8 @@ class Gate(QuantumOperator):
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
                 in the |1⟩ state. Default "1" * len(control).
+            power (Optional[float]): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
 
         Returns:
             str: Representing the openqasm representation of the gate.
@@ -179,11 +186,24 @@ class Gate(QuantumOperator):
         else:
             qubits = target_qubits
             control_prefix = ""
+        inv_prefix = (
+            "inv @ "
+            if power and power < 0
+            else ""
+        )
+        power_prefix = (
+            f"pow({abs(power)}) @ "
+            if power is not None
+            else ""
+        )
         param_string = (
             f"({', '.join(map(str, self.parameters))})" if hasattr(self, "parameters") else ""
         )
 
-        return f"{control_prefix}{self._qasm_name}{param_string} {', '.join(qubits)};"
+        return (
+            f"{inv_prefix}{power_prefix}{control_prefix}"
+            f"{self._qasm_name}{param_string} {', '.join(qubits)};"
+        )
 
     @property
     def ascii_symbols(self) -> Tuple[str, ...]:

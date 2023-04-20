@@ -1061,14 +1061,14 @@ def test_pulse_gate_to_matrix():
             QubitSet([0]),
             QubitSet([1, 2, 3]),
             [1, 0],
-            "negctrl @ ctrl @ negctrl @ " "z q[1], q[2], q[3], q[0];",
+            "negctrl @ ctrl @ negctrl @ z q[1], q[2], q[3], q[0];",
         ),
         (
             Gate.Z(),
             QubitSet([0]),
             QubitSet([1, 2, 3]),
             "10",
-            "negctrl @ ctrl @ negctrl @ " "z q[1], q[2], q[3], q[0];",
+            "negctrl @ ctrl @ negctrl @ z q[1], q[2], q[3], q[0];",
         ),
     ),
 )
@@ -1122,3 +1122,30 @@ def test_gate_control_invalid_state(control, control_state, error_string):
                 qubit_reference_type=QubitReferenceType.VIRTUAL
             ),
         )
+
+
+@pytest.mark.parametrize(
+    "gate, target, power, expected_ir",
+    (
+        (Gate.H(), QubitSet(0), 2, "pow(2) @ h q[0];"),
+        (Gate.H(), QubitSet(0), 2.0, "pow(2.0) @ h q[0];"),
+        (Gate.H(), QubitSet(0), 2.5, "pow(2.5) @ h q[0];"),
+        (Gate.H(), QubitSet(0), 0, "pow(0) @ h q[0];"),
+        (Gate.H(), QubitSet(0), -2, "inv @ pow(2) @ h q[0];"),
+        (Gate.H(), QubitSet(0), -2.0, "inv @ pow(2.0) @ h q[0];"),
+        (Gate.H(), QubitSet(0), -2.5, "inv @ pow(2.5) @ h q[0];"),
+    ),
+)
+def test_gate_power(gate, target, power, expected_ir):
+    serialization_properties = OpenQASMSerializationProperties(
+        qubit_reference_type=QubitReferenceType.VIRTUAL
+    )
+    assert (
+        gate.to_ir(
+            target,
+            power=power,
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+        )
+        == expected_ir
+    )
