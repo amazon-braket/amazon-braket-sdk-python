@@ -1126,9 +1126,7 @@ class CNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cnot(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
-    ) -> Instruction:
+    def cnot(control: QubitSetInput, target: QubitInput, power: Optional[float] = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
@@ -1798,9 +1796,7 @@ class CV(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cv(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
-    ) -> Instruction:
+    def cv(control: QubitSetInput, target: QubitInput, power: Optional[float] = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
@@ -1860,9 +1856,7 @@ class CY(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cy(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
-    ) -> Instruction:
+    def cy(control: QubitSetInput, target: QubitInput, power: Optional[float] = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
@@ -1914,9 +1908,7 @@ class CZ(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cz(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
-    ) -> Instruction:
+    def cz(control: QubitSetInput, target: QubitInput, power: Optional[float] = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
