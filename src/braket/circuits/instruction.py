@@ -205,7 +205,7 @@ class Instruction:
         control_mapping: Dict[QubitInput, QubitInput] = None,
         control: QubitSetInput = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """
         Return a shallow copy of the instruction.
@@ -232,6 +232,7 @@ class Instruction:
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: A shallow copy of the instruction.
