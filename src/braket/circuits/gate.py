@@ -73,7 +73,7 @@ class Gate(QuantumOperator):
         *,
         control: Optional[QubitSet] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -94,6 +94,7 @@ class Gate(QuantumOperator):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
         Returns:
             Any: IR object of the quantum operator and target
 
@@ -103,7 +104,7 @@ class Gate(QuantumOperator):
             ValueError: If gate modifiers are supplied with `ir_type` Jaqcd.
         """
         if ir_type == IRType.JAQCD:
-            if control or power is not None:
+            if control or power != 1:
                 raise ValueError("Gate modifiers are not supported with Jaqcd.")
             return self._to_jaqcd(target)
         elif ir_type == IRType.OPENQASM:
@@ -143,7 +144,7 @@ class Gate(QuantumOperator):
         *,
         control: Optional[QubitSet] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> str:
         """
         Returns the openqasm string representation of the gate.
@@ -161,6 +162,7 @@ class Gate(QuantumOperator):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             str: Representing the openqasm representation of the gate.
@@ -187,7 +189,7 @@ class Gate(QuantumOperator):
             qubits = target_qubits
             control_prefix = ""
         inv_prefix = "inv @ " if power and power < 0 else ""
-        power_prefix = f"pow({abs(power)}) @ " if power is not None else ""
+        power_prefix = f"pow({abs_power}) @ " if (abs_power := abs(power)) != 1 else ""
         param_string = (
             f"({', '.join(map(str, self.parameters))})" if hasattr(self, "parameters") else ""
         )

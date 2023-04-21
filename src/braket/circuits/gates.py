@@ -88,7 +88,7 @@ class H(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -103,6 +103,7 @@ class H(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of H instructions.
@@ -152,7 +153,7 @@ class I(Gate):  # noqa: E742, E261
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -167,6 +168,7 @@ class I(Gate):  # noqa: E742, E261
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of I instructions.
@@ -216,7 +218,7 @@ class X(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -231,6 +233,7 @@ class X(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of X instructions.
@@ -280,7 +283,7 @@ class Y(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -295,6 +298,7 @@ class Y(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Y instructions.
@@ -344,7 +348,7 @@ class Z(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -359,6 +363,7 @@ class Z(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Z instructions.
@@ -408,7 +413,7 @@ class S(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -423,6 +428,7 @@ class S(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of S instructions.
@@ -472,7 +478,7 @@ class Si(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -487,6 +493,7 @@ class Si(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: Iterable of Si instructions.
@@ -536,7 +543,7 @@ class T(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -551,6 +558,7 @@ class T(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of T instructions.
@@ -600,7 +608,7 @@ class Ti(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -615,6 +623,7 @@ class Ti(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Ti instructions.
@@ -664,7 +673,7 @@ class V(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -679,6 +688,7 @@ class V(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of V instructions.
@@ -728,7 +738,7 @@ class Vi(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -743,6 +753,7 @@ class Vi(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Vi instructions.
@@ -810,7 +821,7 @@ class Rx(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -826,6 +837,7 @@ class Rx(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -889,7 +901,7 @@ class Ry(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -905,6 +917,7 @@ class Ry(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -964,7 +977,7 @@ class Rz(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -980,6 +993,7 @@ class Rz(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -1037,7 +1051,7 @@ class PhaseShift(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -1053,6 +1067,7 @@ class PhaseShift(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: PhaseShift instruction.
@@ -1112,7 +1127,7 @@ class CNot(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cnot(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = None
+        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1122,6 +1137,7 @@ class CNot(Gate):
             target (QubitInput): Target qubit index.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CNot instruction.
@@ -1178,7 +1194,7 @@ class Swap(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1194,6 +1210,7 @@ class Swap(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: Swap instruction.
@@ -1252,7 +1269,7 @@ class ISwap(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1268,6 +1285,7 @@ class ISwap(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: ISwap instruction.
@@ -1338,7 +1356,7 @@ class PSwap(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1355,6 +1373,7 @@ class PSwap(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: PSwap instruction.
@@ -1433,7 +1452,7 @@ class XY(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1450,6 +1469,7 @@ class XY(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: XY instruction.
@@ -1506,7 +1526,7 @@ class CPhaseShift(AngledGate):
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1517,6 +1537,7 @@ class CPhaseShift(AngledGate):
             angle (Union[FreeParameterExpression, float]): angle in radians.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift instruction.
@@ -1574,7 +1595,7 @@ class CPhaseShift00(AngledGate):
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1585,6 +1606,7 @@ class CPhaseShift00(AngledGate):
             angle (Union[FreeParameterExpression, float]): angle in radians.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift00 instruction.
@@ -1642,7 +1664,7 @@ class CPhaseShift01(AngledGate):
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1653,6 +1675,7 @@ class CPhaseShift01(AngledGate):
             angle (Union[FreeParameterExpression, float]): angle in radians.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift01 instruction.
@@ -1710,7 +1733,7 @@ class CPhaseShift10(AngledGate):
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1721,6 +1744,7 @@ class CPhaseShift10(AngledGate):
             angle (Union[FreeParameterExpression, float]): angle in radians.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift10 instruction.
@@ -1775,7 +1799,7 @@ class CV(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cv(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = None
+        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1785,6 +1809,7 @@ class CV(Gate):
             target (QubitInput): Target qubit index.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CV instruction.
@@ -1836,7 +1861,7 @@ class CY(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cy(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = None
+        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1846,6 +1871,7 @@ class CY(Gate):
             target (QubitInput): Target qubit index.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CY instruction.
@@ -1889,7 +1915,7 @@ class CZ(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cz(
-        control: QubitSetInput, target: QubitInput, power: Optional[float] = None
+        control: QubitSetInput, target: QubitInput, power: Optional[float] = 1
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1899,6 +1925,7 @@ class CZ(Gate):
             target (QubitInput): Target qubit index.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CZ instruction.
@@ -1954,7 +1981,7 @@ class ECR(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1970,6 +1997,7 @@ class ECR(Gate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: ECR instruction.
@@ -2048,7 +2076,7 @@ class XX(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -2065,6 +2093,7 @@ class XX(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: XX instruction.
@@ -2143,7 +2172,7 @@ class YY(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -2160,6 +2189,7 @@ class YY(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: YY instruction.
@@ -2232,7 +2262,7 @@ class ZZ(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -2249,6 +2279,7 @@ class ZZ(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: ZZ instruction.
@@ -2315,7 +2346,7 @@ class CCNot(Gate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -2334,6 +2365,7 @@ class CCNot(Gate):
                 the control argument, not control1 and control2. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CCNot instruction.
@@ -2394,7 +2426,7 @@ class CSwap(Gate):
         control: QubitSetInput,
         target1: QubitInput,
         target2: QubitInput,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -2405,6 +2437,7 @@ class CSwap(Gate):
             target2 (QubitInput): Target qubit 2 index.
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CSwap instruction.
@@ -2469,7 +2502,7 @@ class GPi(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -2485,6 +2518,7 @@ class GPi(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: GPi instruction.
@@ -2547,7 +2581,7 @@ class GPi2(AngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -2563,6 +2597,7 @@ class GPi2(AngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: GPi2 instruction.
@@ -2635,7 +2670,7 @@ class MS(DoubleAngledGate):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -2653,6 +2688,7 @@ class MS(DoubleAngledGate):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: MS instruction.
@@ -2827,7 +2863,7 @@ class PulseGate(Gate, Parameterizable):
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ) -> Instruction:
         """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
            within circuits.
@@ -2847,6 +2883,7 @@ class PulseGate(Gate, Parameterizable):
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: Pulse gate instruction.

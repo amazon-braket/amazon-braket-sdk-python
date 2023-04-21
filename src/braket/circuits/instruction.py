@@ -40,7 +40,7 @@ class Instruction:
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = None,
+        power: Optional[float] = 1,
     ):
         """
         InstructionOperator includes objects of type `Gate` and `Noise` only.
@@ -58,6 +58,7 @@ class Instruction:
                 in the |1⟩ state. Default "1" * len(control).
             power (Optional[float]): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the `Qubit`
@@ -131,7 +132,7 @@ class Instruction:
         """
         float: Power that the operator is raised to.
         """
-        return self._power if self._power is not None else 1
+        return self._power
 
     def adjoint(self) -> List[Instruction]:
         """Returns a list of Instructions implementing adjoint of this instruction's own operator
@@ -183,7 +184,7 @@ class Instruction:
         if self.control:
             kwargs["control"] = self.control
             kwargs["control_state"] = self.control_state
-        if self._power is not None:
+        if self.power != 1:
             kwargs["power"] = self.power
         return self._operator.to_ir(
             [int(qubit) for qubit in self._target],
