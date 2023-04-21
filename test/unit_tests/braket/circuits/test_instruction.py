@@ -193,3 +193,15 @@ def test_copy_with_control_target_and_mapping(instr):
     cant_do_both = "Only 'control_mapping' or 'control' can be supplied, but not both."
     with pytest.raises(TypeError, match=cant_do_both):
         instr.copy(target=[10], control=[10], control_mapping={0: 10})
+
+
+def test_pow(instr):
+    assert instr.power == 1
+    cubed = instr**3
+    assert instr.power == 1
+    assert cubed.power == 3
+    then_squared = cubed**2
+    assert cubed.power == 3
+    assert then_squared.power == 6
+    modded = then_squared.__pow__(6, 5)
+    assert modded.power == 1

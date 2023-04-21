@@ -293,3 +293,9 @@ class Instruction:
                 self._power,
             )
         return NotImplemented
+
+    def __pow__(self, power, modulo=None):
+        new_power = self.power * power
+        if modulo is not None:
+            new_power %= modulo
+        return self.copy(power=new_power)
