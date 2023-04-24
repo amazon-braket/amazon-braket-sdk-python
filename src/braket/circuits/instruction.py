@@ -40,7 +40,7 @@ class Instruction:
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = 1,
+        power: float = 1,
     ):
         """
         InstructionOperator includes objects of type `Gate` and `Noise` only.
@@ -56,7 +56,7 @@ class Instruction:
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
                 in the |1⟩ state. Default "1" * len(control).
-            power (Optional[float]): Integer or fractional power to raise the gate to. Negative
+            power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
 
@@ -205,7 +205,7 @@ class Instruction:
         control_mapping: Dict[QubitInput, QubitInput] = None,
         control: QubitSetInput = None,
         control_state: Optional[BasisStateInput] = None,
-        power: Optional[float] = 1,
+        power: float = 1,
     ) -> Instruction:
         """
         Return a shallow copy of the instruction.
@@ -230,7 +230,7 @@ class Instruction:
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
                 in the |1⟩ state. Default "1" * len(control).
-            power (Optional[float]): Integer or fractional power to raise the gate to. Negative
+            power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
 
