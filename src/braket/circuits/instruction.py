@@ -40,6 +40,7 @@ class Instruction:
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ):
         """
         InstructionOperator includes objects of type `Gate` and `Noise` only.
@@ -55,6 +56,9 @@ class Instruction:
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
                 in the |1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Raises:
             ValueError: If `operator` is empty or any integer in `target` does not meet the `Qubit`
@@ -95,6 +99,7 @@ class Instruction:
             (1,) * len(control_set) if control_state is None else control_state,
             len(control_set),
         )
+        self._power = power
 
     @property
     def operator(self) -> InstructionOperator:
@@ -122,6 +127,13 @@ class Instruction:
         """
         return self._control_state
 
+    @property
+    def power(self) -> float:
+        """
+        float: Power that the operator is raised to.
+        """
+        return self._power
+
     def adjoint(self) -> List[Instruction]:
         """Returns a list of Instructions implementing adjoint of this instruction's own operator
 
@@ -137,7 +149,11 @@ class Instruction:
         if isinstance(operator, Gate):
             return [
                 Instruction(
-                    gate, self._target, control=self._control, control_state=self._control_state
+                    gate,
+                    self._target,
+                    control=self._control,
+                    control_state=self._control_state,
+                    power=self._power,
                 )
                 for gate in operator.adjoint()
             ]
@@ -168,6 +184,8 @@ class Instruction:
         if self.control:
             kwargs["control"] = self.control
             kwargs["control_state"] = self.control_state
+        if self.power != 1:
+            kwargs["power"] = self.power
         return self._operator.to_ir(
             [int(qubit) for qubit in self._target],
             ir_type=ir_type,
@@ -187,6 +205,7 @@ class Instruction:
         control_mapping: Dict[QubitInput, QubitInput] = None,
         control: QubitSetInput = None,
         control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Instruction:
         """
         Return a shallow copy of the instruction.
@@ -211,6 +230,9 @@ class Instruction:
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
                 in the |1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: A shallow copy of the instruction.
@@ -240,21 +262,41 @@ class Instruction:
         new_control_state = self._control_state if control_state is None else control_state
 
         return Instruction(
-            self._operator, new_target, control=new_control, control_state=new_control_state
+            self._operator,
+            new_target,
+            control=new_control,
+            control_state=new_control_state,
+            power=power,
         )
 
     def __repr__(self):
         return (
             f"Instruction('operator': {self._operator}, "
             f"'target': {self._target}, "
-            f"'control': {self._control})"
+            f"'control': {self._control}, "
+            f"'control_state': {self._control_state.as_tuple}, "
+            f"'power': {self.power})"
         )
 
     def __eq__(self, other):
         if isinstance(other, Instruction):
-            return (self._operator, self._target, self._control) == (
+            return (
+                self._operator,
+                self._target,
+                self._control,
+                self._control_state,
+                self._power,
+            ) == (
                 other._operator,
                 other._target,
                 self._control,
+                self._control_state,
+                self._power,
             )
         return NotImplemented
+
+    def __pow__(self, power, modulo=None):
+        new_power = self.power * power
+        if modulo is not None:
+            new_power %= modulo
+        return self.copy(power=new_power)
