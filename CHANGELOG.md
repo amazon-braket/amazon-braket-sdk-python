@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.37.1 (2023-04-25)
+
+### Bug Fixes and Other Changes
+
+ * test: fix tox parallel issues with unsorted sets
+ * Mock task creation against QPUs for tracker
+ * test: order terminal states for quantum jobs
+
+### Testing and Release Infrastructure
+
+ * speed up unit testing by automatically parallelizing the CPU workers for test runs
+
 ## v1.37.0 (2023-04-11)
 
 ### Features
