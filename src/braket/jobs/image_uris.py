@@ -47,11 +47,11 @@ def retrieve_image(framework: Framework, region: str) -> str:
     registry = _registry_for_region(version_config, region)
     tag = ""
     if framework == Framework.PL_TENSORFLOW:
-        tag = f"{version_config['repository']}:{framework_version}-gpu-py39-cu112-ubuntu20.04"
+        tag = f"{version_config['repository']}:{framework_version}-gpu-py310-cu118-ubuntu20.04"
     elif framework == Framework.PL_PYTORCH:
-        tag = f"{version_config['repository']}:{framework_version}-gpu-py39-cu117-ubuntu20.04"
+        tag = f"{version_config['repository']}:{framework_version}-gpu-py310-cu118-ubuntu20.04"
     else:
-        tag = f"{version_config['repository']}:{framework_version}-cpu-py39-ubuntu22.04"
+        tag = f"{version_config['repository']}:{framework_version}-cpu-py310-ubuntu22.04"
     return f"{registry}.dkr.ecr.{region}.amazonaws.com/{tag}"
 
 

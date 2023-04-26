@@ -23,19 +23,19 @@ from braket.jobs.image_uris import Framework, retrieve_image
             "us-west-1",
             Framework.BASE,
             "292282985366.dkr.ecr.us-west-1.amazonaws.com/"
-            "amazon-braket-base-jobs:1.0-cpu-py39-ubuntu22.04",
+            "amazon-braket-base-jobs:1.0-cpu-py310-ubuntu22.04",
         ),
         (
             "us-east-1",
             Framework.PL_TENSORFLOW,
             "292282985366.dkr.ecr.us-east-1.amazonaws.com/amazon-braket-tensorflow-jobs:"
-            "2.11.0-gpu-py39-cu112-ubuntu20.04",
+            "2.12.0-gpu-py310-cu118-ubuntu20.04",
         ),
         (
             "us-west-2",
             Framework.PL_PYTORCH,
             "292282985366.dkr.ecr.us-west-2.amazonaws.com/"
-            "amazon-braket-pytorch-jobs:1.13.1-gpu-py39-cu117-ubuntu20.04",
+            "amazon-braket-pytorch-jobs:2.0.0-gpu-py310-cu118-ubuntu20.04",
         ),
     ],
 )
