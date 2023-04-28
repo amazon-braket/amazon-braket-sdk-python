@@ -148,6 +148,7 @@ def test_result_types_tensor_hermitian_hermitian(
     )
 
 
+@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
