@@ -10,8 +10,8 @@ on:
       - feature/**
 
 jobs:
-  build-and-publish:
-    name: Build and publish distribution to PyPi
+  twine-check:
+    name: Check long description
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
