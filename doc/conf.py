@@ -25,6 +25,8 @@ autoclass_content = "both"
 autodoc_member_order = "bysource"
 default_role = "py:obj"
 
+language = 'en'
+
 html_theme = "sphinx_rtd_theme"
 htmlhelp_basename = "{}doc".format(project)
 
