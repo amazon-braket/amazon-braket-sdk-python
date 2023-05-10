@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.38.0 (2023-05-01)
+
+### Features
+
+ * add tagging for python 3.10 images
+
 ## v1.37.1 (2023-04-25)
 
 ### Bug Fixes and Other Changes
