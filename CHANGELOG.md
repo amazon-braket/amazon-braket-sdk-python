@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.38.1 (2023-05-11)
+
+### Bug Fixes and Other Changes
+
+ * hardcode the language used by Sphinx instead of falling back on the default
+
 ## v1.38.0 (2023-05-01)
 
 ### Features
