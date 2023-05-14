@@ -41,7 +41,7 @@ class Observable(QuantumOperator):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         self._coef = 1
 
-    def _unscaled(self):
+    def _unscaled(self) -> Observable:
         return Observable(qubit_count=self.qubit_count, ascii_symbols=self.ascii_symbols)
 
     def to_ir(
@@ -105,7 +105,11 @@ class Observable(QuantumOperator):
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
     @property
-    def coefficient(self):
+    def coefficient(self) -> int:
+        """
+        Returns:
+            int: coefficient value of the observable.
+        """
         return self._coef
 
     @property
@@ -195,7 +199,7 @@ class StandardObservable(Observable):
         super().__init__(qubit_count=1, ascii_symbols=ascii_symbols)
         self._eigenvalues = (1.0, -1.0)  # immutable
 
-    def _unscaled(self):
+    def _unscaled(self) -> StandardObservable:
         return StandardObservable(ascii_symbols=self.ascii_symbols)
 
     @property

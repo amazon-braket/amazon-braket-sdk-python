@@ -114,9 +114,8 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
-                PulseSequence, AnalogHamiltonianSimulation]): The specification of the task to run
-                on device.
+            task_specification (Union[Circuit, Problem, OpenQASMProgram, BlackbirdProgram,PulseSequence, AnalogHamiltonianSimulation]): # noqa
+                The specification of the task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -139,7 +138,7 @@ class AwsQuantumTask(QuantumTask):
                 An example would be:
                 `{"state": "washington"}`
 
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+            inputs (Dict[str, float]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
