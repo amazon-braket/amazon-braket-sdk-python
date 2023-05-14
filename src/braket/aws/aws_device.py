@@ -436,7 +436,8 @@ class AwsDevice(Device):
             >>> print(device.topology_graph.edges)
 
         Returns:
-            DiGraph: `None` if the topology is not available for the device.
+            DiGraph: topology of QPU as a networkx `DiGraph` object. `None` if the topology
+            is not available for the device.
         """
         if not self._topology_graph:
             self._topology_graph = self._construct_topology_graph()
