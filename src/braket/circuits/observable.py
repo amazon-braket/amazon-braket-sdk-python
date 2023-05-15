@@ -134,7 +134,7 @@ class Observable(QuantumOperator):
             index (int): The index of the desired eigenvalue
 
         Returns:
-            float: The `index`th eigenvalue of the observable.
+            float: The `index` th eigenvalue of the observable.
         """
         raise NotImplementedError
 

@@ -65,7 +65,7 @@ class PulseSequence:
 
     @property
     def parameters(self) -> Set[FreeParameter]:
-        """Returns the set of `FreeParameter`s in the PulseSequence."""
+        """Returns the set of `FreeParameter` s in the PulseSequence."""
         return self._free_parameters.copy()
 
     def set_frequency(

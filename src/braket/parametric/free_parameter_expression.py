@@ -144,7 +144,7 @@ def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
     """Substitute a free parameter with the given kwargs, if any.
     Args:
         parameter (Any): The parameter.
-        **kwargs: The kwargs to use to substitute.
+        ``**kwargs``: The kwargs to use to substitute.
 
     Returns:
         Any: The substituted parameters.
