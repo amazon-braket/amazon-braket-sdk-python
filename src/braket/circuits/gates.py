@@ -2227,11 +2227,12 @@ class PulseGate(Gate, Parameterizable):
 
     @property
     def parameters(self) -> List[FreeParameter]:
-        """Returns the list of `FreeParameter`s associated with the gate."""
+        """Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:
-        """Takes in parameters and returns an object with specified parameters
+        """
+        Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
         Returns:
