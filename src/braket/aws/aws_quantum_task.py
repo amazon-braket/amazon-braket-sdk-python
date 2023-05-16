@@ -622,7 +622,7 @@ def _(
     create_task_kwargs.update(
         {
             "action": problem.to_ir().json(),
-            "deviceParameters": device_params.json(exclude_none=True),
+            "deviceParameters": device_params.json(),
         }
     )
 
