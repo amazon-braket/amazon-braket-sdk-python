@@ -62,7 +62,6 @@ SIMULATOR_ARN = "device/quantum-simulator"
 XANADU_ARN = "device/qpu/xanadu"
 
 DEVICE_PARAMETERS = [
-    (IONQ_ARN, IonqDeviceParameters),
     (RIGETTI_ARN, RigettiDeviceParameters),
     (OQC_ARN, OqcDeviceParameters),
     (SIMULATOR_ARN, GateModelSimulatorDeviceParameters),
