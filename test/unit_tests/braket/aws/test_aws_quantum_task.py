@@ -1090,7 +1090,7 @@ def _assert_create_quantum_task_called_with(
     }
 
     if device_parameters is not None:
-        test_kwargs.update({"deviceParameters": device_parameters.json()})
+        test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
     if tags is not None:
         test_kwargs.update({"tags": tags})
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
