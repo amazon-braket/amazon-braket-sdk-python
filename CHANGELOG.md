@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.38.3 (2023-05-16)
+
+### Bug Fixes and Other Changes
+
+ * Remove `exclude_none` from device params
+
 ## v1.38.2 (2023-05-16)
 
 ### Bug Fixes and Other Changes
