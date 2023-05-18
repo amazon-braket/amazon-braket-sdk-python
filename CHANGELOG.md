@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.39.1 (2023-05-18)
+
+### Bug Fixes and Other Changes
+
+ * exclude default none for kms
+ * test: Rename ionQdevice to Harmony in tests
+ * making kms key optional
+
+### Testing and Release Infrastructure
+
+ * twine check action
+
 ## v1.39.0 (2023-05-16)
 
 ### Features
