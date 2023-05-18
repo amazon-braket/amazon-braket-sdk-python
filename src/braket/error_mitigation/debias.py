@@ -11,8 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-   Version number (major.minor.patch[-label])
-"""
+from typing import List
 
-__version__ = "1.39.1.dev0"
+from braket.device_schema import error_mitigation
+from braket.error_mitigation.error_mitigation import ErrorMitigation
+
+
+class Debias(ErrorMitigation):
+    """
+    The debias error mitigation scheme. This scheme takes no parameters.
+    """
+
+    def serialize(self) -> List[error_mitigation.Debias]:
+        return [error_mitigation.Debias()]

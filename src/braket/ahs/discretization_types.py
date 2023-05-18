@@ -26,9 +26,9 @@ class DiscretizationProperties:
     """Capabilities of a device that represent the resolution with which the device can
     implement the parameters.
 
-    lattice (Any): configuration values for discretization of the lattice geometry,
+    :parameter lattice (Any): configuration values for discretization of the lattice geometry,
         including the position resolution.
-    rydberg (Any): configuration values for discretization of Rydberg fields.
+    :parameter rydberg (Any): configuration values for discretization of Rydberg fields.
 
     Examples:
         lattice.geometry.positionResolution = Decimal("1E-7")

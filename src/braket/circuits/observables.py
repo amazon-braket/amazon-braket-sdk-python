@@ -378,7 +378,7 @@ class TensorProduct(Observable):
             index (int): The index of the desired eigenvalue
 
         Returns:
-            float: The `index`th eigenvalue of the observable.
+            float: The `index` th eigenvalue of the observable.
         """
         if index in self._eigenvalue_indices:
             return self._eigenvalue_indices[index]
