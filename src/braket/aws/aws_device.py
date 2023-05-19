@@ -114,9 +114,8 @@ class AwsDevice(Device):
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
                 Specification of task (circuit or annealing problem or program) to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the task's results to. Default is `<default_bucket>/tasks` if evoked
-                outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
-                a Braket Job.
+                save the task's results to. Default is `<default_bucket>/tasks` if evoked outside a
+                Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
@@ -218,9 +217,8 @@ class AwsDevice(Device):
                 Single instance or list of circuits, annealing problems, pulse sequences,
                 or photonics program to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
-                outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
-                a Braket Job.
+                save the tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
+                Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             max_parallel (Optional[int]): The maximum number of tasks to run on AWS in parallel.

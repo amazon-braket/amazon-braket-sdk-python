@@ -11,8 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-   Version number (major.minor.patch[-label])
-"""
+from typing import List
 
-__version__ = "1.39.2.dev0"
+from braket.device_schema import error_mitigation
+
+
+class ErrorMitigation:
+    def serialize(self) -> List[error_mitigation.ErrorMitigationScheme]:
+        """
+        Returns:
+            List[ErrorMitigationScheme]: A list of service-readable error
+            mitigation scheme descriptions.
+        """
+        raise NotImplementedError("serialize is not implemented.")

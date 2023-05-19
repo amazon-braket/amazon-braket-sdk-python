@@ -27,7 +27,7 @@ from braket.tracking.tracker import MIN_SIMULATOR_DURATION
 @pytest.mark.parametrize(
     "qpu",
     [
-        "arn:aws:braket:::device/qpu/ionq/ionQdevice",
+        "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony",
         "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
         "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3",
     ],

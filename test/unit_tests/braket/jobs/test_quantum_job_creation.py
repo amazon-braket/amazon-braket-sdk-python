@@ -30,6 +30,7 @@ from braket.jobs.config import (
     StoppingCondition,
 )
 from braket.jobs.quantum_job_creation import (
+    _exclude_nones_factory,
     _generate_default_job_name,
     _process_input_data,
     _process_local_source_module,
@@ -356,7 +357,7 @@ def _translate_creation_args(create_job_args):
         "algorithmSpecification": algorithm_specification,
         "inputDataConfig": _process_input_data(input_data, job_name, aws_session),
         "instanceConfig": asdict(instance_config),
-        "outputDataConfig": asdict(output_data_config),
+        "outputDataConfig": asdict(output_data_config, dict_factory=_exclude_nones_factory),
         "checkpointConfig": asdict(checkpoint_config),
         "deviceConfig": {"device": device},
         "hyperParameters": hyperparameters,
