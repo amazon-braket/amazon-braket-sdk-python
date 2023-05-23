@@ -82,7 +82,7 @@ class AwsDevice(Device):
         self._arn = arn
         self._properties = None
         self._provider_name = None
-        self._topology_graph = None
+        self._poll_interval_seconds = None
         self._type = None
         self._aws_session = self._get_session_and_initialize(aws_session or AwsSession())
         self._ports = None
@@ -101,7 +101,7 @@ class AwsDevice(Device):
         s3_destination_folder: Optional[AwsSession.S3DestinationFolder] = None,
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
-        poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
+        poll_interval_seconds: Optional[float] = None,
         inputs: Optional[Dict[str, float]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
@@ -114,15 +114,15 @@ class AwsDevice(Device):
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
                 Specification of task (circuit or annealing problem or program) to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the task's results to. Default is `<default_bucket>/tasks` if evoked
-                outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
-                a Braket Job.
+                save the task's results to. Default is `<default_bucket>/tasks` if evoked outside a
+                Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
-                in seconds. Default: 1 second.
+                in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
+                ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
@@ -172,7 +172,7 @@ class AwsDevice(Device):
             or (self._aws_session.default_bucket(), "tasks"),
             shots if shots is not None else self._default_shots,
             poll_timeout_seconds=poll_timeout_seconds,
-            poll_interval_seconds=poll_interval_seconds,
+            poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
@@ -219,9 +219,8 @@ class AwsDevice(Device):
                 AnalogHamiltonianSimulation]]]): Single instance or list of circuits, annealing
                 problems, pulse sequences, or photonics program to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the tasks' results to. Default is `<default_bucket>/tasks` if evoked
-                outside of a Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside of
-                a Braket Job.
+                save the tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
+                Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             max_parallel (Optional[int]): The maximum number of tasks to run on AWS in parallel.
@@ -231,8 +230,9 @@ class AwsDevice(Device):
                 Also the maximum number of thread pool workers for the batch. Default: 100
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
-            poll_interval_seconds (float): The polling interval for results in seconds.
-                Default: 1 second.
+            poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
+                in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
+                ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
@@ -258,7 +258,7 @@ class AwsDevice(Device):
             max_parallel=max_parallel if max_parallel is not None else self._default_max_parallel,
             max_workers=max_connections,
             poll_timeout_seconds=poll_timeout_seconds,
-            poll_interval_seconds=poll_interval_seconds,
+            poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
@@ -321,7 +321,14 @@ class AwsDevice(Device):
         self._status = metadata.get("deviceStatus")
         self._type = AwsDeviceType(metadata.get("deviceType"))
         self._provider_name = metadata.get("providerName")
-        self._properties = metadata.get("deviceCapabilities")
+        self._properties = BraketSchemaBase.parse_raw_schema(metadata.get("deviceCapabilities"))
+        device_poll_interval = self._properties.service.getTaskPollIntervalMillis
+        self._poll_interval_seconds = (
+            device_poll_interval / 1000.0
+            if device_poll_interval
+            else AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL
+        )
+        self._topology_graph = None
         self._frames = None
         self._ports = None
 
@@ -412,7 +419,7 @@ class AwsDevice(Device):
         Please see `braket.device_schema` in amazon-braket-schemas-python_
 
         .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
-        return BraketSchemaBase.parse_raw_schema(self._properties)
+        return self._properties
 
     @property
     def topology_graph(self) -> DiGraph:
@@ -429,7 +436,9 @@ class AwsDevice(Device):
 
             >>> print(device.topology_graph.edges)
         """
-        return self._construct_topology_graph()
+        if not self._topology_graph:
+            self._topology_graph = self._construct_topology_graph()
+        return self._topology_graph
 
     def _construct_topology_graph(self) -> DiGraph:
         """

@@ -1,5 +1,78 @@
 # Changelog
 
+## v1.39.1 (2023-05-18)
+
+### Bug Fixes and Other Changes
+
+ * exclude default none for kms
+ * test: Rename ionQdevice to Harmony in tests
+ * making kms key optional
+
+### Testing and Release Infrastructure
+
+ * twine check action
+
+## v1.39.0 (2023-05-16)
+
+### Features
+
+ * Introduce error mitigation
+
+## v1.38.3 (2023-05-16)
+
+### Bug Fixes and Other Changes
+
+ * Remove `exclude_none` from device params
+
+## v1.38.2 (2023-05-16)
+
+### Bug Fixes and Other Changes
+
+ * docs: add a linter to check proper rst formatting and fix up incorrect docs
+
+## v1.38.1 (2023-05-11)
+
+### Bug Fixes and Other Changes
+
+ * hardcode the language used by Sphinx instead of falling back on the default
+
+## v1.38.0 (2023-05-01)
+
+### Features
+
+ * add tagging for python 3.10 images
+
+## v1.37.1 (2023-04-25)
+
+### Bug Fixes and Other Changes
+
+ * test: fix tox parallel issues with unsorted sets
+ * Mock task creation against QPUs for tracker
+ * test: order terminal states for quantum jobs
+
+### Testing and Release Infrastructure
+
+ * speed up unit testing by automatically parallelizing the CPU workers for test runs
+
+## v1.37.0 (2023-04-11)
+
+### Features
+
+ * Introduce AHS-related utils from examples repo
+ * upgrade container URIs for python 3.9
+
+### Bug Fixes and Other Changes
+
+ * correct the python version in the container integ tests to the correct one
+ * Use device-specific poll interval if provided
+
+## v1.36.5 (2023-04-03)
+
+### Bug Fixes and Other Changes
+
+ * support adding a single instruction to moments
+ * typo in noise_model.py
+
 ## v1.36.4 (2023-03-27)
 
 ### Bug Fixes and Other Changes
