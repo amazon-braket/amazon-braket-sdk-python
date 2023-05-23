@@ -54,8 +54,8 @@ class Instruction:
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -228,8 +228,8 @@ class Instruction:
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.

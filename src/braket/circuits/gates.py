@@ -99,8 +99,8 @@ class H(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -164,8 +164,8 @@ class I(Gate):  # noqa: E742, E261
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -229,8 +229,8 @@ class X(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -294,8 +294,8 @@ class Y(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -359,8 +359,8 @@ class Z(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -424,8 +424,8 @@ class S(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -489,8 +489,8 @@ class Si(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -554,8 +554,8 @@ class T(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -619,8 +619,8 @@ class Ti(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -684,8 +684,8 @@ class V(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -749,8 +749,8 @@ class Vi(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -833,8 +833,8 @@ class Rx(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -913,8 +913,8 @@ class Ry(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -989,8 +989,8 @@ class Rz(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -1063,8 +1063,8 @@ class PhaseShift(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -1204,8 +1204,8 @@ class Swap(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -1279,8 +1279,8 @@ class ISwap(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -1367,8 +1367,8 @@ class PSwap(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -1463,8 +1463,8 @@ class XY(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -1985,8 +1985,8 @@ class ECR(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -2081,8 +2081,8 @@ class XX(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -2177,8 +2177,8 @@ class YY(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -2267,8 +2267,8 @@ class ZZ(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -2352,8 +2352,8 @@ class CCNot(Gate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Control state only applies to control qubits specified with
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Control state only applies to control qubits specified with
                 the control argument, not control1 and control2. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
@@ -2506,8 +2506,8 @@ class GPi(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -2585,8 +2585,8 @@ class GPi2(AngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -2676,8 +2676,8 @@ class MS(DoubleAngledGate):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
@@ -2871,8 +2871,8 @@ class PulseGate(Gate, Parameterizable):
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
-                controlling on qubits 0 and 2 being in the |0⟩ state and qubits 1 and 3 being
-                in the |1⟩ state. Default "1" * len(control).
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
             power (float): Integer or fractional power to raise the gate to. Negative
                 powers will be split into an inverse, accompanied by the positive power.
                 Default 1.
