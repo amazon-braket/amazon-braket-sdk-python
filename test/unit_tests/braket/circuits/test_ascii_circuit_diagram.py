@@ -187,8 +187,26 @@ def test_connector_across_two_qubits():
     _assert_correct_diagram(circ, expected)
 
 
+def test_connector_across_three_qubits():
+    circ = Circuit().x(control=(3, 4), target=5).h(range(2, 6))
+    expected = (
+        "T  : |0|1|",
+        "          ",
+        "q2 : -H---",
+        "          ",
+        "q3 : -C-H-",
+        "      |   ",
+        "q4 : -C-H-",
+        "      |   ",
+        "q5 : -X-H-",
+        "",
+        "T  : |0|1|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_overlapping_qubits():
-    circ = Circuit().cnot(0, 2).cnot(1, 3).h(0)
+    circ = Circuit().cnot(0, 2).x(control=1, target=3).h(0)
     expected = (
         "T  : | 0 |1|",
         "            ",
@@ -206,7 +224,7 @@ def test_overlapping_qubits():
 
 
 def test_overlapping_qubits_angled_gates():
-    circ = Circuit().zz(0, 2, 0.15).cnot(1, 3).h(0)
+    circ = Circuit().zz(0, 2, 0.15).x(control=1, target=3).h(0)
     expected = (
         "T  : |    0     |1|",
         "                   ",
@@ -224,7 +242,7 @@ def test_overlapping_qubits_angled_gates():
 
 
 def test_connector_across_gt_two_qubits():
-    circ = Circuit().h(4).cnot(3, 5).h(4).h(2)
+    circ = Circuit().h(4).x(control=3, target=5).h(4).h(2)
     expected = (
         "T  : | 0 |1|",
         "            ",
