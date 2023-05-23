@@ -211,7 +211,7 @@ def prepare_quantum_job(
         "algorithmSpecification": algorithm_specification,
         "inputDataConfig": input_data_list,
         "instanceConfig": asdict(instance_config),
-        "outputDataConfig": asdict(output_data_config),
+        "outputDataConfig": asdict(output_data_config, dict_factory=_exclude_nones_factory),
         "checkpointConfig": asdict(checkpoint_config),
         "deviceConfig": asdict(device_config),
         "hyperParameters": hyperparameters,
@@ -420,3 +420,7 @@ def _convert_input_to_config(input_data: Dict[str, S3DataSourceConfig]) -> List[
         }
         for channel_name, data_config in input_data.items()
     ]
+
+
+def _exclude_nones_factory(items: List[Tuple]) -> Dict:
+    return {k: v for k, v in items if v is not None}

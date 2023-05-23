@@ -692,6 +692,7 @@ class Circuit:
                 in the whole circuit when they are not given.
 
         Examples:
+        ::
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ)
             T  : |0|1|2|

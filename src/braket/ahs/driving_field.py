@@ -18,7 +18,7 @@ from typing import List, Union
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
-from braket.timings.time_series import TimeSeries
+from braket.timings.time_series import StitchBoundaryCondition, TimeSeries
 
 
 class DrivingField(Hamiltonian):
@@ -83,6 +83,34 @@ class DrivingField(Hamiltonian):
         r"""Field: global detuning (:math:`\Delta(t)`). Time is in s, and value is in rad/s."""
         return self._detuning
 
+    def stitch(
+        self, other: DrivingField, boundary: StitchBoundaryCondition = StitchBoundaryCondition.MEAN
+    ) -> DrivingField:
+        """Stitches two driving fields based on TimeSeries.stitch method.
+        The time points of the second DrivingField are shifted such that the first time point of
+        the second DrifingField coincides with the last time point of the first DrivingField.
+        The boundary point value is handled according to StitchBoundaryCondition argument value.
+
+        Args:
+            other (DrivingField): The second shifting field to be stitched with.
+            boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
+                Possible options are
+            * "mean" - take the average of the boundary value points of the first
+              and the second time series.
+            * "left" - use the last value from the left time series as the boundary point.
+            * "right" - use the first value from the right time series as the boundary
+              point.
+
+        Returns:
+            DrivingField: The stitched DrivingField object.
+        """
+
+        amplitude = self.amplitude.time_series.stitch(other.amplitude.time_series, boundary)
+        detuning = self.detuning.time_series.stitch(other.detuning.time_series, boundary)
+        phase = self.phase.time_series.stitch(other.phase.time_series, boundary)
+
+        return DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
+
     def discretize(self, properties: DiscretizationProperties) -> DrivingField:
         """Creates a discretized version of the Hamiltonian.
 
@@ -110,3 +138,39 @@ class DrivingField(Hamiltonian):
         return DrivingField(
             amplitude=discretized_amplitude, phase=discretized_phase, detuning=discretized_detuning
         )
+
+    @staticmethod
+    def from_lists(
+        times: List[float], amplitudes: List[float], detunings: List[float], phases: List[float]
+    ) -> DrivingField:
+        """
+        Builds DrivingField Hamiltonian from lists defining time evolution
+        of Hamiltonian parameters (Rabi frequency, detuning, phase).
+        The values of the parameters at each time points are global for all atoms.
+
+        Args:
+            times (List[float]): The time points of the driving field
+            amplitudes (List[float]): The values of the amplitude
+            detunings (List[float]): The values of the detuning
+            phases (List[float]): The values of the phase
+        """
+        if not (len(times) == len(amplitudes) == len(detunings) == len(phases)):
+            raise ValueError(
+                f"The lengths of the lists for times({len(times)}), amplitudes({len(amplitudes)}),\
+                detunings({len(detunings)}) and phases({len(phases)}) are not equal"
+            )
+
+        amplitude = TimeSeries()
+        detuning = TimeSeries()
+        phase = TimeSeries()
+
+        for t, amplitude_value, detuning_value, phase_value in zip(
+            times, amplitudes, detunings, phases
+        ):
+            amplitude.put(t, amplitude_value)
+            detuning.put(t, detuning_value)
+            phase.put(t, phase_value)
+
+        drive = DrivingField(amplitude=amplitude, detuning=detuning, phase=phase)
+
+        return drive

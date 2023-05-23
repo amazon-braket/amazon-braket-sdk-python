@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+import unittest.mock as mock
 from datetime import timedelta
 
 import boto3
@@ -26,7 +27,7 @@ from braket.tracking.tracker import MIN_SIMULATOR_DURATION
 @pytest.mark.parametrize(
     "qpu",
     [
-        "arn:aws:braket:::device/qpu/ionq/ionQdevice",
+        "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony",
         "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy",
         "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3",
     ],
@@ -34,7 +35,17 @@ from braket.tracking.tracker import MIN_SIMULATOR_DURATION
 def test_qpu_tracking(qpu):
     circuit = Circuit().h(0)
     with Tracker() as t:
-        AwsDevice(qpu).run(circuit, shots=10)
+        device = AwsDevice(qpu)
+        # Mock out task creation against the service
+        device._aws_session.braket_client.create_quantum_task = mock.Mock(
+            return_value={
+                "quantumTaskArn": (
+                    f"arn:aws:braket:{device._aws_session.region}"
+                    ":1234567890:quantum-task/e9e6bd31-5ba3-4027-948d-93c5f12e2942"
+                )
+            }
+        )
+        device.run(circuit, shots=10)
 
     assert t.qpu_tasks_cost() > 0
 

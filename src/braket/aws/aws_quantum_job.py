@@ -49,7 +49,7 @@ from braket.jobs_data import PersistedJobData
 class AwsQuantumJob(QuantumJob):
     """Amazon Braket implementation of a quantum job."""
 
-    TERMINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}
+    TERMINAL_STATES = {"CANCELLED", "COMPLETED", "FAILED"}
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
