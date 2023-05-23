@@ -211,7 +211,8 @@ class AwsSession(object):
         Create a quantum task.
 
         Args:
-            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateQuantumTask` operation.
+            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateQuantumTask`
+              operation.
 
         Returns:
             str: The ARN of the quantum task.
@@ -236,7 +237,7 @@ class AwsSession(object):
         Create a quantum job.
 
         Args:
-            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateJob` operation.
+            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateJob` operation.
 
         Returns:
             str: The ARN of the job.
@@ -369,13 +370,15 @@ class AwsSession(object):
 
         Example:
             local_prefix = "input", s3_prefix = "s3://my-bucket/dir/input" will upload:
-                * 'input.csv' to 's3://my-bucket/dir/input.csv'
-                * 'input-2.csv' to 's3://my-bucket/dir/input-2.csv'
-                * 'input/data.txt' to 's3://my-bucket/dir/input/data.txt'
-                * 'input-dir/data.csv' to 's3://my-bucket/dir/input-dir/data.csv'
-                but will not upload:
-                * 'my-input.csv'
-                * 'my-dir/input.csv'
+
+            - 'input.csv' to 's3://my-bucket/dir/input.csv'
+            - 'input-2.csv' to 's3://my-bucket/dir/input-2.csv'
+            - 'input/data.txt' to 's3://my-bucket/dir/input/data.txt'
+            - 'input-dir/data.csv' to 's3://my-bucket/dir/input-dir/data.csv'
+              but will not upload:
+            - 'my-input.csv'
+            - 'my-dir/input.csv'
+
             To match all files within the directory "input" and upload them into
                 "s3://my-bucket/input", provide local_prefix = "input/" and
                 s3_prefix = "s3://my-bucket/input/"
@@ -687,7 +690,7 @@ class AwsSession(object):
 
         Args:
             bucket (str): S3 URI.
-            *dirs (str): directories to be appended in the resulting S3 URI
+            `*dirs` (str): directories to be appended in the resulting S3 URI
 
         Returns:
             str: S3 URI

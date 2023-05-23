@@ -95,11 +95,11 @@ class DrivingField(Hamiltonian):
             other (DrivingField): The second shifting field to be stitched with.
             boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
                 Possible options are
-                    * "mean" - take the average of the boundary value points of the first
-                    and the second time series.
-                    * "left" - use the last value from the left time series as the boundary point.
-                    * "right" - use the first value from the right time series as the boundary
-                    point.
+            * "mean" - take the average of the boundary value points of the first
+              and the second time series.
+            * "left" - use the last value from the left time series as the boundary point.
+            * "right" - use the first value from the right time series as the boundary
+              point.
 
         Returns:
             DrivingField: The stitched DrivingField object.
