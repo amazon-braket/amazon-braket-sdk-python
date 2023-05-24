@@ -44,7 +44,9 @@ from gate_model_device_testing_utils import (
 
 from braket.aws import AwsDevice
 
-SHOTS = 8000
+# shots-based tests in this file have the capacity to fail rarely due to probabilistic checks.
+# this parameter can be adjusted if we find tests regularly failing.
+SHOTS = 9000
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 SIMULATOR_ARNS = [SV1_ARN, DM1_ARN]
