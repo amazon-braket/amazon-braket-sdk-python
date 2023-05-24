@@ -44,20 +44,15 @@ from gate_model_device_testing_utils import (
 
 from braket.aws import AwsDevice
 
-SHOTS = 8000
+# shots-based tests in this file have the capacity to fail rarely due to probabilistic checks.
+# this parameter can be adjusted if we find tests regularly failing.
+SHOTS = 9000
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 SIMULATOR_ARNS = [SV1_ARN, DM1_ARN]
 ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0), (DM1_ARN, SHOTS), (DM1_ARN, 0)]
 
 
-# Tests in this file have the capacity to fail rarely due to probabilistic checks.
-# These tests have been marked with a flaky decorator and allowed a certain number
-# of retries. If these tests are failing frequently, their parameters should be
-# adjusted.
-
-
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_no_result_types_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -87,7 +82,6 @@ def test_result_types_no_shots(
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_nonzero_shots_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -96,7 +90,6 @@ def test_result_types_nonzero_shots_bell_pair(simulator_arn, aws_session, s3_des
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_bell_pair_full_probability(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -105,7 +98,6 @@ def test_result_types_bell_pair_full_probability(simulator_arn, aws_session, s3_
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_bell_pair_marginal_probability(
     simulator_arn, aws_session, s3_destination_folder
@@ -116,7 +108,6 @@ def test_result_types_bell_pair_marginal_probability(
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -125,7 +116,6 @@ def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destinati
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -134,7 +124,6 @@ def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destina
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -143,7 +132,6 @@ def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destinatio
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -152,7 +140,6 @@ def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destinati
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_hermitian_hermitian(
     simulator_arn, shots, aws_session, s3_destination_folder
@@ -163,8 +150,6 @@ def test_result_types_tensor_hermitian_hermitian(
     )
 
 
-@pytest.mark.flaky(reruns=3)
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -173,7 +158,6 @@ def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_d
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -182,7 +166,6 @@ def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_d
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_all_selected(simulator_arn, shots, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -191,14 +174,12 @@ def test_result_types_all_selected(simulator_arn, shots, aws_session, s3_destina
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_noncommuting(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_noncommuting_testing(device, {"s3_destination_folder": s3_destination_folder})
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_noncommuting_flipped_targets(
     simulator_arn, aws_session, s3_destination_folder
@@ -209,14 +190,12 @@ def test_result_types_noncommuting_flipped_targets(
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_noncommuting_all(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
     result_types_noncommuting_all(device, {"s3_destination_folder": s3_destination_folder})
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_observable_not_in_instructions(
     simulator_arn, shots, aws_session, s3_destination_folder
@@ -227,7 +206,6 @@ def test_result_types_observable_not_in_instructions(
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_multithreaded_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -236,7 +214,6 @@ def test_multithreaded_bell_pair(simulator_arn, aws_session, s3_destination_fold
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_batch_bell_pair(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -253,7 +230,6 @@ def test_bell_pair_openqasm(simulator_arn, aws_session, s3_destination_folder):
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_bell_pair_openqasm_results(simulator_arn, aws_session, s3_destination_folder):
     device = AwsDevice(simulator_arn, aws_session)
@@ -262,7 +238,6 @@ def test_bell_pair_openqasm_results(simulator_arn, aws_session, s3_destination_f
     )
 
 
-@pytest.mark.flaky(reruns=3)
 def test_openqasm_probability_results(aws_session, s3_destination_folder):
     device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/dm1", aws_session)
     openqasm_noisy_circuit_1qubit_noise_full_probability(
@@ -270,7 +245,6 @@ def test_openqasm_probability_results(aws_session, s3_destination_folder):
     )
 
 
-@pytest.mark.flaky(reruns=3)
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 @pytest.mark.parametrize("num_layers", [50, 100, 500, 1000])
 def test_many_layers(simulator_arn, num_layers, aws_session, s3_destination_folder):
