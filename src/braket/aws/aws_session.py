@@ -211,7 +211,8 @@ class AwsSession(object):
         Create a quantum task.
 
         Args:
-            `**boto3_kwargs`: Keyword arguments for the Amazon Braket `CreateQuantumTask` operation.
+            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateQuantumTask`
+                operation.
 
         Returns:
             str: The ARN of the quantum task.
@@ -236,7 +237,7 @@ class AwsSession(object):
         Create a quantum job.
 
         Args:
-            `**boto3_kwargs`: Keyword arguments for the Amazon Braket `CreateJob` operation.
+            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateJob` operation.
 
         Returns:
             str: The ARN of the job.
@@ -689,7 +690,7 @@ class AwsSession(object):
 
         Args:
             bucket (str): S3 URI.
-            `*dirs` (str): directories to be appended in the resulting S3 URI
+            ``*dirs`` (str): directories to be appended in the resulting S3 URI
 
         Returns:
             str: S3 URI
