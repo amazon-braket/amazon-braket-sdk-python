@@ -37,7 +37,7 @@ class OutputDataConfig:
     """Configuration that specifies the location for the output of the job."""
 
     s3Path: Optional[str] = None
-    kmsKeyId = None
+    kmsKeyId: Optional[str] = None
 
 
 @dataclass

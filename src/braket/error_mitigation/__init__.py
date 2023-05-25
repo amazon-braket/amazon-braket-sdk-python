@@ -11,8 +11,5 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-   Version number (major.minor.patch[-label])
-"""
-
-__version__ = "1.39.2.dev0"
+from braket.error_mitigation.debias import Debias  # noqa: F401
+from braket.error_mitigation.error_mitigation import ErrorMitigation  # noqa: F401

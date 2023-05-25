@@ -111,8 +111,8 @@ class PauliString:
 
         The resulting eigenstate has each qubit in the +1 eigenstate of its corresponding signed
         Pauli operator. For example, a Pauli string +XYZ and signs ++- has factors +X, +Y and -Z,
-        with the corresponding qubits in states |+⟩, |i⟩ and |1⟩ respectively (the global phase of
-        the Pauli string is ignored).
+        with the corresponding qubits in states `|+⟩` , `|i⟩` , and `|1⟩` respectively (the global
+        phase of the Pauli string is ignored).
 
         Args:
             signs (Optional[Union[str, List[int], Tuple[int, ...]]]): The sign of each factor of the

@@ -74,7 +74,7 @@ class NoiseModelInstruction:
 
 @dataclass
 class NoiseModelInstructions:
-    """Represents the instructions in a noise model, seperated by type."""
+    """Represents the instructions in a noise model, separated by type."""
 
     initialization_noise: List[NoiseModelInstruction]
     gate_noise: List[NoiseModelInstruction]
