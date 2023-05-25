@@ -199,7 +199,7 @@ class DoubleAngledGate(Gate, Parameterizable):
         Takes in parameters and attempts to assign them to values.
 
         Args:
-            `**kwargs`: The parameters that are being assigned.
+            ``**kwargs``: The parameters that are being assigned.
 
         Returns:
             AngledGate: A new Gate of the same type with the requested parameters bound.
@@ -289,7 +289,7 @@ def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
 
     Args:
         gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
-        `**kwargs`: The named parameters that are being filled for a particular gate.
+        ``**kwargs``: The named parameters that are being filled for a particular gate.
 
     Returns:
         AngledGate: A new gate of the type of the AngledGate originally used with all
@@ -308,7 +308,7 @@ def _get_angles(gate: DoubleAngledGate, **kwargs) -> DoubleAngledGate:
     Args:
         gate (DoubleAngledGate): The subclass of DoubleAngledGate for which the angle is being
             obtained.
-        `**kwargs`: The named parameters that are being filled for a particular gate.
+        ``**kwargs``: The named parameters that are being filled for a particular gate.
 
     Returns:
         DoubleAngledGate: A new gate of the type of the AngledGate originally used with all angles
