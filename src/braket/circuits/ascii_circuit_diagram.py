@@ -270,7 +270,23 @@ class AsciiCircuitDiagram(CircuitDiagram):
                     item_qubit_index = [
                         index for index, q in enumerate(target_qubits) if q == qubit
                     ][0]
-                    symbols[qubit] = ascii_symbols[item_qubit_index]
+                    power_string = (
+                        f"^{power}"
+                        if (
+                            (power := getattr(item, "power", 1)) != 1
+                            # this has the limitation of not printing the power
+                            # when a user has a gate genuinely named C, but
+                            # is necessary to enable proper printing of custom
+                            # gates with built-in control qubits
+                            and ascii_symbols[item_qubit_index] != "C"
+                        )
+                        else ""
+                    )
+                    symbols[qubit] = (
+                        f"({ascii_symbols[item_qubit_index]}{power_string})"
+                        if power_string
+                        else ascii_symbols[item_qubit_index]
+                    )
                 elif qubit in control_qubits:
                     symbols[qubit] = "C"
                 else:
