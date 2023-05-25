@@ -274,6 +274,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         f"^{power}"
                         if (
                             (power := getattr(item, "power", 1)) != 1
+                            # this has the limitation of not printing the power
+                            # when a user has a gate genuinely named C, but
+                            # is necessary to enable proper printing of custom
+                            # gates with control qubits
                             and ascii_symbols[item_qubit_index] != "C"
                         )
                         else ""
