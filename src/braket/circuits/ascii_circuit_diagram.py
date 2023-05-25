@@ -129,7 +129,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
                     target = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
                 else:
                     target = item.target
-                qubit_range = QubitSet(range(min(target), max(target) + 1))
+                control = getattr(item, "control", QubitSet())
+                target_and_control = target.union(control)
+                qubit_range = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
 
             found_grouping = False
             for group in groupings:
@@ -236,10 +238,14 @@ class AsciiCircuitDiagram(CircuitDiagram):
         for item in items:
             if isinstance(item, ResultType) and not item.target:
                 target_qubits = circuit_qubits
+                control_qubits = QubitSet()
+                target_and_control = target_qubits.union(control_qubits)
                 qubits = circuit_qubits
                 ascii_symbols = [item.ascii_symbols[0]] * len(circuit_qubits)
             elif isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective):
                 target_qubits = circuit_qubits
+                control_qubits = QubitSet()
+                target_and_control = target_qubits.union(control_qubits)
                 qubits = circuit_qubits
                 ascii_symbol = item.ascii_symbols[0]
                 marker = "*" * len(ascii_symbol)
@@ -251,9 +257,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
                 else:
                     target_qubits = item.target
-                qubits = circuit_qubits.intersection(
-                    set(range(min(target_qubits), max(target_qubits) + 1))
-                )
+                control_qubits = getattr(item, "control", QubitSet())
+                target_and_control = target_qubits.union(control_qubits)
+                qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
+
                 ascii_symbols = item.ascii_symbols
 
             for qubit in qubits:
@@ -263,12 +270,30 @@ class AsciiCircuitDiagram(CircuitDiagram):
                     item_qubit_index = [
                         index for index, q in enumerate(target_qubits) if q == qubit
                     ][0]
-                    symbols[qubit] = ascii_symbols[item_qubit_index]
+                    power_string = (
+                        f"^{power}"
+                        if (
+                            (power := getattr(item, "power", 1)) != 1
+                            # this has the limitation of not printing the power
+                            # when a user has a gate genuinely named C, but
+                            # is necessary to enable proper printing of custom
+                            # gates with built-in control qubits
+                            and ascii_symbols[item_qubit_index] != "C"
+                        )
+                        else ""
+                    )
+                    symbols[qubit] = (
+                        f"({ascii_symbols[item_qubit_index]}{power_string})"
+                        if power_string
+                        else ascii_symbols[item_qubit_index]
+                    )
+                elif qubit in control_qubits:
+                    symbols[qubit] = "C"
                 else:
                     symbols[qubit] = "|"
 
                 # Set the margin to be a connector if not on the first qubit
-                if qubit != min(target_qubits):
+                if qubit != min(target_and_control):
                     margins[qubit] = "|"
 
         symbols_width = max([len(symbol) for symbol in symbols.values()])
