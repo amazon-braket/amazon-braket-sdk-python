@@ -1165,7 +1165,12 @@ class Circuit:
                 ]
             )
         else:
-            for idx, qubit in enumerate(self.qubits):
+            qubits = (
+                sorted(self.qubits)
+                if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL
+                else self.qubits
+            )
+            for idx, qubit in enumerate(qubits):
                 qubit_target = serialization_properties.format_target(int(qubit))
                 ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
 
