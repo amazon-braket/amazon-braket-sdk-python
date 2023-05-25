@@ -41,7 +41,7 @@ class Instruction:
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
-    ):
+    ) -> Instruction:
         """
         InstructionOperator includes objects of type `Gate` and `Noise` only.
 

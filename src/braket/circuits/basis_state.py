@@ -9,22 +9,22 @@ class BasisState:
         self.state = _as_tuple(state, size)
 
     @property
-    def size(self):
+    def size(self) -> int:
         return len(self.state)
 
     @property
-    def as_tuple(self):
+    def as_tuple(self) -> tuple:
         return self.state
 
     @property
-    def as_int(self):
+    def as_int(self) -> int:
         return 2 ** np.arange(self.size)[::-1] @ self.state
 
     @property
-    def as_string(self):
+    def as_string(self) -> str:
         return "".join(map(str, self.state))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.state)
 
     def __iter__(self):
@@ -35,7 +35,7 @@ BasisStateInput = Union[int, List[int], str, BasisState]
 
 
 @singledispatch
-def _as_tuple(state: BasisStateInput, size: int):
+def _as_tuple(state: BasisStateInput, size: int) -> tuple:
     size = size if size is not None else len(state)
     if state and len(state) > size:
         raise ValueError(
