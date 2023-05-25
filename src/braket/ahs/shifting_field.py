@@ -94,15 +94,44 @@ class ShiftingField(Hamiltonian):
         Args:
             other (ShiftingField): The second shifting field to be stitched with.
             boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
+
                 Possible options are
-                * "mean" - take the average of the boundary value points of the first
+
+              - "mean" - take the average of the boundary value points of the first
                 and the second time series.
-                * "left" - use the last value from the left time series as the boundary point.
-                * "right" - use the first value from the right time series as the boundary
+              - "left" - use the last value from the left time series as the boundary point.
+              - "right" - use the first value from the right time series as the boundary
                 point.
 
         Returns:
             ShiftingField: The stitched ShiftingField object.
+
+        Example (StitchBoundaryCondition.MEAN):
+        ::
+            time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
+            time_series_2 = TimeSeries.from_lists(times=[0.2, 0.4], values=[4, 5])
+
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.MEAN)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 3, 5]
+
+        Example (StitchBoundaryCondition.LEFT):
+        ::
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.LEFT)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 2, 5]
+
+        Example (StitchBoundaryCondition.RIGHT):
+        ::
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.RIGHT)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 4, 5]
         """
         if not (self.magnitude.pattern.series == other.magnitude.pattern.series):
             raise ValueError("The ShiftingField pattern for both fields must be equal.")
