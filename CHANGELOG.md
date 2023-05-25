@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.40.0 (2023-05-25)
+
+### Features
+
+ * gate modifiers
+
 ## v1.39.1 (2023-05-18)
 
 ### Bug Fixes and Other Changes
