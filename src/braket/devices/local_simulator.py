@@ -25,7 +25,7 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.serialization import IRType
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
-from braket.ir.ahs import Program as AnalogHamiltonianProgram
+from braket.ir.ahs import Program as ProgramAHS
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -71,7 +71,7 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]): The
+            task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, ProgramAHS]): The
                 task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
@@ -138,7 +138,7 @@ class LocalSimulator(Device):
     def _run_internal(
         self,
         task_specification: Union[
-            Circuit, Problem, Program, AnalogHamiltonianSimulation, AnalogHamiltonianProgram
+            Circuit, Problem, Program, AnalogHamiltonianSimulation, ProgramAHS
         ],
         shots: Optional[int] = None,
         *args,
@@ -222,7 +222,7 @@ class LocalSimulator(Device):
     @_run_internal.register
     def _(
         self,
-        program: AnalogHamiltonianProgram,
+        program: ProgramAHS,
         shots: Optional[int] = None,
         *args,
         **kwargs,
