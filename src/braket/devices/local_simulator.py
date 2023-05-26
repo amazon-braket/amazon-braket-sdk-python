@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from multiprocessing import Pool
 from functools import singledispatchmethod
-from typing import Dict, Optional, Set, Union
+from typing import Dict, Optional, Set, Union, List
 
 import pkg_resources
 
@@ -136,16 +136,13 @@ class LocalSimulator(Device):
         task_specifications = [task_specifications] if type(task_specifications) != list else task_specifications
         inputs = [inputs] if inputs and type(inputs) != list else inputs         
 
-        def _run_internal_wrap(task, inp):
-            return self._run_internal(task, shots, inputs=inp, *args, **kwargs)
-
         with Pool(max_parallel) as p:
             if inputs:
-                il = [(task, inp) for task, inp in zip(task_specifications, inputs)] 
+                il = [(task, shots, inp, *args, *kwargs) for task, inp in zip(task_specifications, inputs)] 
             else:
-                il = [(task, None) for task in task_specifications] 
+                il = [(task, shots, None, *args, *kwargs) for task in task_specifications] 
 
-            results = p.starmap(_run_internal_wrap, il)
+            results = p.starmap(self._run_internal_wrap, il)
 
         return LocalQuantumTaskBatch(results)
 
@@ -167,6 +164,17 @@ class LocalSimulator(Device):
             into LocalSimulator's constructor
         """
         return set(_simulator_devices.keys())
+
+    def _run_internal_wrap(
+        self,
+        task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+        *args,
+        **kwargs,
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+        """Wraps _run_interal for pickle dump""" 
+        return self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
 
     @singledispatchmethod
     def _get_simulator(self, simulator: Union[str, BraketSimulator]) -> LocalSimulator:

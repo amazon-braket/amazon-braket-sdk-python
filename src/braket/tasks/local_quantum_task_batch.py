@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
-from typing import Union
+from typing import Union, List
 
 from braket.tasks import (
     AnnealingQuantumTaskResult,

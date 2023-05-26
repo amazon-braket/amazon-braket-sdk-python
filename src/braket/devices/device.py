@@ -12,11 +12,12 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, List
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.tasks.quantum_task import QuantumTask
+from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
 class Device(ABC):
