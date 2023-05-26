@@ -133,14 +133,19 @@ class LocalSimulator(Device):
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
         """
+        task_specifications = [task_specifications] if type(task_specifications) != list else task_specifications
+        inputs = [inputs] if inputs and type(inputs) != list else inputs         
+
         def _run_internal_wrap(task, inp):
             return self._run_internal(task, shots, inputs=inp, *args, **kwargs)
 
         with Pool(max_parallel) as p:
-            results = p.starmap(
-                _run_internal_wrap, 
-                [(task, inp) for task, inp in zip(task_specifications, inputs)]
-            )
+            if inputs:
+                il = [(task, inp) for task, inp in zip(task_specifications, inputs)] 
+            else:
+                il = [(task, None) for task in task_specifications] 
+
+            results = p.starmap(_run_internal_wrap, il)
 
         return LocalQuantumTaskBatch(results)
 
