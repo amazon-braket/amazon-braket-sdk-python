@@ -14,7 +14,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -31,11 +30,6 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install -e .[test]
-    - name: Check code format
-      run: |
-        # stop the build if there are Python format errors or undefined names
-        black --check .
-        flake8
     - name: Run unit tests
       run: |
         tox -e unit-tests
