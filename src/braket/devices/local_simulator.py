@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from multiprocessing import Pool
 from functools import singledispatchmethod
 from typing import Dict, Optional, Set, Union
 
@@ -32,6 +33,7 @@ from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
 )
 from braket.tasks.local_quantum_task import LocalQuantumTask
+from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 
 _simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
@@ -95,6 +97,52 @@ class LocalSimulator(Device):
         """
         result = self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
         return LocalQuantumTask(result)
+
+
+
+    def run_batch(
+        self,
+        task_specifications: Union[
+            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
+            List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]],
+        ],
+        shots: Optional[int] = 0,
+        max_parallel: Optional[int] = 8,
+        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
+        *args,
+        **kwargs,
+    ) -> LocalQuantumTaskBatch:
+        """Executes a batch of tasks in parallel
+
+        Args:
+            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
+                PulseSequence, AnalogHamiltonianSimulation], List[Union[ Circuit,
+                Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence,
+                AnalogHamiltonianSimulation]]]): Single instance or list of circuits, annealing
+                problems, pulse sequences, or photonics program to run on device.
+            shots (Optional[int]): The number of times to run the circuit or annealing problem.
+                Default is 1000 for QPUs and 0 for simulators.
+            max_parallel (Optional[int]): The maximum number of tasks to run  in parallel. Default: 10
+            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+                IR. If the IR supports inputs, the inputs will be updated with this value.
+                Default: {}.
+
+        Returns:
+            LocalQuantumTaskBatch: A batch containing all of the tasks run
+
+        See Also:
+            `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
+        """
+        def _run_internal_wrap(task, inp):
+            return self._run_internal(task, shots, inputs=inp, *args, **kwargs)
+
+        with Pool(max_parallel) as p:
+            results = p.starmap(
+                _run_internal_wrap, 
+                [(task, inp) for task, inp in zip(task_specifications, inputs)]
+            )
+
+        return LocalQuantumTaskBatch(results)
 
     @property
     def properties(self) -> DeviceCapabilities:

@@ -56,6 +56,36 @@ class Device(ABC):
             QuantumTask: The QuantumTask tracking task execution on this device
         """
 
+    @abstractmethod
+    def run_batch(
+        self,
+        task_specifications: Union[
+            Union[Circuit, Problem],
+            List[Union[Circuit, Problem]],
+        ],
+        shots: Optional[int],
+        max_parallel: Optional[int],
+        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]],
+        *args,
+        **kwargs
+    ) -> QuantumTaskBatch: 
+    # TODO: create a QuantumTaskBatch and make LocalQuantumTaskBatch and AWSQuantumTaskBatch inherits from it
+        """Executes a batch of tasks in parallel
+
+        Args:
+            task_specifications (Union[Union[Circuit, Problem], List[Union[ Circuit,
+                Problem,]]]): Single instance or list of circuits or problems to run on device.
+            shots (Optional[int]): The number of times to run the circuit or annealing problem.                
+            max_parallel (Optional[int]): The maximum number of tasks to run  in parallel.
+                Batch creation will fail if this value is greater than the maximum allowed
+                concurrent tasks on the device.
+            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+                IR. If the IR supports inputs, the inputs will be updated with this value.
+
+        Returns:
+            QuantumTaskBatch: A batch containing all of the tasks run
+        """
+
     @property
     def name(self) -> str:
         """Return the name of this Device.

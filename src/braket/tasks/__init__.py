@@ -22,6 +22,7 @@ from braket.tasks.photonic_model_quantum_task_result import (  # noqa: F401
     PhotonicModelQuantumTaskResult,
 )
 from braket.tasks.quantum_task import QuantumTask  # noqa: F401
+from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 # Apply nest_asyncio if currently running within Jupyter. This ensures anything that uses
 # asyncio will run in Jupyter without any issues.
