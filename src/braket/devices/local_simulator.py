@@ -25,6 +25,7 @@ from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.serialization import IRType
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
+from braket.ir.ahs import Program as AnalogHamiltonianProgram
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.tasks import AnnealingQuantumTaskResult, GateModelQuantumTaskResult
@@ -136,7 +137,9 @@ class LocalSimulator(Device):
     @singledispatchmethod
     def _run_internal(
         self,
-        task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
+        task_specification: Union[
+            Circuit, Problem, Program, AnalogHamiltonianSimulation, AnalogHamiltonianProgram
+        ],
         shots: Optional[int] = None,
         *args,
         **kwargs,
@@ -214,4 +217,20 @@ class LocalSimulator(Device):
                 f"{type(simulator)} does not support analog Hamiltonian simulation programs"
             )
         results = simulator.run(program.to_ir(), shots, *args, **kwargs)
+        return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
+
+    @_run_internal.register
+    def _(
+        self,
+        program: AnalogHamiltonianProgram,
+        shots: Optional[int] = None,
+        *args,
+        **kwargs,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.AHS not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+            )
+        results = simulator.run(program, shots, *args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
