@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import asyncio
 from abc import ABC, abstractmethod
 from typing import List, Union
 
@@ -34,13 +33,5 @@ class QuantumTaskBatch(ABC):
         """Get the quantum task results.
         Returns:
             List[Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]]:: # noqa
-            Get the quantum task results. Call async_result if you want the result in an
-            asynchronous way.
-        """
-
-    @abstractmethod
-    def async_results(self) -> asyncio.Task:
-        """Get the quantum task result asynchronously.
-        Returns:
-            Task: Get the quantum task result asynchronously.
+            Get the quantum task results.
         """

@@ -321,7 +321,7 @@ def test_run_batch():
     assert len(batch.results()) == num_tasks
 
     for x in batch.results():
-        assert batch.results() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+        assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_gate_model_inputs():

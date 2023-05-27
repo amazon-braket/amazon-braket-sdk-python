@@ -132,6 +132,8 @@ class LocalSimulator(Device):
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
         """
+        inputs = inputs or {}
+
         if not max_parallel:
             max_parallel = cpu_count()
 
@@ -139,6 +141,7 @@ class LocalSimulator(Device):
             task_specifications,
             (Circuit, Program, Problem, AnalogHamiltonianSimulation),
         )
+
         single_input = isinstance(inputs, dict)
 
         if not single_task and not single_input:

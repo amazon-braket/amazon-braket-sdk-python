@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import asyncio
 from typing import List, Union
 
 from braket.tasks import (
@@ -48,11 +47,3 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
         ]
     ]:
         return self._results
-
-    def async_results(self) -> asyncio.Task:
-        """Get the quantum task results asynchronously.
-        Returns:
-            Task: Get the quantum task results asynchronously.
-        """
-        # TODO: Allow for asynchronous simulation
-        raise NotImplementedError("Asynchronous local simulation unsupported")
