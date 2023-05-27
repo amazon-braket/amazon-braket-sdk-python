@@ -12,36 +12,41 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
-from typing import Union, List
+from typing import List, Union
 
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
-    QuantumTask,
-    QuantumTaskBatch
+    QuantumTaskBatch,
 )
 
 
 class LocalQuantumTaskBatch(QuantumTaskBatch):
-    """A task containing the results of a local simulation.
+    """Executes a batch of quantum tasks in parallel.
 
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
     """
 
     def __init__(
         self,
-        results: List[Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-        ]],
+        results: List[
+            Union[
+                GateModelQuantumTaskResult,
+                AnnealingQuantumTaskResult,
+                PhotonicModelQuantumTaskResult,
+            ]
+        ],
     ):
         self._results = results
 
     def results(
         self,
-    ) -> List[Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]]:
+    ) -> List[
+        Union[
+            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+        ]
+    ]:
         return self._results
 
     def async_results(self) -> asyncio.Task:
@@ -51,6 +56,3 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
         """
         # TODO: Allow for asynchronous simulation
         raise NotImplementedError("Asynchronous local simulation unsupported")
-
-    def __repr__(self) -> str:
-        return f"LocalQuantumTaskBatch('id':{self.id})"

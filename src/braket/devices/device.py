@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union, List
+from typing import Dict, List, Optional, Union
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
@@ -69,14 +69,13 @@ class Device(ABC):
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]],
         *args,
         **kwargs
-    ) -> QuantumTaskBatch: 
-    # TODO: create a QuantumTaskBatch and make LocalQuantumTaskBatch and AWSQuantumTaskBatch inherits from it
+    ) -> QuantumTaskBatch:
         """Executes a batch of tasks in parallel
 
         Args:
             task_specifications (Union[Union[Circuit, Problem], List[Union[ Circuit,
                 Problem,]]]): Single instance or list of circuits or problems to run on device.
-            shots (Optional[int]): The number of times to run the circuit or annealing problem.                
+            shots (Optional[int]): The number of times to run the circuit or annealing problem.
             max_parallel (Optional[int]): The maximum number of tasks to run  in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent tasks on the device.

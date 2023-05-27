@@ -13,7 +13,7 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Union, List
+from typing import List, Union
 
 from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
@@ -26,9 +26,11 @@ class QuantumTaskBatch(ABC):
     @abstractmethod
     def results(
         self,
-    ) -> List[Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]]:
+    ) -> List[
+        Union[
+            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
+        ]
+    ]:
         """Get the quantum task results.
         Returns:
             List[Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]]:: # noqa

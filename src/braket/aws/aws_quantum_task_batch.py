@@ -27,6 +27,7 @@ from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
+
 class AwsQuantumTaskBatch(QuantumTaskBatch):
     """Executes a batch of quantum tasks in parallel.
 

@@ -310,16 +310,19 @@ def test_run_gate_model():
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
+
 def test_run_batch():
+    dummy = DummyProgramSimulator()
     bell = Circuit().h(0).cnot(0, 1)
     device = LocalSimulator(dummy)
     num_tasks = 10
     circuits = [bell for _ in range(num_tasks)]
     batch = device.run_batch(circuits, shots=10)
+    assert len(batch.results()) == num_tasks
 
-    assert(len(batch.results()), num_tasks)
     for x in batch.results():
-        assert task.results() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+        assert batch.results() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
 
 def test_run_gate_model_inputs():
     dummy = DummyProgramSimulator()
