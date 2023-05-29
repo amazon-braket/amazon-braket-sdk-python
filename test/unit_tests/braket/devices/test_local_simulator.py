@@ -331,7 +331,7 @@ def test_batch_circuit_with_missing_input():
     inputs = {"beta": 0.2}
     cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
     with pytest.raises(ValueError, match=cannot_execute_with_unbound):
-        batch = device.run_batch(task, inputs=inputs, shots=10)
+        device.run_batch(task, inputs=inputs, shots=10)
 
 
 def test_batch_circuit_with_single_task():
@@ -349,9 +349,9 @@ def test_batch_circuit_with_task_and_input_mismatch():
     device = LocalSimulator(dummy)
     num_tasks = 10
     circuits = [bell for _ in range(num_tasks)]
-    inputs = [{} for _ in range(num_tasks-1)]
+    inputs = [{} for _ in range(num_tasks - 1)]
     with pytest.raises(ValueError):
-        batch = device.run_batch(circuits, inputs=inputs, shots=10)
+        device.run_batch(circuits, inputs=inputs, shots=10)
 
 
 def test_run_gate_model_inputs():
