@@ -121,7 +121,8 @@ class TimeSeries:
         """Obtain a constant time series given the list of time points and the constant values
 
         Args:
-            times (List[float]): list of time points
+            times (Union[List[float], TimeSeries]): list of time points
+            constant (float): constant value
 
         Returns:
             TimeSeries: A constant time series
@@ -140,14 +141,13 @@ class TimeSeries:
 
         Args:
             other (TimeSeries): The second time series to be concatenated
+                Notes:
+                Keeps the time points in both time series unchanged.
+                Assumes that the time points in the first TimeSeries
+                are at earler times then the time points in the second TimeSeries.
 
         Returns:
             TimeSeries: The concatenated time series.
-
-        Notes:
-            Keeps the time points in both time series unchanged.
-            Assumes that the time points in the first TimeSeries
-            are at earler times then the time points in the second TimeSeries.
 
         Example:
         ::
@@ -186,14 +186,13 @@ class TimeSeries:
 
         Args:
             other (TimeSeries): The second time series to be stitched with.
-            boundary (StitchBoundaryCondition): `{"mean", "left", "right"}`. Boundary point handler.
-              Possible options are
+            boundary (StitchBoundaryCondition): {"mean", "left", "right"}. Boundary point handler.
 
-                - "mean" - take the average of the boundary value points of the first
-                  and the second time series.
-                - "left" - use the last value from the left time series as the boundary point.
-                - "right" - use the first value from the right time series as the boundary
-                  point.
+                Possible options are
+              - "mean" - take the average of the boundary value points of the first
+                and the second time series.
+              - "left" - use the last value from the left time series as the boundary point.
+              - "right" - use the first value from the right time series as the boundary point.
 
         Returns:
             TimeSeries: The stitched time series.
@@ -224,7 +223,6 @@ class TimeSeries:
             Result:
                 stitch_ts.times() = [0, 0.1, 0.3]
                 stitch_ts.values() = [1, 4, 5]
-
         """
 
         if len(self.times()) == 0:
@@ -278,12 +276,12 @@ class TimeSeries:
         return discretized_ts
 
     @staticmethod
-    def periodic_signal(times: List[float], values: List[float], num_repeat: int = 1):
+    def periodic_signal(times: List[float], values: List[float], num_repeat: int = 1) -> TimeSeries:
         """Create a periodic time series by repeating the same block multiple times.
 
         Args:
-            times (float): List of time points in a single block
-            values (float): Values for the time series in a single block
+            times (List[float]): List of time points in a single block
+            values (List[float]): Values for the time series in a single block
             num_repeat (int): Number of block repeatitions
 
         Returns:

@@ -52,7 +52,7 @@ class Gate(QuantumOperator):
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> NotImplementedError:
         raise NotImplementedError()
 
     def adjoint(self) -> List[Gate]:

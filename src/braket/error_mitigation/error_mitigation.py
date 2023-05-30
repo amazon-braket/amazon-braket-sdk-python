@@ -20,7 +20,7 @@ class ErrorMitigation:
     def serialize(self) -> List[error_mitigation.ErrorMitigationScheme]:
         """
         Returns:
-            List[error_mitigation.ErrorMitigationScheme]: A list of service-readable error
-                mitigation scheme descriptions
+            List[ErrorMitigationScheme]: A list of service-readable error
+            mitigation scheme descriptions.
         """
         raise NotImplementedError("serialize is not implemented.")

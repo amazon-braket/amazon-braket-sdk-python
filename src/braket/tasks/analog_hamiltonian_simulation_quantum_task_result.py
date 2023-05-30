@@ -102,15 +102,16 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
     def get_counts(self) -> Dict[str, int]:
         """Aggregate state counts from AHS shot results.
 
+        Notes:
+            We use the following convention to denote the state of an atom (site).
+            e: empty site
+            r: Rydberg state atom
+            g: ground state atom
+
         Returns:
             Dict[str, int]: number of times each state configuration is measured.
             Returns None if none of shot measurements are successful.
             Only succesful shots contribute to the state count.
-
-        Notes: We use the following convention to denote the state of an atom (site):
-            e: empty site
-            r: Rydberg state atom
-            g: ground state atom
         """
 
         state_counts = Counter()
@@ -132,7 +133,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         """Get the average Rydberg state densities from the result
 
         Returns:
-            ndarray (float): The average densities from the result
+            ndarray: The average densities from the result
         """
 
         counts = self.get_counts()

@@ -120,7 +120,7 @@ class AwsDevice(Device):
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
-            poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
+            poll_interval_seconds (Optional[float]): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
                 ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
@@ -213,11 +213,9 @@ class AwsDevice(Device):
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
-                PulseSequence, AnalogHamiltonianSimulation], List[Union[ Circuit,
-                Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence,
-                AnalogHamiltonianSimulation]]]): Single instance or list of circuits, annealing
-                problems, pulse sequences, or photonics program to run on device.
+            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], List[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
+                Single instance or list of circuits, annealing problems, pulse sequences,
+                or photonics program to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
@@ -233,9 +231,9 @@ class AwsDevice(Device):
             poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
                 ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
-                IR. If the IR supports inputs, the inputs will be updated with this value.
-                Default: {}.
+            inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
+                passed along with the IR. If the IR supports inputs, the inputs will be updated
+                with this value. Default: {}.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -424,7 +422,6 @@ class AwsDevice(Device):
     @property
     def topology_graph(self) -> DiGraph:
         """DiGraph: topology of device as a networkx `DiGraph` object.
-        Returns `None` if the topology is not available for the device.
 
         Examples:
             >>> import networkx as nx
@@ -435,6 +432,10 @@ class AwsDevice(Device):
             >>> nx.draw_kamada_kawai(topology_subgraph, with_labels=True, font_weight="bold")
 
             >>> print(device.topology_graph.edges)
+
+        Returns:
+            DiGraph: topology of QPU as a networkx `DiGraph` object. `None` if the topology
+            is not available for the device.
         """
         if not self._topology_graph:
             self._topology_graph = self._construct_topology_graph()
