@@ -146,18 +146,19 @@ class TimeSeries:
                 Assumes that the time points in the first TimeSeries
                 are at earler times then the time points in the second TimeSeries.
 
-                Example:
-                time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
-                time_series_2 = TimeSeries.from_lists(times=[0.2, 0.3], values=[4, 5])
-
-                concat_ts = time_series_1.concatenate(time_series_2)
-
-                Result:
-                concat_ts.times() = [0, 0.1, 0.2, 0.3]
-                concat_ts.values() = [1, 2, 4, 5]
-
         Returns:
             TimeSeries: The concatenated time series.
+
+        Example:
+        ::
+            time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
+            time_series_2 = TimeSeries.from_lists(times=[0.2, 0.3], values=[4, 5])
+
+            concat_ts = time_series_1.concatenate(time_series_2)
+
+            Result:
+                concat_ts.times() = [0, 0.1, 0.2, 0.3]
+                concat_ts.values() = [1, 2, 4, 5]
         """
 
         not_empty_ts = len(other.times()) * len(self.times()) != 0
