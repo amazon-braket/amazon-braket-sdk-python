@@ -81,7 +81,7 @@ class LocalSimulator(Device):
                 Sampling is not supported for shots=0.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this
-                alue. Default: {}.
+                value. Default: {}.
 
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results
