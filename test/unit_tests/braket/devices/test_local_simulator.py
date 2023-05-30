@@ -41,14 +41,18 @@ GATE_MODEL_RESULT = GateModelTaskResult(
         "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
         "measuredQubits": [0, 1],
         "taskMetadata": {
-            "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+            "braketSchemaHeader": {
+                "name": "braket.task_result.task_metadata", "version": "1"
+            },
             "id": "task_arn",
             "shots": 100,
             "deviceId": "default",
         },
         "additionalMetadata": {
             "action": {
-                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                "braketSchemaHeader": {
+                    "name": "braket.ir.jaqcd.program", "version": "1"
+                },
                 "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
             },
         },
@@ -150,7 +154,12 @@ class DummyCircuitSimulator(BraketSimulator):
 
 class DummyJaqcdSimulator(BraketSimulator):
     def run(
-        self, program: ir.jaqcd.Program, qubits: int, shots: Optional[int], *args, **kwargs
+        self, 
+        program: ir.jaqcd.Program, 
+        qubits: int, 
+        shots: Optional[int], 
+        *args, 
+        **kwargs
     ) -> Dict[str, Any]:
         if not isinstance(program, ir.jaqcd.Program):
             raise TypeError("Not a Jaqcd program")
@@ -224,7 +233,9 @@ class DummyProgramSimulator(BraketSimulator):
 
 
 class DummyAnnealingSimulator(BraketSimulator):
-    def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> AnnealingTaskResult:
+    def run(
+        self, problem: ir.annealing.Problem, *args, **kwargs
+    ) -> AnnealingTaskResult:
         return ANNEALING_RESULT
 
     @property
@@ -402,10 +413,14 @@ def test_run_annealing():
 def test_run_ahs():
     sim = LocalSimulator(DummyRydbergSimulator())
     task = sim.run(mock_ahs_program)
-    assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(AHS_RESULT)
+    assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(
+        AHS_RESULT
+    )
 
     task = sim.run(mock_ahs_program.to_ir())
-    assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(AHS_RESULT)
+    assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(
+        AHS_RESULT
+    )
 
 
 def test_registered_backends():
