@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.41.0 (2023-05-30)
+
+### Features
+
+ * AHS ir valid input for `LocalSimulator`
+
+### Bug Fixes and Other Changes
+
+ * re-enable & update content as per BCS
+
 ## v1.40.0 (2023-05-25)
 
 ### Features
