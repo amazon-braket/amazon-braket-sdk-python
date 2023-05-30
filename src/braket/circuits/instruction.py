@@ -48,7 +48,7 @@ class Instruction:
         Args:
             operator (InstructionOperator): Operator for the instruction.
             target (QubitSetInput): Target qubits that the operator is applied to. Default is None.
-            control (QubitSetInput): Target qubits that the operator is controlled on.
+            control (Optional[QubitSetInput]): Target qubits that the operator is controlled on.
                 Default is None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in

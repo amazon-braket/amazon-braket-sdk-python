@@ -195,6 +195,33 @@ class TimeSeries:
 
         Returns:
             TimeSeries: The stitched time series.
+
+        Example (StitchBoundaryCondition.MEAN):
+        ::
+            time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
+            time_series_2 = TimeSeries.from_lists(times=[0.2, 0.4], values=[4, 5])
+
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.MEAN)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 3, 5]
+
+        Example (StitchBoundaryCondition.LEFT):
+        ::
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.LEFT)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 2, 5]
+
+        Example (StitchBoundaryCondition.RIGHT):
+        ::
+            stitch_ts = time_series_1.stitch(time_series_2, boundary=StitchBoundaryCondition.RIGHT)
+
+            Result:
+                stitch_ts.times() = [0, 0.1, 0.3]
+                stitch_ts.values() = [1, 4, 5]
         """
 
         if len(self.times()) == 0:
