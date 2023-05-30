@@ -71,15 +71,17 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, ProgramAHS]): The
+            task_specification,
+            (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, ProgramAHS]):
+            The
                 task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
                 results based on the task specification.
                 Sampling is not supported for shots=0.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
-                IR. If the IR supports inputs, the inputs will be updated with this value.
-                Default: {}.
+                IR. If the IR supports inputs, the inputs will be updated with this
+                alue. Default: {}.
 
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results
