@@ -447,6 +447,9 @@ def test_run_ahs():
     task = sim.run(mock_ahs_program)
     assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(AHS_RESULT)
 
+    task = sim.run(mock_ahs_program.to_ir())
+    assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(AHS_RESULT)
+
 
 def test_registered_backends():
     assert LocalSimulator.registered_backends() == {"dummy", "dummy_oq3", "dummy_jaqcd"}

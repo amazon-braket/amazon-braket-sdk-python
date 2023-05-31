@@ -65,7 +65,7 @@ class H(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["H"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "h"
 
     def adjoint(self) -> List[Gate]:
@@ -130,7 +130,7 @@ class I(Gate):  # noqa: E742, E261
         super().__init__(qubit_count=None, ascii_symbols=["I"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "i"
 
     def adjoint(self) -> List[Gate]:
@@ -195,7 +195,7 @@ class X(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["X"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "x"
 
     def adjoint(self) -> List[Gate]:
@@ -260,7 +260,7 @@ class Y(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["Y"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "y"
 
     def adjoint(self) -> List[Gate]:
@@ -325,7 +325,7 @@ class Z(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["Z"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "z"
 
     def adjoint(self) -> List[Gate]:
@@ -390,7 +390,7 @@ class S(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["S"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "s"
 
     def adjoint(self) -> List[Gate]:
@@ -455,7 +455,7 @@ class Si(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["Si"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "si"
 
     def adjoint(self) -> List[Gate]:
@@ -520,7 +520,7 @@ class T(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["T"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "t"
 
     def adjoint(self) -> List[Gate]:
@@ -585,7 +585,7 @@ class Ti(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["Ti"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "ti"
 
     def adjoint(self) -> List[Gate]:
@@ -650,7 +650,7 @@ class V(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["V"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "v"
 
     def adjoint(self) -> List[Gate]:
@@ -715,7 +715,7 @@ class Vi(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["Vi"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "vi"
 
     def adjoint(self) -> List[Gate]:
@@ -791,7 +791,7 @@ class Rx(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "rx"
 
     def _to_jaqcd(self, target: QubitSet, **kwargs) -> Any:
@@ -871,7 +871,7 @@ class Ry(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "ry"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -951,7 +951,7 @@ class Rz(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "rz"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1027,7 +1027,7 @@ class PhaseShift(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "phaseshift"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1100,7 +1100,7 @@ class CNot(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cnot"
 
     def adjoint(self) -> List[Gate]:
@@ -1160,7 +1160,7 @@ class Swap(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["SWAP", "SWAP"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "swap"
 
     def adjoint(self) -> List[Gate]:
@@ -1235,7 +1235,7 @@ class ISwap(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "iswap"
 
     def adjoint(self) -> List[Gate]:
@@ -1321,7 +1321,7 @@ class PSwap(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "pswap"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1411,7 +1411,7 @@ class XY(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "xy"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1502,7 +1502,7 @@ class CPhaseShift(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cphaseshift"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1571,7 +1571,7 @@ class CPhaseShift00(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cphaseshift00"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1640,7 +1640,7 @@ class CPhaseShift01(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cphaseshift01"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1709,7 +1709,7 @@ class CPhaseShift10(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cphaseshift10"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1770,7 +1770,7 @@ class CV(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cv"
 
     def adjoint(self) -> List[Gate]:
@@ -1830,7 +1830,7 @@ class CY(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cy"
 
     def adjoint(self) -> List[Gate]:
@@ -1890,7 +1890,7 @@ class CZ(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cz"
 
     def adjoint(self) -> List[Gate]:
@@ -1942,7 +1942,7 @@ class ECR(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "ecr"
 
     def adjoint(self) -> List[Gate]:
@@ -2029,7 +2029,7 @@ class XX(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "xx"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2125,7 +2125,7 @@ class YY(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "yy"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2221,7 +2221,7 @@ class ZZ(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "zz"
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2301,7 +2301,7 @@ class CCNot(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "ccnot"
 
     def adjoint(self) -> List[Gate]:
@@ -2384,7 +2384,7 @@ class CSwap(Gate):
         super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "cswap"
 
     def adjoint(self) -> List[Gate]:
@@ -2465,7 +2465,7 @@ class GPi(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "gpi"
 
     def to_matrix(self) -> np.ndarray:
@@ -2544,7 +2544,7 @@ class GPi2(AngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "gpi2"
 
     def to_matrix(self) -> np.ndarray:
@@ -2629,7 +2629,7 @@ class MS(DoubleAngledGate):
         )
 
     @property
-    def _qasm_name(self):
+    def _qasm_name(self) -> str:
         return "ms"
 
     def to_matrix(self) -> np.ndarray:

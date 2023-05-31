@@ -25,4 +25,4 @@ jobs:
     - name: Run code format checks
       run: |
         black --check .
-        flake8
+        flake8 --enable-extensions=BCS src

@@ -115,9 +115,8 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
-                PulseSequence, AnalogHamiltonianSimulation]): The specification of the task to run
-                on device.
+            task_specification (Union[Circuit, Problem, OpenQASMProgram, BlackbirdProgram,PulseSequence, AnalogHamiltonianSimulation]): # noqa
+                The specification of the task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -140,7 +139,7 @@ class AwsQuantumTask(QuantumTask):
                 An example would be:
                 `{"state": "washington"}`
 
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+            inputs (Dict[str, float]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
@@ -657,7 +656,9 @@ def _(
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
 
-def _circuit_device_params_from_dict(device_parameters, device_arn, paradigm_parameters):
+def _circuit_device_params_from_dict(
+    device_parameters: dict, device_arn: str, paradigm_parameters: GateModelParameters
+) -> GateModelSimulatorDeviceParameters:
     if "errorMitigation" in device_parameters:
         error_migitation = device_parameters["errorMitigation"]
         device_parameters["errorMitigation"] = (
