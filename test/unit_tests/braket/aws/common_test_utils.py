@@ -22,7 +22,7 @@ IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
 OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
-XANADU_ARN = "arn:aws:braket:us-east-1::device/qpu/xanadu/Borealis"
+PHOTONIC_DEVICE_ARN = "arn:aws:braket:us-east-1::device/qpu/test/photonicDevice"
 
 RIGETTI_REGION = "us-west-1"
 
@@ -139,7 +139,7 @@ class MockS3:
             "taskMetadata": {
                 "id": "task_arn",
                 "shots": 3,
-                "deviceId": XANADU_ARN,
+                "deviceId": PHOTONIC_DEVICE_ARN,
             },
             "additionalMetadata": {
                 "action": {
