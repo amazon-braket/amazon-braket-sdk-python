@@ -311,6 +311,20 @@ def test_run_gate_model():
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
+def test_batch_circuit():
+    dummy = DummyProgramSimulator()
+    theta = FreeParameter("theta")
+    task = Circuit().rx(angle=theta, target=0)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    circuits = [task for _ in range(num_tasks)]
+    inputs = [{"theta": i} for i in range(num_tasks)]
+    batch = device.run_batch(circuits, inputs=inputs, shots=10)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
 def test_batch_circuit_without_inputs():
     dummy = DummyProgramSimulator()
     bell = Circuit().h(0).cnot(0, 1)
@@ -323,7 +337,7 @@ def test_batch_circuit_without_inputs():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_batch_circuit_with_missing_input():
+def test_batch_circuit_with_unbound_parameters():
     dummy = DummyProgramSimulator()
     device = LocalSimulator(dummy)
     theta = FreeParameter("theta")

@@ -116,9 +116,8 @@ class LocalSimulator(Device):
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, Program,
-                AnalogHamiltonianSimulation], List[Union[Circuit, Problem, Program,
-                AnalogHamiltonianSimulation]]]): Single instance or list of task specification.
+            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation], List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]]]): # noqa
+                Single instance or list of task specification.
             shots (Optional[int]): The number of times to run the task.
                 Default: 0.
             max_parallel (Optional[int]): The maximum number of tasks to run  in parallel. Default
@@ -160,8 +159,8 @@ class LocalSimulator(Device):
 
         if single_task and single_input:
             tasks_and_inputs = [next(tasks_and_inputs)]
-
-        tasks_and_inputs = list(tasks_and_inputs)
+        else:
+            tasks_and_inputs = list(tasks_and_inputs)
 
         for task_specification, input_map in tasks_and_inputs:
             if isinstance(task_specification, Circuit):
@@ -173,10 +172,8 @@ class LocalSimulator(Device):
                         f"{unbounded_parameters}"
                     )
 
-        with Pool(max_parallel) as pool:
-            param_list = [
-                (task, shots, inp, *args, *kwargs) for task, inp in zip(task_specifications, inputs)
-            ]
+        with Pool(min(max_parallel, len(tasks_and_inputs))) as pool:
+            param_list = [(task, shots, inp, *args, *kwargs) for task, inp in tasks_and_inputs]
             results = pool.starmap(self._run_internal_wrap, param_list)
 
         return LocalQuantumTaskBatch(results)
