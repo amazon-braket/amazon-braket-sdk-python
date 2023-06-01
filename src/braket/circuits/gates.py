@@ -23,9 +23,9 @@ import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.angled_gate import (
     AngledGate,
-    DoubleAngledGate,
-    _double_angled_ascii_characters,
+    TripleAngledGate,
     _get_angles,
+    _multi_angled_ascii_characters,
     angled_ascii_characters,
     get_angle,
 )
@@ -2608,24 +2608,27 @@ class GPi2(AngledGate):
 Gate.register_gate(GPi2)
 
 
-class MS(DoubleAngledGate):
+class MS(TripleAngledGate):
     """IonQ Mølmer-Sørenson gate.
 
     Args:
         angle_1 (Union[FreeParameterExpression, float]): angle in radians.
         angle_2 (Union[FreeParameterExpression, float]): angle in radians.
+        angle_3 (Union[FreeParameterExpression, float]): angle in radians.
     """
 
     def __init__(
         self,
         angle_1: Union[FreeParameterExpression, float],
         angle_2: Union[FreeParameterExpression, float],
+        angle_3: Union[FreeParameterExpression, float] = np.pi / 2,
     ):
         super().__init__(
             angle_1=angle_1,
             angle_2=angle_2,
+            angle_3=angle_3,
             qubit_count=None,
-            ascii_symbols=[_double_angled_ascii_characters("MS", angle_1, angle_2)] * 2,
+            ascii_symbols=[_multi_angled_ascii_characters("MS", angle_1, angle_2, angle_3)] * 2,
         )
 
     @property
@@ -2659,6 +2662,7 @@ class MS(DoubleAngledGate):
         target2: QubitInput,
         angle_1: Union[FreeParameterExpression, float],
         angle_2: Union[FreeParameterExpression, float],
+        angle_3: Union[FreeParameterExpression, float] = np.pi / 2,
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
@@ -2671,6 +2675,7 @@ class MS(DoubleAngledGate):
             target2 (QubitInput): Target qubit 2 index.
             angle_1 (Union[FreeParameterExpression, float]): angle in radians.
             angle_2 (Union[FreeParameterExpression, float]): angle in radians.
+            angle_3 (Union[FreeParameterExpression, float]): angle in radians.
             control (Optional[QubitSetInput]): Control qubit(s). Default None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
@@ -2690,7 +2695,7 @@ class MS(DoubleAngledGate):
         """
         return [
             Instruction(
-                MS(angle_1, angle_2),
+                MS(angle_1, angle_2, angle_3),
                 target=[target1, target2],
                 control=control,
                 control_state=control_state,
