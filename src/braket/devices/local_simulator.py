@@ -14,7 +14,10 @@
 from __future__ import annotations
 
 from functools import singledispatchmethod
-from typing import Dict, Optional, Set, Union
+from itertools import repeat
+from multiprocessing import Pool
+from os import cpu_count
+from typing import Dict, List, Optional, Set, Union
 
 import pkg_resources
 
@@ -33,6 +36,7 @@ from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
     AnalogHamiltonianSimulationQuantumTaskResult,
 )
 from braket.tasks.local_quantum_task import LocalQuantumTask
+from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 
 _simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
@@ -97,6 +101,83 @@ class LocalSimulator(Device):
         result = self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
         return LocalQuantumTask(result)
 
+    def run_batch(
+        self,
+        task_specifications: Union[
+            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
+            List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]],
+        ],
+        shots: Optional[int] = 0,
+        max_parallel: Optional[int] = None,
+        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
+        *args,
+        **kwargs,
+    ) -> LocalQuantumTaskBatch:
+        """Executes a batch of tasks in parallel
+
+        Args:
+            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation], List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]]]): # noqa
+                Single instance or list of task specification.
+            shots (Optional[int]): The number of times to run the task.
+                Default: 0.
+            max_parallel (Optional[int]): The maximum number of tasks to run  in parallel. Default
+                is the number of CPU.
+            inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be passed
+                along with the IR. If the IR supports inputs, the inputs will be updated with
+                this value. Default: {}.
+
+        Returns:
+            LocalQuantumTaskBatch: A batch containing all of the tasks run
+
+        See Also:
+            `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
+        """
+        inputs = inputs or {}
+
+        if not max_parallel:
+            max_parallel = cpu_count()
+
+        single_task = isinstance(
+            task_specifications,
+            (Circuit, Program, Problem, AnalogHamiltonianSimulation),
+        )
+
+        single_input = isinstance(inputs, dict)
+
+        if not single_task and not single_input:
+            if len(task_specifications) != len(inputs):
+                raise ValueError(
+                    "Multiple inputs and task specifications must " "be equal in number."
+                )
+        if single_task:
+            task_specifications = repeat(task_specifications)
+
+        if single_input:
+            inputs = repeat(inputs)
+
+        tasks_and_inputs = zip(task_specifications, inputs)
+
+        if single_task and single_input:
+            tasks_and_inputs = [next(tasks_and_inputs)]
+        else:
+            tasks_and_inputs = list(tasks_and_inputs)
+
+        for task_specification, input_map in tasks_and_inputs:
+            if isinstance(task_specification, Circuit):
+                param_names = {param.name for param in task_specification.parameters}
+                unbounded_parameters = param_names - set(input_map.keys())
+                if unbounded_parameters:
+                    raise ValueError(
+                        f"Cannot execute circuit with unbound parameters: "
+                        f"{unbounded_parameters}"
+                    )
+
+        with Pool(min(max_parallel, len(tasks_and_inputs))) as pool:
+            param_list = [(task, shots, inp, *args, *kwargs) for task, inp in tasks_and_inputs]
+            results = pool.starmap(self._run_internal_wrap, param_list)
+
+        return LocalQuantumTaskBatch(results)
+
     @property
     def properties(self) -> DeviceCapabilities:
         """DeviceCapabilities: Return the device properties
@@ -115,6 +196,17 @@ class LocalSimulator(Device):
             into LocalSimulator's constructor
         """
         return set(_simulator_devices.keys())
+
+    def _run_internal_wrap(
+        self,
+        task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+        *args,
+        **kwargs,
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+        """Wraps _run_interal for pickle dump"""
+        return self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
 
     @singledispatchmethod
     def _get_simulator(self, simulator: Union[str, BraketSimulator]) -> LocalSimulator:

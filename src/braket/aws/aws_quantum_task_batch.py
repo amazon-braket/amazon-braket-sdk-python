@@ -25,9 +25,10 @@ from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
-class AwsQuantumTaskBatch:
+class AwsQuantumTaskBatch(QuantumTaskBatch):
     """Executes a batch of quantum tasks in parallel.
 
     Using this class can yield vast speedups over executing tasks sequentially,

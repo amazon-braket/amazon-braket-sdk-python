@@ -12,11 +12,12 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.tasks.quantum_task import QuantumTask
+from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
 class Device(ABC):
@@ -44,7 +45,7 @@ class Device(ABC):
         or an annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]):  Specification of a task
+            task_specification (Union[Circuit, Problem]): Specification of a task
                 to run on device.
             shots (Optional[int]): The number of times to run the task on the device.
                 Default is `None`.
@@ -54,6 +55,36 @@ class Device(ABC):
 
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device
+        """
+
+    @abstractmethod
+    def run_batch(
+        self,
+        task_specifications: Union[
+            Union[Circuit, Problem],
+            List[Union[Circuit, Problem]],
+        ],
+        shots: Optional[int],
+        max_parallel: Optional[int],
+        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]],
+        *args,
+        **kwargs
+    ) -> QuantumTaskBatch:
+        """Executes a batch of tasks in parallel
+
+        Args:
+            task_specifications (Union[Union[Circuit, Problem], List[Union[Circuit, Problem]]]):
+                Single instance or list of circuits or problems to run on device.
+            shots (Optional[int]): The number of times to run the circuit or annealing problem.
+            max_parallel (Optional[int]): The maximum number of tasks to run  in parallel.
+                Batch creation will fail if this value is greater than the maximum allowed
+                concurrent tasks on the device.
+            inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
+                passed along with the IR. If the IR supports inputs, the inputs will be updated
+                with this value.
+
+        Returns:
+            QuantumTaskBatch: A batch containing all of the tasks run
         """
 
     @property
