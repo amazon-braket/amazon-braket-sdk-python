@@ -325,6 +325,30 @@ def test_batch_circuit():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
+def test_batch_with_max_parallel():
+    dummy = DummyProgramSimulator()
+    task = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    circuits = [task for _ in range(num_tasks)]
+    batch = device.run_batch(circuits, shots=10, max_parallel=2)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_batch_with_annealing_problems():
+    dummy = DummyAnnealingSimulator()
+    problem = Problem(ProblemType.ISING)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    problems = [problem for _ in range(num_tasks)]
+    batch = device.run_batch(problems, shots=10)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == AnnealingQuantumTaskResult.from_object(ANNEALING_RESULT)
+
+
 def test_batch_circuit_without_inputs():
     dummy = DummyProgramSimulator()
     bell = Circuit().h(0).cnot(0, 1)
