@@ -2638,15 +2638,35 @@ class MS(TripleAngledGate):
     def to_matrix(self) -> np.ndarray:
         return np.array(
             [
-                [1, 0, 0, -1j * np.exp(-1j * (self.angle_1 + self.angle_2))],
-                [0, 1, -1j * np.exp(-1j * (self.angle_1 - self.angle_2)), 0],
-                [0, -1j * np.exp(1j * (self.angle_1 - self.angle_2)), 1, 0],
-                [-1j * np.exp(1j * (self.angle_1 + self.angle_2)), 0, 0, 1],
+                [
+                    np.cos(self.angle_3 / 2),
+                    0,
+                    0,
+                    -1j * np.exp(-1j * (self.angle_1 + self.angle_2)) * np.sin(self.angle_3 / 2),
+                ],
+                [
+                    0,
+                    np.cos(self.angle_3 / 2),
+                    -1j * np.exp(-1j * (self.angle_1 - self.angle_2)) * np.sin(self.angle_3 / 2),
+                    0,
+                ],
+                [
+                    0,
+                    -1j * np.exp(1j * (self.angle_1 - self.angle_2)) * np.sin(self.angle_3 / 2),
+                    np.cos(self.angle_3 / 2),
+                    0,
+                ],
+                [
+                    -1j * np.exp(1j * (self.angle_1 + self.angle_2)) * np.sin(self.angle_3 / 2),
+                    0,
+                    0,
+                    np.cos(self.angle_3 / 2),
+                ],
             ]
-        ) / np.sqrt(2)
+        )
 
     def adjoint(self) -> List[Gate]:
-        return [MS(self.angle_1 + np.pi, self.angle_2)]
+        return [MS(self.angle_1 + np.pi, self.angle_2, self.angle_3)]
 
     @staticmethod
     def fixed_qubit_count() -> int:
