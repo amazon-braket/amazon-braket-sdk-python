@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.42.0 (2023-06-05)
+
+### Features
+
+ * support for the run_batch() method on LocalSimulator
+
 ## v1.41.0 (2023-05-30)
 
 ### Features
