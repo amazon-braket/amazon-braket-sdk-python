@@ -74,7 +74,8 @@ def prepare_quantum_job(
             `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
             for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
-        job_name (str): A str that specifies the name with which the job is created.
+        job_name (str): A str that specifies the name with which the job is created. The job
+            name must be between 0 and 50 characters long and cannot contain underscores.
             Default: f'{image_uri_type}-{timestamp}'.
 
         code_location (str): The S3 prefix URI where custom code will be uploaded.
