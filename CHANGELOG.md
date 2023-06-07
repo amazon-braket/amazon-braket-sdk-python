@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.42.1 (2023-06-07)
+
+### Bug Fixes and Other Changes
+
+ * Add more information to docstring about job name requirements
+
 ## v1.42.0 (2023-06-05)
 
 ### Features
