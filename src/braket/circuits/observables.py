@@ -43,7 +43,7 @@ class H(StandardObservable):
         """
         super().__init__(ascii_symbols=["H"])
 
-    def _unscaled(self):
+    def _unscaled(self) -> StandardObservable:
         return H()
 
     def _to_jaqcd(self) -> List[str]:
@@ -84,7 +84,7 @@ class I(Observable):  # noqa: E742, E261
         """
         super().__init__(qubit_count=1, ascii_symbols=["I"])
 
-    def _unscaled(self):
+    def _unscaled(self) -> Observable:
         return I()
 
     def _to_jaqcd(self) -> List[str]:
@@ -134,7 +134,7 @@ class X(StandardObservable):
         """
         super().__init__(ascii_symbols=["X"])
 
-    def _unscaled(self):
+    def _unscaled(self) -> StandardObservable:
         return X()
 
     def _to_jaqcd(self) -> List[str]:
@@ -173,7 +173,7 @@ class Y(StandardObservable):
         """
         super().__init__(ascii_symbols=["Y"])
 
-    def _unscaled(self):
+    def _unscaled(self) -> StandardObservable:
         return Y()
 
     def _to_jaqcd(self) -> List[str]:
@@ -212,7 +212,7 @@ class Z(StandardObservable):
         """
         super().__init__(ascii_symbols=["Z"])
 
-    def _unscaled(self):
+    def _unscaled(self) -> StandardObservable:
         return Z()
 
     def _to_jaqcd(self) -> List[str]:
@@ -302,7 +302,7 @@ class TensorProduct(Observable):
             for _ in range(self.qubit_count)
         )
 
-    def _unscaled(self):
+    def _unscaled(self) -> Observable:
         copied = TensorProduct(observables=self.factors)
         copied._coef = 1
         return copied
@@ -378,7 +378,7 @@ class TensorProduct(Observable):
             index (int): The index of the desired eigenvalue
 
         Returns:
-            float: The `index`th eigenvalue of the observable.
+            float: The `index` th eigenvalue of the observable.
         """
         if index in self._eigenvalue_indices:
             return self._eigenvalue_indices[index]
@@ -435,6 +435,8 @@ class Sum(Observable):
         """
         Args:
             observables (List[Observable]): List of observables for Sum
+            display_name (str): Name to use for an instance of this Sum
+                observable for circuit diagrams. Defaults to `Hamiltonian`.
 
         Examples:
             >>> t1 = -3 * Observable.Y() + 2 * Observable.X()
@@ -558,7 +560,7 @@ class Hermitian(Observable):
 
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
-    def _unscaled(self):
+    def _unscaled(self) -> Observable:
         return Hermitian(matrix=self._matrix, display_name=self.ascii_symbols[0])
 
     def _to_jaqcd(self) -> List[List[List[List[float]]]]:

@@ -54,6 +54,7 @@ class BitFlip(SingleProbabilisticNoise):
     """Bit flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
+
     where
 
     .. math::
@@ -156,6 +157,7 @@ class PhaseFlip(SingleProbabilisticNoise):
     """Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
+
     where
 
     .. math::
@@ -262,6 +264,7 @@ class PauliChannel(PauliNoise):
             + probX X \\rho X^{\\dagger}
             + probY Y \\rho Y^{\\dagger}
             + probZ Z \\rho Z^{\\dagger}
+
     where
 
     .. math::
@@ -414,6 +417,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
             + p/3 X \\rho X^{\\dagger}
             + p/3 Y \\rho Y^{\\dagger}
             + p/3 Z \\rho Z^{\\dagger}
+
     where
 
     .. math::
@@ -539,6 +543,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         + XZ \\rho XZ^{\\dagger} + YI \\rho YI^{\\dagger} + YX \\rho YX^{\\dagger}
         + YY \\rho YY^{\\dagger} + YZ \\rho YZ^{\\dagger} + ZI \\rho ZI^{\\dagger}
         + ZX \\rho ZX^{\\dagger} + ZY \\rho ZY^{\\dagger} + ZZ \\rho ZZ^{\\dagger})
+
     where
 
     .. math::
@@ -679,6 +684,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
     .. math::
         \\rho \\Rightarrow (1-p) \\rho + p/3 (
           IZ \\rho IZ^{\\dagger} + ZI \\rho ZI^{\\dagger} + ZZ \\rho ZZ^{\\dagger})
+
     where
 
     .. math::
@@ -811,6 +817,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
             p_{ZX} ZX \\rho ZX^{\\dagger} +
             p_{ZY} ZY \\rho ZY^{\\dagger} +
             p_{ZZ} ZZ \\rho ZZ^{\\dagger})
+
     where
 
     .. math::
@@ -959,6 +966,7 @@ class AmplitudeDamping(DampingNoise):
     """AmplitudeDamping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
+
     where
 
     .. math::
@@ -1061,6 +1069,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
                 + E_2 \\rho E_2^{\\dagger} + E_3 \\rho E_3^{\\dagger}
+
     where
 
     .. math::
@@ -1200,6 +1209,7 @@ class PhaseDamping(DampingNoise):
     """Phase damping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
+
     where
 
     .. math::

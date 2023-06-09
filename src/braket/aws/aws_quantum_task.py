@@ -50,6 +50,7 @@ from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
+from braket.error_mitigation import ErrorMitigation
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse.pulse_sequence import PulseSequence
@@ -114,9 +115,8 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
-                PulseSequence, AnalogHamiltonianSimulation]): The specification of the task to run
-                on device.
+            task_specification (Union[Circuit, Problem, OpenQASMProgram, BlackbirdProgram,PulseSequence, AnalogHamiltonianSimulation]): # noqa
+                The specification of the task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
@@ -139,7 +139,7 @@ class AwsQuantumTask(QuantumTask):
                 An example would be:
                 `{"state": "washington"}`
 
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+            inputs (Dict[str, float]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
@@ -502,7 +502,7 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
     device_arn: str,
-    _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQASMProgram
+    device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
     *args,
@@ -516,6 +516,20 @@ def _(
             inputs=inputs_copy,
         )
     create_task_kwargs.update({"action": openqasm_program.json()})
+    if device_parameters:
+        final_device_parameters = (
+            _circuit_device_params_from_dict(
+                device_parameters,
+                device_arn,
+                GateModelParameters(qubitCount=0),  # qubitCount unused
+            )
+            if type(device_parameters) is dict
+            else device_parameters
+        )
+        create_task_kwargs.update(
+            {"deviceParameters": final_device_parameters.json(exclude_none=True)}
+        )
+
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
@@ -543,7 +557,7 @@ def _(
     aws_session: AwsSession,
     create_task_kwargs: Dict[str, Any],
     device_arn: str,
-    device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for circuits
+    device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
     *args,
@@ -555,16 +569,11 @@ def _(
     paradigm_parameters = GateModelParameters(
         qubitCount=circuit.qubit_count, disableQubitRewiring=disable_qubit_rewiring
     )
-    if "ionq" in device_arn:
-        device_parameters = IonqDeviceParameters(paradigmParameters=paradigm_parameters)
-    elif "rigetti" in device_arn:
-        device_parameters = RigettiDeviceParameters(paradigmParameters=paradigm_parameters)
-    elif "oqc" in device_arn:
-        device_parameters = OqcDeviceParameters(paradigmParameters=paradigm_parameters)
-    else:  # default to use simulator
-        device_parameters = GateModelSimulatorDeviceParameters(
-            paradigmParameters=paradigm_parameters
-        )
+    final_device_parameters = (
+        _circuit_device_params_from_dict(device_parameters or {}, device_arn, paradigm_parameters)
+        if type(device_parameters) is dict
+        else device_parameters
+    )
 
     qubit_reference_type = QubitReferenceType.VIRTUAL
 
@@ -594,7 +603,7 @@ def _(
     create_task_kwargs.update(
         {
             "action": openqasm_program.json(),
-            "deviceParameters": device_parameters.json(),
+            "deviceParameters": final_device_parameters.json(exclude_none=True),
         }
     )
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
@@ -645,6 +654,25 @@ def _(
     create_task_kwargs.update({"action": analog_hamiltonian_simulation.to_ir().json()})
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+def _circuit_device_params_from_dict(
+    device_parameters: dict, device_arn: str, paradigm_parameters: GateModelParameters
+) -> GateModelSimulatorDeviceParameters:
+    if "errorMitigation" in device_parameters:
+        error_migitation = device_parameters["errorMitigation"]
+        device_parameters["errorMitigation"] = (
+            error_migitation.serialize()
+            if isinstance(error_migitation, ErrorMitigation)
+            else error_migitation
+        )
+    if "ionq" in device_arn:
+        return IonqDeviceParameters(paradigmParameters=paradigm_parameters, **device_parameters)
+    if "rigetti" in device_arn:
+        return RigettiDeviceParameters(paradigmParameters=paradigm_parameters)
+    if "oqc" in device_arn:
+        return OqcDeviceParameters(paradigmParameters=paradigm_parameters)
+    return GateModelSimulatorDeviceParameters(paradigmParameters=paradigm_parameters)
 
 
 def _create_annealing_device_params(

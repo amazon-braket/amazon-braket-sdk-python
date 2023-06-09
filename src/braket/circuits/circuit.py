@@ -692,6 +692,7 @@ class Circuit:
                 in the whole circuit when they are not given.
 
         Examples:
+        ::
             >>> circ = Circuit().x(0).y(1).z(0).x(1).cnot(0,1)
             >>> print(circ)
             T  : |0|1|2|
@@ -1164,7 +1165,12 @@ class Circuit:
                 ]
             )
         else:
-            for idx, qubit in enumerate(self.qubits):
+            qubits = (
+                sorted(self.qubits)
+                if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL
+                else self.qubits
+            )
+            for idx, qubit in enumerate(qubits):
                 qubit_target = serialization_properties.format_target(int(qubit))
                 ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
 

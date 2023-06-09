@@ -311,6 +311,87 @@ def test_run_gate_model():
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
+def test_batch_circuit():
+    dummy = DummyProgramSimulator()
+    theta = FreeParameter("theta")
+    task = Circuit().rx(angle=theta, target=0)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    circuits = [task for _ in range(num_tasks)]
+    inputs = [{"theta": i} for i in range(num_tasks)]
+    batch = device.run_batch(circuits, inputs=inputs, shots=10)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_batch_with_max_parallel():
+    dummy = DummyProgramSimulator()
+    task = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    circuits = [task for _ in range(num_tasks)]
+    batch = device.run_batch(circuits, shots=10, max_parallel=2)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_batch_with_annealing_problems():
+    dummy = DummyAnnealingSimulator()
+    problem = Problem(ProblemType.ISING)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    problems = [problem for _ in range(num_tasks)]
+    batch = device.run_batch(problems, shots=10)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == AnnealingQuantumTaskResult.from_object(ANNEALING_RESULT)
+
+
+def test_batch_circuit_without_inputs():
+    dummy = DummyProgramSimulator()
+    bell = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    circuits = [bell for _ in range(num_tasks)]
+    batch = device.run_batch(circuits, shots=10)
+    assert len(batch.results()) == num_tasks
+    for x in batch.results():
+        assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_batch_circuit_with_unbound_parameters():
+    dummy = DummyProgramSimulator()
+    device = LocalSimulator(dummy)
+    theta = FreeParameter("theta")
+    task = Circuit().rx(angle=theta, target=0)
+    inputs = {"beta": 0.2}
+    cannot_execute_with_unbound = "Cannot execute circuit with unbound parameters: {'theta'}"
+    with pytest.raises(ValueError, match=cannot_execute_with_unbound):
+        device.run_batch(task, inputs=inputs, shots=10)
+
+
+def test_batch_circuit_with_single_task():
+    dummy = DummyProgramSimulator()
+    bell = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(dummy)
+    batch = device.run_batch(bell, shots=10)
+    assert len(batch.results()) == 1
+    assert batch.results()[0] == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+
+
+def test_batch_circuit_with_task_and_input_mismatch():
+    dummy = DummyProgramSimulator()
+    bell = Circuit().h(0).cnot(0, 1)
+    device = LocalSimulator(dummy)
+    num_tasks = 10
+    circuits = [bell for _ in range(num_tasks)]
+    inputs = [{} for _ in range(num_tasks - 1)]
+    with pytest.raises(ValueError):
+        device.run_batch(circuits, inputs=inputs, shots=10)
+
+
 def test_run_gate_model_inputs():
     dummy = DummyProgramSimulator()
     dummy.run = Mock(return_value=GATE_MODEL_RESULT)
@@ -402,6 +483,9 @@ def test_run_annealing():
 def test_run_ahs():
     sim = LocalSimulator(DummyRydbergSimulator())
     task = sim.run(mock_ahs_program)
+    assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(AHS_RESULT)
+
+    task = sim.run(mock_ahs_program.to_ir())
     assert task.result() == AnalogHamiltonianSimulationQuantumTaskResult.from_object(AHS_RESULT)
 
 

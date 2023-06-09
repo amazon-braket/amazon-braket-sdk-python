@@ -1,5 +1,87 @@
 # Changelog
 
+## v1.42.1 (2023-06-07)
+
+### Bug Fixes and Other Changes
+
+ * Add more information to docstring about job name requirements
+
+## v1.42.0 (2023-06-05)
+
+### Features
+
+ * support for the run_batch() method on LocalSimulator
+
+## v1.41.0 (2023-05-30)
+
+### Features
+
+ * AHS ir valid input for `LocalSimulator`
+
+### Bug Fixes and Other Changes
+
+ * re-enable & update content as per BCS
+
+## v1.40.0 (2023-05-25)
+
+### Features
+
+ * gate modifiers
+
+## v1.39.1 (2023-05-18)
+
+### Bug Fixes and Other Changes
+
+ * exclude default none for kms
+ * test: Rename ionQdevice to Harmony in tests
+ * making kms key optional
+
+### Testing and Release Infrastructure
+
+ * twine check action
+
+## v1.39.0 (2023-05-16)
+
+### Features
+
+ * Introduce error mitigation
+
+## v1.38.3 (2023-05-16)
+
+### Bug Fixes and Other Changes
+
+ * Remove `exclude_none` from device params
+
+## v1.38.2 (2023-05-16)
+
+### Bug Fixes and Other Changes
+
+ * docs: add a linter to check proper rst formatting and fix up incorrect docs
+
+## v1.38.1 (2023-05-11)
+
+### Bug Fixes and Other Changes
+
+ * hardcode the language used by Sphinx instead of falling back on the default
+
+## v1.38.0 (2023-05-01)
+
+### Features
+
+ * add tagging for python 3.10 images
+
+## v1.37.1 (2023-04-25)
+
+### Bug Fixes and Other Changes
+
+ * test: fix tox parallel issues with unsorted sets
+ * Mock task creation against QPUs for tracker
+ * test: order terminal states for quantum jobs
+
+### Testing and Release Infrastructure
+
+ * speed up unit testing by automatically parallelizing the CPU workers for test runs
+
 ## v1.37.0 (2023-04-11)
 
 ### Features

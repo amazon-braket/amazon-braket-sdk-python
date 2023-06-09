@@ -27,8 +27,8 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.14.0",
-        "amazon-braket-default-simulator>=1.11.0",
+        "amazon-braket-schemas>=1.17.0",
+        "amazon-braket-default-simulator>=1.14.0",
         "oqpy~=0.1.1",
         "setuptools",
         "backoff",
@@ -46,6 +46,7 @@ setup(
             "black",
             "botocore",
             "flake8<=5.0.4",
+            "flake8-rst-docstrings",
             "isort",
             "jsonschema==3.2.0",
             "pre-commit",

@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Iterable, List, Union
+from typing import Any, Iterable, List, Optional, Union
 
 import numpy as np
 from oqpy import Program
@@ -29,6 +29,7 @@ from braket.circuits.angled_gate import (
     angled_ascii_characters,
     get_angle,
 )
+from braket.circuits.basis_state import BasisStateInput
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -63,17 +64,15 @@ class H(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["H"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "h"
+
     def adjoint(self) -> List[Gate]:
         return [H()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.H.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"h {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return 1.0 / np.sqrt(2.0) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=complex)
@@ -84,11 +83,27 @@ class H(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def h(target: QubitSetInput) -> Iterable[Instruction]:
+    def h(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of H instructions.
@@ -97,7 +112,12 @@ class H(Gate):
             >>> circ = Circuit().h(0)
             >>> circ = Circuit().h([0, 1, 2])
         """
-        return [Instruction(H(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                H(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(H)
@@ -109,17 +129,15 @@ class I(Gate):  # noqa: E742, E261
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["I"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "i"
+
     def adjoint(self) -> List[Gate]:
         return [I()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.I.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"i {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.eye(2, dtype=complex)
@@ -130,11 +148,27 @@ class I(Gate):  # noqa: E742, E261
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def i(target: QubitSetInput) -> Iterable[Instruction]:
+    def i(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of I instructions.
@@ -143,7 +177,12 @@ class I(Gate):  # noqa: E742, E261
             >>> circ = Circuit().i(0)
             >>> circ = Circuit().i([0, 1, 2])
         """
-        return [Instruction(I(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                I(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(I)
@@ -155,17 +194,15 @@ class X(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["X"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "x"
+
     def adjoint(self) -> List[Gate]:
         return [X()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.X.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"x {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -176,11 +213,27 @@ class X(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def x(target: QubitSetInput) -> Iterable[Instruction]:
+    def x(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of X instructions.
@@ -189,7 +242,12 @@ class X(Gate):
             >>> circ = Circuit().x(0)
             >>> circ = Circuit().x([0, 1, 2])
         """
-        return [Instruction(X(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                X(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(X)
@@ -201,17 +259,15 @@ class Y(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Y"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "y"
+
     def adjoint(self) -> List[Gate]:
         return [Y()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Y.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"y {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
@@ -222,11 +278,27 @@ class Y(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def y(target: QubitSetInput) -> Iterable[Instruction]:
+    def y(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Y instructions.
@@ -235,7 +307,12 @@ class Y(Gate):
             >>> circ = Circuit().y(0)
             >>> circ = Circuit().y([0, 1, 2])
         """
-        return [Instruction(Y(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Y(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Y)
@@ -247,17 +324,15 @@ class Z(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Z"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "z"
+
     def adjoint(self) -> List[Gate]:
         return [Z()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Z.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"z {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -268,11 +343,27 @@ class Z(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def z(target: QubitSetInput) -> Iterable[Instruction]:
+    def z(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Z instructions.
@@ -281,7 +372,12 @@ class Z(Gate):
             >>> circ = Circuit().z(0)
             >>> circ = Circuit().z([0, 1, 2])
         """
-        return [Instruction(Z(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Z(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Z)
@@ -293,17 +389,15 @@ class S(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["S"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "s"
+
     def adjoint(self) -> List[Gate]:
         return [Si()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.S.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"s {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, 1.0j]], dtype=complex)
@@ -314,11 +408,27 @@ class S(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def s(target: QubitSetInput) -> Iterable[Instruction]:
+    def s(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of S instructions.
@@ -327,7 +437,12 @@ class S(Gate):
             >>> circ = Circuit().s(0)
             >>> circ = Circuit().s([0, 1, 2])
         """
-        return [Instruction(S(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                S(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(S)
@@ -339,17 +454,15 @@ class Si(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Si"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "si"
+
     def adjoint(self) -> List[Gate]:
         return [S()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Si.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"si {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1, 0], [0, -1j]], dtype=complex)
@@ -360,11 +473,27 @@ class Si(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def si(target: QubitSetInput) -> Iterable[Instruction]:
+    def si(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: Iterable of Si instructions.
@@ -373,7 +502,12 @@ class Si(Gate):
             >>> circ = Circuit().si(0)
             >>> circ = Circuit().si([0, 1, 2])
         """
-        return [Instruction(Si(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Si(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Si)
@@ -385,17 +519,15 @@ class T(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["T"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "t"
+
     def adjoint(self) -> List[Gate]:
         return [Ti()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.T.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"t {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * np.pi / 4)]], dtype=complex)
@@ -406,11 +538,27 @@ class T(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def t(target: QubitSetInput) -> Iterable[Instruction]:
+    def t(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of T instructions.
@@ -419,7 +567,12 @@ class T(Gate):
             >>> circ = Circuit().t(0)
             >>> circ = Circuit().t([0, 1, 2])
         """
-        return [Instruction(T(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                T(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(T)
@@ -431,17 +584,15 @@ class Ti(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Ti"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "ti"
+
     def adjoint(self) -> List[Gate]:
         return [T()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Ti.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"ti {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(-1j * np.pi / 4)]], dtype=complex)
@@ -452,11 +603,27 @@ class Ti(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def ti(target: QubitSetInput) -> Iterable[Instruction]:
+    def ti(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Ti instructions.
@@ -465,7 +632,12 @@ class Ti(Gate):
             >>> circ = Circuit().ti(0)
             >>> circ = Circuit().ti([0, 1, 2])
         """
-        return [Instruction(Ti(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Ti(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Ti)
@@ -477,17 +649,15 @@ class V(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["V"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "v"
+
     def adjoint(self) -> List[Gate]:
         return [Vi()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.V.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"v {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[0.5 + 0.5j, 0.5 - 0.5j], [0.5 - 0.5j, 0.5 + 0.5j]], dtype=complex)
@@ -498,11 +668,27 @@ class V(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def v(target: QubitSetInput) -> Iterable[Instruction]:
+    def v(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of V instructions.
@@ -511,7 +697,12 @@ class V(Gate):
             >>> circ = Circuit().v(0)
             >>> circ = Circuit().v([0, 1, 2])
         """
-        return [Instruction(V(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                V(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(V)
@@ -523,17 +714,15 @@ class Vi(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Vi"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "vi"
+
     def adjoint(self) -> List[Gate]:
         return [V()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Vi.construct(target=target[0])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"vi {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(([[0.5 - 0.5j, 0.5 + 0.5j], [0.5 + 0.5j, 0.5 - 0.5j]]), dtype=complex)
@@ -544,11 +733,27 @@ class Vi(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def vi(target: QubitSetInput) -> Iterable[Instruction]:
+    def vi(
+        target: QubitSetInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Vi instructions.
@@ -557,7 +762,12 @@ class Vi(Gate):
             >>> circ = Circuit().vi(0)
             >>> circ = Circuit().vi([0, 1, 2])
         """
-        return [Instruction(Vi(), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Vi(), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Vi)
@@ -580,14 +790,12 @@ class Rx(AngledGate):
             ascii_symbols=[angled_ascii_characters("Rx", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "rx"
+
     def _to_jaqcd(self, target: QubitSet, **kwargs) -> Any:
         return ir.Rx.construct(target=target[0], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"rx({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
@@ -608,13 +816,28 @@ class Rx(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def rx(
-        target: QubitInput, angle: Union[FreeParameterExpression, float]
+        target: QubitSetInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
-            target (QubitInput): Target qubit index.
+            target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: Rx instruction.
@@ -622,7 +845,12 @@ class Rx(AngledGate):
         Examples:
             >>> circ = Circuit().rx(0, 0.15)
         """
-        return [Instruction(Rx(angle), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Rx(angle), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Rx)
@@ -642,14 +870,12 @@ class Ry(AngledGate):
             ascii_symbols=[angled_ascii_characters("Ry", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "ry"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Ry.construct(target=target[0], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"ry({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
@@ -670,21 +896,41 @@ class Ry(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def ry(
-        target: QubitInput, angle: Union[FreeParameterExpression, float]
+        target: QubitSetInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
-            target (QubitInput): Target qubit index.
+            target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
-            Iterable[Instruction]: Ry instruction.
+            Iterable[Instruction]: Rx instruction.
 
         Examples:
             >>> circ = Circuit().ry(0, 0.15)
         """
-        return [Instruction(Ry(angle), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Ry(angle), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Ry)
@@ -704,14 +950,12 @@ class Rz(AngledGate):
             ascii_symbols=[angled_ascii_characters("Rz", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "rz"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Rz.construct(target=target[0], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"rz({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -728,21 +972,41 @@ class Rz(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def rz(
-        target: QubitInput, angle: Union[FreeParameterExpression, float]
+        target: QubitSetInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
-            target (QubitInput): Target qubit index.
-            angle (Union[FreeParameterExpression, float]): angle in radians.
+            target (QubitSetInput): Target qubit(s).
+            angle (Union[FreeParameterExpression, float]): Angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
-            Iterable[Instruction]: Rz instruction.
+            Iterable[Instruction]: Rx instruction.
 
         Examples:
             >>> circ = Circuit().rz(0, 0.15)
         """
-        return [Instruction(Rz(angle), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                Rz(angle), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(Rz)
@@ -762,15 +1026,12 @@ class PhaseShift(AngledGate):
             ascii_symbols=[angled_ascii_characters("PHASE", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "phaseshift"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.PhaseShift.construct(target=target[0], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        # alternatively, "ctrl @ phase({self.angle}) {target_qubit};"
-        return f"phaseshift({self.angle}) {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array([[1.0, 0.0], [0.0, np.exp(1j * self.angle)]], dtype=complex)
@@ -785,13 +1046,28 @@ class PhaseShift(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def phaseshift(
-        target: QubitInput, angle: Union[FreeParameterExpression, float]
+        target: QubitSetInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
-            target (QubitInput): Target qubit index.
+            target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: PhaseShift instruction.
@@ -799,7 +1075,16 @@ class PhaseShift(AngledGate):
         Examples:
             >>> circ = Circuit().phaseshift(0, 0.15)
         """
-        return [Instruction(PhaseShift(angle), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                PhaseShift(angle),
+                target=qubit,
+                control=control,
+                control_state=control_state,
+                power=power,
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(PhaseShift)
@@ -814,18 +1099,15 @@ class CNot(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cnot"
+
     def adjoint(self) -> List[Gate]:
         return [CNot()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CNot.construct(control=target[0], target=target[1])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        return f"cnot {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -844,12 +1126,16 @@ class CNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cnot(control: QubitInput, target: QubitInput) -> Instruction:
+    def cnot(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CNot instruction.
@@ -857,7 +1143,11 @@ class CNot(Gate):
         Examples:
             >>> circ = Circuit().cnot(0, 1)
         """
-        return Instruction(CNot(), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CNot(), target=[absorbed_control, target], control=control_qubits, power=power
+        )
 
 
 Gate.register_gate(CNot)
@@ -869,18 +1159,15 @@ class Swap(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["SWAP", "SWAP"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "swap"
+
     def adjoint(self) -> List[Gate]:
         return [Swap()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Swap.construct(targets=[target[0], target[1]])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_0 = serialization_properties.format_target(int(target[0]))
-        target_qubit_1 = serialization_properties.format_target(int(target[1]))
-        return f"swap {target_qubit_0}, {target_qubit_1};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -899,12 +1186,29 @@ class Swap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def swap(target1: QubitInput, target2: QubitInput) -> Instruction:
+    def swap(
+        target1: QubitInput,
+        target2: QubitInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: Swap instruction.
@@ -912,7 +1216,13 @@ class Swap(Gate):
         Examples:
             >>> circ = Circuit().swap(0, 1)
         """
-        return Instruction(Swap(), target=[target1, target2])
+        return Instruction(
+            Swap(),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(Swap)
@@ -924,18 +1234,15 @@ class ISwap(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "iswap"
+
     def adjoint(self) -> List[Gate]:
         return [self, self, self]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.ISwap.construct(targets=[target[0], target[1]])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_0 = serialization_properties.format_target(int(target[0]))
-        target_qubit_1 = serialization_properties.format_target(int(target[1]))
-        return f"iswap {target_qubit_0}, {target_qubit_1};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -954,12 +1261,29 @@ class ISwap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def iswap(target1: QubitInput, target2: QubitInput) -> Instruction:
+    def iswap(
+        target1: QubitInput,
+        target2: QubitInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: ISwap instruction.
@@ -967,7 +1291,13 @@ class ISwap(Gate):
         Examples:
             >>> circ = Circuit().iswap(0, 1)
         """
-        return Instruction(ISwap(), target=[target1, target2])
+        return Instruction(
+            ISwap(),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(ISwap)
@@ -990,15 +1320,12 @@ class PSwap(AngledGate):
             ],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "pswap"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.PSwap.construct(targets=[target[0], target[1]], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_0 = serialization_properties.format_target(int(target[0]))
-        target_qubit_1 = serialization_properties.format_target(int(target[1]))
-        return f"pswap({self.angle}) {target_qubit_0}, {target_qubit_1};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1021,7 +1348,13 @@ class PSwap(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def pswap(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
+        target1: QubitInput,
+        target2: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1029,6 +1362,16 @@ class PSwap(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: PSwap instruction.
@@ -1036,7 +1379,13 @@ class PSwap(AngledGate):
         Examples:
             >>> circ = Circuit().pswap(0, 1, 0.15)
         """
-        return Instruction(PSwap(angle), target=[target1, target2])
+        return Instruction(
+            PSwap(angle),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(PSwap)
@@ -1061,15 +1410,12 @@ class XY(AngledGate):
             ],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "xy"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_1 = serialization_properties.format_target(int(target[0]))
-        target_qubit_2 = serialization_properties.format_target(int(target[1]))
-        return f"xy({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
@@ -1098,7 +1444,13 @@ class XY(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def xy(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
+        target1: QubitInput,
+        target2: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1106,6 +1458,16 @@ class XY(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: XY instruction.
@@ -1113,7 +1475,13 @@ class XY(AngledGate):
         Examples:
             >>> circ = Circuit().xy(0, 1, 0.15)
         """
-        return Instruction(XY(angle), target=[target1, target2])
+        return Instruction(
+            XY(angle),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(XY)
@@ -1133,15 +1501,12 @@ class CPhaseShift(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cphaseshift"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift.construct(control=target[0], target=target[1], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        return f"cphaseshift({self.angle}) {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, 1.0, np.exp(1j * self.angle)])
@@ -1156,14 +1521,21 @@ class CPhaseShift(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput,
+        target: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift instruction.
@@ -1171,7 +1543,14 @@ class CPhaseShift(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CPhaseShift(angle),
+            target=[absorbed_control, target],
+            control=control_qubits,
+            power=power,
+        )
 
 
 Gate.register_gate(CPhaseShift)
@@ -1191,15 +1570,12 @@ class CPhaseShift00(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE00", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cphaseshift00"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift00.construct(control=target[0], target=target[1], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        return f"cphaseshift00({self.angle}) {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([np.exp(1j * self.angle), 1.0, 1.0, 1.0])
@@ -1214,14 +1590,21 @@ class CPhaseShift00(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift00(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput,
+        target: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift00 instruction.
@@ -1229,7 +1612,14 @@ class CPhaseShift00(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift00(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift00(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CPhaseShift00(angle),
+            target=[absorbed_control, target],
+            control=control_qubits,
+            power=power,
+        )
 
 
 Gate.register_gate(CPhaseShift00)
@@ -1249,15 +1639,12 @@ class CPhaseShift01(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE01", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cphaseshift01"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift01.construct(control=target[0], target=target[1], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        return f"cphaseshift01({self.angle}) {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, np.exp(1j * self.angle), 1.0, 1.0])
@@ -1272,14 +1659,21 @@ class CPhaseShift01(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift01(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput,
+        target: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift01 instruction.
@@ -1287,7 +1681,14 @@ class CPhaseShift01(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift01(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift01(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CPhaseShift01(angle),
+            target=[absorbed_control, target],
+            control=control_qubits,
+            power=power,
+        )
 
 
 Gate.register_gate(CPhaseShift01)
@@ -1307,15 +1708,12 @@ class CPhaseShift10(AngledGate):
             ascii_symbols=["C", angled_ascii_characters("PHASE10", angle)],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cphaseshift10"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CPhaseShift10.construct(control=target[0], target=target[1], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        return f"cphaseshift10({self.angle}) {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([1.0, 1.0, np.exp(1j * self.angle), 1.0])
@@ -1330,14 +1728,21 @@ class CPhaseShift10(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cphaseshift10(
-        control: QubitInput, target: QubitInput, angle: Union[FreeParameterExpression, float]
+        control: QubitSetInput,
+        target: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CPhaseShift10 instruction.
@@ -1345,7 +1750,14 @@ class CPhaseShift10(AngledGate):
         Examples:
             >>> circ = Circuit().cphaseshift10(0, 1, 0.15)
         """
-        return Instruction(CPhaseShift10(angle), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CPhaseShift10(angle),
+            target=[absorbed_control, target],
+            control=control_qubits,
+            power=power,
+        )
 
 
 Gate.register_gate(CPhaseShift10)
@@ -1357,18 +1769,15 @@ class CV(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cv"
+
     def adjoint(self) -> List[Gate]:
         return [self, self, self]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CV.construct(control=target[0], target=target[1])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        return f"cv {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1387,12 +1796,16 @@ class CV(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cv(control: QubitInput, target: QubitInput) -> Instruction:
+    def cv(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CV instruction.
@@ -1400,7 +1813,11 @@ class CV(Gate):
         Examples:
             >>> circ = Circuit().cv(0, 1)
         """
-        return Instruction(CV(), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CV(), target=[absorbed_control, target], control=control_qubits, power=power
+        )
 
 
 Gate.register_gate(CV)
@@ -1412,18 +1829,15 @@ class CY(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cy"
+
     def adjoint(self) -> List[Gate]:
         return [CY()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CY.construct(control=target[0], target=target[1])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        return f"cy {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1442,12 +1856,16 @@ class CY(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cy(control: QubitInput, target: QubitInput) -> Instruction:
+    def cy(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CY instruction.
@@ -1455,7 +1873,11 @@ class CY(Gate):
         Examples:
             >>> circ = Circuit().cy(0, 1)
         """
-        return Instruction(CY(), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CY(), target=[absorbed_control, target], control=control_qubits, power=power
+        )
 
 
 Gate.register_gate(CY)
@@ -1467,18 +1889,15 @@ class CZ(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cz"
+
     def adjoint(self) -> List[Gate]:
         return [CZ()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CZ.construct(control=target[0], target=target[1])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[1]))
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        return f"cz {control_qubit}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.diag([complex(1.0), 1.0, 1.0, -1.0])
@@ -1489,12 +1908,16 @@ class CZ(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cz(control: QubitInput, target: QubitInput) -> Instruction:
+    def cz(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index.
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target (QubitInput): Target qubit index.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CZ instruction.
@@ -1502,7 +1925,11 @@ class CZ(Gate):
         Examples:
             >>> circ = Circuit().cz(0, 1)
         """
-        return Instruction(CZ(), target=[control, target])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CZ(), target=[absorbed_control, target], control=control_qubits, power=power
+        )
 
 
 Gate.register_gate(CZ)
@@ -1514,18 +1941,15 @@ class ECR(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "ecr"
+
     def adjoint(self) -> List[Gate]:
         return [ECR()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.ECR.construct(targets=[target[0], target[1]])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_0 = serialization_properties.format_target(int(target[0]))
-        target_qubit_1 = serialization_properties.format_target(int(target[1]))
-        return f"ecr {target_qubit_0}, {target_qubit_1};"
 
     def to_matrix(self) -> np.ndarray:
         return (
@@ -1543,12 +1967,29 @@ class ECR(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def ecr(target1: QubitInput, target2: QubitInput) -> Instruction:
+    def ecr(
+        target1: QubitInput,
+        target2: QubitInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: ECR instruction.
@@ -1556,7 +1997,13 @@ class ECR(Gate):
         Examples:
             >>> circ = Circuit().ecr(0, 1)
         """
-        return Instruction(ECR(), target=[target1, target2])
+        return Instruction(
+            ECR(),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(ECR)
@@ -1581,15 +2028,12 @@ class XX(AngledGate):
             ],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "xx"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_1 = serialization_properties.format_target(int(target[0]))
-        target_qubit_2 = serialization_properties.format_target(int(target[1]))
-        return f"xx({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
@@ -1618,7 +2062,13 @@ class XX(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def xx(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
+        target1: QubitInput,
+        target2: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1626,6 +2076,16 @@ class XX(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: XX instruction.
@@ -1633,7 +2093,13 @@ class XX(AngledGate):
         Examples:
             >>> circ = Circuit().xx(0, 1, 0.15)
         """
-        return Instruction(XX(angle), target=[target1, target2])
+        return Instruction(
+            XX(angle),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(XX)
@@ -1658,15 +2124,12 @@ class YY(AngledGate):
             ],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "yy"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_1 = serialization_properties.format_target(int(target[0]))
-        target_qubit_2 = serialization_properties.format_target(int(target[1]))
-        return f"yy({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
@@ -1695,7 +2158,13 @@ class YY(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def yy(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
+        target1: QubitInput,
+        target2: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1703,6 +2172,16 @@ class YY(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: YY instruction.
@@ -1710,7 +2189,13 @@ class YY(AngledGate):
         Examples:
             >>> circ = Circuit().yy(0, 1, 0.15)
         """
-        return Instruction(YY(angle), target=[target1, target2])
+        return Instruction(
+            YY(angle),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(YY)
@@ -1735,15 +2220,12 @@ class ZZ(AngledGate):
             ],
         )
 
+    @property
+    def _qasm_name(self) -> str:
+        return "zz"
+
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.ZZ.construct(targets=[target[0], target[1]], angle=self.angle)
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_1 = serialization_properties.format_target(int(target[0]))
-        target_qubit_2 = serialization_properties.format_target(int(target[1]))
-        return f"zz({self.angle}) {target_qubit_1}, {target_qubit_2};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1766,7 +2248,13 @@ class ZZ(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def zz(
-        target1: QubitInput, target2: QubitInput, angle: Union[FreeParameterExpression, float]
+        target1: QubitInput,
+        target2: QubitInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Instruction:
         """Registers this function into the circuit class.
 
@@ -1774,6 +2262,16 @@ class ZZ(AngledGate):
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
             angle (Union[FreeParameterExpression, float]): angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: ZZ instruction.
@@ -1781,7 +2279,13 @@ class ZZ(AngledGate):
         Examples:
             >>> circ = Circuit().zz(0, 1, 0.15)
         """
-        return Instruction(ZZ(angle), target=[target1, target2])
+        return Instruction(
+            ZZ(angle),
+            target=[target1, target2],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(ZZ)
@@ -1796,19 +2300,15 @@ class CCNot(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "ccnot"
+
     def adjoint(self) -> List[Gate]:
         return [CCNot()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CCNot.construct(controls=[target[0], target[1]], target=target[2])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit_0 = serialization_properties.format_target(int(target[0]))
-        control_qubit_1 = serialization_properties.format_target(int(target[1]))
-        target_qubit = serialization_properties.format_target(int(target[2]))
-        return f"ccnot {control_qubit_0}, {control_qubit_1}, {target_qubit};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1831,13 +2331,33 @@ class CCNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def ccnot(control1: QubitInput, control2: QubitInput, target: QubitInput) -> Instruction:
+    def ccnot(
+        control1: QubitInput,
+        control2: QubitInput,
+        target: QubitInput,
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
             control1 (QubitInput): Control qubit 1 index.
             control2 (QubitInput): Control qubit 2 index.
             target (QubitInput): Target qubit index.
+            control (Optional[QubitSetInput]): Control qubit(s), in addition to
+                control1 and control2. Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Control state only applies to control qubits specified with
+                the control argument, not control1 and control2. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CCNot instruction.
@@ -1845,7 +2365,13 @@ class CCNot(Gate):
         Examples:
             >>> circ = Circuit().ccnot(0, 1, 2)
         """
-        return Instruction(CCNot(), target=[control1, control2, target])
+        return Instruction(
+            CCNot(),
+            target=[control1, control2, target],
+            control=control,
+            control_state=control_state,
+            power=power,
+        )
 
 
 Gate.register_gate(CCNot)
@@ -1857,20 +2383,15 @@ class CSwap(Gate):
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
 
+    @property
+    def _qasm_name(self) -> str:
+        return "cswap"
+
     def adjoint(self) -> List[Gate]:
         return [CSwap()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.CSwap.construct(control=target[0], targets=[target[1], target[2]])
-
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        control_qubit = serialization_properties.format_target(int(target[0]))
-        target_qubit_0 = serialization_properties.format_target(int(target[1]))
-        target_qubit_1 = serialization_properties.format_target(int(target[2]))
-
-        return f"cswap {control_qubit}, {target_qubit_0}, {target_qubit_1};"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1893,13 +2414,22 @@ class CSwap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def cswap(control: QubitInput, target1: QubitInput, target2: QubitInput) -> Instruction:
+    def cswap(
+        control: QubitSetInput,
+        target1: QubitInput,
+        target2: QubitInput,
+        power: float = 1,
+    ) -> Instruction:
         """Registers this function into the circuit class.
 
         Args:
-            control (QubitInput): Control qubit index
+            control (QubitSetInput): Control qubit(s). The last control qubit
+                is absorbed into the target of the instruction.
             target1 (QubitInput): Target qubit 1 index.
             target2 (QubitInput): Target qubit 2 index.
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: CSwap instruction.
@@ -1907,7 +2437,14 @@ class CSwap(Gate):
         Examples:
             >>> circ = Circuit().cswap(0, 1, 2)
         """
-        return Instruction(CSwap(), target=[control, target1, target2])
+        control_qubits = QubitSet(control)
+        absorbed_control = control_qubits.pop()
+        return Instruction(
+            CSwap(),
+            target=[absorbed_control, target1, target2],
+            control=control_qubits,
+            power=power,
+        )
 
 
 Gate.register_gate(CSwap)
@@ -1927,11 +2464,9 @@ class GPi(AngledGate):
             ascii_symbols=[angled_ascii_characters("GPi", angle)],
         )
 
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"gpi({self.angle}) {target_qubit};"
+    @property
+    def _qasm_name(self) -> str:
+        return "gpi"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -1954,13 +2489,28 @@ class GPi(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def gpi(
-        target: QubitInput, angle: Union[FreeParameterExpression, float]
+        target: QubitSetInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
-            target (QubitInput): Target qubit index.
+            target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: GPi instruction.
@@ -1968,7 +2518,12 @@ class GPi(AngledGate):
         Examples:
             >>> circ = Circuit().gpi(0, 0.15)
         """
-        return [Instruction(GPi(angle), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                GPi(angle), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(GPi)
@@ -1988,11 +2543,9 @@ class GPi2(AngledGate):
             ascii_symbols=[angled_ascii_characters("GPi2", angle)],
         )
 
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit = serialization_properties.format_target(int(target[0]))
-        return f"gpi2({self.angle}) {target_qubit};"
+    @property
+    def _qasm_name(self) -> str:
+        return "gpi2"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -2015,13 +2568,28 @@ class GPi2(AngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def gpi2(
-        target: QubitInput, angle: Union[FreeParameterExpression, float]
+        target: QubitSetInput,
+        angle: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
-            target (QubitInput): Target qubit index.
+            target (QubitSetInput): Target qubit(s).
             angle (Union[FreeParameterExpression, float]): Angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: GPi2 instruction.
@@ -2029,7 +2597,12 @@ class GPi2(AngledGate):
         Examples:
             >>> circ = Circuit().gpi2(0, 0.15)
         """
-        return [Instruction(GPi2(angle), target=qubit) for qubit in QubitSet(target)]
+        return [
+            Instruction(
+                GPi2(angle), target=qubit, control=control, control_state=control_state, power=power
+            )
+            for qubit in QubitSet(target)
+        ]
 
 
 Gate.register_gate(GPi2)
@@ -2055,12 +2628,9 @@ class MS(DoubleAngledGate):
             ascii_symbols=[_double_angled_ascii_characters("MS", angle_1, angle_2)] * 2,
         )
 
-    def _to_openqasm(
-        self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties, **kwargs
-    ) -> str:
-        target_qubit_1 = serialization_properties.format_target(int(target[0]))
-        target_qubit_2 = serialization_properties.format_target(int(target[1]))
-        return f"ms({self.angle_1}, {self.angle_2}) {target_qubit_1}, {target_qubit_2};"
+    @property
+    def _qasm_name(self) -> str:
+        return "ms"
 
     def to_matrix(self) -> np.ndarray:
         return np.array(
@@ -2089,6 +2659,10 @@ class MS(DoubleAngledGate):
         target2: QubitInput,
         angle_1: Union[FreeParameterExpression, float],
         angle_2: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
@@ -2097,6 +2671,16 @@ class MS(DoubleAngledGate):
             target2 (QubitInput): Target qubit 2 index.
             angle_1 (Union[FreeParameterExpression, float]): angle in radians.
             angle_2 (Union[FreeParameterExpression, float]): angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Iterable[Instruction]: MS instruction.
@@ -2104,7 +2688,15 @@ class MS(DoubleAngledGate):
         Examples:
             >>> circ = Circuit().ms(0, 1, 0.15, 0.34)
         """
-        return [Instruction(MS(angle_1, angle_2), target=[target1, target2])]
+        return [
+            Instruction(
+                MS(angle_1, angle_2),
+                target=[target1, target2],
+                control=control,
+                control_state=control_state,
+                power=power,
+            )
+        ]
 
 
 Gate.register_gate(MS)
@@ -2191,6 +2783,7 @@ class Unitary(Gate):
         Examples:
             >>> circ = Circuit().unitary(matrix=np.array([[0, 1],[1, 0]]), targets=[0])
         """
+        # todo: handle controlled unitary
         if 2 ** len(targets) != matrix.shape[0]:
             raise ValueError("Dimensions of the supplied unitary are incompatible with the targets")
 
@@ -2227,11 +2820,12 @@ class PulseGate(Gate, Parameterizable):
 
     @property
     def parameters(self) -> List[FreeParameter]:
-        """Returns the list of `FreeParameter`s associated with the gate."""
+        """Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:
-        """Takes in parameters and returns an object with specified parameters
+        """
+        Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
         Returns:
@@ -2256,7 +2850,13 @@ class PulseGate(Gate, Parameterizable):
     @staticmethod
     @circuit.subroutine(register=True)
     def pulse_gate(
-        targets: QubitSet, pulse_sequence: PulseSequence, display_name: str = "PG"
+        targets: QubitSet,
+        pulse_sequence: PulseSequence,
+        display_name: str = "PG",
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
     ) -> Instruction:
         """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
            within circuits.
@@ -2267,6 +2867,16 @@ class PulseGate(Gate, Parameterizable):
             pulse_sequence (PulseSequence): PulseSequence to embed within the circuit.
             display_name (str): Name to be used for an instance of this pulse gate
                 for circuit diagrams. Defaults to `PG`.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
 
         Returns:
             Instruction: Pulse gate instruction.
@@ -2276,7 +2886,11 @@ class PulseGate(Gate, Parameterizable):
             >>> circ = Circuit().pulse_gate(pulse_sequence=pulse_seq, targets=[0])
         """
         return Instruction(
-            PulseGate(pulse_sequence, len(QubitSet(targets)), display_name), target=targets
+            PulseGate(pulse_sequence, len(QubitSet(targets)), display_name),
+            target=targets,
+            control=control,
+            control_state=control_state,
+            power=power,
         )
 
 

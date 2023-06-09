@@ -25,9 +25,10 @@ from braket.aws.aws_session import AwsSession
 from braket.circuits import Circuit
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
 
-class AwsQuantumTaskBatch:
+class AwsQuantumTaskBatch(QuantumTaskBatch):
     """Executes a batch of quantum tasks in parallel.
 
     Using this class can yield vast speedups over executing tasks sequentially,
@@ -68,11 +69,8 @@ class AwsQuantumTaskBatch:
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             device_arn (str): The ARN of the quantum device.
-            task_specifications (
-                Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram,
-                AnalogHamiltonianSimulation], List[Union[Circuit,
-                Problem, OpenQasmProgram, BlackbirdProgram,
-                AnalogHamiltonianSimulation]]): Single instance or list of circuits, annealing
+            task_specifications (Union[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation],List[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation]]]): # noqa
+                Single instance or list of circuits, annealing
                 problems, pulse sequences, or photonics program as specification of task
                 to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
@@ -90,9 +88,9 @@ class AwsQuantumTaskBatch:
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
-            inputs ([Dict[str, float]]): Inputs to be passed along with the
-                IR. If the IR supports inputs, the inputs will be updated with this value.
-                Default: {}.
+            inputs (Union[Dict[str, float], List[Dict[str, float]]]): Inputs to be passed
+                along with the IR. If the IR supports inputs, the inputs will be updated
+                with this value. Default: {}.
         """
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,

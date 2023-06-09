@@ -31,6 +31,11 @@ def cnot():
     return Instruction(Gate.CNot(), [0, 1])
 
 
+@pytest.fixture
+def ccry():
+    return Instruction(Gate.Ry(1.23), 0, control=[1, 2])
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_empty_operator():
     Instruction(None, target=0)
@@ -101,7 +106,16 @@ def test_adjoint_unsupported():
 
 
 def test_str(instr):
-    expected = "Instruction('operator': {}, 'target': {})".format(instr.operator, instr.target)
+    expected = (
+        "Instruction('operator': {}, 'target': {}, "
+        "'control': {}, 'control_state': {}, 'power': {})"
+    ).format(
+        instr.operator,
+        instr.target,
+        instr.control,
+        instr.control_state.as_tuple,
+        instr.power,
+    )
     assert str(instr) == expected
 
 
@@ -151,12 +165,43 @@ def test_copy_with_mapping(cnot):
     assert cnot.copy(target_mapping=target_mapping) == expected
 
 
+def test_copy_with_control_mapping(ccry):
+    control_mapping = {1: 10, 2: 11}
+    expected = Instruction(Gate.Ry(1.23), target=1, control=[10, 11])
+    assert ccry.copy(target=1, control_mapping=control_mapping) == expected
+
+
 def test_copy_with_target(cnot):
     target = [10, 11]
     expected = Instruction(Gate.CNot(), target)
     assert cnot.copy(target=target) == expected
 
 
-@pytest.mark.xfail(raises=TypeError)
+def test_copy_with_control(ccry):
+    control = [10, 11]
+    expected = Instruction(Gate.Ry(1.23), 3, control=control)
+    assert ccry.copy(target=3, control=control) == expected
+
+
 def test_copy_with_target_and_mapping(instr):
-    instr.copy(target=[10], target_mapping={0: 10})
+    cant_do_both = "Only 'target_mapping' or 'target' can be supplied, but not both."
+    with pytest.raises(TypeError, match=cant_do_both):
+        instr.copy(target=[10], target_mapping={0: 10})
+
+
+def test_copy_with_control_target_and_mapping(instr):
+    cant_do_both = "Only 'control_mapping' or 'control' can be supplied, but not both."
+    with pytest.raises(TypeError, match=cant_do_both):
+        instr.copy(target=[10], control=[10], control_mapping={0: 10})
+
+
+def test_pow(instr):
+    assert instr.power == 1
+    cubed = instr**3
+    assert instr.power == 1
+    assert cubed.power == 3
+    then_squared = cubed**2
+    assert cubed.power == 3
+    assert then_squared.power == 6
+    modded = then_squared.__pow__(6, 5)
+    assert modded.power == 1

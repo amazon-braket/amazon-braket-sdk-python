@@ -33,7 +33,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     QubitReferenceType,
 )
-from braket.device_schema import GateModelParameters
+from braket.device_schema import GateModelParameters, error_mitigation
 from braket.device_schema.dwave import (
     Dwave2000QDeviceParameters,
     DwaveAdvantageDeviceParameters,
@@ -43,6 +43,7 @@ from braket.device_schema.ionq import IonqDeviceParameters
 from braket.device_schema.oqc import OqcDeviceParameters
 from braket.device_schema.rigetti import RigettiDeviceParameters
 from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
+from braket.error_mitigation.debias import Debias
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse import Frame, Port, PulseSequence
@@ -138,6 +139,11 @@ def pulse_sequence():
 @pytest.fixture
 def pulse_gate(pulse_sequence):
     return PulseGate(pulse_sequence, 1, "my_PG")
+
+
+@pytest.fixture
+def em():
+    return Debias()
 
 
 @pytest.fixture
@@ -460,6 +466,54 @@ def test_create_openqasm_program(aws_session, arn, openqasm_program):
     )
 
 
+def test_create_openqasm_program_em(aws_session, arn, openqasm_program, em):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(
+        aws_session,
+        IONQ_ARN,
+        openqasm_program,
+        S3_TARGET,
+        shots,
+        device_parameters={"errorMitigation": em},
+    )
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IONQ_ARN,
+        openqasm_program.json(),
+        S3_TARGET,
+        shots,
+        device_parameters=IonqDeviceParameters(
+            paradigmParameters=GateModelParameters(qubitCount=0),
+            errorMitigation=[error_mitigation.Debias()],
+        ),
+    )
+
+
+def test_create_openqasm_program_em_serialized(aws_session, arn, openqasm_program, em):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    AwsQuantumTask.create(
+        aws_session,
+        IONQ_ARN,
+        openqasm_program,
+        S3_TARGET,
+        shots,
+        device_parameters={"errorMitigation": em.serialize()},
+    )
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IONQ_ARN,
+        openqasm_program.json(),
+        S3_TARGET,
+        shots,
+        device_parameters=IonqDeviceParameters(
+            paradigmParameters=GateModelParameters(qubitCount=0),
+            errorMitigation=[error_mitigation.Debias()],
+        ),
+    )
+
+
 def test_create_blackbird_program(aws_session, arn, blackbird_program):
     aws_session.create_quantum_task.return_value = arn
     shots = 21
@@ -548,7 +602,7 @@ def test_create_pulse_gate_circuit(
 
 
 @pytest.mark.parametrize("device_arn,device_parameters_class", DEVICE_PARAMETERS)
-def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_session, circuit):
+def test_create_circuit_with_shots(device_arn, device_parameters_class, aws_session, circuit):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
     shots = 53
@@ -572,8 +626,35 @@ def test_from_circuit_with_shots(device_arn, device_parameters_class, aws_sessio
     )
 
 
+def test_create_circuit_em(aws_session, circuit, em):
+    mocked_task_arn = "task-arn-1"
+    aws_session.create_quantum_task.return_value = mocked_task_arn
+    shots = 53
+
+    task = AwsQuantumTask.create(
+        aws_session, IONQ_ARN, circuit, S3_TARGET, shots, device_parameters={"errorMitigation": em}
+    )
+    assert task == AwsQuantumTask(mocked_task_arn, aws_session)
+    program = circuit.to_ir(ir_type=IRType.OPENQASM)
+    assert program.inputs == {}
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        IONQ_ARN,
+        program.json(),
+        S3_TARGET,
+        shots,
+        IonqDeviceParameters(
+            paradigmParameters=GateModelParameters(qubitCount=circuit.qubit_count),
+            errorMitigation=[error_mitigation.Debias()],
+        ),
+    )
+
+
 @pytest.mark.parametrize("device_arn,device_parameters_class", DEVICE_PARAMETERS)
-def test_from_circuit_with_input_params(device_arn, device_parameters_class, aws_session, circuit):
+def test_create_circuit_with_input_params(
+    device_arn, device_parameters_class, aws_session, circuit
+):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
     shots = 53
@@ -602,7 +683,7 @@ def test_from_circuit_with_input_params(device_arn, device_parameters_class, aws
 @pytest.mark.parametrize(
     "device_arn,device_parameters_class", [(RIGETTI_ARN, RigettiDeviceParameters)]
 )
-def test_from_circuit_with_disabled_rewiring(
+def test_create_circuit_with_disabled_rewiring(
     device_arn, device_parameters_class, aws_session, circuit
 ):
     mocked_task_arn = "task-arn-1"
@@ -635,7 +716,7 @@ def test_from_circuit_with_disabled_rewiring(
     "device_arn,device_parameters_class, disable_qubit_rewiring",
     [(RIGETTI_ARN, RigettiDeviceParameters, True), (RIGETTI_ARN, RigettiDeviceParameters, False)],
 )
-def test_from_circuit_with_verbatim(
+def test_create_circuit_with_verbatim(
     device_arn, device_parameters_class, disable_qubit_rewiring, aws_session
 ):
     circ = Circuit().add_verbatim_box(Circuit().h(0))
@@ -675,7 +756,7 @@ def test_from_circuit_with_verbatim(
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_from_circuit_with_shots_value_error(aws_session, arn, circuit):
+def test_create_circuit_with_shots_value_error(aws_session, arn, circuit):
     mocked_task_arn = "task-arn-1"
     aws_session.create_quantum_task.return_value = mocked_task_arn
     AwsQuantumTask.create(aws_session, arn, circuit, S3_TARGET, 0)
