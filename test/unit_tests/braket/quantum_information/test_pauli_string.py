@@ -135,3 +135,35 @@ def test_eigenstate(string, signs):
 @pytest.mark.parametrize("sign", ["+ab", "--+-", [+2, -1, -1], (-1, 1j, 1)])
 def test_eigenstate_invalid_signs(sign):
     PauliString("XYZ").eigenstate(sign)
+
+
+@pytest.mark.parametrize(
+    "circ1, circ2, circ_res",
+    [
+        ("XYXZY", "+XYXZY", "IIIII"),
+        ("XYZ", "ZYX", "YIY"),
+        ("YZ", "ZX", "-XY"),
+        ("-Z", "Y", "X"),
+        ("Z", "Y", "-X"),
+    ],
+)
+def test_dot(circ1, circ2, circ_res):
+    circ1 = PauliString(circ1)
+    circ1.dot(PauliString(circ2), inplace=True)
+    assert circ1 == PauliString(circ_res)
+
+
+@pytest.mark.parametrize(
+    "circ, n, circ_res",
+    [
+        ("-X", 1, "-X"),
+        ("Y", 2, "I"),
+        ("-X", 3, "-X"),
+        ("XYZ", 5, "XYZ"),
+        ("XYZ", 1, "XYZ"),
+    ],
+)
+def test_power(circ, n, circ_res):
+    circ = PauliString(circ)
+    circ.power(n, inplace=True)
+    assert circ == PauliString(circ_res)

@@ -24,6 +24,11 @@ _PAULI_X = "X"
 _PAULI_Y = "Y"
 _PAULI_Z = "Z"
 _PAULI_INDICES = {_IDENTITY: 0, _PAULI_X: 1, _PAULI_Y: 2, _PAULI_Z: 3}
+_PRODUCT_MAP = {
+    "X": {"Y": ["Z", 1j], "Z": ["Y", -1j]},
+    "Y": {"X": ["Z", -1j], "Z": ["X", 1j]},
+    "Z": {"X": ["Y", 1j], "Y": ["X", -1j]},
+}
 _PAULI_OBSERVABLES = {_PAULI_X: X(), _PAULI_Y: Y(), _PAULI_Z: Z()}
 _SIGN_MAP = {"+": 1, "-": -1}
 
@@ -141,6 +146,100 @@ class PauliString:
         if not set(signs_tup) <= {1, -1}:
             raise ValueError(f"signs must be +/-1, got {signs}")
         return self._generate_eigenstate_circuit(signs_tup)
+
+    def dot(self, other: PauliString, inplace: bool = False) -> PauliString:
+        """Right multiplies this Pauli String with the argument.
+
+        Returns the result of multiplying the current circuit by the argument on its right. For
+        example, if called on `-XYZ` with argument `ZYX`, then `YIY` is the result. In-place
+        computation is off by default.
+
+        Args:
+            other (PauliString): The right multiplicand.
+            inplace (bool): If `True`, `self` is updated to hold the product.
+
+        Returns:
+            PauliString: The resultant circuit from right multiplying `self` with `other`.
+
+        Raises:
+            ValueError: If the lengths of the Pauli Strings being multiplied differ.
+        """
+        if self._qubit_count != other._qubit_count:
+            raise ValueError(
+                f"Input Pauli string must be of length ({self._qubit_count}), "
+                f"not {other._qubit_count}"
+            )
+        pauli_result = ""
+        phase_result = self._phase * other._phase
+        for i in range(self._qubit_count):
+            # Are either identity?
+            if i not in self._nontrivial and i not in other._nontrivial:
+                pauli_result += "I"
+            elif i not in self._nontrivial:
+                pauli_result += other._nontrivial[i]
+            elif i not in other._nontrivial:
+                pauli_result += self._nontrivial[i]
+            elif self._nontrivial[i] == other._nontrivial[i]:
+                pauli_result += "I"
+            else:
+                gate, phase = _PRODUCT_MAP[self._nontrivial[i]][other._nontrivial[i]]
+                pauli_result += gate
+                phase_result *= phase
+
+        # ignore complex global phase
+        if phase_result.real < 0 or phase_result.imag < 0:
+            pauli_result = "-" + pauli_result
+        out_pauli_string = PauliString(pauli_result)
+
+        if inplace:
+            self._phase = out_pauli_string._phase
+            self._qubit_count = out_pauli_string._qubit_count
+            self._nontrivial = out_pauli_string._nontrivial
+        return out_pauli_string
+
+    def power(self, n: int, inplace: bool = False) -> PauliString:
+        """Composes circuit with itself n times.
+
+        Args:
+            n (int): The number of times to self-multiply. Must be greater than 0.
+            inplace (bool): Update `self` if `True`
+
+        Returns:
+            PauliString: The circuit from right multiplying `self` with itself `n` times.
+
+        Raises:
+            ValueError: If `n <= 0`.
+        """
+        if n <= 0:
+            raise ValueError("Must be raised to power strictly greater than 0")
+
+        pauli_other = PauliString(self)
+        for _ in range(n - 1):
+            pauli_other.dot(self, inplace=True)
+
+        if inplace:
+            self._phase = pauli_other._phase
+            self._qubit_count = pauli_other._qubit_count
+            self._nontrivial = pauli_other._nontrivial
+        return pauli_other
+
+    def to_circuit(self) -> Circuit:
+        """Returns circuit represented by this `PauliString`.
+
+        Returns:
+            Circuit: The circuit for this `PauliString`.
+        """
+        circ = Circuit()
+        for qubit in range(self._qubit_count):
+            if qubit not in self._nontrivial:
+                circ = circ.i(qubit)
+            elif self._nontrivial[qubit] == "X":
+                circ = circ.x(qubit)
+            elif self._nontrivial[qubit] == "Y":
+                circ = circ.y(qubit)
+            elif self._nontrivial[qubit] == "Z":
+                circ = circ.z(qubit)
+        return circ
 
     def __eq__(self, other):
         if isinstance(other, PauliString):
