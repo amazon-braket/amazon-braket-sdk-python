@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.42.1 (2023-06-07)
+
+### Bug Fixes and Other Changes
+
+ * Add more information to docstring about job name requirements
+
+## v1.42.0 (2023-06-05)
+
+### Features
+
+ * support for the run_batch() method on LocalSimulator
+
 ## v1.41.0 (2023-05-30)
 
 ### Features
