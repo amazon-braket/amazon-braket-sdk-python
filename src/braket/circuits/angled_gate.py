@@ -404,7 +404,7 @@ def _multi_angled_ascii_characters(
     return (
         f"{gate}("
         + ", ".join(
-            f'{angle:{".2f" if isinstance(angle, (float, Float)) else ""}}, ' for angle in angles
+            f'{angle:{".2f" if isinstance(angle, (float, Float)) else ""}}' for angle in angles
         )
         + ")"
     )
