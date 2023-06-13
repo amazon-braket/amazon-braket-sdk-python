@@ -15,9 +15,11 @@ from __future__ import annotations
 
 import json
 import os
+import importlib
+import urllib.request
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
@@ -27,7 +29,8 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
-from braket.circuits import Circuit
+from braket.circuits import Circuit, Gate, QubitSet
+from braket.parametric.free_parameter import FreeParameter
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
@@ -36,8 +39,9 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # no
 from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.pulse import Frame, Port, PulseSequence
+from braket.pulse import ArbitraryWaveform, DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 from braket.schema_common import BraketSchemaBase
+from braket.native_gates.native_gate_calibration import NativeGateCalibration
 
 
 class AwsDeviceType(str, Enum):
@@ -80,6 +84,8 @@ class AwsDevice(Device):
         """
         super().__init__(name=None, status=None)
         self._arn = arn
+        self._native_gate_calibration = None
+        self._native_gate_calibration_timestamp = None
         self._properties = None
         self._provider_name = None
         self._poll_interval_seconds = None
@@ -103,6 +109,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[Dict[str, float]] = None,
+        native_gate_calibration: Optional[NativeGateCalibration] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -126,6 +133,8 @@ class AwsDevice(Device):
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
+            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for user defined gate
+                calibration.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -174,6 +183,7 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
+            native_gate_calibration=native_gate_calibration,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -350,6 +360,27 @@ class AwsDevice(Device):
         return self._arn
 
     @property
+    def native_gate_calibration(self) -> NativeGateCalibration:
+        """
+        Fetches the native gate calibration data if not already present.
+
+        Returns:
+            NativeGateCalibration: The calibration object.
+        """
+        if not self._native_gate_calibration:
+            self._native_gate_calibration = self.refresh_native_gate_calibrations()
+        return self._calibration
+
+    @property
+    def native_gate_calibration_timestamp(self) -> datetime:
+        """
+        This returns the timestamp of the last time the calibration data was fetched.
+
+        Returns:
+            datetime: The timestamp for the last time the calibration was fetched.
+        """
+
+    @property
     def is_available(self) -> bool:
         """Returns true if the device is currently available.
         Returns:
@@ -366,8 +397,7 @@ class AwsDevice(Device):
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)
 
             if (
-                execution_window.windowEndHour < execution_window.windowStartHour
-                and current_time_utc < execution_window.windowEndHour
+                current_time_utc < execution_window.windowEndHour < execution_window.windowStartHour
             ):
                 weekday = (weekday - 1) % 7
 
@@ -622,3 +652,157 @@ class AwsDevice(Device):
                 f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
+
+    def refresh_native_gate_calibrations(self) -> PulseSequence:
+        """
+        Refreshes the native gate calibration data upon request.
+
+        If the device does not have calibration data, None is returned.
+
+        Returns:
+            PulseSequence: the calibration data for the device from the specific time.
+        """
+        if hasattr(self.properties, "nativeGateCalibrationsRef"):
+            try:
+                with urllib.request.urlopen(self.properties.nativeGateCalibrationsRef) as f:
+                    json_calibration_data = self._parse_calibration_json(json.loads(f.read().decode("utf-8")))
+                    self._native_gate_calibration_timestamp = datetime.now()
+                    return NativeGateCalibration(json_calibration_data)
+            except urllib.error.URLError as e:
+                print(e.reason)
+        else:
+            return None
+
+    def _parse_waveforms(self, waveforms_json: str) -> Dict[ArbitraryWaveform]:
+        waveforms = dict()
+        for waveform in waveforms_json.items():
+            complex_amplitudes = [complex(i[0], i[1]) for i in waveform["amplitudes"]]
+            waveforms["waveformId"] = complex_amplitudes
+        return waveforms
+
+    def _get_pulse_sequence(self, calibration: str, waveforms: Dict[ArbitraryWaveform]) -> PulseSequence:
+        calibration_sequence = PulseSequence()
+        for instr in calibration:
+            if instr.instructionName == "barrier":
+                frames = [self._frames[frame]for frame in instr.arguments]
+                calibration_sequence = calibration_sequence.barrier(frames)
+            elif instr.instructionName == "play":
+                frame = None
+                waveform = None
+                for argument in instr.arguments:
+                    if argument.name == "frame":
+                        frame = self._frames[argument.value]
+                    elif argument.name == "waveform":
+                        if argument.type == "ArbitraryWaveform":
+                            waveform = waveforms[argument.value]
+                        elif "drag" in argument.type.value.templateName:
+                            length, sigma, beta, amplitude = None
+                            for val in argument.type.value.arguments:
+                                if val.name == "duration":
+                                    length = float(val.value
+                                                   if is_float(val.value) else FreeParameter(val.value))
+                                if val.name == "sigma":
+                                    sigma = float(val.value
+                                                   if is_float(val.value) else FreeParameter(val.value))
+                                if val.name == "beta":
+                                    beta = float(val.value
+                                                   if is_float(val.value) else FreeParameter(val.value))
+                                if val.name == "amplitude":
+                                    amplitude = float(val.value
+                                                   if is_float(val.value) else FreeParameter(val.value))
+                            waveform = DragGaussianWaveform(length, sigma, beta, amplitude)
+                        else:
+                            length, sigma, amplitude = None
+                            for val in argument.type.value.arguments:
+                                if val.name == "duration":
+                                    length = float(val.value
+                                                   if is_float(val.value) else FreeParameter(val.value))
+                                if val.name == "sigma":
+                                    sigma = float(val.value
+                                                   if is_float(val.value) else FreeParameter(val.value))
+                                if val.name == "amplitude":
+                                    amplitude = float(val.value
+                                                   if is_float(val.value) else FreeParameter(val.value))
+                            waveform = GaussianWaveform(length, sigma, amplitude)
+
+                calibration_sequence = calibration_sequence.play(frame, waveform)
+            elif instr.instructionName == "delay":
+                frames = list()
+                duration = None
+                for argument in instr.arguments:
+                    if argument.name == "frame":
+                        frames.append(self._frames[argument.value])
+                    elif argument.name == "duration":
+                        duration = float(argument.value
+                                         if is_float(argument.value) else FreeParameter(argument.value))
+                calibration_sequence = calibration_sequence.delay(frames, duration)
+            elif instr.instructionName == "shift_phase":
+                frame = None
+                phase = None
+                for argument in instr.arguments:
+                    if argument.name == "frame":
+                        frame = self._frames[argument.value]
+                    elif argument.name == "duration":
+                        phase = float(argument.value
+                                         if is_float(argument.value) else FreeParameter(argument.value))
+                calibration_sequence = calibration_sequence.shift_phase(frame, phase)
+        return calibration_sequence
+
+    def _parse_calibration_json(self, calibration_json: Dict) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
+        """
+        Takes the json string from the device calibration URL and returns a structured dictionary of corresponding
+        BDK objects.
+
+        Args:
+            calibration_json (Dict): The data to be parsed.
+
+        Returns:
+            Dict[Tuple[Gate, QubitSet], PulseSequence]: The structured data in BDK native objects.
+
+        """
+        calibration_data = dict()
+        json.loads(calibration_json)
+        waveforms = self._parse_waveforms(calibration_json["Waveforms"])
+        for qubit in calibration_json["gates"]:
+            for gate in qubit:
+                qubits = QubitSet(gate.qubits)
+                gate_obj = str_to_gate(gate)
+                argument = float(gate.arugments[0])if is_float(gate.arugments[0]) else FreeParameter(gate.arugments[0])
+                gate_qubit_key = tuple(gate_obj(argument), qubits)
+                gate_qubit_pulse = self._get_pulse_sequence(gate.calibration, waveforms)
+                calibration_data[gate_qubit_key] = gate_qubit_pulse
+        return calibration_data
+
+
+def str_to_gate(class_name: str) -> Gate:
+    """
+    Returns the class of Gate corresponding to the string assigned.
+
+    Args:
+        class_name (str): The name of the gate to convert.
+
+    Returns:
+        Gate: A Gate of type corresponding to `class_name`.
+    """
+    class_ = getattr(importlib.import_module("braket.circuits.gates"), class_name)
+    return class_
+
+
+def is_float(argument: str) -> bool:
+    """
+    Checks if a string can be cast into a float.
+
+    Args:
+        argument (str): String to check.
+
+    Returns:
+        bool: Returns true if the string can be cast as a float. False, otherwise.
+
+    """
+    if argument is None:
+        return False
+    try:
+        float(argument)
+        return True
+    except ValueError:
+        return False

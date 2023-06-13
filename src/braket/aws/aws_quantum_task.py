@@ -103,6 +103,7 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: Dict[str, str] = None,
         inputs: Dict[str, float] = None,
+        native_gate_calibration = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -142,6 +143,10 @@ class AwsQuantumTask(QuantumTask):
             inputs (Dict[str, float]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
+
+            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for user defined gate
+                calibration.
+                Default: None.
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
