@@ -13,7 +13,7 @@
 
 import os
 
-from braket.aws import AwsDevice, AwsQuantumJob
+from braket.aws import AwsDevice, AwsQuantumJob, BraketDevices
 from braket.circuits import Circuit
 from braket.jobs import save_job_result
 
@@ -36,7 +36,7 @@ def run_job():
 
 if __name__ == "__main__":
     job = AwsQuantumJob.create(
-        device="arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+        device=BraketDevices.Amazon.SV1,
         source_module="job.py",
         entry_point="job:run_job",
         wait_until_complete=True,

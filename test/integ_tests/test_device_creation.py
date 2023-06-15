@@ -14,6 +14,7 @@
 import pytest
 
 from braket.aws import AwsDevice
+from braket.aws.aws_device import BraketDevices
 
 RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
@@ -71,3 +72,45 @@ def test_get_devices_all():
     result_arns = [result.arn for result in AwsDevice.get_devices()]
     for arn in [RIGETTI_ARN, IONQ_ARN, SIMULATOR_ARN, OQC_ARN]:
         assert arn in result_arns
+
+
+def test_device_enum():
+    provider_name_to_enum_map = {
+        "Amazon Braket": "Amazon",
+        "D-Wave Systems": "_DWave",
+        "IonQ": "IonQ",
+        "Oxford": "OQC",
+        "QuEra": "Quera",
+        "Rigetti": "Rigetti",
+        "Xanadu": "_Xanadu",
+    }
+    device_name_to_enum_map = {
+        "SV1": "SV1",
+        "TN1": "TN1",
+        "dm1": "DM1",
+        "Advantage_system1.1": "_Advantage1",
+        "Advantage_system3.2": "_Advantage3",
+        "Advantage_system4.1": "_Advantage4",
+        "Advantage_system6.1": "_Advantage6",
+        "DW_2000Q_6": "_DW2000Q6",
+        "Harmony": "Harmony",
+        "Aria 1": "Aria1",
+        "Lucy": "Lucy",
+        "Aquila": "Aquila",
+        "Aspen-8": "_Aspen8",
+        "Aspen-9": "_Aspen9",
+        "Aspen-10": "_Aspen10",
+        "Aspen-11": "_Aspen11",
+        "Aspen-M-1": "_AspenM1",
+        "Aspen-M-2": "_AspenM2",
+        "Aspen-M-3": "AspenM3",
+        "Borealis": "_Borealis",
+    }
+    for device in AwsDevice.get_devices():
+        assert (
+            getattr(
+                getattr(BraketDevices, provider_name_to_enum_map[device.provider_name]),
+                device_name_to_enum_map[device.name],
+            )
+            == device.arn
+        )

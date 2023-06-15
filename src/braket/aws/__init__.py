@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.aws.aws_device import AwsDevice, AwsDeviceType  # noqa: F401
+from braket.aws.aws_device import AwsDevice, AwsDeviceType, BraketDevices  # noqa: F401
 from braket.aws.aws_quantum_job import AwsQuantumJob  # noqa: F401
 from braket.aws.aws_quantum_task import AwsQuantumTask  # noqa: F401
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch  # noqa: F401
