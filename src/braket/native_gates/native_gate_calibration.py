@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.gate import Gate
@@ -23,7 +25,10 @@ class NativeGateCalibration:
         """
         return self._calibration_data
 
-    def filter_data(self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None) -> NativeGateCalibration:
+    def filter_data(
+            self,
+            gates: Optional[List[Gate]] = None,
+            qubits: Optional[QubitSet] = None) -> NativeGateCalibration:
         """
         Filters the data based on optional lists of gates or QubitSets.
 

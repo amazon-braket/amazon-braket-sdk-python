@@ -369,7 +369,7 @@ class AwsDevice(Device):
         """
         if not self._native_gate_calibration:
             self._native_gate_calibration = self.refresh_native_gate_calibrations()
-        return self._calibration
+        return self._native_gate_calibration
 
     @property
     def native_gate_calibration_timestamp(self) -> datetime:
@@ -714,7 +714,7 @@ class AwsDevice(Device):
                         else:
                             length, sigma, amplitude = None
                             for val in argument.type.value.arguments:
-                                if val.name == "duration":
+                                if val.name == "length":
                                     length = float(val.value
                                                    if is_float(val.value) else FreeParameter(val.value))
                                 if val.name == "sigma":
