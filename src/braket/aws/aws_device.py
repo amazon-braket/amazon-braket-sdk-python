@@ -688,67 +688,71 @@ class AwsDevice(Device):
         """
         waveforms = dict()
         for waveform in waveforms_json:
-            complex_amplitudes = [complex(i[0], i[1]) for i in waveforms_json[waveform]["amplitudes"]]
-            waveforms["waveformId"] = complex_amplitudes
+            if "amplitudes" in waveforms_json[waveform].keys():
+                wave_id = waveforms_json[waveform]["waveformId"]
+                complex_amplitudes = [complex(i[0], i[1]) for i in waveforms_json[waveform]["amplitudes"]]
+                wave = ArbitraryWaveform(complex_amplitudes, wave_id)
+                waveforms[wave_id] = wave
         return waveforms
 
     def _get_pulse_sequence(self, calibration: str, waveforms: Dict[ArbitraryWaveform]) -> PulseSequence:
         calibration_sequence = PulseSequence()
-        for instr in calibration:
-            if instr.instructionName == "barrier":
-                frames = [self._frames[frame]for frame in instr.arguments]
+        for instruction in range(len(calibration)):
+            instr = calibration[instruction]
+            if instr["name"] == "barrier":
+                frames = [self._frames[frame]for frame in instr["arguments"]]
                 calibration_sequence = calibration_sequence.barrier(frames)
-            elif instr.instructionName == "play":
+            elif instr["name"] == "play":
                 frame = None
                 waveform = None
-                for argument in instr.arguments:
-                    if argument.name == "frame":
-                        frame = self._frames[argument.value]
-                    elif argument.name == "waveform":
-                        if argument.type == "ArbitraryWaveform":
+                for argument in instr["arguments"]:
+                    if instr[argument]["name"] == "frame":
+                        frame = self._frames[instr["arguments"]["value"]]
+                    elif instr[argument]["name"] == "waveform":
+                        if instr[argument]["type"] == "ArbitraryWaveform":
                             waveform = waveforms[argument.value]
-                        elif "drag" in argument.type.value.templateName:
+                        elif "drag" in instr[argument]["type"]["value"]["templateName"]:
                             length, sigma, beta, amplitude = None
-                            for val in argument.type.value.arguments:
-                                if val.name == "duration":
-                                    length = float(val.value
-                                                   if is_float(val.value) else FreeParameter(val.value))
-                                if val.name == "sigma":
-                                    sigma = float(val.value
-                                                   if is_float(val.value) else FreeParameter(val.value))
-                                if val.name == "beta":
+                            for val in instr[argument]["type"]["value"]["arguments"]:
+                                if val["name"] == "duration":
+                                    length = float(val["value"]
+                                                   if is_float(val["value"]) else FreeParameter(val["value"]))
+                                if val["name"] == "sigma":
+                                    sigma = float(val["value"]
+                                                   if is_float(val["value"]) else FreeParameter(val["value"]))
+                                if val["name"] == "beta":
                                     beta = float(val.value
-                                                   if is_float(val.value) else FreeParameter(val.value))
-                                if val.name == "amplitude":
+                                                   if is_float(val.value) else FreeParameter(val["value"]))
+                                if val["name"] == "amplitude":
                                     amplitude = float(val.value
-                                                   if is_float(val.value) else FreeParameter(val.value))
+                                                   if is_float(val.value) else FreeParameter(val["value"]))
                             waveform = DragGaussianWaveform(length, sigma, beta, amplitude)
                         else:
                             length, sigma, amplitude = None
-                            for val in argument.type.value.arguments:
-                                if val.name == "length":
-                                    length = float(val.value
-                                                   if is_float(val.value) else FreeParameter(val.value))
-                                if val.name == "sigma":
-                                    sigma = float(val.value
-                                                   if is_float(val.value) else FreeParameter(val.value))
-                                if val.name == "amplitude":
-                                    amplitude = float(val.value
-                                                   if is_float(val.value) else FreeParameter(val.value))
+                            for val in instr[argument]["type"]["value"]["arguments"]:
+                                if val["name"] == "duration":
+                                    length = float(val["value"]
+                                                   if is_float(val["value"]) else FreeParameter(val["value"]))
+                                if val["name"] == "sigma":
+                                    sigma = float(val["value"]
+                                                   if is_float(val["value"]) else FreeParameter(val["value"]))
+                                if val["name"] == "amplitude":
+                                    amplitude = float(val["value"]
+                                                   if is_float(val["value"]) else FreeParameter(val["value"]))
                             waveform = GaussianWaveform(length, sigma, amplitude)
 
                 calibration_sequence = calibration_sequence.play(frame, waveform)
-            elif instr.instructionName == "delay":
+            elif instr["name"] == "delay":
                 frames = list()
                 duration = None
-                for argument in instr.arguments:
-                    if argument.name == "frame":
+                for i in range(len(instr["arguments"])):
+                    if instr["arguments"][i]["name"] == "frame":
                         frames.append(self._frames[argument.value])
-                    elif argument.name == "duration":
-                        duration = float(argument.value
-                                         if is_float(argument.value) else FreeParameter(argument.value))
+                    elif instr["arguments"][i]["name"] == "duration":
+                        duration = float(instr["arguments"][i]["value"]
+                                         if is_float(instr["arguments"][i]["value"]) else FreeParameter(instr["arguments"][i]["value"]))
                 calibration_sequence = calibration_sequence.delay(frames, duration)
-            elif instr.instructionName == "shift_phase":
+            elif instr["name"] == "shift_phase":
                 frame = None
                 phase = None
                 for argument in instr.arguments:
@@ -774,14 +778,19 @@ class AwsDevice(Device):
         """
         calibration_data = json.loads(calibration_json)
         waveforms = self._parse_waveforms(calibration_data["waveforms"])
-        for qubit in calibration_json["gates"]:
-            for gate in qubit:
-                qubits = QubitSet(gate.qubits)
-                gate_obj = str_to_gate(gate)
-                argument = float(gate.arugments[0])if is_float(gate.arugments[0]) else FreeParameter(gate.arugments[0])
-                gate_qubit_key = tuple(gate_obj(argument), qubits)
-                gate_qubit_pulse = self._get_pulse_sequence(gate.calibration, waveforms)
-                calibration_data[gate_qubit_key] = gate_qubit_pulse
+        for qubit in calibration_data["gates"]:
+            q = calibration_data["gates"][qubit]
+            for gate in q:
+                for i in range(len(q[gate])):
+                    g = q[gate][i]
+                    qubits = QubitSet(g["qubits"]) if is_float(g["qubits"][0]) else QubitSet()
+                    gate_obj = str_to_gate(gate.capitalize())
+                    argument = None
+                    if len(g["arguments"]):
+                        argument = float(g["arguments"][0]) if is_float(g["arguments"][0]) else FreeParameter(g["arguments"][0])
+                    gate_qubit_key = (gate_obj(argument), qubits) if argument else (gate_obj(), qubits)
+                    gate_qubit_pulse = self._get_pulse_sequence(g["calibrations"], waveforms)
+                    calibration_data[gate_qubit_key] = gate_qubit_pulse
         return calibration_data
 
 
