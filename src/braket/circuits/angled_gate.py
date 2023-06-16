@@ -119,6 +119,9 @@ class AngledGate(Gate, Parameterizable):
     def __repr__(self):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
 
+    def __hash__(self):
+        return hash((self.name, self.angle, self.qubit_count))
+
 
 class DoubleAngledGate(Gate, Parameterizable):
     """
@@ -230,6 +233,9 @@ class DoubleAngledGate(Gate, Parameterizable):
             f"{self.name}('angles': ({self.angle_1}, {self.angle_2}), "
             f"'qubit_count': {self.qubit_count})"
         )
+
+    def __hash__(self):
+        return hash((self.name, self.angle_1, self.angle_2, self.qubit_count))
 
 
 @singledispatch
