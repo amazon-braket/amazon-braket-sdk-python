@@ -666,7 +666,7 @@ class AwsDevice(Device):
         if hasattr(self.properties, "nativeGateCalibrationsRef"):
             try:
                 with urllib.request.urlopen(self.properties.nativeGateCalibrationsRef) as f:
-                    json_calibration_data = self._parse_calibration_json(json.loads(f.read().decode("utf-8")))
+                    json_calibration_data = self._parse_calibration_json(f.read().decode("utf-8"))
                     self._native_gate_calibration_timestamp = datetime.now()
                     return NativeGateCalibration(json_calibration_data)
             except urllib.error.URLError as e:
@@ -674,10 +674,21 @@ class AwsDevice(Device):
         else:
             return None
 
-    def _parse_waveforms(self, waveforms_json: str) -> Dict[ArbitraryWaveform]:
+    def _parse_waveforms(self, waveforms_json: Dict) -> Dict[ArbitraryWaveform]:
+        """
+        Parses the waveform top level field of the calibration data. The waveforms only contain
+        `ArbitraryWaveform` type of waveforms.
+
+        Args:
+            waveforms_json: The JSON blob of waveforms to parse.
+
+        Returns:
+            Returns a dictionary
+
+        """
         waveforms = dict()
-        for waveform in waveforms_json.items():
-            complex_amplitudes = [complex(i[0], i[1]) for i in waveform["amplitudes"]]
+        for waveform in waveforms_json:
+            complex_amplitudes = [complex(i[0], i[1]) for i in waveforms_json[waveform]["amplitudes"]]
             waveforms["waveformId"] = complex_amplitudes
         return waveforms
 
@@ -749,7 +760,7 @@ class AwsDevice(Device):
                 calibration_sequence = calibration_sequence.shift_phase(frame, phase)
         return calibration_sequence
 
-    def _parse_calibration_json(self, calibration_json: Dict) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
+    def _parse_calibration_json(self, calibration_json: str) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
         Takes the json string from the device calibration URL and returns a structured dictionary of corresponding
         BDK objects.
@@ -761,9 +772,8 @@ class AwsDevice(Device):
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The structured data in BDK native objects.
 
         """
-        calibration_data = dict()
-        json.loads(calibration_json)
-        waveforms = self._parse_waveforms(calibration_json["Waveforms"])
+        calibration_data = json.loads(calibration_json)
+        waveforms = self._parse_waveforms(calibration_data["waveforms"])
         for qubit in calibration_json["gates"]:
             for gate in qubit:
                 qubits = QubitSet(gate.qubits)
