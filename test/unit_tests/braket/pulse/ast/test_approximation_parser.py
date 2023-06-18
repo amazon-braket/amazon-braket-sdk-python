@@ -473,6 +473,64 @@ def test_barrier_same_dt(port):
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
 
+def test_barrier_no_args(port):
+    frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
+    frame2 = Frame(frame_id="frame2", port=port, frequency=1e8, phase=0, is_predefined=False)
+    pulse_seq = (
+        PulseSequence()
+        .play(frame1, ConstantWaveform(12e-9, 0.75))  # Inst1
+        .barrier([])  # Inst2
+        .play(frame1, ConstantWaveform(16e-9, 1))  # Inst3
+        .play(frame2, ConstantWaveform(8e-9, -1))  # Inst4
+    )
+
+    expected_amplitudes = {"frame1": TimeSeries(), "frame2": TimeSeries()}
+    expected_frequencies = {"frame1": TimeSeries(), "frame2": TimeSeries()}
+    expected_phases = {"frame1": TimeSeries(), "frame2": TimeSeries()}
+
+    # Inst1
+    shift_time_frame1 = 0
+    pulse_length = 12e-9
+    times = np.arange(0, pulse_length, port.dt)
+    values = 0.75 * np.ones_like(times)
+    for t, v in zip(times, values):
+        expected_amplitudes["frame1"].put(shift_time_frame1 + t, v)
+        expected_frequencies["frame1"].put(shift_time_frame1 + t, 1e8)
+        expected_phases["frame1"].put(shift_time_frame1 + t, 0)
+
+    # Inst2
+    # Delay frame2 from 0ns to 11ns
+    shift_time_frame2 = 0
+
+    expected_amplitudes["frame2"].put(0, 0).put(11e-9, 0)
+    expected_frequencies["frame2"].put(0, 1e8).put(11e-9, 1e8)
+    expected_phases["frame2"].put(0, 0).put(11e-9, 0)
+
+    # Inst3
+    shift_time_frame1 = shift_time_frame1 + pulse_length
+    pulse_length = 16e-9
+    times = np.arange(0, pulse_length, port.dt)
+    values = 1 * np.ones_like(times)
+    for t, v in zip(times, values):
+        expected_amplitudes["frame1"].put(shift_time_frame1 + t, v)
+        expected_frequencies["frame1"].put(shift_time_frame1 + t, 1e8)
+        expected_phases["frame1"].put(shift_time_frame1 + t, 0)
+
+    # Inst4
+    shift_time_frame2 = shift_time_frame1
+    pulse_length = 8e-9
+    times = np.arange(0, pulse_length, port.dt)
+    values = -1 * np.ones_like(times)
+    for t, v in zip(times, values):
+        expected_amplitudes["frame2"].put(shift_time_frame2 + t, v)
+        expected_frequencies["frame2"].put(shift_time_frame2 + t, 1e8)
+        expected_phases["frame2"].put(shift_time_frame2 + t, 0)
+
+    parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
+
+    verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
+
+
 def test_barrier_different_dt(port):
     port1 = Port(port_id="device_port_x1", dt=5e-9, properties={})
     port2 = Port(port_id="device_port_x2", dt=4e-9, properties={})
