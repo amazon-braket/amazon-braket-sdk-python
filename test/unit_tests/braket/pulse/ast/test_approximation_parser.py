@@ -41,13 +41,11 @@ def test_bare_pulsequence():
 def test_delay(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     pulse_seq = PulseSequence().delay(frame, 3e-9)
-    # 3 datapoints for delay
 
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
     expected_phases = {"frame1": TimeSeries()}
 
-    # 2 datapoints for first delay
     expected_amplitudes["frame1"].put(0, 0).put(2e-9, 0)
     expected_frequencies["frame1"].put(0, 1e8).put(2e-9, 1e8)
     expected_phases["frame1"].put(0, 0).put(2e-9, 0)
@@ -60,13 +58,11 @@ def test_delay(port):
 def test_predefined_frame(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=True)
     pulse_seq = PulseSequence().delay(frame, 3e-9)
-    # 3 datapoints for delay
 
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
     expected_phases = {"frame1": TimeSeries()}
 
-    # 2 datapoints for first delay
     expected_amplitudes["frame1"].put(0, 0).put(2e-9, 0)
     expected_frequencies["frame1"].put(0, 1e8).put(2e-9, 1e8)
     expected_phases["frame1"].put(0, 0).put(2e-9, 0)
@@ -93,15 +89,10 @@ def test_set_shift_phase(port):
     expected_frequencies = {"frame1": TimeSeries()}
     expected_phases = {"frame1": TimeSeries()}
 
-    # 2 datapoints for first delay
-    # Parser does not like delay 2ns
     expected_amplitudes["frame1"].put(0, 0).put(1e-9, 0)
     expected_frequencies["frame1"].put(0, 1e8).put(1e-9, 1e8)
     expected_phases["frame1"].put(0, 1).put(1e-9, 1)
 
-    # set_shift_phase should be instantaneous (result on current or next datapoint?)
-    # 5 dt for second delay
-    # shift_phase adds 2 to the phase of the last point -> 3
     expected_amplitudes["frame1"].put(2e-9, 0).put(6e-9, 0)
     expected_frequencies["frame1"].put(2e-9, 1e8).put(6e-9, 1e8)
     expected_phases["frame1"].put(2e-9, 3).put(6e-9, 3)
@@ -125,13 +116,11 @@ def test_set_shift_phase_beyond_2_pi(port):
     expected_frequencies = {"frame1": TimeSeries()}
     expected_phases = {"frame1": TimeSeries()}
 
-    # 2 datapoints for first delay
     # 5pi/2 is reduced to pi/2
     expected_amplitudes["frame1"].put(0, 0).put(1e-9, 0)
     expected_frequencies["frame1"].put(0, 1e8).put(1e-9, 1e8)
     expected_phases["frame1"].put(0, np.pi / 2).put(1e-9, np.pi / 2)
 
-    # set_shift_phase should be instantaneous (result on current or next datapoint?)
     # shift_phase adds -pi to the phase of the last point -> 3pi/2
     expected_amplitudes["frame1"].put(2e-9, 0).put(6e-9, 0)
     expected_frequencies["frame1"].put(2e-9, 1e8).put(6e-9, 1e8)
@@ -151,22 +140,15 @@ def test_set_shift_frequency(port):
         .shift_frequency(frame, -0.1e8)
         .delay(frame, 10e-9)
     )
-    # 2 datapoints for delay
-    # set_shift_phase should be instantaneous (result on current or next datapoint?)
-    # shift_phase adds 2 to the phase of the last point -> 3
 
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
     expected_phases = {"frame1": TimeSeries()}
 
-    # 2 datapoints for first delay
     expected_amplitudes["frame1"].put(0, 0).put(19e-9, 0)
     expected_frequencies["frame1"].put(0, 2e8).put(19e-9, 2e8)
     expected_phases["frame1"].put(0, 0).put(19e-9, 0)
 
-    # set_shift_phase should be instantaneous (result on current or next datapoint?)
-    # 5 dt for second delay
-    # shift_phase adds 2 to the phase of the last point -> 3
     expected_amplitudes["frame1"].put(20e-9, 0).put(29e-9, 0)
     expected_frequencies["frame1"].put(20e-9, 1.9e8).put(29e-9, 1.9e8)
     expected_phases["frame1"].put(20e-9, 0).put(29e-9, 0)
@@ -180,7 +162,6 @@ def test_play_arbitrary_waveforms(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     my_arb_wf = ArbitraryWaveform([0.4 + 0.1j, -0.8 + 0.1j, 1 + 0.2j])
     pulse_seq = PulseSequence().play(frame, my_arb_wf).capture_v0(frame)
-    # 3 datapoints for arb wf play
 
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
@@ -201,7 +182,6 @@ def test_play_literal(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     pulse_seq = PulseSequence()
     pulse_seq._program.play(frame=frame, waveform=[0.4 + 0.1j, -0.8 + 0.1j, 1 + 0.2j])
-    # 3 datapoints for arb wf play
 
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
@@ -290,7 +270,6 @@ def test_play_gaussian_waveforms(port):
         length=1e-8, sigma=1.69e-9, amplitude=1.0, zero_at_edges=False
     )
     pulse_seq = PulseSequence().play(frame1, gaussian_wf_ZaE_False)
-    # X datapoints...
 
     times = np.arange(0, 1e-8, port.dt)
     values = np.array(
@@ -329,21 +308,20 @@ def test_play_gaussian_waveforms(port):
         length=1e-8, sigma=1.69e-9, amplitude=1.0, zero_at_edges=True
     )
     pulse_seq.play(frame1, gaussian_wf_ZaE_True)
-    # X datapoints...
 
     times = np.arange(0, 1e-8, port.dt)
     values = np.array(
         [
-            0.0 + 0.0j,
-            complex(0.04879311),
-            complex(0.1967938),
-            complex(0.49004931),
-            complex(0.83735931),
+            complex(0.0),
+            complex(0.04879310874736347),
+            complex(0.1967938049565093),
+            complex(0.49004931075238933),
+            complex(0.8373593063365198),
             complex(1.0),
-            complex(0.83735931),
-            complex(0.49004931),
-            complex(0.1967938),
-            complex(0.04879311),
+            complex(0.8373593063365196),
+            complex(0.49004931075238906),
+            complex(0.1967938049565092),
+            complex(0.048793108747363416),
         ],
         dtype=np.complex128,
     )
@@ -412,16 +390,16 @@ def test_play_drag_gaussian_waveforms(port):
     times = np.arange(0, 1e-8, port.dt)
     values = np.array(
         [
-            0.0 + 0.0j,
-            0.04879311 + 0.06833529j,
-            0.1967938 + 0.20670894j,
-            0.49004931 + 0.34315977j,
-            0.83735931 + 0.29318277j,
-            1.0 + 0.0j,
-            0.83735931 - 0.29318277j,
-            0.49004931 - 0.34315977j,
-            0.1967938 - 0.20670894j,
-            0.04879311 - 0.06833529j,
+            complex(0.0, 0.0),
+            complex(0.04879310874736347, 0.0683352946288484),
+            complex(0.1967938049565093, 0.20670894396888342),
+            complex(0.49004931075238933, 0.34315977084303023),
+            complex(0.8373593063365198, 0.2931827689284408),
+            complex(1.0, 0),
+            complex(0.8373593063365196, -0.293182768928441),
+            complex(0.49004931075238906, -0.34315977084303023),
+            complex(0.1967938049565092, -0.20670894396888334),
+            complex(0.048793108747363416, -0.06833529462884834),
         ],
         dtype=np.complex128,
     )
@@ -490,29 +468,9 @@ def test_barrier_same_dt(port):
         expected_frequencies["frame2"].put(shift_time_frame2 + t, 1e8)
         expected_phases["frame2"].put(shift_time_frame2 + t, 0)
 
-    # # Pad frame2
-    # shift_time_frame2 = shift_time_frame2 + pulse_length
-    # last_time_frame1 = expected_amplitudes["frame1"].times()[-1]
-
-    # # Do we need to pad frame1?
-    # expected_amplitudes["frame1"].put(last_time_frame1 + port.dt, 0)
-    # expected_frequencies["frame1"].put(last_time_frame1 + port.dt, 1e8)
-    # expected_phases["frame1"].put(last_time_frame1 + port.dt, 0)
-
-    # expected_amplitudes["frame2"].put(shift_time_frame2, 0).put(
-    #     last_time_frame1 + port.dt, 0
-    # )
-    # expected_frequencies["frame2"].put(shift_time_frame2, 1e8).put(
-    #     last_time_frame1 + port.dt, 1e8
-    # )
-    # expected_phases["frame2"].put(shift_time_frame2, 0).put(last_time_frame1 + port.dt, 0)
-
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
-    # Array retrievable with
-    # x=np.arange(0, ts.times()+1e-9, 1e-9)
-    # np.interp(x, ts.times(), ts.values()) # See last cells of SDK Testing.ipynb
 
 
 def test_barrier_different_dt(port):
@@ -543,8 +501,7 @@ def test_barrier_different_dt(port):
         expected_phases["frame1"].put(shift_time_frame1 + t, 0)
 
     # Inst2
-    # barrier at 35ns (first point coinciding with frame2: np.ceil(max(20,0)/np.lcm(dt1=5,dt2=7))*np.lcm(dt1=5,dt2=7)) # noqa
-    # reset shift_time_frame1 = shift_time_frame2 = 35
+    # barrier at 40ns (first point coinciding with frame2 (every 20ns))
     shift_time_frame1 = shift_time_frame2 = 40e-9
 
     latest_time_frame1 = expected_amplitudes["frame1"].times()[-1]
@@ -579,13 +536,6 @@ def test_barrier_different_dt(port):
         expected_amplitudes["frame2"].put(shift_time_frame2 + t, v)
         expected_frequencies["frame2"].put(shift_time_frame2 + t, 1e8)
         expected_phases["frame2"].put(shift_time_frame2 + t, 0)
-
-    # # Pad frame2
-    # shift_time_frame2 = shift_time_frame2 + pulse_length
-    # last_time = 80e-9
-    # expected_amplitudes["frame2"].put(shift_time_frame2, 0).put(last_time, 0)
-    # expected_frequencies["frame2"].put(shift_time_frame2, 1e8).put(last_time, 1e8)
-    # expected_phases["frame2"].put(shift_time_frame2, 0).put(last_time, 0)
 
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
 
@@ -627,18 +577,6 @@ def test_pad_different_dt(port):
         expected_amplitudes["frame2"].put(shift_time_frame2 + t, v)
         expected_frequencies["frame2"].put(shift_time_frame2 + t, 1e8)
         expected_phases["frame2"].put(shift_time_frame2 + t, 0)
-
-    # # Pad all frames to end up
-    # last_time_frame1 = expected_amplitudes["frame1"].times()[-1]
-    # last_time_frame2 = expected_amplitudes["frame2"].times()[-1]
-
-    # last_time = 40e-9
-    # expected_amplitudes["frame1"].put(last_time_frame1 + port1.dt, 0).put(last_time, 0)
-    # expected_frequencies["frame1"].put(last_time_frame1 + port1.dt, 1e8).put(last_time, 1e8) # noqa
-    # expected_phases["frame1"].put(last_time_frame1 + port1.dt, 0).put(last_time, 0)
-    # expected_amplitudes["frame2"].put(last_time_frame2 + port2.dt, 0).put(last_time, 0)
-    # expected_frequencies["frame2"].put(last_time_frame2 + port2.dt, 1e8).put(last_time, 1e8) # noqa
-    # expected_phases["frame2"].put(last_time_frame2 + port2.dt, 0).put(last_time, 0)
 
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict([frame1, frame2]))
 
@@ -709,9 +647,9 @@ def test_duration_literal():
 
 def verify_results(results, expected_amplitudes, expected_frequencies, expected_phases):
     for frame_id in expected_amplitudes.keys():
-        assert _all_close(results.amplitudes[frame_id], expected_amplitudes[frame_id])
-        assert _all_close(results.frequencies[frame_id], expected_frequencies[frame_id])
-        assert _all_close(results.phases[frame_id], expected_phases[frame_id])
+        assert _all_close(results.amplitudes[frame_id], expected_amplitudes[frame_id], 1e-10)
+        assert _all_close(results.frequencies[frame_id], expected_frequencies[frame_id], 1e-10)
+        assert _all_close(results.phases[frame_id], expected_phases[frame_id], 1e-10)
 
 
 def to_dict(frames: Union[Frame, List]):
