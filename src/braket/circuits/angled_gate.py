@@ -401,13 +401,11 @@ def _multi_angled_ascii_characters(
         str: Returns the ascii representation for an angled gate.
 
     """
-    return (
-        f"{gate}("
-        + ", ".join(
-            f'{angle:{".2f" if isinstance(angle, (float, Float)) else ""}}' for angle in angles
-        )
-        + ")"
-    )
+
+    def format_string(angle):
+        return ".2f" if isinstance(angle, (float, Float)) else ""
+
+    return f"{gate}({', '.join(f'{angle:{format_string(angle)}}' for angle in angles)})"
 
 
 def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
