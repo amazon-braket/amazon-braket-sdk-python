@@ -310,7 +310,7 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         .delay(frames=[predefined_frame_1, predefined_frame_2], duration=2e-9)
         .delay(frames=predefined_frame_1, duration=1e-6)
         .delay(qubits=QubitSet(0), duration=1e-3)
-        .barrier(qubits=QubitSet(0))
+        .barrier(qubits=QubitSet([0, 1]))
         .barrier([predefined_frame_1, predefined_frame_2])
         .play(predefined_frame_1, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
         .play(
@@ -345,8 +345,8 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[2.0ns] predefined_frame_1, predefined_frame_2;",
             "    delay[1000.0ns] predefined_frame_1;",
-            "    delay[1000000.0ns] Qubit(0);",
-            "    barrier Qubit(0);",
+            "    delay[1000000.0ns] $0;",
+            "    barrier $0, $1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
             "    play(predefined_frame_2, drag_gauss_wf);",

@@ -17,7 +17,7 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional, Set, Union
 
 from openpulse import ast
-from oqpy import BitVar, Program
+from oqpy import BitVar, PhysicalQubits, Program
 from oqpy.timing import OQDurationLiteral
 
 from braket.circuits.qubit_set import QubitSet
@@ -198,7 +198,8 @@ class PulseSequence:
             for frame in frames:
                 self._frames[frame.id] = frame
         else:
-            self._program.delay(time=duration, qubits_or_frames=qubits)
+            physical_qubits = set(PhysicalQubits[int(x)] for x in qubits)
+            self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
     def barrier(
@@ -223,7 +224,8 @@ class PulseSequence:
             for frame in frames:
                 self._frames[frame.id] = frame
         else:
-            self._program.barrier(qubits_or_frames=qubits)
+            physical_qubits = set(PhysicalQubits[int(x)] for x in qubits)
+            self._program.barrier(qubits_or_frames=physical_qubits)
         return self
 
     def play(self, frame: Frame, waveform: Waveform) -> PulseSequence:
