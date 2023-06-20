@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.42.2 (2023-06-20)
+
+### Bug Fixes and Other Changes
+
+ * pulse plotting with barriers that have no argument
+
 ## v1.42.1 (2023-06-07)
 
 ### Bug Fixes and Other Changes
