@@ -166,21 +166,26 @@ class PulseSequence:
         return self
 
     def delay(
-        self, duration: Union[float, FreeParameterExpression], qubits: Optional[QubitSet] = None, frames: Optional[Union[Frame, List[Frame]]] = None
+        self,
+        duration: Union[float, FreeParameterExpression],
+        frames: Optional[Union[Frame, List[Frame]]] = None,
+        qubits: Optional[QubitSet] = None,
     ) -> PulseSequence:
         """
         Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
-            frames (Union[Frame, List[Frame]]): Frame(s) on which the delay needs to be introduced.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
+            frames (Optional[Union[Frame, List[Frame]]]): Frame(s) on which the delay needs to
+                be introduced.
+            qubits (Optional[QubitSet]): Qubit(s) on which the delay needs to be introduced.
 
         Returns:
             PulseSequence: self, with the instruction added.
         """
         if qubits is None and frames == qubits:
-            raise ValueError('Expected either frames or qubits args')
+            raise ValueError("Expected either frames or qubits args")
         if frames is not None:
             if not isinstance(frames, list):
                 frames = [frames]
@@ -196,19 +201,22 @@ class PulseSequence:
             self._program.delay(time=duration, qubits_or_frames=qubits)
         return self
 
-    def barrier(self, frames: Optional[List[Frame]]=None, qubits: Optional[QubitSet] = None) -> PulseSequence:
+    def barrier(
+        self, frames: Optional[List[Frame]] = None, qubits: Optional[QubitSet] = None
+    ) -> PulseSequence:
         """
         Adds an instruction to align the frame clocks to the latest time across all the specified
         frames.
 
         Args:
-            frames (List[Frame]): Frames across which the frame clocks need to be aligned.
+            frames (Optional[List[Frame]]): Frames across which the frame clocks need to be aligned.
+            qubits (Optional[QubitSet]): Qubits across which the frame clocks need to be aligned.
 
         Returns:
             PulseSequence: self, with the instruction added.
         """
         if qubits is None and frames == qubits:
-            raise ValueError('Expected either frames or qubits args')
+            raise ValueError("Expected either frames or qubits args")
         if frames is not None:
             _validate_uniqueness(self._frames, frames)
             self._program.barrier(qubits_or_frames=frames)

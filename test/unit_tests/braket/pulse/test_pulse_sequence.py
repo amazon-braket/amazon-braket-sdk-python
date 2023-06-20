@@ -13,8 +13,7 @@
 
 import pytest
 
-from braket.circuits import FreeParameter
-from braket.circuits import QubitSet
+from braket.circuits import FreeParameter, QubitSet
 from braket.pulse import (
     ArbitraryWaveform,
     ConstantWaveform,
@@ -271,9 +270,7 @@ def test_pulse_sequence_conflicting_frames(
         ("barrier", None),
     ],
 )
-def test_pulse_sequence_no_frames_no_qubits(
-        method_name, method_kwargs
-):
+def test_pulse_sequence_no_frames_no_qubits(method_name, method_kwargs):
     ps = PulseSequence()
     method = getattr(ps, method_name)
 
