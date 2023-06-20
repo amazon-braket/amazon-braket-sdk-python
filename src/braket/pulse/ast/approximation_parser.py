@@ -145,6 +145,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             frame_data = context.frame_data[frame_id]
             self._delay_frame(frame_id, frame_data.current_time + duration, context)
 
+
     def visit_QuantumBarrier(self, node: ast.QuantumBarrier, context: _ParseState) -> None:
         """Visit a Quantum Barrier.
             barrier $0;

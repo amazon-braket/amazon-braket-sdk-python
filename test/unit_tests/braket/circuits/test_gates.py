@@ -947,7 +947,7 @@ def test_bind_values_pulse_gate():
     gate = Gate.PulseGate(
         PulseSequence()
         .set_frequency(frame, FreeParameter("a") + FreeParameter("b"))
-        .delay(frame, FreeParameter("c")),
+        .delay(frames=frame, duration=FreeParameter("c")),
         qubit_count,
     )
 
