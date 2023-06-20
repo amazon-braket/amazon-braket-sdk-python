@@ -155,6 +155,9 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             context (_ParseState): The parse state context.
         """
         frames = self._get_frame_parameters(node.qubits, context)
+        if len(frames) == 0:
+            # barrier without arguments is applied to all the frames of the context
+            frames = list(context.frame_data.keys())
         dts = [context.frame_data[frame_id].dt for frame_id in frames]
         max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
         # All frames are delayed till the first multiple of the LCM([port.dts])
