@@ -16,7 +16,6 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
         dependent:
           - amazon-braket-pennylane-plugin-python
-          - amazon-braket-strawberryfields-plugin-python
 
     steps:
     - uses: actions/checkout@v3
