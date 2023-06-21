@@ -198,7 +198,7 @@ class PulseSequence:
             for frame in frames:
                 self._frames[frame.id] = frame
         else:
-            physical_qubits = set(PhysicalQubits[int(x)] for x in qubits)
+            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits)
             self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
@@ -224,7 +224,7 @@ class PulseSequence:
             for frame in frames:
                 self._frames[frame.id] = frame
         else:
-            physical_qubits = set(PhysicalQubits[int(x)] for x in qubits)
+            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits)
             self._program.barrier(qubits_or_frames=physical_qubits)
         return self
 
