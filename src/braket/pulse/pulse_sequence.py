@@ -167,64 +167,57 @@ class PulseSequence:
 
     def delay(
         self,
-        duration: Union[float, FreeParameterExpression],
-        frames: Optional[Union[Frame, List[Frame]]] = None,
-        qubits: Optional[QubitSet] = None,
+        qubits_or_frames: Union[List[Frame], QubitSet],
+        duration: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
         """
         Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
+            qubits_or_frames: Union[List[Frame], QubitSet]: Qubits or frames across which the frame clocks
+                need to be aligned.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
-            frames (Optional[Union[Frame, List[Frame]]]): Frame(s) on which the delay needs to
-                be introduced.
-            qubits (Optional[QubitSet]): Qubit(s) on which the delay needs to be introduced.
-
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        if qubits is None and frames == qubits:
-            raise ValueError("Expected either frames or qubits args")
-        if frames is not None:
-            if not isinstance(frames, list):
-                frames = [frames]
-            if isinstance(duration, FreeParameterExpression):
-                for p in duration.expression.free_symbols:
-                    self._free_parameters.add(FreeParameter(p.name))
-                duration = OQDurationLiteral(duration)
-            _validate_uniqueness(self._frames, frames)
-            self._program.delay(time=duration, qubits_or_frames=frames)
-            for frame in frames:
+        if isinstance(duration, FreeParameterExpression):
+            for p in duration.expression.free_symbols:
+                self._free_parameters.add(FreeParameter(p.name))
+            duration = OQDurationLiteral(duration)
+        if not isinstance(qubits_or_frames, QubitSet):
+            if not isinstance(qubits_or_frames, list):
+                qubits_or_frames = [qubits_or_frames]
+            _validate_uniqueness(self._frames, qubits_or_frames)
+            self._program.delay(time=duration, qubits_or_frames=qubits_or_frames)
+            for frame in qubits_or_frames:
                 self._frames[frame.id] = frame
         else:
-            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits)
+            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits_or_frames)
             self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
     def barrier(
-        self, frames: Optional[List[Frame]] = None, qubits: Optional[QubitSet] = None
+        self, qubits_or_frames: Union[List[Frame], QubitSet]
     ) -> PulseSequence:
         """
         Adds an instruction to align the frame clocks to the latest time across all the specified
         frames.
 
         Args:
-            frames (Optional[List[Frame]]): Frames across which the frame clocks need to be aligned.
-            qubits (Optional[QubitSet]): Qubits across which the frame clocks need to be aligned.
+            qubits_or_frames: Union[List[Frame], QubitSet]: Qubits or frames across which the frame clocks
+                need to be aligned.
 
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        if qubits is None and frames == qubits:
-            raise ValueError("Expected either frames or qubits args")
-        if frames is not None:
-            _validate_uniqueness(self._frames, frames)
-            self._program.barrier(qubits_or_frames=frames)
-            for frame in frames:
+        if not isinstance(qubits_or_frames, QubitSet):
+            _validate_uniqueness(self._frames, qubits_or_frames)
+            self._program.barrier(qubits_or_frames=qubits_or_frames)
+            for frame in qubits_or_frames:
                 self._frames[frame.id] = frame
         else:
-            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits)
+            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits_or_frames)
             self._program.barrier(qubits_or_frames=physical_qubits)
         return self
 

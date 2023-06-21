@@ -90,9 +90,9 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         .shift_phase(predefined_frame_1, param)
         .set_scale(predefined_frame_1, param)
         .capture_v0(predefined_frame_1)
-        .delay(frames=[predefined_frame_1, predefined_frame_2], duration=param)
-        .delay(frames=predefined_frame_1, duration=param)
-        .delay(frames=predefined_frame_1, duration=1e-3)
+        .delay([predefined_frame_1, predefined_frame_2], param)
+        .delay(predefined_frame_1, param)
+        .delay(predefined_frame_1, 1e-3)
         .barrier([predefined_frame_1, predefined_frame_2])
         .play(
             predefined_frame_1,
@@ -255,30 +255,10 @@ def test_pulse_sequence_conflicting_frames(
     method = getattr(ps, method_name)
 
     with pytest.raises(ValueError):
-        if method_kwargs and method_name != "delay":
+        if method_kwargs:
             method(conflicting_user_defined_frame, **method_kwargs)
-        elif method_name == "delay":
-            method(frames=conflicting_user_defined_frame, **method_kwargs)
         else:
             method(conflicting_user_defined_frame)
-
-
-@pytest.mark.parametrize(
-    "method_name, method_kwargs",
-    [
-        ("delay", {"duration": 1e-5}),
-        ("barrier", None),
-    ],
-)
-def test_pulse_sequence_no_frames_no_qubits(method_name, method_kwargs):
-    ps = PulseSequence()
-    method = getattr(ps, method_name)
-
-    with pytest.raises(ValueError):
-        if method_kwargs:
-            method(**method_kwargs)
-        else:
-            method()
 
 
 def test_pulse_sequence_conflicting_wf(user_defined_frame):
@@ -307,10 +287,10 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         .shift_phase(predefined_frame_1, 0.1)
         .set_scale(predefined_frame_1, 0.25)
         .capture_v0(predefined_frame_1)
-        .delay(frames=[predefined_frame_1, predefined_frame_2], duration=2e-9)
-        .delay(frames=predefined_frame_1, duration=1e-6)
-        .delay(qubits=QubitSet(0), duration=1e-3)
-        .barrier(qubits=QubitSet([0, 1]))
+        .delay([predefined_frame_1, predefined_frame_2], 2e-9)
+        .delay(predefined_frame_1, 1e-6)
+        .delay(QubitSet(0), 1e-3)
+        .barrier(QubitSet([0, 1]))
         .barrier([predefined_frame_1, predefined_frame_2])
         .play(predefined_frame_1, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
         .play(

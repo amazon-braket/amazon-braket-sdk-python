@@ -40,7 +40,7 @@ def test_bare_pulsequence():
 
 def test_delay(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
-    pulse_seq = PulseSequence().delay(frames=frame, duration=3e-9)
+    pulse_seq = PulseSequence().delay(frame, 3e-9)
     # 3 datapoints for delay
 
     expected_amplitudes = {"frame1": TimeSeries()}
@@ -58,7 +58,7 @@ def test_delay(port):
 
 def test_predefined_frame(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=True)
-    pulse_seq = PulseSequence().delay(frames=frame, duration=3e-9)
+    pulse_seq = PulseSequence().delay(frame, 3e-9)
     # 3 datapoints for delay
 
     expected_amplitudes = {"frame1": TimeSeries()}
@@ -82,9 +82,9 @@ def test_set_shift_phase(port):
     pulse_seq = (
         PulseSequence()
         .set_phase(frame, 1)
-        .delay(frames=frame, duration=2e-9)
+        .delay(frame, 2e-9)
         .shift_phase(frame, 2)
-        .delay(frames=frame, duration=5e-9)
+        .delay(frame, 5e-9)
         .set_phase(frame, 0)
     )
     expected_amplitudes = {"frame1": TimeSeries()}
@@ -109,9 +109,9 @@ def test_set_shift_phase_beyond_2_pi(port):
     pulse_seq = (
         PulseSequence()
         .set_phase(frame, 5 * np.pi / 2)
-        .delay(frames=frame, duration=2e-9)
+        .delay(frame, 2e-9)
         .shift_phase(frame, -np.pi)
-        .delay(frames=frame, duration=5e-9)
+        .delay(frame, 5e-9)
         .set_phase(frame, 0)
     )
     expected_amplitudes = {"frame1": TimeSeries()}
@@ -138,9 +138,9 @@ def test_set_shift_frequency(port):
     pulse_seq = (
         PulseSequence()
         .set_frequency(frame, 2e8)
-        .delay(frames=frame, duration=20e-9)
+        .delay(frame, 20e-9)
         .shift_frequency(frame, -0.1e8)
-        .delay(frames=frame, duration=10e-9)
+        .delay(frame, 10e-9)
     )
 
     expected_amplitudes = {"frame1": TimeSeries()}
@@ -300,7 +300,7 @@ def test_play_gaussian_waveforms(port):
         expected_phases["frame1"].put(t, 0)
 
     # Add a delay between the two waveforms
-    pulse_seq.delay(frames=frame1, duration=2e-8)
+    pulse_seq.delay(frame1, 2e-8)
     expected_amplitudes["frame1"].put(1e-8, 0).put(29e-9, 0)
     expected_frequencies["frame1"].put(1e-8, 1e8).put(29e-9, 1e8)
     expected_phases["frame1"].put(1e-8, 0).put(29e-9, 0)
@@ -355,7 +355,7 @@ def test_play_drag_gaussian_waveforms(port):
     pulse_seq = (
         PulseSequence()
         .play(frame1, drag_gaussian_wf_ZaE_False)
-        .delay(frames=frame1, duration=2e-8)
+        .delay(frame1, 2e-8)
         .play(frame1, drag_gaussian_wf_ZaE_True)
     )
 
