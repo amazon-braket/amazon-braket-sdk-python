@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, Tuple
 
+from braket.circuits.angled_gate import AngledGate
 from braket.circuits.gate import Gate
 from braket.circuits.qubit_set import QubitSet
 from braket.pulse.pulse_sequence import PulseSequence
@@ -43,3 +44,30 @@ class NativeGateCalibration:
         return NativeGateCalibration(
             {k: v for (k, v) in self.calibration_data.items() if filtered_calibration_keys in k}
         )
+
+    def get_defcal(self, key: [Optional[Tuple[Gate,QubitSet]]] = None) -> str:
+        """
+        Returns the defcal representation for the `NativeGateCalibration` object.
+
+        Args:
+            key ([Optional[Tuple[Gate,QubitSet]]])): An optional key to get a specific defcal.
+                Default: None
+
+        Returns:
+            str: the defcal string for the object.
+
+        """
+        if key is not None:
+            return self.calibration_data.to_ir().replace('cal', self._def_cal_gate(key), 1)
+        else:
+            defcal = "\n".join(
+                v.to_ir().replace('cal', self._def_cal_gate(k), 1) for (k, v) in self.calibration_data.items()
+            )
+            return defcal
+
+    def _def_cal_gate(self, gate_key: Tuple[Gate, QubitSet]) -> str:
+        gate_to_qasm = gate_key[0]._qasm_name
+        if isinstance(gate_key[0], AngledGate):
+            gate_to_qasm += "(" + "angle " + gate_key[0].angle + ")"
+        qubit_to_qasm = " ".join(["$" + str(int(q)) for q in gate_key[1]])
+        return " ".join(["defcal", gate_to_qasm, qubit_to_qasm])
