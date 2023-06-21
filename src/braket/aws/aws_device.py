@@ -751,7 +751,9 @@ class AwsDevice(Device):
                 calibration_sequence = calibration_sequence.shift_phase(frame, phase)
         return calibration_sequence
 
-    def _parse_calibration_json(self, calibration_json: Dict) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
+    def _parse_calibration_json(
+        self, calibration_data: Dict
+    ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
         Takes the json string from the device calibration URL and returns a structured dictionary of corresponding
         BDK objects.
@@ -763,7 +765,6 @@ class AwsDevice(Device):
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The structured data in BDK native objects.
 
         """
-        calibration_data = json.loads(calibration_json)
         waveforms = self._parse_waveforms(calibration_data["waveforms"])
         for qubit in calibration_data["gates"]:
             q = calibration_data["gates"][qubit]
