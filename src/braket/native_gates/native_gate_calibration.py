@@ -41,7 +41,13 @@ class NativeGateCalibration:
         """
         keys = self._calibration_data.keys()
         filtered_calibration_keys = [tup for tup in keys if any(i in tup for i in gates or qubits)]
-        return NativeGateCalibration({k:v for (k,v) in d.items() if filtered_calibration_keys in k})
+        return NativeGateCalibration(
+            {k: v for (k, v) in self.calibration_data.items() if filtered_calibration_keys in k}
+        )
+
+    def to_defcal(self, key: [Optional[Tuple[Gate, QubitSet]]] = None) -> str:
+        """
+        Returns the defcal representation for the `NativeGateCalibration` object.
 
 
 
