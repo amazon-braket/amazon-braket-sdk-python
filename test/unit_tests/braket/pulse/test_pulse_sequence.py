@@ -356,5 +356,4 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
             "}",
         ]
     )
-    print(pulse_sequence.to_ir())
     assert pulse_sequence.to_ir() == expected_str
