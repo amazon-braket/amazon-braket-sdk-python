@@ -1,4 +1,5 @@
 [run]
+parallel = True
 branch = True
 source =
     src
@@ -8,6 +9,7 @@ omit =
     **/braket/schema_common/*
     **/braket/task_result/*
     **/braket/simulator/*
+    */site-packages/braket/*
 
 [paths]
 source =
