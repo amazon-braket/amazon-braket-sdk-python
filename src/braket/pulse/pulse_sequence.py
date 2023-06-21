@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Set, Union
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
@@ -168,14 +168,14 @@ class PulseSequence:
     def delay(
         self,
         qubits_or_frames: Union[List[Frame], QubitSet],
-        duration: Union[float, FreeParameterExpression]
+        duration: Union[float, FreeParameterExpression],
     ) -> PulseSequence:
         """
         Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
-            qubits_or_frames: Union[List[Frame], QubitSet]: Qubits or frames across which the frame clocks
-                need to be aligned.
+            qubits_or_frames (Union[List[Frame], QubitSet]): Qubits or frames across which the frame
+                clocks need to be aligned.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
         Returns:
@@ -197,16 +197,14 @@ class PulseSequence:
             self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
-    def barrier(
-        self, qubits_or_frames: Union[List[Frame], QubitSet]
-    ) -> PulseSequence:
+    def barrier(self, qubits_or_frames: Union[List[Frame], QubitSet]) -> PulseSequence:
         """
         Adds an instruction to align the frame clocks to the latest time across all the specified
         frames.
 
         Args:
-            qubits_or_frames: Union[List[Frame], QubitSet]: Qubits or frames across which the frame clocks
-                need to be aligned.
+            qubits_or_frames (Union[List[Frame], QubitSet]): Qubits or frames which the delay
+                needs to be introduced.
 
         Returns:
             PulseSequence: self, with the instruction added.
