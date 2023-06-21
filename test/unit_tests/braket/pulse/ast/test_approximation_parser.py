@@ -43,7 +43,6 @@ def test_delay(port):
     pulse_seq = PulseSequence().delay(frames=frame, duration=3e-9)
     # 3 datapoints for delay
 
-
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
     expected_phases = {"frame1": TimeSeries()}
