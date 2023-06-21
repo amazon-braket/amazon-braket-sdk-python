@@ -380,6 +380,17 @@ class AwsDevice(Device):
         Returns:
             datetime: The timestamp for the last time the calibration was fetched.
         """
+        return self.native_gate_calibration_timestamp
+
+    @property
+    def native_gate_calibration_href(self) -> str:
+        """
+        Returns the href for the native gate calibration data is the device has it.
+        """
+        if hasattr(self.properties, "nativeGateCalibrationsRef"):
+            return self.properties.nativeGateCalibrationsRef
+        else:
+            return None
 
     @property
     def is_available(self) -> bool:
