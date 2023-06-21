@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from braket.pulse.pulse_sequence import PulseSequence
-from braket.circuits.qubit_set import QubitSet
-from braket.circuits.gate import Gate
-
 from typing import Dict, List, Optional, Tuple
+
+from braket.circuits.gate import Gate
+from braket.circuits.qubit_set import QubitSet
+from braket.pulse.pulse_sequence import PulseSequence
 
 
 class NativeGateCalibration:
@@ -16,7 +16,7 @@ class NativeGateCalibration:
         self._calibration_data = calibration_json
 
     @property
-    def calibration_date(self):
+    def calibration_data(self):
         """
         Gets the calibration data from the object.
 
@@ -26,9 +26,8 @@ class NativeGateCalibration:
         return self._calibration_data
 
     def filter_data(
-            self,
-            gates: Optional[List[Gate]] = None,
-            qubits: Optional[QubitSet] = None) -> NativeGateCalibration:
+        self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None
+    ) -> NativeGateCalibration:
         """
         Filters the data based on optional lists of gates or QubitSets.
 
@@ -41,8 +40,6 @@ class NativeGateCalibration:
         """
         keys = self._calibration_data.keys()
         filtered_calibration_keys = [tup for tup in keys if any(i in tup for i in gates or qubits)]
-        return NativeGateCalibration({k:v for (k,v) in d.items() if filtered_calibration_keys in k})
-
-
-
-
+        return NativeGateCalibration(
+            {k: v for (k, v) in self.calibration_data.items() if filtered_calibration_keys in k}
+        )
