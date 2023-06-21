@@ -204,7 +204,7 @@ class LocalSimulator(Device):
         inputs: Optional[Dict[str, float]] = None,
         *args,
         **kwargs,
-    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: # pragma: no cover
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:  # pragma: no cover
         """Wraps _run_interal for pickle dump"""
         return self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
 
