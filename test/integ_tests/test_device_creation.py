@@ -14,7 +14,7 @@
 import pytest
 
 from braket.aws import AwsDevice
-from braket.aws.aws_device import BraketDevices
+from braket.devices import Devices
 
 RIGETTI_ARN = "arn:aws:braket:::device/qpu/rigetti/Aspen-10"
 IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
@@ -80,7 +80,7 @@ def test_device_enum():
         "D-Wave Systems": "_DWave",
         "IonQ": "IonQ",
         "Oxford": "OQC",
-        "QuEra": "Quera",
+        "QuEra": "QuEra",
         "Rigetti": "Rigetti",
         "Xanadu": "_Xanadu",
     }
@@ -109,7 +109,7 @@ def test_device_enum():
     for device in AwsDevice.get_devices():
         assert (
             getattr(
-                getattr(BraketDevices, provider_name_to_enum_map[device.provider_name]),
+                getattr(Devices, provider_name_to_enum_map[device.provider_name]),
                 device_name_to_enum_map[device.name],
             )
             == device.arn

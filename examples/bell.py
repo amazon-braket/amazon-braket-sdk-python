@@ -11,10 +11,11 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.aws import AwsDevice, BraketDevices
+from braket.aws import AwsDevice
 from braket.circuits import Circuit
+from braket.devices import Devices
 
-device = AwsDevice(BraketDevices.Amazon.SV1)
+device = AwsDevice(Devices.Amazon.SV1)
 
 # https://wikipedia.org/wiki/Bell_state
 bell = Circuit().h(0).cnot(0, 1)
