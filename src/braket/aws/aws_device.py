@@ -749,6 +749,21 @@ class AwsDevice(Device):
                     elif argument["name"] == "phase":
                         phase = float(argument["value"]) if is_float(argument["value"]) else FreeParameter(argument["value"])
                 calibration_sequence = calibration_sequence.shift_phase(frame, phase)
+            elif instr["name"] == "shift_frequency":
+                frame = frequency = None
+                for argument in instr["arguments"]:
+                    if argument["name"] == "frame":
+                        f = "_".join(argument["value"].split("_")[:-1]) + "_frame"
+                        frame = self.frames[f]
+                    elif argument["name"] == "frequency":
+                        frequency = (
+                            float(argument["value"])
+                            if is_float(argument["value"])
+                            else FreeParameter(argument["value"])
+                        )
+                calibration_sequence = calibration_sequence.shift_frequency(frame, frequency)
+            else:
+                raise ValueError(f"The instruction {instr['name']} has not been implemented")
         return calibration_sequence
 
     def _parse_calibration_json(
