@@ -257,6 +257,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
                 self.zero_at_edges,
             ),
             name=self.id,
+            needs_declaration=False,
         )
 
     def sample(self, dt: float) -> np.ndarray:

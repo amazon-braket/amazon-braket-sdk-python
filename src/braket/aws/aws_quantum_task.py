@@ -17,9 +17,10 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 import boto3
+import oqpy
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -53,6 +54,7 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.error_mitigation import ErrorMitigation
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
+from braket.native_gates.native_gate_calibration import NativeGateCalibration
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import (
@@ -103,7 +105,7 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: Dict[str, str] = None,
         inputs: Dict[str, float] = None,
-        native_gate_calibration = None,
+        native_gate_calibration: Optional[NativeGateCalibration] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -192,6 +194,7 @@ class AwsQuantumTask(QuantumTask):
             device_parameters or {},
             disable_qubit_rewiring,
             inputs,
+            native_gate_calibration=native_gate_calibration,
             *args,
             **kwargs,
         )
@@ -478,6 +481,7 @@ def _create_internal(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    native_gate_calibration: Optional[NativeGateCalibration],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -493,10 +497,17 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    native_gate_calibration: Optional[NativeGateCalibration],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
+    for key, calibration in native_gate_calibration.calibration_data.items():
+        prog=pulse_sequence._program
+        with oqpy.defcal(prog, [oqpy.PhysicalQubits[k.__index__()] for k in key[1]], key[0]._qasm_name, [key[0].angle]):
+            prog += calibration._program
+    pulse_sequence._program.declare(list(pulse_sequence._program.waveform_vars))
     create_task_kwargs.update({"action": OpenQASMProgram(source=pulse_sequence.to_ir()).json()})
+    print(create_task_kwargs)
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 
