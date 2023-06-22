@@ -18,7 +18,7 @@ from numbers import Number
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy as np
-from oqpy import Program as OqpyProgram
+import oqpy
 
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
@@ -55,6 +55,7 @@ from braket.circuits.serialization import (
 from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.native_gates.native_gate_calibration import NativeGateCalibration
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import _validate_uniqueness
 
@@ -1095,6 +1096,7 @@ class Circuit:
         self,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
+        native_gate_calibration: Optional[NativeGateCalibration] = None,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """
         Converts the circuit into the canonical intermediate representation.
@@ -1125,7 +1127,7 @@ class Circuit:
                     "serialization_properties must be of type OpenQASMSerializationProperties "
                     "for IRType.OPENQASM."
                 )
-            return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
+            return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties(), native_gate_calibration=native_gate_calibration)
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
@@ -1143,9 +1145,9 @@ class Circuit:
         )
 
     def _to_openqasm(
-        self, serialization_properties: OpenQASMSerializationProperties
+        self, serialization_properties: OpenQASMSerializationProperties, native_gate_calibration: Optional[NativeGateCalibration],
     ) -> OpenQasmProgram:
-        ir_instructions = self._create_openqasm_header(serialization_properties)
+        ir_instructions = self._create_openqasm_header(serialization_properties, native_gate_calibration)
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend(
             [
@@ -1178,7 +1180,7 @@ class Circuit:
         return OpenQasmProgram.construct(source="\n".join(ir_instructions), inputs={})
 
     def _create_openqasm_header(
-        self, serialization_properties: OpenQASMSerializationProperties
+        self, serialization_properties: OpenQASMSerializationProperties, native_gate_calibration: Optional[NativeGateCalibration],
     ) -> List[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         for parameter in self.parameters:
@@ -1195,15 +1197,27 @@ class Circuit:
                 f"{serialization_properties.qubit_reference_type} supplied."
             )
 
-        frame_wf_declarations = self._generate_frame_wf_declarations()
+        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(native_gate_calibration)
         if frame_wf_declarations:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
 
-    def _generate_frame_wf_declarations(self) -> Optional[str]:
+    def _generate_frame_wf_defcal_declarations(self, native_gate_calibration: Optional[NativeGateCalibration]) -> Optional[str]:
         frames = {}
         waveforms = {}
         from braket.circuits.gates import PulseGate
+
+        program = oqpy.Program(None)
+        if native_gate_calibration is not None:
+            for key, calibration in native_gate_calibration.calibration_data.items():
+                with oqpy.defcal(program, [oqpy.PhysicalQubits[int(k)] for k in key[1]], key[0]._qasm_name, [key[0].angle]):
+                    program += calibration._program
+                for frame in calibration._frames.values():
+                    _validate_uniqueness(frames, frame)
+                    frames[frame.id] = frame
+                for waveform in calibration._waveforms.values():
+                    _validate_uniqueness(waveforms, waveform)
+                    waveforms[waveform.id] = waveform
 
         for instruction in self.instructions:
             if isinstance(instruction.operator, PulseGate):
@@ -1216,8 +1230,7 @@ class Circuit:
 
         # Declare the frames and waveforms across all pulse sequences
         declarable_frames = [f for f in frames.values() if not f.is_predefined]
-        if declarable_frames or waveforms:
-            program = OqpyProgram(None)
+        if declarable_frames or waveforms or native_gate_calibration is not None:
             for f in declarable_frames:
                 program.declare(f._to_oqpy_expression())
             for wf in waveforms.values():

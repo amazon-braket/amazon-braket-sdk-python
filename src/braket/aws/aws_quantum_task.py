@@ -576,6 +576,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    native_gate_calibration: Optional[NativeGateCalibration],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -596,6 +597,7 @@ def _(
     if (
         disable_qubit_rewiring
         or Instruction(StartVerbatimBox()) in circuit.instructions
+        or native_gate_calibration is not None
         or any(isinstance(instruction.operator, PulseGate) for instruction in circuit.instructions)
     ):
         qubit_reference_type = QubitReferenceType.PHYSICAL
@@ -605,7 +607,7 @@ def _(
     )
 
     openqasm_program = circuit.to_ir(
-        ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        ir_type=IRType.OPENQASM, serialization_properties=serialization_properties, native_gate_calibration=native_gate_calibration
     )
 
     if inputs:
