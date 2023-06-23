@@ -167,14 +167,14 @@ class PulseSequence:
 
     def delay(
         self,
-        qubits_or_frames: Union[List[Frame], QubitSet],
+        qubits_or_frames: Union[Frame, List[Frame], QubitSet],
         duration: Union[float, FreeParameterExpression],
     ) -> PulseSequence:
         """
         Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
-            qubits_or_frames (Union[List[Frame], QubitSet]): Qubits or frame(s) on which the delay
+            qubits_or_frames (Union[Frame, List[Frame], QubitSet]): Qubits or frame(s) on which the delay
                 needs to be introduced.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
