@@ -174,8 +174,8 @@ class PulseSequence:
         Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
-            qubits_or_frames (Union[List[Frame], QubitSet]): Qubits or frames across which the frame
-                clocks need to be aligned.
+            qubits_or_frames (Union[List[Frame], QubitSet]): Qubits or frame(s) on which the delay 
+                needs to be introduced.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
         Returns:
