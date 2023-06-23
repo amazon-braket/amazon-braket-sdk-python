@@ -718,7 +718,8 @@ class AwsDevice(Device):
         calibration_sequence = PulseSequence()
         for instruction in range(len(calibration)):
             instr = calibration[instruction]
-            # if instr["name"] == "barrier":
+            if instr["name"] == "barrier":
+                continue
             #     print(instr)
             #     frames = [self.frames.get[i] for i in instr["arguments"]]
             #     calibration_sequence = calibration_sequence.barrier(frames)
@@ -763,7 +764,7 @@ class AwsDevice(Device):
                         )
                 calibration_sequence = calibration_sequence.shift_frequency(frame, frequency)
             else:
-                raise ValueError(f"The instruction {instr['name']} has not been implemented")
+                raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
 
     def _parse_calibration_json(
