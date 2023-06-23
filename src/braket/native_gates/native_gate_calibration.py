@@ -12,8 +12,9 @@ class NativeGateCalibration:
     A collection of gate calibrations for a QPU with the timestamp of when the data was collected.
     """
 
-    def __init__(self, calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence]):
+    def __init__(self, calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence], fidelities: Dict[Tuple[Gate, QubitSet], float]):
         self._calibration_data = calibration_json
+        self._fidelities = fidelities
 
     @property
     def calibration_date(self):
@@ -24,6 +25,9 @@ class NativeGateCalibration:
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
         """
         return self._calibration_data
+    
+    def __len__(self):
+        return len(self._calibration_data)
 
     def filter_data(
             self,
@@ -44,8 +48,34 @@ class NativeGateCalibration:
         return NativeGateCalibration(
             {k: v for (k, v) in self.calibration_data.items() if filtered_calibration_keys in k}
         )
+    
+    def get_pulse_sequence(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:
+        """
+        Returns the pulse implementation for the gate and QubitSet.
 
-    def to_defcal(self, key: [Optional[Tuple[Gate, QubitSet]]] = None) -> str:
+        Args:
+            key (Tuple[Gate,QubitSet])): A key to get a specific PulseSequence.
+
+        Returns:
+            PulseSequence: the PulseSequence object corresponding the gate acting on the QubitSet.
+
+        """
+        return self._calibration_data.get(key, None)
+    
+    def get_fidelity(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:
+        """
+        Returns the fidelity for the gate and QubitSet that has been computed by the provider.
+
+        Args:
+            key (Tuple[Gate,QubitSet])): A key to get a specific fidelity.
+
+        Returns:
+            float: the fidelity measured for the gate acting on the QubitSet.
+
+        """
+        return self._fidelities.get(key, None)
+
+    def to_defcal(self, key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
         """
         Returns the defcal representation for the `NativeGateCalibration` object.
 
