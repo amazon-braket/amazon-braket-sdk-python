@@ -690,9 +690,11 @@ class AwsDevice(Device):
         if hasattr(self.properties, "nativeGateCalibrationsRef"):
             try:
                 with urllib.request.urlopen(self.properties.nativeGateCalibrationsRef) as f:
-                    json_calibration_data = self._parse_calibration_json(json.loads(f.read().decode("utf-8")))
+                    json_calibration_data, fidelities = self._parse_calibration_json(
+                        json.loads(f.read().decode("utf-8"))
+                    )
                     self._native_gate_calibration_timestamp = datetime.now()
-                    return NativeGateCalibration(json_calibration_data)
+                    return NativeGateCalibration(json_calibration_data, fidelities)
             except urllib.error.URLError as e:
                 print(e.reason)
         else:
@@ -796,6 +798,7 @@ class AwsDevice(Device):
 
         """
         waveforms = self._parse_waveforms(calibration_data["waveforms"])
+        fidelities = {}
         for qubit in calibration_data["gates"]:
             q = calibration_data["gates"][qubit]
             for gate in q:
@@ -811,7 +814,15 @@ class AwsDevice(Device):
                     gate_qubit_key = (gate_obj(argument), qubits) if argument else (gate_obj(), qubits)
                     gate_qubit_pulse = self._get_pulse_sequence(g["calibrations"], waveforms)
                     calibration_data[gate_qubit_key] = gate_qubit_pulse
-        return calibration_data
+                    
+                    k1 = f"{len(qubits)}Q"
+                    k2 = "-".join([str(int(qubit)) for qubit in sorted(qubits)])
+                    k3 = f"f{gate_qubit_key[0].name}" if len(qubits) == 2 else "f1QRB"
+                    if k3 == "fCPhaseShift":
+                        k3 = "fCPHASE"
+                    if len(qubits) > 0:
+                        fidelities[gate_qubit_key] = self.properties.provider.specs[k1][k2][k3]
+        return calibration_data, fidelities
 
 
 def str_to_gate(class_name: str) -> Gate:
