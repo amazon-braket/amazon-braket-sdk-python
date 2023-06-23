@@ -1127,7 +1127,10 @@ class Circuit:
                     "serialization_properties must be of type OpenQASMSerializationProperties "
                     "for IRType.OPENQASM."
                 )
-            return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties(), native_gate_calibration=native_gate_calibration)
+            return self._to_openqasm(
+                serialization_properties or OpenQASMSerializationProperties(),
+                native_gate_calibration,
+            )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
@@ -1145,9 +1148,13 @@ class Circuit:
         )
 
     def _to_openqasm(
-        self, serialization_properties: OpenQASMSerializationProperties, native_gate_calibration: Optional[NativeGateCalibration],
+        self,
+        serialization_properties: OpenQASMSerializationProperties,
+        native_gate_calibration: Optional[NativeGateCalibration],
     ) -> OpenQasmProgram:
-        ir_instructions = self._create_openqasm_header(serialization_properties, native_gate_calibration)
+        ir_instructions = self._create_openqasm_header(
+            serialization_properties, native_gate_calibration
+        )
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend(
             [
@@ -1180,7 +1187,9 @@ class Circuit:
         return OpenQasmProgram.construct(source="\n".join(ir_instructions), inputs={})
 
     def _create_openqasm_header(
-        self, serialization_properties: OpenQASMSerializationProperties, native_gate_calibration: Optional[NativeGateCalibration],
+        self,
+        serialization_properties: OpenQASMSerializationProperties,
+        native_gate_calibration: Optional[NativeGateCalibration],
     ) -> List[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         for parameter in self.parameters:
@@ -1202,7 +1211,9 @@ class Circuit:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
 
-    def _generate_frame_wf_defcal_declarations(self, native_gate_calibration: Optional[NativeGateCalibration]) -> Optional[str]:
+    def _generate_frame_wf_defcal_declarations(
+        self, native_gate_calibration: Optional[NativeGateCalibration]
+    ) -> Optional[str]:
         frames = {}
         waveforms = {}
         from braket.circuits.gates import PulseGate
@@ -1229,17 +1240,18 @@ class Circuit:
         # Declare the frames and waveforms across all pulse sequences
         declarable_frames = [f for f in frames.values() if not f.is_predefined]
         if declarable_frames or waveforms or native_gate_calibration is not None:
-            for f in declarable_frames:
-                program.declare(f._to_oqpy_expression(), encal=True)
-            for wf in waveforms.values():
-                program.declare(wf._to_oqpy_expression(), encal=True)
-            
+            frame_wf_to_declare = [f._to_oqpy_expression() for f in declarable_frames]
+            frame_wf_to_declare += [wf._to_oqpy_expression() for wf in waveforms.values()]
+            program.declare(frame_wf_to_declare, encal=True)
+
             if native_gate_calibration is not None:
                 for key, calibration in native_gate_calibration.calibration_data.items():
                     gate, qubits = key
                     gate_name = gate._qasm_name
                     arguments = [gate.angle] if hasattr(gate, "angle") else None
-                    with oqpy.defcal(program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments):
+                    with oqpy.defcal(
+                        program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
+                    ):
                         program += calibration._program
 
             ast = program.to_ast(encal=False, include_externs=False)

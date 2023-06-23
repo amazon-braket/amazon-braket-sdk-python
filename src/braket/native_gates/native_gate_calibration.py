@@ -53,10 +53,12 @@ class NativeGateCalibration:
 
         """
         if key is not None:
-            return self.calibration_data.to_ir().replace('cal', self._def_cal_gate(key), 1)
+            return self.calibration_data.to_ir().replace("cal", self._def_cal_gate(key), 1)
         else:
             defcal = "\n".join(
-                v.to_ir().replace('cal', self._def_cal_gate(k), 1) for (k, v) in self.calibration_data.items() if isinstance(v, PulseSequence)
+                v.to_ir().replace("cal", self._def_cal_gate(k), 1)
+                for (k, v) in self.calibration_data.items()
+                if isinstance(v, PulseSequence)
             )
             return defcal
 
