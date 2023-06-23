@@ -227,6 +227,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
+        native_gate_calibration: Optional[NativeGateCalibration] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -254,6 +255,8 @@ class AwsDevice(Device):
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
+            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for user defined gate
+                calibration.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -278,6 +281,7 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
+            native_gate_calibration=native_gate_calibration,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
