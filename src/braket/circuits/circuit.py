@@ -1209,9 +1209,7 @@ class Circuit:
 
         program = oqpy.Program(None)
         if native_gate_calibration is not None:
-            for key, calibration in native_gate_calibration.calibration_data.items():
-                with oqpy.defcal(program, [oqpy.PhysicalQubits[int(k)] for k in key[1]], key[0]._qasm_name, [key[0].angle]):
-                    program += calibration._program
+            for calibration in native_gate_calibration.calibration_data.values():
                 for frame in calibration._frames.values():
                     _validate_uniqueness(frames, frame)
                     frames[frame.id] = frame
@@ -1232,11 +1230,21 @@ class Circuit:
         declarable_frames = [f for f in frames.values() if not f.is_predefined]
         if declarable_frames or waveforms or native_gate_calibration is not None:
             for f in declarable_frames:
-                program.declare(f._to_oqpy_expression())
+                program.declare(f._to_oqpy_expression(), encal=True)
             for wf in waveforms.values():
-                program.declare(wf._to_oqpy_expression())
-            ast = program.to_ast(encal=True, include_externs=False)
+                program.declare(wf._to_oqpy_expression(), encal=True)
+            
+            if native_gate_calibration is not None:
+                for key, calibration in native_gate_calibration.calibration_data.items():
+                    gate, qubits = key
+                    gate_name = gate._qasm_name
+                    arguments = [gate.angle] if hasattr(gate, "angle") else None
+                    with oqpy.defcal(program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments):
+                        program += calibration._program
+
+            ast = program.to_ast(encal=False, include_externs=False)
             return ast_to_qasm(ast)
+
         return None
 
     def as_unitary(self) -> np.ndarray:
