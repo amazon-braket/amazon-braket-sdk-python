@@ -40,9 +40,18 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # no
 from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.pulse import ArbitraryWaveform, DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
-from braket.schema_common import BraketSchemaBase
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.parametric.free_parameter import FreeParameter
+from braket.pulse import (
+    ArbitraryWaveform,
+    ConstantWaveform,
+    DragGaussianWaveform,
+    Frame,
+    GaussianWaveform,
+    Port,
+    PulseSequence,
+)
+from braket.schema_common import BraketSchemaBase
 
 
 class AwsDeviceType(str, Enum):
@@ -712,6 +721,7 @@ class AwsDevice(Device):
                 waveforms[wave_id] = ConstantWaveform(length, iq)
             else:
                 raise ValueError(f"The waveform {wave_id} of cannot be constructed")
+            waveforms[wave_id]._autodeclare(False)
         return waveforms
 
     def _get_pulse_sequence(self, calibration: str, waveforms: Dict[ArbitraryWaveform]) -> PulseSequence:

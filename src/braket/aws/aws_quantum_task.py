@@ -501,11 +501,18 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    for key, calibration in native_gate_calibration.calibration_data.items():
-        prog=pulse_sequence._program
-        with oqpy.defcal(prog, [oqpy.PhysicalQubits[k.__index__()] for k in key[1]], key[0]._qasm_name, [key[0].angle]):
-            prog += calibration._program
-    pulse_sequence._program.declare(list(pulse_sequence._program.waveform_vars))
+    if native_gate_calibration is not None:
+        for key, calibration in native_gate_calibration.calibration_data.items():
+            prog = pulse_sequence._program
+            for wf in calibration._waveforms.values():
+                prog.declare(wf._to_oqpy_expression(), encal=True)
+            gate, qubits = key
+            gate_name = gate._qasm_name
+            arguments = [gate.angle] if hasattr(gate, "angle") else None
+            with oqpy.defcal(
+                prog, [oqpy.PhysicalQubits[int(qb)] for qb in qubits], gate_name, arguments
+            ):
+                prog += calibration._program
     create_task_kwargs.update({"action": OpenQASMProgram(source=pulse_sequence.to_ir()).json()})
     print(create_task_kwargs)
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
@@ -521,6 +528,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    native_gate_calibration: Optional[NativeGateCalibration],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -559,6 +567,7 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    native_gate_calibration: Optional[NativeGateCalibration],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -607,8 +616,12 @@ def _(
     )
 
     openqasm_program = circuit.to_ir(
-        ir_type=IRType.OPENQASM, serialization_properties=serialization_properties, native_gate_calibration=native_gate_calibration
+        ir_type=IRType.OPENQASM,
+        serialization_properties=serialization_properties,
+        native_gate_calibration=native_gate_calibration,
     )
+
+    print(openqasm_program.source)
 
     if inputs:
         inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
@@ -642,6 +655,7 @@ def _(
     ],
     _,
     inputs: Dict[str, float],
+    native_gate_calibration: Optional[NativeGateCalibration],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -666,6 +680,7 @@ def _(
     device_parameters: dict,
     _,
     inputs: Dict[str, float],
+    native_gate_calibration: Optional[NativeGateCalibration],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
