@@ -41,7 +41,6 @@ def test_bare_pulsequence():
 def test_delay(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     pulse_seq = PulseSequence().delay(frame, 3e-9)
-    # 3 datapoints for delay
 
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
@@ -59,7 +58,6 @@ def test_delay(port):
 def test_predefined_frame(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=True)
     pulse_seq = PulseSequence().delay(frame, 3e-9)
-    # 3 datapoints for delay
 
     expected_amplitudes = {"frame1": TimeSeries()}
     expected_frequencies = {"frame1": TimeSeries()}
