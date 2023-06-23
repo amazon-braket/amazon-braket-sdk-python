@@ -1054,6 +1054,7 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
         None,
         None,
         None,
+        None,
     )
     device._aws_session.default_bucket.assert_not_called()
 
@@ -1227,6 +1228,7 @@ def _run_and_assert(
     poll_timeout_seconds=None,  # Treated as positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
+    native_gate_calibration=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1243,6 +1245,7 @@ def _run_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
+        native_gate_calibration,
         extra_args,
         extra_kwargs,
     )
@@ -1260,6 +1263,7 @@ def _run_batch_and_assert(
     poll_timeout_seconds=None,  # Treated as a positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
+    native_gate_calibration=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1279,6 +1283,7 @@ def _run_batch_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
+        native_gate_calibration,
         extra_args,
         extra_kwargs,
     )
