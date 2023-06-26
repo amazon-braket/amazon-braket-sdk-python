@@ -1219,7 +1219,9 @@ class Circuit:
 
         program = oqpy.Program(None)
         if native_gate_calibration is not None:
-            for calibration in native_gate_calibration.calibration_data.values():
+            for key, calibration in native_gate_calibration.calibration_data.items():
+                if isinstance(key, str):
+                    continue
                 for frame in calibration._frames.values():
                     _validate_uniqueness(frames, frame)
                     frames[frame.id] = frame
@@ -1245,9 +1247,11 @@ class Circuit:
 
             if native_gate_calibration is not None:
                 for key, calibration in native_gate_calibration.calibration_data.items():
+                    if isinstance(key, str):
+                        continue
                     gate, qubits = key
                     gate_name = gate._qasm_name
-                    arguments = [gate.angle] if hasattr(gate, "angle") else None
+                    arguments = [calibration._format_parameter_ast(gate.angle)] if hasattr(gate, "angle") else None
                     with oqpy.defcal(
                         program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
                     ):
