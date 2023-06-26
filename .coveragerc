@@ -2,18 +2,19 @@
 parallel = True
 branch = True
 source =
-    braket
+    src
 omit = 
     **/braket/ir/*
     **/braket/device_schema/*
     **/braket/schema_common/*
     **/braket/task_result/*
     **/braket/simulator/*
+    */site-packages/braket/*
 
 [paths]
 source =
-    src/braket
-    .tox/*/lib/python*/site-packages/braket
+    src
+    */site-packages/braket
 
 [report]
 show_missing = True

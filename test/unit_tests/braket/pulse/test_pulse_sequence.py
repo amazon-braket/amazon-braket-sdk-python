@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import FreeParameter
+from braket.circuits import FreeParameter, QubitSet
 from braket.pulse import (
     ArbitraryWaveform,
     ConstantWaveform,
@@ -255,9 +255,10 @@ def test_pulse_sequence_conflicting_frames(
     method = getattr(ps, method_name)
 
     with pytest.raises(ValueError):
-        method(conflicting_user_defined_frame, **method_kwargs) if method_kwargs else method(
-            conflicting_user_defined_frame
-        )
+        if method_kwargs:
+            method(conflicting_user_defined_frame, **method_kwargs)
+        else:
+            method(conflicting_user_defined_frame)
 
 
 def test_pulse_sequence_conflicting_wf(user_defined_frame):
@@ -288,6 +289,8 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         .capture_v0(predefined_frame_1)
         .delay([predefined_frame_1, predefined_frame_2], 2e-9)
         .delay(predefined_frame_1, 1e-6)
+        .delay(QubitSet(0), 1e-3)
+        .barrier(QubitSet([0, 1]))
         .barrier([predefined_frame_1, predefined_frame_2])
         .play(predefined_frame_1, GaussianWaveform(length=1e-3, sigma=0.7, id="gauss_wf"))
         .play(
@@ -322,6 +325,8 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[2.0ns] predefined_frame_1, predefined_frame_2;",
             "    delay[1000.0ns] predefined_frame_1;",
+            "    delay[1000000.0ns] $0;",
+            "    barrier $0, $1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
             "    play(predefined_frame_2, drag_gauss_wf);",

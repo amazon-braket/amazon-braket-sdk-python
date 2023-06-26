@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.44.0 (2023-06-26)
+
+### Features
+
+ * add support for qubits in pulse delay and barrier
+
+## v1.43.0 (2023-06-22)
+
+### Features
+
+ * add support for Python 3.11
+
+## v1.42.2 (2023-06-20)
+
+### Bug Fixes and Other Changes
+
+ * pulse plotting with barriers that have no argument
+
 ## v1.42.1 (2023-06-07)
 
 ### Bug Fixes and Other Changes
