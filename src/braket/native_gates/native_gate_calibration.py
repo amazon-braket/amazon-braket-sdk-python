@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from braket.pulse.pulse_sequence import PulseSequence
-from braket.circuits.qubit_set import QubitSet
-from braket.circuits.gate import Gate
-
 from typing import Dict, List, Optional, Tuple
+
+from braket.circuits.angled_gate import AngledGate
+from braket.circuits.gate import Gate
+from braket.circuits.qubit_set import QubitSet
+from braket.pulse.pulse_sequence import PulseSequence
 
 
 class NativeGateCalibration:
@@ -12,12 +13,12 @@ class NativeGateCalibration:
     A collection of gate calibrations for a QPU with the timestamp of when the data was collected.
     """
 
-    def __init__(self, calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence], fidelities: Dict[Tuple[Gate, QubitSet], float]):
+    def __init__(self, calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence], fidelities: Dict[Tuple[Gate, QubitSet], float]={}):
         self._calibration_data = calibration_json
         self._fidelities = fidelities
 
     @property
-    def calibration_date(self):
+    def calibration_data(self):
         """
         Gets the calibration data from the object.
 
@@ -79,7 +80,12 @@ class NativeGateCalibration:
         """
         Returns the defcal representation for the `NativeGateCalibration` object.
 
+        Args:
+            key (Optional[Tuple[Gate,QubitSet]])): An optional key to get a specific defcal.
+                Default: None
 
+        Returns:
+            str: the defcal string for the object.
 
         """
         if key is not None:
