@@ -13,7 +13,11 @@ class NativeGateCalibration:
     A collection of gate calibrations for a QPU with the timestamp of when the data was collected.
     """
 
-    def __init__(self, calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence], fidelities: Dict[Tuple[Gate, QubitSet], float]={}):
+    def __init__(
+        self,
+        calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence],
+        fidelities: Dict[Tuple[Gate, QubitSet], float] = {},
+    ):
         self._calibration_data = calibration_json
         self._fidelities = fidelities
 
@@ -26,14 +30,13 @@ class NativeGateCalibration:
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
         """
         return self._calibration_data
-    
+
     def __len__(self):
         return len(self._calibration_data)
 
     def filter_data(
-            self,
-            gates: Optional[List[Gate]] = None,
-            qubits: Optional[QubitSet] = None) -> NativeGateCalibration:
+        self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None
+    ) -> NativeGateCalibration:
         """
         Filters the data based on optional lists of gates or QubitSets.
 
@@ -49,7 +52,7 @@ class NativeGateCalibration:
         return NativeGateCalibration(
             {k: v for (k, v) in self.calibration_data.items() if filtered_calibration_keys in k}
         )
-    
+
     def get_pulse_sequence(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:
         """
         Returns the pulse implementation for the gate and QubitSet.
@@ -62,7 +65,7 @@ class NativeGateCalibration:
 
         """
         return self._calibration_data.get(key, None)
-    
+
     def get_fidelity(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:
         """
         Returns the fidelity for the gate and QubitSet that has been computed by the provider.

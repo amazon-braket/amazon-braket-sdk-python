@@ -1251,7 +1251,11 @@ class Circuit:
                         continue
                     gate, qubits = key
                     gate_name = gate._qasm_name
-                    arguments = [calibration._format_parameter_ast(gate.angle)] if hasattr(gate, "angle") else None
+                    arguments = (
+                        [calibration._format_parameter_ast(gate.angle)]
+                        if hasattr(gate, "angle")
+                        else None
+                    )
                     with oqpy.defcal(
                         program, [oqpy.PhysicalQubits[int(k)] for k in qubits], gate_name, arguments
                     ):
