@@ -621,8 +621,6 @@ def _(
         native_gate_calibration=native_gate_calibration,
     )
 
-    print(openqasm_program.source)
-
     if inputs:
         inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
         inputs_copy.update(inputs)
