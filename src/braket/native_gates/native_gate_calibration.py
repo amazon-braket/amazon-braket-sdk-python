@@ -92,7 +92,7 @@ class NativeGateCalibration:
 
         """
         if key is not None:
-            return self.calibration_data.to_ir().replace("cal", self._def_cal_gate(key), 1)
+            return self.calibration_data[key].to_ir().replace("cal", self._def_cal_gate(key), 1)
         else:
             defcal = "\n".join(
                 v.to_ir().replace("cal", self._def_cal_gate(k), 1)
