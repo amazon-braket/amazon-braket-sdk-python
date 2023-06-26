@@ -723,7 +723,7 @@ class AwsDevice(Device):
                 waveforms[wave_id] = GaussianWaveform(**waveform_parameters)
             elif w["name"] == "constant":
                 length = iq = None
-                for val in arguments:
+                for val in w["arguments"]:
                     if val["name"] == "length":
                         length = (
                             float(val["value"])
