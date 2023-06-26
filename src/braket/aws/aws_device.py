@@ -735,11 +735,15 @@ class AwsDevice(Device):
         for instruction in range(len(calibration)):
             instr = calibration[instruction]
             if instr["name"] == "barrier":
-                continue
-            #     print(instr)
-            #     frames = [self.frames.get[i] for i in instr["arguments"]]
-            #     calibration_sequence = calibration_sequence.barrier(frames)
-            if instr["name"] == "play":
+                if instr["arguments"] is not None:
+                    if instr["arguments"][0]["name"] == "qubit":
+                        qubits_or_frames = QubitSet([int(arg["value"]) for arg in instr["arguments"]])
+                    else:
+                        qubits_or_frames= [self.frames.get(arg["value"]) for arg in instr["arguments"]]
+                else:
+                    qubits_or_frames = []
+                calibration_sequence = calibration_sequence.barrier(qubits_or_frames)
+            elif instr["name"] == "play":
                 frame = waveform = None
                 for argument in instr["arguments"]:
                     if argument["name"] == "frame":
