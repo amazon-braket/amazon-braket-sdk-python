@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.44.0 (2023-06-26)
+
+### Features
+
+ * add support for qubits in pulse delay and barrier
+
 ## v1.43.0 (2023-06-22)
 
 ### Features
