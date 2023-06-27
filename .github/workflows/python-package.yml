@@ -35,4 +35,4 @@ jobs:
         tox -e unit-tests
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@v3
-      if: ${{ strategy.job-index }} == ${{ strategy.job-total - 1 }}
+      if: ${{ strategy.job-index }} == 0
