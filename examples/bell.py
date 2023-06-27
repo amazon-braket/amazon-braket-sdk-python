@@ -13,8 +13,9 @@
 
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
+from braket.devices import Devices
 
-device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+device = AwsDevice(Devices.Amazon.SV1)
 
 # https://wikipedia.org/wiki/Bell_state
 bell = Circuit().h(0).cnot(0, 1)
