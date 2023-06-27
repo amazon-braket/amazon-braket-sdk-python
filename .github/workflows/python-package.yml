@@ -35,4 +35,4 @@ jobs:
         tox -e unit-tests
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@v3
-      if: matrix.os == "ubuntu-latest" && matrix.python-version == "3.11"
+      if: ${{ matrix.os == "ubuntu-latest" && matrix.python-version == "3.11" }}
