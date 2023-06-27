@@ -35,22 +35,22 @@ class NativeGateCalibration:
         return len(self._calibration_data)
 
     def filter_data(
-        self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None
+        self, gates: Optional[List[Gate]] = None, qubits: Optional[List[QubitSet]] = None
     ) -> NativeGateCalibration:
         """
         Filters the data based on optional lists of gates or QubitSets.
 
         Args:
             gates (Optional[List[Gate]]): An optional list of gates to filter on.
-            qubits (Optional[QubitSet]): An optional set of qubits to filter on.
+            qubits (Optional[List[QubitSet]]): An optional set of qubits to filter on.
 
         Returns:
             A filtered NativeGateCalibration object.
         """
         keys = self._calibration_data.keys()
-        filtered_calibration_keys = [tup for tup in keys if any(i in tup for i in gates or qubits)]
+        filtered_calibration_keys = [tup for tup in keys if isinstance(tup, tuple) and any(i in set(tup) for i in gates or qubits)]
         return NativeGateCalibration(
-            {k: v for (k, v) in self.calibration_data.items() if filtered_calibration_keys in k}
+            {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys}
         )
 
     def get_pulse_sequence(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:
