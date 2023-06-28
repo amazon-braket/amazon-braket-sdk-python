@@ -13,10 +13,11 @@
 
 from __future__ import annotations
 
+import ast
 from numbers import Number
 from typing import Any, Dict, Union
 
-from sympy import Expr, Float, sympify
+from sympy import Expr, Float, Symbol, sympify
 
 
 class FreeParameterExpression:
@@ -29,7 +30,7 @@ class FreeParameterExpression:
     present will NOT run. Values must be substituted prior to execution.
     """
 
-    def __init__(self, expression: Union[FreeParameterExpression, Number, Expr]):
+    def __init__(self, expression: Union[FreeParameterExpression, Number, Expr, str]):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
@@ -37,16 +38,25 @@ class FreeParameterExpression:
         Below are examples of how FreeParameterExpressions should be made.
 
         Args:
-            expression (Union[FreeParameterExpression, Number, Expr]): The expression to use.
+            expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
             >>> expression_2 = 1 + FreeParameter("beta") + 2 * FreeParameter("alpha")
         """
+        self._operations = {
+            ast.Add: self.__add__,
+            ast.Sub: self.__sub__,
+            ast.Mult: self.__mul__,
+            ast.Pow: self.__pow__,
+            ast.USub: self.__neg__,
+        }
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
         elif isinstance(expression, (Number, Expr)):
             self._expression = expression
+        elif isinstance(expression, str):
+            self._expression = self._parse_string_expression(expression)
         else:
             raise NotImplementedError
 
@@ -81,10 +91,31 @@ class FreeParameterExpression:
                 new_parameter_values[key] = val
 
         subbed_expr = self._expression.subs(new_parameter_values)
-        if subbed_expr.is_Number:
+        if isinstance(subbed_expr, Number):
             return subbed_expr
         else:
             return FreeParameterExpression(subbed_expr)
+
+    def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
+        return self._eval_operation(ast.parse(expression, mode="eval").body)
+
+    def _eval_operation(self, node: Any) -> FreeParameterExpression:
+        if isinstance(node, ast.Num):
+            return FreeParameterExpression(node.n)
+        elif isinstance(node, ast.Name):
+            return FreeParameterExpression(Symbol(node.id))
+        elif isinstance(node, ast.BinOp):
+            if type(node.op) not in self._operations.keys():
+                raise ValueError(f"Unsupported binary operation: {type(node.op)}")
+            return self._eval_operation(node.left)._operations[type(node.op)](
+                self._eval_operation(node.right)
+            )
+        elif isinstance(node, ast.UnaryOp):
+            if type(node.op) not in self._operations.keys():
+                raise ValueError(f"Unsupported unary operation: {type(node.op)}", type(node.op))
+            return self._eval_operation(node.operand)._operations[type(node.op)]()
+        else:
+            raise ValueError(f"Unsupported string detected: {node}")
 
     def __add__(self, other):
         if issubclass(type(other), FreeParameterExpression):
