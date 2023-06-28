@@ -3,7 +3,6 @@ from typing import Tuple, List
 
 from braket.circuits import Circuit, Gate, Instruction, QubitSet, observables
 from braket.circuits.gates import Unitary
-from braket.circuits.helper import fetch_subclasses
 from braket.circuits.translations import (
     braket_noise_gate_to_instruction,
     BRAKET_GATES,
