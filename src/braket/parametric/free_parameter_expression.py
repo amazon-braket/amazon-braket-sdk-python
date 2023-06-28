@@ -91,8 +91,6 @@ class FreeParameterExpression:
                 new_parameter_values[key] = val
 
         subbed_expr = self._expression.subs(new_parameter_values)
-        if isinstance(subbed_expr, Expr):
-            subbed_expr = simplify(subbed_expr)
         if isinstance(subbed_expr, Number):
             return subbed_expr
         else:
@@ -104,6 +102,8 @@ class FreeParameterExpression:
     def _eval_operation(self, node: Any) -> FreeParameterExpression:
         if isinstance(node, ast.Num):
             return FreeParameterExpression(node.n)
+        elif isinstance(node, ast.Name):
+            return FreeParameterExpression(Symbol(node.id))
         elif isinstance(node, ast.BinOp):
             if type(node.op) not in self._operations.keys():
                 raise ValueError(f"Unsupported binary operation: {type(node.op)}")
@@ -113,9 +113,7 @@ class FreeParameterExpression:
         elif isinstance(node, ast.UnaryOp):
             if type(node.op) not in self._operations.keys():
                 raise ValueError(f"Unsupported unary operation: {type(node.op)}", type(node.op))
-            return self._eval_operation(node.operand)._operations[type(node.op)]
-        elif isinstance(node, ast.Name):
-            return FreeParameterExpression(Symbol(node.id))
+            return self._eval_operation(node.operand)._operations[type(node.op)]()
         else:
             raise ValueError(f"Unsupported string detected: {node}")
 

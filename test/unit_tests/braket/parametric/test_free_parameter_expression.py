@@ -44,16 +44,21 @@ def test_equality():
 
 
 def test_equality_str():
-    expr_1 = FreeParameterExpression("theta+2*theta")
-    expr_2 = FreeParameterExpression(FreeParameter("theta") + 2 * FreeParameter("theta"))
+    expr_1 = FreeParameterExpression("-theta+2*theta")
+    expr_2 = FreeParameterExpression(-FreeParameter("theta") + 2 * FreeParameter("theta"))
     param_values = {"theta": 1}
     assert expr_1 == expr_2
     assert expr_1.subs(param_values) == expr_2.subs(param_values)
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_unsupported_op_str():
+def test_unsupported_bin_op_str():
     FreeParameterExpression("theta/1")
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_unsupported_un_op_str():
+    FreeParameterExpression("~theta")
 
 
 @pytest.mark.xfail(raises=ValueError)
