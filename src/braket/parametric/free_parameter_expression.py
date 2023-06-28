@@ -17,7 +17,7 @@ import ast
 from numbers import Number
 from typing import Any, Dict, Union
 
-from sympy import Expr, Float, Symbol, simplify, sympify
+from sympy import Expr, Float, Symbol, sympify
 
 
 class FreeParameterExpression:
