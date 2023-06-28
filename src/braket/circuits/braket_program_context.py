@@ -1,19 +1,17 @@
-import os
 from typing import Tuple, List
 
-from braket.circuits import Circuit, Gate, Instruction, QubitSet, observables
+import numpy as np
+from braket.default_simulator import KrausOperation
+from braket.default_simulator.openqasm.program_context import AbstractProgramContext
+from braket.ir.jaqcd.program_v1 import Results
+
+from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
 from braket.circuits.translations import (
     braket_noise_gate_to_instruction,
     BRAKET_GATES,
     braket_result_to_result_type,
 )
-from braket.default_simulator import KrausOperation
-from braket.default_simulator.gate_operations import GPhase
-from braket.default_simulator.openqasm.program_context import AbstractProgramContext
-import numpy as np
-from braket.ir.jaqcd.program_v1 import Results
-from braket.circuits.noise import Noise
 
 
 class BraketProgramContext(AbstractProgramContext):
