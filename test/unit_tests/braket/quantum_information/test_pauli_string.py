@@ -148,6 +148,10 @@ def test_eigenstate_invalid_signs(sign):
     ],
 )
 def test_dot(circ1, circ2, circ_res):
+    # Test operator overload
+    assert PauliString(circ1) * PauliString(circ2) == PauliString(circ_res)
+
+    # Test in-place computation
     circ1 = PauliString(circ1)
     circ1.dot(PauliString(circ2), inplace=True)
     assert circ1 == PauliString(circ_res)
@@ -164,6 +168,10 @@ def test_dot(circ1, circ2, circ_res):
     ],
 )
 def test_power(circ, n, circ_res):
+    # Test operator overload
+    assert (PauliString(circ) ** n) == PauliString(circ_res)
+
+    # Test in-place computation
     circ = PauliString(circ)
     circ.power(n, inplace=True)
     assert circ == PauliString(circ_res)

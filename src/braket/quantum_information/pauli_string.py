@@ -197,6 +197,25 @@ class PauliString:
             self._nontrivial = out_pauli_string._nontrivial
         return out_pauli_string
 
+    def __mul__(self, other: PauliString) -> PauliString:
+        """Right multiplication operator overload using `dot()`.
+
+        Returns the result of multiplying the current circuit by the argument on its right.
+
+        Args:
+            other (PauliString): The right multiplicand.
+
+        Returns:
+            PauliString: The resultant circuit from right multiplying `self` with `other`.
+
+        Raises:
+            ValueError: If the lengths of the Pauli Strings being multiplied differ.
+
+        See Also:
+            `braket.quantum_information.PauliString.dot()`
+        """
+        return self.dot(other)
+
     def power(self, n: int, inplace: bool = False) -> PauliString:
         """Composes circuit with itself n times.
 
@@ -222,6 +241,25 @@ class PauliString:
             self._qubit_count = pauli_other._qubit_count
             self._nontrivial = pauli_other._nontrivial
         return pauli_other
+
+    def __pow__(self, n: int) -> PauliString:
+        """Pow operator overload for circuit composition.
+
+        Syntactic sugar for `power()`.
+
+        Args:
+            n (int): The number of times to self-multiply. Must be greater than 0.
+
+        Returns:
+            PauliString: The circuit from right multiplying `self` with itself `n` times.
+
+        Raises:
+            ValueError: If `n <= 0`.
+
+        See Also:
+            `braket.quantum_information.PauliString.power()`
+        """
+        return self.power(n)
 
     def to_circuit(self) -> Circuit:
         """Returns circuit represented by this `PauliString`.
