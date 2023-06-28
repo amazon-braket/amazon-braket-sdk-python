@@ -1,6 +1,4 @@
 from functools import singledispatch, reduce
-from typing import Tuple
-import importlib
 from braket.circuits import Instruction, observables
 import braket.circuits.noises as noises
 from braket.circuits.gates import (
@@ -164,7 +162,7 @@ def get_observable(name: str):
     return getattr(observables, name.upper())()
 
 
-def get_tensor_prodct(observable):
+def get_tensor_product(observable):
     circuit_observable = [get_observable(obs) for obs in observable]
     return reduce(lambda obs1, obs2: obs1 @ obs2, circuit_observable)
 
