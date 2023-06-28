@@ -16,12 +16,13 @@ import sys
 
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
+from braket.devices import Devices
 
 logger = logging.getLogger("newLogger")  # create new logger
 logger.addHandler(logging.StreamHandler(stream=sys.stdout))  # configure to print to sys.stdout
 logger.setLevel(logging.DEBUG)  # print to sys.stdout all log messages with level DEBUG or above
 
-device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/sv1")
+device = AwsDevice(Devices.Amazon.SV1)
 
 bell = Circuit().h(0).cnot(0, 1)
 # pass in logger to device.run, enabling debugging logs to print to console
