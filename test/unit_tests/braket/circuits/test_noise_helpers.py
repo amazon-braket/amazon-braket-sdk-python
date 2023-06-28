@@ -596,10 +596,7 @@ def test_apply_multiple_noise_1QubitNoise_1(circuit_2qubit, noise_1qubit, noise_
 
 
 def test_apply_multiple_noise_1QubitNoise_2(circuit_2qubit, noise_1qubit, noise_1qubit_2):
-    circ = circuit_2qubit.apply_gate_noise(
-        noise_1qubit,
-        target_gates=[Gate.X],
-    ).apply_gate_noise(
+    circ = circuit_2qubit.apply_gate_noise(noise_1qubit, target_gates=[Gate.X],).apply_gate_noise(
         noise_1qubit_2,
         target_qubits=[0],
     )

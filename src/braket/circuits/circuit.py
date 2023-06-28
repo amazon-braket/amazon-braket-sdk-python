@@ -18,6 +18,7 @@ from numbers import Number
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy as np
+from braket.default_simulator.openqasm.interpreter import Interpreter
 from oqpy import Program as OqpyProgram
 
 from braket.circuits import compiler_directives
@@ -1127,6 +1128,16 @@ class Circuit:
             return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    @staticmethod
+    def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None):
+        from braket.circuits.braket_program_context import BraketProgramContext
+
+        return Interpreter(BraketProgramContext()).build_circuit(
+            source=source,
+            inputs=inputs,
+            is_file=False,
+        )
 
     def _to_jaqcd(self) -> JaqcdProgram:
         jaqcd_ir_type = IRType.JAQCD
