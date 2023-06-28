@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.45.0 (2023-06-28)
+
+### Features
+
+ * enum for device arns
+
 ## v1.44.0 (2023-06-26)
 
 ### Features
