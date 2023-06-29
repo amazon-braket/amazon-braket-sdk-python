@@ -40,6 +40,7 @@ from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
 from braket.parametric.free_parameter import FreeParameter
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.pulse import (
     ArbitraryWaveform,
     ConstantWaveform,
@@ -709,7 +710,7 @@ class AwsDevice(Device):
                 waveform_parameters |= {
                     val["name"]: float(val["value"])
                     if is_float(val["value"])
-                    else FreeParameter(val["value"])
+                    else FreeParameterExpression(val["value"])
                     for val in w["arguments"]
                 }
                 waveforms[wave_id] = DragGaussianWaveform(**waveform_parameters)
@@ -717,7 +718,7 @@ class AwsDevice(Device):
                 waveform_parameters |= {
                     val["name"]: float(val["value"])
                     if is_float(val["value"])
-                    else FreeParameter(val["value"])
+                    else FreeParameterExpression(val["value"])
                     for val in w["arguments"]
                 }
                 waveforms[wave_id] = GaussianWaveform(**waveform_parameters)
@@ -728,13 +729,13 @@ class AwsDevice(Device):
                         length = (
                             float(val["value"])
                             if is_float(val["value"])
-                            else FreeParameter(val["value"])
+                            else FreeParameterExpression(val["value"])
                         )
                     if val["name"] == "iq":
                         iq = (
                             complex(val["value"])
                             if is_float(val["value"])
-                            else FreeParameter(val["value"])
+                            else FreeParameterExpression(val["value"])
                         )
                 waveforms[wave_id] = ConstantWaveform(length, iq)
             else:
@@ -743,7 +744,7 @@ class AwsDevice(Device):
         return waveforms
 
     def _get_pulse_sequence(
-        self, calibration: str, waveforms: Dict[ArbitraryWaveform]
+        self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
     ) -> PulseSequence:
         calibration_sequence = PulseSequence()
         for instruction in range(len(calibration)):
@@ -780,7 +781,7 @@ class AwsDevice(Device):
                         duration = (
                             float(instr["arguments"][i]["value"])
                             if is_float(instr["arguments"][i]["value"])
-                            else FreeParameter(instr["arguments"][i]["value"])
+                            else FreeParameterExpression(instr["arguments"][i]["value"])
                         )
                 calibration_sequence = calibration_sequence.delay(frames, duration)
             elif instr["name"] == "shift_phase":
@@ -793,7 +794,7 @@ class AwsDevice(Device):
                         phase = (
                             float(argument["value"])
                             if is_float(argument["value"])
-                            else FreeParameter(argument["value"])
+                            else FreeParameterExpression(argument["value"])
                         )
                 calibration_sequence = calibration_sequence.shift_phase(frame, phase)
             elif instr["name"] == "shift_frequency":
@@ -806,7 +807,7 @@ class AwsDevice(Device):
                         frequency = (
                             float(argument["value"])
                             if is_float(argument["value"])
-                            else FreeParameter(argument["value"])
+                            else FreeParameterExpression(argument["value"])
                         )
                 calibration_sequence = calibration_sequence.shift_frequency(frame, frequency)
             else:
