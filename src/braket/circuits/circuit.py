@@ -1219,6 +1219,23 @@ class Circuit:
         from braket.circuits.gates import PulseGate
 
         program = oqpy.Program(None)
+
+        for instruction in self.instructions:
+            if isinstance(instruction.operator, PulseGate):
+                for frame in instruction.operator.pulse_sequence._frames.values():
+                    _validate_uniqueness(frames, frame)
+                    frames[frame.id] = frame
+                for waveform in instruction.operator.pulse_sequence._waveforms.values():
+                    _validate_uniqueness(waveforms, waveform)
+                    waveforms[waveform.id] = waveform
+            elif hasattr(type(instruction.operator), "angle"):
+                if native_gate_calibration is not None:
+                    key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
+                    if key in native_gate_calibration.calibration_data:
+                        ps = native_gate_calibration.get_pulse_sequence(key)
+                        bound_key = (type(instruction.operator)(instruction.operator.angle), instruction.target)
+                        native_gate_calibration._calibration_data |= {bound_key: ps(theta=instruction.operator.angle)}
+
         if native_gate_calibration is not None:
             for key, calibration in native_gate_calibration.calibration_data.items():
                 if isinstance(key, str):
@@ -1227,15 +1244,6 @@ class Circuit:
                     _validate_uniqueness(frames, frame)
                     frames[frame.id] = frame
                 for waveform in calibration._waveforms.values():
-                    _validate_uniqueness(waveforms, waveform)
-                    waveforms[waveform.id] = waveform
-
-        for instruction in self.instructions:
-            if isinstance(instruction.operator, PulseGate):
-                for frame in instruction.operator.pulse_sequence._frames.values():
-                    _validate_uniqueness(frames, frame)
-                    frames[frame.id] = frame
-                for waveform in instruction.operator.pulse_sequence._waveforms.values():
                     _validate_uniqueness(waveforms, waveform)
                     waveforms[waveform.id] = waveform
 
@@ -1251,6 +1259,11 @@ class Circuit:
                     if isinstance(key, str):
                         continue
                     gate, qubits = key
+
+                    # ignoring parametric gates
+                    if hasattr(gate, "angle") and isinstance(gate.angle, FreeParameter):
+                        continue
+
                     gate_name = gate._qasm_name
                     arguments = (
                         [calibration._format_parameter_ast(gate.angle)]
