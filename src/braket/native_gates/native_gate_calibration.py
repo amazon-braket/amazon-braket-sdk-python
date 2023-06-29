@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Dict, List, Optional, Tuple
 
 from braket.circuits.angled_gate import AngledGate
@@ -16,7 +17,7 @@ class NativeGateCalibration:
     def __init__(
         self,
         calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence],
-        fidelities: Dict[Tuple[Gate, QubitSet], float] = {},
+        fidelities: Optional[Dict[Tuple[Gate, QubitSet], float]] = {},
     ):
         self._calibration_data = calibration_json
         self._fidelities = fidelities
@@ -30,6 +31,15 @@ class NativeGateCalibration:
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
         """
         return self._calibration_data
+
+    def copy(self):
+        """
+        Returns a copy of the object.
+
+        Returns:
+            NativeGateCalibration: a copy of the calibrations.
+        """
+        return NativeGateCalibration(deepcopy(self._calibration_data), deepcopy(self._fidelities))
 
     def __len__(self):
         return len(self._calibration_data)
@@ -48,9 +58,14 @@ class NativeGateCalibration:
             A filtered NativeGateCalibration object.
         """
         keys = self._calibration_data.keys()
-        filtered_calibration_keys = [tup for tup in keys if isinstance(tup, tuple) and any(i in set(tup) for i in gates or qubits)]
+        filtered_calibration_keys = [
+            tup
+            for tup in keys
+            if isinstance(tup, tuple) and any(i in set(tup) for i in gates or qubits)
+        ]
         return NativeGateCalibration(
-            {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys}
+            {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},
+            {k: v for (k, v) in self._fidelities.items() if k in filtered_calibration_keys},
         )
 
     def get_pulse_sequence(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:

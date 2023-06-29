@@ -618,7 +618,9 @@ def _(
     openqasm_program = circuit.to_ir(
         ir_type=IRType.OPENQASM,
         serialization_properties=serialization_properties,
-        native_gate_calibration=native_gate_calibration,
+        native_gate_calibration=native_gate_calibration.copy()
+        if native_gate_calibration is not None
+        else None,
     )
 
     if inputs:

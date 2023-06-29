@@ -1233,8 +1233,13 @@ class Circuit:
                     key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
                     if key in native_gate_calibration.calibration_data:
                         ps = native_gate_calibration.get_pulse_sequence(key)
-                        bound_key = (type(instruction.operator)(instruction.operator.angle), instruction.target)
-                        native_gate_calibration._calibration_data |= {bound_key: ps(theta=instruction.operator.angle)}
+                        bound_key = (
+                            type(instruction.operator)(instruction.operator.angle),
+                            instruction.target,
+                        )
+                        native_gate_calibration._calibration_data |= {
+                            bound_key: ps(theta=instruction.operator.angle)
+                        }
 
         if native_gate_calibration is not None:
             for key, calibration in native_gate_calibration.calibration_data.items():
