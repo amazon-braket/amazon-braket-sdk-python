@@ -18,7 +18,6 @@ from numbers import Number
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy as np
-from braket.default_simulator.openqasm.interpreter import Interpreter
 from oqpy import Program as OqpyProgram
 
 from braket.circuits import compiler_directives
@@ -54,8 +53,10 @@ from braket.circuits.serialization import (
     SerializationProperties,
 )
 from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
+from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import _validate_uniqueness
 
@@ -1130,7 +1131,17 @@ class Circuit:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     @staticmethod
-    def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None):
+    def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None) -> Circuit:
+        """
+        Converts OpenQASM to Braket Circuit
+
+        Args:
+            source (str): OpenQASM string.
+            inputs (Optional[Dict[str, io_type]]): Inputs to the circuit.
+
+        Returns:
+            Circuit: braket sdk circuit.
+        """
         from braket.circuits.braket_program_context import BraketProgramContext
 
         return Interpreter(BraketProgramContext()).build_circuit(

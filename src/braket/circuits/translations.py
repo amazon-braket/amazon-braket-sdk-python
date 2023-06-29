@@ -1,113 +1,78 @@
-from functools import singledispatch, reduce
-from braket.circuits import Instruction, observables
-import braket.circuits.noises as noises
-from braket.circuits.gates import (
-    I,
-    H,
-    X,
-    Y,
-    Z,
-    CV,
-    CNot,
-    CY,
-    CZ,
-    ECR,
-    S,
-    Si,
-    T,
-    Ti,
-    V,
-    Vi,
-    PhaseShift,
-    CPhaseShift,
-    CPhaseShift00,
-    CPhaseShift01,
-    CPhaseShift10,
-    Rx,
-    Ry,
-    Rz,
-    Swap,
-    ISwap,
-    PSwap,
-    XY,
-    XX,
-    YY,
-    ZZ,
-    CCNot,
-    CSwap,
-    GPi,
-    GPi2,
-    MS,
-    Unitary,
-)
-import braket.circuits.result_types as ResultTypes
+from functools import reduce, singledispatch
+from typing import Union
 
+import braket.circuits.gates as braket_gates
+import braket.circuits.noises as noises
+import braket.circuits.result_types as ResultTypes
+import braket.ir.jaqcd.shared_models as models
+from braket.circuits import Instruction, Observable, observables
+from braket.default_simulator import KrausOperation
 from braket.default_simulator.noise_operations import (
-    BitFlip,
-    PhaseFlip,
-    GeneralizedAmplitudeDamping,
-    PhaseDamping,
     AmplitudeDamping,
+    BitFlip,
     Depolarizing,
+    GeneralizedAmplitudeDamping,
     PauliChannel,
-    TwoQubitDepolarizing,
+    PhaseDamping,
+    PhaseFlip,
     TwoQubitDephasing,
+    TwoQubitDepolarizing,
 )
 from braket.ir.jaqcd import (
+    AdjointGradient,
     Amplitude,
+    DensityMatrix,
     Expectation,
     Probability,
     Sample,
     StateVector,
-    DensityMatrix,
     Variance,
-    AdjointGradient,
 )
-
+from braket.ir.jaqcd.program_v1 import Results
 
 BRAKET_GATES = {
-    "i": I,
-    "h": H,
-    "x": X,
-    "y": Y,
-    "z": Z,
-    "cv": CV,
-    "cnot": CNot,
-    "cy": CY,
-    "cz": CZ,
-    "ecr": ECR,
-    "s": S,
-    "si": Si,
-    "t": T,
-    "ti": Ti,
-    "v": V,
-    "vi": Vi,
-    "phaseshift": PhaseShift,
-    "cphaseshift": CPhaseShift,
-    "cphaseshift00": CPhaseShift00,
-    "cphaseshift01": CPhaseShift01,
-    "cphaseshift10": CPhaseShift10,
-    "rx": Rx,
-    "ry": Ry,
-    "rz": Rz,
-    "swap": Swap,
-    "iswap": ISwap,
-    "pswap": PSwap,
-    "xy": XY,
-    "xx": XX,
-    "yy": YY,
-    "zz": ZZ,
-    "ccnot": CCNot,
-    "cswap": CSwap,
-    "gpi": GPi,
-    "gpi2": GPi2,
-    "ms": MS,
-    "unitary": Unitary,
+    "i": braket_gates.I,
+    "h": braket_gates.H,
+    "x": braket_gates.X,
+    "y": braket_gates.Y,
+    "z": braket_gates.Z,
+    "cv": braket_gates.CV,
+    "cnot": braket_gates.CNot,
+    "cy": braket_gates.CY,
+    "cz": braket_gates.CZ,
+    "ecr": braket_gates.ECR,
+    "s": braket_gates.S,
+    "si": braket_gates.Si,
+    "t": braket_gates.T,
+    "ti": braket_gates.Ti,
+    "v": braket_gates.V,
+    "vi": braket_gates.Vi,
+    "phaseshift": braket_gates.PhaseShift,
+    "cphaseshift": braket_gates.CPhaseShift,
+    "cphaseshift00": braket_gates.CPhaseShift00,
+    "cphaseshift01": braket_gates.CPhaseShift01,
+    "cphaseshift10": braket_gates.CPhaseShift10,
+    "rx": braket_gates.Rx,
+    "ry": braket_gates.Ry,
+    "rz": braket_gates.Rz,
+    "swap": braket_gates.Swap,
+    "iswap": braket_gates.ISwap,
+    "pswap": braket_gates.PSwap,
+    "xy": braket_gates.XY,
+    "xx": braket_gates.XX,
+    "yy": braket_gates.YY,
+    "zz": braket_gates.ZZ,
+    "ccnot": braket_gates.CCNot,
+    "cswap": braket_gates.CSwap,
+    "gpi": braket_gates.GPi,
+    "gpi2": braket_gates.GPi2,
+    "ms": braket_gates.MS,
+    "unitary": braket_gates.Unitary,
 }
 
 
 @singledispatch
-def braket_noise_gate_to_instruction(noise):
+def braket_noise_gate_to_instruction(noise: KrausOperation) -> Union[Instruction]:
     raise TypeError(f"Operation {type(noise).__name__} not supported")
 
 
@@ -158,17 +123,36 @@ def _(noise):
     return Instruction(noises.PhaseDamping(noise.gamma), target=noise.targets)
 
 
-def get_observable(name: str):
+@singledispatch
+def get_observable(obs: Union[models.Observable, list]) -> Observable:
+    raise NotImplementedError
+
+
+@get_observable.register(list)
+def _(obs):
+    raise NotImplementedError
+
+
+@get_observable.register(str)
+def _(name: str):
     return getattr(observables, name.upper())()
 
 
-def get_tensor_product(observable):
+def get_tensor_product(observable: Union[models.Observable, list]) -> Observable:
+    """Generate an braket circuit observable
+
+    Args:
+        observable (Union[Observable, list]): ir observable or a matrix
+
+    Returns:
+        Observable: braket circuit observable
+    """
     circuit_observable = [get_observable(obs) for obs in observable]
     return reduce(lambda obs1, obs2: obs1 @ obs2, circuit_observable)
 
 
 @singledispatch
-def braket_result_to_result_type(result):
+def braket_result_to_result_type(result: Results) -> None:
     raise TypeError(f"Result type {type(result).__name__} is not supported")
 
 

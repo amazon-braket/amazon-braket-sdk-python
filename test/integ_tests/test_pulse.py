@@ -184,7 +184,10 @@ def cz_pulse(
 
 
 def test_pulse_bell(arbitrary_waveform, device):
-    (a, b,) = (
+    (
+        a,
+        b,
+    ) = (
         10,
         113,
     )  # qubits used
@@ -229,7 +232,10 @@ def test_pulse_bell(arbitrary_waveform, device):
 
 
 def test_pulse_sequence(arbitrary_waveform, device):
-    (a, b,) = (
+    (
+        a,
+        b,
+    ) = (
         10,
         113,
     )  # qubits used
