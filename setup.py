@@ -28,8 +28,8 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-schemas>=1.17.0",
-        "amazon-braket-default-simulator>=1.14.0",
-        "oqpy~=0.1.1",
+        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@9b0a2a7c6a9b8a580ddc04f3d1a048dc47fac374#egg=amazon-braket-default-simulator",  # mcm-sim branch  # noqa E501
+        "oqpy @ git+https://github.com/ajberdy/oqpy.git@7e5885af6193009265c8195dad7553db02bdfd96#egg=oqpy",  # qubit-array branch  # noqa E501
         "setuptools",
         "backoff",
         "boltons",
@@ -40,6 +40,9 @@ setup(
         "openpulse",
         "openqasm3",
         "sympy",
+        "astunparse",
+        "gast",
+        "termcolor",
     ],
     extras_require={
         "test": [
@@ -59,7 +62,7 @@ setup(
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
             "tox",
-        ]
+        ],
     },
     include_package_data=True,
     url="https://github.com/aws/amazon-braket-sdk-python",
