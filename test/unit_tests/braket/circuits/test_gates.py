@@ -35,7 +35,7 @@ from braket.ir.jaqcd.shared_models import (
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 
 
-class DoubleAngle:
+class TripleAngle:
     pass
 
 
@@ -93,7 +93,7 @@ testdata = [
     (Gate.ZZ, "zz", ir.ZZ, [DoubleTarget, Angle], {}),
     (Gate.GPi, "gpi", None, [SingleTarget, Angle], {}),
     (Gate.GPi2, "gpi2", None, [SingleTarget, Angle], {}),
-    (Gate.MS, "ms", None, [DoubleTarget, DoubleAngle], {}),
+    (Gate.MS, "ms", None, [DoubleTarget, TripleAngle], {}),
     (
         Gate.Unitary,
         "unitary",
@@ -163,8 +163,8 @@ def angle_valid_input(**kwargs):
     return {"angle": 0.123}
 
 
-def double_angle_valid_input(**kwargs):
-    return {"angle_1": 0.123, "angle_2": 4.567}
+def triple_angle_valid_input(**kwargs):
+    return {"angle_1": 0.123, "angle_2": 4.567, "angle_3": 8.910}
 
 
 def single_control_valid_input(**kwargs):
@@ -196,7 +196,7 @@ valid_ir_switcher = {
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
-    "DoubleAngle": double_angle_valid_input,
+    "TripleAngle": triple_angle_valid_input,
     "SingleControl": single_control_valid_input,
     "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
@@ -244,7 +244,7 @@ def create_valid_target_input(irsubclasses):
             qubit_set = list(single_control_valid_input().values()) + qubit_set
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
-        elif subclass in (Angle, TwoDimensionalMatrix, DoubleAngle):
+        elif subclass in (Angle, TwoDimensionalMatrix, TripleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -256,8 +256,8 @@ def create_valid_gate_class_input(irsubclasses, **kwargs):
     input = {}
     if Angle in irsubclasses:
         input.update(angle_valid_input())
-    if DoubleAngle in irsubclasses:
-        input.update(double_angle_valid_input())
+    if TripleAngle in irsubclasses:
+        input.update(triple_angle_valid_input())
     if TwoDimensionalMatrix in irsubclasses:
         input.update(two_dimensional_matrix_valid_input(**kwargs))
     return input
@@ -282,7 +282,7 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif subclass in (Angle, TwoDimensionalMatrix, DoubleAngle):
+        elif subclass in (Angle, TwoDimensionalMatrix, TripleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")
@@ -808,13 +808,13 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             Gate.MS(angle_1=0.17, angle_2=3.45),
             [4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "ms(0.17, 3.45) q[4], q[5];",
+            f"ms(0.17, 3.45, {np.pi / 2}) q[4], q[5];",
         ),
         (
             Gate.MS(angle_1=0.17, angle_2=3.45),
             [4, 5],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
-            "ms(0.17, 3.45) $4, $5;",
+            f"ms(0.17, 3.45, {np.pi / 2}) $4, $5;",
         ),
     ],
 )
@@ -925,17 +925,17 @@ def test_large_unitary():
 
 @pytest.mark.parametrize("gate", parameterizable_gates)
 def test_bind_values(gate):
-    double_angled = gate.__name__ in ("MS",)
-    num_params = 2 if double_angled else 1
+    triple_angled = gate.__name__ in ("MS",)
+    num_params = 3 if triple_angled else 1
     thetas = [FreeParameter(f"theta_{i}") for i in range(num_params)]
-    mapping = dict((f"theta_{i}", i) for i in range(num_params))
+    mapping = {f"theta_{i}": i for i in range(num_params)}
     param_gate = gate(*thetas)
     new_gate = param_gate.bind_values(**mapping)
     expected = gate(*range(num_params))
 
     assert type(new_gate) == type(param_gate) and new_gate == expected
-    if double_angled:
-        for angle in new_gate.angle_1, new_gate.angle_2:
+    if triple_angled:
+        for angle in new_gate.angle_1, new_gate.angle_2, new_gate.angle_3:
             assert type(angle) == float
     else:
         assert type(new_gate.angle) == float
@@ -1023,7 +1023,7 @@ def test_pulse_gate_to_matrix():
             QubitSet(0),
             QubitSet([1, 2]),
             None,
-            "ctrl(2) @ ms(0.17, 3.45) q[1], q[2], q[0];",
+            f"ctrl(2) @ ms(0.17, 3.45, {np.pi / 2}) q[1], q[2], q[0];",
         ),
         (
             Gate.CCNot(),
