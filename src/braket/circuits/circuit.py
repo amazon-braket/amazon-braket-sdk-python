@@ -460,9 +460,10 @@ class Circuit:
 
         if self._check_for_params(instruction):
             for param in instruction.operator.parameters:
-                free_params = param.expression.free_symbols
-                for parameter in free_params:
-                    self._parameters.add(FreeParameter(parameter.name))
+                if isinstance(param, FreeParameterExpression):
+                    free_params = param.expression.free_symbols
+                    for parameter in free_params:
+                        self._parameters.add(FreeParameter(parameter.name))
         self._moments.add(instructions_to_add)
 
         return self
