@@ -740,7 +740,6 @@ class AwsDevice(Device):
                 waveforms[wave_id] = ConstantWaveform(length, iq)
             else:
                 raise ValueError(f"The waveform {wave_id} of cannot be constructed")
-            waveforms[wave_id]._autodeclare(False)
         return waveforms
 
     def _get_pulse_sequence(

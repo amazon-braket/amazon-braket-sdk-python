@@ -55,9 +55,6 @@ class Waveform(ABC):
             ndarray: The sample amplitudes for this waveform.
         """
 
-    def _autodeclare(self, needs_declaration: bool = True):
-        self._needs_declaration = needs_declaration
-
 
 class ArbitraryWaveform(Waveform):
     """An arbitrary waveform with amplitudes at each timestep explicitly specified using
@@ -86,12 +83,7 @@ class ArbitraryWaveform(Waveform):
         Returns:
             OQPyExpression: The OQPyExpression.
         """
-        kwargs = (
-            {"needs_declaration": self._needs_declaration}
-            if hasattr(self, "_needs_declaration")
-            else {}
-        )
-        return WaveformVar(init_expression=self.amplitudes, name=self.id, **kwargs)
+        return WaveformVar(init_expression=self.amplitudes, name=self.id)
 
     def sample(self, dt: float) -> np.ndarray:
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
@@ -157,15 +149,9 @@ class ConstantWaveform(Waveform, Parameterizable):
         constant_generator = declare_waveform_generator(
             "constant", [("length", duration), ("iq", complex128)]
         )
-        kwargs = (
-            {"needs_declaration": self._needs_declaration}
-            if hasattr(self, "_needs_declaration")
-            else {}
-        )
         return WaveformVar(
             init_expression=constant_generator(_map_to_oqpy_type(self.length, True), self.iq),
             name=self.id,
-            **kwargs,
         )
 
     def sample(self, dt: float) -> np.ndarray:
@@ -262,11 +248,6 @@ class DragGaussianWaveform(Waveform, Parameterizable):
                 ("zero_at_edges", bool_),
             ],
         )
-        kwargs = (
-            {"needs_declaration": self._needs_declaration}
-            if hasattr(self, "_needs_declaration")
-            else {}
-        )
         return WaveformVar(
             init_expression=drag_gaussian_generator(
                 _map_to_oqpy_type(self.length, True),
@@ -276,7 +257,6 @@ class DragGaussianWaveform(Waveform, Parameterizable):
                 self.zero_at_edges,
             ),
             name=self.id,
-            **kwargs,
         )
 
     def sample(self, dt: float) -> np.ndarray:
@@ -378,11 +358,6 @@ class GaussianWaveform(Waveform, Parameterizable):
                 ("zero_at_edges", bool_),
             ],
         )
-        kwargs = (
-            {"needs_declaration": self._needs_declaration}
-            if hasattr(self, "_needs_declaration")
-            else {}
-        )
         return WaveformVar(
             init_expression=gaussian_generator(
                 _map_to_oqpy_type(self.length, True),
@@ -391,7 +366,6 @@ class GaussianWaveform(Waveform, Parameterizable):
                 self.zero_at_edges,
             ),
             name=self.id,
-            **kwargs,
         )
 
     def sample(self, dt: float) -> np.ndarray:
