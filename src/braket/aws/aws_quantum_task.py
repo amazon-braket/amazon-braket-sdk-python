@@ -146,8 +146,8 @@ class AwsQuantumTask(QuantumTask):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for user defined gate
-                calibration.
+            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for
+                user defined gate calibration.
                 Default: None.
 
         Returns:

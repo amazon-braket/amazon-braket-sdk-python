@@ -817,8 +817,8 @@ class AwsDevice(Device):
         self, calibration_data: Dict
     ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
-        Takes the json string from the device calibration URL and returns a structured dictionary of corresponding
-        BDK objects.
+        Takes the json string from the device calibration URL and returns a structured dictionary of
+        corresponding BDK objects.
 
         Args:
             calibration_json (Dict): The data to be parsed.
