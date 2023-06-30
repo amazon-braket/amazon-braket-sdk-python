@@ -501,18 +501,6 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
-    if native_gate_calibration is not None:
-        for key, calibration in native_gate_calibration.calibration_data.items():
-            prog = pulse_sequence._program
-            for wf in calibration._waveforms.values():
-                prog.declare(wf._to_oqpy_expression(), encal=True)
-            gate, qubits = key
-            gate_name = gate._qasm_name
-            arguments = [gate.angle] if hasattr(gate, "angle") else None
-            with oqpy.defcal(
-                prog, [oqpy.PhysicalQubits[int(qb)] for qb in qubits], gate_name, arguments
-            ):
-                prog += calibration._program
     create_task_kwargs.update({"action": OpenQASMProgram(source=pulse_sequence.to_ir()).json()})
     print(create_task_kwargs)
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
