@@ -146,12 +146,20 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             node (ast.DelayInstruction): The classical declaration.
             context (_ParseState): The parse state context.
         """
-        # TODO: delay with qubits should act like having a barrier before (see OpenQASM3 spec)
         duration = self.visit(node.duration, context)
         frames = self._get_frame_parameters(node.qubits, context)
+        if len(frames) == 0:
+            # barrier without arguments is applied to all the frames of the context
+            frames = list(context.frame_data.keys())
+        dts = [context.frame_data[frame_id].dt for frame_id in frames]
+        max_time = max([context.frame_data[frame_id].current_time for frame_id in frames])
+        # All frames are delayed till the first multiple of the LCM([port.dts])
+        # after the longest time of all considered frames
+        lcm = _lcm_floats(*dts)
+        barrier_time = _ceil_approx(max_time / lcm) * lcm
+
         for frame_id in frames:
-            frame_data = context.frame_data[frame_id]
-            self._delay_frame(frame_id, frame_data.current_time + duration, context)
+            self._delay_frame(frame_id, barrier_time + duration, context)
 
     def visit_QuantumBarrier(self, node: ast.QuantumBarrier, context: _ParseState) -> None:
         """Visit a Quantum Barrier.
@@ -172,6 +180,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         # after the longest time of all considered frames
         lcm = _lcm_floats(*dts)
         barrier_time = _ceil_approx(max_time / lcm) * lcm
+
         for frame_id in frames:
             self._delay_frame(frame_id, barrier_time, context)
 

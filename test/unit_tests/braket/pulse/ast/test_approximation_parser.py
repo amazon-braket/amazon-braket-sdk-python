@@ -56,7 +56,6 @@ def test_delay(port):
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
 
-@pytest.mark.xfail()
 def test_delay_multiple_frames(port):
     frame1 = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     frame2 = Frame(frame_id="frame2", port=port, frequency=1e8, phase=0, is_predefined=False)
@@ -129,7 +128,6 @@ def test_delay_multiple_frames(port):
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
 
-@pytest.mark.xfail()
 def test_delay_qubits(port):
     frame1 = Frame(frame_id="q0_frame", port=port, frequency=1e8, phase=0, is_predefined=False)
     frame2 = Frame(frame_id="q0_q1_frame", port=port, frequency=1e8, phase=0, is_predefined=False)
@@ -202,7 +200,6 @@ def test_delay_qubits(port):
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
     assert list(parser.amplitudes.keys()) == ["q0_frame", "q0_q1_frame"]  # no frame belonging to $2
-    assert False
 
 
 def test_predefined_frame(port):
