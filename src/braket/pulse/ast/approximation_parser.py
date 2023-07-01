@@ -57,7 +57,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         self.frequencies = defaultdict(TimeSeries)
         self.phases = defaultdict(TimeSeries)
         context = _ParseState(variables=dict(), frame_data=_init_frame_data(frames))
-        self._qubit_frames_mapping: Dict[str, str] = _init_qubit_frame_mapping(frames)
+        self._qubit_frames_mapping: Dict[str, List[str]] = _init_qubit_frame_mapping(frames)
         self.visit(program.to_ast(include_externs=False), context)
 
     def visit(
@@ -75,15 +75,14 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
     def _get_frame_parameters(
         self, parameters: List[ast.Expression], context: _ParseState
     ) -> Union[KeysView, List[str]]:
-        # TODO: change frame_ids to a set
-        frame_ids = []
+        frame_ids = set()
         for expression in parameters:
             identifier_name = self.visit(expression, context)
             if match := re.search(r"^\$[0-9]+$", identifier_name):
                 qubit_number = match.group()[1:]
-                frame_ids += self._qubit_frames_mapping.get(qubit_number, [])
+                frame_ids.update(self._qubit_frames_mapping.get(qubit_number, []))
             else:
-                frame_ids.append(identifier_name)
+                frame_ids.add(identifier_name)
         return frame_ids
 
     def _delay_frame(self, frame_id: str, to_delay_time: float, context: _ParseState) -> None:
@@ -465,7 +464,7 @@ def _init_frame_data(frames: Dict[str, Frame]) -> Dict[str, _FrameState]:
     return frame_states
 
 
-def _init_qubit_frame_mapping(frames: Dict[str, Frame]) -> Dict[str, str]:
+def _init_qubit_frame_mapping(frames: Dict[str, Frame]) -> Dict[str, List[str]]:
     mapping = {}
     for frameId in frames.keys():
         if m := (
