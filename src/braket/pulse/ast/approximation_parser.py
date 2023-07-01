@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, KeysView, List, Optional, Union
@@ -56,6 +57,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         self.frequencies = defaultdict(TimeSeries)
         self.phases = defaultdict(TimeSeries)
         context = _ParseState(variables=dict(), frame_data=_init_frame_data(frames))
+        self._qubit_frames_mapping: Dict[str, str] = _init_qubit_frame_mapping(frames)
         self.visit(program.to_ast(include_externs=False), context)
 
     def visit(
@@ -73,9 +75,15 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
     def _get_frame_parameters(
         self, parameters: List[ast.Expression], context: _ParseState
     ) -> Union[KeysView, List[str]]:
+        # TODO: change frame_ids to a set
         frame_ids = []
         for expression in parameters:
-            frame_ids.append(self.visit(expression, context))
+            identifier_name = self.visit(expression, context)
+            if match := re.search(r"^\$[0-9]+$", identifier_name):
+                qubit_number = match.group()[1:]
+                frame_ids += self._qubit_frames_mapping.get(qubit_number, [])
+            else:
+                frame_ids.append(identifier_name)
         return frame_ids
 
     def _delay_frame(self, frame_id: str, to_delay_time: float, context: _ParseState) -> None:
@@ -139,6 +147,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             node (ast.DelayInstruction): The classical declaration.
             context (_ParseState): The parse state context.
         """
+        # TODO: delay with qubits should act like having a barrier before (see OpenQASM3 spec)
         duration = self.visit(node.duration, context)
         frames = self._get_frame_parameters(node.qubits, context)
         for frame_id in frames:
@@ -454,6 +463,20 @@ def _init_frame_data(frames: Dict[str, Frame]) -> Dict[str, _FrameState]:
             frame.port.dt, frame.frequency, frame.phase % (2 * np.pi)
         )
     return frame_states
+
+
+def _init_qubit_frame_mapping(frames: Dict[str, Frame]) -> Dict[str, str]:
+    mapping = {}
+    for frameId in frames.keys():
+        if m := (
+            re.search(r"q(\d+)_q(\d+)_[a-z_]+", frameId) or re.search(r"[rq](\d+)_[a-z_]+", frameId)
+        ):
+            for qubit in m.groups():
+                if qubit in mapping:
+                    mapping[qubit].append(frameId)
+                else:
+                    mapping[qubit] = [frameId]
+    return mapping
 
 
 def _lcm_floats(*dts: List[float]) -> float:
