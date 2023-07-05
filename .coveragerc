@@ -9,6 +9,7 @@ omit =
     **/braket/schema_common/*
     **/braket/task_result/*
     **/braket/simulator/*
+    **/autoqasm/autograph/*
     */site-packages/braket/*
 
 [paths]
