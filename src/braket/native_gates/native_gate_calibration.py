@@ -11,7 +11,7 @@ from braket.pulse.pulse_sequence import PulseSequence
 
 class NativeGateCalibration:
     """
-    A collection of gate calibrations for a QPU with the timestamp of when the data was collected.
+    A collection of gate calibrations for a QPU.
     """
 
     def __init__(
@@ -122,3 +122,9 @@ class NativeGateCalibration:
             gate_to_qasm += f"(angle {gate_key[0].angle})"
         qubit_to_qasm = " ".join([f"${int(q)}" for q in gate_key[1]])
         return " ".join(["defcal", gate_to_qasm, qubit_to_qasm])
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, NativeGateCalibration)
+            and other.calibration_data == self.calibration_data
+        )

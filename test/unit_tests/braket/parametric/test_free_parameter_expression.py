@@ -49,11 +49,7 @@ def test_equality_str():
     param_values = {"theta": 1}
     assert expr_1 == expr_2
     assert expr_1.subs(param_values) == expr_2.subs(param_values)
-    assert (
-        hasattr(expr_1.expression, "free_symbols")
-        == hasattr(expr_2.expression, "free_symbols")
-        == True
-    )
+    assert hasattr(expr_1.expression, "free_symbols") == hasattr(expr_2.expression, "free_symbols")
 
 
 @pytest.mark.xfail(raises=ValueError)

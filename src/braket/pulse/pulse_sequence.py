@@ -350,6 +350,9 @@ class PulseSequence:
             param_values[str(key)] = val
         return self.make_bound_pulse_sequence(param_values)
 
+    def __eq__(self, other):
+        return isinstance(other, PulseSequence) and self.parameters == other.parameters and self._program == other._program
+
 
 def _validate_uniqueness(
     mapping: Dict[str, Any], values: Union[Frame, Waveform, List[Frame], List[Waveform]]

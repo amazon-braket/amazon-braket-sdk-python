@@ -20,7 +20,6 @@ from logging import Logger, getLogger
 from typing import Any, Dict, Optional, Union
 
 import boto3
-import oqpy
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
