@@ -2445,3 +2445,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
             "b[1] = measure $1;",
         ]
     )
+
+
+def test_free_param_float_mix():
+    Circuit().ms(0, 1, 0.1, FreeParameter("theta"))
