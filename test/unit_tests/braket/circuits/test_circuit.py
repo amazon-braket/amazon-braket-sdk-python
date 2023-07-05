@@ -1492,6 +1492,42 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
             ),
         ),
         (
+            Circuit().x(0, control=1),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                    [0.0, 0.0, 1.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().x(1, control=0, power=0.5),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 0.5 + 0.5j, 0.5 - 0.5j],
+                    [0.0, 0.0, 0.5 - 0.5j, 0.5 + 0.5j],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
+            Circuit().x(1, control=0, power=2),
+            np.array(
+                [
+                    [1.0, 0.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0, 0.0],
+                    [0.0, 0.0, 0.0, 1.0],
+                ],
+                dtype=complex,
+            ),
+        ),
+        (
             Circuit().ccnot(1, 2, 0),
             np.array(
                 [
