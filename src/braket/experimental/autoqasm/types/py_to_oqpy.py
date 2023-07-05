@@ -13,14 +13,11 @@
 
 """Type conversions between Python and the internal oqpy representation for types."""
 
-import ast as python_ast
 import typing
-from collections.abc import Iterable
 from functools import singledispatch
 from typing import Any, Union
 
 import numpy as np
-import openqasm3.ast as qasm_ast
 import oqpy
 
 from braket.experimental.autoqasm import program
@@ -45,14 +42,22 @@ def map_type(python_type: type) -> type:
     if issubclass(origin_type, (float, np.floating)):
         return oqpy.FloatVar
     if issubclass(origin_type, list) and issubclass(type_args[0], (int, np.integer)):
-        return oqpy.ArrayVar[oqpy.IntVar, 10]  # TODO don't use fixed length 10
+        # TODO: Update array length to match the input rather than hardcoding
+        #       OQPY and QASM require arrays have a set length. python doesn't require this,
+        #       so the length of the array is indeterminate.
+        #       At this point we only have access to the _parameter_ (type hint), not the
+        #       _argument_ (concrete value), which is the only place length information is stored
+        # Here's where the info is stored for oqpy variables:
+        # ctx = program.get_program_conversion_context()
+        # dims = ctx.get_oqpy_program().declared_vars[name_of_var].dimensions
+        return oqpy.ArrayVar[oqpy.IntVar, 10]
 
     # TODO add all supported types
     return python_type
 
 
 @singledispatch
-def wrap_value(node: Any, **kwargs: dict) -> Any:
+def wrap_value(node: Any) -> Any:
     """Wraps an object in an oqpy variable.
 
     Args:
@@ -73,7 +78,7 @@ def wrap_value(node: Any, **kwargs: dict) -> Any:
 
 
 @wrap_value.register(bool)
-def _(node: bool, **kwargs: dict):
+def _(node: bool):
     return oqpy.BoolVar(
         node, name=program.get_program_conversion_context().next_var_name(oqpy.BoolVar)
     )
@@ -81,7 +86,7 @@ def _(node: bool, **kwargs: dict):
 
 @wrap_value.register(int)
 @wrap_value.register(np.integer)
-def _(node: Union[int, np.integer], **kwargs: dict):
+def _(node: Union[int, np.integer]):
     return oqpy.IntVar(
         node, name=program.get_program_conversion_context().next_var_name(oqpy.IntVar)
     )
@@ -89,91 +94,22 @@ def _(node: Union[int, np.integer], **kwargs: dict):
 
 @wrap_value.register(float)
 @wrap_value.register(np.floating)
-def _(node: Union[float, np.floating], **kwargs: dict):
+def _(node: Union[float, np.floating]):
     return oqpy.FloatVar(
         node, name=program.get_program_conversion_context().next_var_name(oqpy.FloatVar)
     )
 
 
 @wrap_value.register
-def _(node: Iterable, **kwargs: dict):
-    # TODO: pass base_type to ArrayVar constructor
-    return oqpy.ArrayVar(
-        node,
-        dimensions=list(np.shape(node)),
-        name=program.get_program_conversion_context().next_var_name(oqpy.ArrayVar),
-    )
-
-
-@wrap_value.register
-def _(node: oqpy.base.Var, **kwargs: dict):
+def _(node: oqpy.base.Var):
     return node
 
 
 @wrap_value.register
-def _(node: oqpy.base.OQPyExpression, **kwargs: dict):
+def _(node: oqpy.base.OQPyExpression):
     return node
 
 
 @wrap_value.register
-def _(node: python_ast.Constant, **kwargs: dict):
-    return node.value
-
-
-@wrap_value.register
-def _(node: python_ast.Name, **kwargs: dict):
-    return oqpy.classical_types.Identifier(node.id)
-
-
-@wrap_value.register
-def _(node: python_ast.BinOp, **kwargs: dict):
-    return wrap_value(node.op, left=node.left, right=node.right)
-
-
-@wrap_value.register
-def _(node: python_ast.Add, **kwargs: dict):
-    left = kwargs["left"]
-    right = kwargs["right"]
-    return oqpy.base.OQPyBinaryExpression(
-        getattr(qasm_ast.BinaryOperator, "+"),
-        wrap_value(left),
-        wrap_value(right),
-    )
-
-
-@wrap_value.register
-def _(node: python_ast.Sub, **kwargs: dict):
-    left = kwargs["left"]
-    right = kwargs["right"]
-    return oqpy.base.OQPyBinaryExpression(
-        getattr(qasm_ast.BinaryOperator, "-"),
-        wrap_value(left),
-        wrap_value(right),
-    )
-
-
-@wrap_value.register
-def _(node: python_ast.Call, **kwargs: dict):
-    if node.func.id == "range":
-        arg_values = [wrap_value(arg) for arg in node.args]
-        return range(*arg_values)
-
-
-@wrap_value.register
-def _(node: python_ast.Compare, **kwargs: dict):
-    if len(node.ops) > 1:
-        raise NotImplementedError(node)
-    op = node.ops[0]
-    op_map = {
-        python_ast.Eq: "==",
-        python_ast.NotEq: "!=",
-        python_ast.Lt: "<",
-        python_ast.LtE: "<=",
-        python_ast.Gt: ">",
-        python_ast.GtE: ">=",
-    }
-    return oqpy.base.OQPyBinaryExpression(
-        getattr(qasm_ast.BinaryOperator, op_map[type(op)]),
-        wrap_value(node.left),
-        wrap_value(node.comparators[0]),
-    )
+def _(node: program.Program):
+    return node
