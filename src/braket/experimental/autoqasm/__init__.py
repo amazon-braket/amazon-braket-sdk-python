@@ -40,9 +40,7 @@ The Python code above outputs the following OpenQASM program:
     result[1] = measure __qubits__[1];
 """
 
-from oqpy import BitVar  # noqa: F401
-from oqpy import FloatVar  # noqa: F401
-from oqpy import IntVar  # noqa: F401
+from oqpy import ArrayVar, BitVar, BoolVar, FloatVar, IntVar  # noqa: F401
 
 from . import api, constants, gates, operators, types  # noqa: F401
 from .api import function  # noqa: F401

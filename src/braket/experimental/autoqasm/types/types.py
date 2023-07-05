@@ -19,7 +19,7 @@ import oqpy.base
 
 
 def is_qasm_type(val: Any) -> bool:
-    """Returns whether the provided object is of a QASM type
+    """Returns whether the provided object is of a QASM type or is itself a QASM type
     which receives special treatment by AutoQASM.
 
     Args:
@@ -28,10 +28,14 @@ def is_qasm_type(val: Any) -> bool:
     Returns:
         bool: Whether the object is a QASM type.
     """
-    return isinstance(
-        val,
-        (oqpy.Range, oqpy._ClassicalVar, oqpy.base.OQPyExpression),
-    )
+    try:
+        if issubclass(val, (oqpy.Range, oqpy._ClassicalVar, oqpy.base.OQPyExpression)):
+            return True
+    except TypeError:
+        # `val` is not a class
+        pass
+
+    return isinstance(val, (oqpy.Range, oqpy._ClassicalVar, oqpy.base.OQPyExpression))
 
 
 def qasm_range(start: int, stop: Optional[int] = None, step: Optional[int] = 1) -> oqpy.Range:

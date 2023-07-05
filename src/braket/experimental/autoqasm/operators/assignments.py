@@ -14,6 +14,7 @@
 
 """Operators for assignment statements."""
 
+import copy
 from typing import Any
 
 import oqpy
@@ -62,7 +63,9 @@ def assign_stmt(target_name: str, value: Any) -> Any:
                 # Set to `value.init_expression` to avoid declaring an unnecessary variable.
                 oqpy_program.set(target, value.init_expression)
         else:
-            target = type(value)(name=target_name, size=value.size)
+            target = copy.copy(value)
+            target.init_expression = None
+            target.name = target_name
 
             if is_value_used:
                 oqpy_program.declare(target)
