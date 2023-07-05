@@ -1504,7 +1504,7 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
             ),
         ),
         (
-            Circuit().x(1, control=0, power=.5),
+            Circuit().x(1, control=0, power=0.5),
             np.array(
                 [
                     [1.0, 0.0, 0.0, 0.0],
