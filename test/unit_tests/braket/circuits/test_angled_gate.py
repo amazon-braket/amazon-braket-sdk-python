@@ -18,7 +18,7 @@ import pytest
 from pydantic import BaseModel
 
 from braket.circuits import AngledGate, FreeParameter, FreeParameterExpression, Gate
-from braket.circuits.angled_gate import DoubleAngledGate
+from braket.circuits.angled_gate import DoubleAngledGate, TripleAngledGate
 
 
 @pytest.fixture
@@ -140,6 +140,11 @@ def test_double_angle_is_none():
         DoubleAngledGate(qubit_count=1, ascii_symbols=["foo"], angle_1=None, angle_2=1)
 
 
+def test_triple_angle_is_none():
+    with pytest.raises(ValueError, match="angles must not be None"):
+        TripleAngledGate(qubit_count=1, ascii_symbols=["foo"], angle_1=None, angle_2=1, angle_3=2)
+
+
 def test_double_angle_equality():
     gate = DoubleAngledGate(angle_1=0.15, angle_2=3, qubit_count=1, ascii_symbols=["bar"])
     equal_gate = DoubleAngledGate(angle_1=0.15, angle_2=3, qubit_count=1, ascii_symbols=["bar"])
@@ -172,3 +177,18 @@ def test_double_angle_repr():
         repr(DoubleAngledGate(qubit_count=1, ascii_symbols=["foo"], angle_1=1, angle_2=2))
         == "DoubleAngledGate('angles': (1.0, 2.0), 'qubit_count': 1)"
     )
+
+
+def test_triple_angle_repr():
+    assert (
+        repr(
+            TripleAngledGate(qubit_count=1, ascii_symbols=["foo"], angle_1=1, angle_2=2, angle_3=3)
+        )
+        == "TripleAngledGate('angles': (1.0, 2.0, 3.0), 'qubit_count': 1)"
+    )
+
+
+def test_double_angle_parameters():
+    assert DoubleAngledGate(
+        qubit_count=1, ascii_symbols=["foo"], angle_1=1, angle_2=2
+    ).parameters == [1, 2]

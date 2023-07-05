@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.47.0 (2023-06-30)
+
+### Features
+
+ * add optional third angle to MS gate
+
+### Bug Fixes and Other Changes
+
+ * mixed free parameters and floats
+
+## v1.46.0 (2023-06-29)
+
+### Features
+
+ * add string support for FreeParameterExpressions
+
+## v1.45.0 (2023-06-28)
+
+### Features
+
+ * enum for device arns
+
 ## v1.44.0 (2023-06-26)
 
 ### Features
