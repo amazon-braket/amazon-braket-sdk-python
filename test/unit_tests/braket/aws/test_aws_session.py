@@ -15,6 +15,7 @@ import json
 import os
 import tempfile
 import time
+from http.client import HTTPMessage
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -22,7 +23,6 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 from botocore.stub import Stubber
-from http.client import HTTPMessage
 
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
@@ -1327,5 +1327,4 @@ def test_add_braket_user_agent(aws_session):
     user_agent = "newAgent/1.0"
     aws_session.add_braket_user_agent(user_agent)
     aws_session.add_braket_user_agent(user_agent)
-    # assert aws_session.braket_client._client_config.user_agent.count(user_agent) == 1
     aws_session._braket_user_agents.count(user_agent) == 1

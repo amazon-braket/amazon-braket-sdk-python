@@ -193,7 +193,7 @@ class AwsSession(object):
                 "User-Agent", f"{initial_user_agent} {self._braket_user_agents}"
             )
         except KeyError:
-            request.headers.add_header("User-Agent",self._braket_user_agents)
+            request.headers.add_header("User-Agent", self._braket_user_agents)
 
     @staticmethod
     def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:
