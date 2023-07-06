@@ -1143,7 +1143,9 @@ class Circuit:
         Returns:
             Circuit: braket sdk circuit.
         """
-        from braket.circuits.braket_program_context import BraketProgramContext as _BraketProgramContext
+        from braket.circuits.braket_program_context import (
+            BraketProgramContext as _BraketProgramContext,
+        )
 
         return Interpreter(_BraketProgramContext()).build_circuit(
             source=source,
