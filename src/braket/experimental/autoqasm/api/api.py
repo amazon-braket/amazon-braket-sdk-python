@@ -68,6 +68,7 @@ Keyword Args:
     wrapper_factory = convert_wrapper(
         recursive=False,
         optional_features=(
+            converter.Feature.ASSERT_STATEMENTS,
             converter.Feature.LISTS,
             converter.Feature.EQUALITY_OPERATORS,
         ),

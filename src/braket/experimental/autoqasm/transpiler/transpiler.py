@@ -235,14 +235,11 @@ def converted_call(
 
     target_entity, effective_args, exc = _inspect_callable(f, args)
     if exc:
-        return _fall_back_unconverted(f, args, kwargs, options, exc)
-
-    if _is_permanently_allowed_code(target_entity):
-        return _call_unconverted(f, args, kwargs, options)
+        raise exc
 
     converted_f, exc = _try_convert_actual(target_entity, effective_args, kwargs, options)
     if exc:
-        return _fall_back_unconverted(f, args, kwargs, options, exc)
+        raise exc
 
     with StackTraceMapper(converted_f), tf_stack.CurrentModuleFilter():
         try:
@@ -305,19 +302,6 @@ def _inspect_callable(f: Callable, args: tuple) -> Tuple[Callable, tuple, Option
         exc = e
 
     return target_entity, effective_args, exc
-
-
-def _is_permanently_allowed_code(target_entity: Callable) -> bool:
-    if not hasattr(target_entity, "__code__"):
-        logging.log(2, "Permanently allowed: %s: native binding", target_entity)
-        return True
-    elif (
-        hasattr(target_entity.__code__, "co_filename")
-        and target_entity.__code__.co_filename == "<string>"
-    ):
-        logging.log(2, "Permanently allowed: %s: dynamic code (exec?)", target_entity)
-        return True
-    return False
 
 
 def _try_convert_actual(
