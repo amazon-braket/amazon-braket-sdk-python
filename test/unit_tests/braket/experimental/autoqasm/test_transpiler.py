@@ -13,11 +13,14 @@
 
 """Tests for transpiler."""
 
+import functools
+
 import pytest
 
 import braket.experimental.autoqasm as aq
+from braket.experimental.autoqasm.autograph import ag_logging
 from braket.experimental.autoqasm.autograph.core.ag_ctx import ControlStatusCtx, Status
-from braket.experimental.autoqasm.gates import h, measure, x
+from braket.experimental.autoqasm.gates import cnot, h, measure, x
 
 
 def test_convert_invalid_object() -> None:
@@ -44,3 +47,47 @@ def test_autograph_disabled() -> None:
     with ControlStatusCtx(Status.DISABLED):
         with pytest.raises(RuntimeError):
             my_program()
+
+
+def test_partial_function() -> None:
+    """Tests aq.function decorator application to a partial function."""
+
+    def bell(q0: int, q1: int):
+        h(q0)
+        cnot(q0, q1)
+
+    expected = """OPENQASM 3.0;
+qubit[4] __qubits__;
+h __qubits__[1];
+cnot __qubits__[1], __qubits__[3];"""
+    bell_partial = aq.function(functools.partial(bell, 1))
+    assert bell_partial(3).to_ir() == expected
+
+
+def test_classmethod() -> None:
+    """Tests aq.function decorator application to a classmethod."""
+
+    class MyClass:
+        @classmethod
+        def bell(self, q0: int, q1: int):
+            h(q0)
+            cnot(q0, q1)
+
+    expected = """OPENQASM 3.0;
+qubit[4] __qubits__;
+h __qubits__[1];
+cnot __qubits__[1], __qubits__[3];"""
+
+    a = MyClass()
+    assert aq.function(a.bell)(1, 3).to_ir() == expected
+
+
+def test_with_verbose_logging() -> None:
+    """Tests aq.function decorator application with verbose logging enabled."""
+
+    @aq.function
+    def nothing():
+        pass
+
+    ag_logging.set_verbosity(10)
+    nothing()
