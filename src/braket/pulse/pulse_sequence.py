@@ -351,7 +351,11 @@ class PulseSequence:
         return self.make_bound_pulse_sequence(param_values)
 
     def __eq__(self, other):
-        return isinstance(other, PulseSequence) and self.parameters == other.parameters and self._program == other._program
+        return (
+            isinstance(other, PulseSequence)
+            and self.parameters == other.parameters
+            and self.to_ir() == other.to_ir()
+        )
 
 
 def _validate_uniqueness(

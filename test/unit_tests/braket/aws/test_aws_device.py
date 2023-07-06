@@ -32,7 +32,7 @@ from common_test_utils import (
 from jsonschema import validate
 
 from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask, AwsQuantumTaskBatch
-from braket.circuits import Circuit, FreeParameter
+from braket.circuits import Circuit, FreeParameter, Gate
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
@@ -1299,6 +1299,7 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
         assert device.topology_graph.edges == device._construct_topology_graph().edges
     assert device.frames == {}
     assert device.ports == {}
+    assert device.native_gate_calibration_href is None
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")
@@ -1574,3 +1575,16 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
     new_val = "new_val"
     device._topology_graph = new_val
     assert device.topology_graph == new_val
+
+
+def test_str_to_gate():
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    device = AwsDevice(DWAVE_ARN, mock_session)
+    assert (
+        isinstance(Gate.H(), device.str_to_gate("H"))
+        and isinstance(Gate.CZ(), device.str_to_gate("Cz"))
+        and isinstance(Gate.CPhaseShift(angle=1), device.str_to_gate("Cphase"))
+        and isinstance(Gate.XY(angle=1), device.str_to_gate("Xy"))
+        and device.str_to_gate("Rx_12") is None
+    )

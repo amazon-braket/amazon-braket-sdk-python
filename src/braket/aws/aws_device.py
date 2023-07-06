@@ -400,7 +400,7 @@ class AwsDevice(Device):
         Returns the href for the native gate calibration data is the device has it.
         """
         if hasattr(self.properties, "nativeGateCalibrationsRef"):
-            return self.properties.nativeGateCalibrationsRef
+            return self.properties.nativeGateCalibrationsRef.split("?")[0]
         else:
             return None
 
@@ -834,12 +834,13 @@ class AwsDevice(Device):
             for gate in q:
                 for i in range(len(q[gate])):
                     g = q[gate][i]
+                    gate_str = self.str_to_gate(gate.capitalize())
                     qubits = (
                         QubitSet([int(x) for x in g["qubits"]])
                         if is_float(g["qubits"][0])
                         else QubitSet()
                     )
-                    if (gate_obj := str_to_gate(gate.capitalize())) is None:
+                    if gate_str is None:
                         # We drop out gate that are not implemented in the BDK
                         continue
                     argument = None
@@ -864,28 +865,28 @@ class AwsDevice(Device):
                         fidelities[gate_qubit_key] = self.properties.provider.specs[k1][k2][k3]
         return calibration_data, fidelities
 
+    @staticmethod
+    def str_to_gate(class_name: str) -> Gate:
+        """
+        Returns the class of Gate corresponding to the string assigned.
 
-def str_to_gate(class_name: str) -> Gate:
-    """
-    Returns the class of Gate corresponding to the string assigned.
+        Args:
+            class_name (str): The name of the gate to convert.
 
-    Args:
-        class_name (str): The name of the gate to convert.
-
-    Returns:
-        Gate: A Gate of type corresponding to `class_name`.
-    """
-    if class_name == "Rx_12":
-        # FIXME: Rx_12 does not exist in the Braket, it is a gate between |1> and |2>
-        return None
-    elif class_name == "Cz":
-        class_name = "CZ"
-    elif class_name == "Cphase":
-        class_name = "CPhaseShift"
-    elif class_name == "Xy":
-        class_name = "XY"
-    class_ = getattr(importlib.import_module("braket.circuits.gates"), class_name)
-    return class_
+        Returns:
+            Gate: A Gate of type corresponding to `class_name`.
+        """
+        if class_name == "Rx_12":
+            # FIXME: Rx_12 does not exist in the Braket, it is a gate between |1> and |2>
+            return None
+        elif class_name == "Cz":
+            class_name = "CZ"
+        elif class_name == "Cphase":
+            class_name = "CPhaseShift"
+        elif class_name == "Xy":
+            class_name = "XY"
+        class_ = getattr(importlib.import_module("braket.circuits.gates"), class_name)
+        return class_
 
 
 def is_float(argument: str) -> bool:

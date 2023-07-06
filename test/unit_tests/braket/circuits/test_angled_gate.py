@@ -196,5 +196,6 @@ def test_double_angle_parameters():
 
 def test_hash():
     symbol1 = FreeParameter("theta")
-    assert hash(DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"])) == hash(DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"]))
-
+    assert hash(
+        DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"])
+    ) == hash(DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"]))
