@@ -399,8 +399,10 @@ class AwsDevice(Device):
         """
         Returns the href for the native gate calibration data is the device has it.
         """
-        if hasattr(self.properties, "nativeGateCalibrationsRef"):
-            return self.properties.nativeGateCalibrationsRef.split("?")[0]
+        if hasattr(self.properties, "pulse") and hasattr(
+            self.properties.pulse, "nativeGateCalibrationsRef"
+        ):
+            return self.properties.pulse.nativeGateCalibrationsRef
         else:
             return None
 
@@ -684,9 +686,9 @@ class AwsDevice(Device):
         Returns:
             PulseSequence: the calibration data for the device from the specific time.
         """
-        if hasattr(self.properties, "nativeGateCalibrationsRef"):
+        if self.native_gate_calibration_href is not None:
             try:
-                with urllib.request.urlopen(self.properties.nativeGateCalibrationsRef) as f:
+                with urllib.request.urlopen(self.native_gate_calibration_href.split("?")[0]) as f:
                     json_calibration_data, fidelities = self._parse_calibration_json(
                         json.loads(f.read().decode("utf-8"))
                     )
@@ -742,6 +744,68 @@ class AwsDevice(Device):
                 raise ValueError(f"The waveform {wave_id} of cannot be constructed")
         return waveforms
 
+    def _get_barrier_arguments(self, instr: Dict):
+        if instr["arguments"] is not None:
+            if instr["arguments"][0]["name"] == "qubit":
+                qubits_or_frames = QubitSet([int(arg["value"]) for arg in instr["arguments"]])
+            else:
+                qubits_or_frames = [self.frames.get(arg["value"]) for arg in instr["arguments"]]
+        else:
+            qubits_or_frames = []
+        return qubits_or_frames
+
+    def _get_play_arguments(self, instr: Dict, waveforms: Dict[ArbitraryWaveform]):
+        frame = waveform = None
+        for argument in instr["arguments"]:
+            if argument["name"] == "frame":
+                frame = self.frames[argument["value"]]
+            elif argument["name"] == "waveform":
+                waveform = waveforms[argument["value"]]
+        return frame, waveform
+
+    def _get_delay_arguemnts(self, instr: Dict):
+        frames = list()
+        duration = None
+        for i in range(len(instr["arguments"])):
+            if instr["arguments"][i]["name"] == "frame":
+                f = "_".join(instr["arguments"][i]["value"].split("_")[:-1]) + "_frame"
+                frames.append(self.frames[f])
+            elif instr["arguments"][i]["name"] == "duration":
+                duration = (
+                    float(instr["arguments"][i]["value"])
+                    if is_float(instr["arguments"][i]["value"])
+                    else FreeParameterExpression(instr["arguments"][i]["value"])
+                )
+        return frames, duration
+
+    def _get_shift_phase_arguments(self, instr: Dict):
+        frame = phase = None
+        for argument in instr["arguments"]:
+            if argument["name"] == "frame":
+                f = "_".join(argument["value"].split("_")[:-1]) + "_frame"
+                frame = self.frames[f]
+            elif argument["name"] == "phase":
+                phase = (
+                    float(argument["value"])
+                    if is_float(argument["value"])
+                    else FreeParameterExpression(argument["value"])
+                )
+        return frame, phase
+
+    def _get_shift_frequency_arguments(self, instr: Dict):
+        frame = frequency = None
+        for argument in instr["arguments"]:
+            if argument["name"] == "frame":
+                f = "_".join(argument["value"].split("_")[:-1]) + "_frame"
+                frame = self.frames[f]
+            elif argument["name"] == "frequency":
+                frequency = (
+                    float(argument["value"])
+                    if is_float(argument["value"])
+                    else FreeParameterExpression(argument["value"])
+                )
+        return frame, frequency
+
     def _get_pulse_sequence(
         self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
     ) -> PulseSequence:
@@ -749,66 +813,23 @@ class AwsDevice(Device):
         for instruction in range(len(calibration)):
             instr = calibration[instruction]
             if instr["name"] == "barrier":
-                if instr["arguments"] is not None:
-                    if instr["arguments"][0]["name"] == "qubit":
-                        qubits_or_frames = QubitSet(
-                            [int(arg["value"]) for arg in instr["arguments"]]
-                        )
-                    else:
-                        qubits_or_frames = [
-                            self.frames.get(arg["value"]) for arg in instr["arguments"]
-                        ]
-                else:
-                    qubits_or_frames = []
-                calibration_sequence = calibration_sequence.barrier(qubits_or_frames)
+                calibration_sequence = calibration_sequence.barrier(
+                    self._get_barrier_arguments(instr)
+                )
             elif instr["name"] == "play":
-                frame = waveform = None
-                for argument in instr["arguments"]:
-                    if argument["name"] == "frame":
-                        frame = self.frames[argument["value"]]
-                    elif argument["name"] == "waveform":
-                        waveform = waveforms[argument["value"]]
-                calibration_sequence = calibration_sequence.play(frame, waveform)
+                calibration_sequence = calibration_sequence.play(
+                    self._get_play_arguments(instr, waveforms)
+                )
             elif instr["name"] == "delay":
-                frames = list()
-                duration = None
-                for i in range(len(instr["arguments"])):
-                    if instr["arguments"][i]["name"] == "frame":
-                        f = "_".join(instr["arguments"][i]["value"].split("_")[:-1]) + "_frame"
-                        frames.append(self.frames[f])
-                    elif instr["arguments"][i]["name"] == "duration":
-                        duration = (
-                            float(instr["arguments"][i]["value"])
-                            if is_float(instr["arguments"][i]["value"])
-                            else FreeParameterExpression(instr["arguments"][i]["value"])
-                        )
-                calibration_sequence = calibration_sequence.delay(frames, duration)
+                calibration_sequence = calibration_sequence.delay(self._get_delay_arguemnts(instr))
             elif instr["name"] == "shift_phase":
-                frame = phase = None
-                for argument in instr["arguments"]:
-                    if argument["name"] == "frame":
-                        f = "_".join(argument["value"].split("_")[:-1]) + "_frame"
-                        frame = self.frames[f]
-                    elif argument["name"] == "phase":
-                        phase = (
-                            float(argument["value"])
-                            if is_float(argument["value"])
-                            else FreeParameterExpression(argument["value"])
-                        )
-                calibration_sequence = calibration_sequence.shift_phase(frame, phase)
+                calibration_sequence = calibration_sequence.shift_phase(
+                    self._get_shift_phase_arguments(instr)
+                )
             elif instr["name"] == "shift_frequency":
-                frame = frequency = None
-                for argument in instr["arguments"]:
-                    if argument["name"] == "frame":
-                        f = "_".join(argument["value"].split("_")[:-1]) + "_frame"
-                        frame = self.frames[f]
-                    elif argument["name"] == "frequency":
-                        frequency = (
-                            float(argument["value"])
-                            if is_float(argument["value"])
-                            else FreeParameterExpression(argument["value"])
-                        )
-                calibration_sequence = calibration_sequence.shift_frequency(frame, frequency)
+                calibration_sequence = calibration_sequence.shift_frequency(
+                    self._get_shift_phase_arguments(instr)
+                )
             else:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
@@ -834,13 +855,13 @@ class AwsDevice(Device):
             for gate in q:
                 for i in range(len(q[gate])):
                     g = q[gate][i]
-                    gate_str = self.str_to_gate(gate.capitalize())
+                    gate_obj = self.str_to_gate(gate.capitalize())
                     qubits = (
                         QubitSet([int(x) for x in g["qubits"]])
                         if is_float(g["qubits"][0])
                         else QubitSet()
                     )
-                    if gate_str is None:
+                    if gate_obj is None:
                         # We drop out gate that are not implemented in the BDK
                         continue
                     argument = None

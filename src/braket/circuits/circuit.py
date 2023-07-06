@@ -1214,32 +1214,9 @@ class Circuit:
     def _generate_frame_wf_defcal_declarations(
         self, native_gate_calibration: Optional[NativeGateCalibration]
     ) -> Optional[str]:
-        frames = {}
-        waveforms = {}
-        from braket.circuits.gates import PulseGate
-
         program = oqpy.Program(None)
 
-        for instruction in self.instructions:
-            if isinstance(instruction.operator, PulseGate):
-                for frame in instruction.operator.pulse_sequence._frames.values():
-                    _validate_uniqueness(frames, frame)
-                    frames[frame.id] = frame
-                for waveform in instruction.operator.pulse_sequence._waveforms.values():
-                    _validate_uniqueness(waveforms, waveform)
-                    waveforms[waveform.id] = waveform
-            elif hasattr(type(instruction.operator), "angle"):
-                if native_gate_calibration is not None:
-                    key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
-                    if key in native_gate_calibration.calibration_data:
-                        ps = native_gate_calibration.get_pulse_sequence(key)
-                        bound_key = (
-                            type(instruction.operator)(instruction.operator.angle),
-                            instruction.target,
-                        )
-                        native_gate_calibration._calibration_data |= {
-                            bound_key: ps(theta=instruction.operator.angle)
-                        }
+        frames, waveforms = self._get_frames_waveforms_from_instrs(native_gate_calibration)
 
         if native_gate_calibration is not None:
             for key, calibration in native_gate_calibration.calibration_data.items():
@@ -1284,6 +1261,35 @@ class Circuit:
             return ast_to_qasm(ast)
 
         return None
+
+    def _get_frames_waveforms_from_instrs(
+        self, native_gate_calibration: Optional[NativeGateCalibration]
+    ):
+        from braket.circuits.gates import PulseGate
+
+        frames = {}
+        waveforms = {}
+        for instruction in self.instructions:
+            if isinstance(instruction.operator, PulseGate):
+                for frame in instruction.operator.pulse_sequence._frames.values():
+                    _validate_uniqueness(frames, frame)
+                    frames[frame.id] = frame
+                for waveform in instruction.operator.pulse_sequence._waveforms.values():
+                    _validate_uniqueness(waveforms, waveform)
+                    waveforms[waveform.id] = waveform
+            elif hasattr(type(instruction.operator), "angle"):
+                if native_gate_calibration is not None:
+                    key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
+                    if key in native_gate_calibration.calibration_data:
+                        ps = native_gate_calibration.get_pulse_sequence(key)
+                        bound_key = (
+                            type(instruction.operator)(instruction.operator.angle),
+                            instruction.target,
+                        )
+                        native_gate_calibration._calibration_data |= {
+                            bound_key: ps(theta=instruction.operator.angle)
+                        }
+        return frames, waveforms
 
     def as_unitary(self) -> np.ndarray:
         r"""

@@ -42,6 +42,7 @@ from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse import Frame, Port
+from braket.native_gates.native_gate_calibration import NativeGateCalibration
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -327,6 +328,11 @@ def device(aws_session):
 
     return _device
 
+@pytest.fixture
+def mock_http():
+    with patch("urllib.request.urlopen") as http_mock:
+        http_mock().return_value = "{}"
+        yield http_mock()
 
 @pytest.mark.parametrize(
     "device_capabilities, get_device_data",
@@ -516,6 +522,7 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
             "qhpSpecificProperties": None,
         }
     },
+    "nativeGateCalibrationsRef": "empty_url"
 }
 
 
@@ -586,6 +593,15 @@ def test_device_pulse_metadata(pulse_device_capabilities):
         assert frame.properties == pulse_device_capabilities["frames"]["q0_q1_cphase_frame"]
     else:
         assert device.frames == {}
+
+
+def test_device_native_gates_exists(mock_http):
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2)
+    device = AwsDevice(RIGETTI_ARN, mock_session)
+    print(device.properties)
+    assert device.native_gate_calibration_href is not None
+    assert device.native_gate_calibration == NativeGateCalibration(calibration_data={})
 
 
 def test_equality(arn):
