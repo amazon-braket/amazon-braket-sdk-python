@@ -65,7 +65,6 @@ Keyword Args:
 """
     except Exception as e:
         ag_logging.warning(f"Unable to set docstring for converted function. Exception: {e}")
-        pass
 
     f_wrapper = f
     decorators, f = tf_decorator.unwrap(f)
