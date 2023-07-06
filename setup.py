@@ -33,6 +33,7 @@ setup(
         "setuptools",
         "backoff",
         "boltons",
+        "botocore<1.30.0",
         "boto3>=1.22.3",
         "nest-asyncio",
         "networkx",
