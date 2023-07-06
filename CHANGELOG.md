@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.48.0 (2023-07-06)
+
+### Features
+
+ * draw barrier/delay with qubits
+
+### Bug Fixes and Other Changes
+
+ * constrain boto version
+ * pass the expression field when parsing to FreeParameterExpression
+ * pass gate modifiers to to_unitary
+
 ## v1.47.0 (2023-06-30)
 
 ### Features
