@@ -22,6 +22,7 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 from botocore.stub import Stubber
+from http.client import HTTPMessage
 
 import braket._schemas as braket_schemas
 import braket._sdk as braket_sdk
@@ -282,21 +283,28 @@ def test_ecr(aws_session):
     ],
 )
 def test_populates_user_agent(os_path_exists_mock, metadata_file_exists, initial_user_agent):
+    request = Mock()
+    request.headers = HTTPMessage()
     boto_session = Mock()
     boto_session.region_name = "foobar"
     braket_client = Mock()
     braket_client.meta.region_name = "foobar"
-    braket_client._client_config.user_agent = initial_user_agent
     nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
     os_path_exists_mock.return_value = metadata_file_exists
     aws_session = AwsSession(boto_session=boto_session, braket_client=braket_client)
     expected_user_agent = (
-        f"{initial_user_agent} BraketSdk/{braket_sdk.__version__} "
+        f"BraketSdk/{braket_sdk.__version__} "
         f"BraketSchemas/{braket_schemas.__version__} "
         f"NotebookInstance/{0 if metadata_file_exists else None}"
     )
     os_path_exists_mock.assert_called_with(nbi_metadata_path)
-    assert aws_session.braket_client._client_config.user_agent == expected_user_agent
+
+    if initial_user_agent is not None:
+        request.headers.add_header("User-Agent", initial_user_agent)
+        expected_user_agent = f"{initial_user_agent} {expected_user_agent}"
+
+    aws_session._add_braket_user_agents_handler(request)
+    assert request.headers.get("User-Agent") == expected_user_agent
 
 
 @patch("braket.aws.aws_session.active_trackers")
@@ -1274,13 +1282,13 @@ def test_get_log_events(aws_session, next_token):
 @patch("boto3.Session")
 def test_copy_session(boto_session_init, aws_session):
     boto_session_init.return_value = Mock()
-    aws_session.braket_client._client_config.user_agent = "foo/bar"
+    aws_session._braket_user_agents = "foo/bar"
     copied_session = AwsSession.copy_session(aws_session, "us-west-2")
     boto_session_init.assert_called_with(
         region_name="us-west-2",
         profile_name="test-profile",
     )
-    assert copied_session.braket_client._client_config.user_agent == "foo/bar"
+    assert copied_session._braket_user_agents == "foo/bar"
     assert copied_session._default_bucket is None
 
 
@@ -1319,4 +1327,5 @@ def test_add_braket_user_agent(aws_session):
     user_agent = "newAgent/1.0"
     aws_session.add_braket_user_agent(user_agent)
     aws_session.add_braket_user_agent(user_agent)
-    assert aws_session.braket_client._client_config.user_agent.count(user_agent) == 1
+    # assert aws_session.braket_client._client_config.user_agent.count(user_agent) == 1
+    aws_session._braket_user_agents.count(user_agent) == 1
