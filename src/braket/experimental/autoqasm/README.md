@@ -79,14 +79,13 @@ and quantum runtime side-by-side. For the moment, we support only a few quantum 
 them out!
 
 The Amazon Braket local simulator supports AutoQASM programs as input.
-Let's simulate the `my_reset_program` with the `mcm=True` argument,
-which enables simulation of mid-circuit measurements:
+Let's simulate the `my_reset_program`:
 
 ```
 from braket.devices.local_simulator import LocalSimulator
 
 device = LocalSimulator()
-task = device.run(my_reset_program, shots=100, mcm=True)
+task = device.run(my_reset_program, shots=100)
 result = task.result()
 ```
 
