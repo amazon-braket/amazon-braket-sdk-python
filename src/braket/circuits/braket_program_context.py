@@ -16,7 +16,8 @@ from braket.ir.jaqcd.program_v1 import Results
 
 class BraketProgramContext(AbstractProgramContext):
     def __init__(self):
-        super().__init__(Circuit())
+        super().__init__()
+        self.circuit = Circuit()
 
     def is_builtin_gate(self, name: str) -> bool:
         """Whether the gate is currently in scope as a built-in Braket gate.
