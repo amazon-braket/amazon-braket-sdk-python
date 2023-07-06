@@ -813,22 +813,27 @@ class AwsDevice(Device):
         for instruction in range(len(calibration)):
             instr = calibration[instruction]
             if instr["name"] == "barrier":
+                qubits_or_frames = self._get_barrier_arguments(instr)
                 calibration_sequence = calibration_sequence.barrier(
-                    self._get_barrier_arguments(instr)
+                    qubits_or_frames
                 )
             elif instr["name"] == "play":
+                frame, waveform = self._get_play_arguments(instr, waveforms)
                 calibration_sequence = calibration_sequence.play(
-                    self._get_play_arguments(instr, waveforms)
+                    frame, waveform
                 )
             elif instr["name"] == "delay":
-                calibration_sequence = calibration_sequence.delay(self._get_delay_arguemnts(instr))
+                frames, duration = self._get_delay_arguemnts(instr)
+                calibration_sequence = calibration_sequence.delay(frames, duration)
             elif instr["name"] == "shift_phase":
+                frame, phase = self._get_shift_phase_arguments(instr)
                 calibration_sequence = calibration_sequence.shift_phase(
-                    self._get_shift_phase_arguments(instr)
+                    frame, phase
                 )
             elif instr["name"] == "shift_frequency":
+                frame, frequency = self._get_shift_frequency_arguments(instr)
                 calibration_sequence = calibration_sequence.shift_frequency(
-                    self._get_shift_phase_arguments(instr)
+                    frame, frequency
                 )
             else:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
