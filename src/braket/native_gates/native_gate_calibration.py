@@ -16,10 +16,10 @@ class NativeGateCalibration:
 
     def __init__(
         self,
-        calibration_json: Dict[Tuple[Gate, QubitSet], PulseSequence],
+        calibration_data: Dict[Tuple[Gate, QubitSet], PulseSequence],
         fidelities: Optional[Dict[Tuple[Gate, QubitSet], float]] = {},
     ):
-        self._calibration_data = calibration_json
+        self._calibration_data = calibration_data
         self._fidelities = fidelities
 
     @property
