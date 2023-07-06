@@ -314,6 +314,7 @@ class LocalSimulator(Device):
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
         program = Program(source=program.to_ir(ir_type=IRType.OPENQASM))
+        kwargs["mcm"] = True
         results = simulator.run(program, shots, *args, **kwargs)
         return GateModelQuantumTaskResult(
             task_metadata=TaskMetadata.construct(id=""),

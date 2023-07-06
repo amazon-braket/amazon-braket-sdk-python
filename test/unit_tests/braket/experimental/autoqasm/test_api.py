@@ -28,7 +28,7 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 
 def _test_on_local_sim(program: aq.Program) -> None:
     device = LocalSimulator(backend=StateVectorSimulator())
-    task = device.run(program, shots=10, mcm=True)
+    task = device.run(program, shots=10)
     assert isinstance(task, LocalQuantumTask)
     assert isinstance(task.result().measurements, dict)
 
