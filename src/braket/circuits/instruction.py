@@ -289,9 +289,9 @@ class Instruction:
             ) == (
                 other._operator,
                 other._target,
-                self._control,
-                self._control_state,
-                self._power,
+                other._control,
+                other._control_state,
+                other._power,
             )
         return NotImplemented
 
