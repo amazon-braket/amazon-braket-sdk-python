@@ -1134,20 +1134,18 @@ class Circuit:
     @staticmethod
     def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None) -> Circuit:
         """
-        Converts OpenQASM to Braket Circuit
+        Converts an OpenQASM program to a Braket Circuit object.
 
         Args:
             source (str): OpenQASM string.
             inputs (Optional[Dict[str, io_type]]): Inputs to the circuit.
 
         Returns:
-            Circuit: braket sdk circuit.
+            Circuit: Braket Circuit implementing the OpenQASM program.
         """
-        from braket.circuits.braket_program_context import (
-            BraketProgramContext as _BraketProgramContext,
-        )
+        from braket.circuits.braket_program_context import BraketProgramContext
 
-        return Interpreter(_BraketProgramContext()).build_circuit(
+        return Interpreter(BraketProgramContext()).build_circuit(
             source=source,
             inputs=inputs,
             is_file=False,
