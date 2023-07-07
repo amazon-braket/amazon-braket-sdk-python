@@ -21,7 +21,7 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.circuits.serialization import IRType
-from braket.experimental.autoqasm.gates import cnot, h, measure
+from braket.experimental.autoqasm.gates import cnot, measure, rx
 
 
 def test_program_conversion_context() -> None:
@@ -71,8 +71,7 @@ def test_multiprocessing() -> None:
 
     @aq.function
     def circuit(angle: float):
-        # TODO: rx(0, angle)
-        h(0)
+        rx(0, angle)
         cnot(0, 1)
 
     @aq.function
@@ -93,7 +92,7 @@ def test_multiprocessing() -> None:
         return (
             """OPENQASM 3.0;
 def circuit(float[64] angle) {
-    h __qubits__[0];
+    rx(angle) __qubits__[0];
     cnot __qubits__[0], __qubits__[1];
 }
 qubit[2] __qubits__;
