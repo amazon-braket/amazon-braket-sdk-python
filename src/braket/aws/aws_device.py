@@ -904,7 +904,7 @@ class AwsDevice(Device):
             return None
         elif class_name == "Cz":
             class_name = "CZ"
-        elif class_name == "Cphase":
+        elif class_name == "Cphaseshift":
             class_name = "CPhaseShift"
         elif class_name == "Xy":
             class_name = "XY"
