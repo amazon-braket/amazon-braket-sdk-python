@@ -63,7 +63,10 @@ Keyword Args:
     {aq_program.ProgramOptions.NUM_QUBITS.value} (int): Configuration to set the total number of
         qubits to declare in the program.
 """
-    except Exception as e:
+    except AttributeError as e:
+        # AttributeError: object attribute '__doc__' is read-only
+        # Typically occurs when `f` is not a user-defined function. This will likely lead to
+        # another exception down the line, but it's better simply to warn at this point.
         ag_logging.warning(f"Unable to set docstring for converted function. Exception: {e}")
 
     f_wrapper = f

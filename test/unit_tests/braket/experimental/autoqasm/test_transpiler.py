@@ -56,12 +56,20 @@ def test_partial_function() -> None:
         h(q0)
         cnot(q0, q1)
 
+    @aq.function
+    def bell_decorated(q0: int, q1: int):
+        bell(q0, q1)
+
     expected = """OPENQASM 3.0;
 qubit[4] __qubits__;
 h __qubits__[1];
 cnot __qubits__[1], __qubits__[3];"""
+
     bell_partial = aq.function(functools.partial(bell, 1))
     assert bell_partial(3).to_ir() == expected
+
+    bell_decorated_partial = functools.partial(bell_decorated, 1)
+    assert bell_decorated_partial(3).to_ir() == expected
 
 
 def test_classmethod() -> None:
@@ -73,13 +81,22 @@ def test_classmethod() -> None:
             h(q0)
             cnot(q0, q1)
 
+        @classmethod
+        @aq.function
+        def bell_decorated(self, q0: int, q1: int):
+            self.bell(q0, q1)
+
     expected = """OPENQASM 3.0;
 qubit[4] __qubits__;
 h __qubits__[1];
 cnot __qubits__[1], __qubits__[3];"""
 
+    assert aq.function(MyClass.bell)(1, 3).to_ir() == expected
+    assert MyClass.bell_decorated(1, 3).to_ir() == expected
+
     a = MyClass()
     assert aq.function(a.bell)(1, 3).to_ir() == expected
+    assert a.bell_decorated(1, 3).to_ir() == expected
 
 
 def test_with_verbose_logging() -> None:
