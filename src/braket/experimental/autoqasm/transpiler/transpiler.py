@@ -52,10 +52,9 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
     _attach_error_metadata,
     _log_callargs,
     is_autograph_artifact,
-    is_autograph_strict_conversion_mode,
 )
 from braket.experimental.autoqasm.autograph.logging import ag_logging as logging
-from braket.experimental.autoqasm.autograph.pyct import anno, cfg, errors, qual_names, transpiler
+from braket.experimental.autoqasm.autograph.pyct import anno, cfg, qual_names, transpiler
 from braket.experimental.autoqasm.autograph.pyct.static_analysis import (
     activity,
     reaching_definitions,
@@ -233,16 +232,10 @@ def converted_call(
     if not options.internal_convert_user_code:
         return _call_unconverted(f, args, kwargs, options)
 
-    target_entity, effective_args, exc = _inspect_callable(f, args)
-    if exc:
-        return _fall_back_unconverted(f, args, kwargs, options, exc)
-
-    if _is_permanently_allowed_code(target_entity):
-        return _call_unconverted(f, args, kwargs, options)
-
+    target_entity, effective_args = _inspect_callable(f, args)
     converted_f, exc = _try_convert_actual(target_entity, effective_args, kwargs, options)
     if exc:
-        return _fall_back_unconverted(f, args, kwargs, options, exc)
+        raise exc
 
     with StackTraceMapper(converted_f), tf_stack.CurrentModuleFilter():
         try:
@@ -275,49 +268,25 @@ def _converted_partial(
     )
 
 
-def _inspect_callable(f: Callable, args: tuple) -> Tuple[Callable, tuple, Optional[Exception]]:
+def _inspect_callable(f: Callable, args: tuple) -> Tuple[Callable, tuple]:
     target_entity = None
     effective_args = None
-    exc = None
-    try:
-        if inspect.ismethod(f) or inspect.isfunction(f):
-            target_entity = f
-            effective_args = args
 
-            f_self = getattr(f, "__self__", None)
-            if f_self is not None:
-                effective_args = (f_self,) + effective_args
+    if inspect.ismethod(f) or inspect.isfunction(f):
+        target_entity = f
+        effective_args = args
 
-        elif hasattr(f, "__class__") and hasattr(f.__class__, "__call__"):
-            # Callable objects. Dunder methods have special lookup rules, see:
-            # https://docs.python.org/3/reference/datamodel.html#specialnames
-            target_entity = f.__class__.__call__
-            effective_args = (f,) + args
+        f_self = getattr(f, "__self__", None)
+        if f_self is not None:
+            effective_args = (f_self,) + effective_args
 
-        else:
-            target_entity = f
-            raise NotImplementedError('unknown callable type "%s"' % type(f))
+    elif hasattr(f, "__class__") and hasattr(f.__class__, "__call__"):
+        # Callable objects. Dunder methods have special lookup rules, see:
+        # https://docs.python.org/3/reference/datamodel.html#specialnames
+        target_entity = f.__class__.__call__
+        effective_args = (f,) + args
 
-    except Exception as e:
-        logging.log(1, "Error transforming entity %s", target_entity, exc_info=True)
-        if is_autograph_strict_conversion_mode():
-            raise
-        exc = e
-
-    return target_entity, effective_args, exc
-
-
-def _is_permanently_allowed_code(target_entity: Callable) -> bool:
-    if not hasattr(target_entity, "__code__"):
-        logging.log(2, "Permanently allowed: %s: native binding", target_entity)
-        return True
-    elif (
-        hasattr(target_entity.__code__, "co_filename")
-        and target_entity.__code__.co_filename == "<string>"
-    ):
-        logging.log(2, "Permanently allowed: %s: dynamic code (exec?)", target_entity)
-        return True
-    return False
+    return target_entity, effective_args
 
 
 def _try_convert_actual(
@@ -335,33 +304,8 @@ def _try_convert_actual(
             _log_callargs(converted_f, effective_args, kwargs)
     except Exception as e:
         logging.log(1, "Error transforming entity %s", target_entity, exc_info=True)
-        if is_autograph_strict_conversion_mode():
-            raise
         exc = e
     return converted_f, exc
-
-
-def _fall_back_unconverted(
-    f: Callable, args: tuple, kwargs: dict, options: converter.ConversionOptions, exc: Exception
-) -> Any:
-    """Falls back to calling the function unconverted, in case of error."""
-    warning_template = (
-        "AutoGraph could not transform %s and will run it as-is.\n" "%s" "Cause: %s\n"
-    )
-    if isinstance(exc, errors.InaccessibleSourceCodeError):
-        if ag_ctx.INSPECT_SOURCE_SUPPORTED:
-            logging.warning(warning_template, f, "", exc)
-    elif isinstance(exc, errors.UnsupportedLanguageElementError):
-        logging.warning(warning_template, f, "", exc)
-    else:
-        file_bug_message = (
-            "Please report this in the AutoQASM repo. When filing the bug, set"
-            " the verbosity to 10 (on Linux, `export AUTOGRAPH_VERBOSITY=10`) and"
-            " attach the full output.\n"
-        )
-        logging.warning(warning_template, f, file_bug_message, exc)
-
-    return _call_unconverted(f, args, kwargs, options)
 
 
 def _call_unconverted(
