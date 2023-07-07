@@ -22,8 +22,12 @@ class BraketProgramContext(AbstractProgramContext):
                 context. Default: None.
         """
         super().__init__()
-        self.circuit = circuit or Circuit()
+        self._circuit = circuit or Circuit()
 
+    @property
+    def circuit(self):
+        return self._circuit
+    
     def is_builtin_gate(self, name: str) -> bool:
         """Whether the gate is currently in scope as a built-in Braket gate.
 
@@ -63,7 +67,7 @@ class BraketProgramContext(AbstractProgramContext):
             control_state=ctrl_modifiers,
             power=power,
         )
-        self.circuit.add_instruction(instruction)
+        self._circuit.add_instruction(instruction)
 
     def add_custom_unitary(
         self,
@@ -77,12 +81,12 @@ class BraketProgramContext(AbstractProgramContext):
             target (Tuple[int]): control_qubits + target_qubits
         """
         instruction = Instruction(Unitary(unitary), target)
-        self.circuit.add_instruction(instruction)
+        self._circuit.add_instruction(instruction)
 
     def add_noise_instruction(self, noise: KrausOperation) -> None:
         """Add a noise instruction the circuit"""
-        self.circuit.add_instruction(braket_noise_gate_to_instruction(noise))
+        self._circuit.add_instruction(braket_noise_gate_to_instruction(noise))
 
     def add_result(self, result: Results) -> None:
         """Add a result type to the circuit"""
-        self.circuit.add_result_type(braket_result_to_result_type(result))
+        self._circuit.add_result_type(braket_result_to_result_type(result))
