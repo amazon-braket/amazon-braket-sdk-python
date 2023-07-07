@@ -26,6 +26,7 @@ import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
 from braket.experimental.autoqasm import errors
+from braket.experimental.autoqasm.autograph import ag_logging
 from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 from braket.experimental.autoqasm.autograph.impl.api_core import (
     autograph_artifact,
@@ -53,14 +54,20 @@ def function(f: Callable) -> Callable[[Any], aq_program.Program]:
         return f
 
     # Update documentation with user configuration
-    if f.__doc__ is None:
-        f.__doc__ = ""
-    f.__doc__ += f"""
+    try:
+        if f.__doc__ is None:
+            f.__doc__ = ""
+        f.__doc__ += f"""
 
 Keyword Args:
     {aq_program.ProgramOptions.NUM_QUBITS.value} (int): Configuration to set the total number of
         qubits to declare in the program.
 """
+    except AttributeError as e:
+        # AttributeError: object attribute '__doc__' is read-only
+        # Typically occurs when `f` is not a user-defined function. This will likely lead to
+        # another exception down the line, but it's better simply to warn at this point.
+        ag_logging.warning(f"Unable to set docstring for converted function. Exception: {e}")
 
     f_wrapper = f
     decorators, f = tf_decorator.unwrap(f)
@@ -68,6 +75,7 @@ Keyword Args:
     wrapper_factory = convert_wrapper(
         recursive=False,
         optional_features=(
+            converter.Feature.ASSERT_STATEMENTS,
             converter.Feature.LISTS,
             converter.Feature.EQUALITY_OPERATORS,
         ),
