@@ -1370,7 +1370,114 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
         ),
     ],
 )
-def test_openqasm_from_ir_circuit(expected_circuit, ir):
+def test_circuit_from_ir(expected_circuit, ir):
+    circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
+
+    assert circuit_from_ir == expected_circuit
+
+
+@pytest.mark.parametrize(
+    "expected_circuit, ir",
+    [
+        (
+            Circuit().h(0).cnot(0, 1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "gate my_gate a,b {",
+                        "h a;",
+                        "cnot a,b;",
+                        "}",
+                        "my_gate q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).h(1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "def my_sub(qubit q) {",
+                        "h q;",
+                        "}",
+                        "h q[0];",
+                        "my_sub(q[1]);",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).h(1).cnot(0, 1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "for uint i in [0:1] {",
+                        "h q[i];",
+                        "}",
+                        "cnot q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).h(1).cnot(0, 1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "for uint i in [0:1] {",
+                        "h q[i];",
+                        "}",
+                        "cnot q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().x(0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "bit c = 0;",
+                        "if (c ==0){",
+                        "x q[0];",
+                        "}",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+    ],
+)
+def test_circuit_from_ir_greater_functionality(expected_circuit, ir):
     circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
 
     assert circuit_from_ir == expected_circuit
