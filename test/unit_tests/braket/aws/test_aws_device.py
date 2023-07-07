@@ -1689,7 +1689,6 @@ def test_parse_calibration_data():
     device = AwsDevice(DWAVE_ARN, mock_session)
     calibration_data, fidelities = device._parse_calibration_json(MOCK_NATIVE_GATE_CALIBRATION_JSON)
     device_ngc = NativeGateCalibration(calibration_data, fidelities)
-    print(device_ngc.calibration_data)
 
     expected_waveforms = {
         "wf_drag_gaussian_0": DragGaussianWaveform(
@@ -1697,13 +1696,15 @@ def test_parse_calibration_data():
             sigma=6.369913502160144e-9,
             amplitude=-0.4549282253548838,
             beta=7.494904522022295e-10,
+            id="wf_drag_gaussian_0",
         )
     }
     expected_calibration_data = {
         (Gate.Rx(-1.5707963267948966), QubitSet(0)): PulseSequence()
-        .delay(QubitSet(0), 3e-07)
         .barrier(QubitSet(0))
         .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
+        .barrier(QubitSet(0))
+        .delay(QubitSet(0), 3e-07)
     }
     expected_ngc = NativeGateCalibration(calibration_data=expected_calibration_data)
     assert device_ngc == expected_ngc

@@ -29,7 +29,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
-from braket.circuits import Circuit, Gate, QubitSet
+from braket.circuits import Circuit, Gate, Qubit, QubitSet
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
@@ -764,19 +764,23 @@ class AwsDevice(Device):
         return frame, waveform
 
     def _get_delay_arguments(self, instr: Dict):
-        frames = list()
+        qubits_or_frames = list()
         duration = None
         for i in range(len(instr["arguments"])):
             if instr["arguments"][i]["name"] == "frame":
                 f = "_".join(instr["arguments"][i]["value"].split("_")[:-1]) + "_frame"
-                frames.append(self.frames[f])
+                qubits_or_frames.append(self.frames[f])
+            elif instr["arguments"][i]["name"] == "qubit":
+                if qubits_or_frames == list():
+                    qubits_or_frames = QubitSet([])
+                qubits_or_frames.add(Qubit(int(instr["arguments"][i]["value"])))
             elif instr["arguments"][i]["name"] == "duration":
                 duration = (
                     float(instr["arguments"][i]["value"])
                     if is_float(instr["arguments"][i]["value"])
                     else FreeParameterExpression(instr["arguments"][i]["value"])
                 )
-        return frames, duration
+        return qubits_or_frames, duration
 
     def _get_shift_phase_arguments(self, instr: Dict):
         frame = phase = None
@@ -833,7 +837,7 @@ class AwsDevice(Device):
 
     def _parse_calibration_json(
         self, calibration_data: Dict
-    ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
+    ) -> Tuple[Dict[Tuple[Gate, QubitSet], PulseSequence], Dict[Tuple[Gate, QubitSet], float]]:
         """
         Takes the json string from the device calibration URL and returns a structured dictionary of
         corresponding BDK objects.
@@ -896,7 +900,7 @@ class AwsDevice(Device):
             Gate: A Gate of type corresponding to `class_name`.
         """
         if class_name == "Rx_12":
-            # FIXME: Rx_12 does not exist in the Braket, it is a gate between |1> and |2>
+            # FIXME: Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
             return None
         elif class_name == "Cz":
             class_name = "CZ"
