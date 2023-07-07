@@ -25,9 +25,9 @@ class BraketProgramContext(AbstractProgramContext):
         self._circuit = circuit or Circuit()
 
     @property
-    def circuit(self):
+    def circuit(self) -> Circuit:
         return self._circuit
-    
+
     def is_builtin_gate(self, name: str) -> bool:
         """Whether the gate is currently in scope as a built-in Braket gate.
 
