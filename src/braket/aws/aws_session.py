@@ -22,7 +22,7 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import backoff
 import boto3
-from botocore import client
+from botocore import awsrequest, client
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
@@ -82,6 +82,9 @@ class AwsSession(object):
         self._default_bucket = default_bucket or os.environ.get("AMZN_BRAKET_OUT_S3_BUCKET")
         self.braket_client.meta.events.register(
             "before-sign.braket.CreateQuantumTask", self._add_cost_tracker_count_handler
+        )
+        self.braket_client.meta.events.register(
+            "before-sign.braket", self._add_braket_user_agents_handler
         )
 
         self._iam = None
@@ -157,8 +160,7 @@ class AwsSession(object):
         """
         Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
         braket-schemas and the notebook instance version. The header is a string of space delimited
-        values (For example: "Boto3/1.14.43 Python/3.7.9 Botocore/1.17.44"). See:
-        https://botocore.amazonaws.com/v1/documentation/api/latest/reference/config.html#botocore.config.Config
+        values (For example: "Boto3/1.14.43 Python/3.7.9 Botocore/1.17.44").
         """
 
         def _notebook_instance_version() -> str:
@@ -166,14 +168,10 @@ class AwsSession(object):
             nbi_metadata_path = "/opt/ml/metadata/resource-metadata.json"
             return "0" if os.path.exists(nbi_metadata_path) else "None"
 
-        additional_user_agent_fields = (
+        self._braket_user_agents = (
             f"BraketSdk/{braket_sdk.__version__} "
             f"BraketSchemas/{braket_schemas.__version__} "
             f"NotebookInstance/{_notebook_instance_version()}"
-        )
-
-        self.braket_client._client_config.user_agent = (
-            f"{self.braket_client._client_config.user_agent} {additional_user_agent_fields}"
         )
 
     def add_braket_user_agent(self, user_agent: str) -> None:
@@ -185,12 +183,20 @@ class AwsSession(object):
         Args:
             user_agent (str): The user_agent value to append to the header.
         """
-        existing_user_agent = self.braket_client._client_config.user_agent
-        if user_agent not in existing_user_agent:
-            self.braket_client._client_config.user_agent = f"{existing_user_agent} {user_agent}"
+        if user_agent not in self._braket_user_agents:
+            self._braket_user_agents = f"{self._braket_user_agents} {user_agent}"
+
+    def _add_braket_user_agents_handler(self, request: awsrequest.AWSRequest, **kwargs) -> None:
+        try:
+            initial_user_agent = request.headers["User-Agent"]
+            request.headers.replace_header(
+                "User-Agent", f"{initial_user_agent} {self._braket_user_agents}"
+            )
+        except KeyError:
+            request.headers.add_header("User-Agent", self._braket_user_agents)
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request: Any, **kwargs) -> None:
+    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #
@@ -815,7 +821,5 @@ class AwsSession(object):
             boto_session=boto_session, config=config, default_bucket=default_bucket
         )
         # Preserve user_agent information
-        copied_session.braket_client._client_config.user_agent = (
-            self.braket_client._client_config.user_agent
-        )
+        copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
