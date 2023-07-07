@@ -501,7 +501,6 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     create_task_kwargs.update({"action": OpenQASMProgram(source=pulse_sequence.to_ir()).json()})
-    print(create_task_kwargs)
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
 

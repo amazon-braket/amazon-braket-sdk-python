@@ -41,8 +41,8 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # no
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.pulse import Frame, Port
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.pulse import Frame, Port
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -328,11 +328,13 @@ def device(aws_session):
 
     return _device
 
+
 @pytest.fixture
 def mock_http():
     with patch("urllib.request.urlopen") as http_mock:
         http_mock().return_value = "{}"
         yield http_mock()
+
 
 @pytest.mark.parametrize(
     "device_capabilities, get_device_data",
@@ -522,7 +524,7 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
             "qhpSpecificProperties": None,
         }
     },
-    "nativeGateCalibrationsRef": "empty_url"
+    "nativeGateCalibrationsRef": "empty_url",
 }
 
 
@@ -597,11 +599,12 @@ def test_device_pulse_metadata(pulse_device_capabilities):
 
 def test_device_native_gates_exists(mock_http):
     mock_session = Mock()
-    mock_session.get_device.return_value = get_pulse_model(MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2)
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2
+    )
     device = AwsDevice(RIGETTI_ARN, mock_session)
-    print(device.properties)
-    assert device.native_gate_calibration_href is not None
-    assert device.native_gate_calibration == NativeGateCalibration(calibration_data={})
+    assert device.native_gate_calibrations_href is not None
+    assert device.native_gate_calibrations == NativeGateCalibration(calibration_data={})
 
 
 def test_equality(arn):
@@ -1315,7 +1318,7 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
         assert device.topology_graph.edges == device._construct_topology_graph().edges
     assert device.frames == {}
     assert device.ports == {}
-    assert device.native_gate_calibration_href is None
+    assert device.native_gate_calibrations_href is None
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")

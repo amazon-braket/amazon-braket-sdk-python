@@ -395,7 +395,7 @@ class AwsDevice(Device):
         return self.native_gate_calibration_timestamp
 
     @property
-    def native_gate_calibration_href(self) -> str:
+    def native_gate_calibrations_href(self) -> str:
         """
         Returns the href for the native gate calibration data is the device has it.
         """
@@ -814,27 +814,19 @@ class AwsDevice(Device):
             instr = calibration[instruction]
             if instr["name"] == "barrier":
                 qubits_or_frames = self._get_barrier_arguments(instr)
-                calibration_sequence = calibration_sequence.barrier(
-                    qubits_or_frames
-                )
+                calibration_sequence = calibration_sequence.barrier(qubits_or_frames)
             elif instr["name"] == "play":
                 frame, waveform = self._get_play_arguments(instr, waveforms)
-                calibration_sequence = calibration_sequence.play(
-                    frame, waveform
-                )
+                calibration_sequence = calibration_sequence.play(frame, waveform)
             elif instr["name"] == "delay":
                 frames, duration = self._get_delay_arguemnts(instr)
                 calibration_sequence = calibration_sequence.delay(frames, duration)
             elif instr["name"] == "shift_phase":
                 frame, phase = self._get_shift_phase_arguments(instr)
-                calibration_sequence = calibration_sequence.shift_phase(
-                    frame, phase
-                )
+                calibration_sequence = calibration_sequence.shift_phase(frame, phase)
             elif instr["name"] == "shift_frequency":
                 frame, frequency = self._get_shift_frequency_arguments(instr)
-                calibration_sequence = calibration_sequence.shift_frequency(
-                    frame, frequency
-                )
+                calibration_sequence = calibration_sequence.shift_frequency(frame, frequency)
             else:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
@@ -855,6 +847,7 @@ class AwsDevice(Device):
         """
         waveforms = self._parse_waveforms(calibration_data["waveforms"])
         fidelities = {}
+        parsed_calibration_data = {}
         for qubit in calibration_data["gates"]:
             q = calibration_data["gates"][qubit]
             for gate in q:
@@ -880,7 +873,7 @@ class AwsDevice(Device):
                         (gate_obj(argument), qubits) if argument else (gate_obj(), qubits)
                     )
                     gate_qubit_pulse = self._get_pulse_sequence(g["calibrations"], waveforms)
-                    calibration_data[gate_qubit_key] = gate_qubit_pulse
+                    parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
                     k1 = f"{len(qubits)}Q"
                     k2 = "-".join([str(int(qubit)) for qubit in sorted(qubits)])
@@ -889,7 +882,7 @@ class AwsDevice(Device):
                         k3 = "fCPHASE"
                     if len(qubits) > 0:
                         fidelities[gate_qubit_key] = self.properties.provider.specs[k1][k2][k3]
-        return calibration_data, fidelities
+        return parsed_calibration_data, fidelities
 
     @staticmethod
     def str_to_gate(class_name: str) -> Gate:
