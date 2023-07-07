@@ -32,7 +32,7 @@ from common_test_utils import (
 from jsonschema import validate
 
 from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask, AwsQuantumTaskBatch
-from braket.circuits import Circuit, FreeParameter, Gate
+from braket.circuits import Circuit, FreeParameter, Gate, QubitSet
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
@@ -42,7 +42,7 @@ from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
-from braket.pulse import Frame, Port
+from braket.pulse import DragGaussianWaveform, Frame, Port, PulseSequence
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -77,6 +77,62 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
 MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
     MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1
 )
+
+
+MOCK_NATIVE_GATE_CALIBRATION_JSON = {
+    "gates": {
+        "0": {
+            "rx": [
+                {
+                    "name": "rx",
+                    "qubits": ["0"],
+                    "arguments": ["-1.5707963267948966"],
+                    "calibrations": [
+                        {
+                            "name": "barrier",
+                            "arguments": [{"name": "qubit", "value": "0", "type": "string"}],
+                        },
+                        {
+                            "name": "play",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
+                                {
+                                    "name": "waveform",
+                                    "value": "wf_drag_gaussian_0",
+                                    "type": "waveform",
+                                },
+                            ],
+                        },
+                        {
+                            "name": "barrier",
+                            "arguments": [{"name": "qubit", "value": "0", "type": "string"}],
+                        },
+                        {
+                            "name": "delay",
+                            "arguments": [
+                                {"name": "qubit", "value": "0", "type": "string"},
+                                {"name": "duration", "value": 3e-07, "type": "float"},
+                            ],
+                        },
+                    ],
+                }
+            ]
+        }
+    },
+    "waveforms": {
+        "q0_q1_cz_CZ": {"waveformId": "q0_q1_cz_CZ", "amplitudes": [[0.0, 0.0], [0.0, 0.0]]},
+        "wf_drag_gaussian_0": {
+            "waveformId": "wf_drag_gaussian_0",
+            "name": "drag_gaussian",
+            "arguments": [
+                {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
+            ],
+        },
+    },
+}
 
 
 def test_mock_rigetti_schema_1():
@@ -544,6 +600,22 @@ def get_pulse_model(capabilities_json):
             ],
             "shotsRange": [1, 10],
         },
+        "provider": {
+            "specs": {
+                "1Q": {
+                    "0": {
+                        "fActiveReset": 0.9715,
+                        "fRO": 0.951,
+                        "f1QRB": 0.997339217568556,
+                        "f1QRB_std_err": 0.00006690422818326937,
+                        "f1Q_simultaneous_RB": 0.9949723201166536,
+                        "f1Q_simultaneous_RB_std_err": 0.00021695233492231294,
+                        "T1": 0.000010019627401991471,
+                        "T2": 0.000018156447816365015,
+                    }
+                }
+            }
+        },
         "action": {
             "braket.ir.jaqcd.program": {
                 "actionType": "braket.ir.jaqcd.program",
@@ -604,7 +676,7 @@ def test_device_native_gates_exists(mock_http):
     )
     device = AwsDevice(RIGETTI_ARN, mock_session)
     assert device.native_gate_calibrations_href is not None
-    assert device.native_gate_calibrations == NativeGateCalibration(calibration_data={})
+    assert device.native_gate_calibration == NativeGateCalibration(calibration_data={})
 
 
 def test_equality(arn):
@@ -1607,3 +1679,31 @@ def test_str_to_gate():
         and isinstance(Gate.XY(angle=1), device.str_to_gate("Xy"))
         and device.str_to_gate("Rx_12") is None
     )
+
+
+def test_parse_calibration_data():
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    )
+    device = AwsDevice(DWAVE_ARN, mock_session)
+    calibration_data, fidelities = device._parse_calibration_json(MOCK_NATIVE_GATE_CALIBRATION_JSON)
+    device_ngc = NativeGateCalibration(calibration_data, fidelities)
+    print(device_ngc.calibration_data)
+
+    expected_waveforms = {
+        "wf_drag_gaussian_0": DragGaussianWaveform(
+            length=6.000000000000001e-8,
+            sigma=6.369913502160144e-9,
+            amplitude=-0.4549282253548838,
+            beta=7.494904522022295e-10,
+        )
+    }
+    expected_calibration_data = {
+        (Gate.Rx(-1.5707963267948966), QubitSet(0)): PulseSequence()
+        .delay(QubitSet(0), 3e-07)
+        .barrier(QubitSet(0))
+        .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
+    }
+    expected_ngc = NativeGateCalibration(calibration_data=expected_calibration_data)
+    assert device_ngc == expected_ngc

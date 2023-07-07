@@ -686,9 +686,9 @@ class AwsDevice(Device):
         Returns:
             PulseSequence: the calibration data for the device from the specific time.
         """
-        if self.native_gate_calibration_href is not None:
+        if self.native_gate_calibrations_href is not None:
             try:
-                with urllib.request.urlopen(self.native_gate_calibration_href.split("?")[0]) as f:
+                with urllib.request.urlopen(self.native_gate_calibrations_href.split("?")[0]) as f:
                     json_calibration_data, fidelities = self._parse_calibration_json(
                         json.loads(f.read().decode("utf-8"))
                     )
@@ -763,7 +763,7 @@ class AwsDevice(Device):
                 waveform = waveforms[argument["value"]]
         return frame, waveform
 
-    def _get_delay_arguemnts(self, instr: Dict):
+    def _get_delay_arguments(self, instr: Dict):
         frames = list()
         duration = None
         for i in range(len(instr["arguments"])):
@@ -819,7 +819,7 @@ class AwsDevice(Device):
                 frame, waveform = self._get_play_arguments(instr, waveforms)
                 calibration_sequence = calibration_sequence.play(frame, waveform)
             elif instr["name"] == "delay":
-                frames, duration = self._get_delay_arguemnts(instr)
+                frames, duration = self._get_delay_arguments(instr)
                 calibration_sequence = calibration_sequence.delay(frames, duration)
             elif instr["name"] == "shift_phase":
                 frame, phase = self._get_shift_phase_arguments(instr)
