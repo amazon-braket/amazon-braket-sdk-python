@@ -38,6 +38,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     QubitReferenceType,
 )
+from braket.circuits.translations import braket_result_to_result_type
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 
@@ -843,7 +844,7 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
 
 
 @pytest.mark.parametrize(
-    "circuit, expected_ir",
+    "expected_circuit, ir",
     [
         (
             Circuit().h(0, control=1, control_state=0),
@@ -1243,19 +1244,138 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                 inputs={},
             ),
         ),
+        (
+            Circuit().unitary(matrix=np.array([[0, 1], [1, 0]]), targets=[0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket unitary([[0, 1.0], [1.0, 0]]) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().pauli_channel(0, probX=0.1, probY=0.2, probZ=0.3),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().two_qubit_depolarizing(0, 1, probability=0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_dephasing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_dephasing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).sample(observable=Observable.Z(), target=0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result sample z(q[0])",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).sample(observable=Observable.Z(), target=0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result sample z(q[0])",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).x(1).density_matrix(target=[0, 1]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[2] q;",
+                        "h q[0];",
+                        "x q[1];",
+                        "#pragma braket result density_matrix q[0], q[1]",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
-def test_openqasm_from_ir_circuit(circuit, expected_ir):
-    circuit_from_ir = Circuit.from_ir(source=expected_ir.source, inputs=expected_ir.inputs)
+def test_openqasm_from_ir_circuit(expected_circuit, ir):
+    circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
 
-    assert all(
-        all(
-            getattr(obj1, attr) == getattr(obj2, attr)
-            for attr in dir(obj1)
-            if not attr.startswith("_") and not callable(getattr(obj1, attr))
-        )
-        for obj1, obj2 in zip(circuit_from_ir.instructions, circuit.instructions)
-    )
+    assert circuit_from_ir == expected_circuit
+
+
+def test_braket_result_to_result_type_raises_type_error():
+    with pytest.raises(TypeError, match="Result type str is not supported"):
+        braket_result_to_result_type("type error test")
 
 
 @pytest.mark.parametrize(

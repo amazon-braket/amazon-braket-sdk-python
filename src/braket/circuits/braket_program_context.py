@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -15,9 +15,14 @@ from braket.ir.jaqcd.program_v1 import Results
 
 
 class BraketProgramContext(AbstractProgramContext):
-    def __init__(self):
+    def __init__(self, circuit: Optional[Circuit] = None):
+        """
+        Args:
+            circuit (Optional[Circuit]): A partially-built circuit to continue building with this
+                context. Default: None.
+        """
         super().__init__()
-        self.circuit = Circuit()
+        self.circuit = circuit or Circuit()
 
     def is_builtin_gate(self, name: str) -> bool:
         """Whether the gate is currently in scope as a built-in Braket gate.
@@ -71,7 +76,7 @@ class BraketProgramContext(AbstractProgramContext):
             unitary (np.ndarray): unitary matrix
             target (Tuple[int]): control_qubits + target_qubits
         """
-        instruction = Instruction(Unitary(unitary)(), target)
+        instruction = Instruction(Unitary(unitary), target)
         self.circuit.add_instruction(instruction)
 
     def add_noise_instruction(self, noise: KrausOperation) -> None:

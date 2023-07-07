@@ -19,7 +19,6 @@ from braket.default_simulator.noise_operations import (
     TwoQubitDepolarizing,
 )
 from braket.ir.jaqcd import (
-    AdjointGradient,
     Amplitude,
     DensityMatrix,
     Expectation,
@@ -72,68 +71,76 @@ BRAKET_GATES = {
 
 
 @singledispatch
-def braket_noise_gate_to_instruction(noise: KrausOperation) -> Union[Instruction]:
+def _braket_noise_gate_to_instruction(noise: KrausOperation) -> Union[Instruction]:
     raise TypeError(f"Operation {type(noise).__name__} not supported")
 
 
-@braket_noise_gate_to_instruction.register(BitFlip)
+def braket_noise_gate_to_instruction(noise: KrausOperation) -> Union[Instruction]:
+    return _braket_noise_gate_to_instruction(noise)
+
+
+@_braket_noise_gate_to_instruction.register(BitFlip)
 def _(noise):
     return Instruction(noises.BitFlip(noise.probability), target=noise.targets)
 
 
-@braket_noise_gate_to_instruction.register(PhaseFlip)
+@_braket_noise_gate_to_instruction.register(PhaseFlip)
 def _(noise):
     return Instruction(noises.PhaseFlip(noise.probability), target=noise.targets)
 
 
-@braket_noise_gate_to_instruction.register(PauliChannel)
+@_braket_noise_gate_to_instruction.register(PauliChannel)
 def _(noise):
     return Instruction(noises.PauliChannel(*noise.probabilities), target=noise.targets)
 
 
-@braket_noise_gate_to_instruction.register(Depolarizing)
+@_braket_noise_gate_to_instruction.register(Depolarizing)
 def _(noise):
     return Instruction(noises.Depolarizing(noise.probability), target=noise.targets)
 
 
-@braket_noise_gate_to_instruction.register(TwoQubitDepolarizing)
+@_braket_noise_gate_to_instruction.register(TwoQubitDepolarizing)
 def _(noise):
     return Instruction(noises.TwoQubitDepolarizing(noise.probability), target=noise.targets)
 
 
-@braket_noise_gate_to_instruction.register(TwoQubitDephasing)
+@_braket_noise_gate_to_instruction.register(TwoQubitDephasing)
 def _(noise):
     return Instruction(noises.TwoQubitDephasing(noise.probability), target=noise.targets)
 
 
-@braket_noise_gate_to_instruction.register(AmplitudeDamping)
+@_braket_noise_gate_to_instruction.register(AmplitudeDamping)
 def _(noise):
     return Instruction(noises.AmplitudeDamping(noise.gamma), target=noise.targets)
 
 
-@braket_noise_gate_to_instruction.register(GeneralizedAmplitudeDamping)
+@_braket_noise_gate_to_instruction.register(GeneralizedAmplitudeDamping)
 def _(noise):
     return Instruction(
         noises.GeneralizedAmplitudeDamping(noise.gamma, noise.probability), target=noise.targets
     )
 
 
-@braket_noise_gate_to_instruction.register(PhaseDamping)
+@_braket_noise_gate_to_instruction.register(PhaseDamping)
 def _(noise):
     return Instruction(noises.PhaseDamping(noise.gamma), target=noise.targets)
 
 
-@singledispatch
 def get_observable(obs: Union[models.Observable, list]) -> Observable:
+    return _get_observable(obs)
+
+
+@singledispatch
+def _get_observable(obs: Union[models.Observable, list]) -> Observable:
     raise NotImplementedError
 
 
-@get_observable.register(list)
+@_get_observable.register(list)
 def _(obs):
     raise NotImplementedError
 
 
-@get_observable.register(str)
+@_get_observable.register(str)
 def _(name: str):
     return getattr(observables, name.upper())()
 
@@ -152,50 +159,48 @@ def get_tensor_product(observable: Union[models.Observable, list]) -> Observable
 
 
 @singledispatch
-def braket_result_to_result_type(result: Results) -> None:
+def _braket_result_to_result_type(result: Results) -> None:
     raise TypeError(f"Result type {type(result).__name__} is not supported")
 
 
-@braket_result_to_result_type.register(Amplitude)
+def braket_result_to_result_type(result: Results) -> None:
+    return _braket_result_to_result_type(result)
+
+
+@_braket_result_to_result_type.register(Amplitude)
 def _(result):
     return ResultTypes.Amplitude(state=result.states)
 
 
-@braket_result_to_result_type.register(Expectation)
+@_braket_result_to_result_type.register(Expectation)
 def _(result):
     tensor_product = get_tensor_product(result.observable)
 
     return ResultTypes.Expectation(observable=tensor_product, target=result.targets)
 
 
-@braket_result_to_result_type.register(Probability)
+@_braket_result_to_result_type.register(Probability)
 def _(result):
     return ResultTypes.Probability(result.targets)
 
 
-@braket_result_to_result_type.register(Sample)
+@_braket_result_to_result_type.register(Sample)
 def _(result):
     tensor_product = get_tensor_product(result.observable)
     return ResultTypes.Sample(observable=tensor_product, target=result.targets)
 
 
-@braket_result_to_result_type.register(StateVector)
+@_braket_result_to_result_type.register(StateVector)
 def _(result):
     return ResultTypes.StateVector()
 
 
-@braket_result_to_result_type.register(DensityMatrix)
+@_braket_result_to_result_type.register(DensityMatrix)
 def _(result):
     return ResultTypes.DensityMatrix(target=result.targets)
 
 
-@braket_result_to_result_type.register(Variance)
+@_braket_result_to_result_type.register(Variance)
 def _(result):
     tensor_product = get_tensor_product(result.observable)
     return ResultTypes.Variance(observable=tensor_product, target=result.targets)
-
-
-@braket_result_to_result_type.register(AdjointGradient)
-def _(result):
-    tensor_product = get_tensor_product(result.observable)
-    return ResultTypes.AdjointGradient(observable=tensor_product, target=result.targets)
