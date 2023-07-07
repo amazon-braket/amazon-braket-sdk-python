@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.48.1 (2023-07-07)
+
+### Bug Fixes and Other Changes
+
+ * use event callbacks to add braket user agents
+
 ## v1.48.0 (2023-07-06)
 
 ### Features
