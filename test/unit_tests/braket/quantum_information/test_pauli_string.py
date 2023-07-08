@@ -138,7 +138,7 @@ def test_eigenstate_invalid_signs(sign):
 
 
 @pytest.mark.parametrize(
-    "circ1, circ2, circ_res",
+    "circ_arg_1, circ_arg_2, circ_res",
     [
         ("XYXZY", "+XYXZY", "IIIII"),
         ("XYZ", "ZYX", "YIY"),
@@ -147,13 +147,22 @@ def test_eigenstate_invalid_signs(sign):
         ("Z", "Y", "-X"),
     ],
 )
-def test_dot(circ1, circ2, circ_res):
-    # Test operator overload
-    assert PauliString(circ1) * PauliString(circ2) == PauliString(circ_res)
+def test_dot(circ_arg_1, circ_arg_2, circ_res):
+    circ1 = PauliString(circ_arg_1)
+    circ2 = circ1.dot(PauliString(circ_arg_2))
+    assert circ2 == PauliString(circ_res)
+    assert circ1 == circ1
 
     # Test in-place computation
-    circ1 = PauliString(circ1)
-    circ1.dot(PauliString(circ2), inplace=True)
+    circ1 = PauliString(circ_arg_1)
+    circ1.dot(PauliString(circ_arg_2), inplace=True)
+    assert circ1 == PauliString(circ_res)
+
+    # Test operator overloads
+    circ1 = PauliString(circ_arg_1)
+    circ2 = PauliString(circ_arg_2)
+    assert circ1 * circ2 == PauliString(circ_res)
+    circ1 *= circ2
     assert circ1 == PauliString(circ_res)
 
 
@@ -168,10 +177,17 @@ def test_dot(circ1, circ2, circ_res):
     ],
 )
 def test_power(circ, n, circ_res):
-    # Test operator overload
-    assert (PauliString(circ) ** n) == PauliString(circ_res)
+    circ1 = PauliString(circ)
+    circ2 = circ1.power(n)
+    assert circ2 == PauliString(circ_res)
+    assert circ1 == PauliString(circ)
 
     # Test in-place computation
-    circ = PauliString(circ)
-    circ.power(n, inplace=True)
-    assert circ == PauliString(circ_res)
+    circ1.power(n, inplace=True)
+    assert circ1 == PauliString(circ_res)
+
+    # Test operator overloads
+    circ1 = PauliString(circ)
+    assert (circ1**n) == PauliString(circ_res)
+    circ1 **= n
+    assert circ1 == PauliString(circ_res)

@@ -148,7 +148,7 @@ class PauliString:
         return self._generate_eigenstate_circuit(signs_tup)
 
     def dot(self, other: PauliString, inplace: bool = False) -> PauliString:
-        """Right multiplies this Pauli String with the argument.
+        """Right multiplies this Pauli string with the argument.
 
         Returns the result of multiplying the current circuit by the argument on its right. For
         example, if called on `-XYZ` with argument `ZYX`, then `YIY` is the result. In-place
@@ -162,7 +162,7 @@ class PauliString:
             PauliString: The resultant circuit from right multiplying `self` with `other`.
 
         Raises:
-            ValueError: If the lengths of the Pauli Strings being multiplied differ.
+            ValueError: If the lengths of the Pauli strings being multiplied differ.
         """
         if self._qubit_count != other._qubit_count:
             raise ValueError(
@@ -209,32 +209,57 @@ class PauliString:
             PauliString: The resultant circuit from right multiplying `self` with `other`.
 
         Raises:
-            ValueError: If the lengths of the Pauli Strings being multiplied differ.
+            ValueError: If the lengths of the Pauli strings being multiplied differ.
 
         See Also:
             `braket.quantum_information.PauliString.dot()`
         """
         return self.dot(other)
 
-    def power(self, n: int, inplace: bool = False) -> PauliString:
-        """Composes circuit with itself n times.
+    def __imul__(self, other: PauliString) -> PauliString:
+        """Operator overload for right-multiplication assignment (`*=`) using `dot()`.
+
+        Right-multiplies `self` by `other`, and assigns the result to `self`.
 
         Args:
-            n (int): The number of times to self-multiply. Must be greater than 0.
+            other (PauliString): The right multiplicand.
+
+        Returns:
+            PauliString: The resultant circuit from right multiplying `self` with `other`.
+
+        Raises:
+            ValueError: If the lengths of the Pauli strings being multiplied differ.
+
+        See Also:
+            `braket.quantum_information.PauliString.dot()`
+        """
+        return self.dot(other, inplace=True)
+
+    def power(self, n: int, inplace: bool = False) -> PauliString:
+        """Composes Pauli string with itself n times.
+
+        Args:
+            n (int): The number of times to self-multiply. Can be any integer value.
             inplace (bool): Update `self` if `True`
 
         Returns:
-            PauliString: The circuit from right multiplying `self` with itself `n` times.
+            PauliString: If `n` is positive, result from self-multiplication `n` times.
+            If zero, identity. If negative, self-multiplication from trivial
+            inverse (recall Pauli operators are involutory).
 
         Raises:
-            ValueError: If `n <= 0`.
+            ValueError: If `n` isn't a plain Python `int`.
         """
-        if n <= 0:
-            raise ValueError("Must be raised to power strictly greater than 0")
+        if not isinstance(n, int):
+            raise ValueError("Must be raised to integer power")
 
         pauli_other = PauliString(self)
-        for _ in range(n - 1):
-            pauli_other.dot(self, inplace=True)
+        if n == 0:
+            pauli_other._phase = 1
+            pauli_other._nontrivial = {}
+        else:
+            for _ in range(n - 1):
+                pauli_other.dot(self, inplace=True)
 
         if inplace:
             self._phase = pauli_other._phase
@@ -248,18 +273,41 @@ class PauliString:
         Syntactic sugar for `power()`.
 
         Args:
-            n (int): The number of times to self-multiply. Must be greater than 0.
+            n (int): The number of times to self-multiply. Can be any integer
 
         Returns:
-            PauliString: The circuit from right multiplying `self` with itself `n` times.
+            PauliString: If `n` is positive, result from self-multiplication `n` times.
+            If zero, identity. If negative, self-multiplication from trivial
+            inverse (recall Pauli operators are involutory).
 
         Raises:
-            ValueError: If `n <= 0`.
+            ValueError: If `n` isn't a plain Python `int`.
 
         See Also:
             `braket.quantum_information.PauliString.power()`
         """
         return self.power(n)
+
+    def __ipow__(self, n: int) -> PauliString:
+        """Operator overload for in-place pow assignment (`**=`) using `power()`.
+
+        Syntactic sugar for in-place `power()`.
+
+        Args:
+            n (int): The number of times to self-multiply. Can be any integer
+
+        Returns:
+            PauliString: If `n` is positive, result from self-multiplication `n` times.
+            If zero, identity. If negative, self-multiplication from trivial
+            inverse (recall Pauli operators are involutory).
+
+        Raises:
+            ValueError: If `n` isn't a plain Python `int`.
+
+        See Also:
+            `braket.quantum_information.PauliString.power()`
+        """
+        return self.power(n, inplace=True)
 
     def to_circuit(self) -> Circuit:
         """Returns circuit represented by this `PauliString`.
