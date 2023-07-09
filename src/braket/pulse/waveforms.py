@@ -71,7 +71,7 @@ class ArbitraryWaveform(Waveform):
         """
         try:
             self.amplitudes = list(amplitudes)
-        except:
+        except TypeError:
             raise TypeError("Amplitudes must be castable into list.")
         self.id = id or _make_identifier_name()
 
