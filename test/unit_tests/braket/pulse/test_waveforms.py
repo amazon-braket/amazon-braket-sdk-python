@@ -14,6 +14,8 @@ import math
 import re
 from copy import deepcopy
 
+import numpy as np
+import pytest
 from oqpy import Program
 
 from braket.circuits.free_parameter import FreeParameter
@@ -21,14 +23,20 @@ from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWavefo
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 
 
-def test_arbitrary_waveform():
-    amps = [complex(1, 2), complex(0.3, -1), 0, 4.2]
+@pytest.mark.parametrize(
+    "amps",
+    [
+        [complex(1, 2), complex(0.3, -1), 0, 4.2],
+        np.array([complex(1, 2), complex(0.3, -1), 0, 4.2]),
+    ],
+)
+def test_arbitrary_waveform(amps):
     id = "arb_wf_x"
     wf = ArbitraryWaveform(amps, id)
-    assert wf.amplitudes == amps
+    assert wf.amplitudes == list(amps)
     assert wf.id == id
     oq_exp = wf._to_oqpy_expression()
-    assert oq_exp.init_expression == amps
+    assert oq_exp.init_expression == list(amps)
     assert oq_exp.name == wf.id
 
 
@@ -47,6 +55,12 @@ def test_arbitrary_wf_eq():
         wfc = deepcopy(wf_2)
         setattr(wfc, att, "wrong_value")
         assert wf != wfc
+
+
+def test_arbitrary_waveform_not_castable_into_list():
+    amps = 1
+    with pytest.raises(TypeError):
+        wf = ArbitraryWaveform(amps)
 
 
 def test_constant_waveform():
