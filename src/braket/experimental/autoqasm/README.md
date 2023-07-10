@@ -56,21 +56,27 @@ def bell_state() -> None:
 You can view the output format, which is OpenQASM, by running `bell_state().to_ir()`.
 
 AutoQASM enables users to use more complicated program constructs with a compact and readable
-structure. We can demonstrate this with an active reset program:
+structure. We can demonstrate this with a program that conditionally prepares multiple Bell states:
 ```
-# A program that actively resets a qubit back to the ground state
+# A program that is conditioned on the measurement result of qubit 0 to prepare two
+# Bell states on qubit pairs (1, 2) and (3, 4).
 @aq.function
-def reset(qubit: int, num_repeats: int) -> None:
-    for repeats in aq.range(num_repeats):
-        if measure(qubit):
-            x(qubit)
-```
+def conditional_multi_bell_states() -> None:
+    h(0)
+    if measure(0):
+        for i in aq.range(2):
+            qubit = 2*i+1
+            h(qubit)
+            cnot(qubit, qubit+1)
 
-Now that the program takes inputs, you must pass those inputs when you call your function.
-In this case, the qubits are indexed by variable, rather than by integer literals, so we
-must additionally pass the `num_qubits` keyword argument to AutoQASM.
+    measure([0,1,2,3,4])
 ```
-my_reset_program = reset(qubit=0, num_repeats=3, num_qubits=1)
+In this example, the qubits are indexed by variable, rather than by integer literals. The variables
+are in general unresolvable until the execution time. So, AutoQASM does not know how many qubits
+the program may need. We must pass the number of qubits used, `num_qubits`, as a keyword
+argument to AutoQASM.
+```
+my_bell_program = conditional_multi_bell_states(num_qubits=5)
 ```
 
 AutoQASM can support nested subroutines and complex control flow. You can use the Python runtime
