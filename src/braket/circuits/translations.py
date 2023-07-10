@@ -82,6 +82,7 @@ one_prob_noise_map = {
     "phase_damping": noises.PhaseDamping,
 }
 
+
 def get_observable(obs: Union[models.Observable, list]) -> Observable:
     return _get_observable(obs)
 

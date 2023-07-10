@@ -21,7 +21,8 @@ from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
     braket_noise_gate_to_instruction,
-    braket_result_to_result_type, one_prob_noise_map,
+    braket_result_to_result_type,
+    one_prob_noise_map,
 )
 from braket.default_simulator import KrausOperation
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
@@ -97,7 +98,9 @@ class BraketProgramContext(AbstractProgramContext):
         instruction = Instruction(Unitary(unitary), target)
         self._circuit.add_instruction(instruction)
 
-    def add_noise_instruction(self, noise_instruction: str, target: List[int], probabilities: List[float]) -> None:
+    def add_noise_instruction(
+        self, noise_instruction: str, target: List[int], probabilities: List[float]
+    ) -> None:
         instruction = one_prob_noise_map[noise_instruction](target, *probabilities)
         self._circuit.add_instruction(instruction)
 
