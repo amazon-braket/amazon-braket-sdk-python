@@ -17,10 +17,11 @@ import numpy as np
 
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
+from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
     braket_noise_gate_to_instruction,
-    braket_result_to_result_type,
+    braket_result_to_result_type, one_prob_noise_map,
 )
 from braket.default_simulator import KrausOperation
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
@@ -96,9 +97,13 @@ class BraketProgramContext(AbstractProgramContext):
         instruction = Instruction(Unitary(unitary), target)
         self._circuit.add_instruction(instruction)
 
-    def add_noise_instruction(self, noise: KrausOperation) -> None:
-        """Add a noise instruction the circuit"""
-        self._circuit.add_instruction(braket_noise_gate_to_instruction(noise))
+    def add_noise_instruction(self, noise_instruction: str, target: List[int], probabilities: List[float]) -> None:
+        instruction = one_prob_noise_map[noise_instruction](target, *probabilities)
+        self._circuit.add_instruction(instruction)
+
+    def add_kraus_instruction(self, matrices, target):
+        instruction = Instruction(Kraus(matrices), target)
+        self._circuit.add_instruction(instruction)
 
     def add_result(self, result: Results) -> None:
         """Add a result type to the circuit"""
