@@ -38,10 +38,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     QubitReferenceType,
 )
-from braket.circuits.translations import (
-    braket_noise_gate_to_instruction,
-    braket_result_to_result_type,
-)
+from braket.circuits.translations import braket_result_to_result_type
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 
@@ -1486,11 +1483,6 @@ def test_circuit_from_ir_greater_functionality(expected_circuit, ir):
 def test_braket_result_to_result_type_raises_type_error():
     with pytest.raises(TypeError, match="Result type str is not supported"):
         braket_result_to_result_type("type error test")
-
-
-def test_braket_noise_gate_to_instruction_raises_type_error():
-    with pytest.raises(TypeError, match="Operation str not supported"):
-        braket_noise_gate_to_instruction("type error test")
 
 
 @pytest.mark.parametrize(
