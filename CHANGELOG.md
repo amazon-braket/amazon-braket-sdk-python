@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.49.0 (2023-07-10)
+
+### Features
+
+ * OpenQASM to `Circuit` translator
+
+### Bug Fixes and Other Changes
+
+ * Update Braket dependencies
+ * update noise operation in program context
+ * ci: Harden GitHub Actions
+
 ## v1.48.1 (2023-07-07)
 
 ### Bug Fixes and Other Changes
