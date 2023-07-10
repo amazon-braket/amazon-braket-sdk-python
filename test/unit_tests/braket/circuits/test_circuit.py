@@ -1365,6 +1365,29 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
                 inputs={},
             ),
         ),
+        (
+            Circuit().kraus(
+                [0],
+                matrices=[
+                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                    np.array([[0, 0.31622777], [0.31622777, 0]]),
+                ],
+            ),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise "
+                        "kraus([[0.9486833im, 0], [0, 0.9486833im]], [[0, 0.31622777], "
+                        "[0.31622777, 0]]) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
 def test_circuit_from_ir(expected_circuit, ir):

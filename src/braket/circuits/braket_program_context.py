@@ -108,7 +108,9 @@ class BraketProgramContext(AbstractProgramContext):
             probabilities (List[float]): The probabilities associated with each possible outcome
                 of the noise operation.
         """
-        instruction = one_prob_noise_map[noise_instruction](target, *probabilities)
+        instruction = Instruction(
+            one_prob_noise_map[noise_instruction](*probabilities), target=target
+        )
         self._circuit.add_instruction(instruction)
 
     def add_kraus_instruction(self, matrices: List[np.ndarray], target: List[int]) -> None:
