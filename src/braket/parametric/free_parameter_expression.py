@@ -56,7 +56,7 @@ class FreeParameterExpression:
         elif isinstance(expression, (Number, Expr)):
             self._expression = expression
         elif isinstance(expression, str):
-            self._expression = self._parse_string_expression(expression)
+            self._expression = self._parse_string_expression(expression).expression
         else:
             raise NotImplementedError
 

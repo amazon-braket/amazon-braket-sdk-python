@@ -1,5 +1,45 @@
 # Changelog
 
+## v1.49.0 (2023-07-10)
+
+### Features
+
+ * OpenQASM to `Circuit` translator
+
+### Bug Fixes and Other Changes
+
+ * Update Braket dependencies
+ * update noise operation in program context
+ * ci: Harden GitHub Actions
+
+## v1.48.1 (2023-07-07)
+
+### Bug Fixes and Other Changes
+
+ * use event callbacks to add braket user agents
+
+## v1.48.0 (2023-07-06)
+
+### Features
+
+ * draw barrier/delay with qubits
+
+### Bug Fixes and Other Changes
+
+ * constrain boto version
+ * pass the expression field when parsing to FreeParameterExpression
+ * pass gate modifiers to to_unitary
+
+## v1.47.0 (2023-06-30)
+
+### Features
+
+ * add optional third angle to MS gate
+
+### Bug Fixes and Other Changes
+
+ * mixed free parameters and floats
+
 ## v1.46.0 (2023-06-29)
 
 ### Features
