@@ -82,9 +82,9 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
 MOCK_NATIVE_GATE_CALIBRATION_JSON = {
     "gates": {
         "0": {
-            "rx": [
+            "cphaseshift": [
                 {
-                    "name": "rx",
+                    "name": "cphaseshift",
                     "qubits": ["0"],
                     "arguments": ["-1.5707963267948966"],
                     "calibrations": [
@@ -138,8 +138,8 @@ MOCK_NATIVE_GATE_CALIBRATION_JSON = {
                         {
                             "name": "shift_frequency",
                             "arguments": [
-                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
                                 {"name": "frequency", "value": "theta", "type": "expr"},
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
                             ],
                         },
                     ],
@@ -1787,7 +1787,7 @@ def test_parse_calibration_data():
         )
     }
     expected_calibration_data = {
-        (Gate.Rx(-1.5707963267948966), QubitSet(0)): PulseSequence()
+        (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): PulseSequence()
         .barrier(QubitSet(0))
         .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
         .barrier([device.frames["q0_q1_cphase_frame"]])
@@ -1799,8 +1799,6 @@ def test_parse_calibration_data():
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
     expected_ngc = NativeGateCalibration(calibration_data=expected_calibration_data)
-    print(device_ngc.calibration_data[Gate.CZ(), QubitSet([1, 0])].to_ir())
-    print(expected_ngc.calibration_data[Gate.CZ(), QubitSet([1, 0])].to_ir())
     assert device_ngc == expected_ngc
 
 
@@ -1837,7 +1835,7 @@ def test_parse_calibration_data():
                     "0": {
                         "rx": [
                             {
-                                "name": "rx",
+                                "name": "cphaseshift",
                                 "qubits": ["0"],
                                 "arguments": ["-1.5707963267948966"],
                                 "calibrations": [

@@ -894,10 +894,7 @@ class AwsDevice(Device):
                     k1 = f"{len(qubits)}Q"
                     k2 = "-".join([str(int(qubit)) for qubit in sorted(qubits)])
                     k3 = f"f{gate_qubit_key[0].name}" if len(qubits) == 2 else "f1QRB"
-                    if k3 == "fCPhaseShift":
-                        k3 = "fCPHASE"
-                    if len(qubits) > 0:
-                        fidelities[gate_qubit_key] = self.properties.provider.specs[k1][k2][k3]
+                    fidelities[gate_qubit_key] = self.properties.provider.specs[k1][k2][k3]
         return parsed_calibration_data, fidelities
 
     @staticmethod
