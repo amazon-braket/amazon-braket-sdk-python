@@ -17,12 +17,12 @@ import numpy as np
 
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
+from braket.circuits.noises import Kraus
 from braket.circuits.translations import (
     BRAKET_GATES,
-    braket_noise_gate_to_instruction,
     braket_result_to_result_type,
+    one_prob_noise_map,
 )
-from braket.default_simulator import KrausOperation
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
 
@@ -39,6 +39,7 @@ class BraketProgramContext(AbstractProgramContext):
 
     @property
     def circuit(self) -> Circuit:
+        """The circuit being built in this context."""
         return self._circuit
 
     def is_builtin_gate(self, name: str) -> bool:
@@ -96,10 +97,37 @@ class BraketProgramContext(AbstractProgramContext):
         instruction = Instruction(Unitary(unitary), target)
         self._circuit.add_instruction(instruction)
 
-    def add_noise_instruction(self, noise: KrausOperation) -> None:
-        """Add a noise instruction the circuit"""
-        self._circuit.add_instruction(braket_noise_gate_to_instruction(noise))
+    def add_noise_instruction(
+        self, noise_instruction: str, target: List[int], probabilities: List[float]
+    ) -> None:
+        """Method to add a noise instruction to the circuit
+
+        Args:
+            noise_instruction (str): The name of the noise operation
+            target (List[int]): The target qubit or qubits to which the noise operation is applied.
+            probabilities (List[float]): The probabilities associated with each possible outcome
+                of the noise operation.
+        """
+        instruction = Instruction(
+            one_prob_noise_map[noise_instruction](*probabilities), target=target
+        )
+        self._circuit.add_instruction(instruction)
+
+    def add_kraus_instruction(self, matrices: List[np.ndarray], target: List[int]) -> None:
+        """Method to add a Kraus instruction to the circuit
+
+        Args:
+            matrices (List[ndarray]): The matrices defining the Kraus operation
+            target (List[int]): The target qubit or qubits to which the Kraus operation is applied.
+        """
+        instruction = Instruction(Kraus(matrices), target)
+        self._circuit.add_instruction(instruction)
 
     def add_result(self, result: Results) -> None:
-        """Add a result type to the circuit"""
+        """
+        Abstract method to add result type to the circuit
+
+        Args:
+            result (Results): The result object representing the measurement results
+        """
         self._circuit.add_result_type(braket_result_to_result_type(result))

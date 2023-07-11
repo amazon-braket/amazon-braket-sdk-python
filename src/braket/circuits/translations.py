@@ -18,19 +18,7 @@ import braket.circuits.gates as braket_gates
 import braket.circuits.noises as noises
 import braket.circuits.result_types as ResultTypes
 import braket.ir.jaqcd.shared_models as models
-from braket.circuits import Instruction, Observable, observables
-from braket.default_simulator import KrausOperation
-from braket.default_simulator.noise_operations import (
-    AmplitudeDamping,
-    BitFlip,
-    Depolarizing,
-    GeneralizedAmplitudeDamping,
-    PauliChannel,
-    PhaseDamping,
-    PhaseFlip,
-    TwoQubitDephasing,
-    TwoQubitDepolarizing,
-)
+from braket.circuits import Observable, observables
 from braket.ir.jaqcd import (
     Amplitude,
     DensityMatrix,
@@ -82,61 +70,17 @@ BRAKET_GATES = {
     "unitary": braket_gates.Unitary,
 }
 
-
-@singledispatch
-def _braket_noise_gate_to_instruction(noise: KrausOperation) -> Union[Instruction]:
-    raise TypeError(f"Operation {type(noise).__name__} not supported")
-
-
-def braket_noise_gate_to_instruction(noise: KrausOperation) -> Union[Instruction]:
-    return _braket_noise_gate_to_instruction(noise)
-
-
-@_braket_noise_gate_to_instruction.register(BitFlip)
-def _(noise):
-    return Instruction(noises.BitFlip(noise.probability), target=noise.targets)
-
-
-@_braket_noise_gate_to_instruction.register(PhaseFlip)
-def _(noise):
-    return Instruction(noises.PhaseFlip(noise.probability), target=noise.targets)
-
-
-@_braket_noise_gate_to_instruction.register(PauliChannel)
-def _(noise):
-    return Instruction(noises.PauliChannel(*noise.probabilities), target=noise.targets)
-
-
-@_braket_noise_gate_to_instruction.register(Depolarizing)
-def _(noise):
-    return Instruction(noises.Depolarizing(noise.probability), target=noise.targets)
-
-
-@_braket_noise_gate_to_instruction.register(TwoQubitDepolarizing)
-def _(noise):
-    return Instruction(noises.TwoQubitDepolarizing(noise.probability), target=noise.targets)
-
-
-@_braket_noise_gate_to_instruction.register(TwoQubitDephasing)
-def _(noise):
-    return Instruction(noises.TwoQubitDephasing(noise.probability), target=noise.targets)
-
-
-@_braket_noise_gate_to_instruction.register(AmplitudeDamping)
-def _(noise):
-    return Instruction(noises.AmplitudeDamping(noise.gamma), target=noise.targets)
-
-
-@_braket_noise_gate_to_instruction.register(GeneralizedAmplitudeDamping)
-def _(noise):
-    return Instruction(
-        noises.GeneralizedAmplitudeDamping(noise.gamma, noise.probability), target=noise.targets
-    )
-
-
-@_braket_noise_gate_to_instruction.register(PhaseDamping)
-def _(noise):
-    return Instruction(noises.PhaseDamping(noise.gamma), target=noise.targets)
+one_prob_noise_map = {
+    "bit_flip": noises.BitFlip,
+    "phase_flip": noises.PhaseFlip,
+    "pauli_channel": noises.PauliChannel,
+    "depolarizing": noises.Depolarizing,
+    "two_qubit_depolarizing": noises.TwoQubitDepolarizing,
+    "two_qubit_dephasing": noises.TwoQubitDephasing,
+    "amplitude_damping": noises.AmplitudeDamping,
+    "generalized_amplitude_damping": noises.GeneralizedAmplitudeDamping,
+    "phase_damping": noises.PhaseDamping,
+}
 
 
 def get_observable(obs: Union[models.Observable, list]) -> Observable:
