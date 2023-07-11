@@ -43,7 +43,7 @@ class InconsistentNumQubits(AutoQasmError):
         self.message = """\
 The number of qubits specified by one of your subroutines does not match the \
 arguments supplied to your main function. Remove the num_qubits decorator \
-argument to all aq.functions except the one you wish to call."""
+argument to all AutoQASM decorated functions except the one you wish to call."""
 
     def __str__(self):
         return self.message

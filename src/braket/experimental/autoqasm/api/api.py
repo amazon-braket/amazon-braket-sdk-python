@@ -34,7 +34,7 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 
 
-def function(*args, num_qubits: int = None) -> Callable[[Any], aq_program.Program]:
+def function(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.Program]:
     """Decorator that converts a function into a callable that returns
     a Program object containing the quantum program.
 
@@ -159,9 +159,7 @@ def _convert_wrapper(
 
 
 def _validate_subroutine_args(user_config: aq_program.UserConfig) -> None:
-    """Validate decorator arguments to subroutines. Subroutines do not currently support
-    decorator parameters; however, we allow them if they match the arguments provided to
-    main.
+    """Validate decorator arguments to subroutines.
 
     Args:
         user_config (UserConfig): User-specified settings that influence program building
@@ -172,6 +170,7 @@ def _validate_subroutine_args(user_config: aq_program.UserConfig) -> None:
     """
     if user_config.num_qubits is None:
         return
+    # Allow num_qubits only if the arg matches the value provided to the main function
     if user_config.num_qubits != aq_program.get_program_conversion_context().get_declared_qubits():
         raise errors.InconsistentNumQubits()
 

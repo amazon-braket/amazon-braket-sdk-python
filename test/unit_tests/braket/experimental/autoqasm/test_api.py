@@ -789,6 +789,6 @@ def test_mismatched_qubits():
     @aq.function(num_qubits=8)
     def main() -> None:
         subroutine()
-    
+
     with pytest.raises(errors.InconsistentNumQubits):
         main()
