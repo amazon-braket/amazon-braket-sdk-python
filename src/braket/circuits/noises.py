@@ -1399,9 +1399,9 @@ class Kraus(Noise):
             Iterable[Instruction]: `Iterable` of Kraus instructions.
 
         Examples:
-            >>> K0 = np.eye(4) * sqrt(0.9)
-            >>> K1 = np.kron([[1., 0.],[0., 1.]], [[0., 1.],[1., 0.]]) * sqrt(0.1)
-            >>> circ = Circuit().kraus(0, matrices=[K0, K1])
+            >>> K0 = np.eye(4) * np.sqrt(0.9)
+            >>> K1 = np.kron([[1., 0.],[0., 1.]], [[0., 1.],[1., 0.]]) * np.sqrt(0.1)
+            >>> circ = Circuit().kraus([1, 0], matrices=[K0, K1])
         """
         if 2 ** len(targets) != matrices[0].shape[0]:
             raise ValueError(
