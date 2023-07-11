@@ -112,14 +112,14 @@ def do_h(q: int):
     h(q)
 
 
-@aq.function
+@aq.function(num_qubits=6)
 def recursive_h(q: int):
     do_h(q)
     if q > 0:
         recursive_h(q - 1)
 
 
-@aq.function
+@aq.function(num_qubits=6)
 def recursive_h_wrapper(q: int):
     recursive_h(q)
 
@@ -137,11 +137,11 @@ def recursive_h(int[32] q) {
 }
 qubit[6] __qubits__;
 recursive_h(5);"""
-    assert recursive_h_wrapper(5, num_qubits=6).to_ir() == expected
+    assert recursive_h_wrapper(5).to_ir() == expected
 
 
 def test_sim_recursive_h_wrapper():
-    _test_on_local_sim(recursive_h_wrapper(5, num_qubits=6))
+    _test_on_local_sim(recursive_h_wrapper(5))
 
 
 def test_recursive_h():
@@ -158,11 +158,11 @@ def recursive_h(int[32] q) {
 qubit[6] __qubits__;
 do_h(5);
 recursive_h(4);"""
-    assert recursive_h(5, num_qubits=6).to_ir() == expected
+    assert recursive_h(5).to_ir() == expected
 
 
 def test_sim_recursive_h():
-    _test_on_local_sim(recursive_h(5, num_qubits=6))
+    _test_on_local_sim(recursive_h(5))
 
 
 @aq.function
@@ -171,7 +171,7 @@ def bell_state_arbitrary_qubits(q0: int, q1: int) -> None:
     cnot(q0, q1)
 
 
-@aq.function
+@aq.function(num_qubits=4)
 def double_bell_state() -> None:
     bell_state_arbitrary_qubits(0, 1)
     bell_state_arbitrary_qubits(2, 3)
@@ -186,11 +186,11 @@ def bell_state_arbitrary_qubits(int[32] q0, int[32] q1) {
 qubit[4] __qubits__;
 bell_state_arbitrary_qubits(0, 1);
 bell_state_arbitrary_qubits(2, 3);"""
-    assert double_bell_state(num_qubits=4).to_ir() == expected
+    assert double_bell_state().to_ir() == expected
 
 
 def test_sim_double_bell() -> None:
-    _test_on_local_sim(double_bell_state(num_qubits=4))
+    _test_on_local_sim(double_bell_state())
 
 
 @aq.function
@@ -294,7 +294,7 @@ def test_bell_measurement_invalid_declared_size() -> None:
     assert expected_error_message in str(exc_info.value)
 
 
-@aq.function
+@aq.function(num_qubits=5)
 def ghz_qasm_for_loop() -> None:
     """A function that generates a GHZ state using a QASM for loop."""
     n_qubits = 5
@@ -310,11 +310,11 @@ h __qubits__[0];
 for int i in [0:3] {
     cnot __qubits__[i], __qubits__[i + 1];
 }"""
-    assert ghz_qasm_for_loop(num_qubits=5).to_ir() == expected
+    assert ghz_qasm_for_loop().to_ir() == expected
 
 
 def test_sim_ghz_qasm_for_loop() -> None:
-    _test_on_local_sim(ghz_qasm_for_loop(num_qubits=5))
+    _test_on_local_sim(ghz_qasm_for_loop())
 
 
 @aq.function
@@ -521,12 +521,6 @@ def test_physical_qubit_decl(physical_bell_program) -> None:
     assert "__qubits__" not in qasm
 
 
-def test_explicit_qubit_decl() -> None:
-    """Tests the qubit declaration functionality."""
-    qasm = ghz_py_for_loop(num_qubits=10).to_ir()
-    assert "\nqubit[10] __qubits__;" in qasm
-
-
 def test_invalid_physical_qubit_fails() -> None:
     """Tests invalid physical qubit formatting."""
 
@@ -671,13 +665,6 @@ def test_program_with_expr() -> None:
         qubit_expr()
 
 
-def test_program_with_expr_and_declaration() -> None:
-    """Test that a program with expressions for the qubit index does not
-    raise an error if the user explicitly declares the number of qubits.
-    """
-    ghz_qasm_for_loop(num_qubits=8)
-
-
 def test_multi_for_loop() -> None:
     """Test that a program with multiple differing for loops is generated
     correctly.
@@ -691,7 +678,7 @@ for int i in [0:4] {
     h __qubits__[i];
 }"""
 
-    @aq.function
+    @aq.function(num_qubits=6)
     def prog():
         for i in aq.range(3):
             cnot(i, i + 1)
@@ -699,7 +686,7 @@ for int i in [0:4] {
         for i in aq.range(5):
             h(i)
 
-    assert prog(num_qubits=6).to_ir() == expected
+    assert prog().to_ir() == expected
 
 
 @aq.function
@@ -708,7 +695,7 @@ def bell(q0: int, q1: int) -> None:
     cnot(q0, q1)
 
 
-@aq.function
+@aq.function(num_qubits=5)
 def bell_in_for_loop() -> None:
     for i in aq.range(3):
         bell(0, 1)
@@ -726,7 +713,7 @@ for int i in [0:2] {
     bell(0, 1);
 }"""
 
-    assert bell_in_for_loop(num_qubits=5).to_ir() == expected
+    assert bell_in_for_loop().to_ir() == expected
 
 
 def test_classical_variables_types():
@@ -792,7 +779,3 @@ a = __bit_0__;
 bit b;
 b = a;"""
     assert prog().to_ir() == expected
-
-
-def test_generated_docstring(bell_state_program) -> None:
-    assert "num_qubits (int)" in bell_state_program.__doc__

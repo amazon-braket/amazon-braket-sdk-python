@@ -19,7 +19,6 @@ from .pragmas import Verbatim  # noqa: F401
 from .program import (  # noqa: F401
     Program,
     ProgramConversionContext,
-    ProgramOptions,
     UserConfig,
     build_program,
     get_program_conversion_context,
