@@ -17,9 +17,10 @@ from copy import deepcopy
 from typing import Any, Dict, List, Set, Union
 
 from openpulse import ast
-from oqpy import BitVar, Program
+from oqpy import BitVar, PhysicalQubits, Program
 from oqpy.timing import OQDurationLiteral
 
+from braket.circuits.qubit_set import QubitSet
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
@@ -165,46 +166,57 @@ class PulseSequence:
         return self
 
     def delay(
-        self, frames: Union[Frame, List[Frame]], duration: Union[float, FreeParameterExpression]
+        self,
+        qubits_or_frames: Union[Frame, List[Frame], QubitSet],
+        duration: Union[float, FreeParameterExpression],
     ) -> PulseSequence:
         """
         Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
-            frames (Union[Frame, List[Frame]]): Frame(s) on which the delay needs to be introduced.
+            qubits_or_frames (Union[Frame, List[Frame], QubitSet]): Qubits or frame(s) on which
+                the delay needs to be introduced.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
-
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        if not isinstance(frames, list):
-            frames = [frames]
         if isinstance(duration, FreeParameterExpression):
             for p in duration.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
             duration = OQDurationLiteral(duration)
-        _validate_uniqueness(self._frames, frames)
-        self._program.delay(time=duration, qubits_or_frames=frames)
-        for frame in frames:
-            self._frames[frame.id] = frame
+        if not isinstance(qubits_or_frames, QubitSet):
+            if not isinstance(qubits_or_frames, list):
+                qubits_or_frames = [qubits_or_frames]
+            _validate_uniqueness(self._frames, qubits_or_frames)
+            self._program.delay(time=duration, qubits_or_frames=qubits_or_frames)
+            for frame in qubits_or_frames:
+                self._frames[frame.id] = frame
+        else:
+            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits_or_frames)
+            self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
-    def barrier(self, frames: List[Frame]) -> PulseSequence:
+    def barrier(self, qubits_or_frames: Union[List[Frame], QubitSet]) -> PulseSequence:
         """
         Adds an instruction to align the frame clocks to the latest time across all the specified
         frames.
 
         Args:
-            frames (List[Frame]): Frames across which the frame clocks need to be aligned.
+            qubits_or_frames (Union[List[Frame], QubitSet]): Qubits or frames which the delay
+                needs to be introduced.
 
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        _validate_uniqueness(self._frames, frames)
-        self._program.barrier(qubits_or_frames=frames)
-        for frame in frames:
-            self._frames[frame.id] = frame
+        if not isinstance(qubits_or_frames, QubitSet):
+            _validate_uniqueness(self._frames, qubits_or_frames)
+            self._program.barrier(qubits_or_frames=qubits_or_frames)
+            for frame in qubits_or_frames:
+                self._frames[frame.id] = frame
+        else:
+            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits_or_frames)
+            self._program.barrier(qubits_or_frames=physical_qubits)
         return self
 
     def play(self, frame: Frame, waveform: Waveform) -> PulseSequence:

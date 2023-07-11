@@ -1,5 +1,75 @@
 # Changelog
 
+## v1.49.0 (2023-07-10)
+
+### Features
+
+ * OpenQASM to `Circuit` translator
+
+### Bug Fixes and Other Changes
+
+ * Update Braket dependencies
+ * update noise operation in program context
+ * ci: Harden GitHub Actions
+
+## v1.48.1 (2023-07-07)
+
+### Bug Fixes and Other Changes
+
+ * use event callbacks to add braket user agents
+
+## v1.48.0 (2023-07-06)
+
+### Features
+
+ * draw barrier/delay with qubits
+
+### Bug Fixes and Other Changes
+
+ * constrain boto version
+ * pass the expression field when parsing to FreeParameterExpression
+ * pass gate modifiers to to_unitary
+
+## v1.47.0 (2023-06-30)
+
+### Features
+
+ * add optional third angle to MS gate
+
+### Bug Fixes and Other Changes
+
+ * mixed free parameters and floats
+
+## v1.46.0 (2023-06-29)
+
+### Features
+
+ * add string support for FreeParameterExpressions
+
+## v1.45.0 (2023-06-28)
+
+### Features
+
+ * enum for device arns
+
+## v1.44.0 (2023-06-26)
+
+### Features
+
+ * add support for qubits in pulse delay and barrier
+
+## v1.43.0 (2023-06-22)
+
+### Features
+
+ * add support for Python 3.11
+
+## v1.42.2 (2023-06-20)
+
+### Bug Fixes and Other Changes
+
+ * pulse plotting with barriers that have no argument
+
 ## v1.42.1 (2023-06-07)
 
 ### Bug Fixes and Other Changes

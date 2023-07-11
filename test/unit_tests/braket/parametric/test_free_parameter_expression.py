@@ -28,7 +28,7 @@ def test_is_free_param_expr(free_parameter_expression):
 
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_constructor_bad_input():
-    FreeParameterExpression("theta")
+    FreeParameterExpression(["test"])
 
 
 def test_equality():
@@ -41,6 +41,30 @@ def test_equality():
     assert expr_1 is not expr_2
     assert expr_1 != other_expr
     assert expr_1 != non_expr
+
+
+def test_equality_str():
+    expr_1 = FreeParameterExpression("-theta+2*theta")
+    expr_2 = FreeParameterExpression(-FreeParameter("theta") + 2 * FreeParameter("theta"))
+    param_values = {"theta": 1}
+    assert expr_1 == expr_2
+    assert expr_1.subs(param_values) == expr_2.subs(param_values)
+    assert hasattr(expr_1.expression, "free_symbols") and hasattr(expr_2.expression, "free_symbols")
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_unsupported_bin_op_str():
+    FreeParameterExpression("theta/1")
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_unsupported_un_op_str():
+    FreeParameterExpression("~theta")
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_unsupported_node_str():
+    FreeParameterExpression("theta , 1")
 
 
 def test_commutativity():

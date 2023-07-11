@@ -14,6 +14,7 @@
 from typing import Iterable
 
 import numpy as np
+from scipy.linalg import fractional_matrix_power
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
@@ -124,17 +125,26 @@ def calculate_unitary_big_endian(
     index_substitutions = {qubits_sorted[i]: i for i in range(qubit_count)}
     rank = 2**qubit_count
     # Initialize identity unitary as type (rank, rank) tensor
-    unitary = np.eye(rank).reshape([2] * 2 * qubit_count)
+    unitary = np.eye(rank, dtype=complex).reshape([2] * 2 * qubit_count)
 
     for instruction in instructions:
         if isinstance(instruction.operator, CompilerDirective):
             continue
         if not isinstance(instruction.operator, Gate):
             raise TypeError("Only Gate operators are supported to build the unitary")
+
+        base_gate_matrix = instruction.operator.to_matrix()
+        if int(instruction.power) == instruction.power:
+            gate_matrix = np.linalg.matrix_power(base_gate_matrix, int(instruction.power))
+        else:
+            gate_matrix = fractional_matrix_power(base_gate_matrix, instruction.power)
+
         unitary = multiply_matrix(
             unitary,
-            instruction.operator.to_matrix(),
+            gate_matrix,
             tuple(index_substitutions[qubit] for qubit in instruction.target),
+            controls=instruction.control,
+            control_state=instruction.control_state,
         )
 
     return unitary.reshape(rank, rank)

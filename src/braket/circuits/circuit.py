@@ -53,8 +53,10 @@ from braket.circuits.serialization import (
     SerializationProperties,
 )
 from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
+from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import _validate_uniqueness
 
@@ -460,9 +462,10 @@ class Circuit:
 
         if self._check_for_params(instruction):
             for param in instruction.operator.parameters:
-                free_params = param.expression.free_symbols
-                for parameter in free_params:
-                    self._parameters.add(FreeParameter(parameter.name))
+                if isinstance(param, FreeParameterExpression):
+                    free_params = param.expression.free_symbols
+                    for parameter in free_params:
+                        self._parameters.add(FreeParameter(parameter.name))
         self._moments.add(instructions_to_add)
 
         return self
@@ -1127,6 +1130,26 @@ class Circuit:
             return self._to_openqasm(serialization_properties or OpenQASMSerializationProperties())
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    @staticmethod
+    def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None) -> Circuit:
+        """
+        Converts an OpenQASM program to a Braket Circuit object.
+
+        Args:
+            source (str): OpenQASM string.
+            inputs (Optional[Dict[str, io_type]]): Inputs to the circuit.
+
+        Returns:
+            Circuit: Braket Circuit implementing the OpenQASM program.
+        """
+        from braket.circuits.braket_program_context import BraketProgramContext
+
+        return Interpreter(BraketProgramContext()).build_circuit(
+            source=source,
+            inputs=inputs,
+            is_file=False,
+        )
 
     def _to_jaqcd(self) -> JaqcdProgram:
         jaqcd_ir_type = IRType.JAQCD

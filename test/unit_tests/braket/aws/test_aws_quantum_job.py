@@ -532,7 +532,8 @@ def test_name(quantum_job_arn, quantum_job_name, aws_session):
 
 
 def test_no_arn_setter(quantum_job):
-    with pytest.raises(AttributeError, match="can't set attribute"):
+    # Python 3.11 error output differs from Python 3.10 <=
+    with pytest.raises(AttributeError):
         quantum_job.arn = 123
 
 
