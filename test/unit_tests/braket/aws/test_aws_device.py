@@ -105,22 +105,67 @@ MOCK_NATIVE_GATE_CALIBRATION_JSON = {
                         },
                         {
                             "name": "barrier",
-                            "arguments": [{"name": "qubit", "value": "0", "type": "string"}],
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"}
+                            ],
+                        },
+                        {
+                            "name": "barrier",
+                            "arguments": None,
                         },
                         {
                             "name": "delay",
                             "arguments": [
                                 {"name": "qubit", "value": "0", "type": "string"},
+                                {"name": "qubit", "value": "1", "type": "string"},
                                 {"name": "duration", "value": 3e-07, "type": "float"},
+                            ],
+                        },
+                        {
+                            "name": "delay",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
+                                {"name": "duration", "value": 3e-07, "type": "float"},
+                            ],
+                        },
+                        {
+                            "name": "shift_phase",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
+                                {"name": "phase", "value": 3e-07, "type": "float"},
+                            ],
+                        },
+                        {
+                            "name": "shift_frequency",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
+                                {"name": "frequency", "value": "theta", "type": "expr"},
                             ],
                         },
                     ],
                 }
             ]
-        }
+        },
+        "0_1": {
+            "cz": [
+                {
+                    "gateName": "cz",
+                    "gateId": "cz_0_1",
+                    "qubits": ["1", "0"],
+                    "arguments": [],
+                    "calibrations": [
+                        {"name": "barrier", "arguments": None},
+                    ],
+                }
+            ]
+        },
     },
     "waveforms": {
-        "q0_q1_cz_CZ": {"waveformId": "q0_q1_cz_CZ", "amplitudes": [[0.0, 0.0], [0.0, 0.0]]},
+        "q0_q1_cz_CZ": {
+            "waveformId": "q0_q1_cz_CZ",
+            "name": "arbitrary",
+            "amplitudes": [[0.0, 0.0], [0.0, 0.0]],
+        },
         "wf_drag_gaussian_0": {
             "waveformId": "wf_drag_gaussian_0",
             "name": "drag_gaussian",
@@ -129,6 +174,23 @@ MOCK_NATIVE_GATE_CALIBRATION_JSON = {
                 {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
                 {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
                 {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
+            ],
+        },
+        "wf_gaussian_0": {
+            "waveformId": "wf_gaussian_0",
+            "name": "gaussian",
+            "arguments": [
+                {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+            ],
+        },
+        "wf_constant": {
+            "waveformId": "wf_constant",
+            "name": "constant",
+            "arguments": [
+                {"name": "length", "value": 2, "type": "float"},
+                {"name": "iq", "value": 0.23, "type": "float"},
             ],
         },
     },
@@ -613,7 +675,17 @@ def get_pulse_model(capabilities_json):
                         "T1": 0.000010019627401991471,
                         "T2": 0.000018156447816365015,
                     }
-                }
+                },
+                "2Q": {
+                    "0-1": {
+                        "fCZ": 0.9586440436264603,
+                        "fCZ_std_err": 0.007025921432645824,
+                        "fCPHASE": 0.9287330972713645,
+                        "fCPHASE_std_err": 0.009709406809550082,
+                        "fXY": 0.9755179214520402,
+                        "fXY_std_err": 0.0060234488782598536,
+                    },
+                },
             }
         },
         "action": {
@@ -675,8 +747,8 @@ def test_device_native_gates_exists(mock_http):
         MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2
     )
     device = AwsDevice(RIGETTI_ARN, mock_session)
-    assert device.native_gate_calibrations_href is not None
     assert device.native_gate_calibration == NativeGateCalibration(calibration_data={})
+    assert device.native_gate_calibrations_href is not None
 
 
 def test_equality(arn):
@@ -1668,6 +1740,14 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
     assert device.topology_graph == new_val
 
 
+def test_calibration_timestamp():
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    device = AwsDevice(DWAVE_ARN, mock_session)
+
+    assert device.native_gate_calibration_timestamp is None
+
+
 def test_str_to_gate():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
@@ -1675,10 +1755,17 @@ def test_str_to_gate():
     assert (
         isinstance(Gate.H(), device.str_to_gate("H"))
         and isinstance(Gate.CZ(), device.str_to_gate("Cz"))
-        and isinstance(Gate.CPhaseShift(angle=1), device.str_to_gate("Cphase"))
+        and isinstance(Gate.CPhaseShift(angle=1), device.str_to_gate("Cphaseshift"))
         and isinstance(Gate.XY(angle=1), device.str_to_gate("Xy"))
         and device.str_to_gate("Rx_12") is None
     )
+
+
+def test_device_no_href():
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    device = AwsDevice(DWAVE_ARN, mock_session)
+    assert device.native_gate_calibrations_href is None
 
 
 def test_parse_calibration_data():
@@ -1703,8 +1790,80 @@ def test_parse_calibration_data():
         (Gate.Rx(-1.5707963267948966), QubitSet(0)): PulseSequence()
         .barrier(QubitSet(0))
         .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
-        .barrier(QubitSet(0))
-        .delay(QubitSet(0), 3e-07)
+        .barrier([device.frames["q0_q1_cphase_frame"]])
+        .barrier([])
+        .delay(QubitSet([0, 1]), 3e-07)
+        .delay([device.frames["q0_q1_cphase_frame"]], 3e-07)
+        .shift_phase(device.frames["q0_q1_cphase_frame"], 3e-07)
+        .shift_frequency(device.frames["q0_q1_cphase_frame"], FreeParameter("theta")),
+        (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
     expected_ngc = NativeGateCalibration(calibration_data=expected_calibration_data)
+    print(device_ngc.calibration_data[Gate.CZ(), QubitSet([1, 0])].to_ir())
+    print(expected_ngc.calibration_data[Gate.CZ(), QubitSet([1, 0])].to_ir())
     assert device_ngc == expected_ngc
+
+
+@pytest.mark.parametrize(
+    "bad_input",
+    [
+        (
+            {
+                "gates": {
+                    "0": {
+                        "rx": [
+                            {
+                                "name": "rx",
+                                "qubits": ["0"],
+                                "arguments": ["-1.5707963267948966"],
+                                "calibrations": [
+                                    {
+                                        "name": "incorrect_instr",
+                                        "arguments": [
+                                            {"name": "qubit", "value": "0", "type": "string"}
+                                        ],
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                },
+                "waveforms": {},
+            }
+        ),
+        (
+            {
+                "gates": {
+                    "0": {
+                        "rx": [
+                            {
+                                "name": "rx",
+                                "qubits": ["0"],
+                                "arguments": ["-1.5707963267948966"],
+                                "calibrations": [
+                                    {
+                                        "name": "incorrect_instr",
+                                        "arguments": [
+                                            {"name": "qubit", "value": None, "type": "string"}
+                                        ],
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                },
+                "waveforms": {
+                    "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
+                },
+            }
+        ),
+    ],
+)
+@pytest.mark.xfail(raises=ValueError)
+def test_parse_calibration_data_bad_instr(bad_input):
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    )
+    device = AwsDevice(DWAVE_ARN, mock_session)
+    device._parse_calibration_json(bad_input)

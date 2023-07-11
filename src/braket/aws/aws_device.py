@@ -392,12 +392,15 @@ class AwsDevice(Device):
         Returns:
             datetime: The timestamp for the last time the calibration was fetched.
         """
-        return self.native_gate_calibration_timestamp
+        return self._native_gate_calibration_timestamp
 
     @property
     def native_gate_calibrations_href(self) -> str:
         """
-        Returns the href for the native gate calibration data is the device has it.
+        Returns the href for the native gate calibration data if the device has it.
+
+        Returns:
+            str: The href to access the native gate calibration data.
         """
         if hasattr(self.properties, "pulse") and hasattr(
             self.properties.pulse, "nativeGateCalibrationsRef"
@@ -744,7 +747,7 @@ class AwsDevice(Device):
                 raise ValueError(f"The waveform {wave_id} of cannot be constructed")
         return waveforms
 
-    def _get_barrier_arguments(self, instr: Dict):
+    def _get_barrier_arguments(self, instr: Dict) -> Union[QubitSet, List]:
         if instr["arguments"] is not None:
             if instr["arguments"][0]["name"] == "qubit":
                 qubits_or_frames = QubitSet([int(arg["value"]) for arg in instr["arguments"]])
@@ -754,7 +757,9 @@ class AwsDevice(Device):
             qubits_or_frames = []
         return qubits_or_frames
 
-    def _get_play_arguments(self, instr: Dict, waveforms: Dict[ArbitraryWaveform]):
+    def _get_play_arguments(
+        self, instr: Dict, waveforms: Dict[ArbitraryWaveform]
+    ) -> Tuple[Frame, ArbitraryWaveform]:
         frame = waveform = None
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
@@ -763,7 +768,9 @@ class AwsDevice(Device):
                 waveform = waveforms[argument["value"]]
         return frame, waveform
 
-    def _get_delay_arguments(self, instr: Dict):
+    def _get_delay_arguments(
+        self, instr: Dict
+    ) -> Tuple[Union[Frame, List[Frame], QubitSet], Union[float, FreeParameterExpression]]:
         qubits_or_frames = list()
         duration = None
         for i in range(len(instr["arguments"])):
@@ -782,7 +789,9 @@ class AwsDevice(Device):
                 )
         return qubits_or_frames, duration
 
-    def _get_shift_phase_arguments(self, instr: Dict):
+    def _get_shift_phase_arguments(
+        self, instr: Dict
+    ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
         frame = phase = None
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
@@ -796,7 +805,9 @@ class AwsDevice(Device):
                 )
         return frame, phase
 
-    def _get_shift_frequency_arguments(self, instr: Dict):
+    def _get_shift_frequency_arguments(
+        self, instr: Dict
+    ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
         frame = frequency = None
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
@@ -843,12 +854,13 @@ class AwsDevice(Device):
         corresponding BDK objects.
 
         Args:
-            calibration_json (Dict): The data to be parsed.
+            calibration_data (Dict): The data to be parsed.
 
         Returns:
-            Dict[Tuple[Gate, QubitSet], PulseSequence]: The structured data in BDK native objects.
+            Tuple[Dict[Tuple[Gate, QubitSet], PulseSequence], Dict[Tuple[Gate, QubitSet], float]]: The
+            structured data in BDK native objects.
 
-        """
+        """  # noqa: E501
         waveforms = self._parse_waveforms(calibration_data["waveforms"])
         fidelities = {}
         parsed_calibration_data = {}

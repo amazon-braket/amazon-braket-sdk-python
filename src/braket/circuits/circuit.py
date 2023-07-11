@@ -56,6 +56,7 @@ from braket.circuits.unitary_calculation import calculate_unitary, calculate_uni
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import _validate_uniqueness
 
@@ -1108,6 +1109,8 @@ class Circuit:
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
+            native_gate_calibration (Optional[NativeGateCalibration]): The calibration data for the
+                device. default: None.
 
         Returns:
             Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
@@ -1211,6 +1214,22 @@ class Circuit:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
 
+    def _validate_ngc_uniqueness(
+        self,
+        native_gate_calibration: NativeGateCalibration,
+        frames: Dict[Frame],
+        waveforms: Dict[ArbitraryWaveform],
+    ) -> None:
+        for key, calibration in native_gate_calibration.calibration_data.items():
+            if isinstance(key, str):
+                continue
+            for frame in calibration._frames.values():
+                _validate_uniqueness(frames, frame)
+                frames[frame.id] = frame
+            for waveform in calibration._waveforms.values():
+                _validate_uniqueness(waveforms, waveform)
+                waveforms[waveform.id] = waveform
+
     def _generate_frame_wf_defcal_declarations(
         self, native_gate_calibration: Optional[NativeGateCalibration]
     ) -> Optional[str]:
@@ -1219,15 +1238,7 @@ class Circuit:
         frames, waveforms = self._get_frames_waveforms_from_instrs(native_gate_calibration)
 
         if native_gate_calibration is not None:
-            for key, calibration in native_gate_calibration.calibration_data.items():
-                if isinstance(key, str):
-                    continue
-                for frame in calibration._frames.values():
-                    _validate_uniqueness(frames, frame)
-                    frames[frame.id] = frame
-                for waveform in calibration._waveforms.values():
-                    _validate_uniqueness(waveforms, waveform)
-                    waveforms[waveform.id] = waveform
+            self._validate_ngc_uniqueness(native_gate_calibration, frames, waveforms)
 
         # Declare the frames and waveforms across all pulse sequences
         declarable_frames = [f for f in frames.values() if not f.is_predefined]
@@ -1264,7 +1275,7 @@ class Circuit:
 
     def _get_frames_waveforms_from_instrs(
         self, native_gate_calibration: Optional[NativeGateCalibration]
-    ):
+    ) -> Tuple[Dict[Frame], Dict[ArbitraryWaveform]]:
         from braket.circuits.gates import PulseGate
 
         frames = {}

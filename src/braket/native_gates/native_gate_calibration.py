@@ -23,7 +23,7 @@ class NativeGateCalibration:
         self._fidelities = fidelities
 
     @property
-    def calibration_data(self):
+    def calibration_data(self) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
         Gets the calibration data from the object.
 
@@ -32,7 +32,7 @@ class NativeGateCalibration:
         """
         return self._calibration_data
 
-    def copy(self):
+    def copy(self) -> NativeGateCalibration:
         """
         Returns a copy of the object.
 
@@ -55,7 +55,7 @@ class NativeGateCalibration:
             qubits (Optional[List[QubitSet]]): An optional set of qubits to filter on.
 
         Returns:
-            A filtered NativeGateCalibration object.
+            NativeGateCalibration: A filtered NativeGateCalibration object.
         """
         keys = self._calibration_data.keys()
         filtered_calibration_keys = [
@@ -73,7 +73,7 @@ class NativeGateCalibration:
         Returns the pulse implementation for the gate and QubitSet.
 
         Args:
-            key (Tuple[Gate,QubitSet])): A key to get a specific PulseSequence.
+            key (Tuple[Gate, QubitSet]): A key to get a specific PulseSequence.
 
         Returns:
             PulseSequence: the PulseSequence object corresponding the gate acting on the QubitSet.
@@ -81,12 +81,12 @@ class NativeGateCalibration:
         """
         return self._calibration_data.get(key, None)
 
-    def get_fidelity(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:
+    def get_fidelity(self, key: Tuple[Gate, QubitSet]) -> float:
         """
         Returns the fidelity for the gate and QubitSet that has been computed by the provider.
 
         Args:
-            key (Tuple[Gate,QubitSet])): A key to get a specific fidelity.
+            key (Tuple[Gate, QubitSet]): A key to get a specific fidelity.
 
         Returns:
             float: the fidelity measured for the gate acting on the QubitSet.
@@ -99,7 +99,7 @@ class NativeGateCalibration:
         Returns the defcal representation for the `NativeGateCalibration` object.
 
         Args:
-            key (Optional[Tuple[Gate,QubitSet]])): An optional key to get a specific defcal.
+            key (Optional[Tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
                 Default: None
 
         Returns:

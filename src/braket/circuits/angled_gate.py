@@ -401,14 +401,23 @@ def _multi_angled_ascii_characters(
 
     Args:
         gate (str): The name of the gate.
-        angles (Union[FreeParameterExpression, float]): angles in radians.
+        ``*angles`` (Union[FreeParameterExpression, float]): angles in radians.
 
     Returns:
         str: Returns the ascii representation for an angled gate.
 
     """
 
-    def format_string(angle):
+    def format_string(angle: Union[FreeParameterExpression, float]) -> str:
+        """
+        Formats an angle for ASCII representation.
+
+        Args:
+            angle (Union[FreeParameterExpression, float]): The angle to format.
+
+        Returns:
+            str: The ASCII representation of the angle.
+        """
         return ".2f" if isinstance(angle, (float, Float)) else ""
 
     return f"{gate}({', '.join(f'{angle:{format_string(angle)}}' for angle in angles)})"
