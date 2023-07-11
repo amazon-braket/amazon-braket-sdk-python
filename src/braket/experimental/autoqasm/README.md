@@ -59,7 +59,7 @@ AutoQASM enables users to use more complicated program constructs with a compact
 structure. We can demonstrate this with an active reset program:
 ```
 # A program that actively resets a qubit back to the ground state
-@aq.function(num_qubits=1)
+@aq.function
 def reset(qubit: int, num_repeats: int) -> None:
     for repeats in aq.range(num_repeats):
         if measure(qubit):
