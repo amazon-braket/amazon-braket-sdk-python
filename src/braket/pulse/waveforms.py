@@ -69,10 +69,7 @@ class ArbitraryWaveform(Waveform):
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
-        try:
-            self.amplitudes = list(amplitudes)
-        except TypeError:
-            raise TypeError("Amplitudes must be castable into list.")
+        self.amplitudes = list(amplitudes)
         self.id = id or _make_identifier_name()
 
     def __eq__(self, other):
