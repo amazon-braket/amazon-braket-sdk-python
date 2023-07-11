@@ -53,10 +53,12 @@ from braket.circuits.serialization import (
     SerializationProperties,
 )
 from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
+from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
 from braket.pulse import ArbitraryWaveform, Frame
+from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import _validate_uniqueness
 
@@ -1136,6 +1138,26 @@ class Circuit:
             )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+    @staticmethod
+    def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None) -> Circuit:
+        """
+        Converts an OpenQASM program to a Braket Circuit object.
+
+        Args:
+            source (str): OpenQASM string.
+            inputs (Optional[Dict[str, io_type]]): Inputs to the circuit.
+
+        Returns:
+            Circuit: Braket Circuit implementing the OpenQASM program.
+        """
+        from braket.circuits.braket_program_context import BraketProgramContext
+
+        return Interpreter(BraketProgramContext()).build_circuit(
+            source=source,
+            inputs=inputs,
+            is_file=False,
+        )
 
     def _to_jaqcd(self) -> JaqcdProgram:
         jaqcd_ir_type = IRType.JAQCD

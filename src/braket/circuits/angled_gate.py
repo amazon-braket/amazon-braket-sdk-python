@@ -401,7 +401,7 @@ def _multi_angled_ascii_characters(
 
     Args:
         gate (str): The name of the gate.
-        ``*angles`` (Union[FreeParameterExpression, float]): angles in radians.
+        `*angles` (Union[FreeParameterExpression, float]): angles in radians.
 
     Returns:
         str: Returns the ascii representation for an angled gate.
