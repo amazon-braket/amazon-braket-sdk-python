@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.49.1 (2023-07-12)
+
+### Bug Fixes and Other Changes
+
+ * coerce ArbitraryWaveform.amplitudes type
+
 ## v1.49.0 (2023-07-10)
 
 ### Features
