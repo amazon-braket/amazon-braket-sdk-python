@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import io
 import json
 import os
 from datetime import datetime
@@ -42,7 +43,7 @@ from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
-from braket.pulse import DragGaussianWaveform, Frame, Port, PulseSequence
+from braket.pulse import ArbitraryWaveform, DragGaussianWaveform, Frame, Port, PulseSequence
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -447,13 +448,6 @@ def device(aws_session):
     return _device
 
 
-@pytest.fixture
-def mock_http():
-    with patch("urllib.request.urlopen") as http_mock:
-        http_mock().return_value = "{}"
-        yield http_mock()
-
-
 @pytest.mark.parametrize(
     "device_capabilities, get_device_data",
     [
@@ -621,6 +615,7 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
             "qhpSpecificProperties": None,
         }
     },
+    "nativeGateCalibrationsRef": "file://hostname/foo/bar",
 }
 
 
@@ -642,7 +637,7 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
             "qhpSpecificProperties": None,
         }
     },
-    "nativeGateCalibrationsRef": "empty_url",
+    "nativeGateCalibrationsRef": "file://hostname/foo/bar",
 }
 
 
@@ -741,13 +736,81 @@ def test_device_pulse_metadata(pulse_device_capabilities):
         assert device.frames == {}
 
 
-def test_device_native_gates_exists(mock_http):
+@patch("urllib.request.urlopen")
+def test_device_native_gates_exists(mock_url_request):
+    # The data is accessed using a device manager so here data is prepped and passed for the return val.
+    response_data_content = {
+        "gates": {
+            "0": {
+                "cphaseshift": [
+                    {
+                        "name": "cphaseshift",
+                        "qubits": ["0"],
+                        "arguments": ["-1.5707963267948966"],
+                        "calibrations": [
+                            {
+                                "name": "play",
+                                "arguments": [
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_q1_cphase_frame",
+                                        "type": "frame",
+                                    },
+                                    {
+                                        "name": "waveform",
+                                        "value": "wf_drag_gaussian_0",
+                                        "type": "waveform",
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                ]
+            }
+        },
+        "waveforms": {
+            "wf_drag_gaussian_0": {
+                "waveformId": "wf_drag_gaussian_0",
+                "name": "drag_gaussian",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                    {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                    {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
+                ],
+            },
+        },
+    }
+
+    response_data_stream = io.BytesIO(json.dumps(response_data_content).encode("utf-8"))
+    mock_url_request.return_value.__enter__.return_value = response_data_stream
     mock_session = Mock()
     mock_session.get_device.return_value = get_pulse_model(
-        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
     )
     device = AwsDevice(RIGETTI_ARN, mock_session)
-    assert device.native_gate_calibration == NativeGateCalibration(calibration_data={})
+
+    expected_waveforms = {
+        "wf_drag_gaussian_0": DragGaussianWaveform(
+            length=6.000000000000001e-8,
+            sigma=6.369913502160144e-9,
+            amplitude=-0.4549282253548838,
+            beta=7.494904522022295e-10,
+            id="wf_drag_gaussian_0",
+        )
+    }
+    expected_ngc = NativeGateCalibration(
+        calibration_data={
+            (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): PulseSequence().play(
+                device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"]
+            )
+        }
+    )
+
+    # with patch.object(urllib.request, 'urlopen', return_value='{}'):
+    assert device.native_gate_calibration == expected_ngc
+    # Called twice to check that the property stays the same after being initially fetched
+    assert device.native_gate_calibration == expected_ngc
     assert device.native_gate_calibrations_href is not None
 
 
