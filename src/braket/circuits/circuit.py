@@ -1310,6 +1310,7 @@ class Circuit:
                 for waveform in instruction.operator.pulse_sequence._waveforms.values():
                     _validate_uniqueness(waveforms, waveform)
                     waveforms[waveform.id] = waveform
+            # this will change with full parametric calibration support
             elif hasattr(type(instruction.operator), "angle"):
                 if native_gate_calibration is not None:
                     key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)

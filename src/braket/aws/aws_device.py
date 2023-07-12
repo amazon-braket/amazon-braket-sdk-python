@@ -775,8 +775,7 @@ class AwsDevice(Device):
         duration = None
         for i in range(len(instr["arguments"])):
             if instr["arguments"][i]["name"] == "frame":
-                f = "_".join(instr["arguments"][i]["value"].split("_")[:-1]) + "_frame"
-                qubits_or_frames.append(self.frames[f])
+                qubits_or_frames.append(self.frames[instr["arguments"][i]["value"]])
             elif instr["arguments"][i]["name"] == "qubit":
                 if qubits_or_frames == list():
                     qubits_or_frames = QubitSet([])
@@ -795,8 +794,7 @@ class AwsDevice(Device):
         frame = phase = None
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
-                f = "_".join(argument["value"].split("_")[:-1]) + "_frame"
-                frame = self.frames[f]
+                frame = self.frames[argument["value"]]
             elif argument["name"] == "phase":
                 phase = (
                     float(argument["value"])
@@ -811,8 +809,7 @@ class AwsDevice(Device):
         frame = frequency = None
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
-                f = "_".join(argument["value"].split("_")[:-1]) + "_frame"
-                frame = self.frames[f]
+                frame = self.frames[argument["value"]]
             elif argument["name"] == "frequency":
                 frequency = (
                     float(argument["value"])
@@ -909,7 +906,7 @@ class AwsDevice(Device):
             Gate: A Gate of type corresponding to `class_name`.
         """
         if class_name == "Rx_12":
-            # FIXME: Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
+            # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
             return None
         elif class_name == "Cz":
             class_name = "CZ"

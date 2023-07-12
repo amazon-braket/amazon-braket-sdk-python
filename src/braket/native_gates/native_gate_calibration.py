@@ -79,6 +79,8 @@ class NativeGateCalibration:
             PulseSequence: the PulseSequence object corresponding the gate acting on the QubitSet.
 
         """
+        if not isinstance(key[0], Gate) or not isinstance(key[1], QubitSet):
+            raise ValueError("The key must be a tuple of a gate object and a qubit set.")
         return self._calibration_data.get(key, None)
 
     def get_fidelity(self, key: Tuple[Gate, QubitSet]) -> float:

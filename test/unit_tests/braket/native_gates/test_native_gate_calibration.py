@@ -123,3 +123,11 @@ def test_get_pulse_sequence(pulse_sequence):
     calibration = NativeGateCalibration({calibration_key: pulse_sequence})
 
     assert calibration.get_pulse_sequence(calibration_key) == pulse_sequence
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_get_pulse_sequence_bad_key(pulse_sequence):
+    calibration_key = (Gate.H, QubitSet([0, 1]))
+    calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+
+    calibration.get_pulse_sequence(calibration_key)
