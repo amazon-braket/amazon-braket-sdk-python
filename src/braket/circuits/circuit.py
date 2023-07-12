@@ -56,9 +56,9 @@ from braket.circuits.unitary_calculation import calculate_unitary, calculate_uni
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
+from braket.ir.openqasm.program_v1 import io_type
 from braket.native_gates.native_gate_calibration import NativeGateCalibration
 from braket.pulse import ArbitraryWaveform, Frame
-from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import _validate_uniqueness
 

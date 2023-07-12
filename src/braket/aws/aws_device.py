@@ -873,7 +873,7 @@ class AwsDevice(Device):
                         else QubitSet()
                     )
                     if gate_obj is None:
-                        # We drop out gate that are not implemented in the BDK
+                        # We drop out gates that are not implemented in the BDK
                         continue
                     argument = None
                     if len(g["arguments"]):

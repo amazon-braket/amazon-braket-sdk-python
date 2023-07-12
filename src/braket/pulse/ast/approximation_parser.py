@@ -22,7 +22,6 @@ from oqpy import Program
 
 from braket.pulse.frame import Frame
 from braket.pulse.waveforms import (
-    ArbitraryWaveform,
     ConstantWaveform,
     DragGaussianWaveform,
     GaussianWaveform,
@@ -418,9 +417,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             amps = self.visit(node.arguments[1], context)
         elif isinstance(node.arguments[1], (ast.Identifier, ast.FunctionCall)):
             amps = self.visit(node.arguments[1], context)
-            if isinstance(amps, ArbitraryWaveform):
-                amps = amps.amplitudes
-            elif isinstance(amps, Waveform):
+            if isinstance(amps, Waveform):
                 amps = amps.sample(context.frame_data[frame_id].dt)
             elif isinstance(amps, str):
                 raise NameError(f"waveform '{amps}' is not defined.")

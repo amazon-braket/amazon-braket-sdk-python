@@ -399,6 +399,17 @@ def test_play_arbitrary_waveforms(port):
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
 
+def test_missing_waveform(port):
+    frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
+    my_arb_wf = ArbitraryWaveform([0.4 + 0.1j, -0.8 + 0.1j, 1 + 0.2j])
+    pulse_seq = PulseSequence()
+    identifier = my_arb_wf._to_oqpy_expression()
+    identifier._needs_declaration = False
+    pulse_seq._program.play(frame, identifier.to_ast(pulse_seq._program))
+    with pytest.raises(NameError):
+        parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
+
+
 def test_play_literal(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)
     pulse_seq = PulseSequence()
