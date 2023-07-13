@@ -33,6 +33,7 @@ from braket.circuits import (
     noise,
     observables,
 )
+from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
@@ -40,7 +41,6 @@ from braket.circuits.serialization import (
 )
 from braket.circuits.translations import braket_result_to_result_type
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 
 

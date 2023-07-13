@@ -33,18 +33,15 @@ from common_test_utils import (
 )
 from jsonschema import validate
 
-from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask, AwsQuantumTaskBatch
+from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
 from braket.circuits import Circuit, FreeParameter, Gate, QubitSet
+from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
-from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
-    PulseDeviceActionProperties,
-)
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.native_gates.gate_calibrations import GateCalibrations
-from braket.pulse import ArbitraryWaveform, DragGaussianWaveform, Frame, Port, PulseSequence
+from braket.pulse import DragGaussianWaveform, Frame, Port, PulseSequence
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {

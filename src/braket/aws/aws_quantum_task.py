@@ -28,6 +28,7 @@ from braket.circuits import Instruction
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.compiler_directives import StartVerbatimBox
+from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import (
     IRType,
@@ -53,7 +54,6 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.error_mitigation import ErrorMitigation
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import (

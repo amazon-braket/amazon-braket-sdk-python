@@ -16,8 +16,9 @@ class GateCalibrations:
     Args:
         calibration_data (Dict[Tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
             `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
-        fidelities  Optional[Dict[Tuple[Gate, QubitSet], float]]: Gate fidelities.
-    """
+        fidelities  Optional[Dict[Tuple[Gate, QubitSet], float]]: Gate fidelities. This is attempted to be added
+            when calibration_data is refreshed. Users do not need to supply this.
+    """  # noqa: E501
 
     def __init__(
         self,

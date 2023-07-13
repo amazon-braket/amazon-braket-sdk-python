@@ -14,7 +14,7 @@
 import pytest
 
 from braket.circuits import Gate, QubitSet
-from braket.native_gates.gate_calibrations import GateCalibrations
+from braket.circuits.gate_calibrations import GateCalibrations
 from braket.pulse import Frame, Port, PulseSequence
 
 
