@@ -67,45 +67,6 @@ def test_filter_by_qubits_or_gates(pulse_sequence):
     assert expected_calibration == calibration.filter_by_qubits_or_gates(gates=[Gate.Z()])
 
 
-def test_filter_by_qubits_or_gates_with_fidelity(pulse_sequence):
-    calibration_key = (Gate.Z(), QubitSet([0, 1]))
-    calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations(
-        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}, {calibration_key: 4}
-    )
-    expected_calibration = GateCalibrations({calibration_key: pulse_sequence}, {calibration_key: 4})
-
-    assert expected_calibration == calibration.filter_by_qubits_or_gates(gates=[Gate.Z()])
-
-
-def test_fidelities(pulse_sequence):
-    calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence}, {calibration_key: 4})
-
-    assert calibration.fidelities == {calibration_key: 4}
-
-
-def test_fidelities_empty(pulse_sequence):
-    calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    assert calibration.fidelities is None
-
-
-def test_get_fidelity_empty(pulse_sequence):
-    calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    assert calibration.get_fidelity(calibration_key) is None
-
-
-def test_get_fidelity(pulse_sequence):
-    calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence}, {calibration_key: 4})
-
-    assert calibration.get_fidelity(calibration_key) == 4
-
-
 def test_to_defcal(pulse_sequence):
     calibration_key = (Gate.Rx(angle=1), QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})

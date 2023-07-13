@@ -813,8 +813,7 @@ def test_device_gate_calibrations_exists(mock_url_request):
             (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): PulseSequence().play(
                 device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"]
             )
-        },
-        fidelities={(Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): 0.9287330972713645},
+        }
     )
     assert device.gate_calibrations_href is not None
     assert device.gate_calibrations == expected_ngc
@@ -1824,14 +1823,6 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
     assert device.topology_graph == new_val
 
 
-def test_calibration_timestamp():
-    mock_session = Mock()
-    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-    device = AwsDevice(DWAVE_ARN, mock_session)
-
-    assert device.gate_calibrations_timestamp is None
-
-
 def test_str_to_gate():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
@@ -1858,8 +1849,8 @@ def test_parse_calibration_data():
         MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
     )
     device = AwsDevice(DWAVE_ARN, mock_session)
-    calibration_data, fidelities = device._parse_calibration_json(MOCK_gate_calibrations_JSON)
-    device_ngc = GateCalibrations(calibration_data, fidelities)
+    calibration_data = device._parse_calibration_json(MOCK_gate_calibrations_JSON)
+    device_ngc = GateCalibrations(calibration_data)
 
     expected_waveforms = {
         "wf_drag_gaussian_0": DragGaussianWaveform(
@@ -1882,13 +1873,7 @@ def test_parse_calibration_data():
         .shift_frequency(device.frames["q0_q1_cphase_frame"], FreeParameter("theta")),
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
-    expected_fidelities = {
-        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): 0.9287330972713645,
-        (Gate.CZ(), QubitSet([1, 0])): 0.9586440436264603,
-    }
-    expected_ngc = GateCalibrations(
-        calibration_data=expected_calibration_data, fidelities=expected_fidelities
-    )
+    expected_ngc = GateCalibrations(calibration_data=expected_calibration_data)
     assert device_ngc == expected_ngc
 
 

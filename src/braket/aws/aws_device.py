@@ -94,7 +94,6 @@ class AwsDevice(Device):
         super().__init__(name=None, status=None)
         self._arn = arn
         self._gate_calibrations = None
-        self._gate_calibrations_timestamp = None
         self._properties = None
         self._provider_name = None
         self._poll_interval_seconds = None
@@ -383,16 +382,6 @@ class AwsDevice(Device):
         if not self._gate_calibrations:
             self._gate_calibrations = self.refresh_gate_calibrations()
         return self._gate_calibrations
-
-    @property
-    def gate_calibrations_timestamp(self) -> datetime:
-        """
-        This returns the timestamp of the last time the calibration data was fetched.
-
-        Returns:
-            datetime: The timestamp for the last time the calibration was fetched.
-        """
-        return self._gate_calibrations_timestamp
 
     @property
     def gate_calibrations_href(self) -> str:
@@ -692,11 +681,10 @@ class AwsDevice(Device):
         if self.gate_calibrations_href is not None:
             try:
                 with urllib.request.urlopen(self.gate_calibrations_href.split("?")[0]) as f:
-                    json_calibration_data, fidelities = self._parse_calibration_json(
+                    json_calibration_data = self._parse_calibration_json(
                         json.loads(f.read().decode("utf-8"))
                     )
-                    self._gate_calibrations_timestamp = datetime.now()
-                    return GateCalibrations(json_calibration_data, fidelities)
+                    return GateCalibrations(json_calibration_data)
             except urllib.error.URLError:
                 raise urllib.error.URLError(f"Unable to reach {self.gate_calibrations_href}")
         else:
@@ -849,7 +837,7 @@ class AwsDevice(Device):
 
     def _parse_calibration_json(
         self, calibration_data: Dict
-    ) -> Tuple[Dict[Tuple[Gate, QubitSet], PulseSequence], Dict[Tuple[Gate, QubitSet], float]]:
+    ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
         Takes the json string from the device calibration URL and returns a structured dictionary of
         corresponding BDK objects.
@@ -858,12 +846,11 @@ class AwsDevice(Device):
             calibration_data (Dict): The data to be parsed.
 
         Returns:
-            Tuple[Dict[Tuple[Gate, QubitSet], PulseSequence], Dict[Tuple[Gate, QubitSet], float]]: The
+            Dict[Tuple[Gate, QubitSet], PulseSequence]: The
             structured data in BDK native objects.
 
         """  # noqa: E501
         waveforms = self._parse_waveforms(calibration_data["waveforms"])
-        fidelities = {}
         parsed_calibration_data = {}
         for qubit in calibration_data["gates"]:
             q = calibration_data["gates"][qubit]
@@ -893,13 +880,7 @@ class AwsDevice(Device):
                     gate_qubit_pulse = self._get_pulse_sequence(g["calibrations"], waveforms)
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
-                    k1 = f"{len(qubits)}Q"
-                    k2 = "-".join([str(int(qubit)) for qubit in sorted(qubits)])
-                    k3 = f"f{gate_qubit_key[0].name}" if len(qubits) == 2 else "f1QRB"
-                    if k3 == "fCPhaseShift":
-                        k3 = "fCPHASE"
-                    fidelities[gate_qubit_key] = self.properties.provider.specs[k1][k2][k3]
-        return parsed_calibration_data, fidelities
+        return parsed_calibration_data
 
     @staticmethod
     def str_to_gate(class_name: str) -> Gate:

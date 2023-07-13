@@ -11,22 +11,18 @@ from braket.pulse.pulse_sequence import PulseSequence
 
 class GateCalibrations:
     """
-    An object containing gate fidelities and calibration data.
+    An object containing gate calibration data.
 
     Args:
         calibration_data (Dict[Tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
             `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
-        fidelities  Optional[Dict[Tuple[Gate, QubitSet], float]]: Gate fidelities. This is attempted to be added
-            when calibration_data is refreshed. Users do not need to supply this.
     """  # noqa: E501
 
     def __init__(
         self,
         calibration_data: Dict[Tuple[Gate, QubitSet], PulseSequence],
-        fidelities: Optional[Dict[Tuple[Gate, QubitSet], float]] = None,
     ):
         self._calibration_data = calibration_data
-        self._fidelities = fidelities
 
     @property
     def calibration_data(self) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
@@ -38,18 +34,6 @@ class GateCalibrations:
         """
         return self._calibration_data
 
-    @property
-    def fidelities(self) -> Dict[Tuple[Gate, QubitSet], float]:
-        """
-        Gets the mapping of (Gate, Qubit) to the corresponding fidelity.
-
-        Returns:
-            Dict[Tuple[Gate, QubitSet], float]: The fidelity data.
-        """
-        if self._fidelities:
-            return self._fidelities
-        return None
-
     def copy(self) -> GateCalibrations:
         """
         Returns a copy of the object.
@@ -57,7 +41,7 @@ class GateCalibrations:
         Returns:
             GateCalibrations: a copy of the calibrations.
         """
-        return GateCalibrations(deepcopy(self._calibration_data), deepcopy(self._fidelities))
+        return GateCalibrations(deepcopy(self._calibration_data))
 
     def __len__(self):
         return len(self._calibration_data)
@@ -81,18 +65,8 @@ class GateCalibrations:
             for tup in keys
             if isinstance(tup, tuple) and any(i in set(tup) for i in gates or qubits)
         ]
-        if self._fidelities is None:
-            return GateCalibrations(
-                {
-                    k: v
-                    for (k, v) in self.calibration_data.items()
-                    if k in filtered_calibration_keys
-                },
-                None,
-            )
         return GateCalibrations(
             {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},
-            {k: v for (k, v) in self._fidelities.items() if k in filtered_calibration_keys},
         )
 
     def get_gate_calibration(self, calibration_key: Tuple[Gate, QubitSet]) -> PulseSequence:
@@ -109,21 +83,6 @@ class GateCalibrations:
         if not isinstance(calibration_key[0], Gate) or not isinstance(calibration_key[1], QubitSet):
             raise ValueError("The key must be a tuple of a gate object and a qubit set.")
         return self._calibration_data.get(calibration_key, None)
-
-    def get_fidelity(self, key: Tuple[Gate, QubitSet]) -> float:
-        """
-        Returns the fidelity for the gate and QubitSet that has been computed by the provider.
-
-        Args:
-            key (Tuple[Gate, QubitSet]): A key to get a specific fidelity.
-
-        Returns:
-            float: the fidelity measured for the gate acting on the QubitSet.
-
-        """
-        if self._fidelities:
-            return self._fidelities.get(key, None)
-        return None
 
     def to_defcal(self, key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
         """
@@ -158,7 +117,5 @@ class GateCalibrations:
 
     def __eq__(self, other):
         return (
-            isinstance(other, GateCalibrations)
-            and other.calibration_data == self.calibration_data
-            and other.fidelities == self.fidelities
+            isinstance(other, GateCalibrations) and other.calibration_data == self.calibration_data
         )
