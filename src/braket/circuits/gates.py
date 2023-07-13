@@ -2782,7 +2782,7 @@ class Unitary(Gate):
         return False
 
     def __hash__(self):
-        return hash(self.name, self._matrix, self.qubit_count)
+        return hash((self.name, str(self._matrix), self.qubit_count))
 
     @staticmethod
     def _transform_matrix_to_ir(matrix: np.ndarray) -> List:

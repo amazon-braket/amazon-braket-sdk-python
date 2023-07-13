@@ -87,7 +87,7 @@ MOCK_gate_calibrations_JSON = {
             "cphaseshift": [
                 {
                     "name": "cphaseshift",
-                    "qubits": ["0"],
+                    "qubits": ["0", "1"],
                     "arguments": ["-1.5707963267948966"],
                     "calibrations": [
                         {
@@ -738,16 +738,25 @@ def test_device_pulse_metadata(pulse_device_capabilities):
         assert device.frames == {}
 
 
+def test_gate_calibration_refresh_no_url(arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+
+    assert device.refresh_gate_calibrations() == None
+
+
 @patch("urllib.request.urlopen")
 def test_device_gate_calibrations_exists(mock_url_request):
     # The data is accessed using a device manager so here data is prepped and passed for the return val.
     response_data_content = {
         "gates": {
-            "0": {
+            "0_1": {
                 "cphaseshift": [
                     {
                         "name": "cphaseshift",
-                        "qubits": ["0"],
+                        "qubits": ["0", "1"],
                         "arguments": ["-1.5707963267948966"],
                         "calibrations": [
                             {
@@ -767,9 +776,9 @@ def test_device_gate_calibrations_exists(mock_url_request):
                             },
                         ],
                     }
-                ]
+                ],
+                "rx_12": [{"name": "rx_12", "qubits": ["0"]}],
             },
-            "rx_12": [],
         },
         "waveforms": {
             "wf_drag_gaussian_0": {
@@ -804,11 +813,11 @@ def test_device_gate_calibrations_exists(mock_url_request):
     }
     expected_ngc = GateCalibrations(
         calibration_data={
-            (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): PulseSequence().play(
+            (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): PulseSequence().play(
                 device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"]
             )
         },
-        fidelities={(Gate.CPhaseShift(-1.5707963267948966), QubitSet([0])): 0.997339217568556},
+        fidelities={(Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): 0.9287330972713645},
     )
     assert device.gate_calibrations_href is not None
     assert device.gate_calibrations == expected_ngc
@@ -1865,7 +1874,7 @@ def test_parse_calibration_data():
         )
     }
     expected_calibration_data = {
-        (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): PulseSequence()
+        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0,1])): PulseSequence()
         .barrier(QubitSet(0))
         .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
         .barrier([device.frames["q0_q1_cphase_frame"]])
@@ -1877,9 +1886,9 @@ def test_parse_calibration_data():
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
     expected_fidelities = {
-            (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): 0.997339217568556,
-            (Gate.CZ(), QubitSet([1, 0])): 0.9586440436264603,
-        }
+        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0,1])): 0.9287330972713645,
+        (Gate.CZ(), QubitSet([1, 0])): 0.9586440436264603,
+    }
     expected_ngc = GateCalibrations(
         calibration_data=expected_calibration_data, fidelities=expected_fidelities
     )
