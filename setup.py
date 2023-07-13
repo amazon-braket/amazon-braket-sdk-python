@@ -28,7 +28,7 @@ setup(
     package_dir={"": "src"},
     install_requires=[
         "amazon-braket-schemas>=1.19.0",
-        "amazon-braket-default-simulator>=1.15.0",
+        "amazon-braket-default-simulator>=1.18.1",
         "oqpy~=0.2.1",
         "setuptools",
         "backoff",

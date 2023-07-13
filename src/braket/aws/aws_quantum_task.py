@@ -53,7 +53,7 @@ from braket.device_schema.simulators import GateModelSimulatorDeviceParameters
 from braket.error_mitigation import ErrorMitigation
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
-from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.pulse.pulse_sequence import PulseSequence
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import (
@@ -104,7 +104,7 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: Dict[str, str] = None,
         inputs: Dict[str, float] = None,
-        native_gate_calibration: Optional[NativeGateCalibration] = None,
+        gate_calibrations: Optional[GateCalibrations] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -145,7 +145,7 @@ class AwsQuantumTask(QuantumTask):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for
+            gate_calibrations (Optional[GateCalibrations]): A `GateCalibrations` for
                 user defined gate calibration.
                 Default: None.
 
@@ -193,7 +193,7 @@ class AwsQuantumTask(QuantumTask):
             device_parameters or {},
             disable_qubit_rewiring,
             inputs,
-            native_gate_calibration=native_gate_calibration,
+            gate_calibrations=gate_calibrations,
             *args,
             **kwargs,
         )
@@ -480,7 +480,7 @@ def _create_internal(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    native_gate_calibration: Optional[NativeGateCalibration],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -496,7 +496,7 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    native_gate_calibration: Optional[NativeGateCalibration],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -514,7 +514,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    native_gate_calibration: Optional[NativeGateCalibration],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -553,7 +553,7 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    native_gate_calibration: Optional[NativeGateCalibration],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -571,7 +571,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    native_gate_calibration: Optional[NativeGateCalibration],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -592,7 +592,7 @@ def _(
     if (
         disable_qubit_rewiring
         or Instruction(StartVerbatimBox()) in circuit.instructions
-        or native_gate_calibration is not None
+        or gate_calibrations is not None
         or any(isinstance(instruction.operator, PulseGate) for instruction in circuit.instructions)
     ):
         qubit_reference_type = QubitReferenceType.PHYSICAL
@@ -604,8 +604,8 @@ def _(
     openqasm_program = circuit.to_ir(
         ir_type=IRType.OPENQASM,
         serialization_properties=serialization_properties,
-        native_gate_calibration=native_gate_calibration.copy()
-        if native_gate_calibration is not None
+        gate_calibrations=gate_calibrations.copy()
+        if gate_calibrations is not None
         else None,
     )
 
@@ -641,7 +641,7 @@ def _(
     ],
     _,
     inputs: Dict[str, float],
-    native_gate_calibration: Optional[NativeGateCalibration],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -666,7 +666,7 @@ def _(
     device_parameters: dict,
     _,
     inputs: Dict[str, float],
-    native_gate_calibration: Optional[NativeGateCalibration],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:

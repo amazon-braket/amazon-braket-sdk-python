@@ -9,15 +9,20 @@ from braket.circuits.qubit_set import QubitSet
 from braket.pulse.pulse_sequence import PulseSequence
 
 
-class NativeGateCalibration:
+class GateCalibrations:
     """
-    A collection of gate calibrations for a QPU.
+    An object containing gate fidelities and calibration data.
+
+    Args:
+        calibration_data (Dict[Tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
+            `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
+        fidelities  Optional[Dict[Tuple[Gate, QubitSet], float]]: Gate fidelities.
     """
 
     def __init__(
         self,
         calibration_data: Dict[Tuple[Gate, QubitSet], PulseSequence],
-        fidelities: Optional[Dict[Tuple[Gate, QubitSet], float]] = {},
+        fidelities: Optional[Dict[Tuple[Gate, QubitSet], float]] = None,
     ):
         self._calibration_data = calibration_data
         self._fidelities = fidelities
@@ -32,21 +37,21 @@ class NativeGateCalibration:
         """
         return self._calibration_data
 
-    def copy(self) -> NativeGateCalibration:
+    def copy(self) -> GateCalibrations:
         """
         Returns a copy of the object.
 
         Returns:
-            NativeGateCalibration: a copy of the calibrations.
+           GateCalibrations: a copy of the calibrations.
         """
-        return NativeGateCalibration(deepcopy(self._calibration_data), deepcopy(self._fidelities))
+        return GateCalibrations(deepcopy(self._calibration_data), deepcopy(self._fidelities))
 
     def __len__(self):
         return len(self._calibration_data)
 
     def filter_data(
         self, gates: Optional[List[Gate]] = None, qubits: Optional[List[QubitSet]] = None
-    ) -> NativeGateCalibration:
+    ) -> GateCalibrations:
         """
         Filters the data based on optional lists of gates or QubitSets.
 
@@ -55,7 +60,7 @@ class NativeGateCalibration:
             qubits (Optional[List[QubitSet]]): An optional set of qubits to filter on.
 
         Returns:
-            NativeGateCalibration: A filtered NativeGateCalibration object.
+             GateCalibrations: A filteredGateCalibrations object.
         """
         keys = self._calibration_data.keys()
         filtered_calibration_keys = [
@@ -63,7 +68,12 @@ class NativeGateCalibration:
             for tup in keys
             if isinstance(tup, tuple) and any(i in set(tup) for i in gates or qubits)
         ]
-        return NativeGateCalibration(
+        if self._fidelities is None:
+            return GateCalibrations(
+                {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},
+                None,
+            )
+        return GateCalibrations(
             {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},
             {k: v for (k, v) in self._fidelities.items() if k in filtered_calibration_keys},
         )
@@ -94,11 +104,13 @@ class NativeGateCalibration:
             float: the fidelity measured for the gate acting on the QubitSet.
 
         """
-        return self._fidelities.get(key, None)
+        if self._fidelities:
+            return self._fidelities.get(key, None)
+        return None
 
     def to_defcal(self, key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
         """
-        Returns the defcal representation for the `NativeGateCalibration` object.
+        Returns the defcal representation for the `GateCalibrations` object.
 
         Args:
             key (Optional[Tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
@@ -127,6 +139,6 @@ class NativeGateCalibration:
 
     def __eq__(self, other):
         return (
-            isinstance(other, NativeGateCalibration)
+            isinstance(other, GateCalibrations)
             and other.calibration_data == self.calibration_data
         )

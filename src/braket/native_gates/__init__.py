@@ -11,4 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.native_gates.native_gate_calibration import NativeGateCalibration  # noqa: F401
+from braket.native_gates.gate_calibrations import GateCalibrations  # noqa: F401

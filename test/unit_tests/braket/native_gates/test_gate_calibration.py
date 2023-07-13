@@ -14,7 +14,7 @@
 import pytest
 
 from braket.circuits import Gate, QubitSet
-from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.pulse import Frame, Port, PulseSequence
 
 
@@ -44,14 +44,14 @@ def pulse_sequence(frame):
 
 def test_ngc_creation(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+    calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     assert calibration.calibration_data[calibration_key] == pulse_sequence
 
 
 def test_ngc_copy(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+    calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     assert calibration == calibration.copy()
 
@@ -59,24 +59,24 @@ def test_ngc_copy(pulse_sequence):
 def test_filter_data(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
-    calibration = NativeGateCalibration(
+    calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
     )
-    expected_calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+    expected_calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     assert expected_calibration == calibration.filter_data(gates=[Gate.Z()])
 
 
 def test_get_fidelity(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+    calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     assert calibration.get_fidelity(calibration_key) is None
 
 
 def test_to_defcal(pulse_sequence):
     calibration_key = (Gate.Rx(angle=1), QubitSet([0, 1]))
-    calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+    calibration = GateCalibrations({calibration_key: pulse_sequence})
     expected_defcal = "\n".join(
         [
             "OPENQASM 3.0;",
@@ -93,7 +93,7 @@ def test_to_defcal(pulse_sequence):
 def test_to_def_cal_with_key(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
-    calibration = NativeGateCalibration(
+    calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
     )
     expected_defcal = "\n".join(
@@ -111,7 +111,7 @@ def test_to_def_cal_with_key(pulse_sequence):
 def test_ngc_length(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
-    calibration = NativeGateCalibration(
+    calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
     )
 
@@ -120,7 +120,7 @@ def test_ngc_length(pulse_sequence):
 
 def test_get_pulse_sequence(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+    calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     assert calibration.get_pulse_sequence(calibration_key) == pulse_sequence
 
@@ -128,6 +128,6 @@ def test_get_pulse_sequence(pulse_sequence):
 @pytest.mark.xfail(raises=ValueError)
 def test_get_pulse_sequence_bad_key(pulse_sequence):
     calibration_key = (Gate.H, QubitSet([0, 1]))
-    calibration = NativeGateCalibration({calibration_key: pulse_sequence})
+    calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     calibration.get_pulse_sequence(calibration_key)

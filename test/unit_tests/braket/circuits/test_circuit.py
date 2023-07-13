@@ -40,7 +40,7 @@ from braket.circuits.serialization import (
 )
 from braket.circuits.translations import braket_result_to_result_type
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 
 
@@ -697,10 +697,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[2] b;",
                         "qubit[2] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -722,10 +720,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "bit[2] b;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -749,10 +745,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -780,10 +774,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "qubit[5] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -807,10 +799,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "input float theta;",
                         "bit[2] b;",
                         "qubit[2] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -836,10 +826,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[5] b;",
                         "qubit[5] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -866,10 +854,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[7] b;",
                         "qubit[7] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -898,10 +884,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[1] b;",
                         "qubit[1] q;",
-                        "cal {",
-                        "    waveform drag_gauss_wf = drag_gaussian"
+                        "waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
-                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -919,21 +903,14 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
 def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0, 1]))
-    calibration = NativeGateCalibration(
+    calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
-    )
-    print(
-        circuit.to_ir(
-            ir_type=IRType.OPENQASM,
-            serialization_properties=serialization_properties,
-            native_gate_calibration=calibration,
-        )
     )
     assert (
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            native_gate_calibration=calibration,
+            gate_calibrations=calibration,
         )
         == expected_ir
     )

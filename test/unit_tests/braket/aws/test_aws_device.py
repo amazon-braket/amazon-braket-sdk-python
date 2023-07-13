@@ -42,7 +42,7 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # no
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.pulse import ArbitraryWaveform, DragGaussianWaveform, Frame, Port, PulseSequence
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
@@ -80,7 +80,7 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
 )
 
 
-MOCK_NATIVE_GATE_CALIBRATION_JSON = {
+MOCK_gate_calibrations_JSON = {
     "gates": {
         "0": {
             "cphaseshift": [
@@ -637,7 +637,7 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
             "qhpSpecificProperties": None,
         }
     },
-    "nativeGateCalibrationsRef": "file://hostname/foo/bar",
+    "nativeGateCalibrationssRef": "file://hostname/foo/bar",
 }
 
 
@@ -737,7 +737,7 @@ def test_device_pulse_metadata(pulse_device_capabilities):
 
 
 @patch("urllib.request.urlopen")
-def test_device_native_gates_exists(mock_url_request):
+def test_device_gate_calibrations_exists(mock_url_request):
     # The data is accessed using a device manager so here data is prepped and passed for the return val.
     response_data_content = {
         "gates": {
@@ -799,7 +799,7 @@ def test_device_native_gates_exists(mock_url_request):
             id="wf_drag_gaussian_0",
         )
     }
-    expected_ngc = NativeGateCalibration(
+    expected_ngc = GateCalibrations(
         calibration_data={
             (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): PulseSequence().play(
                 device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"]
@@ -807,11 +807,10 @@ def test_device_native_gates_exists(mock_url_request):
         }
     )
 
-    # with patch.object(urllib.request, 'urlopen', return_value='{}'):
-    assert device.native_gate_calibration == expected_ngc
+    assert device.gate_calibrations_href is not None
+    assert device.gate_calibrations == expected_ngc
     # Called twice to check that the property stays the same after being initially fetched
-    assert device.native_gate_calibration == expected_ngc
-    assert device.native_gate_calibrations_href is not None
+    assert device.gate_calibrations == expected_ngc
 
 
 def test_equality(arn):
@@ -1454,7 +1453,7 @@ def _run_and_assert(
     poll_timeout_seconds=None,  # Treated as positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
-    native_gate_calibration=None,  # Treated as positional arg
+    gate_calibrations=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1471,7 +1470,7 @@ def _run_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
-        native_gate_calibration,
+        gate_calibrations,
         extra_args,
         extra_kwargs,
     )
@@ -1489,7 +1488,7 @@ def _run_batch_and_assert(
     poll_timeout_seconds=None,  # Treated as a positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
-    native_gate_calibration=None,  # Treated as positional arg
+    gate_calibrations=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1509,7 +1508,7 @@ def _run_batch_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
-        native_gate_calibration,
+        gate_calibrations,
         extra_args,
         extra_kwargs,
     )
@@ -1525,7 +1524,7 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
         assert device.topology_graph.edges == device._construct_topology_graph().edges
     assert device.frames == {}
     assert device.ports == {}
-    assert device.native_gate_calibrations_href is None
+    assert device.gate_calibrations_href is None
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")
@@ -1808,7 +1807,7 @@ def test_calibration_timestamp():
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     device = AwsDevice(DWAVE_ARN, mock_session)
 
-    assert device.native_gate_calibration_timestamp is None
+    assert device.gate_calibrations_timestamp is None
 
 
 def test_str_to_gate():
@@ -1828,7 +1827,7 @@ def test_device_no_href():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     device = AwsDevice(DWAVE_ARN, mock_session)
-    assert device.native_gate_calibrations_href is None
+    assert device.gate_calibrations_href is None
 
 
 def test_parse_calibration_data():
@@ -1837,8 +1836,8 @@ def test_parse_calibration_data():
         MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
     )
     device = AwsDevice(DWAVE_ARN, mock_session)
-    calibration_data, fidelities = device._parse_calibration_json(MOCK_NATIVE_GATE_CALIBRATION_JSON)
-    device_ngc = NativeGateCalibration(calibration_data, fidelities)
+    calibration_data, fidelities = device._parse_calibration_json(MOCK_gate_calibrations_JSON)
+    device_ngc = GateCalibrations(calibration_data, fidelities)
 
     expected_waveforms = {
         "wf_drag_gaussian_0": DragGaussianWaveform(
@@ -1861,7 +1860,7 @@ def test_parse_calibration_data():
         .shift_frequency(device.frames["q0_q1_cphase_frame"], FreeParameter("theta")),
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
-    expected_ngc = NativeGateCalibration(calibration_data=expected_calibration_data)
+    expected_ngc = GateCalibrations(calibration_data=expected_calibration_data)
     assert device_ngc == expected_ngc
 
 

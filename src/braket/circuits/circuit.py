@@ -57,7 +57,7 @@ from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.openqasm.program_v1 import io_type
-from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import _validate_uniqueness
@@ -1099,7 +1099,7 @@ class Circuit:
         self,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
-        native_gate_calibration: Optional[NativeGateCalibration] = None,
+        gate_calibrations: Optional[GateCalibrations] = None,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """
         Converts the circuit into the canonical intermediate representation.
@@ -1111,7 +1111,7 @@ class Circuit:
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
-            native_gate_calibration (Optional[NativeGateCalibration]): The calibration data for the
+            gate_calibrations (Optional[GateCalibrations]): The calibration data for the
                 device. default: None.
 
         Returns:
@@ -1134,7 +1134,7 @@ class Circuit:
                 )
             return self._to_openqasm(
                 serialization_properties or OpenQASMSerializationProperties(),
-                native_gate_calibration,
+                gate_calibrations,
             )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
@@ -1175,10 +1175,10 @@ class Circuit:
     def _to_openqasm(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        native_gate_calibration: Optional[NativeGateCalibration],
+        gate_calibrations: Optional[GateCalibrations],
     ) -> OpenQasmProgram:
         ir_instructions = self._create_openqasm_header(
-            serialization_properties, native_gate_calibration
+            serialization_properties, gate_calibrations
         )
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend(
@@ -1214,7 +1214,7 @@ class Circuit:
     def _create_openqasm_header(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        native_gate_calibration: Optional[NativeGateCalibration],
+        gate_calibrations: Optional[GateCalibrations],
     ) -> List[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         for parameter in self.parameters:
@@ -1231,48 +1231,27 @@ class Circuit:
                 f"{serialization_properties.qubit_reference_type} supplied."
             )
 
-        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(native_gate_calibration)
+        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_calibrations)
         if frame_wf_declarations:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
 
-    def _validate_ngc_uniqueness(
-        self,
-        native_gate_calibration: NativeGateCalibration,
-        frames: Dict[Frame],
-        waveforms: Dict[ArbitraryWaveform],
-    ) -> None:
-        for key, calibration in native_gate_calibration.calibration_data.items():
-            if isinstance(key, str):
-                continue
-            for frame in calibration._frames.values():
-                _validate_uniqueness(frames, frame)
-                frames[frame.id] = frame
-            for waveform in calibration._waveforms.values():
-                _validate_uniqueness(waveforms, waveform)
-                waveforms[waveform.id] = waveform
-
     def _generate_frame_wf_defcal_declarations(
-        self, native_gate_calibration: Optional[NativeGateCalibration]
+        self, gate_calibrations: Optional[GateCalibrations]
     ) -> Optional[str]:
         program = oqpy.Program(None)
 
-        frames, waveforms = self._get_frames_waveforms_from_instrs(native_gate_calibration)
-
-        if native_gate_calibration is not None:
-            self._validate_ngc_uniqueness(native_gate_calibration, frames, waveforms)
+        frames, waveforms = self._get_frames_waveforms_from_instrs(gate_calibrations)
 
         # Declare the frames and waveforms across all pulse sequences
         declarable_frames = [f for f in frames.values() if not f.is_predefined]
-        if declarable_frames or waveforms or native_gate_calibration is not None:
+        if declarable_frames or waveforms or gate_calibrations is not None:
             frame_wf_to_declare = [f._to_oqpy_expression() for f in declarable_frames]
             frame_wf_to_declare += [wf._to_oqpy_expression() for wf in waveforms.values()]
             program.declare(frame_wf_to_declare, encal=True)
 
-            if native_gate_calibration is not None:
-                for key, calibration in native_gate_calibration.calibration_data.items():
-                    if isinstance(key, str):
-                        continue
+            if gate_calibrations is not None:
+                for key, calibration in gate_calibrations.calibration_data.items():
                     gate, qubits = key
 
                     # ignoring parametric gates
@@ -1296,7 +1275,7 @@ class Circuit:
         return None
 
     def _get_frames_waveforms_from_instrs(
-        self, native_gate_calibration: Optional[NativeGateCalibration]
+        self, gate_calibrations: Optional[GateCalibrations]
     ) -> Tuple[Dict[Frame], Dict[ArbitraryWaveform]]:
         from braket.circuits.gates import PulseGate
 
@@ -1312,15 +1291,15 @@ class Circuit:
                     waveforms[waveform.id] = waveform
             # this will change with full parametric calibration support
             elif hasattr(type(instruction.operator), "angle"):
-                if native_gate_calibration is not None:
+                if gate_calibrations is not None:
                     key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
-                    if key in native_gate_calibration.calibration_data:
-                        ps = native_gate_calibration.get_pulse_sequence(key)
+                    if key in gate_calibrations.calibration_data:
+                        ps = gate_calibrations.get_pulse_sequence(key)
                         bound_key = (
                             type(instruction.operator)(instruction.operator.angle),
                             instruction.target,
                         )
-                        native_gate_calibration._calibration_data |= {
+                        gate_calibrations._calibration_data |= {
                             bound_key: ps(theta=instruction.operator.angle)
                         }
         return frames, waveforms

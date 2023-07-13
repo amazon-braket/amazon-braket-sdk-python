@@ -38,7 +38,7 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # no
 from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.native_gates.native_gate_calibration import NativeGateCalibration
+from braket.native_gates.gate_calibrations import GateCalibrations
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.pulse import (
@@ -93,8 +93,8 @@ class AwsDevice(Device):
         """
         super().__init__(name=None, status=None)
         self._arn = arn
-        self._native_gate_calibration = None
-        self._native_gate_calibration_timestamp = None
+        self._gate_calibrations = None
+        self._gate_calibrations_timestamp = None
         self._properties = None
         self._provider_name = None
         self._poll_interval_seconds = None
@@ -118,7 +118,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[Dict[str, float]] = None,
-        native_gate_calibration: Optional[NativeGateCalibration] = None,
+        gate_calibrations: Optional[GateCalibrations] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -142,8 +142,8 @@ class AwsDevice(Device):
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
-            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for user defined gate
-                calibration.
+            gate_calibrations (Optional[GateCalibrations]): A `GateCalibrations` for user defined gate
+                calibrations.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -192,7 +192,7 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
-            native_gate_calibration=native_gate_calibration,
+            gate_calibrations=gate_calibrations,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -226,7 +226,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
-        native_gate_calibration: Optional[NativeGateCalibration] = None,
+        gate_calibrations: Optional[GateCalibrations] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -254,7 +254,7 @@ class AwsDevice(Device):
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            native_gate_calibration (Optional[NativeGateCalibration]): A `NativeGateCalibration` for user defined gate
+            gate_calibrations (Optional[GateCalibrations]): A `GateCalibrations` for user defined gate
                 calibration.
 
         Returns:
@@ -280,7 +280,7 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
-            native_gate_calibration=native_gate_calibration,
+            gate_calibrations=gate_calibrations,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -373,29 +373,29 @@ class AwsDevice(Device):
         return self._arn
 
     @property
-    def native_gate_calibration(self) -> NativeGateCalibration:
+    def gate_calibrations(self) -> GateCalibrations:
         """
         Fetches the native gate calibration data if not already present.
 
         Returns:
-            NativeGateCalibration: The calibration object.
+            GateCalibrations: The calibration object.
         """
-        if not self._native_gate_calibration:
-            self._native_gate_calibration = self.refresh_native_gate_calibrations()
-        return self._native_gate_calibration
+        if not self._gate_calibrations:
+            self._gate_calibrations = self.refresh_gate_calibrationss()
+        return self._gate_calibrations
 
     @property
-    def native_gate_calibration_timestamp(self) -> datetime:
+    def gate_calibrations_timestamp(self) -> datetime:
         """
         This returns the timestamp of the last time the calibration data was fetched.
 
         Returns:
             datetime: The timestamp for the last time the calibration was fetched.
         """
-        return self._native_gate_calibration_timestamp
+        return self._gate_calibrations_timestamp
 
     @property
-    def native_gate_calibrations_href(self) -> str:
+    def gate_calibrations_href(self) -> str:
         """
         Returns the href for the native gate calibration data if the device has it.
 
@@ -680,23 +680,23 @@ class AwsDevice(Device):
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
 
-    def refresh_native_gate_calibrations(self) -> PulseSequence:
+    def refresh_gate_calibrationss(self) -> Union[GateCalibrations, None]:
         """
         Refreshes the native gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.
 
         Returns:
-            PulseSequence: the calibration data for the device from the specific time.
+             Union[GateCalibrations, None]: the calibration data for the device.
         """
-        if self.native_gate_calibrations_href is not None:
+        if self.gate_calibrations_href is not None:
             try:
-                with urllib.request.urlopen(self.native_gate_calibrations_href.split("?")[0]) as f:
+                with urllib.request.urlopen(self.gate_calibrations_href.split("?")[0]) as f:
                     json_calibration_data, fidelities = self._parse_calibration_json(
                         json.loads(f.read().decode("utf-8"))
                     )
-                    self._native_gate_calibration_timestamp = datetime.now()
-                    return NativeGateCalibration(json_calibration_data, fidelities)
+                    self._gate_calibrations_timestamp = datetime.now()
+                    return GateCalibrations(json_calibration_data, fidelities)
             except urllib.error.URLError as e:
                 print(e.reason)
         else:
