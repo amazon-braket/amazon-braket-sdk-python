@@ -1309,7 +1309,7 @@ class Circuit:
                 if gate_calibrations is not None:
                     key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
                     if key in gate_calibrations.calibration_data:
-                        ps = gate_calibrations.get_pulse_sequence(key)
+                        ps = gate_calibrations.get_gate_calibration(key)
                         bound_key = (
                             type(instruction.operator)(instruction.operator.angle),
                             instruction.target,

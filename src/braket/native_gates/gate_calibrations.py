@@ -61,7 +61,7 @@ class GateCalibrations:
     def __len__(self):
         return len(self._calibration_data)
 
-    def filter_data(
+    def filter_by_qubits_or_gates(
         self, gates: Optional[List[Gate]] = None, qubits: Optional[List[QubitSet]] = None
     ) -> Optional[GateCalibrations]:
         """
@@ -72,7 +72,7 @@ class GateCalibrations:
             qubits (Optional[List[QubitSet]]): An optional set of qubits to filter on.
 
         Returns:
-            Optional[GateCalibrations]: A filteredGateCalibrations object. Otherwise, returns none if no matches are found.
+            Optional[GateCalibrations]: A filtered GateCalibrations object. Otherwise, returns none if no matches are found.
         """  # noqa: E501
         keys = self._calibration_data.keys()
         filtered_calibration_keys = [
@@ -94,20 +94,20 @@ class GateCalibrations:
             {k: v for (k, v) in self._fidelities.items() if k in filtered_calibration_keys},
         )
 
-    def get_pulse_sequence(self, key: Tuple[Gate, QubitSet]) -> PulseSequence:
+    def get_gate_calibration(self, calibration_key: Tuple[Gate, QubitSet]) -> PulseSequence:
         """
         Returns the pulse implementation for the gate and QubitSet.
 
         Args:
-            key (Tuple[Gate, QubitSet]): A key to get a specific PulseSequence.
+            calibration_key (Tuple[Gate, QubitSet]): A key to get a specific PulseSequence.
 
         Returns:
             PulseSequence: the PulseSequence object corresponding the gate acting on the QubitSet.
 
         """
-        if not isinstance(key[0], Gate) or not isinstance(key[1], QubitSet):
+        if not isinstance(calibration_key[0], Gate) or not isinstance(calibration_key[1], QubitSet):
             raise ValueError("The key must be a tuple of a gate object and a qubit set.")
-        return self._calibration_data.get(key, None)
+        return self._calibration_data.get(calibration_key, None)
 
     def get_fidelity(self, key: Tuple[Gate, QubitSet]) -> float:
         """

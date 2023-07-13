@@ -56,7 +56,7 @@ def test_gc_copy(pulse_sequence):
     assert calibration == calibration.copy()
 
 
-def test_filter_data(pulse_sequence):
+def test_filter_by_qubits_or_gates(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations(
@@ -64,10 +64,10 @@ def test_filter_data(pulse_sequence):
     )
     expected_calibration = GateCalibrations({calibration_key: pulse_sequence})
 
-    assert expected_calibration == calibration.filter_data(gates=[Gate.Z()])
+    assert expected_calibration == calibration.filter_by_qubits_or_gates(gates=[Gate.Z()])
 
 
-def test_filter_data_with_fidelity(pulse_sequence):
+def test_filter_by_qubits_or_gates_with_fidelity(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations(
@@ -75,7 +75,7 @@ def test_filter_data_with_fidelity(pulse_sequence):
     )
     expected_calibration = GateCalibrations({calibration_key: pulse_sequence}, {calibration_key: 4})
 
-    assert expected_calibration == calibration.filter_data(gates=[Gate.Z()])
+    assert expected_calibration == calibration.filter_by_qubits_or_gates(gates=[Gate.Z()])
 
 
 def test_fidelities(pulse_sequence):
@@ -169,16 +169,16 @@ def test_ngc_length(pulse_sequence):
     assert len(calibration) == 2
 
 
-def test_get_pulse_sequence(pulse_sequence):
+def test_get_gate_calibration(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})
 
-    assert calibration.get_pulse_sequence(calibration_key) == pulse_sequence
+    assert calibration.get_gate_calibration(calibration_key) == pulse_sequence
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_get_pulse_sequence_bad_key(pulse_sequence):
+def test_get_gate_calibration_bad_key(pulse_sequence):
     calibration_key = (Gate.H, QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})
 
-    calibration.get_pulse_sequence(calibration_key)
+    calibration.get_gate_calibration(calibration_key)
