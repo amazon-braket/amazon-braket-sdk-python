@@ -381,7 +381,7 @@ class AwsDevice(Device):
             GateCalibrations: The calibration object.
         """
         if not self._gate_calibrations:
-            self._gate_calibrations = self.refresh_gate_calibrationss()
+            self._gate_calibrations = self.refresh_gate_calibrations()
         return self._gate_calibrations
 
     @property
@@ -680,14 +680,14 @@ class AwsDevice(Device):
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
 
-    def refresh_gate_calibrationss(self) -> Union[GateCalibrations, None]:
+    def refresh_gate_calibrations(self) -> GateCalibrations:
         """
-        Refreshes the native gate calibration data upon request.
+        Refreshes the gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.
 
         Returns:
-             Union[GateCalibrations, None]: the calibration data for the device.
+            GateCalibrations: the calibration data for the device.
         """
         if self.gate_calibrations_href is not None:
             try:
@@ -697,8 +697,8 @@ class AwsDevice(Device):
                     )
                     self._gate_calibrations_timestamp = datetime.now()
                     return GateCalibrations(json_calibration_data, fidelities)
-            except urllib.error.URLError as e:
-                print(e.reason)
+            except urllib.error.URLError:
+                raise urllib.error.URLError(f"Unable to reach {self.gate_calibrations_href}")
         else:
             return None
 
@@ -764,7 +764,7 @@ class AwsDevice(Device):
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
                 frame = self.frames[argument["value"]]
-            elif argument["name"] == "waveform":
+            else:
                 waveform = waveforms[argument["value"]]
         return frame, waveform
 
@@ -780,7 +780,7 @@ class AwsDevice(Device):
                 if qubits_or_frames == list():
                     qubits_or_frames = QubitSet([])
                 qubits_or_frames.add(Qubit(int(instr["arguments"][i]["value"])))
-            elif instr["arguments"][i]["name"] == "duration":
+            else:
                 duration = (
                     float(instr["arguments"][i]["value"])
                     if is_float(instr["arguments"][i]["value"])
@@ -795,7 +795,7 @@ class AwsDevice(Device):
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
                 frame = self.frames[argument["value"]]
-            elif argument["name"] == "phase":
+            else:
                 phase = (
                     float(argument["value"])
                     if is_float(argument["value"])
@@ -810,7 +810,7 @@ class AwsDevice(Device):
         for argument in instr["arguments"]:
             if argument["name"] == "frame":
                 frame = self.frames[argument["value"]]
-            elif argument["name"] == "frequency":
+            else:
                 frequency = (
                     float(argument["value"])
                     if is_float(argument["value"])
@@ -875,6 +875,7 @@ class AwsDevice(Device):
                     if gate_obj is None:
                         # We drop out gates that are not implemented in the BDK
                         continue
+
                     argument = None
                     if len(g["arguments"]):
                         argument = (
@@ -891,6 +892,8 @@ class AwsDevice(Device):
                     k1 = f"{len(qubits)}Q"
                     k2 = "-".join([str(int(qubit)) for qubit in sorted(qubits)])
                     k3 = f"f{gate_qubit_key[0].name}" if len(qubits) == 2 else "f1QRB"
+                    if k3 == "fCPhaseShift":
+                        k3 = "fCPHASE"
                     fidelities[gate_qubit_key] = self.properties.provider.specs[k1][k2][k3]
         return parsed_calibration_data, fidelities
 
@@ -929,8 +932,6 @@ def is_float(argument: str) -> bool:
         bool: Returns true if the string can be cast as a float. False, otherwise.
 
     """
-    if argument is None:
-        return False
     try:
         float(argument)
         return True

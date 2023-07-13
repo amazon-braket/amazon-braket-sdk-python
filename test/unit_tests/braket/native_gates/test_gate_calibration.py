@@ -42,14 +42,14 @@ def pulse_sequence(frame):
     )
 
 
-def test_ngc_creation(pulse_sequence):
+def test_gc_creation(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     assert calibration.calibration_data[calibration_key] == pulse_sequence
 
 
-def test_ngc_copy(pulse_sequence):
+def test_gc_copy(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})
 
@@ -67,11 +67,43 @@ def test_filter_data(pulse_sequence):
     assert expected_calibration == calibration.filter_data(gates=[Gate.Z()])
 
 
-def test_get_fidelity(pulse_sequence):
+def test_filter_data_with_fidelity(pulse_sequence):
+    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
+    calibration = GateCalibrations(
+        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}, {calibration_key: 4}
+    )
+    expected_calibration = GateCalibrations({calibration_key: pulse_sequence}, {calibration_key: 4})
+
+    assert expected_calibration == calibration.filter_data(gates=[Gate.Z()])
+
+
+def test_fidelities(pulse_sequence):
+    calibration_key = (Gate.H(), QubitSet([0, 1]))
+    calibration = GateCalibrations({calibration_key: pulse_sequence}, {calibration_key: 4})
+
+    assert calibration.fidelities == {calibration_key: 4}
+
+
+def test_fidelities_empty(pulse_sequence):
+    calibration_key = (Gate.H(), QubitSet([0, 1]))
+    calibration = GateCalibrations({calibration_key: pulse_sequence})
+
+    assert calibration.fidelities is None
+
+
+def test_get_fidelity_empty(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})
 
     assert calibration.get_fidelity(calibration_key) is None
+
+
+def test_get_fidelity(pulse_sequence):
+    calibration_key = (Gate.H(), QubitSet([0, 1]))
+    calibration = GateCalibrations({calibration_key: pulse_sequence}, {calibration_key: 4})
+
+    assert calibration.get_fidelity(calibration_key) == 4
 
 
 def test_to_defcal(pulse_sequence):
@@ -88,6 +120,25 @@ def test_to_defcal(pulse_sequence):
     )
 
     assert calibration.to_defcal() == expected_defcal
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_to_def_cal_with_bad_key(pulse_sequence):
+    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
+    calibration = GateCalibrations(
+        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
+    )
+    expected_defcal = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "defcal z $0 $1 {",
+            "    barrier test_frame_rf;",
+            "    delay[1000000000000.0ns] test_frame_rf;",
+            "}",
+        ]
+    )
+    assert expected_defcal == calibration.to_defcal((Gate.Z(), QubitSet([1, 2])))
 
 
 def test_to_def_cal_with_key(pulse_sequence):

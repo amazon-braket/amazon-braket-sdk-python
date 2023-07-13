@@ -398,6 +398,7 @@ def test_play_arbitrary_waveforms(port):
 
     verify_results(parser, expected_amplitudes, expected_frequencies, expected_phases)
 
+
 @pytest.mark.xfail(raises=NameError)
 def test_missing_waveform(port):
     frame = Frame(frame_id="frame1", port=port, frequency=1e8, phase=0, is_predefined=False)

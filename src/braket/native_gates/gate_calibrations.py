@@ -30,19 +30,31 @@ class GateCalibrations:
     @property
     def calibration_data(self) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
-        Gets the calibration data from the object.
+        Gets the mapping of (Gate, Qubit) to the corresponding `PulseSequences`.
 
         Returns:
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
         """
         return self._calibration_data
 
+    @property
+    def fidelities(self) -> Dict[Tuple[Gate, QubitSet], float]:
+        """
+        Gets the mapping of (Gate, Qubit) to the corresponding fidelity.
+
+        Returns:
+            Dict[Tuple[Gate, QubitSet], float]: The fidelity data.
+        """
+        if self._fidelities:
+            return self._fidelities
+        return None
+
     def copy(self) -> GateCalibrations:
         """
         Returns a copy of the object.
 
         Returns:
-           GateCalibrations: a copy of the calibrations.
+            GateCalibrations: a copy of the calibrations.
         """
         return GateCalibrations(deepcopy(self._calibration_data), deepcopy(self._fidelities))
 
@@ -51,7 +63,7 @@ class GateCalibrations:
 
     def filter_data(
         self, gates: Optional[List[Gate]] = None, qubits: Optional[List[QubitSet]] = None
-    ) -> GateCalibrations:
+    ) -> Optional[GateCalibrations]:
         """
         Filters the data based on optional lists of gates or QubitSets.
 
@@ -60,8 +72,8 @@ class GateCalibrations:
             qubits (Optional[List[QubitSet]]): An optional set of qubits to filter on.
 
         Returns:
-             GateCalibrations: A filteredGateCalibrations object.
-        """
+            Optional[GateCalibrations]: A filteredGateCalibrations object. Otherwise, returns none if no matches are found.
+        """  # noqa: E501
         keys = self._calibration_data.keys()
         filtered_calibration_keys = [
             tup
@@ -70,7 +82,11 @@ class GateCalibrations:
         ]
         if self._fidelities is None:
             return GateCalibrations(
-                {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},
+                {
+                    k: v
+                    for (k, v) in self.calibration_data.items()
+                    if k in filtered_calibration_keys
+                },
                 None,
             )
         return GateCalibrations(
@@ -121,6 +137,8 @@ class GateCalibrations:
 
         """
         if key is not None:
+            if key not in self.calibration_data.keys():
+                raise ValueError(f"The key {key} does not exist in this GateCalibrations object.")
             return self.calibration_data[key].to_ir().replace("cal", self._def_cal_gate(key), 1)
         else:
             defcal = "\n".join(
@@ -141,4 +159,5 @@ class GateCalibrations:
         return (
             isinstance(other, GateCalibrations)
             and other.calibration_data == self.calibration_data
+            and other.fidelities == self.fidelities
         )

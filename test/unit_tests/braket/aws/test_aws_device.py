@@ -15,6 +15,7 @@ import json
 import os
 from datetime import datetime
 from unittest.mock import Mock, PropertyMock, patch
+from urllib.error import URLError
 
 import networkx as nx
 import pytest
@@ -158,7 +159,8 @@ MOCK_gate_calibrations_JSON = {
                         {"name": "barrier", "arguments": None},
                     ],
                 }
-            ]
+            ],
+            "rx_12": [],
         },
     },
     "waveforms": {
@@ -752,21 +754,22 @@ def test_device_gate_calibrations_exists(mock_url_request):
                                 "name": "play",
                                 "arguments": [
                                     {
-                                        "name": "frame",
-                                        "value": "q0_q1_cphase_frame",
-                                        "type": "frame",
-                                    },
-                                    {
                                         "name": "waveform",
                                         "value": "wf_drag_gaussian_0",
                                         "type": "waveform",
+                                    },
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_q1_cphase_frame",
+                                        "type": "frame",
                                     },
                                 ],
                             },
                         ],
                     }
                 ]
-            }
+            },
+            "rx_12": [],
         },
         "waveforms": {
             "wf_drag_gaussian_0": {
@@ -804,13 +807,26 @@ def test_device_gate_calibrations_exists(mock_url_request):
             (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): PulseSequence().play(
                 device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"]
             )
-        }
+        },
+        fidelities={(Gate.CPhaseShift(-1.5707963267948966), QubitSet([0])): 0.997339217568556},
     )
-
     assert device.gate_calibrations_href is not None
     assert device.gate_calibrations == expected_ngc
     # Called twice to check that the property stays the same after being initially fetched
     assert device.gate_calibrations == expected_ngc
+
+
+@pytest.mark.xfail(raises=URLError)
+@patch("urllib.request.urlopen")
+def test_refresh_data_url_error(mock_url_request):
+    mock_url_request.side_effect = URLError("mock reason")
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    )
+    device = AwsDevice(RIGETTI_ARN, mock_session)
+
+    device.gate_calibrations
 
 
 def test_equality(arn):
@@ -1860,7 +1876,13 @@ def test_parse_calibration_data():
         .shift_frequency(device.frames["q0_q1_cphase_frame"], FreeParameter("theta")),
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
-    expected_ngc = GateCalibrations(calibration_data=expected_calibration_data)
+    expected_fidelities = {
+            (Gate.CPhaseShift(-1.5707963267948966), QubitSet(0)): 0.997339217568556,
+            (Gate.CZ(), QubitSet([1, 0])): 0.9586440436264603,
+        }
+    expected_ngc = GateCalibrations(
+        calibration_data=expected_calibration_data, fidelities=expected_fidelities
+    )
     assert device_ngc == expected_ngc
 
 

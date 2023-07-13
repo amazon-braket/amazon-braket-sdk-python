@@ -697,8 +697,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[2] b;",
                         "qubit[2] q;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -720,8 +722,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "bit[2] b;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -745,8 +749,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -774,8 +780,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "qubit[5] q;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -799,8 +807,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "input float theta;",
                         "bit[2] b;",
                         "qubit[2] q;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -826,8 +836,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[5] b;",
                         "qubit[5] q;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -854,8 +866,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[7] b;",
                         "qubit[7] q;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
@@ -884,8 +898,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[1] b;",
                         "qubit[1] q;",
-                        "waveform drag_gauss_wf = drag_gaussian"
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
                         "defcal z $0, $1 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",

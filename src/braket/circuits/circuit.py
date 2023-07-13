@@ -1177,9 +1177,7 @@ class Circuit:
         serialization_properties: OpenQASMSerializationProperties,
         gate_calibrations: Optional[GateCalibrations],
     ) -> OpenQasmProgram:
-        ir_instructions = self._create_openqasm_header(
-            serialization_properties, gate_calibrations
-        )
+        ir_instructions = self._create_openqasm_header(serialization_properties, gate_calibrations)
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend(
             [
@@ -1236,12 +1234,29 @@ class Circuit:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
 
+    def _validate_ngc_uniqueness(
+        self,
+        gate_calibrations: GateCalibrations,
+        frames: Dict[Frame],
+        waveforms: Dict[ArbitraryWaveform],
+    ) -> None:
+        for key, calibration in gate_calibrations.calibration_data.items():
+            for frame in calibration._frames.values():
+                _validate_uniqueness(frames, frame)
+                frames[frame.id] = frame
+            for waveform in calibration._waveforms.values():
+                _validate_uniqueness(waveforms, waveform)
+                waveforms[waveform.id] = waveform
+
     def _generate_frame_wf_defcal_declarations(
         self, gate_calibrations: Optional[GateCalibrations]
     ) -> Optional[str]:
         program = oqpy.Program(None)
 
         frames, waveforms = self._get_frames_waveforms_from_instrs(gate_calibrations)
+
+        if gate_calibrations is not None:
+            self._validate_ngc_uniqueness(gate_calibrations, frames, waveforms)
 
         # Declare the frames and waveforms across all pulse sequences
         declarable_frames = [f for f in frames.values() if not f.is_predefined]

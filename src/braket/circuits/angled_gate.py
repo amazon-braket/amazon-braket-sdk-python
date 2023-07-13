@@ -364,6 +364,9 @@ class TripleAngledGate(Gate, Parameterizable):
             f"'qubit_count': {self.qubit_count})"
         )
 
+    def __hash__(self):
+        return hash((self.name, self.angle_1, self.angle_2, self.angle_3, self.qubit_count))
+
 
 @singledispatch
 def _angles_equal(
