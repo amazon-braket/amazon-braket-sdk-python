@@ -705,6 +705,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "rx(0.15) q[0];",
                         "rx(0.3) q[1];",
                         "b[0] = measure q[0];",
@@ -727,6 +731,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
@@ -754,6 +762,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
@@ -788,6 +800,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "rx(0.15) q[0];",
                         "rx(0.3) q[4];",
                         "#pragma braket noise bit_flip(0.2) q[3]",
@@ -812,6 +828,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
@@ -841,6 +861,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
                         "}",
                         "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
@@ -890,12 +914,13 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
             ),
         ),
         (
-            Circuit().h(0, power=-2.5).h(0, power=0),
+            Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta")),
             OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
             OpenQasmProgram(
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
+                        "input float theta;",
                         "bit[1] b;",
                         "qubit[1] q;",
                         "cal {",
@@ -908,6 +933,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "}",
                         "inv @ pow(2.5) @ h q[0];",
                         "pow(0) @ h q[0];",
+                        "rx(theta) q[0];",
                         "b[0] = measure q[0];",
                     ]
                 ),
@@ -918,9 +944,16 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
 )
 def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
-    calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0, 1]))
+    calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
     calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
+    )
+    print(
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+            gate_calibrations=calibration,
+        )
     )
     assert (
         circuit.to_ir(

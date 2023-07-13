@@ -1874,7 +1874,7 @@ def test_parse_calibration_data():
         )
     }
     expected_calibration_data = {
-        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0,1])): PulseSequence()
+        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): PulseSequence()
         .barrier(QubitSet(0))
         .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
         .barrier([device.frames["q0_q1_cphase_frame"]])
@@ -1886,7 +1886,7 @@ def test_parse_calibration_data():
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
     expected_fidelities = {
-        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0,1])): 0.9287330972713645,
+        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): 0.9287330972713645,
         (Gate.CZ(), QubitSet([1, 0])): 0.9586440436264603,
     }
     expected_ngc = GateCalibrations(
