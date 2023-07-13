@@ -1314,9 +1314,9 @@ class Circuit:
                             type(instruction.operator)(instruction.operator.angle),
                             instruction.target,
                         )
-                        gate_calibrations._calibration_data |= {
-                            bound_key: ps(theta=instruction.operator.angle)
-                        }
+                        gate_calibrations._calibration_data[bound_key] = ps(
+                            theta=instruction.operator.angle
+                        )
         return frames, waveforms
 
     def as_unitary(self) -> np.ndarray:

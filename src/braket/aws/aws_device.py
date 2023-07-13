@@ -702,6 +702,23 @@ class AwsDevice(Device):
         else:
             return None
 
+    def _parse_constant_waveform(self, w: Dict) -> Tuple[float, complex]:
+        length = iq = None
+        for val in w["arguments"]:
+            if val["name"] == "length":
+                length = (
+                    float(val["value"])
+                    if is_float(val["value"])
+                    else FreeParameterExpression(val["value"])
+                )
+            if val["name"] == "iq":
+                iq = (
+                    complex(val["value"])
+                    if is_float(val["value"])
+                    else FreeParameterExpression(val["value"])
+                )
+        return length, iq
+
     def _parse_waveforms(self, waveforms_json: str) -> Dict:
         waveforms = dict()
         for waveform in waveforms_json:
@@ -712,36 +729,23 @@ class AwsDevice(Device):
                 complex_amplitudes = [complex(i[0], i[1]) for i in w["amplitudes"]]
                 waveforms[wave_id] = ArbitraryWaveform(complex_amplitudes, wave_id)
             elif w["name"] == "drag_gaussian":
-                waveform_parameters |= {
-                    val["name"]: float(val["value"])
-                    if is_float(val["value"])
-                    else FreeParameterExpression(val["value"])
-                    for val in w["arguments"]
-                }
+                for val in w["arguments"]:
+                    waveform_parameters[val["name"]] = (
+                        float(val["value"])
+                        if is_float(val["value"])
+                        else FreeParameterExpression(val["value"])
+                    )
                 waveforms[wave_id] = DragGaussianWaveform(**waveform_parameters)
             elif w["name"] == "gaussian":
-                waveform_parameters |= {
-                    val["name"]: float(val["value"])
-                    if is_float(val["value"])
-                    else FreeParameterExpression(val["value"])
-                    for val in w["arguments"]
-                }
+                for val in w["arguments"]:
+                    waveform_parameters[val["name"]] = (
+                        float(val["value"])
+                        if is_float(val["value"])
+                        else FreeParameterExpression(val["value"])
+                    )
                 waveforms[wave_id] = GaussianWaveform(**waveform_parameters)
             elif w["name"] == "constant":
-                length = iq = None
-                for val in w["arguments"]:
-                    if val["name"] == "length":
-                        length = (
-                            float(val["value"])
-                            if is_float(val["value"])
-                            else FreeParameterExpression(val["value"])
-                        )
-                    if val["name"] == "iq":
-                        iq = (
-                            complex(val["value"])
-                            if is_float(val["value"])
-                            else FreeParameterExpression(val["value"])
-                        )
+                length = iq = self._parse_constant_waveform(w)
                 waveforms[wave_id] = ConstantWaveform(length, iq)
             else:
                 raise ValueError(f"The waveform {wave_id} of cannot be constructed")
