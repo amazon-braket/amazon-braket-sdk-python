@@ -56,16 +56,15 @@ def bell_state() -> None:
 You can view the output format, which is OpenQASM, by running `bell_state().to_ir()`.
 
 AutoQASM enables users to use more complicated program constructs with a compact and readable
-structure. We can demonstrate this with a program that conditionally prepares multiple Bell states:
+structure. We can demonstrate this with a program that conditionally prepares multiple Bell states
+on qubit pairs (1, 2) and (3, 4).
 ```
-# A program that is conditioned on the measurement result of qubit 0 to prepare two
-# Bell states on qubit pairs (1, 2) and (3, 4).
 @aq.function
 def conditional_multi_bell_states() -> None:
     h(0)
     if measure(0):
         for i in aq.range(2):
-            qubit = 2*i+1
+            qubit = 2 * i + 1
             h(qubit)
             cnot(qubit, qubit+1)
 
