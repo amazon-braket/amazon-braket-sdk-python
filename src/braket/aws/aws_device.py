@@ -722,7 +722,6 @@ class AwsDevice(Device):
                     if instr["name"] != "play"
                     else instr_parser(instr, waveforms, self.frames)
                 )
-                print(type(instr_function_args))
                 instr_function = getattr(calibration_sequence, instr["name"])
                 calibration_sequence = (
                     instr_function(instr_function_args)

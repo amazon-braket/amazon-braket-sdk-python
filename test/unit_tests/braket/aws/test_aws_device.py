@@ -143,7 +143,18 @@ MOCK_gate_calibrations_JSON = {
                         },
                     ],
                 }
-            ]
+            ],
+            "rx": [
+                {
+                    "gateName": "rx",
+                    "gateId": "rz_1",
+                    "qubits": "0",
+                    "arguments": ["theta"],
+                    "calibrations": [
+                        {"name": "barrier", "arguments": None},
+                    ],
+                }
+            ],
         },
         "0_1": {
             "cz": [
@@ -1858,6 +1869,7 @@ def test_parse_calibration_data():
         .delay([device.frames["q0_q1_cphase_frame"]], 3e-07)
         .shift_phase(device.frames["q0_q1_cphase_frame"], 3e-07)
         .shift_frequency(device.frames["q0_q1_cphase_frame"], FreeParameter("theta")),
+        (Gate.Rx(FreeParameter("theta")), QubitSet(0)): PulseSequence().barrier([]),
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
     expected_ngc = GateCalibrations(calibration_data=expected_calibration_data)
