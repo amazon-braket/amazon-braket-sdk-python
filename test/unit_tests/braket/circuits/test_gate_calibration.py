@@ -73,7 +73,7 @@ def test_to_defcal(pulse_sequence):
     expected_defcal = "\n".join(
         [
             "OPENQASM 3.0;",
-            "defcal rx(angle 1.0) $0 $1 {",
+            "defcal rx(1.0) $0, $1 {",
             "    barrier test_frame_rf;",
             "    delay[1000000000000.0ns] test_frame_rf;",
             "}",
@@ -93,7 +93,7 @@ def test_to_def_cal_with_bad_key(pulse_sequence):
     expected_defcal = "\n".join(
         [
             "OPENQASM 3.0;",
-            "defcal z $0 $1 {",
+            "defcal z $0, $1 {",
             "    barrier test_frame_rf;",
             "    delay[1000000000000.0ns] test_frame_rf;",
             "}",
@@ -111,7 +111,7 @@ def test_to_def_cal_with_key(pulse_sequence):
     expected_defcal = "\n".join(
         [
             "OPENQASM 3.0;",
-            "defcal z $0 $1 {",
+            "defcal z $0, $1 {",
             "    barrier test_frame_rf;",
             "    delay[1000000000000.0ns] test_frame_rf;",
             "}",

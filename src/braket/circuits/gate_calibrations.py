@@ -3,9 +3,13 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Dict, List, Optional, Tuple
 
-from braket.circuits.angled_gate import AngledGate
 from braket.circuits.gate import Gate
 from braket.circuits.qubit_set import QubitSet
+from braket.circuits.serialization import (
+    IRType,
+    OpenQASMSerializationProperties,
+    QubitReferenceType,
+)
 from braket.pulse.pulse_sequence import PulseSequence
 
 
@@ -109,11 +113,18 @@ class GateCalibrations:
             return defcal
 
     def _def_cal_gate(self, gate_key: Tuple[Gate, QubitSet]) -> str:
-        gate_to_qasm = gate_key[0]._qasm_name
-        if isinstance(gate_key[0], AngledGate):
-            gate_to_qasm += f"(angle {gate_key[0].angle})"
-        qubit_to_qasm = " ".join([f"${int(q)}" for q in gate_key[1]])
-        return " ".join(["defcal", gate_to_qasm, qubit_to_qasm])
+        return " ".join(
+            [
+                "defcal",
+                gate_key[0].to_ir(
+                    target=gate_key[1],
+                    serialization_properties=OpenQASMSerializationProperties(
+                        QubitReferenceType.PHYSICAL
+                    ),
+                    ir_type=IRType.OPENQASM,
+                )[:-1],
+            ]
+        )
 
     def __eq__(self, other):
         return (

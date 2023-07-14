@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import importlib
 from itertools import groupby
 from typing import Any, List, Optional, Sequence, Tuple, Type
 
@@ -212,6 +213,29 @@ class Gate(QuantumOperator):
 
     def __hash__(self):
         return hash((self.name, self.qubit_count))
+
+    @staticmethod
+    def str_to_gate(class_name: str) -> Gate:
+        """
+        Returns the class of Gate corresponding to the string assigned.
+
+        Args:
+            class_name (str): The name of the gate to convert.
+
+        Returns:
+            Gate: A Gate of type corresponding to `class_name`.
+        """
+        if class_name == "Rx_12":
+            # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
+            return None
+        elif class_name == "Cz":
+            class_name = "CZ"
+        elif class_name == "Cphaseshift":
+            class_name = "CPhaseShift"
+        elif class_name == "Xy":
+            class_name = "XY"
+        class_ = getattr(importlib.import_module("braket.circuits.gates"), class_name)
+        return class_
 
     @classmethod
     def register_gate(cls, gate: Type[Gate]) -> None:

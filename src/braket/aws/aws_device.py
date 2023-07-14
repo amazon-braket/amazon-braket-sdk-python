@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-import importlib
 import json
 import os
 import urllib.request
@@ -29,7 +28,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
-from braket.circuits import Circuit, Gate, Qubit, QubitSet
+from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
@@ -40,7 +39,6 @@ from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
-from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.pulse import (
     ArbitraryWaveform,
     ConstantWaveform,
@@ -690,125 +688,26 @@ class AwsDevice(Device):
         else:
             return None
 
-    def _parse_constant_waveform(self, w: Dict) -> Tuple[float, complex]:
-        length = iq = None
-        for val in w["arguments"]:
-            if val["name"] == "length":
-                length = (
-                    float(val["value"])
-                    if is_float(val["value"])
-                    else FreeParameterExpression(val["value"])
-                )
-            if val["name"] == "iq":
-                iq = (
-                    complex(val["value"])
-                    if is_float(val["value"])
-                    else FreeParameterExpression(val["value"])
-                )
-        return length, iq
-
-    def _parse_waveforms(self, waveforms_json: str) -> Dict:
+    def _get_waveforms(self, waveforms_json: str) -> Dict:
         waveforms = dict()
         for waveform in waveforms_json:
             w = waveforms_json[waveform]
-            wave_id = w["waveformId"]
-            waveform_parameters = {"id": wave_id}
             if "amplitudes" in w.keys():
-                complex_amplitudes = [complex(i[0], i[1]) for i in w["amplitudes"]]
-                waveforms[wave_id] = ArbitraryWaveform(complex_amplitudes, wave_id)
+                parsed_waveform = ArbitraryWaveform._from_json(w)
+                waveforms[parsed_waveform.id] = parsed_waveform
             elif w["name"] == "drag_gaussian":
-                for val in w["arguments"]:
-                    waveform_parameters[val["name"]] = (
-                        float(val["value"])
-                        if is_float(val["value"])
-                        else FreeParameterExpression(val["value"])
-                    )
-                waveforms[wave_id] = DragGaussianWaveform(**waveform_parameters)
+                parsed_waveform = DragGaussianWaveform._from_json(w)
+                waveforms[parsed_waveform.id] = parsed_waveform
             elif w["name"] == "gaussian":
-                for val in w["arguments"]:
-                    waveform_parameters[val["name"]] = (
-                        float(val["value"])
-                        if is_float(val["value"])
-                        else FreeParameterExpression(val["value"])
-                    )
-                waveforms[wave_id] = GaussianWaveform(**waveform_parameters)
+                parsed_waveform = GaussianWaveform._from_json(w)
+                waveforms[parsed_waveform.id] = parsed_waveform
             elif w["name"] == "constant":
-                length = iq = self._parse_constant_waveform(w)
-                waveforms[wave_id] = ConstantWaveform(length, iq)
+                parsed_waveform = ConstantWaveform._from_json(w)
+                waveforms[parsed_waveform.id] = parsed_waveform
             else:
-                raise ValueError(f"The waveform {wave_id} of cannot be constructed")
+                id = w["waveformId"]
+                raise ValueError(f"The waveform {id} of cannot be constructed")
         return waveforms
-
-    def _get_barrier_arguments(self, instr: Dict) -> Union[QubitSet, List]:
-        if instr["arguments"] is not None:
-            if instr["arguments"][0]["name"] == "qubit":
-                qubits_or_frames = QubitSet([int(arg["value"]) for arg in instr["arguments"]])
-            else:
-                qubits_or_frames = [self.frames.get(arg["value"]) for arg in instr["arguments"]]
-        else:
-            qubits_or_frames = []
-        return qubits_or_frames
-
-    def _get_play_arguments(
-        self, instr: Dict, waveforms: Dict[ArbitraryWaveform]
-    ) -> Tuple[Frame, ArbitraryWaveform]:
-        frame = waveform = None
-        for argument in instr["arguments"]:
-            if argument["name"] == "frame":
-                frame = self.frames[argument["value"]]
-            else:
-                waveform = waveforms[argument["value"]]
-        return frame, waveform
-
-    def _get_delay_arguments(
-        self, instr: Dict
-    ) -> Tuple[Union[Frame, List[Frame], QubitSet], Union[float, FreeParameterExpression]]:
-        qubits_or_frames = list()
-        duration = None
-        for i in range(len(instr["arguments"])):
-            if instr["arguments"][i]["name"] == "frame":
-                qubits_or_frames.append(self.frames[instr["arguments"][i]["value"]])
-            elif instr["arguments"][i]["name"] == "qubit":
-                if qubits_or_frames == list():
-                    qubits_or_frames = QubitSet([])
-                qubits_or_frames.add(Qubit(int(instr["arguments"][i]["value"])))
-            else:
-                duration = (
-                    float(instr["arguments"][i]["value"])
-                    if is_float(instr["arguments"][i]["value"])
-                    else FreeParameterExpression(instr["arguments"][i]["value"])
-                )
-        return qubits_or_frames, duration
-
-    def _get_shift_phase_arguments(
-        self, instr: Dict
-    ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
-        frame = phase = None
-        for argument in instr["arguments"]:
-            if argument["name"] == "frame":
-                frame = self.frames[argument["value"]]
-            else:
-                phase = (
-                    float(argument["value"])
-                    if is_float(argument["value"])
-                    else FreeParameterExpression(argument["value"])
-                )
-        return frame, phase
-
-    def _get_shift_frequency_arguments(
-        self, instr: Dict
-    ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
-        frame = frequency = None
-        for argument in instr["arguments"]:
-            if argument["name"] == "frame":
-                frame = self.frames[argument["value"]]
-            else:
-                frequency = (
-                    float(argument["value"])
-                    if is_float(argument["value"])
-                    else FreeParameterExpression(argument["value"])
-                )
-        return frame, frequency
 
     def _get_pulse_sequence(
         self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
@@ -816,21 +715,20 @@ class AwsDevice(Device):
         calibration_sequence = PulseSequence()
         for instruction in range(len(calibration)):
             instr = calibration[instruction]
-            if instr["name"] == "barrier":
-                qubits_or_frames = self._get_barrier_arguments(instr)
-                calibration_sequence = calibration_sequence.barrier(qubits_or_frames)
-            elif instr["name"] == "play":
-                frame, waveform = self._get_play_arguments(instr, waveforms)
-                calibration_sequence = calibration_sequence.play(frame, waveform)
-            elif instr["name"] == "delay":
-                frames, duration = self._get_delay_arguments(instr)
-                calibration_sequence = calibration_sequence.delay(frames, duration)
-            elif instr["name"] == "shift_phase":
-                frame, phase = self._get_shift_phase_arguments(instr)
-                calibration_sequence = calibration_sequence.shift_phase(frame, phase)
-            elif instr["name"] == "shift_frequency":
-                frame, frequency = self._get_shift_frequency_arguments(instr)
-                calibration_sequence = calibration_sequence.shift_frequency(frame, frequency)
+            if hasattr(calibration_sequence, f"_parse_{instr['name']}_json"):
+                instr_parser = getattr(calibration_sequence, f"_parse_{instr['name']}_json")
+                instr_function_args = (
+                    instr_parser(instr, self.frames)
+                    if instr["name"] != "play"
+                    else instr_parser(instr, waveforms, self.frames)
+                )
+                print(type(instr_function_args))
+                instr_function = getattr(calibration_sequence, instr["name"])
+                calibration_sequence = (
+                    instr_function(instr_function_args)
+                    if len(instr_function_args) <= 1
+                    else instr_function(*instr_function_args)
+                )
             else:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
@@ -850,14 +748,14 @@ class AwsDevice(Device):
             structured data in BDK native objects.
 
         """  # noqa: E501
-        waveforms = self._parse_waveforms(calibration_data["waveforms"])
+        waveforms = self._get_waveforms(calibration_data["waveforms"])
         parsed_calibration_data = {}
         for qubit in calibration_data["gates"]:
             q = calibration_data["gates"][qubit]
             for gate in q:
                 for i in range(len(q[gate])):
                     g = q[gate][i]
-                    gate_obj = self.str_to_gate(gate.capitalize())
+                    gate_obj = Gate.str_to_gate(gate.capitalize())
                     qubits = (
                         QubitSet([int(x) for x in g["qubits"]])
                         if is_float(g["qubits"][0])
@@ -881,29 +779,6 @@ class AwsDevice(Device):
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
         return parsed_calibration_data
-
-    @staticmethod
-    def str_to_gate(class_name: str) -> Gate:
-        """
-        Returns the class of Gate corresponding to the string assigned.
-
-        Args:
-            class_name (str): The name of the gate to convert.
-
-        Returns:
-            Gate: A Gate of type corresponding to `class_name`.
-        """
-        if class_name == "Rx_12":
-            # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
-            return None
-        elif class_name == "Cz":
-            class_name = "CZ"
-        elif class_name == "Cphaseshift":
-            class_name = "CPhaseShift"
-        elif class_name == "Xy":
-            class_name = "XY"
-        class_ = getattr(importlib.import_module("braket.circuits.gates"), class_name)
-        return class_
 
 
 def is_float(argument: str) -> bool:

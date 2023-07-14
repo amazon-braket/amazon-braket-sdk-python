@@ -14,12 +14,13 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, List, Set, Tuple, Union
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
 from oqpy.timing import OQDurationLiteral
 
+from braket.circuits.qubit import Qubit
 from braket.circuits.qubit_set import QubitSet
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
@@ -330,6 +331,77 @@ class PulseSequence:
                 self._free_parameters.add(FreeParameter(p.name))
             return _FreeParameterExpressionIdentifier(parameter)
         return parameter
+
+    def _parse_barrier_json(self, instr: Dict, frames: Dict) -> Union[QubitSet, List]:
+        if instr["arguments"] is not None:
+            if instr["arguments"][0]["name"] == "qubit":
+                qubits_or_frames = QubitSet([int(arg["value"]) for arg in instr["arguments"]])
+            else:
+                qubits_or_frames = [frames.get(arg["value"]) for arg in instr["arguments"]]
+        else:
+            qubits_or_frames = []
+        return qubits_or_frames
+
+    def _parse_play_json(
+        self, instr: Dict, waveforms: Dict[Waveform], frames: Dict
+    ) -> Tuple[Frame, Waveform]:
+        frame = waveform = None
+        for argument in instr["arguments"]:
+            if argument["name"] == "frame":
+                frame = frames[argument["value"]]
+            else:
+                waveform = waveforms[argument["value"]]
+        return frame, waveform
+
+    def _parse_delay_json(
+        self, instr: Dict, frames: Dict
+    ) -> Tuple[Union[Frame, List[Frame], QubitSet], Union[float, FreeParameterExpression]]:
+        qubits_or_frames = list()
+        duration = None
+        for i in range(len(instr["arguments"])):
+            if instr["arguments"][i]["name"] == "frame":
+                qubits_or_frames.append(frames[instr["arguments"][i]["value"]])
+            elif instr["arguments"][i]["name"] == "qubit":
+                if qubits_or_frames == list():
+                    qubits_or_frames = QubitSet([])
+                qubits_or_frames.add(Qubit(int(instr["arguments"][i]["value"])))
+            else:
+                duration = (
+                    float(instr["arguments"][i]["value"])
+                    if instr["arguments"][i]["type"] == "float"
+                    else FreeParameterExpression(instr["arguments"][i]["value"])
+                )
+        return qubits_or_frames, duration
+
+    def _parse_shift_phase_json(
+        self, instr: Dict, frames: Dict
+    ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
+        frame = phase = None
+        for argument in instr["arguments"]:
+            if argument["name"] == "frame":
+                frame = frames[argument["value"]]
+            else:
+                phase = (
+                    float(argument["value"])
+                    if argument["type"] == "float"
+                    else FreeParameterExpression(argument["value"])
+                )
+        return frame, phase
+
+    def _parse_shift_frequency_json(
+        self, instr: Dict, frames: Dict
+    ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
+        frame = frequency = None
+        for argument in instr["arguments"]:
+            if argument["name"] == "frame":
+                frame = frames[argument["value"]]
+            else:
+                frequency = (
+                    float(argument["value"])
+                    if argument["type"] == "float"
+                    else FreeParameterExpression(argument["value"])
+                )
+        return frame, frequency
 
     def __call__(self, arg: Any = None, **kwargs) -> PulseSequence:
         """

@@ -16,7 +16,7 @@ from __future__ import annotations
 import random
 import string
 from abc import ABC, abstractmethod
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
@@ -53,6 +53,19 @@ class Waveform(ABC):
             dt (float): The time resolution.
         Returns:
             ndarray: The sample amplitudes for this waveform.
+        """
+
+    @staticmethod
+    @abstractmethod
+    def _from_json(waveform_json: Dict) -> Waveform:
+        """
+        Parses a JSON input and returns the BDK waveform.
+
+        Args:
+            waveform_json (Dict): A JSON object with the needed parameters for making the Waveform.
+
+        Returns:
+            Waveform: A Waveform object parsed from the supplied JSON.
         """
 
 
@@ -93,6 +106,12 @@ class ArbitraryWaveform(Waveform):
             ndarray: The sample amplitudes for this waveform.
         """
         raise NotImplementedError
+
+    @staticmethod
+    def _from_json(waveform_json: Dict) -> ArbitraryWaveform:
+        wave_id = waveform_json["waveformId"]
+        complex_amplitudes = [complex(i[0], i[1]) for i in waveform_json["amplitudes"]]
+        return ArbitraryWaveform(complex_amplitudes, wave_id)
 
 
 class ConstantWaveform(Waveform, Parameterizable):
@@ -165,6 +184,25 @@ class ConstantWaveform(Waveform, Parameterizable):
         sample_range = np.arange(0, self.length, dt)
         samples = self.iq * np.ones_like(sample_range)
         return samples
+
+    @staticmethod
+    def _from_json(waveform_json: Dict) -> ConstantWaveform:
+        wave_id = waveform_json["waveformId"]
+        length = iq = None
+        for val in waveform_json["arguments"]:
+            if val["name"] == "length":
+                length = (
+                    float(val["value"])
+                    if val["type"] == "float"
+                    else FreeParameterExpression(val["value"])
+                )
+            if val["name"] == "iq":
+                iq = (
+                    complex(val["value"])
+                    if val["type"] == "complex"
+                    else FreeParameterExpression(val["value"])
+                )
+        return ConstantWaveform(length=length, iq=iq, id=wave_id)
 
 
 class DragGaussianWaveform(Waveform, Parameterizable):
@@ -282,6 +320,17 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         )
         return samples
 
+    @staticmethod
+    def _from_json(waveform_json: Dict) -> DragGaussianWaveform:
+        waveform_parameters = {"id": waveform_json["waveformId"]}
+        for val in waveform_json["arguments"]:
+            waveform_parameters[val["name"]] = (
+                float(val["value"])
+                if val["type"] == "float"
+                else FreeParameterExpression(val["value"])
+            )
+        return DragGaussianWaveform(**waveform_parameters)
+
 
 class GaussianWaveform(Waveform, Parameterizable):
     """A waveform with amplitudes following a gaussian distribution for the specified parameters."""
@@ -386,6 +435,17 @@ class GaussianWaveform(Waveform, Parameterizable):
             - zero_at_edges_int * np.exp(-0.5 * ((self.length / (2 * self.sigma)) ** 2))
         )
         return samples
+
+    @staticmethod
+    def _from_json(waveform_json: Dict) -> GaussianWaveform:
+        waveform_parameters = {"id": waveform_json["waveformId"]}
+        for val in waveform_json["arguments"]:
+            waveform_parameters[val["name"]] = (
+                float(val["value"])
+                if val["type"] == "float"
+                else FreeParameterExpression(val["value"])
+            )
+        return GaussianWaveform(**waveform_parameters)
 
 
 def _make_identifier_name() -> str:

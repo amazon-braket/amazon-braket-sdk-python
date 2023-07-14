@@ -1823,19 +1823,6 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
     assert device.topology_graph == new_val
 
 
-def test_str_to_gate():
-    mock_session = Mock()
-    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
-    device = AwsDevice(DWAVE_ARN, mock_session)
-    assert (
-        isinstance(Gate.H(), device.str_to_gate("H"))
-        and isinstance(Gate.CZ(), device.str_to_gate("Cz"))
-        and isinstance(Gate.CPhaseShift(angle=1), device.str_to_gate("Cphaseshift"))
-        and isinstance(Gate.XY(angle=1), device.str_to_gate("Xy"))
-        and device.str_to_gate("Rx_12") is None
-    )
-
-
 def test_device_no_href():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
