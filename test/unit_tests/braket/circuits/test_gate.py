@@ -121,9 +121,9 @@ def test_gate_to_ir(
 
 def test_str_to_gate():
     assert (
-        isinstance(Gate.H(), Gate.str_to_gate("H"))
-        and isinstance(Gate.CZ(), Gate.str_to_gate("Cz"))
-        and isinstance(Gate.CPhaseShift(angle=1), Gate.str_to_gate("Cphaseshift"))
-        and isinstance(Gate.XY(angle=1), Gate.str_to_gate("Xy"))
-        and Gate.str_to_gate("Rx_12") is None
+        isinstance(Gate.H(), Gate._str_to_gate("H"))
+        and isinstance(Gate.CZ(), Gate._str_to_gate("Cz"))
+        and isinstance(Gate.CPhaseShift(angle=1), Gate._str_to_gate("Cphaseshift"))
+        and isinstance(Gate.XY(angle=1), Gate._str_to_gate("Xy"))
+        and Gate._str_to_gate("Rx_12") is None
     )

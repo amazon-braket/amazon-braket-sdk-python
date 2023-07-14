@@ -215,7 +215,7 @@ class Gate(QuantumOperator):
         return hash((self.name, self.qubit_count))
 
     @staticmethod
-    def str_to_gate(class_name: str) -> Gate:
+    def _str_to_gate(class_name: str) -> Gate:
         """
         Returns the class of Gate corresponding to the string assigned.
 

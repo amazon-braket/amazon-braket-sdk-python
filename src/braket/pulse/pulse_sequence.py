@@ -332,7 +332,8 @@ class PulseSequence:
             return _FreeParameterExpressionIdentifier(parameter)
         return parameter
 
-    def _parse_barrier_json(self, instr: Dict, frames: Dict) -> Union[QubitSet, List]:
+    @staticmethod
+    def _parse_barrier_json(instr: Dict, frames: Dict) -> Union[QubitSet, List]:
         if instr["arguments"] is not None:
             if instr["arguments"][0]["name"] == "qubit":
                 qubits_or_frames = QubitSet([int(arg["value"]) for arg in instr["arguments"]])
@@ -342,8 +343,9 @@ class PulseSequence:
             qubits_or_frames = []
         return qubits_or_frames
 
+    @staticmethod
     def _parse_play_json(
-        self, instr: Dict, waveforms: Dict[Waveform], frames: Dict
+        instr: Dict, waveforms: Dict[Waveform], frames: Dict
     ) -> Tuple[Frame, Waveform]:
         frame = waveform = None
         for argument in instr["arguments"]:
@@ -353,8 +355,9 @@ class PulseSequence:
                 waveform = waveforms[argument["value"]]
         return frame, waveform
 
+    @staticmethod
     def _parse_delay_json(
-        self, instr: Dict, frames: Dict
+        instr: Dict, frames: Dict
     ) -> Tuple[Union[Frame, List[Frame], QubitSet], Union[float, FreeParameterExpression]]:
         qubits_or_frames = list()
         duration = None
@@ -373,8 +376,9 @@ class PulseSequence:
                 )
         return qubits_or_frames, duration
 
+    @staticmethod
     def _parse_shift_phase_json(
-        self, instr: Dict, frames: Dict
+        instr: Dict, frames: Dict
     ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
         frame = phase = None
         for argument in instr["arguments"]:
@@ -388,8 +392,9 @@ class PulseSequence:
                 )
         return frame, phase
 
+    @staticmethod
     def _parse_shift_frequency_json(
-        self, instr: Dict, frames: Dict
+        instr: Dict, frames: Dict
     ) -> Tuple[Frame, Union[float, FreeParameterExpression]]:
         frame = frequency = None
         for argument in instr["arguments"]:
@@ -402,6 +407,26 @@ class PulseSequence:
                     else FreeParameterExpression(argument["value"])
                 )
         return frame, frequency
+
+    def _parse_json(
+        self, instr: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
+    ) -> PulseSequence:
+        if hasattr(self, f"_parse_{instr['name']}_json"):
+            instr_parser = getattr(self, f"_parse_{instr['name']}_json")
+            instr_function_args = (
+                instr_parser(instr, frames)
+                if instr["name"] != "play"
+                else instr_parser(instr, waveforms, frames)
+            )
+            instr_function = getattr(self, instr["name"])
+            self = (
+                instr_function(instr_function_args)
+                if len(instr_function_args) <= 1
+                else instr_function(*instr_function_args)
+            )
+        else:
+            raise ValueError(f"The {instr['name']} instruction has not been implemented")
+        return self
 
     def __call__(self, arg: Any = None, **kwargs) -> PulseSequence:
         """

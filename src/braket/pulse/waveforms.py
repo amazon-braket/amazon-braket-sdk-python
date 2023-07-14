@@ -59,14 +59,14 @@ class Waveform(ABC):
     @abstractmethod
     def _from_json(waveform_json: Dict) -> Waveform:
         """
-        Parses a JSON input and returns the BDK waveform.
+        Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104
 
         Args:
             waveform_json (Dict): A JSON object with the needed parameters for making the Waveform.
 
         Returns:
             Waveform: A Waveform object parsed from the supplied JSON.
-        """
+        """  # noqa: E501
 
 
 class ArbitraryWaveform(Waveform):
@@ -462,3 +462,17 @@ def _map_to_oqpy_type(
             else _FreeParameterExpressionIdentifier(parameter)
         )
     return parameter
+
+
+def _parse_waveform_from_json(waveform) -> Waveform:
+    if "amplitudes" in waveform.keys():
+        return ArbitraryWaveform._from_json(waveform)
+    elif waveform["name"] == "drag_gaussian":
+        return DragGaussianWaveform._from_json(waveform)
+    elif waveform["name"] == "gaussian":
+        return GaussianWaveform._from_json(waveform)
+    elif waveform["name"] == "constant":
+        return ConstantWaveform._from_json(waveform)
+    else:
+        id = waveform["waveformId"]
+        raise ValueError(f"The waveform {id} of cannot be constructed")

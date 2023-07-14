@@ -174,7 +174,6 @@ MOCK_gate_calibrations_JSON = {
     "waveforms": {
         "q0_q1_cz_CZ": {
             "waveformId": "q0_q1_cz_CZ",
-            "name": "arbitrary",
             "amplitudes": [[0.0, 0.0], [0.0, 0.0]],
         },
         "wf_drag_gaussian_0": {
@@ -826,7 +825,6 @@ def test_device_gate_calibrations_exists(mock_url_request):
             )
         }
     )
-    assert device.gate_calibrations_href is not None
     assert device.gate_calibrations == expected_ngc
     # Called twice to check that the property stays the same after being initially fetched
     assert device.gate_calibrations == expected_ngc
@@ -1556,7 +1554,6 @@ def _assert_device_fields(device, expected_properties, expected_device_data):
         assert device.topology_graph.edges == device._construct_topology_graph().edges
     assert device.frames == {}
     assert device.ports == {}
-    assert device.gate_calibrations_href is None
 
 
 @patch("braket.aws.aws_device.AwsSession.copy_session")
@@ -1838,7 +1835,6 @@ def test_device_no_href():
     mock_session = Mock()
     mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
     device = AwsDevice(DWAVE_ARN, mock_session)
-    assert device.gate_calibrations_href is None
 
 
 def test_parse_calibration_data():

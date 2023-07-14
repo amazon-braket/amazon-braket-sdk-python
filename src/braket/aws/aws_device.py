@@ -39,15 +39,8 @@ from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
-from braket.pulse import (
-    ArbitraryWaveform,
-    ConstantWaveform,
-    DragGaussianWaveform,
-    Frame,
-    GaussianWaveform,
-    Port,
-    PulseSequence,
-)
+from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
+from braket.pulse.waveforms import _parse_waveform_from_json
 from braket.schema_common import BraketSchemaBase
 
 
@@ -382,21 +375,6 @@ class AwsDevice(Device):
         return self._gate_calibrations
 
     @property
-    def gate_calibrations_href(self) -> str:
-        """
-        Returns the href for the native gate calibration data if the device has it.
-
-        Returns:
-            str: The href to access the native gate calibration data.
-        """
-        if hasattr(self.properties, "pulse") and hasattr(
-            self.properties.pulse, "nativeGateCalibrationsRef"
-        ):
-            return self.properties.pulse.nativeGateCalibrationsRef
-        else:
-            return None
-
-    @property
     def is_available(self) -> bool:
         """Returns true if the device is currently available.
         Returns:
@@ -656,6 +634,9 @@ class AwsDevice(Device):
         Args:
             device_arn (str): The device ARN.
 
+        Raises:
+            ValueError: Raised if the ARN is not properly formatted
+
         Returns:
             str: the region of the ARN.
         """
@@ -667,46 +648,42 @@ class AwsDevice(Device):
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
 
-    def refresh_gate_calibrations(self) -> GateCalibrations:
+    def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
         """
         Refreshes the gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.
 
+        Raises:
+            URLError: If the URL provided returns a non 2xx response.
+
         Returns:
-            GateCalibrations: the calibration data for the device.
+            Optional[GateCalibrations]: the calibration data for the device.
+                None is returned if they device does not have a gate calibrations URL associated.
         """
-        if self.gate_calibrations_href is not None:
+        if hasattr(self.properties, "pulse") and hasattr(
+            self.properties.pulse, "nativeGateCalibrationsRef"
+        ):
             try:
-                with urllib.request.urlopen(self.gate_calibrations_href.split("?")[0]) as f:
+                with urllib.request.urlopen(
+                    self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
+                ) as f:
                     json_calibration_data = self._parse_calibration_json(
                         json.loads(f.read().decode("utf-8"))
                     )
                     return GateCalibrations(json_calibration_data)
             except urllib.error.URLError:
-                raise urllib.error.URLError(f"Unable to reach {self.gate_calibrations_href}")
+                raise urllib.error.URLError(
+                    f"Unable to reach {self.properties.pulse.nativeGateCalibrationsRef}"
+                )
         else:
             return None
 
     def _get_waveforms(self, waveforms_json: str) -> Dict:
         waveforms = dict()
         for waveform in waveforms_json:
-            w = waveforms_json[waveform]
-            if "amplitudes" in w.keys():
-                parsed_waveform = ArbitraryWaveform._from_json(w)
-                waveforms[parsed_waveform.id] = parsed_waveform
-            elif w["name"] == "drag_gaussian":
-                parsed_waveform = DragGaussianWaveform._from_json(w)
-                waveforms[parsed_waveform.id] = parsed_waveform
-            elif w["name"] == "gaussian":
-                parsed_waveform = GaussianWaveform._from_json(w)
-                waveforms[parsed_waveform.id] = parsed_waveform
-            elif w["name"] == "constant":
-                parsed_waveform = ConstantWaveform._from_json(w)
-                waveforms[parsed_waveform.id] = parsed_waveform
-            else:
-                id = w["waveformId"]
-                raise ValueError(f"The waveform {id} of cannot be constructed")
+            parsed_waveform = _parse_waveform_from_json(waveforms_json[waveform])
+            waveforms[parsed_waveform.id] = parsed_waveform
         return waveforms
 
     def _get_pulse_sequence(
@@ -715,21 +692,7 @@ class AwsDevice(Device):
         calibration_sequence = PulseSequence()
         for instruction in range(len(calibration)):
             instr = calibration[instruction]
-            if hasattr(calibration_sequence, f"_parse_{instr['name']}_json"):
-                instr_parser = getattr(calibration_sequence, f"_parse_{instr['name']}_json")
-                instr_function_args = (
-                    instr_parser(instr, self.frames)
-                    if instr["name"] != "play"
-                    else instr_parser(instr, waveforms, self.frames)
-                )
-                instr_function = getattr(calibration_sequence, instr["name"])
-                calibration_sequence = (
-                    instr_function(instr_function_args)
-                    if len(instr_function_args) <= 1
-                    else instr_function(*instr_function_args)
-                )
-            else:
-                raise ValueError(f"The {instr['name']} instruction has not been implemented")
+            calibration_sequence = calibration_sequence._parse_json(instr, waveforms, self.frames)
         return calibration_sequence
 
     def _parse_calibration_json(
@@ -749,32 +712,28 @@ class AwsDevice(Device):
         """  # noqa: E501
         waveforms = self._get_waveforms(calibration_data["waveforms"])
         parsed_calibration_data = {}
-        for qubit in calibration_data["gates"]:
-            q = calibration_data["gates"][qubit]
-            for gate in q:
-                for i in range(len(q[gate])):
-                    g = q[gate][i]
-                    gate_obj = Gate.str_to_gate(gate.capitalize())
-                    qubits = (
-                        QubitSet([int(x) for x in g["qubits"]])
-                        if is_float(g["qubits"][0])
-                        else QubitSet()
-                    )
+        for qubit_node in calibration_data["gates"]:
+            qubit = calibration_data["gates"][qubit_node]
+            for gate_node in qubit:
+                for i in range(len(qubit[gate_node])):
+                    gate = qubit[gate_node][i]
+                    gate_obj = Gate._str_to_gate(gate_node.capitalize())
+                    qubits = QubitSet([int(x) for x in gate["qubits"]])
                     if gate_obj is None:
                         # We drop out gates that are not implemented in the BDK
                         continue
 
                     argument = None
-                    if len(g["arguments"]):
+                    if len(gate["arguments"]):
                         argument = (
-                            float(g["arguments"][0])
-                            if is_float(g["arguments"][0])
-                            else FreeParameter(g["arguments"][0])
+                            float(gate["arguments"][0])
+                            if is_float(gate["arguments"][0])
+                            else FreeParameter(gate["arguments"][0])
                         )
                     gate_qubit_key = (
                         (gate_obj(argument), qubits) if argument else (gate_obj(), qubits)
                     )
-                    gate_qubit_pulse = self._get_pulse_sequence(g["calibrations"], waveforms)
+                    gate_qubit_pulse = self._get_pulse_sequence(gate["calibrations"], waveforms)
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
         return parsed_calibration_data
