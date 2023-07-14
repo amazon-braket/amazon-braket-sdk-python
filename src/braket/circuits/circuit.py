@@ -1269,13 +1269,15 @@ class Circuit:
                     gate, qubits = key
 
                     # ignoring parametric gates
-                    if hasattr(gate, "angle") and isinstance(gate.angle, FreeParameter):
+                    if hasattr(gate, "parameters") and any(
+                        isinstance(parameter, FreeParameter) for parameter in gate.parameters
+                    ):
                         continue
 
                     gate_name = gate._qasm_name
                     arguments = (
-                        [calibration._format_parameter_ast(gate.angle)]
-                        if hasattr(gate, "angle")
+                        [calibration._format_parameter_ast(value) for value in gate.parameters]
+                        if hasattr(gate, "parameters")
                         else None
                     )
                     with oqpy.defcal(
