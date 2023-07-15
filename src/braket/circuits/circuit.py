@@ -1269,7 +1269,9 @@ class Circuit:
                     gate, qubits = key
 
                     # ignoring parametric gates
-                    if hasattr(gate, "parameters") and any(
+                    # Corresponding defcals with gate parameter value have been added
+                    # in _get_frames_waveforms_from_instrs
+                    if isinstance(gate, Parameterizable) and any(
                         isinstance(parameter, FreeParameter) for parameter in gate.parameters
                     ):
                         continue
@@ -1306,16 +1308,41 @@ class Circuit:
                     _validate_uniqueness(waveforms, waveform)
                     waveforms[waveform.id] = waveform
             # this will change with full parametric calibration support
-            elif hasattr(type(instruction.operator), "angle"):
+            elif isinstance(instruction.operator, Parameterizable):
                 if gate_calibrations is not None:
-                    key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
-                    if key in gate_calibrations:
-                        ps = gate_calibrations.get(key)
-                        bound_key = (
-                            type(instruction.operator)(instruction.operator.angle),
-                            instruction.target,
-                        )
-                        gate_calibrations[bound_key] = ps(theta=instruction.operator.angle)
+                    for key, calibration in gate_calibrations.calibration_data.copy().items():
+                        gate = key[0]
+                        target = key[1]
+                        if target != instruction.target:
+                            continue
+                        if (
+                            gate._qasm_name == instruction.operator._qasm_name
+                            and isinstance(gate, Parameterizable)
+                            and len(instruction.operator.parameters) == len(gate.parameters)
+                        ):
+                            free_parameter_number = sum(
+                                [isinstance(p, FreeParameter) for p in gate.parameters]
+                            )
+                            if free_parameter_number == 0:
+                                continue
+                            elif free_parameter_number < len(instruction.operator.parameters):
+                                raise NotImplementedError(
+                                    "Partially defined calibrations are not supported."
+                                )
+                            elif any(
+                                isinstance(p, FreeParameter)
+                                for p in instruction.operator.parameters
+                            ):
+                                raise NotImplementedError(
+                                    "Parametric calibrations cannot be attached with parametric circuits."
+                                )
+                            bound_key = (
+                                type(instruction.operator)(*instruction.operator.parameters),
+                                instruction.target,
+                            )
+                            gate_calibrations._calibration_data[bound_key] = calibration(
+                                *instruction.operator.parameters
+                            )
         return frames, waveforms
 
     def as_unitary(self) -> np.ndarray:
