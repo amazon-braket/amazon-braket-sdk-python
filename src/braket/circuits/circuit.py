@@ -1110,8 +1110,8 @@ class Circuit:
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
-            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): The calibration data
-                for the device. default: None.
+            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): The
+                calibration data for the device. default: None.
 
         Returns:
             Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
