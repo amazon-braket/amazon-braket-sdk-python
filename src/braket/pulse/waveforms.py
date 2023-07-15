@@ -464,7 +464,7 @@ def _map_to_oqpy_type(
     return parameter
 
 
-def _parse_waveform_from_json(waveform) -> Waveform:
+def _parse_waveform_from_json(waveform: Dict) -> Waveform:
     if "amplitudes" in waveform.keys():
         return ArbitraryWaveform._from_json(waveform)
     elif waveform["name"] == "drag_gaussian":

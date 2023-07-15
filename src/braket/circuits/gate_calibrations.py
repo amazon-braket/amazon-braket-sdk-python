@@ -28,6 +28,7 @@ class GateCalibrations:
         Args:
             calibration_data (Dict[Tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
                 `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
+
         """  # noqa: E501
         self._calibration_data = calibration_data
 
@@ -65,7 +66,7 @@ class GateCalibrations:
 
         Returns:
             Optional[GateCalibrations]: A filtered GateCalibrations object. Otherwise, returns
-                none if no matches are found.
+            none if no matches are found.
         """  # noqa: E501
         keys = self._calibration_data.keys()
         filtered_calibration_keys = [
@@ -88,7 +89,7 @@ class GateCalibrations:
 
         Returns:
             Optional[PulseSequence]: the PulseSequence object corresponding the gate acting on
-                the QubitSet.
+            the QubitSet.
 
         """
         if not isinstance(calibration_key[0], Gate) or not isinstance(calibration_key[1], QubitSet):

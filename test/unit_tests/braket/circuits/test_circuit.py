@@ -952,14 +952,14 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=calibration,
+            gate_calibrations=calibration.calibration_data,
         )
     )
     assert (
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=calibration,
+            gate_calibrations=calibration.calibration_data,
         )
         == expected_ir
     )

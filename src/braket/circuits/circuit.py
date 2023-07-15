@@ -25,7 +25,6 @@ from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
-from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
@@ -60,7 +59,7 @@ from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
-from braket.pulse.pulse_sequence import _validate_uniqueness
+from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1099,7 +1098,7 @@ class Circuit:
         self,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
-        gate_calibrations: Optional[GateCalibrations] = None,
+        gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """
         Converts the circuit into the canonical intermediate representation.
@@ -1111,8 +1110,8 @@ class Circuit:
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
-            gate_calibrations (Optional[GateCalibrations]): The calibration data for the
-                device. default: None.
+            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): The calibration data
+                for the device. default: None.
 
         Returns:
             Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
@@ -1175,7 +1174,7 @@ class Circuit:
     def _to_openqasm(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        gate_calibrations: Optional[GateCalibrations],
+        gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     ) -> OpenQasmProgram:
         ir_instructions = self._create_openqasm_header(serialization_properties, gate_calibrations)
         openqasm_ir_type = IRType.OPENQASM
@@ -1212,7 +1211,7 @@ class Circuit:
     def _create_openqasm_header(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        gate_calibrations: Optional[GateCalibrations],
+        gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     ) -> List[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         for parameter in self.parameters:
@@ -1236,11 +1235,11 @@ class Circuit:
 
     def _validate_ngc_uniqueness(
         self,
-        gate_calibrations: GateCalibrations,
+        gate_calibrations: Dict[Tuple[Gate, QubitSet], PulseSequence],
         frames: Dict[Frame],
         waveforms: Dict[ArbitraryWaveform],
     ) -> None:
-        for key, calibration in gate_calibrations.calibration_data.items():
+        for key, calibration in gate_calibrations.items():
             for frame in calibration._frames.values():
                 _validate_uniqueness(frames, frame)
                 frames[frame.id] = frame
@@ -1249,7 +1248,7 @@ class Circuit:
                 waveforms[waveform.id] = waveform
 
     def _generate_frame_wf_defcal_declarations(
-        self, gate_calibrations: Optional[GateCalibrations]
+        self, gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]
     ) -> Optional[str]:
         program = oqpy.Program(None)
 
@@ -1266,7 +1265,7 @@ class Circuit:
             program.declare(frame_wf_to_declare, encal=True)
 
             if gate_calibrations is not None:
-                for key, calibration in gate_calibrations.calibration_data.items():
+                for key, calibration in gate_calibrations.items():
                     gate, qubits = key
 
                     # ignoring parametric gates
@@ -1290,7 +1289,7 @@ class Circuit:
         return None
 
     def _get_frames_waveforms_from_instrs(
-        self, gate_calibrations: Optional[GateCalibrations]
+        self, gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]
     ) -> Tuple[Dict[Frame], Dict[ArbitraryWaveform]]:
         from braket.circuits.gates import PulseGate
 
@@ -1308,15 +1307,13 @@ class Circuit:
             elif hasattr(type(instruction.operator), "angle"):
                 if gate_calibrations is not None:
                     key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
-                    if key in gate_calibrations.calibration_data:
-                        ps = gate_calibrations.get_gate_calibration(key)
+                    if key in gate_calibrations:
+                        ps = gate_calibrations.get(key)
                         bound_key = (
                             type(instruction.operator)(instruction.operator.angle),
                             instruction.target,
                         )
-                        gate_calibrations._calibration_data[bound_key] = ps(
-                            theta=instruction.operator.angle
-                        )
+                        gate_calibrations[bound_key] = ps(theta=instruction.operator.angle)
         return frames, waveforms
 
     def as_unitary(self) -> np.ndarray:

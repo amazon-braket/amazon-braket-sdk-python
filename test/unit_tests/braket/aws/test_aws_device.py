@@ -115,9 +115,9 @@ MOCK_gate_calibrations_JSON = {
                         {
                             "name": "delay",
                             "arguments": [
+                                {"name": "duration", "value": 3e-07, "type": "float"},
                                 {"name": "qubit", "value": "0", "type": "string"},
                                 {"name": "qubit", "value": "1", "type": "string"},
-                                {"name": "duration", "value": 3e-07, "type": "float"},
                             ],
                         },
                         {
@@ -139,6 +139,7 @@ MOCK_gate_calibrations_JSON = {
                             "arguments": [
                                 {"name": "frequency", "value": "theta", "type": "expr"},
                                 {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
+                                {"name": "extra", "value": "q0_q1_cphase_frame", "type": "string"},
                             ],
                         },
                     ],
@@ -1869,6 +1870,16 @@ def test_parse_calibration_data():
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
     expected_ngc = GateCalibrations(calibration_data=expected_calibration_data)
+    print(
+        expected_ngc.calibration_data[
+            (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1]))
+        ].to_ir()
+    )
+    print(
+        device_ngc.calibration_data[
+            (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1]))
+        ].to_ir()
+    )
     assert device_ngc == expected_ngc
 
 
@@ -1910,9 +1921,10 @@ def test_parse_calibration_data():
                                 "arguments": ["-1.5707963267948966"],
                                 "calibrations": [
                                     {
-                                        "name": "incorrect_instr",
+                                        "name": "delay",
                                         "arguments": [
-                                            {"name": "qubit", "value": None, "type": "string"}
+                                            {"name": "bad_value", "value": "1", "type": "float"},
+                                            {"name": "qubit", "value": None, "type": "string"},
                                         ],
                                     }
                                 ],

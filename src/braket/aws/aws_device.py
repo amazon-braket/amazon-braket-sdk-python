@@ -108,7 +108,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[Dict[str, float]] = None,
-        gate_calibrations: Optional[GateCalibrations] = None,
+        gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -132,7 +132,7 @@ class AwsDevice(Device):
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
-            gate_calibrations (Optional[GateCalibrations]): A `GateCalibrations` for user defined gate
+            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A `GateCalibrations` for user defined gate
                 calibrations.
 
         Returns:
@@ -216,7 +216,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
-        gate_calibrations: Optional[GateCalibrations] = None,
+        gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -244,8 +244,8 @@ class AwsDevice(Device):
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            gate_calibrations (Optional[GateCalibrations]): A `GateCalibrations` for user defined gate
-                calibration.
+            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A `GateCalibrations`
+                for user defined gate calibration.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -658,8 +658,8 @@ class AwsDevice(Device):
             URLError: If the URL provided returns a non 2xx response.
 
         Returns:
-            Optional[GateCalibrations]: the calibration data for the device.
-                None is returned if they device does not have a gate calibrations URL associated.
+            Optional[GateCalibrations]: the calibration data for the device. None
+            is returned if the device does not have a gate calibrations URL associated.
         """
         if hasattr(self.properties, "pulse") and hasattr(
             self.properties.pulse, "nativeGateCalibrationsRef"
@@ -690,8 +690,7 @@ class AwsDevice(Device):
         self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
     ) -> PulseSequence:
         calibration_sequence = PulseSequence()
-        for instruction in range(len(calibration)):
-            instr = calibration[instruction]
+        for instr in calibration:
             calibration_sequence = calibration_sequence._parse_json(instr, waveforms, self.frames)
         return calibration_sequence
 
@@ -715,8 +714,7 @@ class AwsDevice(Device):
         for qubit_node in calibration_data["gates"]:
             qubit = calibration_data["gates"][qubit_node]
             for gate_node in qubit:
-                for i in range(len(qubit[gate_node])):
-                    gate = qubit[gate_node][i]
+                for gate in qubit[gate_node]:
                     gate_obj = Gate._str_to_gate(gate_node.capitalize())
                     qubits = QubitSet([int(x) for x in gate["qubits"]])
                     if gate_obj is None:
