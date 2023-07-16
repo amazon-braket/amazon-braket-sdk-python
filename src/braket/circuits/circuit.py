@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import warnings
+from copy import deepcopy
 from numbers import Number
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
@@ -1310,7 +1311,7 @@ class Circuit:
             # this will change with full parametric calibration support
             elif isinstance(instruction.operator, Parameterizable):
                 if gate_calibrations is not None:
-                    for key, calibration in gate_calibrations.calibration_data.copy().items():
+                    for key, calibration in deepcopy(gate_calibrations).items():
                         gate = key[0]
                         target = key[1]
                         if target != instruction.target:
@@ -1340,7 +1341,7 @@ class Circuit:
                                 type(instruction.operator)(*instruction.operator.parameters),
                                 instruction.target,
                             )
-                            gate_calibrations._calibration_data[bound_key] = calibration(
+                            gate_calibrations[bound_key] = calibration(
                                 **{
                                     p.name: v
                                     for p, v in zip(

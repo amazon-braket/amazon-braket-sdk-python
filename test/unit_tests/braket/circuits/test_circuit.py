@@ -1012,13 +1012,6 @@ def test_circuit_to_ir_openqasm(
             calibration_key_3: pulse_sequence_2,
         }
     )
-    print(
-        circuit.to_ir(
-            ir_type=IRType.OPENQASM,
-            serialization_properties=serialization_properties,
-            gate_calibrations=gate_calibrations,
-        ).source
-    )
     assert (
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
@@ -1043,7 +1036,7 @@ def test_circuit_with_partial_calibrations(pulse_sequence_2):
     circuit.to_ir(
         ir_type=IRType.OPENQASM,
         serialization_properties=serialization_properties,
-        gate_calibrations=gate_calibrations,
+        gate_calibrations=gate_calibrations.calibration_data,
     )
 
 
@@ -1117,7 +1110,7 @@ def test_circuit_user_gate(pulse_sequence_2):
         circ.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=gate_calibrations,
+            gate_calibrations=gate_calibrations.calibration_data,
         )
         == expected_ir
     )
