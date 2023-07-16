@@ -1321,6 +1321,19 @@ class Circuit:
         gate_calibrations: Dict[Tuple[Gate, QubitSet], PulseSequence],
         instruction: Instruction,
     ) -> None:
+        """Adds calibrations with arguments set to the instruction parameter values
+
+        Given the collection of parameters in instruction.operator, this function looks for matching
+        parametric calibrations that have free parameters. If such a calibration is found and the
+        number N of its free parameters equals the number of instruction parameters, we can bound
+        the arguments of the calibration and add it to the calibration dictionary.
+
+        If N is smaller, it is probably impossible to assign the instruction parameter values to the
+        corresponding calibration parameters so we raise an error.
+        If N=0, we ignore it as it will not be removed by _generate_frame_wf_defcal_declarations.
+
+        This function modifies its `gate_calibrations` input argument.
+        """
         for key, calibration in deepcopy(gate_calibrations).items():
             gate = key[0]
             target = key[1]
