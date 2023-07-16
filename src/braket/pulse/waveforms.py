@@ -465,14 +465,16 @@ def _map_to_oqpy_type(
 
 
 def _parse_waveform_from_json(waveform: Dict) -> Waveform:
+    waveform_names = {
+        "arbitrary": ArbitraryWaveform._from_json,
+        "drag_gaussian": DragGaussianWaveform._from_json,
+        "gaussian": GaussianWaveform._from_json,
+        "constant": ConstantWaveform._from_json,
+    }
     if "amplitudes" in waveform.keys():
-        return ArbitraryWaveform._from_json(waveform)
-    elif waveform["name"] == "drag_gaussian":
-        return DragGaussianWaveform._from_json(waveform)
-    elif waveform["name"] == "gaussian":
-        return GaussianWaveform._from_json(waveform)
-    elif waveform["name"] == "constant":
-        return ConstantWaveform._from_json(waveform)
+        waveform["name"] = "arbitrary"
+    if waveform["name"] in waveform_names:
+        return waveform_names[waveform["name"]](waveform)
     else:
         id = waveform["waveformId"]
         raise ValueError(f"The waveform {id} of cannot be constructed")

@@ -217,7 +217,7 @@ class Gate(QuantumOperator):
     @staticmethod
     def _str_to_gate(class_name: str) -> Gate:
         """
-        Returns the class of Gate corresponding to the string assigned.
+        Returns the class of Gate corresponding to the `class_name`.
 
         Args:
             class_name (str): The name of the gate to convert.
@@ -225,16 +225,21 @@ class Gate(QuantumOperator):
         Returns:
             Gate: A Gate of type corresponding to `class_name`.
         """
-        if class_name == "Rx_12":
-            # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
-            return None
-        elif class_name == "Cz":
-            class_name = "CZ"
-        elif class_name == "Cphaseshift":
-            class_name = "CPhaseShift"
-        elif class_name == "Xy":
-            class_name = "XY"
-        class_ = getattr(importlib.import_module("braket.circuits.gates"), class_name)
+        # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
+        rigetti_gates_to_bdk_gates = {
+            "Rx_12": None,
+            "Cz": "CZ",
+            "Cphaseshift": "CPhaseShift",
+            "Xy": "XY",
+        }
+        if class_name in rigetti_gates_to_bdk_gates.keys():
+            class_name = rigetti_gates_to_bdk_gates[class_name]
+
+        class_ = (
+            getattr(importlib.import_module("braket.circuits.gates"), class_name)
+            if class_name is not None
+            else None
+        )
         return class_
 
     @classmethod

@@ -244,8 +244,8 @@ class AwsDevice(Device):
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A `GateCalibrations`
-                for user defined gate calibration.
+            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
+                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for user defined gate calibrations.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -363,12 +363,14 @@ class AwsDevice(Device):
         return self._arn
 
     @property
-    def gate_calibrations(self) -> GateCalibrations:
+    def gate_calibrations(self) -> Optional[GateCalibrations]:
         """
-        Fetches the native gate calibration data if not already present.
+        Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
+        If a QPU does not expose these calibrations, None is returned.
 
         Returns:
-            GateCalibrations: The calibration object.
+            Optional[GateCalibrations]: The calibration object. Returns `None` if the data
+            is not present.
         """
         if not self._gate_calibrations:
             self._gate_calibrations = self.refresh_gate_calibrations()
@@ -679,14 +681,14 @@ class AwsDevice(Device):
         else:
             return None
 
-    def _get_waveforms(self, waveforms_json: str) -> Dict:
+    def _parse_waveforms(self, waveforms_json: Dict) -> Dict:
         waveforms = dict()
         for waveform in waveforms_json:
             parsed_waveform = _parse_waveform_from_json(waveforms_json[waveform])
             waveforms[parsed_waveform.id] = parsed_waveform
         return waveforms
 
-    def _get_pulse_sequence(
+    def _parse_pulse_sequence(
         self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
     ) -> PulseSequence:
         calibration_sequence = PulseSequence()
@@ -699,17 +701,19 @@ class AwsDevice(Device):
     ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
         Takes the json string from the device calibration URL and returns a structured dictionary of
-        corresponding BDK objects.
+        corresponding `Dict[Tuple[Gate, QubitSet], PulseSequence]` to represent the calibration data.
 
         Args:
-            calibration_data (Dict): The data to be parsed.
+            calibration_data (Dict): The data to be parsed. Based on
+                https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py.
 
         Returns:
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The
-            structured data in BDK native objects.
+            structured data based on a mapping of `Tuple[Gate, Qubit]` to its calibration repesented as a
+            `PulseSequence`.
 
         """  # noqa: E501
-        waveforms = self._get_waveforms(calibration_data["waveforms"])
+        waveforms = self._parse_waveforms(calibration_data["waveforms"])
         parsed_calibration_data = {}
         for qubit_node in calibration_data["gates"]:
             qubit = calibration_data["gates"][qubit_node]
@@ -731,7 +735,7 @@ class AwsDevice(Device):
                     gate_qubit_key = (
                         (gate_obj(argument), qubits) if argument else (gate_obj(), qubits)
                     )
-                    gate_qubit_pulse = self._get_pulse_sequence(gate["calibrations"], waveforms)
+                    gate_qubit_pulse = self._parse_pulse_sequence(gate["calibrations"], waveforms)
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
         return parsed_calibration_data

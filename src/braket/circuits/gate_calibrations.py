@@ -96,22 +96,28 @@ class GateCalibrations:
             raise ValueError("The key must be a tuple of a gate object and a qubit set.")
         return self._calibration_data.get(calibration_key, None)
 
-    def to_ir(self, key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
+    def to_ir(self, calibration_key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
         """
         Returns the defcal representation for the `GateCalibrations` object.
 
         Args:
-            key (Optional[Tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
+            calibration_key (Optional[Tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
                 Default: None
 
         Returns:
             str: the defcal string for the object.
 
-        """
-        if key is not None:
-            if key not in self.calibration_data.keys():
-                raise ValueError(f"The key {key} does not exist in this GateCalibrations object.")
-            return self.calibration_data[key].to_ir().replace("cal", self._def_cal_gate(key), 1)
+        """  # noqa: E501
+        if calibration_key is not None:
+            if calibration_key not in self.calibration_data.keys():
+                raise ValueError(
+                    f"The key {calibration_key} does not exist in this GateCalibrations object."
+                )
+            return (
+                self.calibration_data[calibration_key]
+                .to_ir()
+                .replace("cal", self._def_cal_gate(calibration_key), 1)
+            )
         else:
             defcal = "\n".join(
                 v.to_ir().replace("cal", self._def_cal_gate(k), 1)
