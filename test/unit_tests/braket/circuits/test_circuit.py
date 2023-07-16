@@ -123,6 +123,42 @@ def pulse_sequence(predefined_frame_1):
     )
 
 
+@pytest.fixture
+def pulse_sequence_2(predefined_frame_1):
+    return (
+        PulseSequence()
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("alpha"),
+        )
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("gamma"),
+        )
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("beta"),
+        )
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
+    )
+
+
+@pytest.fixture
+def gate_calibrations(pulse_sequence):
+    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
+
+    return GateCalibrations(
+        {
+            calibration_key: pulse_sequence,
+            calibration_key_2: pulse_sequence,
+        }
+    )
+
+
 def test_repr_instructions(h):
     expected = f"Circuit('instructions': {h.instructions})"
     assert repr(h) == expected
@@ -1000,9 +1036,27 @@ def test_circuit_to_ir_openqasm():
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=calibration.calibration_data,
+            gate_calibrations=gate_calibrations.calibration_data,
         )
         == expected_ir
+    )
+
+
+@pytest.mark.xfail(
+    reasons="Calibrations with a partial number of fixed parameters are not supported."
+)
+def test_circuit_to_ir_openqasm(pulse_sequence_2):
+    Circuit().h(0, power=-2.5).h(0, power=0).ms(0, 1, -0.1, -0.2, -0.3),
+    serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
+    gate_calibrations = (
+        GateCalibrations(
+            {(Gate.MS(-0.1, FreeParameter("beta"), -0.3), QubitSet([0, 1])): pulse_sequence_2}
+        ),
+    )
+    circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=serialization_properties,
+        gate_calibrations=gate_calibrations,
     )
 
 

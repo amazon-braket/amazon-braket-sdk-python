@@ -1325,9 +1325,9 @@ class Circuit:
                             )
                             if free_parameter_number == 0:
                                 continue
-                            elif free_parameter_number < len(instruction.operator.parameters):
+                            elif free_parameter_number < len(gate.parameters):
                                 raise NotImplementedError(
-                                    "Partially defined calibrations are not supported."
+                                    "Calibrations with a partial number of fixed parameters are not supported."
                                 )
                             elif any(
                                 isinstance(p, FreeParameter)
@@ -1341,7 +1341,12 @@ class Circuit:
                                 instruction.target,
                             )
                             gate_calibrations._calibration_data[bound_key] = calibration(
-                                *instruction.operator.parameters
+                                **{
+                                    p.name: v
+                                    for p, v in zip(
+                                        gate.parameters, instruction.operator.parameters
+                                    )
+                                }
                             )
         return frames, waveforms
 
