@@ -1268,8 +1268,8 @@ class Circuit:
                 for key, calibration in gate_calibrations.items():
                     gate, qubits = key
 
-                    # ignoring parametric gates
-                    # Corresponding defcals with gate parameter value have been added
+                    # Ignoring parametric gates
+                    # Corresponding defcals with fixed arguments have been added
                     # in _get_frames_waveforms_from_instrs
                     if isinstance(gate, Parameterizable) and any(
                         isinstance(parameter, FreeParameter) for parameter in gate.parameters
@@ -1330,7 +1330,7 @@ class Circuit:
                                     "Calibrations with a partial number of fixed parameters are not supported."
                                 )
                             elif any(
-                                isinstance(p, FreeParameter)
+                                not isinstance(p, (float, int, complex))
                                 for p in instruction.operator.parameters
                             ):
                                 raise NotImplementedError(
