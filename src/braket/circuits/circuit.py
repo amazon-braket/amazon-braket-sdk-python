@@ -1273,7 +1273,8 @@ class Circuit:
                     # Corresponding defcals with fixed arguments have been added
                     # in _get_frames_waveforms_from_instrs
                     if isinstance(gate, Parameterizable) and any(
-                        isinstance(parameter, FreeParameter) for parameter in gate.parameters
+                        not isinstance(parameter, (float, int, complex))
+                        for parameter in gate.parameters
                     ):
                         continue
 
@@ -1312,10 +1313,10 @@ class Circuit:
             elif (
                 isinstance(instruction.operator, Parameterizable) and gate_calibrations is not None
             ):
-                self._add_fixed_arguments_calibrations(gate_calibrations, instruction)
+                self._add_fixed_argument_calibrations(gate_calibrations, instruction)
         return frames, waveforms
 
-    def _add_fixed_arguments_calibrations(
+    def _add_fixed_argument_calibrations(
         self,
         gate_calibrations: Dict[Tuple[Gate, QubitSet], PulseSequence],
         instruction: Instruction,
