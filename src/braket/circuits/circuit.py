@@ -1333,6 +1333,17 @@ class Circuit:
         If N=0, we ignore it as it will not be removed by _generate_frame_wf_defcal_declarations.
 
         This function modifies its `gate_calibrations` input argument.
+
+        Args:
+            gate_calibrations (Dict[Tuple[Gate, QubitSet], PulseSequence]): a dictionary of
+                calibrations
+            instruction (Instruction): a Circuit instruction
+
+        Raises:
+            NotImplementedError: in two cases: (i) if the instruction contains unbound parameters
+                and the calibration dictionary contains a parametric calibration applicable to this
+                instructions; (ii) if the calibration is defined with a partial number of unbound
+                parameters.
         """
         for key, calibration in deepcopy(gate_calibrations).items():
             gate = key[0]
