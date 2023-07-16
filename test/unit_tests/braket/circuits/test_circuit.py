@@ -1058,7 +1058,7 @@ def test_circuit_user_gate(pulse_sequence_2):
 
         @property
         def _qasm_name(self):
-            return f"foo"
+            return "foo"
 
         def __hash__(self):
             return hash((self.name, self.parameters[0], self.qubit_count))
