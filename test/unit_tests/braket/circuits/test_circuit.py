@@ -148,14 +148,18 @@ def pulse_sequence_2(predefined_frame_1):
 
 
 @pytest.fixture
-def gate_calibrations(pulse_sequence):
+def gate_calibrations(pulse_sequence, pulse_sequence_2):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
-
+    calibration_key_3 = (
+        Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
+        QubitSet([0, 1]),
+    )
     return GateCalibrations(
         {
             calibration_key: pulse_sequence,
             calibration_key_2: pulse_sequence,
+            calibration_key_3: pulse_sequence_2,
         }
     )
 
@@ -996,24 +1000,59 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         ),
     ],
 )
-def test_circuit_to_ir_openqasm(
-    circuit, serialization_properties, expected_ir, pulse_sequence, pulse_sequence_2
-):
-    calibration_key = (Gate.Z(), QubitSet([0, 1]))
-    calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
-    calibration_key_3 = (
-        Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
-        QubitSet([0, 1]),
+def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, gate_calibrations):
+    assert (
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+            gate_calibrations=gate_calibrations.calibration_data,
+        )
+        == expected_ir
     )
+
+
+def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
+    circ = Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta"))
+    serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
+    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (Gate.Rx(0.45), QubitSet([0]))
     gate_calibrations = GateCalibrations(
         {
             calibration_key: pulse_sequence,
             calibration_key_2: pulse_sequence,
-            calibration_key_3: pulse_sequence_2,
         }
     )
+
+    expected_ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "input float theta;",
+                "bit[1] b;",
+                "qubit[1] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian"
+                + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                "}",
+                "defcal z $0, $1 {",
+                "    set_frequency(predefined_frame_1, 6000000.0);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "defcal rx(0.45) $0 {",
+                "    set_frequency(predefined_frame_1, 6000000.0);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "inv @ pow(2.5) @ h q[0];",
+                "pow(0) @ h q[0];",
+                "rx(theta) q[0];",
+                "b[0] = measure q[0];",
+            ]
+        ),
+        inputs={},
+    )
+
     assert (
-        circuit.to_ir(
+        circ.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
             gate_calibrations=gate_calibrations.calibration_data,
