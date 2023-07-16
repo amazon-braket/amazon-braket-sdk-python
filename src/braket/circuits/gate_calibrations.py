@@ -54,15 +54,15 @@ class GateCalibrations:
     def __len__(self):
         return len(self._calibration_data)
 
-    def filter_by_qubits_or_gates(
-        self, gates: Optional[List[Gate]] = None, qubits: Optional[List[QubitSet]] = None
+    def filter_calibration_data(
+        self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None
     ) -> Optional[GateCalibrations]:
         """
-        Filters the data based on optional lists of gates or QubitSets.
+        Filters the data based on optional lists of gates and QubitSets.
 
         Args:
             gates (Optional[List[Gate]]): An optional list of gates to filter on.
-            qubits (Optional[List[QubitSet]]): An optional set of qubits to filter on.
+            qubits (Optional[QubitSet]): An optional `QubitSet` to filter on.
 
         Returns:
             Optional[GateCalibrations]: A filtered GateCalibrations object. Otherwise, returns
@@ -72,7 +72,7 @@ class GateCalibrations:
         filtered_calibration_keys = [
             tup
             for tup in keys
-            if isinstance(tup, tuple) and any(i in set(tup) for i in gates or qubits)
+            if (gates is None or tup[0] in gates) and (qubits is None or qubits.issubset(tup[1]))
         ]
         return GateCalibrations(
             {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},

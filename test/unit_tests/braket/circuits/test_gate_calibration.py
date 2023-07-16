@@ -56,15 +56,22 @@ def test_gc_copy(pulse_sequence):
     assert calibration == calibration.copy()
 
 
-def test_filter_by_qubits_or_gates(pulse_sequence):
+def test_filter_calibration_data(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
     )
-    expected_calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    assert expected_calibration == calibration.filter_by_qubits_or_gates(gates=[Gate.Z()])
+    expected_calibration_1 = GateCalibrations({calibration_key: pulse_sequence})
+    expected_calibration_2 = GateCalibrations(
+        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
+    )
+    expected_calibration_3 = GateCalibrations({calibration_key_2: pulse_sequence})
+    assert expected_calibration_1 == calibration.filter_calibration_data(gates=[Gate.Z()])
+    assert expected_calibration_2 == calibration.filter_calibration_data(qubits=QubitSet(0))
+    assert expected_calibration_3 == calibration.filter_calibration_data(
+        gates=[Gate.H()], qubits=QubitSet(1)
+    )
 
 
 def test_to_ir(pulse_sequence):
