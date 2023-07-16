@@ -1279,7 +1279,7 @@ class Circuit:
                     gate_name = gate._qasm_name
                     arguments = (
                         [calibration._format_parameter_ast(value) for value in gate.parameters]
-                        if hasattr(gate, "parameters")
+                        if isinstance(gate, Parameterizable)
                         else None
                     )
                     with oqpy.defcal(
