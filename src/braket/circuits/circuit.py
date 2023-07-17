@@ -1350,11 +1350,9 @@ class Circuit:
             target = key[1]
             if target != instruction.target:
                 continue
-            if (
-                gate._qasm_name == instruction.operator._qasm_name
-                and isinstance(gate, Parameterizable)
-                and len(instruction.operator.parameters) == len(gate.parameters)
-            ):
+            if isinstance(gate, type(instruction.operator)) and len(
+                instruction.operator.parameters
+            ) == len(gate.parameters):
                 free_parameter_number = sum([isinstance(p, FreeParameter) for p in gate.parameters])
                 if free_parameter_number == 0:
                     continue
