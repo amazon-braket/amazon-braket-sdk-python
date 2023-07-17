@@ -22,25 +22,25 @@ class GateCalibrations:
 
     def __init__(
         self,
-        calibration_data: Dict[Tuple[Gate, QubitSet], PulseSequence],
+        pulse_sequences: Dict[Tuple[Gate, QubitSet], PulseSequence],
     ):
         """
         Args:
-            calibration_data (Dict[Tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
+            pulse_sequences (Dict[Tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
                 `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
 
         """  # noqa: E501
-        self._calibration_data = calibration_data
+        self._pulse_sequences = pulse_sequences
 
     @property
-    def calibration_data(self) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
+    def pulse_sequences(self) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """
-        Gets the mapping of (Gate, Qubit) to the corresponding `PulseSequences`.
+        Gets the mapping of (Gate, Qubit) to the corresponding `PulseSequence`.
 
         Returns:
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
         """
-        return self._calibration_data
+        return self._pulse_sequences
 
     def copy(self) -> GateCalibrations:
         """
@@ -49,12 +49,12 @@ class GateCalibrations:
         Returns:
             GateCalibrations: a copy of the calibrations.
         """
-        return GateCalibrations(deepcopy(self._calibration_data))
+        return GateCalibrations(deepcopy(self._pulse_sequences))
 
     def __len__(self):
-        return len(self._calibration_data)
+        return len(self._pulse_sequences)
 
-    def filter_calibration_data(
+    def filter_pulse_sequences(
         self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None
     ) -> Optional[GateCalibrations]:
         """
@@ -68,14 +68,14 @@ class GateCalibrations:
             Optional[GateCalibrations]: A filtered GateCalibrations object. Otherwise, returns
             none if no matches are found.
         """  # noqa: E501
-        keys = self._calibration_data.keys()
+        keys = self.pulse_sequences.keys()
         filtered_calibration_keys = [
             tup
             for tup in keys
             if (gates is None or tup[0] in gates) and (qubits is None or qubits.issubset(tup[1]))
         ]
         return GateCalibrations(
-            {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},
+            {k: v for (k, v) in self.pulse_sequences.items() if k in filtered_calibration_keys},
         )
 
     def to_ir(self, calibration_key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
@@ -91,19 +91,19 @@ class GateCalibrations:
 
         """  # noqa: E501
         if calibration_key is not None:
-            if calibration_key not in self.calibration_data.keys():
+            if calibration_key not in self.pulse_sequences.keys():
                 raise ValueError(
                     f"The key {calibration_key} does not exist in this GateCalibrations object."
                 )
             return (
-                self.calibration_data[calibration_key]
+                self.pulse_sequences[calibration_key]
                 .to_ir()
                 .replace("cal", self._def_cal_gate(calibration_key), 1)
             )
         else:
             defcal = "\n".join(
                 v.to_ir().replace("cal", self._def_cal_gate(k), 1)
-                for (k, v) in self.calibration_data.items()
+                for (k, v) in self.pulse_sequences.items()
                 if isinstance(v, PulseSequence)
             )
             return defcal
@@ -123,6 +123,4 @@ class GateCalibrations:
         )
 
     def __eq__(self, other):
-        return (
-            isinstance(other, GateCalibrations) and other.calibration_data == self.calibration_data
-        )
+        return isinstance(other, GateCalibrations) and other.pulse_sequences == self.pulse_sequences

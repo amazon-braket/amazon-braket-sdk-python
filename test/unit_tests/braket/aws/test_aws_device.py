@@ -820,7 +820,7 @@ def test_device_gate_calibrations_exists(mock_url_request):
         )
     }
     expected_ngc = GateCalibrations(
-        calibration_data={
+        pulse_sequences={
             (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): PulseSequence().play(
                 device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"]
             )
@@ -1856,7 +1856,7 @@ def test_parse_calibration_data():
             id="wf_drag_gaussian_0",
         )
     }
-    expected_calibration_data = {
+    expected_pulse_sequences = {
         (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): PulseSequence()
         .barrier(QubitSet(0))
         .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
@@ -1869,17 +1869,7 @@ def test_parse_calibration_data():
         (Gate.Rx(FreeParameter("theta")), QubitSet(0)): PulseSequence().barrier([]),
         (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
     }
-    expected_ngc = GateCalibrations(calibration_data=expected_calibration_data)
-    print(
-        expected_ngc.calibration_data[
-            (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1]))
-        ].to_ir()
-    )
-    print(
-        device_ngc.calibration_data[
-            (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1]))
-        ].to_ir()
-    )
+    expected_ngc = GateCalibrations(pulse_sequences=expected_pulse_sequences)
     assert device_ngc == expected_ngc
 
 

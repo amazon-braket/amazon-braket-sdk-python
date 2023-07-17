@@ -948,18 +948,11 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
     calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
     )
-    print(
-        circuit.to_ir(
-            ir_type=IRType.OPENQASM,
-            serialization_properties=serialization_properties,
-            gate_calibrations=calibration.calibration_data,
-        )
-    )
     assert (
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=calibration.calibration_data,
+            gate_calibrations=calibration.pulse_sequences,
         )
         == expected_ir
     )
