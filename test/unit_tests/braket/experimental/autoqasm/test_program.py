@@ -26,7 +26,7 @@ from braket.experimental.autoqasm.gates import cnot, measure, rx
 
 def test_program_conversion_context() -> None:
     """Tests the ProgramConversionContext class."""
-    prog = aq.ProgramConversionContext()
+    prog = aq.program.ProgramConversionContext()
     initial_oqpy_program = prog.get_oqpy_program()
     assert len(prog.oqpy_program_stack) == 1
 
@@ -42,16 +42,16 @@ def test_program_conversion_context() -> None:
 def test_build_program() -> None:
     """Tests the aq.build_program function."""
     with pytest.raises(AssertionError):
-        aq.get_program_conversion_context()
+        aq.program.get_program_conversion_context()
 
     with aq.build_program() as program_conversion_context:
-        assert aq.get_program_conversion_context() == program_conversion_context
+        assert aq.program.get_program_conversion_context() == program_conversion_context
         with aq.build_program() as inner_context:
             assert inner_context is program_conversion_context
-            assert aq.get_program_conversion_context() == inner_context
+            assert aq.program.get_program_conversion_context() == inner_context
 
     with pytest.raises(AssertionError):
-        aq.get_program_conversion_context()
+        aq.program.get_program_conversion_context()
 
 
 def test_to_ir() -> None:

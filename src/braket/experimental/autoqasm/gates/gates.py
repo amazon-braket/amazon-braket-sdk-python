@@ -28,45 +28,45 @@ Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
 
 from braket.experimental.autoqasm import program
 
-from .qubits import QubitIdentifier, _qubit
+from .qubits import QubitIdentifierType, _qubit
 
 
-def h(q: QubitIdentifier) -> None:
+def h(q: QubitIdentifierType) -> None:
     """Adds a Hadamard gate to the program on the specified qubit.
 
     Args:
-        q (QubitIdentifier): The target qubit.
+        q (QubitIdentifierType): The target qubit.
     """
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     oqpy_program.gate(_qubit(q), "h")
 
 
-def x(q: QubitIdentifier) -> None:
+def x(q: QubitIdentifierType) -> None:
     """Adds a pi rotation around the X axis on the specified qubit.
 
     Args:
-        q (QubitIdentifier): The target qubit.
+        q (QubitIdentifierType): The target qubit.
     """
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     oqpy_program.gate(_qubit(q), "x")
 
 
-def rx(q: QubitIdentifier, angle: float) -> None:
+def rx(q: QubitIdentifierType, angle: float) -> None:
     """Adds a rotation around the X axis by `angle` on the specified qubit.
     Args:
-        q (QubitIdentifier): The target qubit.
+        q (QubitIdentifierType): The target qubit.
         angle (float): Angle in radians.
     """
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     oqpy_program.gate(_qubit(q), "rx", angle)
 
 
-def cnot(q_ctrl: QubitIdentifier, q_target: QubitIdentifier) -> None:
+def cnot(q_ctrl: QubitIdentifierType, q_target: QubitIdentifierType) -> None:
     """Adds a CNOT gate to the program on the specified qubits.
 
     Args:
-        q_ctrl (QubitIdentifier): The control qubit.
-        q_target (QubitIdentifier): The target qubit.
+        q_ctrl (QubitIdentifierType): The control qubit.
+        q_target (QubitIdentifierType): The target qubit.
     """
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     oqpy_program.gate([_qubit(q_ctrl), _qubit(q_target)], "cnot")
