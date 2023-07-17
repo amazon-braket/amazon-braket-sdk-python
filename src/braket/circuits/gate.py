@@ -225,15 +225,16 @@ class Gate(QuantumOperator):
         Returns:
             Gate: A Gate of type corresponding to `class_name`.
         """
-        # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>
-        rigetti_gates_to_bdk_gates = {
+        # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
+        # Supports gates that need to be converted to BDK class names.
+        gates_to_bdk_gates = {
             "Rx_12": None,
             "Cz": "CZ",
             "Cphaseshift": "CPhaseShift",
             "Xy": "XY",
         }
-        if class_name in rigetti_gates_to_bdk_gates.keys():
-            class_name = rigetti_gates_to_bdk_gates[class_name]
+        if class_name in gates_to_bdk_gates.keys():
+            class_name = gates_to_bdk_gates[class_name]
 
         class_ = (
             getattr(importlib.import_module("braket.circuits.gates"), class_name)
