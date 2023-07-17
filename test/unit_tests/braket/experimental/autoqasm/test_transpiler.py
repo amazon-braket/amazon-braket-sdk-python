@@ -71,6 +71,9 @@ cnot __qubits__[1], __qubits__[3];"""
     bell_decorated_partial = functools.partial(bell_decorated, 1)
     assert bell_decorated_partial(3).to_ir() == expected
 
+    bell_noarg_partial = functools.partial(bell_decorated, 1, 3)
+    assert bell_noarg_partial().to_ir() == expected
+
 
 def test_classmethod() -> None:
     """Tests aq.function decorator application to a classmethod."""

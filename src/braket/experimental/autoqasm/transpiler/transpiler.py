@@ -134,17 +134,15 @@ class PyToOqpy(transpiler.PyToPy):
         node = functions.transform(node, ctx)
         node = directives.transform(node, ctx)
         node = break_statements.transform(node, ctx)
-        if ctx.user.options.uses(converter.Feature.ASSERT_STATEMENTS):
-            node = asserts.transform(node, ctx)
+        node = asserts.transform(node, ctx)
         # Note: sequencing continue canonicalization before for loop one avoids
         # dealing with the extra loop increment operation that the for
         # canonicalization creates.
         node = continue_statements.transform(node, ctx)
         node = return_statements.transform(node, ctx)
         node = assignments.transform(node, ctx)
-        if ctx.user.options.uses(converter.Feature.LISTS):
-            node = lists.transform(node, ctx)
-            node = slices.transform(node, ctx)
+        node = lists.transform(node, ctx)
+        node = slices.transform(node, ctx)
         node = call_trees.transform(node, ctx)
         node = control_flow.transform(node, ctx)
         node = conditional_expressions.transform(node, ctx)
@@ -255,12 +253,9 @@ def _converted_partial(
     caller_fn_scope: Optional[function_wrappers.FunctionScope] = None,
     options: Optional[converter.ConversionOptions] = None,
 ) -> Any:
-    new_kwargs = {}
-    if f.keywords is not None:
-        # Use copy to avoid mutating the underlying keywords.
-        new_kwargs = f.keywords.copy()
-    if kwargs is not None:
-        new_kwargs.update(kwargs)
+    # Use copy to avoid mutating the underlying keywords.
+    new_kwargs = f.keywords.copy()
+    new_kwargs.update(kwargs)
     new_args = f.args + args
     logging.log(3, "Forwarding call of partial %s with\n%s\n%s\n", f, new_args, new_kwargs)
     return converted_call(
@@ -279,12 +274,6 @@ def _inspect_callable(f: Callable, args: tuple) -> Tuple[Callable, tuple]:
         f_self = getattr(f, "__self__", None)
         if f_self is not None:
             effective_args = (f_self,) + effective_args
-
-    elif hasattr(f, "__class__") and hasattr(f.__class__, "__call__"):
-        # Callable objects. Dunder methods have special lookup rules, see:
-        # https://docs.python.org/3/reference/datamodel.html#specialnames
-        target_entity = f.__class__.__call__
-        effective_args = (f,) + args
 
     return target_entity, effective_args
 

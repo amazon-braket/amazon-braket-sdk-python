@@ -784,7 +784,7 @@ b = a;"""
 def test_mismatched_qubits():
     @aq.function(num_qubits=4)
     def subroutine() -> None:
-        a = measure(0)
+        _ = measure(0)
 
     @aq.function(num_qubits=8)
     def main() -> None:
