@@ -1374,7 +1374,10 @@ class Circuit:
                     instruction.target,
                 )
                 gate_calibrations[bound_key] = calibration(
-                    **{p.name: v for p, v in zip(gate.parameters, instruction.operator.parameters)}
+                    **{
+                        p.name if not isinstance(p, (float, int, complex)) else p: v
+                        for p, v in zip(gate.parameters, instruction.operator.parameters)
+                    }
                 )
 
     def as_unitary(self) -> np.ndarray:
