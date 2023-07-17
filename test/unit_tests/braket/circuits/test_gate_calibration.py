@@ -135,18 +135,3 @@ def test_ngc_length(pulse_sequence):
     )
 
     assert len(calibration) == 2
-
-
-def test_get_gate_calibration(pulse_sequence):
-    calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    assert calibration.get_gate_calibration(calibration_key) == pulse_sequence
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_get_gate_calibration_bad_key(pulse_sequence):
-    calibration_key = (Gate.H, QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    calibration.get_gate_calibration(calibration_key)

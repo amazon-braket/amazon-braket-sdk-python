@@ -78,24 +78,6 @@ class GateCalibrations:
             {k: v for (k, v) in self.calibration_data.items() if k in filtered_calibration_keys},
         )
 
-    def get_gate_calibration(
-        self, calibration_key: Tuple[Gate, QubitSet]
-    ) -> Optional[PulseSequence]:
-        """
-        Returns the pulse implementation for the gate and QubitSet.
-
-        Args:
-            calibration_key (Tuple[Gate, QubitSet]): A key to get a specific PulseSequence.
-
-        Returns:
-            Optional[PulseSequence]: the PulseSequence object corresponding the gate acting on
-            the QubitSet.
-
-        """
-        if not isinstance(calibration_key[0], Gate) or not isinstance(calibration_key[1], QubitSet):
-            raise ValueError("The key must be a tuple of a gate object and a qubit set.")
-        return self._calibration_data.get(calibration_key, None)
-
     def to_ir(self, calibration_key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
         """
         Returns the defcal representation for the `GateCalibrations` object.
