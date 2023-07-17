@@ -51,6 +51,16 @@ def x(q: QubitIdentifier) -> None:
     oqpy_program.gate(_qubit(q), "x")
 
 
+def rx(q: QubitIdentifier, angle: float) -> None:
+    """Adds a rotation around the X axis by `angle` on the specified qubit.
+    Args:
+        q (QubitIdentifier): The target qubit.
+        angle (float): Angle in radians.
+    """
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(_qubit(q), "rx", angle)
+
+
 def cnot(q_ctrl: QubitIdentifier, q_target: QubitIdentifier) -> None:
     """Adds a CNOT gate to the program on the specified qubits.
 
