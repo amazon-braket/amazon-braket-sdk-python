@@ -321,7 +321,7 @@ class PauliString:
                 circ = circ.x(qubit)
             elif self._nontrivial[qubit] == "Y":
                 circ = circ.y(qubit)
-            elif self._nontrivial[qubit] == "Z":
+            else:
                 circ = circ.z(qubit)
         return circ
 
