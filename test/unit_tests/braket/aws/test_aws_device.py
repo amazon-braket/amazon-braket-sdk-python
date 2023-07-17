@@ -105,7 +105,7 @@ MOCK_gate_calibrations_JSON = {
                         {
                             "name": "barrier",
                             "arguments": [
-                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"}
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"}
                             ],
                         },
                         {
@@ -123,14 +123,14 @@ MOCK_gate_calibrations_JSON = {
                         {
                             "name": "delay",
                             "arguments": [
-                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
                                 {"name": "duration", "value": 3e-07, "type": "float"},
                             ],
                         },
                         {
                             "name": "shift_phase",
                             "arguments": [
-                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
                                 {"name": "phase", "value": 3e-07, "type": "float"},
                             ],
                         },
@@ -138,7 +138,7 @@ MOCK_gate_calibrations_JSON = {
                             "name": "shift_frequency",
                             "arguments": [
                                 {"name": "frequency", "value": "theta", "type": "expr"},
-                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "string"},
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
                                 {"name": "extra", "value": "q0_q1_cphase_frame", "type": "string"},
                             ],
                         },

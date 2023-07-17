@@ -332,6 +332,19 @@ class PulseSequence:
             return _FreeParameterExpressionIdentifier(parameter)
         return parameter
 
+    def _parse_json_arg(
+        self, argument: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
+    ) -> Any:
+        nonprimitive_arg_type = {
+            "frame": getattr(frames, "get"),
+            "waveform": getattr(waveforms, "get"),
+            "expr": FreeParameterExpression,
+        }
+        if argument["type"] in nonprimitive_arg_type.keys():
+            return nonprimitive_arg_type[argument["type"]](argument["value"])
+        else:
+            return __builtins__[argument["type"]](argument["value"])
+
     def _parse_json(
         self, instr: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
     ) -> PulseSequence:
@@ -352,28 +365,24 @@ class PulseSequence:
             instr_args = {}
             if instr["arguments"] is not None:
                 for argument in instr["arguments"]:
-                    if argument["name"] == "waveform" and argument["name"] in instr_args_keys:
-                        instr_args[argument["name"]] = waveforms[argument["value"]]
-                    elif argument["name"] in {"qubit", "frame"}:
-                        if instr["name"] in {"barrier", "delay"}:
-                            argument_value = (
-                                [frames[argument["value"]]]
-                                if argument["name"] == "frame"
-                                else instr_args.get("qubits_or_frames", QubitSet())
-                            )
-                            (
-                                argument_value + instr_args.get("qubits_or_frames", [])
-                                if argument["name"] == "frame"
-                                else argument_value.update(QubitSet(int(argument["value"])))
-                            )
-                            instr_args["qubits_or_frames"] = argument_value
-                        else:
-                            instr_args[argument["name"]] = frames[argument["value"]]
+                    if argument["name"] in {"qubit", "frame"} and instr["name"] in {
+                        "barrier",
+                        "delay",
+                    }:
+                        argument_value = (
+                            [frames[argument["value"]]]
+                            if argument["name"] == "frame"
+                            else instr_args.get("qubits_or_frames", QubitSet())
+                        )
+                        (
+                            argument_value + instr_args.get("qubits_or_frames", [])
+                            if argument["name"] == "frame"
+                            else argument_value.update(QubitSet(int(argument["value"])))
+                        )
+                        instr_args["qubits_or_frames"] = argument_value
                     elif argument["name"] in instr_args_keys:
-                        instr_args[argument["name"]] = (
-                            float(argument["value"])
-                            if argument["type"] == "float"
-                            else FreeParameterExpression(argument["value"])
+                        instr_args[argument["name"]] = self._parse_json_arg(
+                            argument, waveforms, frames
                         )
             else:
                 instr_args["qubits_or_frames"] = []

@@ -242,6 +242,24 @@ class Gate(QuantumOperator):
         )
         return class_
 
+    @staticmethod
+    def _is_float(argument: str) -> bool:
+        """
+        Checks if a string can be cast into a float.
+
+        Args:
+            argument (str): String to check.
+
+        Returns:
+            bool: Returns true if the string can be cast as a float. False, otherwise.
+
+        """
+        try:
+            float(argument)
+            return True
+        except ValueError:
+            return False
+
     @classmethod
     def register_gate(cls, gate: Type[Gate]) -> None:
         """Register a gate implementation by adding it into the Gate class.

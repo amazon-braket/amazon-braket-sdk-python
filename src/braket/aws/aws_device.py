@@ -726,10 +726,10 @@ class AwsDevice(Device):
                         continue
 
                     argument = None
-                    if len(gate["arguments"]):
+                    if gate["arguments"]:
                         argument = (
                             float(gate["arguments"][0])
-                            if is_float(gate["arguments"][0])
+                            if Gate._is_float(gate["arguments"][0])
                             else FreeParameter(gate["arguments"][0])
                         )
                     gate_qubit_key = (
@@ -739,21 +739,3 @@ class AwsDevice(Device):
                     parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
 
         return parsed_calibration_data
-
-
-def is_float(argument: str) -> bool:
-    """
-    Checks if a string can be cast into a float.
-
-    Args:
-        argument (str): String to check.
-
-    Returns:
-        bool: Returns true if the string can be cast as a float. False, otherwise.
-
-    """
-    try:
-        float(argument)
-        return True
-    except ValueError:
-        return False
