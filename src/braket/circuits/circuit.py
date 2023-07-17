@@ -1353,7 +1353,9 @@ class Circuit:
             if isinstance(gate, type(instruction.operator)) and len(
                 instruction.operator.parameters
             ) == len(gate.parameters):
-                free_parameter_number = sum([isinstance(p, FreeParameter) for p in gate.parameters])
+                free_parameter_number = sum(
+                    [not isinstance(p, (float, int, complex)) for p in gate.parameters]
+                )
                 if free_parameter_number == 0:
                     continue
                 elif free_parameter_number < len(gate.parameters):
