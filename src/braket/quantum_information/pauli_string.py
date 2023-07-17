@@ -253,13 +253,11 @@ class PauliString:
         if not isinstance(n, int):
             raise ValueError("Must be raised to integer power")
 
+        # Since pauli ops involutory, result is either identity or unchanged
         pauli_other = PauliString(self)
-        if n == 0:
+        if n % 2 == 0:
             pauli_other._phase = 1
             pauli_other._nontrivial = {}
-        else:
-            for _ in range(n - 1):
-                pauli_other.dot(self, inplace=True)
 
         if inplace:
             self._phase = pauli_other._phase
@@ -268,7 +266,7 @@ class PauliString:
         return pauli_other
 
     def __pow__(self, n: int) -> PauliString:
-        """Pow operator overload for circuit composition.
+        """Pow operator overload for Pauli string composition.
 
         Syntactic sugar for `power()`.
 
