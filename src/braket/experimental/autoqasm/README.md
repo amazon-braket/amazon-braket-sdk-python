@@ -67,10 +67,8 @@ def reset(qubit: int, num_repeats: int) -> None:
 ```
 
 Now that the program takes inputs, you must pass those inputs when you call your function.
-In this case, the qubits are indexed by variable, rather than by integer literals, so we
-must additionally pass the `num_qubits` keyword argument to AutoQASM.
 ```
-my_reset_program = reset(qubit=0, num_repeats=3, num_qubits=1)
+my_reset_program = reset(qubit=0, num_repeats=3)
 ```
 
 AutoQASM can support nested subroutines and complex control flow. You can use the Python runtime

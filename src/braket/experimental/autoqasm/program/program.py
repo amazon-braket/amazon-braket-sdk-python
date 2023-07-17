@@ -13,7 +13,6 @@
 
 """AutoQASM Program class, context managers, and related functions."""
 
-import enum
 import threading
 from dataclasses import dataclass
 from typing import List, Optional
@@ -35,16 +34,6 @@ def _get_local() -> threading.local:
     if not hasattr(_local, "program_conversion_context"):
         setattr(_local, "program_conversion_context", None)
     return _local
-
-
-class ProgramOptions(enum.Enum):
-    """All options configurable by the user at program invocation time via keyword arguments
-    injected by the aq.function decorator.
-    """
-
-    # Note: this is the exact kwarg name that the user must pass,
-    # which is later input to UserConfig
-    NUM_QUBITS = "num_qubits"
 
 
 @dataclass
