@@ -46,7 +46,7 @@ def test_gc_creation(pulse_sequence):
     calibration_key = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations({calibration_key: pulse_sequence})
 
-    assert calibration.calibration_data[calibration_key] == pulse_sequence
+    assert calibration.pulse_sequences[calibration_key] == pulse_sequence
 
 
 def test_gc_copy(pulse_sequence):
@@ -56,15 +56,22 @@ def test_gc_copy(pulse_sequence):
     assert calibration == calibration.copy()
 
 
-def test_filter_by_qubits_or_gates(pulse_sequence):
+def test_filter_pulse_sequences(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations(
         {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
     )
-    expected_calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    assert expected_calibration == calibration.filter_by_qubits_or_gates(gates=[Gate.Z()])
+    expected_calibration_1 = GateCalibrations({calibration_key: pulse_sequence})
+    expected_calibration_2 = GateCalibrations(
+        {calibration_key: pulse_sequence, calibration_key_2: pulse_sequence}
+    )
+    expected_calibration_3 = GateCalibrations({calibration_key_2: pulse_sequence})
+    assert expected_calibration_1 == calibration.filter_pulse_sequences(gates=[Gate.Z()])
+    assert expected_calibration_2 == calibration.filter_pulse_sequences(qubits=QubitSet(0))
+    assert expected_calibration_3 == calibration.filter_pulse_sequences(
+        gates=[Gate.H()], qubits=QubitSet(1)
+    )
 
 
 def test_to_ir(pulse_sequence):
@@ -128,18 +135,3 @@ def test_ngc_length(pulse_sequence):
     )
 
     assert len(calibration) == 2
-
-
-def test_get_gate_calibration(pulse_sequence):
-    calibration_key = (Gate.H(), QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    assert calibration.get_gate_calibration(calibration_key) == pulse_sequence
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_get_gate_calibration_bad_key(pulse_sequence):
-    calibration_key = (Gate.H, QubitSet([0, 1]))
-    calibration = GateCalibrations({calibration_key: pulse_sequence})
-
-    calibration.get_gate_calibration(calibration_key)
