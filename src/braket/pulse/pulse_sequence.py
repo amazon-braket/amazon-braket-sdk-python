@@ -332,7 +332,7 @@ class PulseSequence:
             return _FreeParameterExpressionIdentifier(parameter)
         return parameter
 
-    def _parse_json_arg(
+    def _parse_arg_from_calibration_schema(
         self, argument: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
     ) -> Any:
         nonprimitive_arg_type = {
@@ -345,7 +345,7 @@ class PulseSequence:
         else:
             return __builtins__[argument["type"]](argument["value"])
 
-    def _parse_json(
+    def _parse_from_calibration_schema(
         self, instr: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
     ) -> PulseSequence:
         """
@@ -381,7 +381,7 @@ class PulseSequence:
                         )
                         instr_args["qubits_or_frames"] = argument_value
                     elif argument["name"] in instr_args_keys:
-                        instr_args[argument["name"]] = self._parse_json_arg(
+                        instr_args[argument["name"]] = self._parse_arg_from_calibration_schema(
                             argument, waveforms, frames
                         )
             else:

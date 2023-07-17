@@ -57,7 +57,7 @@ class Waveform(ABC):
 
     @staticmethod
     @abstractmethod
-    def _from_json(waveform_json: Dict) -> Waveform:
+    def _from_calibration_schema(waveform_json: Dict) -> Waveform:
         """
         Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104
 
@@ -108,7 +108,7 @@ class ArbitraryWaveform(Waveform):
         raise NotImplementedError
 
     @staticmethod
-    def _from_json(waveform_json: Dict) -> ArbitraryWaveform:
+    def _from_calibration_schema(waveform_json: Dict) -> ArbitraryWaveform:
         wave_id = waveform_json["waveformId"]
         complex_amplitudes = [complex(i[0], i[1]) for i in waveform_json["amplitudes"]]
         return ArbitraryWaveform(complex_amplitudes, wave_id)
@@ -186,7 +186,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         return samples
 
     @staticmethod
-    def _from_json(waveform_json: Dict) -> ConstantWaveform:
+    def _from_calibration_schema(waveform_json: Dict) -> ConstantWaveform:
         wave_id = waveform_json["waveformId"]
         length = iq = None
         for val in waveform_json["arguments"]:
@@ -321,7 +321,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         return samples
 
     @staticmethod
-    def _from_json(waveform_json: Dict) -> DragGaussianWaveform:
+    def _from_calibration_schema(waveform_json: Dict) -> DragGaussianWaveform:
         waveform_parameters = {"id": waveform_json["waveformId"]}
         for val in waveform_json["arguments"]:
             waveform_parameters[val["name"]] = (
@@ -437,7 +437,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         return samples
 
     @staticmethod
-    def _from_json(waveform_json: Dict) -> GaussianWaveform:
+    def _from_calibration_schema(waveform_json: Dict) -> GaussianWaveform:
         waveform_parameters = {"id": waveform_json["waveformId"]}
         for val in waveform_json["arguments"]:
             waveform_parameters[val["name"]] = (
@@ -464,12 +464,12 @@ def _map_to_oqpy_type(
     return parameter
 
 
-def _parse_waveform_from_json(waveform: Dict) -> Waveform:
+def _parse_waveform_from_calibration_schema(waveform: Dict) -> Waveform:
     waveform_names = {
-        "arbitrary": ArbitraryWaveform._from_json,
-        "drag_gaussian": DragGaussianWaveform._from_json,
-        "gaussian": GaussianWaveform._from_json,
-        "constant": ConstantWaveform._from_json,
+        "arbitrary": ArbitraryWaveform._from_calibration_schema,
+        "drag_gaussian": DragGaussianWaveform._from_calibration_schema,
+        "gaussian": GaussianWaveform._from_calibration_schema,
+        "constant": ConstantWaveform._from_calibration_schema,
     }
     if "amplitudes" in waveform.keys():
         waveform["name"] = "arbitrary"

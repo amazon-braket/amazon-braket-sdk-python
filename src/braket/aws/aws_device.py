@@ -39,8 +39,9 @@ from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.parametric.free_parameter import FreeParameter
+from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
-from braket.pulse.waveforms import _parse_waveform_from_json
+from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
 
 
@@ -684,7 +685,7 @@ class AwsDevice(Device):
     def _parse_waveforms(self, waveforms_json: Dict) -> Dict:
         waveforms = dict()
         for waveform in waveforms_json:
-            parsed_waveform = _parse_waveform_from_json(waveforms_json[waveform])
+            parsed_waveform = _parse_waveform_from_calibration_schema(waveforms_json[waveform])
             waveforms[parsed_waveform.id] = parsed_waveform
         return waveforms
 
@@ -693,7 +694,9 @@ class AwsDevice(Device):
     ) -> PulseSequence:
         calibration_sequence = PulseSequence()
         for instr in calibration:
-            calibration_sequence = calibration_sequence._parse_json(instr, waveforms, self.frames)
+            calibration_sequence = calibration_sequence._parse_from_calibration_schema(
+                instr, waveforms, self.frames
+            )
         return calibration_sequence
 
     def _parse_calibration_json(
@@ -729,7 +732,7 @@ class AwsDevice(Device):
                     if gate["arguments"]:
                         argument = (
                             float(gate["arguments"][0])
-                            if Gate._is_float(gate["arguments"][0])
+                            if _is_float(gate["arguments"][0])
                             else FreeParameter(gate["arguments"][0])
                         )
                     gate_qubit_key = (

@@ -54,7 +54,7 @@ class GateCalibrations:
     def __len__(self):
         return len(self._pulse_sequences)
 
-    def filter_pulse_sequences(
+    def filter(
         self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None
     ) -> Optional[GateCalibrations]:
         """
