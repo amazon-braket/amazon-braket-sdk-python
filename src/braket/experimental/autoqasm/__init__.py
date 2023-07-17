@@ -42,16 +42,12 @@ The Python code above outputs the following OpenQASM program:
 
 from oqpy import ArrayVar, BitVar, BoolVar, FloatVar, IntVar  # noqa: F401
 
-from . import api, constants, gates, operators, types  # noqa: F401
 from .api import function  # noqa: F401
-from .gates import QubitIdentifier  # noqa: F401
+from .gates import QubitIdentifierType  # noqa: F401
 from .program import (  # noqa: F401
     Program,
-    ProgramConversionContext,
     Verbatim,
     build_program,
-    get_program_conversion_context,
-    in_active_program_conversion_context,
 )
 from .transpiler import transpiler  # noqa: F401
 from .types import qasm_range as range  # noqa: F401

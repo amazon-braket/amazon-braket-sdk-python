@@ -22,7 +22,7 @@ from openpulse.printer import dumps
 
 from braket.experimental.autoqasm import constants, errors, program
 
-QubitIdentifier = Union[int, oqpy._ClassicalVar, oqpy.base.OQPyExpression, str]
+QubitIdentifierType = Union[int, oqpy._ClassicalVar, oqpy.base.OQPyExpression, str]
 
 
 def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> str:
