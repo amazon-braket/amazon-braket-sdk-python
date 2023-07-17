@@ -34,7 +34,8 @@ def measure(qubits: Union[QubitIdentifierType, List[QubitIdentifierType]]) -> Bi
     results to bit variables.
 
     Args:
-        qubits (Union[QubitIdentifierType, List[QubitIdentifierType]]): The target qubits to measure.
+        qubits (Union[QubitIdentifierType, List[QubitIdentifierType]]): The target qubits
+            to measure.
 
     Returns:
         BitVar: Bit variable the measurement results are assigned to.
