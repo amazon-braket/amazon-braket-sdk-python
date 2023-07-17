@@ -81,7 +81,7 @@ def test_conditional_expressions_py_cond(if_true: dict, if_false: dict) -> None:
     assert if_false["qasm"] not in qasm
 
 
-def for_body(i: aq.QubitIdentifier) -> None:
+def for_body(i: aq.QubitIdentifierType) -> None:
     h(i)
 
 
