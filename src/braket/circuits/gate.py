@@ -227,14 +227,16 @@ class Gate(QuantumOperator):
         """
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         # Supports gates that need to be converted to BDK class names.
-        gates_to_bdk_gates = {
+        translations_to_bdk_gates = {
+            # Rigetti
             "Rx_12": None,
+            # General
             "Cz": "CZ",
             "Cphaseshift": "CPhaseShift",
             "Xy": "XY",
         }
-        if class_name in gates_to_bdk_gates.keys():
-            class_name = gates_to_bdk_gates[class_name]
+        if class_name in translations_to_bdk_gates.keys():
+            class_name = translations_to_bdk_gates[class_name]
         class_ = (
             getattr(importlib.import_module("braket.circuits.gates"), class_name)
             if class_name is not None

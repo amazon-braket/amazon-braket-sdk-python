@@ -43,6 +43,12 @@ class PulseSequence:
     and the requested results.
     """
 
+    _capture_v0_count = 0
+    _program = Program()
+    _frames = {}
+    _waveforms = {}
+    _free_parameters = set()
+
     def __init__(self):
         self._capture_v0_count = 0
         self._program = Program()
@@ -345,51 +351,56 @@ class PulseSequence:
         else:
             return __builtins__[argument["type"]](argument["value"])
 
+    @classmethod
     def _parse_from_calibration_schema(
-        self, instr: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
+        cls, calibration: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
     ) -> PulseSequence:
         """
         Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26.
 
         Args:
-            instr (Dict): The pulse instruction to parse
+            calibration (Dict): The pulse instruction to parse
             waveforms (Dict[Waveform]): The waveforms supplied for the pulse sequences.
             frames (Dict[Frame]): A dictionary of frame objects to use.
 
         Returns:
             PulseSequence: The parse sequence obtain from parsing a pulse instruction.
         """  # noqa: E501
-        if hasattr(self, f"{instr['name']}"):
-            instr_function = getattr(self, instr["name"])
-            instr_args_keys = signature(instr_function).parameters.keys()
-            instr_args = {}
-            if instr["arguments"] is not None:
-                for argument in instr["arguments"]:
-                    if argument["name"] in {"qubit", "frame"} and instr["name"] in {
-                        "barrier",
-                        "delay",
-                    }:
-                        argument_value = (
-                            [frames[argument["value"]]]
-                            if argument["name"] == "frame"
-                            else instr_args.get("qubits_or_frames", QubitSet())
-                        )
-                        (
-                            argument_value + instr_args.get("qubits_or_frames", [])
-                            if argument["name"] == "frame"
-                            else argument_value.update(QubitSet(int(argument["value"])))
-                        )
-                        instr_args["qubits_or_frames"] = argument_value
-                    elif argument["name"] in instr_args_keys:
-                        instr_args[argument["name"]] = self._parse_arg_from_calibration_schema(
-                            argument, waveforms, frames
-                        )
+        calibration_sequence = cls()
+        for instr in calibration:
+            if hasattr(PulseSequence, f"{instr['name']}"):
+                instr_function = getattr(calibration_sequence, instr["name"])
+                instr_args_keys = signature(instr_function).parameters.keys()
+                instr_args = {}
+                if instr["arguments"] is not None:
+                    for argument in instr["arguments"]:
+                        if argument["name"] in {"qubit", "frame"} and instr["name"] in {
+                            "barrier",
+                            "delay",
+                        }:
+                            argument_value = (
+                                [frames[argument["value"]]]
+                                if argument["name"] == "frame"
+                                else instr_args.get("qubits_or_frames", QubitSet())
+                            )
+                            (
+                                argument_value + instr_args.get("qubits_or_frames", [])
+                                if argument["name"] == "frame"
+                                else argument_value.update(QubitSet(int(argument["value"])))
+                            )
+                            instr_args["qubits_or_frames"] = argument_value
+                        elif argument["name"] in instr_args_keys:
+                            instr_args[
+                                argument["name"]
+                            ] = calibration_sequence._parse_arg_from_calibration_schema(
+                                argument, waveforms, frames
+                            )
+                else:
+                    instr_args["qubits_or_frames"] = []
+                instr_function(**instr_args)
             else:
-                instr_args["qubits_or_frames"] = []
-            self = instr_function(**instr_args)
-        else:
-            raise ValueError(f"The {instr['name']} instruction has not been implemented")
-        return self
+                raise ValueError(f"The {instr['name']} instruction has not been implemented")
+        return calibration_sequence
 
     def __call__(self, arg: Any = None, **kwargs) -> PulseSequence:
         """

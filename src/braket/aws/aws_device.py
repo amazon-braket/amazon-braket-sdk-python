@@ -692,12 +692,7 @@ class AwsDevice(Device):
     def _parse_pulse_sequence(
         self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
     ) -> PulseSequence:
-        calibration_sequence = PulseSequence()
-        for instr in calibration:
-            calibration_sequence = calibration_sequence._parse_from_calibration_schema(
-                instr, waveforms, self.frames
-            )
-        return calibration_sequence
+        return PulseSequence._parse_from_calibration_schema(calibration, waveforms, self.frames)
 
     def _parse_calibration_json(
         self, calibration_data: Dict
