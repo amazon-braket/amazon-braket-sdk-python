@@ -112,7 +112,9 @@ class LocalQuantumTask(QuantumTask):
 
     def _cancel_task(self) -> None:
         """Cancel the task if it exists"""
-        self._task.cancel()
+        if hasattr(self, "_task"):
+            self._task.cancel()
+            self._thread.join()
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the asyncio.Task

@@ -113,7 +113,7 @@ class DummyCircuitSimulator(BraketSimulator):
         shots: Optional[int],
         inputs: Optional[Dict[str, float]],
         *args,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         self._shots = shots
         self._qubits = qubits
@@ -503,22 +503,31 @@ def test_init_unregistered_backend():
     LocalSimulator("foo")
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_run_unsupported_type():
     sim = LocalSimulator(DummyCircuitSimulator())
-    sim.run("I'm unsupported").result()
+    task = sim.run("I'm unsupported")
+    with pytest.raises(NotImplementedError, match="Unsupported task type <class 'str'>"):
+        task.result()
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_run_annealing_unsupported():
-    sim = LocalSimulator(DummyCircuitSimulator())
-    sim.run(Problem(ProblemType.ISING)).result()
+    dummy_sim = DummyCircuitSimulator()
+    sim = LocalSimulator(dummy_sim)
+    task = sim.run(Problem(ProblemType.ISING))
+    with pytest.raises(
+        NotImplementedError, match=f"{type(dummy_sim)} does not support quantum annealing problems"
+    ):
+        task.result()
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_run_qubit_gate_unsupported():
-    sim = LocalSimulator(DummyAnnealingSimulator())
-    sim.run(Circuit().h(0).cnot(0, 1), 1000).result()
+    dummy_sim = DummyAnnealingSimulator()
+    sim = LocalSimulator(dummy_sim)
+    task = sim.run(Circuit().h(0).cnot(0, 1), 1000)
+    with pytest.raises(
+        NotImplementedError, match=f"{type(dummy_sim)} does not support qubit gate-based programs"
+    ):
+        task.result()
 
 
 def test_properties():

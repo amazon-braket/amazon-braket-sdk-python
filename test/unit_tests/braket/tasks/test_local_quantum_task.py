@@ -14,8 +14,8 @@ import asyncio
 import uuid
 
 import numpy as np
-import pytest
 
+from braket.circuits import Circuit
 from braket.task_result import TaskMetadata
 from braket.tasks import GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
@@ -49,10 +49,13 @@ def test_result():
     assert RESULT.task_metadata.id == TASK.id
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_cancel():
-    TASK = LocalQuantumTask(RESULT)
-    TASK.cancel()
+    task = LocalQuantumTask().create(
+        Circuit().h(0),
+        "dummy_oq3",
+    )
+    task.cancel()
+    assert task.state() == "CANCELLED"
 
 
 def test_async():
