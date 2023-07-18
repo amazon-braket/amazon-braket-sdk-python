@@ -397,7 +397,7 @@ def test_run_gate_model_inputs():
     dummy.run = Mock(return_value=GATE_MODEL_RESULT)
     sim = LocalSimulator(dummy)
     circuit = Circuit().rx(0, FreeParameter("theta"))
-    task = sim.run(circuit, inputs={"theta": 2}, shots=10)
+    result = sim.run(circuit, inputs={"theta": 2}, shots=10).result()
     dummy.run.assert_called_with(
         Program(
             source="\n".join(
@@ -414,7 +414,7 @@ def test_run_gate_model_inputs():
         ),
         10,
     )
-    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_program_model_inputs():
@@ -432,20 +432,20 @@ def test_run_program_model_inputs():
     )
     program = Program.construct(source="\n".join(source_string), inputs=inputs)
     update_inputs = {"beta": 3}
-    task = sim.run(program, inputs=update_inputs, shots=10)
+    result = sim.run(program, inputs=update_inputs, shots=10).result()
     assert program.inputs == inputs
     program.inputs.update(update_inputs)
     dummy.run.assert_called_with(program, 10)
-    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_jaqcd_only():
     dummy = DummyJaqcdSimulator()
     sim = LocalSimulator(dummy)
-    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    result = sim.run(Circuit().h(0).cnot(0, 1), 10).result()
     dummy.assert_shots(10)
     dummy.assert_qubits(2)
-    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_program_model():
@@ -471,7 +471,7 @@ c = measure q;
 def test_run_gate_model_value_error():
     dummy = DummyCircuitSimulator()
     sim = LocalSimulator(dummy)
-    sim.run(Circuit().h(0).cnot(0, 1))
+    sim.run(Circuit().h(0).cnot(0, 1)).result()
 
 
 def test_run_annealing():
@@ -506,19 +506,19 @@ def test_init_unregistered_backend():
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_run_unsupported_type():
     sim = LocalSimulator(DummyCircuitSimulator())
-    sim.run("I'm unsupported")
+    sim.run("I'm unsupported").result()
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_run_annealing_unsupported():
     sim = LocalSimulator(DummyCircuitSimulator())
-    sim.run(Problem(ProblemType.ISING))
+    sim.run(Problem(ProblemType.ISING)).result()
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_run_qubit_gate_unsupported():
     sim = LocalSimulator(DummyAnnealingSimulator())
-    sim.run(Circuit().h(0).cnot(0, 1), 1000)
+    sim.run(Circuit().h(0).cnot(0, 1), 1000).result()
 
 
 def test_properties():

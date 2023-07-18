@@ -10,7 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+import asyncio
 import uuid
 
 import numpy as np
@@ -29,33 +29,38 @@ RESULT = GateModelQuantumTaskResult(
     values=None,
 )
 
-TASK = LocalQuantumTask(RESULT)
-
 
 def test_id():
     # Task ID is valid UUID
+    TASK = LocalQuantumTask(RESULT)
+    TASK.result()
     uuid.UUID(TASK.id)
 
 
 def test_state():
-    assert TASK.state() == "COMPLETED"
+    TASK = LocalQuantumTask(RESULT)
+    assert TASK.state() == "CREATED"
 
 
 def test_result():
+    TASK = LocalQuantumTask(RESULT)
+    result = TASK.result()
+    assert result == RESULT
     assert RESULT.task_metadata.id == TASK.id
-    assert TASK.result() == RESULT
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
+@pytest.mark.xfail(raises=AttributeError)
 def test_cancel():
+    TASK = LocalQuantumTask(RESULT)
     TASK.cancel()
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_async():
-    TASK.async_result()
+    TASK = LocalQuantumTask(RESULT)
+    assert isinstance(TASK.async_result(), asyncio.Task)
 
 
 def test_str():
+    TASK = LocalQuantumTask(RESULT)
     expected = "LocalQuantumTask('id':{})".format(TASK.id)
     assert str(TASK) == expected

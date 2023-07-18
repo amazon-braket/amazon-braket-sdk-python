@@ -98,8 +98,9 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        result = self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
-        return LocalQuantumTask(result)
+        return LocalQuantumTask().create(
+            task_specification, self._delegate, shots, inputs=inputs, *args, **kwargs
+        )
 
     def run_batch(
         self,
