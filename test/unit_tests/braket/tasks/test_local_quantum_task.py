@@ -41,7 +41,7 @@ class DummyCircuitSimulator(BraketSimulator):
         *args,
         **kwargs,
     ) -> Dict[str, Any]:
-        sleep(100)
+        sleep(20)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -93,7 +93,7 @@ def test_result():
 
 def test_cancel():
     qc = Circuit().h(0)
-    task = LocalQuantumTask().create(qc, DummyCircuitSimulator())
+    task = LocalQuantumTask().create(qc, DummyCircuitSimulator(), shots=1)
     task.cancel()
     assert task.state() == "CANCELLED"
 
