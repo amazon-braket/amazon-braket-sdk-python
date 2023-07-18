@@ -107,6 +107,7 @@ class AwsQuantumJob(QuantumJob):
                 for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
             job_name (str): A str that specifies the name with which the job is created.
+                Allowed pattern for job name: `^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,50}$`
                 Default: f'{image_uri_type}-{timestamp}'.
 
             code_location (str): The S3 prefix URI where custom code will be uploaded.

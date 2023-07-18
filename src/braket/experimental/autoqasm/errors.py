@@ -13,8 +13,6 @@
 
 """Errors raised in the AutoQASM build process."""
 
-from braket.experimental.autoqasm.program import ProgramOptions
-
 
 class AutoQasmError(Exception):
     """Base class for all AutoQASM exceptions."""
@@ -24,12 +22,28 @@ class UnknownQubitCountError(AutoQasmError):
     """Missing declaration for the number of qubits."""
 
     def __init__(self):
-        self.message = f"""Unspecified number of qubits.
+        self.message = """Unspecified number of qubits.
 
-Please declare the total number of qubits for your program. \
-You can do that by calling your AutoQASM program with the \
-{ProgramOptions.NUM_QUBITS.value} keyword argument. \
+Specify the number of qubits used by your program by supplying the \
+`num_qubits` argument to `autoqasm.function`. For example:
+
+    @autoqasm.function(num_qubits=5)
+    def my_autoqasm_function():
+        ...
 """
+
+    def __str__(self):
+        return self.message
+
+
+class InconsistentNumQubits(AutoQasmError):
+    """Num qubits supplied to main function does not match subroutine."""
+
+    def __init__(self):
+        self.message = """\
+The number of qubits specified by one of your functions does not match the \
+argument supplied elsewhere. Remove the `num_qubits` argument from nested \
+function calls."""
 
     def __str__(self):
         return self.message

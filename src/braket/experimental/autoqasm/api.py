@@ -11,6 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+"""This module implements the decorator API for generating programs using AutoQASM."""
 
 import copy
 import functools
@@ -26,7 +27,6 @@ import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.autograph import ag_logging
 from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 from braket.experimental.autoqasm.autograph.impl.api_core import (
     autograph_artifact,
@@ -35,7 +35,7 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 
 
-def function(f: Callable) -> Callable[[Any], aq_program.Program]:
+def function(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.Program]:
     """Decorator that converts a function into a callable that returns
     a Program object containing the quantum program.
 
@@ -43,8 +43,43 @@ def function(f: Callable) -> Callable[[Any], aq_program.Program]:
     function is called, and a new Program object is returned.
 
     Args:
+        num_qubits (int): Configuration to set the total number of qubits to declare in the program.
+
+    Returns:
+        Callable[[Any], Program]: A callable which returns the converted
+        quantum program when called.
+    """
+    # First, we just process the arguments to the decorator function
+    user_config = aq_program.UserConfig(num_qubits=num_qubits)
+
+    if len(args):
+        # In this case, num_qubits wasn't supplied.
+        # Matches the following syntax:
+        #    @aq.function
+        #    def my_func(...):
+        # Equivalently, `function(my_func, num_qubits=None)`
+        return _function_without_params(args[0], user_config=user_config)
+    else:
+        # In this case, num_qubits was supplied, and we don't know `f` yet.
+        # Matches the following syntax:
+        #    @aq.function(num_qubits=x)
+        #    def my_func(...):
+        # Equivalently: `function(num_qubits=x)(my_func)`
+        def _function_with_params(f):
+            return _function_without_params(f, user_config=user_config)
+
+        return _function_with_params
+
+
+def _function_without_params(
+    f: Callable, user_config: aq_program.UserConfig
+) -> Callable[[Any], aq_program.Program]:
+    """Wrapping and conversion logic around the user function `f`.
+
+    Args:
         f (Callable): The target function to be converted which represents
             the entry point of the quantum program.
+        user_config (UserConfig): User-specified settings that influence program building
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted
@@ -53,26 +88,11 @@ def function(f: Callable) -> Callable[[Any], aq_program.Program]:
     if is_autograph_artifact(f):
         return f
 
-    # Update documentation with user configuration
-    try:
-        if f.__doc__ is None:
-            f.__doc__ = ""
-        f.__doc__ += f"""
-
-Keyword Args:
-    {aq_program.ProgramOptions.NUM_QUBITS.value} (int): Configuration to set the total number of
-        qubits to declare in the program.
-"""
-    except AttributeError as e:
-        # AttributeError: object attribute '__doc__' is read-only
-        # Typically occurs when `f` is not a user-defined function. This will likely lead to
-        # another exception down the line, but it's better simply to warn at this point.
-        ag_logging.warning(f"Unable to set docstring for converted function. Exception: {e}")
-
     f_wrapper = f
     decorators, f = tf_decorator.unwrap(f)
 
-    wrapper_factory = convert_wrapper(
+    wrapper_factory = _convert_wrapper(
+        user_config=user_config,
         recursive=False,
         optional_features=(
             converter.Feature.ASSERT_STATEMENTS,
@@ -88,7 +108,8 @@ Keyword Args:
     return autograph_artifact(wrapper)
 
 
-def convert_wrapper(
+def _convert_wrapper(
+    user_config: aq_program.UserConfig,
     recursive: bool = False,
     optional_features: Optional[Tuple[converter.Feature]] = None,
     user_requested: bool = True,
@@ -98,6 +119,7 @@ def convert_wrapper(
     that returns a Program object containing the quantum program.
 
     Args:
+        user_config (UserConfig): User-specified settings that influence program building
         recursive (bool): whether to recursively convert any functions or classes
             that the converted function may use. Defaults to False.
         optional_features (Optional[Tuple[Feature]]): allows toggling
@@ -118,12 +140,15 @@ def convert_wrapper(
 
         def _wrapper(*args, **kwargs) -> aq_program.Program:
             """Wrapper that calls the converted version of f."""
+            # This code is executed once the decorated function is called
+            if aq_program.in_active_program_conversion_context():
+                _validate_subroutine_args(user_config)
             options = converter.ConversionOptions(
                 recursive=recursive,
                 user_requested=user_requested,
                 optional_features=optional_features,
             )
-            return _convert(f, conversion_ctx, options, args, kwargs)
+            return _convert(f, conversion_ctx, options, user_config, args, kwargs)
 
         if inspect.isfunction(f) or inspect.ismethod(f):
             _wrapper = functools.update_wrapper(_wrapper, f)
@@ -134,10 +159,28 @@ def convert_wrapper(
     return _decorator
 
 
+def _validate_subroutine_args(user_config: aq_program.UserConfig) -> None:
+    """Validate decorator arguments to subroutines.
+
+    Args:
+        user_config (UserConfig): User-specified settings that influence program building
+
+    Raises:
+        InconsistentUserConfiguration: If subroutine num_qubits does not match the main
+            function's num_qubits argument.
+    """
+    if user_config.num_qubits is None:
+        return
+    # Allow num_qubits only if the arg matches the value provided to the main function
+    if user_config.num_qubits != aq_program.get_program_conversion_context().get_declared_qubits():
+        raise errors.InconsistentNumQubits()
+
+
 def _convert(
     f: Callable,
     conversion_ctx: ag_ctx.ControlStatusCtx,
     options: converter.ConversionOptions,
+    user_config: aq_program.UserConfig,
     args: List[Any],
     kwargs: Dict[str, Any],
 ) -> aq_program.Program:
@@ -150,16 +193,13 @@ def _convert(
         f (Callable): The function to be converted.
         conversion_ctx (ControlStatusCtx): the Autograph context in which `f` is used.
         options (converter.ConversionOptions): Converter options.
+        user_config (UserConfig): User-specified settings that influence program building
         args (List[Any]): Arguments passed to the program when called.
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
 
     Returns:
         Program: The converted program.
     """
-    # User-supplied kwargs need to be processed and removed
-    # _before_ the program is processed
-    user_config = _process_user_config(kwargs)
-
     # We will convert this function as a subroutine if we are already inside an
     # existing conversion process (i.e., this is a subroutine call).
     convert_as_subroutine = aq_program.in_active_program_conversion_context()
@@ -182,21 +222,6 @@ def _convert(
                 raise
 
         return program_conversion_context.make_program()
-
-
-def _process_user_config(kwargs: Dict[str, Any]) -> aq_program.UserConfig:
-    """
-    Process the user supplied kwargs and return a standardized user config dictionary.
-
-    Args:
-        kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
-
-    Returns:
-        UserConfig: Processed user-config keyword arguments.
-    """
-    return aq_program.UserConfig(
-        num_qubits=kwargs.pop(aq_program.ProgramOptions.NUM_QUBITS.value, None)
-    )
 
 
 def _convert_program_as_main(

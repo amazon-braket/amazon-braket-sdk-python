@@ -59,7 +59,7 @@ AutoQASM enables users to use more complicated program constructs with a compact
 structure. We can demonstrate this with a program that conditionally prepares multiple Bell states
 on qubit pairs (1, 2) and (3, 4).
 ```
-@aq.function
+@aq.function(num_qubits=5)
 def conditional_multi_bell_states() -> None:
     h(0)
     if measure(0):
@@ -69,13 +69,8 @@ def conditional_multi_bell_states() -> None:
             cnot(qubit, qubit+1)
 
     measure([0,1,2,3,4])
-```
-In this example, the qubits are indexed by variable, rather than by integer literals. The variables
-are in general unresolvable until the execution time. So, AutoQASM does not know how many qubits
-the program may need. We must pass the number of qubits used, `num_qubits`, as a keyword
-argument to AutoQASM.
-```
-my_bell_program = conditional_multi_bell_states(num_qubits=5)
+
+my_bell_program = conditional_multi_bell_states()
 ```
 
 AutoQASM can support nested subroutines and complex control flow. You can use the Python runtime

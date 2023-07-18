@@ -13,5 +13,5 @@
 
 """Quantum operations for use in AutoQASM programs."""
 
-from .gates import QubitIdentifier, cnot, cphaseshift, h, reset, rz, x, y, z  # noqa: F401
+from .gates import QubitIdentifierType, cnot, cphaseshift, h, reset, rx, rz, x, y, z  # noqa: F401
 from .measurements import measure  # noqa: F401

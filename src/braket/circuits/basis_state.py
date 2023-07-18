@@ -30,6 +30,9 @@ class BasisState:
     def __iter__(self):
         return iter(self.state)
 
+    def __eq__(self, other):
+        return self.state == other.state
+
 
 BasisStateInput = Union[int, List[int], str, BasisState]
 

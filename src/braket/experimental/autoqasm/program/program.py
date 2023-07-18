@@ -13,7 +13,6 @@
 
 """AutoQASM Program class, context managers, and related functions."""
 
-import enum
 import threading
 from dataclasses import dataclass
 from typing import List, Optional
@@ -23,19 +22,18 @@ import oqpy.base
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm import constants
 
-# Prepare to initialize the global program conversion context.
+# Create the thread-local object for the program conversion context.
 _local = threading.local()
-setattr(_local, "program_conversion_context", None)
 
 
-class ProgramOptions(enum.Enum):
-    """All options configurable by the user at program invocation time via keyword arguments
-    injected by the aq.function decorator.
+def _get_local() -> threading.local:
+    """Gets the thread-local object which stores the program conversion context.
+    Returns:
+        local: The thread-local object which stores the program conversion context.
     """
-
-    # Note: this is the exact kwarg name that the user must pass,
-    # which is later input to UserConfig
-    NUM_QUBITS = "num_qubits"
+    if not hasattr(_local, "program_conversion_context"):
+        setattr(_local, "program_conversion_context", None)
+    return _local
 
 
 @dataclass
@@ -188,14 +186,14 @@ class ProgramContextManager:
         self.user_config = user_config
 
     def __enter__(self) -> ProgramConversionContext:
-        if not _local.program_conversion_context:
-            _local.program_conversion_context = ProgramConversionContext(self.user_config)
+        if not _get_local().program_conversion_context:
+            _get_local().program_conversion_context = ProgramConversionContext(self.user_config)
             self.owns_program_conversion_context = True
-        return _local.program_conversion_context
+        return _get_local().program_conversion_context
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         if self.owns_program_conversion_context:
-            _local.program_conversion_context = None
+            _get_local().program_conversion_context = None
 
 
 def build_program(user_config: Optional[UserConfig] = None) -> ProgramContextManager:
@@ -228,7 +226,7 @@ def in_active_program_conversion_context() -> bool:
     Returns:
         bool: Whether there is a program currently being built.
     """
-    return _local.program_conversion_context is not None
+    return _get_local().program_conversion_context is not None
 
 
 def get_program_conversion_context() -> ProgramConversionContext:
@@ -241,6 +239,6 @@ def get_program_conversion_context() -> ProgramConversionContext:
         ProgramConversionContext: The thread-local ProgramConversionContext object.
     """
     assert (
-        _local.program_conversion_context is not None
+        _get_local().program_conversion_context is not None
     ), "get_program_conversion_context() must be called inside build_program() block"
-    return _local.program_conversion_context
+    return _get_local().program_conversion_context
