@@ -43,12 +43,6 @@ class PulseSequence:
     and the requested results.
     """
 
-    _capture_v0_count = 0
-    _program = Program()
-    _frames = {}
-    _waveforms = {}
-    _free_parameters = set()
-
     def __init__(self):
         self._capture_v0_count = 0
         self._program = Program()
