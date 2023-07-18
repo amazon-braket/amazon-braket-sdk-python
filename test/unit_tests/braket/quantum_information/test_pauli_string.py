@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 
 from braket.circuits import gates
+from braket.circuits.circuit import Circuit
 from braket.circuits.observables import X, Y, Z
 from braket.quantum_information import PauliString
 
@@ -135,3 +136,125 @@ def test_eigenstate(string, signs):
 @pytest.mark.parametrize("sign", ["+ab", "--+-", [+2, -1, -1], (-1, 1j, 1)])
 def test_eigenstate_invalid_signs(sign):
     PauliString("XYZ").eigenstate(sign)
+
+
+@pytest.mark.parametrize(
+    "circ_arg_1, circ_arg_2, circ_res",
+    [
+        ("III", "+III", "III"),
+        ("Z", "I", "Z"),
+        ("I", "-Y", "-Y"),
+        ("XYXZY", "+XYXZY", "IIIII"),
+        ("XYZ", "ZYX", "YIY"),
+        ("YZ", "ZX", "-XY"),
+        ("-Z", "Y", "X"),
+        ("Z", "Y", "-X"),
+    ],
+)
+def test_dot(circ_arg_1, circ_arg_2, circ_res):
+    circ1 = PauliString(circ_arg_1)
+    circ2 = circ1.dot(PauliString(circ_arg_2))
+    assert circ2 == PauliString(circ_res)
+    assert circ1 == circ1
+
+    # Test in-place computation
+    circ1 = PauliString(circ_arg_1)
+    circ1.dot(PauliString(circ_arg_2), inplace=True)
+    assert circ1 == PauliString(circ_res)
+
+    # Test operator overloads
+    circ1 = PauliString(circ_arg_1)
+    circ2 = PauliString(circ_arg_2)
+    assert circ1 * circ2 == PauliString(circ_res)
+    circ1 *= circ2
+    assert circ1 == PauliString(circ_res)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize(
+    "circ1, circ2, operation",
+    [
+        (PauliString("III"), PauliString("II"), "dot()"),
+        (PauliString("III"), PauliString("II"), "*"),
+        (PauliString("III"), PauliString("II"), "*="),
+        (PauliString("IXI"), PauliString("II"), "dot()"),
+        (PauliString("IXI"), PauliString("II"), "*"),
+        (PauliString("IXI"), PauliString("II"), "*="),
+    ],
+)
+def test_dot_unequal_lengths(circ1, circ2, operation):
+    if operation == "dot()":
+        circ1.dot(circ2)
+    elif operation == "*":
+        circ1 * circ2
+    elif operation == "*=":
+        circ1 *= circ2
+
+
+@pytest.mark.parametrize(
+    "circ, n, circ_res",
+    [
+        ("-X", 1, "-X"),
+        ("Y", 2, "I"),
+        ("Y", -2, "I"),
+        ("-X", 3, "-X"),
+        ("XYZ", 5, "XYZ"),
+        ("XYZ", -5, "XYZ"),
+        ("XYZ", 6, "III"),
+        ("XYZ", 1, "XYZ"),
+        ("-YX", 0, "II"),
+        ("Y", 0, "I"),
+    ],
+)
+def test_power(circ, n, circ_res):
+    circ1 = PauliString(circ)
+    circ2 = circ1.power(n)
+    assert circ2 == PauliString(circ_res)
+    assert circ1 == PauliString(circ)
+
+    # Test in-place computation
+    circ1.power(n, inplace=True)
+    assert circ1 == PauliString(circ_res)
+
+    # Test operator overloads
+    circ1 = PauliString(circ)
+    assert (circ1**n) == PauliString(circ_res)
+    circ1 **= n
+    assert circ1 == PauliString(circ_res)
+
+
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize(
+    "circ, n, operation",
+    [
+        (PauliString("XYZ"), "-1.2", "power()"),
+        (PauliString("XYZ"), "-1.2", "**"),
+        (PauliString("XYZ"), "-1.2", "**="),
+        (PauliString("ZYX"), "1.2", "power()"),
+        (PauliString("ZYX"), "1.2", "**"),
+        (PauliString("ZYX"), "1.2", "**="),
+        (PauliString("I"), "3j", "power()"),
+        (PauliString("I"), "3j", "**"),
+        (PauliString("I"), "3j", "**="),
+    ],
+)
+def test_power_invalid_exp(circ, n, operation):
+    if operation == "power()":
+        circ.power(n)
+    elif operation == "**":
+        circ**n
+    elif operation == "**=":
+        circ **= n
+
+
+@pytest.mark.parametrize(
+    "circ, circ_res",
+    [
+        (PauliString("I"), Circuit().i(0)),
+        (PauliString("-X"), Circuit().x(0)),
+        (PauliString("IYX"), Circuit().i(0).y(1).x(2)),
+        (PauliString("ZIIIX"), Circuit().z(0).i(1).i(2).i(3).x(4)),
+    ],
+)
+def test_to_circuit(circ, circ_res):
+    assert circ.to_circuit() == circ_res
