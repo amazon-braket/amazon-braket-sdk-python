@@ -377,6 +377,7 @@ class PulseSequence:
                                 if argument["name"] == "frame"
                                 else instr_args.get("qubits_or_frames", QubitSet())
                             )
+                            # QubitSet is an IndexedSet so the ordering matters
                             (
                                 argument_value + instr_args.get("qubits_or_frames", [])
                                 if argument["name"] == "frame"

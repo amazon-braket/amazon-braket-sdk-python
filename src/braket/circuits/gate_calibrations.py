@@ -1,7 +1,20 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from braket.circuits.gate import Gate
 from braket.circuits.qubit_set import QubitSet
@@ -30,7 +43,7 @@ class GateCalibrations:
                 `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
 
         """  # noqa: E501
-        self._pulse_sequences = pulse_sequences
+        self.pulse_sequences: Dict[Tuple[Gate, QubitSet], PulseSequence] = pulse_sequences
 
     @property
     def pulse_sequences(self) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
@@ -41,6 +54,29 @@ class GateCalibrations:
             Dict[Tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
         """
         return self._pulse_sequences
+
+    @pulse_sequences.setter
+    def pulse_sequences(self, value: Any) -> None:
+        """
+        Sets the mapping of (Gate, Qubit) to the corresponding `PulseSequence`.
+
+        Args:
+            value(Any): The value for the pulse_sequences property to be set to.
+
+        Raises:
+            TypeError: Raised if the type is not Dict[Tuple[Gate, QubitSet], PulseSequence]
+
+        """
+        if isinstance(value, dict) and all(
+            isinstance(k[0], Gate) and isinstance(k[1], QubitSet) and isinstance(v, PulseSequence)
+            for (k, v) in value.items()
+        ):
+            self._pulse_sequences = value
+        else:
+            raise TypeError(
+                "The value for pulse_sequence must be of type: "
+                "Dict[Tuple[Gate, QubitSet], PulseSequence]"
+            )
 
     def copy(self) -> GateCalibrations:
         """
@@ -104,7 +140,6 @@ class GateCalibrations:
             defcal = "\n".join(
                 v.to_ir().replace("cal", self._def_cal_gate(k), 1)
                 for (k, v) in self.pulse_sequences.items()
-                if isinstance(v, PulseSequence)
             )
             return defcal
 

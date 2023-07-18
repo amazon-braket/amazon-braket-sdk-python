@@ -133,3 +133,16 @@ def test_ngc_length(pulse_sequence):
     )
 
     assert len(calibration) == 2
+
+
+@pytest.mark.parametrize(
+    "bad_input",
+    [
+        ({(Gate.Rx(1), "string"): PulseSequence()}),
+        ({(Gate.Rx(1), QubitSet(0)): 4}),
+        ({("string_a", "string_b"): PulseSequence()}),
+    ],
+)
+@pytest.mark.xfail(raises=TypeError)
+def test_bad_pulse_sequence(bad_input):
+    GateCalibrations(bad_input)

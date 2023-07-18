@@ -1354,7 +1354,7 @@ class Circuit:
                 instruction.operator.parameters
             ) == len(gate.parameters):
                 free_parameter_number = sum(
-                    [not isinstance(p, (float, int, complex)) for p in gate.parameters]
+                    [isinstance(p, FreeParameterExpression) for p in gate.parameters]
                 )
                 if free_parameter_number == 0:
                     continue
@@ -1363,8 +1363,7 @@ class Circuit:
                         "Calibrations with a partial number of fixed parameters are not supported."
                     )
                 elif any(
-                    not isinstance(p, (float, int, complex))
-                    for p in instruction.operator.parameters
+                    isinstance(p, FreeParameterExpression) for p in instruction.operator.parameters
                 ):
                     raise NotImplementedError(
                         "Parametric calibrations cannot be attached with parametric circuits."
@@ -1375,7 +1374,7 @@ class Circuit:
                 )
                 gate_calibrations[bound_key] = calibration(
                     **{
-                        p.name if not isinstance(p, (float, int, complex)) else p: v
+                        p.name if isinstance(p, FreeParameterExpression) else p: v
                         for p, v in zip(gate.parameters, instruction.operator.parameters)
                     }
                 )
