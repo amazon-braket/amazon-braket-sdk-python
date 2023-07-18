@@ -56,19 +56,21 @@ def bell_state() -> None:
 You can view the output format, which is OpenQASM, by running `bell_state().to_ir()`.
 
 AutoQASM enables users to use more complicated program constructs with a compact and readable
-structure. We can demonstrate this with an active reset program:
+structure. We can demonstrate this with a program that conditionally prepares multiple Bell states
+on qubit pairs (1, 2) and (3, 4).
 ```
-# A program that actively resets a qubit back to the ground state
-@aq.function
-def reset(qubit: int, num_repeats: int) -> None:
-    for repeats in aq.range(num_repeats):
-        if measure(qubit):
-            x(qubit)
-```
+@aq.function(num_qubits=5)
+def conditional_multi_bell_states() -> None:
+    h(0)
+    if measure(0):
+        for i in aq.range(2):
+            qubit = 2 * i + 1
+            h(qubit)
+            cnot(qubit, qubit+1)
 
-Now that the program takes inputs, you must pass those inputs when you call your function.
-```
-my_reset_program = reset(qubit=0, num_repeats=3)
+    measure([0,1,2,3,4])
+
+my_bell_program = conditional_multi_bell_states()
 ```
 
 AutoQASM can support nested subroutines and complex control flow. You can use the Python runtime
@@ -77,13 +79,13 @@ and quantum runtime side-by-side. For the moment, we support only a few quantum 
 them out!
 
 The Amazon Braket local simulator supports AutoQASM programs as input.
-Let's simulate the `my_reset_program`:
+Let's simulate the `my_bell_program`:
 
 ```
 from braket.devices.local_simulator import LocalSimulator
 
 device = LocalSimulator()
-task = device.run(my_reset_program, shots=100)
+task = device.run(my_bell_program, shots=100)
 result = task.result()
 ```
 

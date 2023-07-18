@@ -31,6 +31,16 @@ from braket.experimental.autoqasm import program
 from .qubits import QubitIdentifierType, _qubit
 
 
+def reset(q: QubitIdentifierType) -> None:
+    """Adds a reset instruction on a specified qubit.
+
+    Args:
+        q (QubitIdentifierType): The target qubit.
+    """
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(_qubit(q), "reset")
+
+
 def h(q: QubitIdentifierType) -> None:
     """Adds a Hadamard gate to the program on the specified qubit.
 
@@ -49,6 +59,37 @@ def x(q: QubitIdentifierType) -> None:
     """
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     oqpy_program.gate(_qubit(q), "x")
+
+
+def y(q: QubitIdentifierType) -> None:
+    """Adds a pi rotation around the Y axis on the specified qubit.
+
+    Args:
+        q (QubitIdentifierType): The target qubit.
+    """
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(_qubit(q), "y")
+
+
+def z(q: QubitIdentifierType) -> None:
+    """Adds a pi rotation around the Z axis on the specified qubit.
+
+    Args:
+        q (QubitIdentifierType): The target qubit.
+    """
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(_qubit(q), "z")
+
+
+def rz(q: QubitIdentifierType, angle: float) -> None:
+    """Adds a rotation around the Z axis by `angle` on the specified qubit.
+
+    Args:
+        q (QubitIdentifierType): The target qubit.
+        angle (float): Angle in radians.
+    """
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(_qubit(q), "rz", angle)
 
 
 def rx(q: QubitIdentifierType, angle: float) -> None:
@@ -70,3 +111,15 @@ def cnot(q_ctrl: QubitIdentifierType, q_target: QubitIdentifierType) -> None:
     """
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     oqpy_program.gate([_qubit(q_ctrl), _qubit(q_target)], "cnot")
+
+
+def cphaseshift(q_ctrl: QubitIdentifierType, q_target: QubitIdentifierType, angle: float) -> None:
+    """Adds a CPhaseShift gate to the program on the specified qubits.
+
+    Args:
+        q_ctrl (QubitIdentifierType): The control qubit.
+        q_target (QubitIdentifierType): The target qubit.
+        angle (float): Phase in radians.
+    """
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate([_qubit(q_ctrl), _qubit(q_target)], "cphaseshift", angle)

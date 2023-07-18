@@ -16,7 +16,7 @@
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.gates import cnot, h, measure, rx, x
+from braket.experimental.autoqasm.gates import cnot, cphaseshift, h, measure, reset, rx, rz, x, y, z
 
 
 def test_bell_state_prep(bell_state_program) -> None:
@@ -59,8 +59,13 @@ __bit_0__ = measure __qubits__[0];"""
     [
         (h, [0], [], "\nh __qubits__[0];"),
         (x, [0], [], "\nx __qubits__[0];"),
-        (rx, [0], [0.1], "\nrx(0.1) __qubits__[0];"),
+        (y, [0], [], "\ny __qubits__[0];"),
+        (z, [0], [], "\nz __qubits__[0];"),
+        (rz, [0], [0.1], "\nrz(0.1) __qubits__[0];"),
+        (reset, [0], [], "\nreset __qubits__[0];"),
         (cnot, [0, 1], [], "\ncnot __qubits__[0], __qubits__[1];"),
+        (cphaseshift, [0, 1], [0.1], "\ncphaseshift(0.1) __qubits__[0], __qubits__[1];"),
+        (rx, [0], [0.1], "\nrx(0.1) __qubits__[0];"),
     ],
 )
 def test_gates(gate, qubits, params, expected_qasm) -> None:
