@@ -44,7 +44,7 @@ class DummyCircuitSimulator(BraketSimulator):
         *args,
         **kwargs,
     ) -> Dict[str, Any]:
-        sleep(20)
+        sleep(100)
 
 
 def test_id():
