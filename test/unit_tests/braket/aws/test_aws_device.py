@@ -215,7 +215,7 @@ def test_mock_rigetti_schema_1():
 MOCK_GATE_MODEL_QPU_1 = {
     "deviceName": "Aspen-10",
     "deviceType": "QPU",
-    "providerName": "provider1",
+    "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
 }
@@ -712,7 +712,7 @@ def get_pulse_model(capabilities_json):
     return {
         "deviceName": "M-2-Pulse",
         "deviceType": "QPU",
-        "providerName": "provider1",
+        "providerName": "Rigetti",
         "deviceStatus": "OFFLINE",
         "deviceCapabilities": device_obj.json(),
     }

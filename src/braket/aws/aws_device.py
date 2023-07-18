@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import urllib.request
@@ -66,6 +67,14 @@ class AwsDevice(Device):
     DEFAULT_MAX_PARALLEL = 10
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
+
+    _RIGETTI_GATES_TO_BRAKET = {
+        # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
+        "Rx_12": None,
+        "Cz": "CZ",
+        "Cphaseshift": "CPhaseShift",
+        "Xy": "XY",
+    }
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
@@ -717,7 +726,16 @@ class AwsDevice(Device):
             qubit = calibration_data["gates"][qubit_node]
             for gate_node in qubit:
                 for gate in qubit[gate_node]:
-                    gate_obj = Gate._str_to_gate(gate_node.capitalize())
+                    gate_capitalized = getattr(
+                        self,
+                        f"_{self.provider_name.upper()}_GATES_TO_BRAKET",
+                        {},
+                    ).get(gate_node.capitalize(), gate_node.capitalize())
+                    gate_obj = (
+                        getattr(importlib.import_module("braket.circuits.gates"), gate_capitalized)
+                        if gate_capitalized is not None
+                        else None
+                    )
                     qubits = QubitSet([int(x) for x in gate["qubits"]])
                     if gate_obj is None:
                         # We drop out gates that are not implemented in the BDK

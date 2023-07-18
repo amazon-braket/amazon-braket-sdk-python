@@ -117,13 +117,3 @@ def test_gate_to_ir(
             QubitSet(0), ir_type, serialization_properties=serialization_properties, control=control
         )
     assert exc.value.args[0] == expected_message
-
-
-def test_str_to_gate():
-    assert (
-        isinstance(Gate.H(), Gate._str_to_gate("H"))
-        and isinstance(Gate.CZ(), Gate._str_to_gate("Cz"))
-        and isinstance(Gate.CPhaseShift(angle=1), Gate._str_to_gate("Cphaseshift"))
-        and isinstance(Gate.XY(angle=1), Gate._str_to_gate("Xy"))
-        and Gate._str_to_gate("Rx_12") is None
-    )
