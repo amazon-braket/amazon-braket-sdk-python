@@ -467,11 +467,16 @@ c = measure q;
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_run_gate_model_value_error():
     dummy = DummyCircuitSimulator()
     sim = LocalSimulator(dummy)
-    sim.run(Circuit().h(0).cnot(0, 1)).result()
+    task = sim.run(Circuit().h(0).cnot(0, 1))
+    with pytest.raises(
+        ValueError,
+        match="No result types specified for circuit and shots=0. "
+        "See `braket.circuits.result_types`",
+    ):
+        task.result()
 
 
 def test_run_annealing():

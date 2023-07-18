@@ -12,10 +12,14 @@
 # language governing permissions and limitations under the License.
 import asyncio
 import uuid
+from time import sleep
+from typing import Any, Dict, Optional
 
 import numpy as np
 
+import braket.ir as ir
 from braket.circuits import Circuit
+from braket.simulator import BraketSimulator
 from braket.task_result import TaskMetadata
 from braket.tasks import GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
@@ -28,6 +32,19 @@ RESULT = GateModelQuantumTaskResult(
     result_types=None,
     values=None,
 )
+
+
+class DummyCircuitSimulator(BraketSimulator):
+    def run(
+        self,
+        program: ir.jaqcd.Program,
+        qubits: int,
+        shots: Optional[int],
+        inputs: Optional[Dict[str, float]],
+        *args,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        sleep(20)
 
 
 def test_id():
@@ -50,14 +67,8 @@ def test_result():
 
 
 def test_cancel():
-    num_qubits = 5
-    qc = Circuit()
-    for qubit in range(num_qubits):
-        qc.h(qubit)
-
-    for i in range(num_qubits - 1):
-        qc.cnot(i, i + 1)
-    task = LocalQuantumTask().create(qc, "default", 1000)
+    qc = Circuit().h(0)
+    task = LocalQuantumTask().create(qc, DummyCircuitSimulator, 10000)
     task.cancel()
     assert task.state() == "CANCELLED"
 
