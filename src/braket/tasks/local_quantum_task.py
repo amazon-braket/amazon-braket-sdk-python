@@ -224,11 +224,6 @@ class LocalQuantumTask(QuantumTask):
             raise e
 
     def _get_task(self) -> asyncio.Task:
-        try:
-            asyncio.get_event_loop()
-        except Exception:
-            print("No event loop found; creating new event loop")
-            asyncio.set_event_loop(asyncio.new_event_loop())
         if not hasattr(self, "_task") or (
             self._task.done() and not self._task.cancelled() and self._result is None
         ):
