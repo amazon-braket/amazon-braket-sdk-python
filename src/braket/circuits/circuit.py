@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import warnings
+from copy import deepcopy
 from numbers import Number
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
@@ -1268,14 +1269,19 @@ class Circuit:
                 for key, calibration in gate_calibrations.items():
                     gate, qubits = key
 
-                    # ignoring parametric gates
-                    if hasattr(gate, "angle") and isinstance(gate.angle, FreeParameter):
+                    # Ignoring parametric gates
+                    # Corresponding defcals with fixed arguments have been added
+                    # in _get_frames_waveforms_from_instrs
+                    if isinstance(gate, Parameterizable) and any(
+                        not isinstance(parameter, (float, int, complex))
+                        for parameter in gate.parameters
+                    ):
                         continue
 
                     gate_name = gate._qasm_name
                     arguments = (
-                        [calibration._format_parameter_ast(gate.angle)]
-                        if hasattr(gate, "angle")
+                        [calibration._format_parameter_ast(value) for value in gate.parameters]
+                        if isinstance(gate, Parameterizable)
                         else None
                     )
                     with oqpy.defcal(
@@ -1304,17 +1310,75 @@ class Circuit:
                     _validate_uniqueness(waveforms, waveform)
                     waveforms[waveform.id] = waveform
             # this will change with full parametric calibration support
-            elif hasattr(type(instruction.operator), "angle"):
-                if gate_calibrations is not None:
-                    key = (type(instruction.operator)(FreeParameter("theta")), instruction.target)
-                    if key in gate_calibrations:
-                        ps = gate_calibrations.get(key)
-                        bound_key = (
-                            type(instruction.operator)(instruction.operator.angle),
-                            instruction.target,
-                        )
-                        gate_calibrations[bound_key] = ps(theta=instruction.operator.angle)
+            elif (
+                isinstance(instruction.operator, Parameterizable) and gate_calibrations is not None
+            ):
+                self._add_fixed_argument_calibrations(gate_calibrations, instruction)
         return frames, waveforms
+
+    def _add_fixed_argument_calibrations(
+        self,
+        gate_calibrations: Dict[Tuple[Gate, QubitSet], PulseSequence],
+        instruction: Instruction,
+    ) -> None:
+        """Adds calibrations with arguments set to the instruction parameter values
+
+        Given the collection of parameters in instruction.operator, this function looks for matching
+        parametric calibrations that have free parameters. If such a calibration is found and the
+        number N of its free parameters equals the number of instruction parameters, we can bound
+        the arguments of the calibration and add it to the calibration dictionary.
+
+        If N is smaller, it is probably impossible to assign the instruction parameter values to the
+        corresponding calibration parameters so we raise an error.
+        If N=0, we ignore it as it will not be removed by _generate_frame_wf_defcal_declarations.
+
+        This function modifies its `gate_calibrations` input argument.
+
+        Args:
+            gate_calibrations (Dict[Tuple[Gate, QubitSet], PulseSequence]): a dictionary of
+                calibrations
+            instruction (Instruction): a Circuit instruction
+
+        Raises:
+            NotImplementedError: in two cases: (i) if the instruction contains unbound parameters
+                and the calibration dictionary contains a parametric calibration applicable to this
+                instructions; (ii) if the calibration is defined with a partial number of unbound
+                parameters.
+        """
+        for key, calibration in deepcopy(gate_calibrations).items():
+            gate = key[0]
+            target = key[1]
+            if target != instruction.target:
+                continue
+            if isinstance(gate, type(instruction.operator)) and len(
+                instruction.operator.parameters
+            ) == len(gate.parameters):
+                free_parameter_number = sum(
+                    [not isinstance(p, (float, int, complex)) for p in gate.parameters]
+                )
+                if free_parameter_number == 0:
+                    continue
+                elif free_parameter_number < len(gate.parameters):
+                    raise NotImplementedError(
+                        "Calibrations with a partial number of fixed parameters are not supported."
+                    )
+                elif any(
+                    not isinstance(p, (float, int, complex))
+                    for p in instruction.operator.parameters
+                ):
+                    raise NotImplementedError(
+                        "Parametric calibrations cannot be attached with parametric circuits."
+                    )
+                bound_key = (
+                    type(instruction.operator)(*instruction.operator.parameters),
+                    instruction.target,
+                )
+                gate_calibrations[bound_key] = calibration(
+                    **{
+                        p.name if not isinstance(p, (float, int, complex)) else p: v
+                        for p, v in zip(gate.parameters, instruction.operator.parameters)
+                    }
+                )
 
     def as_unitary(self) -> np.ndarray:
         r"""
