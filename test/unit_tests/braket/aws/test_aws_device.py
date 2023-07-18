@@ -201,7 +201,7 @@ MOCK_gate_calibrations_JSON = {
             "name": "constant",
             "arguments": [
                 {"name": "length", "value": 2, "type": "float"},
-                {"name": "iq", "value": 0.23, "type": "float"},
+                {"name": "iq", "value": 0.23, "type": "complex"},
             ],
         },
     },
