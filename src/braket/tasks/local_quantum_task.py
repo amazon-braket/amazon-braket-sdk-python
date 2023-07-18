@@ -111,11 +111,12 @@ class LocalQuantumTask(QuantumTask):
         return str(self._id)
 
     def _cancel_task(self) -> None:
-        """Cancel the future if it exists. Else, create a cancelled future."""
+        """Cancel the task if it exists"""
         self._task.cancel()
 
     def cancel(self) -> None:
-        """Cancel the quantum task. This cancels the future and the task in Amazon Braket."""
+        """Cancel the quantum task. This cancels the asyncio.Task
+        that is stop the execution on the local simulator"""
         self._cancel_task()
 
     def state(self) -> str:
