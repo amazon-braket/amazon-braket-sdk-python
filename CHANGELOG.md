@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.49.1.post0 (2023-07-17)
+
+### Documentation Changes
+
+ * update aws_quantum_job.py to add pattern for create job_name pa…
+
 ## v1.49.1 (2023-07-12)
 
 ### Bug Fixes and Other Changes
