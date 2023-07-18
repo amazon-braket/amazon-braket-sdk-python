@@ -13,12 +13,12 @@
 import asyncio
 import uuid
 from time import sleep
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import numpy as np
 
-import braket.ir as ir
 from braket.circuits import Circuit
+from braket.device_schema import DeviceCapabilities
 from braket.simulator import BraketSimulator
 from braket.task_result import TaskMetadata
 from braket.tasks import GateModelQuantumTaskResult
@@ -37,14 +37,39 @@ RESULT = GateModelQuantumTaskResult(
 class DummyCircuitSimulator(BraketSimulator):
     def run(
         self,
-        program: ir.jaqcd.Program,
-        qubits: int,
-        shots: Optional[int],
-        inputs: Optional[Dict[str, float]],
+        circuit: Circuit,
         *args,
         **kwargs,
     ) -> Dict[str, Any]:
         sleep(100)
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "11:00",
+                            "windowEndHour": "12:00",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.openqasm.program": {
+                        "actionType": "braket.ir.openqasm.program",
+                        "version": ["1"],
+                    },
+                    "braket.ir.jaqcd.program": {
+                        "actionType": "braket.ir.jaqcd.program",
+                        "version": ["1"],
+                    },
+                },
+                "deviceParameters": {},
+            }
+        )
 
 
 def test_id():
@@ -68,7 +93,7 @@ def test_result():
 
 def test_cancel():
     qc = Circuit().h(0)
-    task = LocalQuantumTask().create(qc, DummyCircuitSimulator, 10000)
+    task = LocalQuantumTask().create(qc, DummyCircuitSimulator())
     task.cancel()
     assert task.state() == "CANCELLED"
 
