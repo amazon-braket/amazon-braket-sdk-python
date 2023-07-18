@@ -50,7 +50,14 @@ def test_result():
 
 
 def test_cancel():
-    task = LocalQuantumTask().create(Circuit().h(0), "dummy_oq3", 100000)
+    num_qubits = 5
+    qc = Circuit()
+    for qubit in range(num_qubits):
+        qc.h(qubit)
+
+    for i in range(num_qubits - 1):
+        qc.cnot(i, i + 1)
+    task = LocalQuantumTask().create(qc, "default", 1000)
     task.cancel()
     assert task.state() == "CANCELLED"
 
