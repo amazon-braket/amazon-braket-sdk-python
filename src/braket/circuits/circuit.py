@@ -1325,7 +1325,7 @@ class Circuit:
 
         Given the collection of parameters in instruction.operator, this function looks for matching
         parametric calibrations that have free parameters. If such a calibration is found and the
-        number N of its free parameters equals the number of instruction parameters, we can bound
+        number N of its free parameters equals the number of instruction parameters, we can bind
         the arguments of the calibration and add it to the calibration dictionary.
 
         If N is smaller, it is probably impossible to assign the instruction parameter values to the
