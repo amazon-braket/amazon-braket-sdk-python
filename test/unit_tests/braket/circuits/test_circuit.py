@@ -1006,7 +1006,7 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=gate_calibrations.pulse_sequences,
+            gate_definitions=gate_calibrations.pulse_sequences,
         )
         == expected_ir
     )
@@ -1057,7 +1057,7 @@ def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
         circ.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=gate_calibrations.pulse_sequences,
+            gate_definitions=gate_calibrations.pulse_sequences,
         )
         == expected_ir
     )
@@ -1077,7 +1077,7 @@ def test_circuit_with_partial_calibrations(pulse_sequence_2):
     circuit.to_ir(
         ir_type=IRType.OPENQASM,
         serialization_properties=serialization_properties,
-        gate_calibrations=gate_calibrations.pulse_sequences,
+        gate_definitions=gate_calibrations.pulse_sequences,
     )
 
 
@@ -1151,7 +1151,7 @@ def test_circuit_user_gate(pulse_sequence_2):
         circ.to_ir(
             ir_type=IRType.OPENQASM,
             serialization_properties=serialization_properties,
-            gate_calibrations=gate_calibrations.pulse_sequences,
+            gate_definitions=gate_calibrations.pulse_sequences,
         )
         == expected_ir
     )
