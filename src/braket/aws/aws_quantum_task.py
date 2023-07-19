@@ -17,7 +17,7 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 import boto3
 
@@ -28,6 +28,7 @@ from braket.circuits import Instruction
 from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.compiler_directives import StartVerbatimBox
+from braket.circuits.gate_calibrations import GateCalibrations
 from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import (
     IRType,
@@ -103,6 +104,7 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: Dict[str, str] = None,
         inputs: Dict[str, float] = None,
+        gate_calibrations: Optional[GateCalibrations] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -142,6 +144,10 @@ class AwsQuantumTask(QuantumTask):
             inputs (Dict[str, float]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
+
+            gate_calibrations (Optional[GateCalibrations]): A `GateCalibrations` for
+                user defined gate calibration.
+                Default: None.
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
@@ -187,6 +193,7 @@ class AwsQuantumTask(QuantumTask):
             device_parameters or {},
             disable_qubit_rewiring,
             inputs,
+            gate_calibrations=gate_calibrations,
             *args,
             **kwargs,
         )
@@ -473,6 +480,7 @@ def _create_internal(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -488,6 +496,7 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -505,6 +514,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -543,6 +553,7 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -560,6 +571,7 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -580,6 +592,7 @@ def _(
     if (
         disable_qubit_rewiring
         or Instruction(StartVerbatimBox()) in circuit.instructions
+        or gate_calibrations is not None
         or any(isinstance(instruction.operator, PulseGate) for instruction in circuit.instructions)
     ):
         qubit_reference_type = QubitReferenceType.PHYSICAL
@@ -589,7 +602,9 @@ def _(
     )
 
     openqasm_program = circuit.to_ir(
-        ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
+        ir_type=IRType.OPENQASM,
+        serialization_properties=serialization_properties,
+        gate_calibrations=gate_calibrations.copy() if gate_calibrations is not None else None,
     )
 
     if inputs:
@@ -624,6 +639,7 @@ def _(
     ],
     _,
     inputs: Dict[str, float],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -648,6 +664,7 @@ def _(
     device_parameters: dict,
     _,
     inputs: Dict[str, float],
+    gate_calibrations: Optional[GateCalibrations],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
