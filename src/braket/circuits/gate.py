@@ -210,6 +210,9 @@ class Gate(QuantumOperator):
     def __repr__(self):
         return f"{self.name}('qubit_count': {self._qubit_count})"
 
+    def __hash__(self):
+        return hash((self.name, self.qubit_count))
+
     @classmethod
     def register_gate(cls, gate: Type[Gate]) -> None:
         """Register a gate implementation by adding it into the Gate class.
