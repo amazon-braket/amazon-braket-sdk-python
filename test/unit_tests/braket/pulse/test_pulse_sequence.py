@@ -337,3 +337,86 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
         ]
     )
     assert pulse_sequence.to_ir() == expected_str
+
+
+def test(predefined_frame_1, predefined_frame_2):
+    waveforms = {
+        "drag_gauss_wf": DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf")
+    }
+    frames = {predefined_frame_1.id: predefined_frame_1, predefined_frame_2.id: predefined_frame_2}
+
+    calibration_instrs = [
+        {
+            "name": "barrier",
+            "arguments": [{"name": "qubit", "value": "0", "type": "string"}],
+        },
+        {
+            "name": "play",
+            "arguments": [
+                {"name": "frame", "value": "predefined_frame_1", "type": "frame"},
+                {
+                    "name": "waveform",
+                    "value": "drag_gauss_wf",
+                    "type": "waveform",
+                },
+            ],
+        },
+        {
+            "name": "barrier",
+            "arguments": [
+                {"name": "frame", "value": "predefined_frame_1", "type": "frame"},
+                {"name": "frame", "value": "predefined_frame_2", "type": "frame"},
+            ],
+        },
+        {
+            "name": "barrier",
+            "arguments": None,
+        },
+        {
+            "name": "delay",
+            "arguments": [
+                {"name": "duration", "value": 3e-07, "type": "float"},
+                {"name": "qubit", "value": "0", "type": "string"},
+                {"name": "qubit", "value": "1", "type": "string"},
+            ],
+        },
+        {
+            "name": "delay",
+            "arguments": [
+                {"name": "frame", "value": "predefined_frame_1", "type": "frame"},
+                {"name": "duration", "value": 3e-07, "type": "float"},
+            ],
+        },
+        {
+            "name": "shift_phase",
+            "arguments": [
+                {"name": "frame", "value": "predefined_frame_1", "type": "frame"},
+                {"name": "phase", "value": 3e-07, "type": "float"},
+            ],
+        },
+        {
+            "name": "shift_frequency",
+            "arguments": [
+                {"name": "frequency", "value": "theta", "type": "expr"},
+                {"name": "frame", "value": "predefined_frame_1", "type": "frame"},
+                {"name": "extra", "value": "predefined_frame_1", "type": "string"},
+            ],
+        },
+    ]
+
+    expected_pulse_sequence = (
+        PulseSequence()
+        .barrier(QubitSet(0))
+        .play(predefined_frame_1, waveforms["drag_gauss_wf"])
+        .barrier([predefined_frame_1, predefined_frame_2])
+        .barrier([])
+        .delay(QubitSet([0, 1]), 3e-07)
+        .delay([predefined_frame_1], 3e-07)
+        .shift_phase(predefined_frame_1, 3e-07)
+        .shift_frequency(predefined_frame_1, FreeParameter("theta"))
+    )
+
+    assert (
+        PulseSequence._parse_from_calibration_schema(calibration_instrs, waveforms, frames)
+        == expected_pulse_sequence
+    )

@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import builtins
 from copy import deepcopy
 from inspect import signature
 from typing import Any, Dict, List, Set, Union
@@ -343,7 +344,7 @@ class PulseSequence:
         if argument["type"] in nonprimitive_arg_type.keys():
             return nonprimitive_arg_type[argument["type"]](argument["value"])
         else:
-            return __builtins__[argument["type"]](argument["value"])
+            return getattr(builtins, argument["type"])(argument["value"])
 
     @classmethod
     def _parse_from_calibration_schema(
@@ -378,11 +379,12 @@ class PulseSequence:
                                 else instr_args.get("qubits_or_frames", QubitSet())
                             )
                             # QubitSet is an IndexedSet so the ordering matters
-                            (
-                                argument_value + instr_args.get("qubits_or_frames", [])
-                                if argument["name"] == "frame"
-                                else argument_value.update(QubitSet(int(argument["value"])))
-                            )
+                            if argument["name"] == "frame":
+                                argument_value = (
+                                    instr_args.get("qubits_or_frames", []) + argument_value
+                                )
+                            else:
+                                argument_value.update(QubitSet(int(argument["value"])))
                             instr_args["qubits_or_frames"] = argument_value
                         elif argument["name"] in instr_args_keys:
                             instr_args[
