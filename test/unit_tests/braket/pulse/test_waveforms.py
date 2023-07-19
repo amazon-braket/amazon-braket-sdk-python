@@ -59,10 +59,10 @@ def test_arbitrary_wf_eq():
         assert wf != wfc
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_arbitrary_waveform_not_castable_into_list():
     amps = 1
-    ArbitraryWaveform(amps)
+    with pytest.raises(TypeError):
+        ArbitraryWaveform(amps)
 
 
 def test_constant_waveform():
