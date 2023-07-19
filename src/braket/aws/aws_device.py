@@ -143,7 +143,10 @@ class AwsDevice(Device):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
             gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for user defined gate_definitions.
+                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
+                The calibration is defined for a particular `Gate` on a particular `QubitSet`
+                and is represented by a `PulseSequence`.
+                Default: None.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -255,7 +258,10 @@ class AwsDevice(Device):
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
             gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for user defined gate_definitions.
+                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
+                The calibration is defined for a particular `Gate` on a particular `QubitSet`
+                and is represented by a `PulseSequence`.
+                Default: None.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
