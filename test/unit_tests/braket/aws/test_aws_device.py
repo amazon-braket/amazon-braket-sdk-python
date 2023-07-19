@@ -1484,7 +1484,7 @@ def _run_and_assert(
     poll_timeout_seconds=None,  # Treated as positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
-    gate_calibrations=None,  # Treated as positional arg
+    gate_definitions=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1501,7 +1501,7 @@ def _run_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
-        gate_calibrations,
+        gate_definitions,
         extra_args,
         extra_kwargs,
     )
@@ -1519,7 +1519,7 @@ def _run_batch_and_assert(
     poll_timeout_seconds=None,  # Treated as a positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
-    gate_calibrations=None,  # Treated as positional arg
+    gate_definitions=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1539,7 +1539,7 @@ def _run_batch_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
-        gate_calibrations,
+        gate_definitions,
         extra_args,
         extra_kwargs,
     )
