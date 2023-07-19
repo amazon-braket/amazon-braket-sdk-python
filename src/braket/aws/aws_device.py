@@ -675,7 +675,7 @@ class AwsDevice(Device):
         """
         if hasattr(self.properties, "pulse") and hasattr(
             self.properties.pulse, "nativeGateCalibrationsRef"
-        ):
+        ) and self.properties.pulse.nativeGateCalibrationsRef:
             try:
                 with urllib.request.urlopen(
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
