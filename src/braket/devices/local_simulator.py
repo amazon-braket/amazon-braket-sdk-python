@@ -98,7 +98,7 @@ class LocalSimulator(Device):
             >>> device = LocalSimulator("default")
             >>> device.run(circuit, shots=1000)
         """
-        return LocalQuantumTask().create(
+        return LocalQuantumTask.create(
             task_specification, self._delegate, shots, inputs=inputs, *args, **kwargs
         )
 

@@ -63,8 +63,8 @@ class LocalQuantumTask(QuantumTask):
         if self._result:
             self._id = result.task_metadata.id
 
+    @staticmethod
     def create(
-        self,
         task_specification: Union[
             Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram
         ],
@@ -96,41 +96,32 @@ class LocalQuantumTask(QuantumTask):
         Returns:
             : LocalQuantumTask tracking the task execution on the device.
         """
-        self._task_specification = task_specification
-        self._inputs = inputs
-        self._shots = shots
-        self._delegate = delegate
-        self._args = args
-        self._kwargs = kwargs
-        if self._result is None:
-            self.async_result()
-        return self
+        task = LocalQuantumTask()
+        task._task_specification = task_specification
+        task._inputs = inputs
+        task._shots = shots
+        task._delegate = delegate
+        task._args = args
+        task._kwargs = kwargs
+        if task._result is None:
+            task.async_result()
+        return task
 
     @property
     def id(self) -> str:
         return str(self._id)
 
-    def _cancel_task(self) -> None:
-        """Cancel the task if it exists"""
-        if hasattr(self, "_task"):
-            self._task.cancel()
-
     def cancel(self) -> None:
-        """Cancel the quantum task. This cancels the asyncio.Task
-        that is stop the execution on the local simulator"""
-        self._cancel_task()
+        """Cancel the quantum task."""
+        raise NotImplementedError("Cannot cancel completed local task")
 
     def state(self) -> str:
         return self._status()
 
     def _status(self) -> str:
         if hasattr(self, "_task"):
-            if self._task._state == "PENDING":
-                if self._task._must_cancel:
-                    return "CANCELLING"
+            if self._thread.is_alive():
                 return "RUNNING"
-            if self._task.cancelled():
-                return "CANCELLED"
             if self._task.done():
                 return "COMPLETED"
         return "CREATED"
@@ -155,16 +146,14 @@ class LocalQuantumTask(QuantumTask):
             Exception:
                 Raises an exception raised in the thread while running the task on the simulator.
         """
-        if self._result:
-            return self._result
+        if not self._result:
+            self._thread.join()
+            if self._task._exception:
+                raise self._task._exception
+            if self._task._result:
+                self._result = self._task._result
+                self._id = self._result.task_metadata.id
 
-        self._thread.join()
-        if self._task._exception:
-            raise self._task._exception
-        if self._task._result:
-            self._result = self._task._result
-            self._id = self._result.task_metadata.id
-            return self._result
         return self._result
 
     def async_result(self) -> asyncio.Task:

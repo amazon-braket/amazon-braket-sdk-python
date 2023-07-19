@@ -15,11 +15,14 @@ import uuid
 from time import sleep
 
 import numpy as np
+import pytest
 
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities
+from braket.devices import LocalSimulator
+from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
-from braket.task_result import TaskMetadata, GateModelTaskResult
+from braket.task_result import GateModelTaskResult, TaskMetadata
 from braket.tasks import GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
@@ -32,6 +35,59 @@ RESULT = GateModelQuantumTaskResult(
     values=None,
 )
 
+GATE_MODEL_RESULT = GateModelTaskResult(
+    **{
+        "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+        "measuredQubits": [0, 1],
+        "taskMetadata": {
+            "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+            "id": "task_arn",
+            "shots": 100,
+            "deviceId": "default",
+        },
+        "additionalMetadata": {
+            "action": {
+                "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
+            },
+        },
+    }
+)
+
+
+class DummyProgramSimulator(BraketSimulator):
+    def run(
+        self,
+        openqasm_ir: Program,
+        shots: int = 0,
+        batch_size: int = 1,
+    ) -> GateModelTaskResult:
+        return GATE_MODEL_RESULT
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "00:00",
+                            "windowEndHour": "23:59:59",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.openqasm.program": {
+                        "actionType": "braket.ir.openqasm.program",
+                        "version": ["1"],
+                    }
+                },
+                "deviceParameters": {},
+            }
+        )
+
 
 class DummyCircuitSimulator(BraketSimulator):
     def run(
@@ -41,24 +97,7 @@ class DummyCircuitSimulator(BraketSimulator):
         **kwargs,
     ) -> GateModelTaskResult:
         sleep(5)
-        return GateModelTaskResult(
-            **{
-                "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
-                "measuredQubits": [0, 1],
-                "taskMetadata": {
-                    "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
-                    "id": "task_arn",
-                    "shots": 100,
-                    "deviceId": "default",
-                },
-                "additionalMetadata": {
-                    "action": {
-                        "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
-                        "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
-                    },
-                },
-            }
-        )
+        return GATE_MODEL_RESULT
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -91,36 +130,46 @@ class DummyCircuitSimulator(BraketSimulator):
 
 def test_id():
     # Task ID is valid UUID
-    TASK = LocalQuantumTask(RESULT)
-    TASK.result()
-    uuid.UUID(TASK.id)
+    task = LocalQuantumTask(RESULT)
+    task.result()
+    uuid.UUID(task.id)
 
 
 def test_state():
-    TASK = LocalQuantumTask(RESULT)
-    assert TASK.state() == "CREATED"
+    task = LocalQuantumTask(RESULT)
+    assert task.state() == "CREATED"
 
 
 def test_result():
-    TASK = LocalQuantumTask(RESULT)
-    result = TASK.result()
+    task = LocalQuantumTask(RESULT)
+    result = task.result()
     assert result == RESULT
-    assert RESULT.task_metadata.id == TASK.id
+    assert RESULT.task_metadata.id == task.id
 
+
+@pytest.mark.xfail(raises=NotImplementedError)
 def test_cancel():
-    sim = DummyCircuitSimulator()
-    task = LocalQuantumTask().create(Circuit().h(0), sim, shots=1)
-    sleep(1)
+    task = LocalQuantumTask(RESULT)
     task.cancel()
-    assert task.state() == "CANCELLING"
 
 
 def test_async():
-    TASK = LocalQuantumTask(RESULT)
-    assert isinstance(TASK.async_result(), asyncio.Task)
+    task = LocalQuantumTask(RESULT)
+    assert isinstance(task.async_result(), asyncio.Task)
+
+
+def test_async_without_result():
+    sim = LocalSimulator(DummyProgramSimulator())
+    local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    local_quantum_task.async_result()
+    local_quantum_task._thread.join()
+    assert local_quantum_task._task._result == GateModelQuantumTaskResult.from_object(
+        GATE_MODEL_RESULT
+    )
+    assert local_quantum_task.state() == "COMPLETED"
 
 
 def test_str():
-    TASK = LocalQuantumTask(RESULT)
-    expected = "LocalQuantumTask('id':{})".format(TASK.id)
-    assert str(TASK) == expected
+    task = LocalQuantumTask(RESULT)
+    expected = "LocalQuantumTask('id':{})".format(task.id)
+    assert str(task) == expected
