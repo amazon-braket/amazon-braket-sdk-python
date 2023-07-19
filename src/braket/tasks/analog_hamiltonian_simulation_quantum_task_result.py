@@ -48,7 +48,7 @@ class ShotResult:
 @dataclass
 class AnalogHamiltonianSimulationQuantumTaskResult:
     task_metadata: TaskMetadata
-    additionalMetadata: AdditionalMetadata
+    additional_metadata: AdditionalMetadata
     measurements: List[ShotResult] = None
 
     def __eq__(self, other) -> bool:
@@ -81,7 +81,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             measurements = None
         return cls(
             task_metadata=result.taskMetadata,
-            additionalMetadata=result.additionalMetadata,
+            additional_metadata=result.additionalMetadata,
             measurements=measurements,
         )
 
