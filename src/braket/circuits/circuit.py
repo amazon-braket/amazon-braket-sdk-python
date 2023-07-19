@@ -1233,7 +1233,7 @@ class Circuit:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
 
-    def _validate_ngc_uniqueness(
+    def _validate_gate_calbrations_uniqueness(
         self,
         gate_calibrations: Dict[Tuple[Gate, QubitSet], PulseSequence],
         frames: Dict[Frame],
@@ -1255,7 +1255,7 @@ class Circuit:
         frames, waveforms = self._get_frames_waveforms_from_instrs(gate_calibrations)
 
         if gate_calibrations is not None:
-            self._validate_ngc_uniqueness(gate_calibrations, frames, waveforms)
+            self._validate_gate_calbrations_uniqueness(gate_calibrations, frames, waveforms)
 
         # Declare the frames and waveforms across all pulse sequences
         declarable_frames = [f for f in frames.values() if not f.is_predefined]
