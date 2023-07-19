@@ -94,11 +94,6 @@ def _function_without_params(
     wrapper_factory = _convert_wrapper(
         user_config=user_config,
         recursive=False,
-        optional_features=(
-            converter.Feature.ASSERT_STATEMENTS,
-            converter.Feature.LISTS,
-            converter.Feature.EQUALITY_OPERATORS,
-        ),
     )
     wrapper = wrapper_factory(f)
 
