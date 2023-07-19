@@ -12,7 +12,6 @@
 # language governing permissions and limitations under the License.
 import asyncio
 import uuid
-from time import sleep
 
 import numpy as np
 import pytest
@@ -83,45 +82,6 @@ class DummyProgramSimulator(BraketSimulator):
                         "actionType": "braket.ir.openqasm.program",
                         "version": ["1"],
                     }
-                },
-                "deviceParameters": {},
-            }
-        )
-
-
-class DummyCircuitSimulator(BraketSimulator):
-    def run(
-        self,
-        circuit: Circuit,
-        *args,
-        **kwargs,
-    ) -> GateModelTaskResult:
-        sleep(5)
-        return GATE_MODEL_RESULT
-
-    @property
-    def properties(self) -> DeviceCapabilities:
-        return DeviceCapabilities.parse_obj(
-            {
-                "service": {
-                    "executionWindows": [
-                        {
-                            "executionDay": "Everyday",
-                            "windowStartHour": "11:00",
-                            "windowEndHour": "12:00",
-                        }
-                    ],
-                    "shotsRange": [1, 10],
-                },
-                "action": {
-                    "braket.ir.openqasm.program": {
-                        "actionType": "braket.ir.openqasm.program",
-                        "version": ["1"],
-                    },
-                    "braket.ir.jaqcd.program": {
-                        "actionType": "braket.ir.jaqcd.program",
-                        "version": ["1"],
-                    },
                 },
                 "deviceParameters": {},
             }
