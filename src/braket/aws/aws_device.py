@@ -673,9 +673,11 @@ class AwsDevice(Device):
             Optional[GateCalibrations]: the calibration data for the device. None
             is returned if the device does not have a gate calibrations URL associated.
         """
-        if hasattr(self.properties, "pulse") and hasattr(
-            self.properties.pulse, "nativeGateCalibrationsRef"
-        ) and self.properties.pulse.nativeGateCalibrationsRef:
+        if (
+            hasattr(self.properties, "pulse")
+            and hasattr(self.properties.pulse, "nativeGateCalibrationsRef")
+            and self.properties.pulse.nativeGateCalibrationsRef
+        ):
             try:
                 with urllib.request.urlopen(
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
