@@ -20,7 +20,11 @@ from typing import Dict, List
 
 import numpy as np
 
-from braket.task_result import AnalogHamiltonianSimulationTaskResult, TaskMetadata, AdditionalMetadata
+from braket.task_result import (
+    AdditionalMetadata,
+    AnalogHamiltonianSimulationTaskResult,
+    TaskMetadata,
+)
 
 
 class AnalogHamiltonianSimulationShotStatus(str, Enum):
