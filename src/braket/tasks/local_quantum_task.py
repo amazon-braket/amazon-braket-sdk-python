@@ -103,7 +103,7 @@ class LocalQuantumTask(QuantumTask):
         self._args = args
         self._kwargs = kwargs
         if self._result is None:
-            self._task = self.async_result()
+            self.async_result()
         return self
 
     @property
@@ -114,7 +114,6 @@ class LocalQuantumTask(QuantumTask):
         """Cancel the task if it exists"""
         if hasattr(self, "_task"):
             self._task.cancel()
-            self._thread.join()
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the asyncio.Task
@@ -125,8 +124,10 @@ class LocalQuantumTask(QuantumTask):
         return self._status()
 
     def _status(self) -> str:
-        if hasattr(self, "_thread") and hasattr(self, "_task"):
-            if self._thread.is_alive():
+        if hasattr(self, "_task"):
+            if self._task._state == "PENDING":
+                if self._task._must_cancel:
+                    return "CANCELLING"
                 return "RUNNING"
             if self._task.cancelled():
                 return "CANCELLED"
@@ -236,7 +237,6 @@ class LocalQuantumTask(QuantumTask):
         return self._task
 
     async def _async_run_internal(self):
-        # sleep(10)
         return self._run_internal(
             self._task_specification, self._shots, inputs=self._inputs, *self._args, **self._kwargs
         )

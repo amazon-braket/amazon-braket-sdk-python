@@ -13,14 +13,13 @@
 import asyncio
 import uuid
 from time import sleep
-from typing import Any, Dict
 
 import numpy as np
 
 from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities
 from braket.simulator import BraketSimulator
-from braket.task_result import TaskMetadata
+from braket.task_result import TaskMetadata, GateModelTaskResult
 from braket.tasks import GateModelQuantumTaskResult
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
@@ -40,8 +39,26 @@ class DummyCircuitSimulator(BraketSimulator):
         circuit: Circuit,
         *args,
         **kwargs,
-    ) -> Dict[str, Any]:
-        sleep(20)
+    ) -> GateModelTaskResult:
+        sleep(5)
+        return GateModelTaskResult(
+            **{
+                "measurements": [[0, 0], [0, 0], [0, 0], [1, 1]],
+                "measuredQubits": [0, 1],
+                "taskMetadata": {
+                    "braketSchemaHeader": {"name": "braket.task_result.task_metadata", "version": "1"},
+                    "id": "task_arn",
+                    "shots": 100,
+                    "deviceId": "default",
+                },
+                "additionalMetadata": {
+                    "action": {
+                        "braketSchemaHeader": {"name": "braket.ir.jaqcd.program", "version": "1"},
+                        "instructions": [{"control": 0, "target": 1, "type": "cnot"}],
+                    },
+                },
+            }
+        )
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -90,12 +107,12 @@ def test_result():
     assert result == RESULT
     assert RESULT.task_metadata.id == TASK.id
 
-
 def test_cancel():
-    qc = Circuit().h(0)
-    task = LocalQuantumTask().create(qc, DummyCircuitSimulator(), shots=1)
+    sim = DummyCircuitSimulator()
+    task = LocalQuantumTask().create(Circuit().h(0), sim, shots=1)
+    sleep(1)
     task.cancel()
-    assert task.state() == "CANCELLED"
+    assert task.state() == "CANCELLING"
 
 
 def test_async():
