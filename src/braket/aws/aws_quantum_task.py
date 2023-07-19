@@ -603,7 +603,7 @@ def _(
     openqasm_program = circuit.to_ir(
         ir_type=IRType.OPENQASM,
         serialization_properties=serialization_properties,
-        gate_definitions=gate_definitions.copy() if gate_definitions is not None else None,
+        gate_definitions=gate_definitions,
     )
 
     if inputs:
