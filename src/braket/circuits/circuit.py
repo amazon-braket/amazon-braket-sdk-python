@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 import warnings
-from copy import deepcopy
 from numbers import Number
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
@@ -1313,14 +1312,17 @@ class Circuit:
             elif (
                 isinstance(instruction.operator, Parameterizable) and gate_calibrations is not None
             ):
-                self._add_fixed_argument_calibrations(gate_calibrations, instruction)
+                fixed_argument_calibrations = self._add_fixed_argument_calibrations(
+                    gate_calibrations, instruction
+                )
+                gate_calibrations.update(fixed_argument_calibrations)
         return frames, waveforms
 
     def _add_fixed_argument_calibrations(
         self,
         gate_calibrations: Dict[Tuple[Gate, QubitSet], PulseSequence],
         instruction: Instruction,
-    ) -> None:
+    ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """Adds calibrations with arguments set to the instruction parameter values
 
         Given the collection of parameters in instruction.operator, this function looks for matching
@@ -1332,12 +1334,13 @@ class Circuit:
         corresponding calibration parameters so we raise an error.
         If N=0, we ignore it as it will not be removed by _generate_frame_wf_defcal_declarations.
 
-        This function modifies its `gate_calibrations` input argument.
-
         Args:
             gate_calibrations (Dict[Tuple[Gate, QubitSet], PulseSequence]): a dictionary of
                 calibrations
             instruction (Instruction): a Circuit instruction
+
+        Returns:
+            Dict[Tuple[Gate, QubitSet], PulseSequence]: additional calibrations
 
         Raises:
             NotImplementedError: in two cases: (i) if the instruction contains unbound parameters
@@ -1345,7 +1348,8 @@ class Circuit:
                 instructions; (ii) if the calibration is defined with a partial number of unbound
                 parameters.
         """
-        for key, calibration in deepcopy(gate_calibrations).items():
+        additional_calibrations = {}
+        for key, calibration in gate_calibrations.items():
             gate = key[0]
             target = key[1]
             if target != instruction.target:
@@ -1372,12 +1376,13 @@ class Circuit:
                     type(instruction.operator)(*instruction.operator.parameters),
                     instruction.target,
                 )
-                gate_calibrations[bound_key] = calibration(
+                additional_calibrations[bound_key] = calibration(
                     **{
                         p.name if isinstance(p, FreeParameterExpression) else p: v
                         for p, v in zip(gate.parameters, instruction.operator.parameters)
                     }
                 )
+        return additional_calibrations
 
     def as_unitary(self) -> np.ndarray:
         r"""
