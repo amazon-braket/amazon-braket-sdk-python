@@ -125,7 +125,7 @@ def test_to_ir_with_key(pulse_sequence):
     assert expected_ir == calibration.to_ir(calibration_key)
 
 
-def test_ngc_length(pulse_sequence):
+def test_gate_calibrations_length(pulse_sequence):
     calibration_key = (Gate.Z(), QubitSet([0, 1]))
     calibration_key_2 = (Gate.H(), QubitSet([0, 1]))
     calibration = GateCalibrations(

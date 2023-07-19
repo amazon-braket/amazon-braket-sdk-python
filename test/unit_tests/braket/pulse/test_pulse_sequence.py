@@ -339,7 +339,7 @@ def test_pulse_sequence_to_ir(predefined_frame_1, predefined_frame_2):
     assert pulse_sequence.to_ir() == expected_str
 
 
-def test(predefined_frame_1, predefined_frame_2):
+def test_parse_from_calibration_schema(predefined_frame_1, predefined_frame_2):
     waveforms = {
         "drag_gauss_wf": DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf")
     }
