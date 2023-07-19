@@ -1133,7 +1133,7 @@ class Circuit:
                 )
             return self._to_openqasm(
                 serialization_properties or OpenQASMSerializationProperties(),
-                gate_calibrations,
+                gate_calibrations.copy() if gate_calibrations is not None else None,
             )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
