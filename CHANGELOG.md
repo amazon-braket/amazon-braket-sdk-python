@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.50.0 (2023-07-19)
+
+### Features
+
+ * Add dot(), power(), and to_circuit() to PauliString
+
 ## v1.49.1.post0 (2023-07-17)
 
 ### Documentation Changes
