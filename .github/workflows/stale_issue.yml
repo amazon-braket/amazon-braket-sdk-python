@@ -6,9 +6,14 @@ on:
   schedule:
     - cron: "0 10 * * *"
 
+permissions:
+  contents: read
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write  # comment on issues
     name: Stale issue job
     steps:
       - uses: aws-actions/stale-issue-cleanup@7de35968489e4142233d2a6812519a82e68b5c38 # v6
