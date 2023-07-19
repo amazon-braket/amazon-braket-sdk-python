@@ -20,7 +20,7 @@ from typing import Dict, List
 
 import numpy as np
 
-from braket.task_result import AnalogHamiltonianSimulationTaskResult, TaskMetadata
+from braket.task_result import AnalogHamiltonianSimulationTaskResult, TaskMetadata, AdditionalMetadata
 
 
 class AnalogHamiltonianSimulationShotStatus(str, Enum):
@@ -48,6 +48,7 @@ class ShotResult:
 @dataclass
 class AnalogHamiltonianSimulationQuantumTaskResult:
     task_metadata: TaskMetadata
+    additionalMetadata: AdditionalMetadata
     measurements: List[ShotResult] = None
 
     def __eq__(self, other) -> bool:
@@ -80,6 +81,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             measurements = None
         return cls(
             task_metadata=result.taskMetadata,
+            additionalMetadata=result.additionalMetadata,
             measurements=measurements,
         )
 
