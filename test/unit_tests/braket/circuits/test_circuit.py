@@ -1001,6 +1001,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
     ],
 )
 def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, gate_calibrations):
+    copy_of_gate_calibrations = gate_calibrations.copy()
     assert (
         circuit.to_ir(
             ir_type=IRType.OPENQASM,
@@ -1009,6 +1010,7 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, 
         )
         == expected_ir
     )
+    assert copy_of_gate_calibrations.pulse_sequences == gate_calibrations.pulse_sequences
 
 
 def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
