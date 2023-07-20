@@ -56,6 +56,12 @@ def test_get_devices_arn(arn):
     assert results[0].arn == arn
 
 
+@pytest.mark.parametrize("arn", [(PULSE_ARN)])
+def test_device_gate_calibrations(arn, aws_session):
+    device = AwsDevice(arn, aws_session=aws_session)
+    assert device.gate_calibrations
+
+
 def test_get_devices_others():
     provider_names = ["Amazon Braket"]
     types = ["SIMULATOR"]

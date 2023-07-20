@@ -10,25 +10,35 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 import math
 import re
 from copy import deepcopy
 
+import numpy as np
+import pytest
 from oqpy import Program
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
 from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 
 
-def test_arbitrary_waveform():
-    amps = [complex(1, 2), complex(0.3, -1), 0, 4.2]
+@pytest.mark.parametrize(
+    "amps",
+    [
+        [complex(1, 2), complex(0.3, -1), 0, 4.2],
+        np.array([complex(1, 2), complex(0.3, -1), 0, 4.2]),
+    ],
+)
+def test_arbitrary_waveform(amps):
     id = "arb_wf_x"
     wf = ArbitraryWaveform(amps, id)
-    assert wf.amplitudes == amps
+    assert wf.amplitudes == list(amps)
     assert wf.id == id
     oq_exp = wf._to_oqpy_expression()
-    assert oq_exp.init_expression == amps
+    assert oq_exp.init_expression == list(amps)
     assert oq_exp.name == wf.id
 
 
@@ -47,6 +57,12 @@ def test_arbitrary_wf_eq():
         wfc = deepcopy(wf_2)
         setattr(wfc, att, "wrong_value")
         assert wf != wfc
+
+
+def test_arbitrary_waveform_not_castable_into_list():
+    amps = 1
+    with pytest.raises(TypeError):
+        ArbitraryWaveform(amps)
 
 
 def test_constant_waveform():
@@ -246,3 +262,66 @@ def _assert_wf_qasm(waveform, expected_qasm):
     p = Program(None)
     p.declare(waveform._to_oqpy_expression())
     assert ast_to_qasm(p.to_ast(include_externs=False)) == expected_qasm
+
+
+@pytest.mark.parametrize(
+    "waveform_json, waveform",
+    [
+        (
+            {
+                "waveformId": "q0_q1_cz_CZ",
+                "amplitudes": [[0.0, 0.0], [0.0, 0.0]],
+            },
+            ArbitraryWaveform(id="q0_q1_cz_CZ", amplitudes=[complex(0.0, 0.0), complex(0.0, 0.0)]),
+        ),
+        (
+            {
+                "waveformId": "wf_drag_gaussian_0",
+                "name": "drag_gaussian",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                    {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                    {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
+                ],
+            },
+            DragGaussianWaveform(
+                id="wf_drag_gaussian_0",
+                sigma=6.369913502160144e-9,
+                length=6.000000000000001e-8,
+                beta=7.494904522022295e-10,
+                amplitude=-0.4549282253548838,
+            ),
+        ),
+        (
+            {
+                "waveformId": "wf_gaussian_0",
+                "name": "gaussian",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                    {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                ],
+            },
+            GaussianWaveform(
+                id="wf_gaussian_0",
+                length=6.000000000000001e-8,
+                sigma=6.369913502160144e-9,
+                amplitude=-0.4549282253548838,
+            ),
+        ),
+        (
+            {
+                "waveformId": "wf_constant",
+                "name": "constant",
+                "arguments": [
+                    {"name": "length", "value": 2.1, "type": "float"},
+                    {"name": "iq", "value": 0.23, "type": "complex"},
+                ],
+            },
+            ConstantWaveform(id="wf_constant", length=2.1, iq=0.23),
+        ),
+    ],
+)
+def test_parse_waveform_from_calibration_schema(waveform_json, waveform):
+    assert _parse_waveform_from_calibration_schema(waveform_json) == waveform

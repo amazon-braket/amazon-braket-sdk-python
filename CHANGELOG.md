@@ -1,5 +1,41 @@
 # Changelog
 
+## v1.50.0 (2023-07-19)
+
+### Features
+
+ * Add dot(), power(), and to_circuit() to PauliString
+
+## v1.49.1.post0 (2023-07-17)
+
+### Documentation Changes
+
+ * update aws_quantum_job.py to add pattern for create job_name pa…
+
+## v1.49.1 (2023-07-12)
+
+### Bug Fixes and Other Changes
+
+ * coerce ArbitraryWaveform.amplitudes type
+
+## v1.49.0 (2023-07-10)
+
+### Features
+
+ * OpenQASM to `Circuit` translator
+
+### Bug Fixes and Other Changes
+
+ * Update Braket dependencies
+ * update noise operation in program context
+ * ci: Harden GitHub Actions
+
+## v1.48.1 (2023-07-07)
+
+### Bug Fixes and Other Changes
+
+ * use event callbacks to add braket user agents
+
 ## v1.48.0 (2023-07-06)
 
 ### Features

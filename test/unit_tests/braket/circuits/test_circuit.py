@@ -31,12 +31,16 @@ from braket.circuits import (
     compiler_directives,
     gates,
     noise,
+    observables,
 )
+from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
 )
+from braket.circuits.translations import braket_result_to_result_type
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.pulse import DragGaussianWaveform, Frame, GaussianWaveform, Port, PulseSequence
 
@@ -102,6 +106,61 @@ def user_defined_frame(port):
         phase=3.14,
         is_predefined=False,
         properties={"associatedGate": "rz"},
+    )
+
+
+@pytest.fixture
+def pulse_sequence(predefined_frame_1):
+    return (
+        PulseSequence()
+        .set_frequency(
+            predefined_frame_1,
+            6e6,
+        )
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
+    )
+
+
+@pytest.fixture
+def pulse_sequence_2(predefined_frame_1):
+    return (
+        PulseSequence()
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("alpha"),
+        )
+        .set_phase(
+            predefined_frame_1,
+            FreeParameter("gamma"),
+        )
+        .shift_phase(
+            predefined_frame_1,
+            FreeParameter("beta"),
+        )
+        .play(
+            predefined_frame_1,
+            DragGaussianWaveform(length=3e-3, sigma=0.4, beta=0.2, id="drag_gauss_wf"),
+        )
+    )
+
+
+@pytest.fixture
+def gate_calibrations(pulse_sequence, pulse_sequence_2):
+    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
+    calibration_key_3 = (
+        Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
+        QubitSet([0, 1]),
+    )
+    return GateCalibrations(
+        {
+            calibration_key: pulse_sequence,
+            calibration_key_2: pulse_sequence,
+            calibration_key_3: pulse_sequence_2,
+        }
     )
 
 
@@ -679,6 +738,18 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[2] b;",
                         "qubit[2] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "rx(0.15) q[0];",
                         "rx(0.3) q[1];",
                         "b[0] = measure q[0];",
@@ -696,6 +767,18 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "bit[2] b;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "rx(0.15) $0;",
                         "rx(0.3) $4;",
                         "b[0] = measure $0;",
@@ -715,6 +798,18 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "rx(0.15) $0;",
                         "#pragma braket verbatim",
                         "box{",
@@ -738,6 +833,18 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "qubit[5] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "rx(0.15) q[0];",
                         "rx(0.3) q[4];",
                         "#pragma braket noise bit_flip(0.2) q[3]",
@@ -757,6 +864,18 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "input float theta;",
                         "bit[2] b;",
                         "qubit[2] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "rx(0.15) q[0];",
                         "rx(theta) q[1];",
                         "b[0] = measure q[0];",
@@ -778,6 +897,18 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "OPENQASM 3.0;",
                         "bit[5] b;",
                         "qubit[5] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal rx(0.15) $0 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
                         "negctrl @ rx(0.15) q[2], q[0];",
                         "ctrl(2) @ rx(0.3) q[2], q[3], q[1];",
                         "ctrl(2) @ cnot q[2], q[3], q[4], q[0];",
@@ -794,6 +925,602 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         (
             Circuit().cnot(0, 1).cnot(target=2, control=3).cnot(target=4, control=[5, 6]),
             OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[7] b;",
+                        "qubit[7] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "cnot q[0], q[1];",
+                        "cnot q[3], q[2];",
+                        "ctrl @ cnot q[5], q[6], q[4];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
+                        "b[5] = measure q[5];",
+                        "b[6] = measure q[6];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0, power=-2.5).h(0, power=0).ms(0, 1, -0.1, -0.2, -0.3),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal ms(-0.1, -0.2, -0.3) $0, $1 {",
+                        "    shift_phase(predefined_frame_1, -0.1);",
+                        "    set_phase(predefined_frame_1, -0.3);",
+                        "    shift_phase(predefined_frame_1, -0.2);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "inv @ pow(2.5) @ h q[0];",
+                        "pow(0) @ h q[0];",
+                        "ms(-0.1, -0.2, -0.3) q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        pytest.param(
+            Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta")),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="",
+                inputs={},
+            ),
+            marks=pytest.mark.xfail(
+                reason="Parametric calibrations cannot be attached with parametric circuits."
+            ),
+        ),
+    ],
+)
+def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir, gate_calibrations):
+    copy_of_gate_calibrations = gate_calibrations.copy()
+    assert (
+        circuit.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+            gate_definitions=gate_calibrations.pulse_sequences,
+        )
+        == expected_ir
+    )
+    assert copy_of_gate_calibrations.pulse_sequences == gate_calibrations.pulse_sequences
+
+
+def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
+    circ = Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=FreeParameter("theta"))
+    serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
+    calibration_key = (Gate.Z(), QubitSet([0, 1]))
+    calibration_key_2 = (Gate.Rx(0.45), QubitSet([0]))
+    gate_calibrations = GateCalibrations(
+        {
+            calibration_key: pulse_sequence,
+            calibration_key_2: pulse_sequence,
+        }
+    )
+
+    expected_ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "input float theta;",
+                "bit[1] b;",
+                "qubit[1] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian"
+                + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                "}",
+                "defcal z $0, $1 {",
+                "    set_frequency(predefined_frame_1, 6000000.0);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "defcal rx(0.45) $0 {",
+                "    set_frequency(predefined_frame_1, 6000000.0);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "inv @ pow(2.5) @ h q[0];",
+                "pow(0) @ h q[0];",
+                "rx(theta) q[0];",
+                "b[0] = measure q[0];",
+            ]
+        ),
+        inputs={},
+    )
+
+    assert (
+        circ.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+            gate_definitions=gate_calibrations.pulse_sequences,
+        )
+        == expected_ir
+    )
+
+
+@pytest.mark.xfail(
+    reasons="Calibrations with a partial number of fixed parameters are not supported."
+)
+def test_circuit_with_partial_calibrations(pulse_sequence_2):
+    circuit = Circuit().h(0, power=-2.5).h(0, power=0).ms(0, 1, -0.1, -0.2, -0.3)
+    serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
+    gate_calibrations = (
+        GateCalibrations(
+            {(Gate.MS(-0.1, FreeParameter("beta"), -0.3), QubitSet([0, 1])): pulse_sequence_2}
+        ),
+    )
+    circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=serialization_properties,
+        gate_definitions=gate_calibrations.pulse_sequences,
+    )
+
+
+def test_circuit_user_gate(pulse_sequence_2):
+    class Foo(Gate, Parameterizable):
+        def __init__(
+            self,
+            bar,
+        ):
+            super().__init__(qubit_count=1, ascii_symbols=["Foo"])
+            self._parameters = [bar]
+
+        @property
+        def parameters(self):
+            return self._parameters
+
+        def bind_values(self, **kwargs):
+            raise NotImplementedError
+
+        @property
+        def _qasm_name(self):
+            return "foo"
+
+        def __hash__(self):
+            return hash((self.name, self.parameters[0], self.qubit_count))
+
+        @staticmethod
+        @circuit.subroutine(register=True)
+        def foo(
+            target,
+            bar,
+        ):
+            return Instruction(Foo(bar), target=target)
+
+    Gate.register_gate(Foo)
+
+    circ = Circuit().foo(0, -0.2)
+    serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
+    gate_calibrations = GateCalibrations(
+        {
+            (Foo(FreeParameter("beta")), QubitSet(0)): pulse_sequence_2(
+                **{"alpha": -0.1, "gamma": -0.3}
+            )
+        }
+    )
+
+    expected_ir = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "bit[1] b;",
+                "qubit[1] q;",
+                "cal {",
+                "    waveform drag_gauss_wf = drag_gaussian"
+                + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                "}",
+                "defcal foo(-0.2) $0 {",
+                "    shift_phase(predefined_frame_1, -0.1);",
+                "    set_phase(predefined_frame_1, -0.3);",
+                "    shift_phase(predefined_frame_1, -0.2);",
+                "    play(predefined_frame_1, drag_gauss_wf);",
+                "}",
+                "foo(-0.2) q[0];",
+                "b[0] = measure q[0];",
+            ]
+        ),
+        inputs={},
+    )
+
+    assert (
+        circ.to_ir(
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+            gate_definitions=gate_calibrations.pulse_sequences,
+        )
+        == expected_ir
+    )
+
+
+@pytest.mark.parametrize(
+    "expected_circuit, ir",
+    [
+        (
+            Circuit().h(0, control=1, control_state=0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ h q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().cnot(target=0, control=1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "cnot q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().x(0, control=[1], control_state=[0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ x q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().rx(0, 0.15, control=1, control_state=1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "ctrl @ rx(0.15) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().ry(0, 0.2, control=1, control_state=1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "ctrl @ ry(0.2) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().rz(0, 0.25, control=[1], control_state=[0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ rz(0.25) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().s(target=0, control=[1], control_state=[0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ s q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().t(target=1, control=[0], control_state=[0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ t q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().cphaseshift(target=0, control=1, angle=0.15),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "cphaseshift(0.15) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().ccnot(*[0, 1], target=2),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[3] b;",
+                        "qubit[3] q;",
+                        "ccnot q[0], q[1], q[2];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).state_vector(),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result state_vector",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).expectation(observables.X(), [0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result expectation x(q[0])",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).expectation(observables.H() @ observables.X(), [0, 1]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[2] q;",
+                        "h q[0];",
+                        "#pragma braket result expectation h(q[0]) @ x(q[1])",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).variance(observables.H() @ observables.X(), [0, 1]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[2] q;",
+                        "h q[0];",
+                        "#pragma braket result variance h(q[0]) @ x(q[1])",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).probability(target=[0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result probability q[0]",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().bit_flip(0, 0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise bit_flip(0.1) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().generalized_amplitude_damping(0, 0.1, 0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise generalized_amplitude_damping(0.1, 0.1) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().phase_flip(0, 0.2),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise phase_flip(0.2) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().depolarizing(0, 0.5),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise depolarizing(0.5) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().amplitude_damping(0, 0.8),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise amplitude_damping(0.8) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().phase_damping(0, 0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise phase_damping(0.1) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).amplitude(state=["0", "1"]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        '#pragma braket result amplitude "0", "1"',
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit()
+            .rx(0, 0.15, control=2, control_state=0)
+            .rx(1, 0.3, control=[2, 3])
+            .cnot(target=0, control=[2, 3, 4]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[5] b;",
+                        "qubit[5] q;",
+                        "negctrl @ rx(0.15) q[2], q[0];",
+                        "ctrl(2) @ rx(0.3) q[2], q[3], q[1];",
+                        "ctrl(2) @ cnot q[2], q[3], q[4], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().cnot(0, 1).cnot(target=2, control=3).cnot(target=4, control=[5, 6]),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -817,7 +1544,6 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
         ),
         (
             Circuit().h(0, power=-2.5).h(0, power=0),
-            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
             OpenQasmProgram(
                 source="\n".join(
                     [
@@ -832,13 +1558,268 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 inputs={},
             ),
         ),
+        (
+            Circuit().unitary(matrix=np.array([[0, 1], [1, 0]]), targets=[0]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket unitary([[0, 1.0], [1.0, 0]]) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().pauli_channel(0, probX=0.1, probY=0.2, probZ=0.3),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().two_qubit_depolarizing(0, 1, probability=0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_dephasing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().two_qubit_dephasing(0, 1, probability=0.1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_dephasing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).sample(observable=Observable.Z(), target=0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result sample z(q[0])",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).sample(observable=Observable.Z(), target=0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result sample z(q[0])",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).x(1).density_matrix(target=[0, 1]),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "qubit[2] q;",
+                        "h q[0];",
+                        "x q[1];",
+                        "#pragma braket result density_matrix q[0], q[1]",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().kraus(
+                [0],
+                matrices=[
+                    np.array([[0.9486833j, 0], [0, 0.9486833j]]),
+                    np.array([[0, 0.31622777], [0.31622777, 0]]),
+                ],
+            ),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise "
+                        "kraus([[0.9486833im, 0], [0, 0.9486833im]], [[0, 0.31622777], "
+                        "[0.31622777, 0]]) q[0]",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
-def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
-    assert (
-        circuit.to_ir(ir_type=IRType.OPENQASM, serialization_properties=serialization_properties)
-        == expected_ir
-    )
+def test_circuit_from_ir(expected_circuit, ir):
+    circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
+
+    assert circuit_from_ir == expected_circuit
+
+
+@pytest.mark.parametrize(
+    "expected_circuit, ir",
+    [
+        (
+            Circuit().h(0).cnot(0, 1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "gate my_gate a,b {",
+                        "h a;",
+                        "cnot a,b;",
+                        "}",
+                        "my_gate q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).h(1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "def my_sub(qubit q) {",
+                        "h q;",
+                        "}",
+                        "h q[0];",
+                        "my_sub(q[1]);",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).h(1).cnot(0, 1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "for uint i in [0:1] {",
+                        "h q[i];",
+                        "}",
+                        "cnot q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0).h(1).cnot(0, 1),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "for uint i in [0:1] {",
+                        "h q[i];",
+                        "}",
+                        "cnot q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().x(0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "bit c = 0;",
+                        "if (c ==0){",
+                        "x q[0];",
+                        "}",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+    ],
+)
+def test_circuit_from_ir_greater_functionality(expected_circuit, ir):
+    circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
+
+    assert circuit_from_ir == expected_circuit
+
+
+def test_braket_result_to_result_type_raises_type_error():
+    with pytest.raises(TypeError, match="Result type str is not supported"):
+        braket_result_to_result_type("type error test")
 
 
 @pytest.mark.parametrize(

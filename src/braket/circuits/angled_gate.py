@@ -119,6 +119,9 @@ class AngledGate(Gate, Parameterizable):
     def __repr__(self):
         return f"{self.name}('angle': {self.angle}, 'qubit_count': {self.qubit_count})"
 
+    def __hash__(self):
+        return hash((self.name, self.angle, self.qubit_count))
+
 
 class DoubleAngledGate(Gate, Parameterizable):
     """
@@ -230,6 +233,9 @@ class DoubleAngledGate(Gate, Parameterizable):
             f"{self.name}('angles': ({self.angle_1}, {self.angle_2}), "
             f"'qubit_count': {self.qubit_count})"
         )
+
+    def __hash__(self):
+        return hash((self.name, self.angle_1, self.angle_2, self.qubit_count))
 
 
 class TripleAngledGate(Gate, Parameterizable):
@@ -358,6 +364,9 @@ class TripleAngledGate(Gate, Parameterizable):
             f"'qubit_count': {self.qubit_count})"
         )
 
+    def __hash__(self):
+        return hash((self.name, self.angle_1, self.angle_2, self.angle_3, self.qubit_count))
+
 
 @singledispatch
 def _angles_equal(
@@ -395,14 +404,23 @@ def _multi_angled_ascii_characters(
 
     Args:
         gate (str): The name of the gate.
-        angles (Union[FreeParameterExpression, float]): angles in radians.
+        `*angles` (Union[FreeParameterExpression, float]): angles in radians.
 
     Returns:
         str: Returns the ascii representation for an angled gate.
 
     """
 
-    def format_string(angle):
+    def format_string(angle: Union[FreeParameterExpression, float]) -> str:
+        """
+        Formats an angle for ASCII representation.
+
+        Args:
+            angle (Union[FreeParameterExpression, float]): The angle to format.
+
+        Returns:
+            str: The ASCII representation of the angle.
+        """
         return ".2f" if isinstance(angle, (float, Float)) else ""
 
     return f"{gate}({', '.join(f'{angle:{format_string(angle)}}' for angle in angles)})"
