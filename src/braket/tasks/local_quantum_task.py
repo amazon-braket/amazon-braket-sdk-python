@@ -95,8 +95,7 @@ class LocalQuantumTask(QuantumTask):
         task._delegate = delegate
         task._args = args
         task._kwargs = kwargs
-        if task._result is None:
-            task.async_result()
+        task.async_result()
         return task
 
     def id(self) -> str:
@@ -110,11 +109,11 @@ class LocalQuantumTask(QuantumTask):
         return self._status()
 
     def _status(self) -> str:
-        if hasattr(self, "_task") and hasattr(self, "_thread"):
+        if hasattr(self, "_thread"):
             if self._thread.is_alive():
                 return "RUNNING"
-            if self._task.done():
-                return "COMPLETED"
+
+            return "COMPLETED"
         return "CREATED"
 
     def result(
