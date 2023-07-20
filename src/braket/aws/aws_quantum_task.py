@@ -17,7 +17,7 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Union
 
 import boto3
 
@@ -25,7 +25,7 @@ from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
 from braket.circuits import Instruction
-from braket.circuits.circuit import Circuit, Gate, QubitSet
+from braket.circuits.circuit import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 from braket.circuits.compiler_directives import StartVerbatimBox
 from braket.circuits.gates import PulseGate
@@ -103,7 +103,6 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: Dict[str, str] = None,
         inputs: Dict[str, float] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -143,12 +142,6 @@ class AwsQuantumTask(QuantumTask):
             inputs (Dict[str, float]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
-
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]):
-                A `Dict` for user defined gate calibration. The calibration is defined for
-                for a particular `Gate` on a particular `QubitSet` and is represented by
-                a `PulseSequence`.
-                Default: None.
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
@@ -194,7 +187,6 @@ class AwsQuantumTask(QuantumTask):
             device_parameters or {},
             disable_qubit_rewiring,
             inputs,
-            gate_definitions=gate_definitions,
             *args,
             **kwargs,
         )
@@ -481,7 +473,6 @@ def _create_internal(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -497,7 +488,6 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -515,7 +505,6 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -554,7 +543,6 @@ def _(
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -572,7 +560,6 @@ def _(
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
     inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -593,7 +580,6 @@ def _(
     if (
         disable_qubit_rewiring
         or Instruction(StartVerbatimBox()) in circuit.instructions
-        or gate_definitions is not None
         or any(isinstance(instruction.operator, PulseGate) for instruction in circuit.instructions)
     ):
         qubit_reference_type = QubitReferenceType.PHYSICAL
@@ -603,9 +589,7 @@ def _(
     )
 
     openqasm_program = circuit.to_ir(
-        ir_type=IRType.OPENQASM,
-        serialization_properties=serialization_properties,
-        gate_definitions=gate_definitions,
+        ir_type=IRType.OPENQASM, serialization_properties=serialization_properties
     )
 
     if inputs:
@@ -640,7 +624,6 @@ def _(
     ],
     _,
     inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -665,7 +648,6 @@ def _(
     device_parameters: dict,
     _,
     inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:

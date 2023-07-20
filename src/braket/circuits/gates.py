@@ -2781,9 +2781,6 @@ class Unitary(Gate):
             return self.matrix_equivalence(other)
         return False
 
-    def __hash__(self):
-        return hash((self.name, str(self._matrix), self.qubit_count))
-
     @staticmethod
     def _transform_matrix_to_ir(matrix: np.ndarray) -> List:
         return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]

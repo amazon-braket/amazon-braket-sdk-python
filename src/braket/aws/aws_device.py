@@ -13,13 +13,11 @@
 
 from __future__ import annotations
 
-import importlib
 import json
 import os
-import urllib.request
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Union
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
@@ -29,8 +27,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
-from braket.circuits import Circuit, Gate, QubitSet
-from braket.circuits.gate_calibrations import GateCalibrations
+from braket.circuits import Circuit
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
 from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
@@ -39,10 +36,7 @@ from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # no
 from braket.devices.device import Device
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.parametric.free_parameter import FreeParameter
-from braket.parametric.free_parameter_expression import _is_float
-from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
-from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
+from braket.pulse import Frame, Port, PulseSequence
 from braket.schema_common import BraketSchemaBase
 
 
@@ -68,14 +62,6 @@ class AwsDevice(Device):
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET = {
-        # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
-        "Rx_12": None,
-        "Cz": "CZ",
-        "Cphaseshift": "CPhaseShift",
-        "Xy": "XY",
-    }
-
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
         """
         Args:
@@ -94,7 +80,6 @@ class AwsDevice(Device):
         """
         super().__init__(name=None, status=None)
         self._arn = arn
-        self._gate_calibrations = None
         self._properties = None
         self._provider_name = None
         self._poll_interval_seconds = None
@@ -118,7 +103,6 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[Dict[str, float]] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -142,11 +126,6 @@ class AwsDevice(Device):
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
-                The calibration is defined for a particular `Gate` on a particular `QubitSet`
-                and is represented by a `PulseSequence`.
-                Default: None.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -195,7 +174,6 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
-            gate_definitions=gate_definitions,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -229,7 +207,6 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -257,11 +234,6 @@ class AwsDevice(Device):
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
-                The calibration is defined for a particular `Gate` on a particular `QubitSet`
-                and is represented by a `PulseSequence`.
-                Default: None.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -286,7 +258,6 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
-            gate_definitions=gate_definitions,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -379,20 +350,6 @@ class AwsDevice(Device):
         return self._arn
 
     @property
-    def gate_calibrations(self) -> Optional[GateCalibrations]:
-        """
-        Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
-        If a QPU does not expose these calibrations, None is returned.
-
-        Returns:
-            Optional[GateCalibrations]: The calibration object. Returns `None` if the data
-            is not present.
-        """
-        if not self._gate_calibrations:
-            self._gate_calibrations = self.refresh_gate_calibrations()
-        return self._gate_calibrations
-
-    @property
     def is_available(self) -> bool:
         """Returns true if the device is currently available.
         Returns:
@@ -408,7 +365,10 @@ class AwsDevice(Device):
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)
 
-            if current_time_utc < execution_window.windowEndHour < execution_window.windowStartHour:
+            if (
+                execution_window.windowEndHour < execution_window.windowStartHour
+                and current_time_utc < execution_window.windowEndHour
+            ):
                 weekday = (weekday - 1) % 7
 
             matched_day = execution_window.executionDay == ExecutionDay.EVERYDAY
@@ -652,9 +612,6 @@ class AwsDevice(Device):
         Args:
             device_arn (str): The device ARN.
 
-        Raises:
-            ValueError: Raised if the ARN is not properly formatted
-
         Returns:
             str: the region of the ARN.
         """
@@ -665,101 +622,3 @@ class AwsDevice(Device):
                 f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
-
-    def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
-        """
-        Refreshes the gate calibration data upon request.
-
-        If the device does not have calibration data, None is returned.
-
-        Raises:
-            URLError: If the URL provided returns a non 2xx response.
-
-        Returns:
-            Optional[GateCalibrations]: the calibration data for the device. None
-            is returned if the device does not have a gate calibrations URL associated.
-        """
-        if (
-            hasattr(self.properties, "pulse")
-            and hasattr(self.properties.pulse, "nativeGateCalibrationsRef")
-            and self.properties.pulse.nativeGateCalibrationsRef
-        ):
-            try:
-                with urllib.request.urlopen(
-                    self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
-                ) as f:
-                    json_calibration_data = self._parse_calibration_json(
-                        json.loads(f.read().decode("utf-8"))
-                    )
-                    return GateCalibrations(json_calibration_data)
-            except urllib.error.URLError:
-                raise urllib.error.URLError(
-                    f"Unable to reach {self.properties.pulse.nativeGateCalibrationsRef}"
-                )
-        else:
-            return None
-
-    def _parse_waveforms(self, waveforms_json: Dict) -> Dict:
-        waveforms = dict()
-        for waveform in waveforms_json:
-            parsed_waveform = _parse_waveform_from_calibration_schema(waveforms_json[waveform])
-            waveforms[parsed_waveform.id] = parsed_waveform
-        return waveforms
-
-    def _parse_pulse_sequence(
-        self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
-    ) -> PulseSequence:
-        return PulseSequence._parse_from_calibration_schema(calibration, waveforms, self.frames)
-
-    def _parse_calibration_json(
-        self, calibration_data: Dict
-    ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
-        """
-        Takes the json string from the device calibration URL and returns a structured dictionary of
-        corresponding `Dict[Tuple[Gate, QubitSet], PulseSequence]` to represent the calibration data.
-
-        Args:
-            calibration_data (Dict): The data to be parsed. Based on
-                https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py.
-
-        Returns:
-            Dict[Tuple[Gate, QubitSet], PulseSequence]: The
-            structured data based on a mapping of `Tuple[Gate, Qubit]` to its calibration repesented as a
-            `PulseSequence`.
-
-        """  # noqa: E501
-        waveforms = self._parse_waveforms(calibration_data["waveforms"])
-        parsed_calibration_data = {}
-        for qubit_node in calibration_data["gates"]:
-            qubit = calibration_data["gates"][qubit_node]
-            for gate_node in qubit:
-                for gate in qubit[gate_node]:
-                    gate_capitalized = getattr(
-                        self,
-                        f"_{self.provider_name.upper()}_GATES_TO_BRAKET",
-                        {},
-                    ).get(gate_node.capitalize(), gate_node.capitalize())
-                    gate_obj = (
-                        getattr(importlib.import_module("braket.circuits.gates"), gate_capitalized)
-                        if gate_capitalized is not None
-                        else None
-                    )
-                    qubits = QubitSet([int(x) for x in gate["qubits"]])
-                    if gate_obj is None:
-                        # We drop out gates that are not implemented in the BDK
-                        continue
-
-                    argument = None
-                    if gate["arguments"]:
-                        argument = (
-                            float(gate["arguments"][0])
-                            if _is_float(gate["arguments"][0])
-                            else FreeParameter(gate["arguments"][0])
-                        )
-                    gate_qubit_key = (
-                        (gate_obj(argument), qubits) if argument else (gate_obj(), qubits)
-                    )
-                    gate_qubit_pulse = self._parse_pulse_sequence(gate["calibrations"], waveforms)
-                    parsed_calibration_data[gate_qubit_key] = gate_qubit_pulse
-
-        return parsed_calibration_data
