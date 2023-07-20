@@ -88,6 +88,7 @@ class DummyProgramSimulator(BraketSimulator):
             }
         )
 
+
 class DummyProgramSleepSimulator(BraketSimulator):
     def run(
         self,
@@ -121,6 +122,8 @@ class DummyProgramSleepSimulator(BraketSimulator):
                 "deviceParameters": {},
             }
         )
+
+
 def test_state():
     task = LocalQuantumTask(RESULT)
     assert task.state() == "CREATED"
@@ -138,10 +141,12 @@ def test_result_without_passing_in_result():
     result = local_quantum_task.result()
     assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
+
 def test_running():
     sim = LocalSimulator(DummyProgramSleepSimulator())
     local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     assert local_quantum_task.state() == "RUNNING"
+
 
 @pytest.mark.xfail(raises=NotImplementedError)
 def test_cancel():
