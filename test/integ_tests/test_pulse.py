@@ -315,13 +315,13 @@ def test_gate_calibration_run(device, pulse_sequence):
     bell_circuit = Circuit().rx(0, math.pi / 2).rx(1, math.pi / 2).cz(0, 1).rx(1, -math.pi / 2)
     user_calibration_task = device.run(
         bell_circuit,
-        gate_definitions=user_gate_calibrations.pulse_sequences,
+        gate_calibrations=user_gate_calibrations.pulse_sequences,
         shots=num_shots,
         disable_qubit_rewiring=True,
     )
     device_calibration_task = device.run(
         bell_circuit,
-        gate_definitions=device.gate_calibrations.pulse_sequences,
+        gate_calibrations=device.gate_calibrations.pulse_sequences,
         shots=num_shots,
         disable_qubit_rewiring=True,
     )

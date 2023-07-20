@@ -118,7 +118,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[Dict[str, float]] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
+        gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -142,11 +142,8 @@ class AwsDevice(Device):
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
-                The calibration is defined for a particular `Gate` on a particular `QubitSet`
-                and is represented by a `PulseSequence`.
-                Default: None.
+            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A `GateCalibrations` for user defined gate
+                calibrations.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -195,7 +192,7 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
-            gate_definitions=gate_definitions,
+            gate_calibrations=gate_calibrations,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -229,7 +226,7 @@ class AwsDevice(Device):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
+        gate_calibrations: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -257,11 +254,8 @@ class AwsDevice(Device):
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
-                The calibration is defined for a particular `Gate` on a particular `QubitSet`
-                and is represented by a `PulseSequence`.
-                Default: None.
+            gate_calibrations (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
+                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for user defined gate calibrations.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the tasks run
@@ -286,7 +280,7 @@ class AwsDevice(Device):
             poll_timeout_seconds=poll_timeout_seconds,
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
-            gate_definitions=gate_definitions,
+            gate_calibrations=gate_calibrations,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -679,10 +673,8 @@ class AwsDevice(Device):
             Optional[GateCalibrations]: the calibration data for the device. None
             is returned if the device does not have a gate calibrations URL associated.
         """
-        if (
-            hasattr(self.properties, "pulse")
-            and hasattr(self.properties.pulse, "nativeGateCalibrationsRef")
-            and self.properties.pulse.nativeGateCalibrationsRef
+        if hasattr(self.properties, "pulse") and hasattr(
+            self.properties.pulse, "nativeGateCalibrationsRef"
         ):
             try:
                 with urllib.request.urlopen(
