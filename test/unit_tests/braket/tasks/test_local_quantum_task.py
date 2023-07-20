@@ -138,6 +138,7 @@ def test_result():
 def test_result_without_passing_in_result():
     sim = LocalSimulator(DummyProgramSimulator())
     local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    assert local_quantum_task._result is None
     result = local_quantum_task.result()
     assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 

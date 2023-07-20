@@ -13,7 +13,7 @@
 
 import asyncio
 import threading
-from asyncio import AbstractEventLoop, CancelledError, Task
+from asyncio import AbstractEventLoop, Task
 from functools import singledispatchmethod
 from typing import Dict, Optional, Union
 
@@ -139,10 +139,11 @@ class LocalQuantumTask(QuantumTask):
         """
         if not self._result:
             self._thread.join()
+
             if self._task._exception:
                 raise self._task._exception
-            if self._task._result:
-                self._result = self._task._result
+
+            self._result = self._task._result
 
         return self._result
 
@@ -175,13 +176,11 @@ class LocalQuantumTask(QuantumTask):
                         that represents the task to run in the event loop.
 
         Raises:
-        - asyncio.CancelledError: If the task is cancelled while running.
         - Exception: If an exception occurs during the execution of the task.
 
         Description:
         This method sets the specified event loop using asyncio.set_event_loop(),
-        and then runs the event loop until the given task is completed. If the task
-        is cancelled, a CancelledError is caught and handled without raising it further.
+        and then runs the event loop until the given task is completed.
         If any other exception occurs during the execution of the task, it is re-raised
         to be handled in the calling context.
 
@@ -198,8 +197,6 @@ class LocalQuantumTask(QuantumTask):
         asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(task)
-        except CancelledError:
-            """Cancelling the task"""
         except Exception as e:
             raise e
 
