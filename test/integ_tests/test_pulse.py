@@ -1,12 +1,10 @@
-import math
-
 import numpy as np
 import pytest
 
 from braket.aws import AwsDevice, AwsQuantumTask
-from braket.circuits import Circuit, Gate, GateCalibrations, QubitSet
+from braket.circuits import Circuit
 from braket.parametric import FreeParameter
-from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
+from braket.pulse import ArbitraryWaveform, PulseSequence
 
 
 @pytest.fixture
@@ -143,30 +141,6 @@ def arbitrary_waveform():
             0.0,
             0.0,
         ]
-    )
-
-
-@pytest.fixture
-def port():
-    return Port("test_port_ff", dt=1e-9)
-
-
-@pytest.fixture
-def frame_id(device):
-    return next(iter(device.frames))
-
-
-@pytest.fixture
-def frame(frame_id, port):
-    return Frame(frame_id, port, 1e6, is_predefined=True)
-
-
-@pytest.fixture
-def pulse_sequence(frame, arbitrary_waveform):
-    return (
-        PulseSequence()
-        .barrier(qubits_or_frames=[frame])
-        .play(frame=frame, waveform=arbitrary_waveform)
     )
 
 
@@ -307,33 +281,3 @@ def test_pulse_sequence(arbitrary_waveform, device):
     )
     chi_squared = np.sum((observed - expected) ** 2 / expected)
     assert chi_squared < 10  # adjust this threshold if test is flaky
-
-
-def test_gate_calibration_run(device, pulse_sequence):
-    user_gate_calibrations = GateCalibrations({(Gate.Rx(math.pi / 2), QubitSet(0)): pulse_sequence})
-    num_shots = 50
-    bell_circuit = Circuit().rx(0, math.pi / 2).rx(1, math.pi / 2).cz(0, 1).rx(1, -math.pi / 2)
-    user_calibration_task = device.run(
-        bell_circuit,
-        gate_calibrations=user_gate_calibrations.pulse_sequences,
-        shots=num_shots,
-        disable_qubit_rewiring=True,
-    )
-    device_calibration_task = device.run(
-        bell_circuit,
-        gate_calibrations=device.gate_calibrations.pulse_sequences,
-        shots=num_shots,
-        disable_qubit_rewiring=True,
-    )
-
-    if not device.is_available:
-        try:
-            assert user_calibration_task.state not in AwsQuantumTask.TERMINAL_STATES
-            assert device_calibration_task.state not in AwsQuantumTask.TERMINAL_STATES
-        finally:
-            user_calibration_task.cancel()
-            device_calibration_task.cancel()
-        return
-
-    assert user_calibration_task.result().measurement_counts
-    assert device_calibration_task.result().measurement_counts

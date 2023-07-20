@@ -13,9 +13,7 @@
 
 from __future__ import annotations
 
-import builtins
 from copy import deepcopy
-from inspect import signature
 from typing import Any, Dict, List, Set, Union
 
 from openpulse import ast
@@ -333,72 +331,6 @@ class PulseSequence:
             return _FreeParameterExpressionIdentifier(parameter)
         return parameter
 
-    def _parse_arg_from_calibration_schema(
-        self, argument: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
-    ) -> Any:
-        nonprimitive_arg_type = {
-            "frame": getattr(frames, "get"),
-            "waveform": getattr(waveforms, "get"),
-            "expr": FreeParameterExpression,
-        }
-        if argument["type"] in nonprimitive_arg_type.keys():
-            return nonprimitive_arg_type[argument["type"]](argument["value"])
-        else:
-            return getattr(builtins, argument["type"])(argument["value"])
-
-    @classmethod
-    def _parse_from_calibration_schema(
-        cls, calibration: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
-    ) -> PulseSequence:
-        """
-        Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26.
-
-        Args:
-            calibration (Dict): The pulse instruction to parse
-            waveforms (Dict[Waveform]): The waveforms supplied for the pulse sequences.
-            frames (Dict[Frame]): A dictionary of frame objects to use.
-
-        Returns:
-            PulseSequence: The parse sequence obtain from parsing a pulse instruction.
-        """  # noqa: E501
-        calibration_sequence = cls()
-        for instr in calibration:
-            if hasattr(PulseSequence, f"{instr['name']}"):
-                instr_function = getattr(calibration_sequence, instr["name"])
-                instr_args_keys = signature(instr_function).parameters.keys()
-                instr_args = {}
-                if instr["arguments"] is not None:
-                    for argument in instr["arguments"]:
-                        if argument["name"] in {"qubit", "frame"} and instr["name"] in {
-                            "barrier",
-                            "delay",
-                        }:
-                            argument_value = (
-                                [frames[argument["value"]]]
-                                if argument["name"] == "frame"
-                                else instr_args.get("qubits_or_frames", QubitSet())
-                            )
-                            # QubitSet is an IndexedSet so the ordering matters
-                            if argument["name"] == "frame":
-                                argument_value = (
-                                    instr_args.get("qubits_or_frames", []) + argument_value
-                                )
-                            else:
-                                argument_value.update(QubitSet(int(argument["value"])))
-                            instr_args["qubits_or_frames"] = argument_value
-                        elif argument["name"] in instr_args_keys:
-                            instr_args[
-                                argument["name"]
-                            ] = calibration_sequence._parse_arg_from_calibration_schema(
-                                argument, waveforms, frames
-                            )
-                else:
-                    instr_args["qubits_or_frames"] = []
-                instr_function(**instr_args)
-            else:
-                raise ValueError(f"The {instr['name']} instruction has not been implemented")
-        return calibration_sequence
-
     def __call__(self, arg: Any = None, **kwargs) -> PulseSequence:
         """
         Implements the call function to easily make a bound PulseSequence.
@@ -417,13 +349,6 @@ class PulseSequence:
         for key, val in kwargs.items():
             param_values[str(key)] = val
         return self.make_bound_pulse_sequence(param_values)
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, PulseSequence)
-            and self.parameters == other.parameters
-            and self.to_ir() == other.to_ir()
-        )
 
 
 def _validate_uniqueness(
