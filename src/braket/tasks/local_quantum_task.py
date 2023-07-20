@@ -103,7 +103,7 @@ class LocalQuantumTask(QuantumTask):
 
     def cancel(self) -> None:
         """Cancel the quantum task."""
-        raise NotImplementedError("Cannot cancel completed local task")
+        raise NotImplementedError("LocalQuantumTask does not support cancelling")
 
     def state(self) -> str:
         return self._status()
