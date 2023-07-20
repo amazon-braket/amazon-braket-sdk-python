@@ -88,13 +88,6 @@ class DummyProgramSimulator(BraketSimulator):
         )
 
 
-def test_id():
-    # Task ID is valid UUID
-    task = LocalQuantumTask(RESULT)
-    task.result()
-    uuid.UUID(task.id)
-
-
 def test_state():
     task = LocalQuantumTask(RESULT)
     assert task.state() == "CREATED"
@@ -104,7 +97,13 @@ def test_result():
     task = LocalQuantumTask(RESULT)
     result = task.result()
     assert result == RESULT
-    assert RESULT.task_metadata.id == task.id
+
+
+def test_result_without_passing_in_result():
+    sim = LocalSimulator(DummyProgramSimulator())
+    local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    result = local_quantum_task.result()
+    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 @pytest.mark.xfail(raises=NotImplementedError)
@@ -127,9 +126,3 @@ def test_async_without_result():
         GATE_MODEL_RESULT
     )
     assert local_quantum_task.state() == "COMPLETED"
-
-
-def test_str():
-    task = LocalQuantumTask(RESULT)
-    expected = "LocalQuantumTask('id':{})".format(task.id)
-    assert str(task) == expected

@@ -53,15 +53,7 @@ class LocalQuantumTask(QuantumTask):
         ] = None,
     ):
         self._result = result
-        self._delegate = None
-        self._inputs = None
-        self._task_specification = None
-        self._shots = None
-        self._args = None
-        self._kwargs = None
         self._loop = asyncio.new_event_loop()
-        if self._result:
-            self._id = result.task_metadata.id
 
     @staticmethod
     def create(
@@ -107,9 +99,8 @@ class LocalQuantumTask(QuantumTask):
             task.async_result()
         return task
 
-    @property
     def id(self) -> str:
-        return str(self._id)
+        raise NotImplementedError
 
     def cancel(self) -> None:
         """Cancel the quantum task."""
@@ -152,7 +143,6 @@ class LocalQuantumTask(QuantumTask):
                 raise self._task._exception
             if self._task._result:
                 self._result = self._task._result
-                self._id = self._result.task_metadata.id
 
         return self._result
 
@@ -330,6 +320,3 @@ class LocalQuantumTask(QuantumTask):
             )
         results = simulator.run(program, shots, *args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
-
-    def __repr__(self) -> str:
-        return f"LocalQuantumTask('id':{self.id})"

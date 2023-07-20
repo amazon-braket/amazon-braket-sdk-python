@@ -65,7 +65,6 @@ def test_arbitrary_waveform_not_castable_into_list():
     ArbitraryWaveform(amps)
 
 
-
 def test_constant_waveform():
     length = 4e-3
     iq = 4
