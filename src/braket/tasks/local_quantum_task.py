@@ -110,7 +110,7 @@ class LocalQuantumTask(QuantumTask):
         return self._status()
 
     def _status(self) -> str:
-        if hasattr(self, "_task"):
+        if hasattr(self, "_task") and hasattr(self, "_thread"):
             if self._thread.is_alive():
                 return "RUNNING"
             if self._task.done():
