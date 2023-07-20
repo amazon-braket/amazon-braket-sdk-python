@@ -14,7 +14,9 @@
 import numpy as np
 import pytest
 
+from braket.ir.ahs import Program
 from braket.task_result import (
+    AdditionalMetadata,
     AnalogHamiltonianSimulationShotMeasurement,
     AnalogHamiltonianSimulationShotMetadata,
     AnalogHamiltonianSimulationShotResult,
@@ -31,6 +33,62 @@ from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import ShotR
 @pytest.fixture
 def task_metadata():
     return TaskMetadata(**{"id": "task_arn", "deviceId": "arn1", "shots": 100})
+
+
+@pytest.fixture
+def additional_metadata():
+    return AdditionalMetadata(
+        action=Program(
+            setup={
+                "ahs_register": {
+                    "sites": [
+                        [0.0, 0.0],
+                        [0.0, 3.0e-6],
+                        [0.0, 6.0e-6],
+                        [3.0e-6, 0.0],
+                        [3.0e-6, 3.0e-6],
+                        [3.0e-6, 6.0e-6],
+                    ],
+                    "filling": [1, 1, 1, 1, 0, 0],
+                }
+            },
+            hamiltonian={
+                "drivingFields": [
+                    {
+                        "amplitude": {
+                            "time_series": {
+                                "values": [0.0, 2.51327e7, 2.51327e7, 0.0],
+                                "times": [0.0, 3.0e-7, 2.7e-6, 3.0e-6],
+                            },
+                            "pattern": "uniform",
+                        },
+                        "phase": {
+                            "time_series": {"values": [0, 0], "times": [0.0, 3.0e-6]},
+                            "pattern": "uniform",
+                        },
+                        "detuning": {
+                            "time_series": {
+                                "values": [-1.25664e8, -1.25664e8, 1.25664e8, 1.25664e8],
+                                "times": [0.0, 3.0e-7, 2.7e-6, 3.0e-6],
+                            },
+                            "pattern": "uniform",
+                        },
+                    }
+                ],
+                "shiftingFields": [
+                    {
+                        "magnitude": {
+                            "time_series": {
+                                "values": [-1.25664e8, 1.25664e8],
+                                "times": [0.0, 3.0e-6],
+                            },
+                            "pattern": [0.5, 1.0, 0.5, 0.5, 0.5, 0.5],
+                        }
+                    }
+                ],
+            },
+        )
+    )
 
 
 @pytest.fixture
@@ -90,27 +148,30 @@ def measurements_extended(
 
 
 @pytest.fixture
-def result_str_1(task_metadata, measurements):
+def result_str_1(task_metadata, additional_metadata, measurements):
     result = AnalogHamiltonianSimulationTaskResult(
         taskMetadata=task_metadata,
+        additionalMetadata=additional_metadata,
         measurements=measurements,
     )
     return result.json()
 
 
 @pytest.fixture
-def result_str_2(task_metadata, measurements):
+def result_str_2(task_metadata, additional_metadata, measurements):
     result = AnalogHamiltonianSimulationTaskResult(
         taskMetadata=task_metadata,
+        additionalMetadata=additional_metadata,
         measurements=None,
     )
     return result.json()
 
 
 @pytest.fixture
-def result_str_3(task_metadata, measurements_extended):
+def result_str_3(task_metadata, additional_metadata, measurements_extended):
     result = AnalogHamiltonianSimulationTaskResult(
         taskMetadata=task_metadata,
+        additionalMetadata=additional_metadata,
         measurements=measurements_extended,
     )
     return result.json()
@@ -127,6 +188,7 @@ def validate_result_from_str_1(result):
     assert result.measurements[2].status == AnalogHamiltonianSimulationShotStatus.FAILURE
     assert result.measurements[2].pre_sequence is None
     assert result.measurements[2].post_sequence is None
+    assert result.additional_metadata.action is not None
 
 
 def test_from_object(result_str_1, task_metadata):
@@ -160,6 +222,7 @@ def test_equality(task_metadata, result_str_1, result_str_2):
     assert result_1 != other_result
     assert result_1 != AnalogHamiltonianSimulationQuantumTaskResult(
         task_metadata=task_metadata,
+        additional_metadata=additional_metadata,
         measurements=[result_1.measurements[1], result_1.measurements[0]],
     )
     assert result_1 != non_result
@@ -177,7 +240,9 @@ def test_get_counts(result_str_3):
 def test_get_counts_failed_task(task_metadata):
     measurement = ShotResult(AnalogHamiltonianSimulationShotStatus.FAILURE, [], [])
     result = AnalogHamiltonianSimulationQuantumTaskResult(
-        task_metadata=task_metadata, measurements=[measurement]
+        task_metadata=task_metadata,
+        additional_metadata=additional_metadata,
+        measurements=[measurement],
     )
 
     counts = result.get_counts()
