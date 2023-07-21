@@ -372,8 +372,8 @@ def qasm_simple_condition(bool do_cnot) -> bool {
     }
     return do_cnot;
 }
-bool __bool_0__ = false;
 qubit[2] __qubits__;
+bool __bool_0__ = false;
 """
     expected += f"__bool_0__ = qasm_simple_condition({'true' if do_cnot else 'false'});"
     assert qasm_simple_condition_wrapper(do_cnot).to_ir() == expected
@@ -466,8 +466,8 @@ def ground_state_measurements() -> bit[3] {
 }
 """
     # TODO: this should be `bit[3]`, but there's a bug. It's being tracked in an issue.
-    expected += """bit __bit_1__;
-qubit[6] __qubits__;
+    expected += """qubit[6] __qubits__;
+bit __bit_1__;
 __bit_1__ = ground_state_measurements();"""
     assert ground_state_measurements_wrapper().to_ir() == expected
 
@@ -906,6 +906,7 @@ def test_recursive_retval_expression_python_type() -> None:
 def retval_recursive() -> int[32] {
     int[32] __int_1__ = 0;
     __int_1__ = retval_recursive();
+    int[32] __int_3__ = 0;
     __int_3__ = retval_constant();
     return 2 * __int_1__ + (__int_3__ + 2) / 3;
 }

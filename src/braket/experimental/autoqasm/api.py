@@ -308,10 +308,7 @@ def _convert_program_as_subroutine(
         oqpy_program.set(return_variable, subroutine_function_call)
     elif return_instance is not None:
         return_variable = aq_types.wrap_value(return_instance)
-        # If we are inside a recursive function call, we need to declare
-        # the variable explicitly before setting it.
-        if f in program_conversion_context.subroutines_processing:
-            oqpy_program.declare(return_variable)
+        oqpy_program.declare(return_variable)
         oqpy_program.set(return_variable, subroutine_function_call)
     else:
         function_call = subroutine_function_call.to_ast(oqpy_program)

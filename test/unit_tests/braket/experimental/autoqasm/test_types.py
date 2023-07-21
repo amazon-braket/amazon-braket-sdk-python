@@ -154,9 +154,9 @@ def test_return_bin_expr():
 def add(int[32] a, int[32] b) -> int[32] {
     return a + b;
 }
-int[32] __int_0__ = 0;
 int[32] a = 5;
 int[32] b = 6;
+int[32] __int_0__ = 0;
 __int_0__ = add(a, b);"""
 
     assert ret_test().to_ir() == expected
