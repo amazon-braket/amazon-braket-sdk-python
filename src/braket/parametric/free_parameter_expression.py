@@ -186,21 +186,3 @@ def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
             substituted = float(substituted)
         return substituted
     return parameter
-
-
-def _is_float(argument: str) -> bool:
-    """
-    Checks if a string can be cast into a float.
-
-    Args:
-        argument (str): String to check.
-
-    Returns:
-        bool: Returns true if the string can be cast as a float. False, otherwise.
-
-    """
-    try:
-        float(argument)
-        return True
-    except ValueError:
-        return False
