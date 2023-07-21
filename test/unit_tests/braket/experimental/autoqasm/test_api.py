@@ -807,8 +807,8 @@ def test_unnamed_retval_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_test() -> int[32] {
-    int[32] __retval__ = 1;
-    return __retval__;
+    int[32] retval_ = 1;
+    return retval_;
 }
 int[32] __int_1__ = 0;
 __int_1__ = retval_test();"""
@@ -829,8 +829,8 @@ def test_unnamed_retval_qasm_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_test() -> bit {
-    bit __retval__ = 1;
-    return __retval__;
+    bit retval_ = 1;
+    return retval_;
 }
 bit __bit_0__;
 __bit_0__ = retval_test();"""

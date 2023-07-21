@@ -43,7 +43,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
     if isinstance(value, UndefinedReturnValue):
         return value
 
-    if target_name == constants.AUTOGRAPH_RETVAL_VARIABLE_NAME:
+    if target_name == constants.RETVAL_VARIABLE_NAME:
         # AutoGraph transpiles return statements like
         #    return <return_value>
         # into
@@ -58,7 +58,6 @@ def assign_stmt(target_name: str, value: Any) -> Any:
             return value
 
         value = types.wrap_value(value)
-        target_name = constants.AUTOQASM_RETVAL_VARIABLE_NAME
 
     if isinstance(value, oqpy.base.Var):
         oqpy_program = program.get_program_conversion_context().get_oqpy_program()

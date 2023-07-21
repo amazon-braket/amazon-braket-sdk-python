@@ -33,8 +33,5 @@ INT_NAME_TEMPLATE = "__int_{0}__"
 QUBIT_REGISTER = "__qubits__"
 """Qubits are globally addressed, and so we can specify a single qubit register name."""
 
-AUTOGRAPH_RETVAL_VARIABLE_NAME = "retval_"
-"""A special name for variables assigned to the return values of AutoGraph function calls."""
-
-AUTOQASM_RETVAL_VARIABLE_NAME = "__retval__"
-"""A special name for variables assigned to the return values of AutoQASM function calls."""
+RETVAL_VARIABLE_NAME = "retval_"
+"""A special name for variables assigned to the return values of function calls."""
