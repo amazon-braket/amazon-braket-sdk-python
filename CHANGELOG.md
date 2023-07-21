@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.51.0 (2023-07-21)
+
+### Features
+
+ * add gate calibration data for supported quantum devices
+
+### Bug Fixes and Other Changes
+
+ * revert adding gate calibration data
+ * making additional meta available in AHS results
+ * handle the optional calibration URL returning None
+ * copy calibrations in to_ir
+
+## v1.50.0 (2023-07-19)
+
+### Features
+
+ * Add dot(), power(), and to_circuit() to PauliString
+
 ## v1.49.1.post0 (2023-07-17)
 
 ### Documentation Changes
