@@ -792,3 +792,47 @@ def test_mismatched_qubits():
 
     with pytest.raises(errors.InconsistentNumQubits):
         main()
+
+
+def test_unnamed_retval_python_type() -> None:
+    """Tests subroutines which return unnamed Python values."""
+
+    @aq.function
+    def retval_test() -> int:
+        return 1
+
+    @aq.function
+    def caller() -> int:
+        return retval_test()
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_test() -> int[32] {
+    int[32] __retval__ = 1;
+    return __retval__;
+}
+int[32] __int_1__ = 0;
+__int_1__ = retval_test();"""
+
+    assert caller().to_ir() == expected_qasm
+
+
+def test_unnamed_retval_qasm_type() -> None:
+    """Tests subroutines which return unnamed QASM values."""
+
+    @aq.function
+    def retval_test() -> aq.BitVar:
+        return aq.BitVar(1)
+
+    @aq.function
+    def caller() -> aq.BitVar:
+        return retval_test()
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_test() -> bit {
+    bit __retval__ = 1;
+    return __retval__;
+}
+bit __bit_0__;
+__bit_0__ = retval_test();"""
+
+    assert caller().to_ir() == expected_qasm
