@@ -91,12 +91,7 @@ def test_device_enum():
     def get_device_name(device: AwsDevice):
         arn_device_name = device.arn.split("/")[-1]
 
-        device_name = (
-            arn_device_name
-            .replace("_", "")
-            .replace("-", "")
-            .replace("system", "")
-        )
+        device_name = arn_device_name.replace("_", "").replace("-", "").replace("system", "")
 
         if device.provider_name == "Amazon Braket":
             device_name = device_name.upper()
