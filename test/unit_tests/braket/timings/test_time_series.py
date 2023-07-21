@@ -72,6 +72,93 @@ def test_periodic_signal():
     assert new_ts.values() == expected_values
 
 
+def test_constant_like_with_time_series():
+    time_series = TimeSeries().put(0.0, 0.0).put(1.2, 3.14)
+    constant_ts = TimeSeries.constant_like(time_series, constant=3.14)
+    times = time_series.times()
+    assert times == constant_ts.times()
+    assert constant_ts.values() == [3.14] * len(times)
+
+
+@pytest.mark.parametrize(
+    "area",
+    "value_max",
+    "slew_rate_max",
+    "time_separation_min",
+    [
+        (2.0, 2.0, 4.0, 1.0),
+        (1.0, 2.0, 4.0, 1.0),
+        (4.0, 2.0, 1.0, 1.0),
+        (1.0, 2.0, 1.0, 1.0),
+    ],
+)
+def test_trapezoidal_signal_as_triangular_signal(
+    area, value_max, slew_rate_max, time_separation_min
+):
+    ts = TimeSeries.trapezoidal_signal(area, value_max, slew_rate_max, time_separation_min)
+    t_ramp = max(time_separation_min, value_max / slew_rate_max)
+    value = area / t_ramp
+    assert ts.times() == [0, t_ramp, 2 * t_ramp]
+    assert ts.values() == [0, value, 0]
+
+
+@pytest.mark.parametrize(
+    "area",
+    "value_max",
+    "slew_rate_max",
+    "time_separation_min",
+    [
+        (4.0, 2.0, 4.0, 1.0),
+        (2.1, 2.0, 4.0, 1.0),
+        (6.0, 2.0, 1.0, 1.0),
+        (4.1, 2.0, 1.0, 1.0),
+    ],
+)
+def test_trapezoidal_signal_as_min_trapezoidal_signal(
+    area, value_max, slew_rate_max, time_separation_min
+):
+    ts = TimeSeries.trapezoidal_signal(area, value_max, slew_rate_max, time_separation_min)
+    t_ramp = max(time_separation_min, value_max / slew_rate_max)
+    value = area / (t_ramp + time_separation_min)
+    assert ts.times() == [0, t_ramp, t_ramp + time_separation_min, 2 * t_ramp + time_separation_min]
+    assert ts.values() == [0, value, value, 0]
+
+
+@pytest.mark.parametrize(
+    "area",
+    "value_max",
+    "slew_rate_max",
+    "time_separation_min",
+    [
+        (4.1, 2.0, 4.0, 1.0),
+        (6.1, 2.0, 1.0, 1.0),
+    ],
+)
+def test_trapezoidal_signal_with_large_area(area, value_max, slew_rate_max, time_separation_min):
+    ts = TimeSeries.trapezoidal_signal(area, value_max, slew_rate_max, time_separation_min)
+    t_ramp = max(time_separation_min, value_max / slew_rate_max)
+    t_plateau = area / value_max - t_ramp
+    assert ts.times() == [0, t_ramp, t_ramp + t_plateau, 2 * t_ramp + t_plateau]
+    assert ts.values() == [0, value_max, value_max, 0]
+
+
+# @pytest.mark.xfail(raises=ValueError)
+# @pytest.mark.parametrize(
+#     "area",
+#     "value_max",
+#     "slew_rate_max",
+#     "time_separation_min",
+#     [
+#         (-4.1, 2.0, 4.0, 1.0),
+#         (4.1, -2.0, 4.0, 1.0),
+#         (4.1, 2.0, -4.0, 1.0),
+#         (4.1, 2.0, 4.0, -1.0),
+#     ],
+# )
+# def test_trapezoidal_signal_with_negative_para(area, value_max, slew_rate_max, time_separation_min):
+#     TimeSeries.trapezoidal_signal(area, value_max, slew_rate_max, time_separation_min)
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_periodic_signal_not_eq_length():
     times = list(range(5))

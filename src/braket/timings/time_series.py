@@ -20,6 +20,8 @@ from enum import Enum
 from numbers import Number
 from typing import Iterator, List, Union
 
+import numpy as np
+
 
 @dataclass
 class TimeSeriesItem:
@@ -118,15 +120,19 @@ class TimeSeries:
 
     @staticmethod
     def constant_like(times: Union[List[float], TimeSeries], constant: float = 0.0) -> TimeSeries:
-        """Obtain a constant time series given the list of time points and the constant values
+        """Obtain a constant time series given another time series or the list of time points,
+        and the constant values
 
         Args:
-            times (Union[List[float], TimeSeries]): list of time points
+            times (Union[List[float], TimeSeries]): list of time points or a time series
             constant (float): constant value
 
         Returns:
             TimeSeries: A constant time series
         """
+        if not isinstance(times, List):
+            times = times.times()
+
         ts = TimeSeries()
         for t in times:
             ts.put(t, constant)
@@ -297,6 +303,69 @@ class TimeSeries:
             new_time_series = new_time_series.stitch(repeating_block)
 
         return new_time_series
+
+    @staticmethod
+    def trapezoidal_signal(
+        area: float, value_max: float, slew_rate_max: float, time_separation_min: float
+    ) -> TimeSeries:
+        """Get a trapezoidal time series with specified area, maximum value, maximum slew rate
+        and minimum separation of time points
+
+            Args:
+                area (float): Total area under the time series
+                value_max (float): The maximum value of the time series
+                slew_rate_max (float): The maximum slew rate
+                time_separation_min (float): The minimum separation of time points
+
+            Returns:
+                TimeSeries: A trapezoidal_signal time series
+
+            Notes: The area of a time series \Omega(t) is defined as the time integral
+            \int_0^T\Omega(t)dt, where T is the duration. We also assume the trapezoidal
+            time series starts and ends at zero.
+        """
+
+        if area <= 0.0:
+            raise ValueError("The area of the trapezoidal time series has to be positive.")
+        if value_max <= 0.0:
+            raise ValueError("The maximum value of the trapezoidal time series has to be positive.")
+        if slew_rate_max <= 0.0:
+            raise ValueError(
+                "The maximum slew rate of the trapezoidal time series has to be positive."
+            )
+        if time_separation_min <= 0.0:
+            raise ValueError(
+                "The minimum separation of time points of the trapezoidal time series "
+                "has to be positive."
+            )
+
+        # Determine the ramp time to reach the max allowed value
+        t_ramp = max(time_separation_min, value_max / slew_rate_max)
+
+        # The max achievable area if there are 3 time points: [0, t_ramp, 2 * t_ramp]
+        area_threshold_1 = t_ramp * value_max
+
+        # The max achievable area if there are 4 time points:
+        # [0, t_ramp, t_ramp + time_separation_min, 2 * t_ramp + time_separation_min]
+        area_threshold_2 = (t_ramp + time_separation_min) * value_max
+
+        if area <= area_threshold_1:
+            # Determine the max value if area <= area_threshold_1
+            value = area / t_ramp
+            times = [0, t_ramp, 2 * t_ramp]
+            values = [0, value, 0]
+        elif area <= area_threshold_2:
+            # Determine the max value if area_threshold_1 < area <= area_threshold_2
+            value = area / (t_ramp + time_separation_min)
+            times = [0, t_ramp, t_ramp + time_separation_min, 2 * t_ramp + time_separation_min]
+            values = [0, value, value, 0]
+        else:
+            # Determine the t_plateau if area > area_threshold_2
+            t_plateau = (area - area_threshold_2) / value_max + time_separation_min
+            times = [0, t_ramp, t_ramp + t_plateau, 2 * t_ramp + t_plateau]
+            values = [0, value_max, value_max, 0]
+
+        return TimeSeries.from_lists(times, values)
 
 
 # TODO: Verify if this belongs here.
