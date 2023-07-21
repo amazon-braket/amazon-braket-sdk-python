@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from typing import List, Set
 
 import pytest
 
@@ -98,14 +99,17 @@ def _get_device_name(device: AwsDevice):
     return device_name
 
 
-def test_device_enum():
-    aws_devices = AwsDevice.get_devices()
-
-    # determine retired providers
+def _get_active_providers(aws_devices: List[AwsDevice]) -> Set[str]:
     active_providers = set()
     for device in aws_devices:
         if device.status != "RETIRED":
             active_providers.add(_get_provider_name(device))
+    return active_providers
+
+
+def test_device_enum():
+    aws_devices = AwsDevice.get_devices()
+    active_providers = _get_active_providers(aws_devices)
 
     # validate all devices in API
     for device in aws_devices:
