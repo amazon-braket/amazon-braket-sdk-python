@@ -107,24 +107,29 @@ def _get_active_providers(aws_devices: List[AwsDevice]) -> Set[str]:
     return active_providers
 
 
+def _validate_device(device: AwsDevice, active_providers: Set[str]):
+    provider_name = _get_provider_name(device)
+    if provider_name not in active_providers:
+        provider_name = f"_{provider_name}"
+    device_name = _get_device_name(device)
+    if device.status == "RETIRED":
+        device_name = f"_{device_name}"
+
+    assert getattr(getattr(Devices, provider_name), device_name) == device.arn
+
+
 def test_device_enum():
     aws_devices = AwsDevice.get_devices()
     active_providers = _get_active_providers(aws_devices)
 
     # validate all devices in API
     for device in aws_devices:
-        provider_name = _get_provider_name(device)
-        if provider_name not in active_providers:
-            provider_name = f"_{provider_name}"
-        device_name = _get_device_name(device)
-        if device.status == "RETIRED":
-            device_name = f"_{device_name}"
-
-        assert getattr(getattr(Devices, provider_name), device_name) == device.arn
+        _validate_device(device, active_providers)
 
     # validate all devices in enum
     providers = [getattr(Devices, attr) for attr in dir(Devices) if not attr.startswith("__")]
     for provider in providers:
         devices = [getattr(provider, attr) for attr in dir(provider) if not attr.startswith("__")]
         for arn in devices:
-            AwsDevice(arn)
+            device = AwsDevice(arn)
+            _validate_device(device, active_providers)
