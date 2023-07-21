@@ -836,3 +836,84 @@ bit __bit_0__;
 __bit_0__ = retval_test();"""
 
     assert caller().to_ir() == expected_qasm
+
+
+def test_recursive_unassigned_retval_python_type() -> None:
+    """Tests recursive subroutines which do not assign the return value to a variable."""
+
+    @aq.function
+    def retval_recursive() -> int:
+        retval_recursive()
+        return 1
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_recursive() -> int[32] {
+    int[32] __int_1__ = 0;
+    __int_1__ = retval_recursive();
+    int[32] retval_ = 1;
+    return retval_;
+}
+int[32] __int_3__ = 0;
+__int_3__ = retval_recursive();
+int[32] retval_ = 1;"""
+
+    assert retval_recursive().to_ir() == expected_qasm
+
+
+def test_recursive_assigned_retval_python_type() -> None:
+    """Tests recursive subroutines which assign the return value to a variable."""
+
+    @aq.function
+    def retval_recursive() -> int:
+        a = retval_recursive()  # noqa: F841
+        return 1
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_recursive() -> int[32] {
+    int[32] __int_1__ = 0;
+    __int_1__ = retval_recursive();
+    int[32] a;
+    a = __int_1__;
+    int[32] retval_ = 1;
+    return retval_;
+}
+int[32] __int_3__ = 0;
+__int_3__ = retval_recursive();
+int[32] a;
+a = __int_3__;
+int[32] retval_ = 1;"""
+
+    assert retval_recursive().to_ir() == expected_qasm
+
+
+def test_recursive_retval_expression_python_type() -> None:
+    """Tests recursive subroutines which use the return value in an expression."""
+
+    @aq.function
+    def retval_constant() -> int:
+        return 3
+
+    @aq.function
+    def retval_recursive() -> int:
+        a = 2 * retval_recursive() + (retval_constant() + 2) / 3
+        return a
+
+    @aq.function
+    def caller() -> int:
+        return retval_recursive()
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_recursive() -> int[32] {
+    int[32] __int_1__ = 0;
+    __int_1__ = retval_recursive();
+    __int_3__ = retval_constant();
+    return 2 * __int_1__ + (__int_3__ + 2) / 3;
+}
+def retval_constant() -> int[32] {
+    int[32] retval_ = 3;
+    return retval_;
+}
+int[32] __int_4__ = 0;
+__int_4__ = retval_recursive();"""
+
+    assert caller().to_ir() == expected_qasm

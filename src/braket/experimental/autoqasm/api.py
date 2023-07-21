@@ -17,7 +17,7 @@ import copy
 import functools
 import inspect
 from types import FunctionType
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -133,7 +133,7 @@ def _convert_wrapper(
     def _decorator(f: Callable) -> Callable[[Any], aq_program.Program]:
         """Decorator implementation."""
 
-        def _wrapper(*args, **kwargs) -> aq_program.Program:
+        def _wrapper(*args, **kwargs) -> Union[aq_program.Program, Optional[oqpy.base.Var]]:
             """Wrapper that calls the converted version of f."""
             # This code is executed once the decorated function is called
             if aq_program.in_active_program_conversion_context():
@@ -178,7 +178,7 @@ def _convert(
     user_config: aq_program.UserConfig,
     args: List[Any],
     kwargs: Dict[str, Any],
-) -> aq_program.Program:
+) -> Union[aq_program.Program, Optional[oqpy.base.Var]]:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
 
     This function adds error handling around `_convert_program_as_subroutine`
@@ -193,7 +193,9 @@ def _convert(
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
 
     Returns:
-        Program: The converted program.
+        Union[Program, Optional[Var]]: The converted program, if this is a top-level call
+        to the conversion process. Or, the oqpy variable returned from the converted function,
+        if this is a subroutine conversion.
     """
     # We will convert this function as a subroutine if we are already inside an
     # existing conversion process (i.e., this is a subroutine call).
@@ -216,7 +218,10 @@ def _convert(
             else:
                 raise
 
-        return program_conversion_context.make_program()
+    if convert_as_subroutine:
+        return program_conversion_context.return_variable
+
+    return program_conversion_context.make_program()
 
 
 def _convert_program_as_main(
@@ -292,6 +297,7 @@ def _convert_program_as_subroutine(
 
     # Add the subroutine invocation to the program
     return_instance = _make_return_instance(f, program_conversion_context)
+    return_variable = None
     if isinstance(return_instance, list):
         ret_type = subroutine_function_call.subroutine_decl.return_type
         return_variable = oqpy.ArrayVar(
@@ -302,10 +308,17 @@ def _convert_program_as_subroutine(
         oqpy_program.set(return_variable, subroutine_function_call)
     elif return_instance is not None:
         return_variable = aq_types.wrap_value(return_instance)
+        # If we are inside a recursive function call, we need to declare
+        # the variable explicitly before setting it.
+        if f in program_conversion_context.subroutines_processing:
+            oqpy_program.declare(return_variable)
         oqpy_program.set(return_variable, subroutine_function_call)
     else:
         function_call = subroutine_function_call.to_ast(oqpy_program)
         oqpy_program._add_statement(qasm_ast.ExpressionStatement(function_call))
+
+    # Store the return variable in the program conversion context
+    program_conversion_context.return_variable = return_variable
 
     # Add the subroutine definition to the root-level program if necessary
     root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
@@ -379,7 +392,7 @@ def _clone_function(f_source: Callable) -> Callable:
         copy.copy(f_source.__globals__),
         copy.deepcopy(f_source.__name__),
         copy.deepcopy(f_source.__defaults__),
-        copy.deepcopy(f_source.__closure__),
+        copy.copy(f_source.__closure__),
     )
     setattr(f_clone, "__signature__", copy.deepcopy(inspect.signature(f_source)))
     setattr(f_clone, "__annotations__", copy.deepcopy(f_source.__annotations__))
