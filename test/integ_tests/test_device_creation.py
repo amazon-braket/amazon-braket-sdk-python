@@ -74,43 +74,45 @@ def test_get_devices_all():
         assert arn in result_arns
 
 
+def _get_provider_name(device: AwsDevice):
+    arn_provider = device.arn.split("/")[2]
+
+    # capitalize as in provider name
+    provider_primary_name = device.provider_name.split()[0]
+    if arn_provider == provider_primary_name.lower():
+        capitalized = provider_primary_name
+    else:
+        capitalized = arn_provider.upper()
+
+    # remove dashes
+    return capitalized.replace("-", "")
+
+
+def _get_device_name(device: AwsDevice):
+    arn_device_name = device.arn.split("/")[-1]
+
+    device_name = arn_device_name.replace("_", "").replace("-", "").replace("system", "")
+
+    if device.provider_name == "Amazon Braket":
+        device_name = device_name.upper()
+    return device_name
+
+
 def test_device_enum():
-    def get_provider_name(device: AwsDevice):
-        arn_provider = device.arn.split("/")[2]
-
-        # capitalize as in provider name
-        provider_primary_name = device.provider_name.split()[0]
-        if arn_provider == provider_primary_name.lower():
-            capitalized = provider_primary_name
-        else:
-            capitalized = arn_provider.upper()
-
-        # remove dashes
-        return capitalized.replace("-", "")
-
-    def get_device_name(device: AwsDevice):
-        arn_device_name = device.arn.split("/")[-1]
-
-        device_name = arn_device_name.replace("_", "").replace("-", "").replace("system", "")
-
-        if device.provider_name == "Amazon Braket":
-            device_name = device_name.upper()
-        return device_name
-
     aws_devices = AwsDevice.get_devices()
 
     # determine retired providers
     active_providers = set()
     for device in aws_devices:
         if device.status != "RETIRED":
-            active_providers.add(get_provider_name(device))
+            active_providers.add(_get_provider_name(device))
 
     # validate all devices in API
     for device in aws_devices:
-        provider_name = get_provider_name(device)
+        provider_name = _get_provider_name(device)
         if provider_name not in active_providers:
             provider_name = f"_{provider_name}"
-        device_name = get_device_name(device)
+        device_name = _get_device_name(device)
         if device.status == "RETIRED":
             device_name = f"_{device_name}"
 
