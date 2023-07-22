@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type, Union
 
 import numpy as np
 
@@ -23,8 +23,11 @@ from braket.circuits.translations import (
     braket_result_to_result_type,
     one_prob_noise_map,
 )
+from braket.default_simulator.openqasm._helpers.casting import LiteralType
+from braket.default_simulator.openqasm.parser.openqasm_ast import ClassicalType, Identifier
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
+from braket.parametric import FreeParameter
 
 
 class BraketProgramContext(AbstractProgramContext):
@@ -41,6 +44,11 @@ class BraketProgramContext(AbstractProgramContext):
     def circuit(self) -> Circuit:
         """The circuit being built in this context."""
         return self._circuit
+
+    def add_parameter(
+        self, name: str, type: Union[ClassicalType, Type[LiteralType], Type[Identifier]]
+    ) -> None:
+        self.declare_variable(name, type, FreeParameter(name))
 
     def is_builtin_gate(self, name: str) -> bool:
         """Whether the gate is currently in scope as a built-in Braket gate.
