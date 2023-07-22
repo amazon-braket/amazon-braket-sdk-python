@@ -318,11 +318,11 @@ class TimeSeries:
                 time_separation_min (float): The minimum separation of time points
 
             Returns:
-                TimeSeries: A trapezoidal_signal time series
+                TimeSeries: A trapezoidal time series
 
-            Notes: The area of a time series \Omega(t) is defined as the time integral
-            \int_0^T\Omega(t)dt, where T is the duration. We also assume the trapezoidal
-            time series starts and ends at zero.
+            Notes: The area of a time series f(t) is defined as the time integral of 
+            f(t) from t=0 to t=T, where T is the duration. 
+            We also assume the trapezoidal time series starts and ends at zero.
         """
 
         if area <= 0.0:

@@ -81,10 +81,7 @@ def test_constant_like_with_time_series():
 
 
 @pytest.mark.parametrize(
-    "area",
-    "value_max",
-    "slew_rate_max",
-    "time_separation_min",
+    "area, value_max, slew_rate_max, time_separation_min",
     [
         (2.0, 2.0, 4.0, 1.0),
         (1.0, 2.0, 4.0, 1.0),
@@ -103,10 +100,7 @@ def test_trapezoidal_signal_as_triangular_signal(
 
 
 @pytest.mark.parametrize(
-    "area",
-    "value_max",
-    "slew_rate_max",
-    "time_separation_min",
+    "area, value_max, slew_rate_max, time_separation_min",
     [
         (4.0, 2.0, 4.0, 1.0),
         (2.1, 2.0, 4.0, 1.0),
@@ -125,10 +119,7 @@ def test_trapezoidal_signal_as_min_trapezoidal_signal(
 
 
 @pytest.mark.parametrize(
-    "area",
-    "value_max",
-    "slew_rate_max",
-    "time_separation_min",
+    "area, value_max, slew_rate_max, time_separation_min",
     [
         (4.1, 2.0, 4.0, 1.0),
         (6.1, 2.0, 1.0, 1.0),
@@ -142,21 +133,18 @@ def test_trapezoidal_signal_with_large_area(area, value_max, slew_rate_max, time
     assert ts.values() == [0, value_max, value_max, 0]
 
 
-# @pytest.mark.xfail(raises=ValueError)
-# @pytest.mark.parametrize(
-#     "area",
-#     "value_max",
-#     "slew_rate_max",
-#     "time_separation_min",
-#     [
-#         (-4.1, 2.0, 4.0, 1.0),
-#         (4.1, -2.0, 4.0, 1.0),
-#         (4.1, 2.0, -4.0, 1.0),
-#         (4.1, 2.0, 4.0, -1.0),
-#     ],
-# )
-# def test_trapezoidal_signal_with_negative_para(area, value_max, slew_rate_max, time_separation_min):
-#     TimeSeries.trapezoidal_signal(area, value_max, slew_rate_max, time_separation_min)
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize(
+    "area, value_max, slew_rate_max, time_separation_min",
+    [
+        (-4.1, 2.0, 4.0, 1.0),
+        (4.1, -2.0, 4.0, 1.0),
+        (4.1, 2.0, -4.0, 1.0),
+        (4.1, 2.0, 4.0, -1.0),
+    ],
+)
+def test_trapezoidal_signal_with_negative_para(area, value_max, slew_rate_max, time_separation_min):
+    TimeSeries.trapezoidal_signal(area, value_max, slew_rate_max, time_separation_min)
 
 
 @pytest.mark.xfail(raises=ValueError)
