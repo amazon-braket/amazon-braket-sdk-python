@@ -320,8 +320,8 @@ class TimeSeries:
             Returns:
                 TimeSeries: A trapezoidal time series
 
-            Notes: The area of a time series f(t) is defined as the time integral of 
-            f(t) from t=0 to t=T, where T is the duration. 
+            Notes: The area of a time series f(t) is defined as the time integral of
+            f(t) from t=0 to t=T, where T is the duration.
             We also assume the trapezoidal time series starts and ends at zero.
         """
 
