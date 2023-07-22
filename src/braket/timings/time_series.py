@@ -20,8 +20,6 @@ from enum import Enum
 from numbers import Number
 from typing import Iterator, List, Union
 
-import numpy as np
-
 
 @dataclass
 class TimeSeriesItem:
@@ -311,16 +309,17 @@ class TimeSeries:
         """Get a trapezoidal time series with specified area, maximum value, maximum slew rate
         and minimum separation of time points
 
-            Args:
-                area (float): Total area under the time series
-                value_max (float): The maximum value of the time series
-                slew_rate_max (float): The maximum slew rate
-                time_separation_min (float): The minimum separation of time points
+        Args:
+            area (float): Total area under the time series
+            value_max (float): The maximum value of the time series
+            slew_rate_max (float): The maximum slew rate
+            time_separation_min (float): The minimum separation of time points
 
-            Returns:
-                TimeSeries: A trapezoidal time series
+        Returns:
+            TimeSeries: A trapezoidal time series
 
-            Notes: The area of a time series f(t) is defined as the time integral of
+            Notes:
+            The area of a time series f(t) is defined as the time integral of
             f(t) from t=0 to t=T, where T is the duration.
             We also assume the trapezoidal time series starts and ends at zero.
         """
