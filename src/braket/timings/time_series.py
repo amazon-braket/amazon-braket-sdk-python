@@ -306,7 +306,7 @@ class TimeSeries:
 
     @staticmethod
     def trapezoidal_signal(
-        area: float, value_max: float, slew_rate_max: float, time_separation_min: float
+        area: float, value_max: float, slew_rate_max: float, time_separation_min: float = 0.0
     ) -> TimeSeries:
         """Get a trapezoidal time series with specified area, maximum value, maximum slew rate
         and minimum separation of time points
@@ -333,10 +333,10 @@ class TimeSeries:
             raise ValueError(
                 "The maximum slew rate of the trapezoidal time series has to be positive."
             )
-        if time_separation_min <= 0.0:
+        if time_separation_min < 0.0:
             raise ValueError(
                 "The minimum separation of time points of the trapezoidal time series "
-                "has to be positive."
+                "has to be non-negative."
             )
 
         # Determine the ramp time to reach the max allowed value
