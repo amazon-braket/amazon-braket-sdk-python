@@ -792,3 +792,26 @@ def test_mismatched_qubits():
 
     with pytest.raises(errors.InconsistentNumQubits):
         main()
+
+
+def test_nested_function():
+    @aq.function
+    def make_ghz(n: int) -> None:
+        def ghz(n: int):
+            if n == 1:
+                h(0)
+            else:
+                ghz(n - 1)
+                cnot(0, n - 1)
+
+        ghz(n)
+
+    expected = """OPENQASM 3.0;
+qubit[5] __qubits__;
+h __qubits__[0];
+cnot __qubits__[0], __qubits__[1];
+cnot __qubits__[0], __qubits__[2];
+cnot __qubits__[0], __qubits__[3];
+cnot __qubits__[0], __qubits__[4];"""
+
+    assert make_ghz(5).to_ir() == expected
