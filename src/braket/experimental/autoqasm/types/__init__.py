@@ -16,4 +16,12 @@ for type handling.
 """
 
 from .py_to_oqpy import map_type, wrap_value  # noqa: F401
-from .types import is_qasm_type, qasm_range  # noqa: F401
+from .types import (  # noqa: F401
+    ArrayVar,
+    BitVar,
+    BoolVar,
+    FloatVar,
+    IntVar,
+    is_qasm_type,
+    qasm_range,
+)

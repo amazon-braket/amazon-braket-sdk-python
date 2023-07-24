@@ -61,8 +61,8 @@ def ret_test() -> bit {
     bit res = 1;
     return res;
 }
-bit __bit_0__;
-__bit_0__ = ret_test();"""
+bit __bit_2__;
+__bit_2__ = ret_test();"""
 
     assert main().to_ir() == expected
 
@@ -84,8 +84,8 @@ def ret_test() -> int[32] {
     int[32] res = 1;
     return res;
 }
-int[32] __int_0__ = 0;
-__int_0__ = ret_test();"""
+int[32] __int_1__ = 0;
+__int_1__ = ret_test();"""
 
     assert main().to_ir() == expected
 
@@ -107,8 +107,8 @@ def ret_test() -> float[64] {
     float[64] res = 1.0;
     return res;
 }
-float[64] __float_0__ = 0.0;
-__float_0__ = ret_test();"""
+float[64] __float_1__ = 0.0;
+__float_1__ = ret_test();"""
 
     assert main().to_ir() == expected
 
@@ -130,8 +130,8 @@ def ret_test() -> bool {
     bool res = true;
     return res;
 }
-bool __bool_0__ = false;
-__bool_0__ = ret_test();"""
+bool __bool_1__ = false;
+__bool_1__ = ret_test();"""
 
     assert main().to_ir() == expected
 
@@ -155,8 +155,8 @@ def add(int[32] a, int[32] b) -> int[32] {
 }
 int[32] a = 5;
 int[32] b = 6;
-int[32] __int_0__ = 0;
-__int_0__ = add(a, b);"""
+int[32] __int_2__ = 0;
+__int_2__ = add(a, b);"""
 
     assert ret_test().to_ir() == expected
 
@@ -188,8 +188,8 @@ def ret_test() -> array[int[32], 3] {
     array[int[32], 3] res = {1, 2, 3};
     return res;
 }
-array[int[32], 3] __arr_0__ = {};
-__arr_0__ = ret_test();"""
+array[int[32], 3] __arr_1__ = {};
+__arr_1__ = ret_test();"""
 
     assert main().to_ir() == expected
 
@@ -211,8 +211,8 @@ def helper() -> int[32] {
     int[32] res = 1;
     return res;
 }
-int[32] __int_0__ = 0;
-__int_0__ = helper();"""
+int[32] __int_1__ = 0;
+__int_1__ = helper();"""
 
     assert ret_test().to_ir() == expected
 
@@ -374,8 +374,8 @@ def retval_test() -> bit {
     bit retval_ = 1;
     return retval_;
 }
-bit __bit_0__;
-__bit_0__ = retval_test();"""
+bit __bit_2__;
+__bit_2__ = retval_test();"""
 
     assert caller().to_ir() == expected_qasm
 

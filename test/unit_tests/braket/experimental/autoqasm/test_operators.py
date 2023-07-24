@@ -376,10 +376,10 @@ def test_slice_bits_w_measure() -> None:
     expected = """OPENQASM 3.0;
 qubit[1] __qubits__;
 bit[10] b0;
-bit __bit_0__;
-__bit_0__ = measure __qubits__[0];
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];
 bit c;
-c = __bit_0__;
+c = __bit_2__;
 b0[3] = c;"""
 
     assert measure_to_slice().to_ir() == expected
