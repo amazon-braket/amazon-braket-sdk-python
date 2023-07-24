@@ -18,6 +18,7 @@ from typing import Dict, List, Optional, Union
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
+from braket.ir.ahs import Program as AHSProgram
 from braket.ir.openqasm import Program
 from braket.tasks import (
     AnnealingQuantumTaskResult,
@@ -48,42 +49,71 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
     ):
         self._results = results
 
-    # flake8: noqa: C901
     @staticmethod
     def create(
         task_specifications: Union[
-            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
-            List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]],
+            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram],
+            List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram]],
         ],
         delegate,  # noqa
-        shots: Optional[int] = 0,
+        shots: int = 0,
         max_parallel: Optional[int] = None,
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
         *args,
         **kwargs,
-    ):
-        """LocalQuantumTask factory method that serializes a quantum task specification
-        (either a quantum circuit or problem), computes the result,
-        and returns back an LocalQuantumTask tracking the execution.
+    ) -> List[LocalQuantumTask]:
+        """Create and initialize a list of LocalQuantumTask instances for local quantum simulation.
 
         Args:
-            task_specifications (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram]):  # noqa
-                The specifications of the tasks to run on device.
+            task_specifications (Union[Union[Circuit,Problem,Program,AnalogHamiltonianSimulation,AHSProgram],List[Union[Circuit,Problem,Program,AnalogHamiltonianSimulation,AHSProgram]]]): # noqa
+                The specifications for the quantum tasks to be created. This parameter
+                accepts a single specification or a list of specifications.
 
-            delegate ('LocalSimulator'): LocalSimulator to run the task on.
+            delegate (LocalSimulator): The local simulator to be used for running the quantum tasks.
 
-            shots (int): The number of times to run the task on the device. If the device is a
-                simulator, this implies the state is sampled N times, where N = `shots`.
-                `shots=0` is only available on simulators and means that the simulator
-                will compute the exact results based on the task specification.
-            max_parallel (Optional[int]): The maximum number of tasks to run  in parallel. Default
-                is the number of CPU.
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
-                IR. If the IR supports inputs, the inputs will be updated with this value.
-                Default: {}.
+            shots (int): The number of times each quantum task should be executed
+                (i.e., the number of shots for the simulation).
+                Default is 0, which means no shots are performed.
+
+            max_parallel (Optional[int]): The maximum number of tasks that can be executed in parallel.
+                If not specified, the number of available CPU cores will be used as the default value.
+
+            inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Input data for the quantum tasks.
+                This parameter can be a dictionary of input values for a single task or a list of dictionaries
+                for multiple tasks.Default is an empty dictionary.
 
         Returns:
-            : List[LocalQuantumTask] tracking the task execution on the device.
+            List[LocalQuantumTask]: A list of initialized LocalQuantumTask instances based
+            on the given task specifications.
+
+        Example:
+            # Create a single quantum task using a Circuit specification
+            circuit_spec = Circuit(...)
+            simulator = LocalSimulator()
+            task_list = LocalQuantumTask.create(task_specifications=circuit_spec,
+                                                delegate=simulator, shots=100)
+
+            # Create multiple quantum tasks using a list of Circuit and Program specifications
+            circuit_spec_1 = Circuit(...)
+            circuit_spec_2 = Circuit(...)
+            program_spec = Program(...)
+            task_list = LocalQuantumTask.create(task_specifications=[circuit_spec_1,
+                                                circuit_spec_2, program_spec],
+                                                delegate=simulator, shots=100, max_parallel=4)
+
+        Notes:
+            - The `inputs`, `*args`, and `**kwargs` parameters allow for customization
+              and additional data to be passed to the quantum tasks as required.
+            - The `max_parallel` parameter can be used to take advantage of parallelism
+              when executing multiple tasks simultaneously, which can improve the overall
+              performance for tasks that are independent of each other.
+            - The `shots` parameter specifies the number of times each task should be
+              executed, useful for statistical analysis or running quantum algorithms
+              with multiple measurements.
+            - When providing multiple task specifications and inputs, they must
+              be equal in number.
+            - If a Circuit task contains unbound parameters, an error will be
+              raised before execution.
         """
         inputs = inputs or {}
 
