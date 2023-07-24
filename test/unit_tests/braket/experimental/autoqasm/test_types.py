@@ -49,7 +49,6 @@ def test_return_bit():
 
     @aq.function
     def ret_test() -> aq.BitVar:
-        # TODO: These should work even in one line
         res = aq.BitVar(1)
         return res
 
@@ -299,8 +298,6 @@ annotation_test(a);"""
 def test_map_other():
     """Test unexpected input parameter type handling."""
 
-    # TODO: Should be able to pass aq.Bit directly to annotation_test
-
     @aq.function
     def annotation_test(input: aq.BitVar):
         pass
@@ -315,6 +312,26 @@ def annotation_test(bit input) {
 }
 bit a = 1;
 annotation_test(a);"""
+
+    assert main().to_ir() == expected
+
+
+def test_map_other_unnamed_arg():
+    """Test unexpected input parameter type handling with unnamed arg."""
+
+    @aq.function
+    def annotation_test(input: aq.BitVar):
+        pass
+
+    @aq.function
+    def main():
+        annotation_test(aq.BitVar(1))
+
+    expected = """OPENQASM 3.0;
+def annotation_test(bit input) {
+}
+bit __bit_0__ = 1;
+annotation_test(__bit_0__);"""
 
     assert main().to_ir() == expected
 
