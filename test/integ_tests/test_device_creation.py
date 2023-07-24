@@ -75,7 +75,7 @@ def test_get_devices_all():
         assert arn in result_arns
 
 
-def _get_provider_name(device: AwsDevice):
+def _get_provider_name(device: AwsDevice) -> str:
     arn_provider = device.arn.split("/")[2]
 
     # capitalize as in provider name
@@ -89,7 +89,7 @@ def _get_provider_name(device: AwsDevice):
     return capitalized.replace("-", "")
 
 
-def _get_device_name(device: AwsDevice):
+def _get_device_name(device: AwsDevice) -> str:
     arn_device_name = device.arn.split("/")[-1]
 
     device_name = arn_device_name.replace("_", "").replace("-", "").replace("system", "")
