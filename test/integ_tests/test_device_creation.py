@@ -92,7 +92,9 @@ def _get_provider_name(device: AwsDevice) -> str:
 def _get_device_name(device: AwsDevice) -> str:
     arn_device_name = device.arn.split("/")[-1]
 
-    device_name = arn_device_name.replace("_", "").replace("-", "").replace("system", "")
+    device_name = (
+        arn_device_name.replace("Advantage_system", "Advantage").replace("_", "").replace("-", "")
+    )
 
     if device.provider_name == "Amazon Braket":
         device_name = device_name.upper()
