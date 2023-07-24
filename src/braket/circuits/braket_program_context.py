@@ -10,10 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
+from functools import singledispatchmethod
 from typing import List, Optional, Tuple, Type, Union
 
 import numpy as np
+from sympy import Expr
 
 from braket.circuits import Circuit, Instruction
 from braket.circuits.gates import Unitary
@@ -27,7 +28,7 @@ from braket.default_simulator.openqasm._helpers.casting import LiteralType
 from braket.default_simulator.openqasm.parser.openqasm_ast import ClassicalType, Identifier
 from braket.default_simulator.openqasm.program_context import AbstractProgramContext
 from braket.ir.jaqcd.program_v1 import Results
-from braket.parametric import FreeParameter
+from braket.parametric import FreeParameterExpression
 
 
 class BraketProgramContext(AbstractProgramContext):
@@ -139,3 +140,11 @@ class BraketProgramContext(AbstractProgramContext):
             result (Results): The result object representing the measurement results
         """
         self._circuit.add_result_type(braket_result_to_result_type(result))
+
+    @singledispatchmethod
+    def handle_parameter_value(self, value):
+        return value
+
+    @handle_parameter_value.register
+    def _(self, value: Expr):
+        return FreeParameterExpression(str(value))
