@@ -44,20 +44,31 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         return value
 
     if target_name == constants.RETVAL_VARIABLE_NAME:
-        return types.wrap_value(value)
+        # AutoGraph transpiles return statements like
+        #    return <return_value>
+        # into
+        #    retval_ = <return_value>
+        #    return retval_
+        # The special logic here is to handle this case properly and avoid
+        # declaring a new variable unless it is necessary.
+
+        if isinstance(value, oqpy.base.Var) and _is_variable_used(value.name):
+            # This is a value which already exists as a variable in the program.
+            # Return it directly without wrapping it or declaring a new variable.
+            return value
+
+        value = types.wrap_value(value)
 
     if isinstance(value, oqpy.base.Var):
-        # TODO: If name is defined in value, it might be different from target_name.
-        #       We should probably validate that.
         oqpy_program = program.get_program_conversion_context().get_oqpy_program()
 
         is_target_name_used = _is_variable_used(target_name)
-        is_value_used = _is_variable_used(value.name)
+        is_value_name_used = _is_variable_used(value.name)
 
         if is_target_name_used:
             target = _get_oqpy_program_variable(target_name)
             _validate_variables_type_size(target, value)
-            if is_value_used:
+            if is_value_name_used:
                 oqpy_program.set(target, value)
             else:
                 # Set to `value.init_expression` to avoid declaring an unnecessary variable.
@@ -67,7 +78,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
             target.init_expression = None
             target.name = target_name
 
-            if is_value_used:
+            if is_value_name_used:
                 oqpy_program.declare(target)
                 oqpy_program.set(target, value)
             else:

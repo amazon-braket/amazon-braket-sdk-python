@@ -85,6 +85,7 @@ class ProgramConversionContext:
         self.oqpy_program_stack = [oqpy.Program()]
         self.subroutines_processing = set()  # the set of subroutines queued for processing
         self.user_config = user_config or UserConfig()
+        self.return_variable = None
         self._qubits_seen = set()
         self._var_idx = 0
 

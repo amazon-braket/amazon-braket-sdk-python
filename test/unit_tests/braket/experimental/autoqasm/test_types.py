@@ -154,9 +154,9 @@ def test_return_bin_expr():
 def add(int[32] a, int[32] b) -> int[32] {
     return a + b;
 }
-int[32] __int_0__ = 0;
 int[32] a = 5;
 int[32] b = 6;
+int[32] __int_0__ = 0;
 __int_0__ = add(a, b);"""
 
     assert ret_test().to_ir() == expected
@@ -317,3 +317,129 @@ bit a = 1;
 annotation_test(a);"""
 
     assert main().to_ir() == expected
+
+
+def test_unnamed_retval_python_type() -> None:
+    """Tests subroutines which return unnamed Python values."""
+
+    @aq.function
+    def retval_test() -> int:
+        return 1
+
+    @aq.function
+    def caller() -> int:
+        return retval_test()
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_test() -> int[32] {
+    int[32] retval_ = 1;
+    return retval_;
+}
+int[32] __int_1__ = 0;
+__int_1__ = retval_test();"""
+
+    assert caller().to_ir() == expected_qasm
+
+
+def test_unnamed_retval_qasm_type() -> None:
+    """Tests subroutines which return unnamed QASM values."""
+
+    @aq.function
+    def retval_test() -> aq.BitVar:
+        return aq.BitVar(1)
+
+    @aq.function
+    def caller() -> aq.BitVar:
+        return retval_test()
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_test() -> bit {
+    bit retval_ = 1;
+    return retval_;
+}
+bit __bit_0__;
+__bit_0__ = retval_test();"""
+
+    assert caller().to_ir() == expected_qasm
+
+
+def test_recursive_unassigned_retval_python_type() -> None:
+    """Tests recursive subroutines which do not assign the return value to a variable."""
+
+    @aq.function
+    def retval_recursive() -> int:
+        retval_recursive()
+        return 1
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_recursive() -> int[32] {
+    int[32] __int_1__ = 0;
+    __int_1__ = retval_recursive();
+    int[32] retval_ = 1;
+    return retval_;
+}
+int[32] __int_3__ = 0;
+__int_3__ = retval_recursive();
+int[32] retval_ = 1;"""
+
+    assert retval_recursive().to_ir() == expected_qasm
+
+
+def test_recursive_assigned_retval_python_type() -> None:
+    """Tests recursive subroutines which assign the return value to a variable."""
+
+    @aq.function
+    def retval_recursive() -> int:
+        a = retval_recursive()  # noqa: F841
+        return 1
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_recursive() -> int[32] {
+    int[32] __int_1__ = 0;
+    __int_1__ = retval_recursive();
+    int[32] a;
+    a = __int_1__;
+    int[32] retval_ = 1;
+    return retval_;
+}
+int[32] __int_3__ = 0;
+__int_3__ = retval_recursive();
+int[32] a;
+a = __int_3__;
+int[32] retval_ = 1;"""
+
+    assert retval_recursive().to_ir() == expected_qasm
+
+
+def test_recursive_retval_expression_python_type() -> None:
+    """Tests recursive subroutines which use the return value in an expression."""
+
+    @aq.function
+    def retval_constant() -> int:
+        return 3
+
+    @aq.function
+    def retval_recursive() -> int:
+        a = 2 * retval_recursive() + (retval_constant() + 2) / 3
+        return a
+
+    @aq.function
+    def caller() -> int:
+        return retval_recursive()
+
+    expected_qasm = """OPENQASM 3.0;
+def retval_recursive() -> int[32] {
+    int[32] __int_1__ = 0;
+    __int_1__ = retval_recursive();
+    int[32] __int_3__ = 0;
+    __int_3__ = retval_constant();
+    return 2 * __int_1__ + (__int_3__ + 2) / 3;
+}
+def retval_constant() -> int[32] {
+    int[32] retval_ = 3;
+    return retval_;
+}
+int[32] __int_4__ = 0;
+__int_4__ = retval_recursive();"""
+
+    assert caller().to_ir() == expected_qasm

@@ -108,8 +108,3 @@ def _(node: oqpy.base.Var):
 @wrap_value.register
 def _(node: oqpy.base.OQPyExpression):
     return node
-
-
-@wrap_value.register
-def _(node: program.Program):
-    return node
