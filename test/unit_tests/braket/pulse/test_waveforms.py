@@ -60,7 +60,7 @@ def test_arbitrary_wf_eq():
 def test_arbitrary_waveform_not_castable_into_list():
     amps = 1
     with pytest.raises(TypeError):
-        wf = ArbitraryWaveform(amps)
+        ArbitraryWaveform(amps)
 
 
 def test_constant_waveform():
