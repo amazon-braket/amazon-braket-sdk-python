@@ -1511,6 +1511,22 @@ def test_circuit_from_ir(expected_circuit, ir):
                 inputs={},
             ),
         ),
+        (
+            Circuit().rx(0, FreeParameter("theta")).rx(0, 2 * FreeParameter("theta")),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "input float theta;" "bit[1] b;",
+                        "qubit[1] q;",
+                        "rx(theta) q[0];",
+                        "rx(2*theta) q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
 def test_circuit_from_ir_greater_functionality(expected_circuit, ir):
