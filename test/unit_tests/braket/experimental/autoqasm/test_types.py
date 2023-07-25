@@ -61,8 +61,8 @@ def ret_test() -> bit {
     bit res = 1;
     return res;
 }
-bit __bit_2__;
-__bit_2__ = ret_test();"""
+bit __bit_1__;
+__bit_1__ = ret_test();"""
 
     assert main().to_ir() == expected
 
@@ -374,8 +374,8 @@ def retval_test() -> bit {
     bit retval_ = 1;
     return retval_;
 }
-bit __bit_2__;
-__bit_2__ = retval_test();"""
+bit __bit_1__;
+__bit_1__ = retval_test();"""
 
     assert caller().to_ir() == expected_qasm
 

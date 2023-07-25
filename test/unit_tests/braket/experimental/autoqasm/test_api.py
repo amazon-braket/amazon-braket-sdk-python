@@ -206,11 +206,11 @@ def test_bell_measurement_undeclared() -> None:
 qubit[2] __qubits__;
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
-bit[2] __bit_1__;
-__bit_1__[0] = measure __qubits__[0];
-__bit_1__[1] = measure __qubits__[1];
+bit[2] __bit_0__;
+__bit_0__[0] = measure __qubits__[0];
+__bit_0__[1] = measure __qubits__[1];
 bit[2] c;
-c = __bit_1__;"""
+c = __bit_0__;"""
     assert bell_measurement_undeclared().to_ir() == expected
 
 
@@ -229,10 +229,10 @@ qubit[2] __qubits__;
 bit[2] c = {0, 0};
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
-bit[2] __bit_2__;
-__bit_2__[0] = measure __qubits__[0];
-__bit_2__[1] = measure __qubits__[1];
-c = __bit_2__;"""
+bit[2] __bit_1__;
+__bit_1__[0] = measure __qubits__[0];
+__bit_1__[1] = measure __qubits__[1];
+c = __bit_1__;"""
     assert bell_measurement_declared().to_ir() == expected
 
 
@@ -249,10 +249,10 @@ def test_bell_partial_measurement() -> None:
 qubit[2] __qubits__;
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
-bit __bit_1__;
-__bit_1__ = measure __qubits__[1];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[1];
 bit c;
-c = __bit_1__;"""
+c = __bit_0__;"""
     assert bell_partial_measurement().to_ir() == expected
 
 
@@ -403,18 +403,18 @@ def test_qasm_inline_var_condition() -> None:
     expected = """OPENQASM 3.0;
 qubit[2] __qubits__;
 h __qubits__[0];
-bit __bit_1__ = 1;
-if (__bit_1__) {
+bit __bit_0__ = 1;
+if (__bit_0__) {
     cnot __qubits__[0], __qubits__[1];
 }
-int[32] __int_3__ = 1;
-if (__int_3__) {
+int[32] __int_1__ = 1;
+if (__int_1__) {
     x __qubits__[0];
 } else {
     x __qubits__[1];
 }
-bit __bit_5__;
-__bit_5__ = measure __qubits__[1];"""
+bit __bit_2__;
+__bit_2__ = measure __qubits__[1];"""
     assert qasm_inline_var_condition().to_ir() == expected
 
 
@@ -440,10 +440,10 @@ def test_simple_measurement() -> None:
     """Test that a program with only measurements is generated correctly."""
     expected = """OPENQASM 3.0;
 qubit[6] __qubits__;
-bit[3] __bit_1__;
-__bit_1__[0] = measure __qubits__[5];
-__bit_1__[1] = measure __qubits__[2];
-__bit_1__[2] = measure __qubits__[1];"""
+bit[3] __bit_0__;
+__bit_0__[0] = measure __qubits__[5];
+__bit_0__[1] = measure __qubits__[2];
+__bit_0__[2] = measure __qubits__[1];"""
     assert ground_state_measurements().to_ir() == expected
 
 
@@ -458,17 +458,17 @@ def test_simple_measurement_return() -> None:
 
     expected = """OPENQASM 3.0;
 def ground_state_measurements() -> bit[3] {
-    bit[3] __bit_1__;
-    __bit_1__[0] = measure __qubits__[5];
-    __bit_1__[1] = measure __qubits__[2];
-    __bit_1__[2] = measure __qubits__[1];
-    return __bit_1__;
+    bit[3] __bit_0__;
+    __bit_0__[0] = measure __qubits__[5];
+    __bit_0__[1] = measure __qubits__[2];
+    __bit_0__[2] = measure __qubits__[1];
+    return __bit_0__;
 }
 qubit[6] __qubits__;
 """
     # TODO: this should be `bit[3]`, but there's a bug. It's being tracked in an issue.
-    expected += """bit __bit_3__;
-__bit_3__ = ground_state_measurements();"""
+    expected += """bit __bit_1__;
+__bit_1__ = ground_state_measurements();"""
     assert ground_state_measurements_wrapper().to_ir() == expected
 
 
@@ -489,13 +489,13 @@ def test_qasm_measurement_condition() -> None:
     expected = """OPENQASM 3.0;
 qubit[2] __qubits__;
 h __qubits__[0];
-bit __bit_1__;
-__bit_1__ = measure __qubits__[0];
-if (__bit_1__) {
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+if (__bit_0__) {
     cnot __qubits__[0], __qubits__[1];
 }
-bit __bit_3__;
-__bit_3__ = measure __qubits__[1];"""
+bit __bit_1__;
+__bit_1__ = measure __qubits__[1];"""
     assert qasm_measurement_condition().to_ir() == expected
 
 
@@ -596,9 +596,9 @@ def test_bit_array_name() -> None:
         my_program()
 
     expected = """
-    bit __bit_1__;
-    __bit_1__ = measure __qubits__[0];
-    return __bit_1__;"""
+    bit __bit_0__;
+    __bit_0__ = measure __qubits__[0];
+    return __bit_0__;"""
     assert expected in my_program_wrapper().to_ir()
 
 
@@ -617,19 +617,19 @@ def test_bit_array_name_multi() -> None:
     """Tests that auto declared bits are given a reasonable name."""
     expected = """OPENQASM 3.0;
 qubit[1] __qubits__;
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+if (__bit_0__) {
+    x __qubits__[0];
+}
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];
 if (__bit_1__) {
     x __qubits__[0];
 }
-bit __bit_3__;
-__bit_3__ = measure __qubits__[0];
-if (__bit_3__) {
-    x __qubits__[0];
-}
-bit __bit_5__;
-__bit_5__ = measure __qubits__[0];
-if (__bit_5__) {
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];
+if (__bit_2__) {
     x __qubits__[0];
 }"""
     assert reset().to_ir() == expected
@@ -772,10 +772,10 @@ def test_assignment_measurement_results():
 
     expected = """OPENQASM 3.0;
 qubit[1] __qubits__;
-bit __bit_1__;
-__bit_1__ = measure __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
 bit a;
-a = __bit_1__;
+a = __bit_0__;
 bit b;
 b = a;"""
     assert prog().to_ir() == expected

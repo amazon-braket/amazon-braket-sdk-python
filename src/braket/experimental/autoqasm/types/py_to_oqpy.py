@@ -20,7 +20,7 @@ from typing import Any, Union
 import numpy as np
 import oqpy
 
-from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import types as aq_types
 
 
 def map_type(python_type: type) -> type:
@@ -58,7 +58,7 @@ def map_type(python_type: type) -> type:
 
 @singledispatch
 def wrap_value(node: Any) -> Any:
-    """Wraps an object in an oqpy variable.
+    """Wraps an object in an autoqasm variable.
 
     Args:
         node (Any): The object to be wrapped.
@@ -68,7 +68,7 @@ def wrap_value(node: Any) -> Any:
         type does not exist.
 
     Returns:
-        Any: The oqpy variable wrapping the given object.
+        Any: The autoqasm variable wrapping the given object.
     """
     if node is None:
         return None
@@ -79,25 +79,19 @@ def wrap_value(node: Any) -> Any:
 
 @wrap_value.register(bool)
 def _(node: bool):
-    return oqpy.BoolVar(
-        node, name=program.get_program_conversion_context().next_var_name(oqpy.BoolVar)
-    )
+    return aq_types.BoolVar(node)
 
 
 @wrap_value.register(int)
 @wrap_value.register(np.integer)
 def _(node: Union[int, np.integer]):
-    return oqpy.IntVar(
-        node, name=program.get_program_conversion_context().next_var_name(oqpy.IntVar)
-    )
+    return aq_types.IntVar(node)
 
 
 @wrap_value.register(float)
 @wrap_value.register(np.floating)
 def _(node: Union[float, np.floating]):
-    return oqpy.FloatVar(
-        node, name=program.get_program_conversion_context().next_var_name(oqpy.FloatVar)
-    )
+    return aq_types.FloatVar(node)
 
 
 @wrap_value.register

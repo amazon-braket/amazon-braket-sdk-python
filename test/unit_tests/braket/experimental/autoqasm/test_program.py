@@ -103,8 +103,8 @@ for int i in [0:"""
             + str(angle)
             + """);
 }
-bit __bit_1__;
-__bit_1__ = measure __qubits__[1];"""
+bit __bit_0__;
+__bit_0__ = measure __qubits__[1];"""
         )
 
     for i, (scale, angle) in enumerate(itertools.product(scales, angles)):

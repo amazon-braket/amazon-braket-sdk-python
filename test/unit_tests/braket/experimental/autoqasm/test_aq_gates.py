@@ -47,8 +47,8 @@ def test_bell_with_measure() -> None:
     expected = """OPENQASM 3.0;
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
-bit __bit_1__;
-__bit_1__ = measure __qubits__[0];"""
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
 
     qasm = program_conversion_context.make_program().to_ir()
     assert qasm == expected.strip()

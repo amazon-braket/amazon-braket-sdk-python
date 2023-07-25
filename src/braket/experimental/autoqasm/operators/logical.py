@@ -16,13 +16,11 @@
 
 from typing import Any, Union
 
-import oqpy.base
-
 from braket.experimental.autoqasm import program
-from braket.experimental.autoqasm.types import is_qasm_type
+from braket.experimental.autoqasm import types as aq_types
 
 
-def eq(a: Any, b: Any) -> Union[bool, oqpy.BoolVar]:
+def eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
     """Functional form of "equal".
 
     Args:
@@ -32,17 +30,15 @@ def eq(a: Any, b: Any) -> Union[bool, oqpy.BoolVar]:
     Returns:
         Union[bool, BoolVar]: Whether the expressions are equal.
     """
-    if is_qasm_type(a) or is_qasm_type(b):
+    if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _oqpy_eq(a, b)
     else:
         return _py_eq(a, b)
 
 
-def _oqpy_eq(a: Any, b: Any) -> oqpy.BoolVar:
+def _oqpy_eq(a: Any, b: Any) -> aq_types.BoolVar:
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    is_equal = oqpy.BoolVar(
-        name=program.get_program_conversion_context().next_var_name(oqpy.BoolVar)
-    )
+    is_equal = aq_types.BoolVar()
     oqpy_program.declare(is_equal)
     oqpy_program.set(is_equal, a == b)
     return is_equal
