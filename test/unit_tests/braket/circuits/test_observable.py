@@ -42,19 +42,19 @@ def test_is_operator(observable):
     assert isinstance(observable, QuantumOperator)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_qubit_count_lt_one():
-    Observable(qubit_count=0, ascii_symbols=[])
+    with pytest.raises(ValueError):
+        Observable(qubit_count=0, ascii_symbols=[])
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_none_ascii():
-    Observable(qubit_count=1, ascii_symbols=None)
+    with pytest.raises(ValueError):
+        Observable(qubit_count=1, ascii_symbols=None)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_mismatch_length_ascii():
-    Observable(qubit_count=1, ascii_symbols=["foo", "bar"])
+    with pytest.raises(ValueError):
+        Observable(qubit_count=1, ascii_symbols=["foo", "bar"])
 
 
 def test_name(observable):
@@ -71,19 +71,19 @@ def test_getters():
     assert observable.ascii_symbols == ascii_symbols
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_qubit_count_setter(observable):
-    observable.qubit_count = 10
+    with pytest.raises(AttributeError):
+        observable.qubit_count = 10
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_ascii_symbols_setter(observable):
-    observable.ascii_symbols = ["foo", "bar"]
+    with pytest.raises(AttributeError):
+        observable.ascii_symbols = ["foo", "bar"]
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_name_setter(observable):
-    observable.name = "hi"
+    with pytest.raises(AttributeError):
+        observable.name = "hi"
 
 
 @pytest.mark.parametrize(
@@ -109,24 +109,24 @@ def test_observable_to_ir(
     assert exc.value.args[0] == expected_message
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_to_matrix_not_implemented_by_default(observable):
-    observable.to_matrix(None)
+    with pytest.raises(NotImplementedError):
+        observable.to_matrix(None)
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_basis_rotation_gates_not_implemented_by_default(observable):
-    observable.basis_rotation_gates
+    with pytest.raises(NotImplementedError):
+        observable.basis_rotation_gates
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_eigenvalues_not_implemented_by_default(observable):
-    observable.eigenvalues
+    with pytest.raises(NotImplementedError):
+        observable.eigenvalues
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_eigenvalue_not_implemented_by_default(observable):
-    observable.eigenvalue(0)
+    with pytest.raises(NotImplementedError):
+        observable.eigenvalue(0)
 
 
 def test_str(observable):
@@ -154,9 +154,9 @@ def test_matmul_observable():
     assert o3.ascii_symbols == ("I@Z", "I@Z")
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_matmul_non_observable():
-    Observable.I() @ "a"
+    with pytest.raises(ValueError):
+        Observable.I() @ "a"
 
 
 def test_observable_equality():

@@ -423,10 +423,10 @@ def test_observable_from_ir(testobject, gateobject, expected_ir, basis_rotation_
 # Hermitian
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_hermitian_matrices)
 def test_hermitian_invalid_matrix(matrix):
-    Observable.Hermitian(matrix=matrix)
+    with pytest.raises(ValueError):
+        Observable.Hermitian(matrix=matrix)
 
 
 def test_hermitian_equality():
@@ -501,10 +501,10 @@ def test_hermitian_basis_rotation_gates(matrix, basis_rotation_matrix):
     assert expected_unitary.matrix_equivalence(actual_rotation_gates[0])
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_observable_from_ir_hermitian_value_error():
     ir_observable = [[[[1.0, 0], [0, 1]], [[0.0, 1], [1, 0]]]]
-    observable_from_ir(ir_observable)
+    with pytest.raises(ValueError):
+        observable_from_ir(ir_observable)
 
 
 def test_observable_from_ir_hermitian():
@@ -550,15 +550,15 @@ def test_tensor_product_matmul_observable():
     assert t.ascii_symbols == tuple(["Z@I@X@I"] * 4)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_tensor_product_eigenvalue_index_out_of_bounds():
     obs = Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()])
-    obs.eigenvalue(8)
+    with pytest.raises(ValueError):
+        obs.eigenvalue(8)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_tensor_product_value_error():
-    Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()]) @ "a"
+    with pytest.raises(ValueError):
+        Observable.TensorProduct([Observable.Z(), Observable.I(), Observable.X()]) @ "a"
 
 
 def test_tensor_product_rmatmul_observable():
@@ -618,9 +618,9 @@ def test_observable_from_ir_tensor_product():
     assert expected_observable == actual_observable
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_observable_from_ir_tensor_product_value_error():
-    observable_from_ir(["z", "i", "foo"])
+    with pytest.raises(ValueError):
+        observable_from_ir(["z", "i", "foo"])
 
 
 def compare_eigenvalues(observable, expected):
