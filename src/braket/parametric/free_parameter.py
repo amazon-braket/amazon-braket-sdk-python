@@ -82,7 +82,7 @@ class FreeParameter(FreeParameterExpression):
     def __eq__(self, other):
         if isinstance(other, FreeParameter):
             return self._name == other._name
-        return False
+        return super().__eq__(other)
 
     def __repr__(self) -> str:
         """
