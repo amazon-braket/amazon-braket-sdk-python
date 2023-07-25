@@ -75,183 +75,183 @@ def generalized_amplitude_damping_noise():
     )
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("qubit_count, ascii_symbols", invalid_data_qubit_count)
 def test_invalid_data_qubit_count(qubit_count, ascii_symbols):
-    Noise(qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        Noise(qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("qubit_count, ascii_symbols", invalid_data_ascii_symbols)
 def test_invalid_data_ascii_symbols(qubit_count, ascii_symbols):
-    Noise(qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        Noise(qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("qubit_count, ascii_symbols", invalid_data_ascii_symbols_length)
 def test_invalid_data_ascii_symbols_length(qubit_count, ascii_symbols):
-    Noise(qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        Noise(qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probability", invalid_data_prob)
 def test_invalid_data_single_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    SingleProbabilisticNoise(probability, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        SingleProbabilisticNoise(probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probability", invalid_data_prob)
 def test_invalid_data_single_prob_34(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    SingleProbabilisticNoise_34(probability, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        SingleProbabilisticNoise_34(probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probability", invalid_data_prob)
 def test_invalid_data_single_prob_1516(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    SingleProbabilisticNoise_1516(probability, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        SingleProbabilisticNoise_1516(probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("probability", invalid_data_prob_2)
 def test_invalid_data_type_single_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    SingleProbabilisticNoise(probability, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        SingleProbabilisticNoise(probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("probability", invalid_data_prob_2)
 def test_invalid_data_type_single_prob_34(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    SingleProbabilisticNoise_34(probability, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        SingleProbabilisticNoise_34(probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("probability", invalid_data_prob_2)
 def test_invalid_data_type_single_prob_1516(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    SingleProbabilisticNoise_1516(probability, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        SingleProbabilisticNoise_1516(probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probX", invalid_data_prob)
 def test_invalid_data_pauli_probX(probX):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probY = 0.1
     probZ = 0.1
-    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probY", invalid_data_prob)
 def test_invalid_data_pauli_probY(probY):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probZ = 0.1
-    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probZ", invalid_data_prob)
 def test_invalid_data_pauli_probZ(probZ):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probY = 0.1
-    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("probX", invalid_data_prob_2)
 def test_invalid_data_type_pauli_probX(probX):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probY = 0.1
     probZ = 0.1
-    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("probY", invalid_data_prob_2)
 def test_invalid_data_type_pauli_probY(probY):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probZ = 0.1
-    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("probZ", invalid_data_prob_2)
 def test_invalid_data_type_pauli_probZ(probZ):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probY = 0.1
-    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_invalid_data_pauli_sum():
     qubit_count = 1
     ascii_symbols = ["foo"]
     probX = 0.1
     probY = 0.1
     probZ = 0.9
-    PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        PauliNoise(probX, probY, probZ, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("gamma", invalid_data_prob_damping)
 def test_invalid_data_damping_prob(gamma):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    DampingNoise(gamma, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        DampingNoise(gamma, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("probability", invalid_data_prob_damping)
 def test_invalid_data_generalized_amplitude_damping_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
     gamma = 0.1
-    GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("gamma", invalid_data_prob_damping_2)
 def test_invalid_data_type_damping_prob(gamma):
     qubit_count = 1
     ascii_symbols = ["foo"]
-    DampingNoise(gamma, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        DampingNoise(gamma, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=TypeError)
 @pytest.mark.parametrize("probability", invalid_data_prob_damping_2)
 def test_invalid_data_type_generalized_amplitude_damping_prob(probability):
     qubit_count = 1
     ascii_symbols = ["foo"]
     gamma = 0.1
-    GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
+    with pytest.raises(TypeError):
+        GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("gamma", invalid_data_prob_damping)
 def test_invalid_data_generalized_amplitude_damping_gamma(gamma):
     qubit_count = 1
     ascii_symbols = ["foo"]
     probability = 0.1
-    GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
+    with pytest.raises(ValueError):
+        GeneralizedAmplitudeDampingNoise(gamma, probability, qubit_count, ascii_symbols)
 
 
 def test_ascii_symbols(base_noise):
@@ -290,14 +290,14 @@ def test_noise_to_ir(
     assert exc.value.args[0] == expected_message
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_to_matrix_not_implemented_by_default(base_noise):
-    base_noise.to_matrix(None)
+    with pytest.raises(NotImplementedError):
+        base_noise.to_matrix(None)
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_invalid_deserializatoin():
-    Noise.from_dict({})
+    with pytest.raises(NotImplementedError):
+        Noise.from_dict({})
 
 
 @pytest.mark.parametrize(
@@ -430,9 +430,9 @@ def test_register_noise():
         (GeneralizedAmplitudeDampingNoise, {"gamma": 0.1, "probability": 1.2}),
     ],
 )
-@pytest.mark.xfail(raises=ValueError)
 def test_invalid_values(noise_class, params):
-    noise_class(**params, qubit_count=1, ascii_symbols=["foo"])
+    with pytest.raises(ValueError):
+        noise_class(**params, qubit_count=1, ascii_symbols=["foo"])
 
 
 @pytest.mark.parametrize(

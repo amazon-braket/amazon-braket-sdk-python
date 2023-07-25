@@ -72,10 +72,10 @@ def test_is_square_matrix():
     assert is_square_matrix(valid_unitary_hermitian_matrix)
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_dimension_matrices)
 def test_verify_quantum_operator_matrix_dimensions_value_error(matrix):
-    verify_quantum_operator_matrix_dimensions(matrix)
+    with pytest.raises(ValueError):
+        verify_quantum_operator_matrix_dimensions(matrix)
 
 
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices_false)
@@ -92,19 +92,19 @@ def test_is_cptp_false():
     assert not is_cptp(invalid_CPTP_matrices_false)
 
 
-@pytest.mark.xfail(raises=Exception)
 def test_is_hermitian_exception():
-    is_hermitian(invalid_matrix_type_error)
+    with pytest.raises(Exception):
+        is_hermitian(invalid_matrix_type_error)
 
 
-@pytest.mark.xfail(raises=Exception)
 def test_is_unitary_exception():
-    is_unitary(invalid_matrix_type_error)
+    with pytest.raises(Exception):
+        is_unitary(invalid_matrix_type_error)
 
 
-@pytest.mark.xfail(raises=Exception)
 def test_is_cptp_exception():
-    is_cptp([invalid_matrix_type_error])
+    with pytest.raises(Exception):
+        is_cptp([invalid_matrix_type_error])
 
 
 def test_get_pauli_eigenvalues_correct_eigenvalues_one_qubit():
@@ -133,7 +133,7 @@ def test_get_pauli_eigenvalues_cache_usage(depth):
     assert functools._CacheInfo(depth - 1, depth, 128, depth) == get_pauli_eigenvalues.cache_info()
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("num_qubits", [1, 2])
 def test_get_pauli_eigenvalues_immutable(num_qubits):
-    get_pauli_eigenvalues(num_qubits)[0] = 100
+    with pytest.raises(ValueError):
+        get_pauli_eigenvalues(num_qubits)[0] = 100

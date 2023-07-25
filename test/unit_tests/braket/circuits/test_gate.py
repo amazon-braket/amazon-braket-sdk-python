@@ -26,14 +26,14 @@ def test_is_operator(gate):
     assert isinstance(gate, QuantumOperator)
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_adjoint_not_implemented_by_default(gate):
-    gate.adjoint()
+    with pytest.raises(NotImplementedError):
+        gate.adjoint()
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_to_matrix_not_implemented_by_default(gate):
-    gate.to_matrix(None)
+    with pytest.raises(NotImplementedError):
+        gate.to_matrix(None)
 
 
 def test_matrix_equivalence():
