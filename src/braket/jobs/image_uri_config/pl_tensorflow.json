@@ -1,13 +1,10 @@
 {
-  "versions": {
-    "2.12.0": {
-      "registries": {
-          "us-east-1": "292282985366",
-          "us-west-1": "292282985366",
-          "us-west-2": "292282985366",
-          "eu-west-2": "292282985366"
-      },
-      "repository": "amazon-braket-tensorflow-jobs"
-    }
-  }
+  "registry": "292282985366",
+  "repository": "amazon-braket-tensorflow-jobs",
+  "supported_regions": [
+    "us-east-1",
+    "us-west-1",
+    "us-west-2",
+    "eu-west-2"
+  ]
 }
