@@ -15,7 +15,10 @@
 
 from typing import Any, Optional
 
+import oqpy
 import oqpy.base
+
+from braket.experimental.autoqasm import program
 
 
 def is_qasm_type(val: Any) -> bool:
@@ -53,3 +56,33 @@ def qasm_range(start: int, stop: Optional[int] = None, step: Optional[int] = 1) 
         stop = start
         start = 0
     return oqpy.Range(start, stop, step)
+
+
+class ArrayVar(oqpy.ArrayVar):
+    def __init__(self, *args, **kwargs):
+        super(ArrayVar, self).__init__(*args, **kwargs)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.ArrayVar)
+
+
+class BitVar(oqpy.BitVar):
+    def __init__(self, *args, **kwargs):
+        super(BitVar, self).__init__(*args, **kwargs)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.BitVar)
+
+
+class BoolVar(oqpy.BoolVar):
+    def __init__(self, *args, **kwargs):
+        super(BoolVar, self).__init__(*args, **kwargs)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.BoolVar)
+
+
+class FloatVar(oqpy.FloatVar):
+    def __init__(self, *args, **kwargs):
+        super(FloatVar, self).__init__(*args, **kwargs)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.FloatVar)
+
+
+class IntVar(oqpy.IntVar):
+    def __init__(self, *args, **kwargs):
+        super(IntVar, self).__init__(*args, **kwargs)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.IntVar)

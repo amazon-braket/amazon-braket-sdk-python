@@ -229,10 +229,10 @@ qubit[2] __qubits__;
 bit[2] c = {0, 0};
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
-bit[2] __bit_0__;
-__bit_0__[0] = measure __qubits__[0];
-__bit_0__[1] = measure __qubits__[1];
-c = __bit_0__;"""
+bit[2] __bit_1__;
+__bit_1__[0] = measure __qubits__[0];
+__bit_1__[1] = measure __qubits__[1];
+c = __bit_1__;"""
     assert bell_measurement_declared().to_ir() == expected
 
 
@@ -464,10 +464,10 @@ def ground_state_measurements() -> bit[3] {
     __bit_0__[2] = measure __qubits__[1];
     return __bit_0__;
 }
+qubit[6] __qubits__;
 """
     # TODO: this should be `bit[3]`, but there's a bug. It's being tracked in an issue.
-    expected += """qubit[6] __qubits__;
-bit __bit_1__;
+    expected += """bit __bit_1__;
 __bit_1__ = ground_state_measurements();"""
     assert ground_state_measurements_wrapper().to_ir() == expected
 
@@ -792,3 +792,26 @@ def test_mismatched_qubits():
 
     with pytest.raises(errors.InconsistentNumQubits):
         main()
+
+
+def test_nested_function():
+    @aq.function
+    def make_ghz(n: int) -> None:
+        def ghz(n: int):
+            if n == 1:
+                h(0)
+            else:
+                ghz(n - 1)
+                cnot(0, n - 1)
+
+        ghz(n)
+
+    expected = """OPENQASM 3.0;
+qubit[5] __qubits__;
+h __qubits__[0];
+cnot __qubits__[0], __qubits__[1];
+cnot __qubits__[0], __qubits__[2];
+cnot __qubits__[0], __qubits__[3];
+cnot __qubits__[0], __qubits__[4];"""
+
+    assert make_ghz(5).to_ir() == expected

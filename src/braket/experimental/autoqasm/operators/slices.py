@@ -54,7 +54,7 @@ def _oqpy_get_item(target: Any, i: Any, opts: GetItemOpts) -> Any:
     else:
         raise TypeError(f"{str(type(target))} object is not subscriptable")
 
-    var = base_type(name=program.get_program_conversion_context().next_var_name(base_type))
+    var = base_type()
     oqpy_program.set(var, target[i])
     return var
 
