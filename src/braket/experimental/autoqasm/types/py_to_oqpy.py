@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Type conversions between Python and the internal oqpy representation for types."""
+"""Type conversions between Python and the autoqasm representation for types."""
 
 import typing
 from functools import singledispatch
