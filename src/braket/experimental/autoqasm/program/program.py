@@ -131,18 +131,18 @@ class ProgramConversionContext:
         """
         next = self._var_idx
         self._var_idx += 1
-        if issubclass(kind, oqpy.ArrayVar):
+        if kind == oqpy.ArrayVar:
             return constants.ARRAY_NAME_TEMPLATE.format(next)
-        if issubclass(kind, oqpy.BitVar):
+        elif kind == oqpy.BitVar:
             return constants.BIT_NAME_TEMPLATE.format(next)
-        elif issubclass(kind, oqpy.BoolVar):
+        elif kind == oqpy.BoolVar:
             return constants.BOOL_NAME_TEMPLATE.format(next)
-        elif issubclass(kind, oqpy.FloatVar):
+        elif kind == oqpy.FloatVar:
             return constants.FLOAT_NAME_TEMPLATE.format(next)
-        elif issubclass(kind, oqpy.IntVar):
+        elif kind == oqpy.IntVar:
             return constants.INT_NAME_TEMPLATE.format(next)
 
-        raise NotImplementedError(f"Programs do not yet support type {kind}.")
+        raise NotImplementedError(f"Program's do not yet support type {kind}.")
 
     def get_oqpy_program(self) -> oqpy.Program:
         """Gets the oqpy program from the top of the stack.
