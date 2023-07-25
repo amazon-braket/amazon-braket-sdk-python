@@ -470,13 +470,12 @@ c = measure q;
 def test_run_gate_model_value_error():
     dummy = DummyCircuitSimulator()
     sim = LocalSimulator(dummy)
-    task = sim.run(Circuit().h(0).cnot(0, 1))
     with pytest.raises(
         ValueError,
         match="No result types specified for circuit and shots=0. "
         "See `braket.circuits.result_types`",
     ):
-        task.result()
+        sim.run(Circuit().h(0).cnot(0, 1))
 
 
 def test_run_annealing():
@@ -510,29 +509,26 @@ def test_init_unregistered_backend():
 
 def test_run_unsupported_type():
     sim = LocalSimulator(DummyCircuitSimulator())
-    task = sim.run("I'm unsupported")
     with pytest.raises(NotImplementedError, match="Unsupported task type <class 'str'>"):
-        task.result()
+        sim.run("I'm unsupported")
 
 
 def test_run_annealing_unsupported():
-    dummy_sim = DummyCircuitSimulator()
-    sim = LocalSimulator(dummy_sim)
-    task = sim.run(Problem(ProblemType.ISING))
+    sim = LocalSimulator(DummyCircuitSimulator())
     with pytest.raises(
-        NotImplementedError, match=f"{type(dummy_sim)} does not support quantum annealing problems"
+        NotImplementedError,
+        match=f"{type(DummyCircuitSimulator())} does not support quantum annealing problems",
     ):
-        task.result()
+        sim.run(Problem(ProblemType.ISING))
 
 
 def test_run_qubit_gate_unsupported():
-    dummy_sim = DummyAnnealingSimulator()
-    sim = LocalSimulator(dummy_sim)
-    task = sim.run(Circuit().h(0).cnot(0, 1), 1000)
+    sim = LocalSimulator(DummyAnnealingSimulator())
     with pytest.raises(
-        NotImplementedError, match=f"{type(dummy_sim)} does not support qubit gate-based programs"
+        NotImplementedError,
+        match=f"{type(DummyAnnealingSimulator())} does not support qubit gate-based programs",
     ):
-        task.result()
+        sim.run(Circuit().h(0).cnot(0, 1), 1000)
 
 
 def test_properties():

@@ -90,11 +90,10 @@ class LocalQuantumTask(QuantumTask):
         """
         task = LocalQuantumTask()
         task._task_specification = task_specification
-        task._inputs = inputs
-        task._shots = shots
         task._delegate = delegate
         task._args = args
         task._kwargs = kwargs
+        task._convert_to_sim_format(task_specification, shots, inputs=inputs, *args, **kwargs)
         task.async_result()
         return task
 
@@ -212,9 +211,102 @@ class LocalQuantumTask(QuantumTask):
         return self._task
 
     async def _async_run_internal(self):
-        return self._run_internal(
-            self._task_specification, self._shots, inputs=self._inputs, *self._args, **self._kwargs
-        )
+        return self._run_internal(self._task_specification, *self._args, **self._kwargs)
+
+    @singledispatchmethod
+    def _convert_to_sim_format(
+        self,
+        task_specification: Union[
+            Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram
+        ],
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+    ) -> None:
+        raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
+
+    @_convert_to_sim_format.register
+    def _(
+        self,
+        circuit: Circuit,
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.OPENQASM in simulator.properties.action:
+            validate_circuit_and_shots(circuit, shots)
+            program = circuit.to_ir(ir_type=IRType.OPENQASM)
+            program.inputs.update(inputs or {})
+            self._args = [program, shots] + list(self._args)
+            return
+        elif DeviceActionType.JAQCD in simulator.properties.action:
+            validate_circuit_and_shots(circuit, shots)
+            program = circuit.to_ir(ir_type=IRType.JAQCD)
+            qubits = circuit.qubit_count
+            self._args = [program, qubits, shots] + list(self._args)
+            return
+        raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
+
+    @_convert_to_sim_format.register
+    def _(
+        self,
+        problem: Problem,
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.ANNEALING not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support quantum annealing problems"
+            )
+        ir = problem.to_ir()
+        self._args = [ir, shots] + list(self._args)
+
+    @_convert_to_sim_format.register
+    def _(
+        self,
+        program: Program,
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.OPENQASM not in simulator.properties.action:
+            raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
+        if inputs:
+            inputs_copy = program.inputs.copy() if program.inputs is not None else {}
+            inputs_copy.update(inputs)
+            program = Program(
+                source=program.source,
+                inputs=inputs_copy,
+            )
+        self._args = [program, shots] + list(self._args)
+
+    @_convert_to_sim_format.register
+    def _(
+        self,
+        program: AnalogHamiltonianSimulation,
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.AHS not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+            )
+        self._args = [program.to_ir(), shots] + list(self._args)
+
+    @_convert_to_sim_format.register
+    def _(
+        self,
+        program: AHSProgram,
+        shots: Optional[int] = None,
+        inputs: Optional[Dict[str, float]] = None,
+    ):
+        simulator = self._delegate
+        if DeviceActionType.AHS not in simulator.properties.action:
+            raise NotImplementedError(
+                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
+            )
+        self._args = [program, shots] + list(self._args)
 
     @singledispatchmethod
     def _run_internal(
@@ -232,87 +324,52 @@ class LocalQuantumTask(QuantumTask):
     def _(
         self,
         circuit: Circuit,
-        shots: Optional[int] = None,
-        inputs: Optional[Dict[str, float]] = None,
         *args,
         **kwargs,
     ):
         simulator = self._delegate
         if DeviceActionType.OPENQASM in simulator.properties.action:
-            validate_circuit_and_shots(circuit, shots)
-            program = circuit.to_ir(ir_type=IRType.OPENQASM)
-            program.inputs.update(inputs or {})
-            results = simulator.run(program, shots, *args, **kwargs)
+            results = simulator.run(*args, **kwargs)
             return GateModelQuantumTaskResult.from_object(results)
         elif DeviceActionType.JAQCD in simulator.properties.action:
-            validate_circuit_and_shots(circuit, shots)
-            program = circuit.to_ir(ir_type=IRType.JAQCD)
-            qubits = circuit.qubit_count
-            results = simulator.run(program, qubits, shots, *args, **kwargs)
+            results = simulator.run(*args, **kwargs)
             return GateModelQuantumTaskResult.from_object(results)
-        raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
 
     @_run_internal.register
-    def _(self, problem: Problem, shots: Optional[int] = None, *args, **kwargs):
+    def _(self, problem: Problem, *args, **kwargs):
         simulator = self._delegate
-        if DeviceActionType.ANNEALING not in simulator.properties.action:
-            raise NotImplementedError(
-                f"{type(simulator)} does not support quantum annealing problems"
-            )
-        ir = problem.to_ir()
-        results = simulator.run(ir, shots, *args, *kwargs)
+        results = simulator.run(*args, *kwargs)
         return AnnealingQuantumTaskResult.from_object(results)
 
     @_run_internal.register
     def _(
         self,
         program: Program,
-        shots: Optional[int] = None,
-        inputs: Optional[Dict[str, float]] = None,
         *args,
         **kwargs,
     ):
         simulator = self._delegate
-        if DeviceActionType.OPENQASM not in simulator.properties.action:
-            raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-        if inputs:
-            inputs_copy = program.inputs.copy() if program.inputs is not None else {}
-            inputs_copy.update(inputs)
-            program = Program(
-                source=program.source,
-                inputs=inputs_copy,
-            )
-        results = simulator.run(program, shots, *args, **kwargs)
+        results = simulator.run(*args, **kwargs)
         return GateModelQuantumTaskResult.from_object(results)
 
     @_run_internal.register
     def _(
         self,
         program: AnalogHamiltonianSimulation,
-        shots: Optional[int] = None,
         *args,
         **kwargs,
     ):
         simulator = self._delegate
-        if DeviceActionType.AHS not in simulator.properties.action:
-            raise NotImplementedError(
-                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
-            )
-        results = simulator.run(program.to_ir(), shots, *args, **kwargs)
+        results = simulator.run(*args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
 
     @_run_internal.register
     def _(
         self,
         program: AHSProgram,
-        shots: Optional[int] = None,
         *args,
         **kwargs,
     ):
         simulator = self._delegate
-        if DeviceActionType.AHS not in simulator.properties.action:
-            raise NotImplementedError(
-                f"{type(simulator)} does not support analog Hamiltonian simulation programs"
-            )
-        results = simulator.run(program, shots, *args, **kwargs)
+        results = simulator.run(*args, **kwargs)
         return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)

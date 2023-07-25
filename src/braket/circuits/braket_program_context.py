@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from sympy import Expr
@@ -134,7 +134,15 @@ class BraketProgramContext(AbstractProgramContext):
         """
         self._circuit.add_result_type(braket_result_to_result_type(result))
 
-    def handle_parameter_value(self, value):
+    def handle_parameter_value(self, value: Any) -> Any:
+        """Convert parameter value to required format. Default conversion is noop.
+
+        Args:
+            value (Any): parameter value
+
+        Returns:
+            Any: Required format
+        """
         if isinstance(value, Expr):
             return FreeParameterExpression(str(value))
         return value

@@ -97,7 +97,7 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
             circuit_spec_1 = Circuit(...)
             circuit_spec_2 = Circuit(...)
             program_spec = Program(...)
-            task_list = LocalQuantumTask.create(task_specifications=[circuit_spec_1,
+            task_list = LocalQuantumTaskBatch.create(task_specifications=[circuit_spec_1,
                                                 circuit_spec_2, program_spec],
                                                 delegate=simulator, shots=100, max_parallel=4)
 
