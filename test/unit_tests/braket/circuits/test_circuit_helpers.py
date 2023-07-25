@@ -17,19 +17,19 @@ from braket.circuits import Circuit, Observable, observables
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_no_instructions():
-    validate_circuit_and_shots(Circuit(), 100)
+    with pytest.raises(ValueError):
+        validate_circuit_and_shots(Circuit(), 100)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_0_no_instructions():
-    validate_circuit_and_shots(Circuit(), 0)
+    with pytest.raises(ValueError):
+        validate_circuit_and_shots(Circuit(), 0)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_0_no_results():
-    validate_circuit_and_shots(Circuit().h(0), 0)
+    with pytest.raises(ValueError):
+        validate_circuit_and_shots(Circuit().h(0), 0)
 
 
 def test_validate_circuit_and_shots_100_no_results():
@@ -53,14 +53,14 @@ def test_validate_circuit_and_shots_100_results_mixed_result():
     )
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_100_result_state_vector():
-    validate_circuit_and_shots(Circuit().h(0).state_vector(), 100)
+    with pytest.raises(ValueError):
+        validate_circuit_and_shots(Circuit().h(0).state_vector(), 100)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_100_result_amplitude():
-    validate_circuit_and_shots(Circuit().h(0).amplitude(state=["0"]), 100)
+    with pytest.raises(ValueError):
+        validate_circuit_and_shots(Circuit().h(0).amplitude(state=["0"]), 100)
 
 
 def test_validate_circuit_and_shots_0_noncommuting():
@@ -73,15 +73,15 @@ def test_validate_circuit_and_shots_0_noncommuting():
     )
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_circuit_and_shots_100_noncommuting():
-    validate_circuit_and_shots(
-        Circuit()
-        .h(0)
-        .expectation(observables.X() @ observables.Y(), [0, 1])
-        .expectation(observables.Y() @ observables.X(), [0, 1]),
-        100,
-    )
+    with pytest.raises(ValueError):
+        validate_circuit_and_shots(
+            Circuit()
+            .h(0)
+            .expectation(observables.X() @ observables.Y(), [0, 1])
+            .expectation(observables.Y() @ observables.X(), [0, 1]),
+            100,
+        )
 
 
 def test_probability_limit():
