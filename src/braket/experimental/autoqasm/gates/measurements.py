@@ -25,11 +25,12 @@ Example of measuring qubit 0:
 
 from typing import List, Union
 
-from braket.experimental.autoqasm import BitVar, program
+from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import types as aq_types
 from braket.experimental.autoqasm.gates.qubits import QubitIdentifierType, _qubit
 
 
-def measure(qubits: Union[QubitIdentifierType, List[QubitIdentifierType]]) -> BitVar:
+def measure(qubits: Union[QubitIdentifierType, List[QubitIdentifierType]]) -> aq_types.BitVar:
     """Add qubit measurement statements to the program and assign the measurement
     results to bit variables.
 
@@ -46,8 +47,7 @@ def measure(qubits: Union[QubitIdentifierType, List[QubitIdentifierType]]) -> Bi
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
 
     bit_var_size = len(qubits) if len(qubits) > 1 else None
-    bit_var = BitVar(
-        name=program.get_program_conversion_context().next_var_name(BitVar),
+    bit_var = aq_types.BitVar(
         size=bit_var_size,
         needs_declaration=True,
     )

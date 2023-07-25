@@ -21,6 +21,7 @@ This module implements operators that AutoQASM overloads or adds on top of AutoG
 # We need to either implement these, or determine they are not needed and remove them.
 
 # Operators below are imported directly from core autograph implementation
+from braket.experimental.autoqasm.autograph.impl.api_core import autograph_artifact  # noqa: F401
 from braket.experimental.autoqasm.autograph.operators.variables import (  # noqa: F401
     Undefined,
     UndefinedReturnValue,

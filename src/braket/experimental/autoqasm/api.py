@@ -300,10 +300,9 @@ def _convert_program_as_subroutine(
     return_variable = None
     if isinstance(return_instance, list):
         ret_type = subroutine_function_call.subroutine_decl.return_type
-        return_variable = oqpy.ArrayVar(
+        return_variable = aq_types.ArrayVar(
             return_instance,
             dimensions=[d.value for d in ret_type.dimensions],
-            name=program_conversion_context.next_var_name(oqpy.ArrayVar),
         )
         oqpy_program.set(return_variable, subroutine_function_call)
     elif return_instance is not None:
@@ -335,7 +334,7 @@ def _make_return_instance(
 
     return_instance = None
     if return_type and aq_types.is_qasm_type(return_type):
-        return_instance = return_type(name=program_conversion_context.next_var_name(return_type))
+        return_instance = return_type()
     elif return_type:
         if hasattr(return_type, "__origin__"):
             # Types from python's typing module, such as `List`. origin gives us `list``
