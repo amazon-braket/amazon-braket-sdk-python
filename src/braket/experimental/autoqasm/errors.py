@@ -47,3 +47,16 @@ function calls."""
 
     def __str__(self):
         return self.message
+
+
+class UnsupportedConditionalExpressionError(AutoQasmError):
+    """Conditional expressions which return values are not supported."""
+
+    def __init__(self):
+        self.message = """\
+Inline conditional expressions (ternary operators) which return values are \
+not supported by AutoQASM. Please rewrite this conditional expression as an \
+if-else statement."""
+
+    def __str__(self):
+        return self.message

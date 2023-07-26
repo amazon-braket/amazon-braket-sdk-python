@@ -19,6 +19,7 @@ from typing import Any, Callable, Optional
 import oqpy.base
 
 from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
 from braket.experimental.autoqasm.types import is_qasm_type
 
 
@@ -53,9 +54,13 @@ def _oqpy_if_exp(
     if isinstance(cond, oqpy.base.Var) and cond.name not in oqpy_program.declared_vars.keys():
         oqpy_program.declare(cond)
     with oqpy.If(oqpy_program, cond):
-        if_true()
+        result = if_true()
+        if result is not None:
+            raise UnsupportedConditionalExpressionError()
     with oqpy.Else(oqpy_program):
-        if_false()
+        result = if_false()
+        if result is not None:
+            raise UnsupportedConditionalExpressionError()
 
 
 def _py_if_exp(cond: Any, if_true: Callable[[None], Any], if_false: Callable[[None], Any]) -> Any:
