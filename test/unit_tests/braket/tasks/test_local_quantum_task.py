@@ -123,6 +123,7 @@ class DummyProgramSleepSimulator(BraketSimulator):
             }
         )
 
+
 class DummyExceptionSimulator(BraketSimulator):
     def run(
         self,
@@ -155,6 +156,8 @@ class DummyExceptionSimulator(BraketSimulator):
                 "deviceParameters": {},
             }
         )
+
+
 def test_state():
     task = LocalQuantumTask(RESULT)
     assert task.state() == "CREATED"
@@ -172,11 +175,13 @@ def test_result_from_sim():
     result = local_quantum_task.result()
     assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
+
 def test_exception_from_sim():
     sim = LocalSimulator(DummyExceptionSimulator())
     local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     with pytest.raises(Exception, match="Catch in main thread"):
         local_quantum_task.result()
+
 
 def test_result_without_passing_in_result():
     sim = LocalSimulator(DummyProgramSimulator())
