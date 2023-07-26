@@ -132,6 +132,36 @@ Please remember to:
 * Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 
+```mermaid
+timeline
+    title Code integration journey (CI)
+    Project setup <br> (make dev)   : Code checkout
+                                    : Virtual environment
+                                    : Dependencies
+                                    : Git pre-commit hooks
+                                    : Local branch
+                                    : Local changes
+                                    : Local tests
+
+    Pre-Pull Request <br> (make PR)     : Code linting
+                                        : Docs linting
+                                        : Static typing analysis
+                                        : Tests (unit|integration)
+
+    Pull Request <br> (CI checks)   : Semantic PR title check
+                                    : Related issue check
+                                    : Acknowledgment check
+                                    : Code coverage diff
+                                    : Dependencies check
+                                    : GitHub Actions security check
+
+    After merge <br> (CI checks)    : End-to-end tests
+                                    : GitHub Actions check
+                                    : Rebuild Changelog
+                                    : Deploy staging docs
+                                    : Prepare release
+```
+
 ## Documentation Guidelines
 
 We use reStructuredText (RST) for most of our documentation. For a quick primer on the syntax,
