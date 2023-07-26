@@ -22,6 +22,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from braket.aws import AwsSession
+from braket.jobs import Framework, image_uris
 from braket.jobs.config import (
     CheckpointConfig,
     InstanceConfig,
@@ -46,6 +47,7 @@ def aws_session():
     _aws_session = Mock(spec=AwsSession)
     _aws_session.default_bucket.return_value = "default-bucket-name"
     _aws_session.get_default_jobs_role.return_value = "default-role-arn"
+    _aws_session.region = "us-east-1"
     return _aws_session
 
 
@@ -347,8 +349,8 @@ def _translate_creation_args(create_job_args):
             "compressionType": "GZIP",
         }
     }
-    if image_uri:
-        algorithm_specification["containerImage"] = {"uri": image_uri}
+    image_uri = image_uri or image_uris.retrieve_image(Framework.BASE, aws_session.region)
+    algorithm_specification["containerImage"] = {"uri": image_uri}
     tags = create_job_args.get("tags", {})
 
     test_kwargs = {

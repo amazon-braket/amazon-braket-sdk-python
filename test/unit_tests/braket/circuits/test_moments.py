@@ -74,9 +74,9 @@ def test_depth():
     assert moments.depth == 2
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_depth_setter(moments):
-    moments.depth = 5
+    with pytest.raises(AttributeError):
+        moments.depth = 5
 
 
 def test_overlaping_qubits():
@@ -97,14 +97,14 @@ def test_qubits():
     assert moments.qubit_count == len(expected)
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_qubits_setter(moments):
-    moments.qubits = QubitSet(1)
+    with pytest.raises(AttributeError):
+        moments.qubits = QubitSet(1)
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_qubit_count_setter(moments):
-    moments.qubit_count = 1
+    with pytest.raises(AttributeError):
+        moments.qubit_count = 1
 
 
 def test_time_slices():
