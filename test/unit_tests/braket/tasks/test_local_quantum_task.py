@@ -203,7 +203,8 @@ def test_cancel():
 
 
 def test_async():
-    task = LocalQuantumTask(RESULT)
+    sim = LocalSimulator(DummyProgramSimulator())
+    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     assert isinstance(task.async_result(), asyncio.Task)
 
 
