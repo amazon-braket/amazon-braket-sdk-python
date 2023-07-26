@@ -124,14 +124,10 @@ class LocalSimulator(Device):
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
         """
-        local_quantum_tasks = LocalQuantumTaskBatch.create(
+
+        return LocalQuantumTaskBatch.create(
             task_specifications, self._delegate, shots, max_parallel, inputs, *args, **kwargs
         )
-        local_quantum_tasks_res = [
-            local_quantum_task.result() for local_quantum_task in local_quantum_tasks
-        ]
-
-        return LocalQuantumTaskBatch(local_quantum_tasks_res)
 
     @property
     def properties(self) -> DeviceCapabilities:

@@ -61,7 +61,7 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
         inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
         *args,
         **kwargs,
-    ) -> List[LocalQuantumTask]:
+    ) -> "LocalQuantumTaskBatch":
         """Create and initialize a list of LocalQuantumTask instances for local quantum simulation.
 
         Args:
@@ -83,7 +83,7 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
                 for multiple tasks.Default is an empty dictionary.
 
         Returns:
-            List[LocalQuantumTask]: A list of initialized LocalQuantumTask instances based
+            : A LocalQuantumTaskBatch object containing _tasks which is a list of initialized LocalQuantumTask instances based
             on the given task specifications.
 
         Example:
@@ -170,7 +170,9 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
             ]
 
         tasks = [future.result() for future in task_futures]
-        return tasks
+        local_quantum_task_batch = LocalQuantumTaskBatch()
+        local_quantum_task_batch._tasks = tasks
+        return local_quantum_task_batch
 
     def results(
         self,
@@ -179,4 +181,12 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
             GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
         ]
     ]:
+        """Get the quantum task results.
+        Returns:
+            List[Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]]:: # noqa
+            Get the quantum task results.
+        """
+        if not self._results:
+            self._results = [local_quantum_task.result() for local_quantum_task in self._tasks]
+
         return self._results

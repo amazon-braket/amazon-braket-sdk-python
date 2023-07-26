@@ -320,31 +320,11 @@ class LocalQuantumTask(QuantumTask):
     ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
 
-    @_run_internal.register
+    @_run_internal.register(Circuit)
+    @_run_internal.register(Program)
     def _(
         self,
-        circuit: Circuit,
-        *args,
-        **kwargs,
-    ):
-        simulator = self._delegate
-        if DeviceActionType.OPENQASM in simulator.properties.action:
-            results = simulator.run(*args, **kwargs)
-            return GateModelQuantumTaskResult.from_object(results)
-        elif DeviceActionType.JAQCD in simulator.properties.action:
-            results = simulator.run(*args, **kwargs)
-            return GateModelQuantumTaskResult.from_object(results)
-
-    @_run_internal.register
-    def _(self, problem: Problem, *args, **kwargs):
-        simulator = self._delegate
-        results = simulator.run(*args, *kwargs)
-        return AnnealingQuantumTaskResult.from_object(results)
-
-    @_run_internal.register
-    def _(
-        self,
-        program: Program,
+        circuit: Union[Circuit, Program],
         *args,
         **kwargs,
     ):
@@ -353,20 +333,16 @@ class LocalQuantumTask(QuantumTask):
         return GateModelQuantumTaskResult.from_object(results)
 
     @_run_internal.register
-    def _(
-        self,
-        program: AnalogHamiltonianSimulation,
-        *args,
-        **kwargs,
-    ):
+    def _(self, problem: Problem, *args, **kwargs):
         simulator = self._delegate
-        results = simulator.run(*args, **kwargs)
-        return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
+        results = simulator.run(*args, *kwargs)
+        return AnnealingQuantumTaskResult.from_object(results)
 
-    @_run_internal.register
+    @_run_internal.register(AnalogHamiltonianSimulation)
+    @_run_internal.register(AHSProgram)
     def _(
         self,
-        program: AHSProgram,
+        program: Union[AnalogHamiltonianSimulation, AHSProgram],
         *args,
         **kwargs,
     ):
