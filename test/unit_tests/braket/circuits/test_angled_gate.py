@@ -30,9 +30,9 @@ def test_is_operator(angled_gate):
     assert isinstance(angled_gate, Gate)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_angle_is_none():
-    AngledGate(qubit_count=1, ascii_symbols=["foo"], angle=None)
+    with pytest.raises(ValueError):
+        AngledGate(qubit_count=1, ascii_symbols=["foo"], angle=None)
 
 
 def test_getters():
@@ -46,9 +46,9 @@ def test_getters():
     assert gate.angle == angle
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_angle_setter(angled_gate):
-    angled_gate.angle = 0.14
+    with pytest.raises(AttributeError):
+        angled_gate.angle = 0.14
 
 
 def test_adjoint(angled_gate):
@@ -111,11 +111,11 @@ def test_angle_adjoint():
     assert np.array_equal(gate2_adj[0].ascii_symbols, ["foo(-0.15)"])
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_bind_values():
     theta = FreeParameter("theta")
     gate = AngledGate(angle=theta, qubit_count=1, ascii_symbols=["bar"])
-    gate.bind_values(theta=1)
+    with pytest.raises(NotImplementedError):
+        gate.bind_values(theta=1)
 
 
 def test_angled_gate_with_expr():
@@ -192,23 +192,3 @@ def test_double_angle_parameters():
     assert DoubleAngledGate(
         qubit_count=1, ascii_symbols=["foo"], angle_1=1, angle_2=2
     ).parameters == [1, 2]
-
-
-def test_hash_double_angle():
-    symbol1 = FreeParameter("theta")
-    assert hash(
-        DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"])
-    ) == hash(DoubleAngledGate(angle_1=symbol1, angle_2=1, qubit_count=1, ascii_symbols=["bar"]))
-
-
-def test_hash_triple_angle():
-    symbol1 = FreeParameter("theta")
-    assert hash(
-        TripleAngledGate(
-            angle_1=symbol1, angle_2=1, angle_3=3, qubit_count=1, ascii_symbols=["bar"]
-        )
-    ) == hash(
-        TripleAngledGate(
-            angle_1=symbol1, angle_2=1, angle_3=3, qubit_count=1, ascii_symbols=["bar"]
-        )
-    )

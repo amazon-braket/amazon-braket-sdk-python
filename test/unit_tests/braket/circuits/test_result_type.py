@@ -35,9 +35,9 @@ def sv():
     return ResultType.StateVector()
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_none_ascii():
-    ResultType(ascii_symbols=None)
+    with pytest.raises(ValueError):
+        ResultType(ascii_symbols=None)
 
 
 def test_name(result_type):
@@ -71,14 +71,14 @@ def test_equality_densitymatrix():
     assert result1 != result4
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_ascii_symbol_setter(result_type):
-    result_type.ascii_symbols = ["bar"]
+    with pytest.raises(AttributeError):
+        result_type.ascii_symbols = ["bar"]
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_name_setter(result_type):
-    result_type.name = "hi"
+    with pytest.raises(AttributeError):
+        result_type.name = "hi"
 
 
 def test_register_result():
@@ -120,31 +120,31 @@ def test_copy_with_target(sv):
     assert sv.copy(target=target) == expected
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_copy_with_target_and_mapping(prob):
-    prob.copy(target=[10], target_mapping={0: 10})
+    with pytest.raises(TypeError):
+        prob.copy(target=[10], target_mapping={0: 10})
 
 
 # ObservableResultType
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_expectation_init_value_error_target():
-    ObservableResultType(
-        ascii_symbols=["Obs", "Obs"], observable=Observable.X() @ Observable.Y(), target=[]
-    )
+    with pytest.raises(ValueError):
+        ObservableResultType(
+            ascii_symbols=["Obs", "Obs"], observable=Observable.X() @ Observable.Y(), target=[]
+        )
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_expectation_init_value_error_ascii_symbols():
-    ObservableResultType(
-        ascii_symbols=["Obs"], observable=Observable.X() @ Observable.Y(), target=[1, 2]
-    )
+    with pytest.raises(ValueError):
+        ObservableResultType(
+            ascii_symbols=["Obs"], observable=Observable.X() @ Observable.Y(), target=[1, 2]
+        )
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_obs_rt_init_value_error_qubit_count():
-    ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=[0, 1])
+    with pytest.raises(ValueError):
+        ObservableResultType(ascii_symbols=["Obs"], observable=Observable.X(), target=[0, 1])
 
 
 def test_obs_rt_equality():

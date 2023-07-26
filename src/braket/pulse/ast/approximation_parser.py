@@ -419,8 +419,6 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             amps = self.visit(node.arguments[1], context)
             if isinstance(amps, Waveform):
                 amps = amps.sample(context.frame_data[frame_id].dt)
-            elif isinstance(amps, str):
-                raise NameError(f"waveform '{amps}' is not defined.")
         else:
             raise NotImplementedError
         frame_data = context.frame_data[frame_id]
