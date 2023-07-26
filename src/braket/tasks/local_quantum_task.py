@@ -93,9 +93,7 @@ class LocalQuantumTask(QuantumTask):
         task._delegate = delegate
         task._args = args
         task._kwargs = kwargs
-        task._args = task._convert_to_sim_format(
-            task_specification, shots, inputs=inputs
-        )
+        task._args = task._convert_to_sim_format(task_specification, shots, inputs=inputs)
         task.async_result()
         return task
 
