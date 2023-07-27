@@ -82,15 +82,39 @@ def test_conditional_expressions_py_cond(if_true: dict, if_false: dict) -> None:
     assert if_false["qasm"] not in qasm
 
 
-def test_unsupported_conditional_assignment() -> None:
-    """Tests conditional expression where the result is assigned to a variable."""
+def test_inline_conditional_assignment() -> None:
+    """Tests conditional expression where the if and else clauses return different types."""
 
     @aq.function
     def cond_exp_assignment():
-        a = aq.IntVar(1) if aq.BoolVar(True) else aq.IntVar(2)  # noqa: F841
+        a = aq.IntVar(2) * aq.IntVar(4) if aq.BoolVar(True) else aq.IntVar(2)  # noqa: F841
+
+    expected = """OPENQASM 3.0;
+int[32] __int_1__ = 2;
+int[32] __int_2__ = 4;
+int[32] __int_4__ = 2;
+int[32] __int_3__;
+bool __bool_0__ = true;
+if (__bool_0__) {
+    __int_3__ = __int_1__ * __int_2__;
+} else {
+    __int_3__ = __int_4__;
+}
+int[32] a;
+a = __int_3__;"""
+
+    assert cond_exp_assignment().to_ir() == expected
+
+
+def test_unsupported_inline_conditional_assignment() -> None:
+    """Tests conditional expression where the if and else clauses return different types."""
+
+    @aq.function
+    def cond_exp_assignment_different_types():
+        a = aq.IntVar(1) if aq.BoolVar(True) else aq.FloatVar(2)  # noqa: F841
 
     with pytest.raises(UnsupportedConditionalExpressionError):
-        cond_exp_assignment()
+        cond_exp_assignment_different_types()
 
 
 def test_branch_assignment_undeclared() -> None:

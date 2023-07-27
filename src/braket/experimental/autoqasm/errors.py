@@ -14,6 +14,9 @@
 """Errors raised in the AutoQASM build process."""
 
 
+from typing import Optional
+
+
 class AutoQasmError(Exception):
     """Base class for all AutoQASM exceptions."""
 
@@ -52,11 +55,15 @@ function calls."""
 class UnsupportedConditionalExpressionError(AutoQasmError):
     """Conditional expressions which return values are not supported."""
 
-    def __init__(self):
+    def __init__(self, true_type: Optional[type], false_type: Optional[type]):
+        if_type = true_type.__name__ if true_type else "None"
+        else_type = false_type.__name__ if false_type else "None"
         self.message = """\
-Inline conditional expressions (ternary operators) which return values are \
-not supported by AutoQASM. Please rewrite this conditional expression as an \
-if-else statement."""
+`if` clause resolves to {}, but `else` clause resolves to {}. \
+Both the `if` and `else` clauses of an inline conditional expression \
+must resolve to the same type.""".format(
+            if_type, else_type
+        )
 
     def __str__(self):
         return self.message

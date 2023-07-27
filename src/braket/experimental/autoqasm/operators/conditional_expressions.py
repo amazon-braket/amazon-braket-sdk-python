@@ -17,10 +17,11 @@
 from typing import Any, Callable, Optional
 
 import oqpy.base
+from openpulse import ast
 
-from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import program as aq_program
+from braket.experimental.autoqasm import types as aq_types
 from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
-from braket.experimental.autoqasm.types import is_qasm_type
 
 
 def if_exp(
@@ -37,10 +38,29 @@ def if_exp(
     Returns:
         Any: The value returned from the conditional expression.
     """
-    if is_qasm_type(cond):
+    if aq_types.is_qasm_type(cond):
         return _oqpy_if_exp(cond, if_true, if_false, expr_repr)
     else:
         return _py_if_exp(cond, if_true, if_false)
+
+
+def _aq_type_from_ast_type(ast_type: ast.ClassicalType) -> type:
+    if isinstance(ast_type, ast.IntType):
+        return aq_types.IntVar
+    if isinstance(ast_type, ast.FloatType):
+        return aq_types.FloatVar
+    if isinstance(ast_type, ast.BoolType):
+        return aq_types.BoolVar
+    if isinstance(ast_type, ast.BitType):
+        return aq_types.BitVar
+    if isinstance(ast_type, ast.ArrayType):
+        return aq_types.ArrayVar
+
+
+def _aq_type(expr_or_var: Any) -> type:
+    if isinstance(expr_or_var, oqpy.base.OQPyExpression):
+        return _aq_type_from_ast_type(expr_or_var.type)
+    return type(expr_or_var)
 
 
 def _oqpy_if_exp(
@@ -50,17 +70,28 @@ def _oqpy_if_exp(
     expr_repr: Optional[str],
 ) -> None:
     """Overload of if_exp that stages an oqpy conditional."""
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program = aq_program.get_program_conversion_context().get_oqpy_program()
     if isinstance(cond, oqpy.base.Var) and cond.name not in oqpy_program.declared_vars.keys():
         oqpy_program.declare(cond)
+
+    result_var = None
     with oqpy.If(oqpy_program, cond):
-        result = if_true()
-        if result is not None:
-            raise UnsupportedConditionalExpressionError()
+        true_result = aq_types.wrap_value(if_true())
+        true_result_type = _aq_type(true_result)
+        if true_result is not None:
+            result_var = true_result_type()
+            oqpy_program.set(result_var, true_result)
     with oqpy.Else(oqpy_program):
-        result = if_false()
-        if result is not None:
-            raise UnsupportedConditionalExpressionError()
+        false_result = aq_types.wrap_value(if_false())
+        false_result_type = _aq_type(false_result)
+        if false_result_type != true_result_type:
+            raise UnsupportedConditionalExpressionError(true_result_type, false_result_type)
+        if false_result is not None:
+            oqpy_program.set(result_var, false_result)
+
+    if result_var is not None:
+        oqpy_program.declare(result_var, to_beginning=True)
+    return result_var
 
 
 def _py_if_exp(cond: Any, if_true: Callable[[None], Any], if_false: Callable[[None], Any]) -> Any:
