@@ -90,9 +90,10 @@ def _oqpy_set_item(target: Any, i: Any, x: Any) -> Any:
         raise NotImplementedError("Slice assignment is not supported.")
 
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    if x.name in oqpy_program.declared_vars.keys():
+    if x.name in oqpy_program.declared_vars.keys() or x.init_expression is None:
         value = x
     else:
+        # Set to `x.init_expression` to avoid declaring an unnecessary variable.
         value = x.init_expression
     oqpy_program.set(target[i], value)
     return target

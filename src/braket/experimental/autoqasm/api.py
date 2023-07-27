@@ -425,9 +425,11 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 
     @functools.wraps(f)
     def _func(*args, **kwargs) -> Any:
-        inner_program = args[0]
+        inner_program: oqpy.Program = args[0]
         with aq_program.get_program_conversion_context().push_oqpy_program(inner_program):
-            return aq_transpiler.converted_call(f, args[1:], kwargs, options=options)
+            result = aq_transpiler.converted_call(f, args[1:], kwargs, options=options)
+        inner_program.autodeclare()
+        return result
 
     # Replace the function signature with a new signature where the first
     # argument is of type `oqpy.Program`.

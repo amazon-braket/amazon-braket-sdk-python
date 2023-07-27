@@ -69,8 +69,6 @@ def _oqpy_if_exp(
         if false_result is not None:
             oqpy_program.set(result_var, false_result)
 
-    if result_var is not None:
-        oqpy_program.declare(result_var, to_beginning=True)
     return result_var
 
 

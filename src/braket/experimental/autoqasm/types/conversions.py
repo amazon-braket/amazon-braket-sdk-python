@@ -77,6 +77,8 @@ def var_type_from_ast_type(ast_type: ast.ClassicalType) -> type:
     if isinstance(ast_type, ast.ArrayType):
         return aq_types.ArrayVar
 
+    raise NotImplementedError
+
 
 def var_type_from_oqpy(expr_or_var: Union[oqpy.base.OQPyExpression, oqpy.base.Var]) -> type:
     """Returns the AutoQASM variable type corresponding to the provided OQPy object.

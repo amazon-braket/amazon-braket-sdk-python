@@ -68,23 +68,16 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         if is_target_name_used:
             target = _get_oqpy_program_variable(target_name)
             _validate_variables_type_size(target, value)
-            if is_value_name_used:
-                oqpy_program.set(target, value)
-            else:
-                # Set to `value.init_expression` to avoid declaring an unnecessary variable.
-                oqpy_program.set(target, value.init_expression)
         else:
             target = copy.copy(value)
             target.init_expression = None
             target.name = target_name
 
-            if is_value_name_used:
-                oqpy_program.declare(target)
-                oqpy_program.set(target, value)
-            else:
-                # Set to `value.init_expression` to avoid declaring an unnecessary variable.
-                target.init_expression = value.init_expression
-                oqpy_program.declare(target)
+        if is_value_name_used or value.init_expression is None:
+            oqpy_program.set(target, value)
+        else:
+            # Set to `value.init_expression` to avoid declaring an unnecessary variable.
+            oqpy_program.set(target, value.init_expression)
 
         return target
 
