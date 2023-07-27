@@ -14,15 +14,11 @@
 import asyncio
 import threading
 from asyncio import AbstractEventLoop, Task
-from functools import singledispatch
 from typing import Dict, Optional, Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
-from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from braket.circuits.serialization import IRType
-from braket.device_schema import DeviceActionType
 from braket.ir.ahs import Program as AHSProgram
 from braket.ir.openqasm import Program
 from braket.task_result import (
@@ -36,9 +32,7 @@ from braket.tasks import (
     PhotonicModelQuantumTaskResult,
     QuantumTask,
 )
-from braket.tasks.analog_hamiltonian_simulation_quantum_task_result import (
-    AnalogHamiltonianSimulationQuantumTaskResult,
-)
+from braket.tasks.quantum_task_helper import _convert_to_sim_format, _wrap_results
 
 
 class LocalQuantumTask(QuantumTask):
@@ -95,7 +89,7 @@ class LocalQuantumTask(QuantumTask):
         """
         task = LocalQuantumTask()
         task._delegate = delegate
-        task._args = convert_to_sim_format(
+        task._args = _convert_to_sim_format(
             task_specification, delegate, shots, inputs=inputs
         ) + list(args)
         task._kwargs = kwargs
@@ -217,7 +211,7 @@ class LocalQuantumTask(QuantumTask):
 
     async def _async_run_internal(self):
         results = self._run_internal(*self._args, **self._kwargs)
-        return wrap_results(results)
+        return _wrap_results(results)
 
     def _run_internal(
         self,
@@ -226,103 +220,3 @@ class LocalQuantumTask(QuantumTask):
     ) -> Union[GateModelTaskResult, AnnealingTaskResult, AnalogHamiltonianSimulationTaskResult,]:
         simulator = self._delegate
         return simulator.run(*args, **kwargs)
-
-
-@singledispatch
-def convert_to_sim_format(
-    task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram],
-    delegate,  # noqa
-    shots: Optional[int] = None,
-    **kwargs,
-) -> list:
-    raise NotImplementedError(f"Unsupported task type {type(task_specification)}")
-
-
-@convert_to_sim_format.register
-def _(program: Program, delegate, shots: Optional[int] = None, **kwargs) -> list:  # noqa
-    simulator = delegate
-    if DeviceActionType.OPENQASM not in simulator.properties.action:
-        raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
-    if kwargs["inputs"]:
-        inputs_copy = program.inputs.copy() if program.inputs is not None else {}
-        inputs_copy.update(kwargs["inputs"])
-        program = Program(
-            source=program.source,
-            inputs=inputs_copy,
-        )
-    return [program, shots]
-
-
-@convert_to_sim_format.register
-def _(circuit: Circuit, delegate, shots: Optional[int] = None, **kwargs) -> list:  # noqa
-    simulator = delegate
-    if DeviceActionType.OPENQASM in simulator.properties.action:
-        validate_circuit_and_shots(circuit, shots)
-        program = circuit.to_ir(ir_type=IRType.OPENQASM)
-        program.inputs.update(kwargs["inputs"] or {})
-        return [program, shots]
-    elif DeviceActionType.JAQCD in simulator.properties.action:
-        validate_circuit_and_shots(circuit, shots)
-        program = circuit.to_ir(ir_type=IRType.JAQCD)
-        qubits = circuit.qubit_count
-        return [program, qubits, shots]
-    raise NotImplementedError(f"{type(simulator)} does not support qubit gate-based programs")
-
-
-@convert_to_sim_format.register
-def _(problem: Problem, delegate, shots: Optional[int] = None, **kwargs) -> list:  # noqa
-    simulator = delegate
-    if DeviceActionType.ANNEALING not in simulator.properties.action:
-        raise NotImplementedError(f"{type(simulator)} does not support quantum annealing problems")
-    ir = problem.to_ir()
-    return [ir, shots]
-
-
-@convert_to_sim_format.register
-def _(
-    program: AnalogHamiltonianSimulation, delegate, shots: Optional[int] = None, **kwargs  # noqa
-) -> list:
-    simulator = delegate
-    if DeviceActionType.AHS not in simulator.properties.action:
-        raise NotImplementedError(
-            f"{type(simulator)} does not support analog Hamiltonian simulation programs"
-        )
-    return [program.to_ir(), shots]
-
-
-@convert_to_sim_format.register
-def _(program: AHSProgram, delegate, shots: Optional[int] = None, **kwargs) -> list:  # noqa
-    simulator = delegate
-    if DeviceActionType.AHS not in simulator.properties.action:
-        raise NotImplementedError(
-            f"{type(simulator)} does not support analog Hamiltonian simulation programs"
-        )
-    return [program, shots]
-
-
-@singledispatch
-def wrap_results(
-    results: Union[GateModelTaskResult, AnalogHamiltonianSimulationTaskResult, AnnealingTaskResult]
-) -> [
-    GateModelQuantumTaskResult,
-    AnnealingQuantumTaskResult,
-    AnalogHamiltonianSimulationQuantumTaskResult,
-]:
-    raise NotImplementedError
-
-
-@wrap_results.register
-def _(results: GateModelTaskResult) -> GateModelQuantumTaskResult:
-    return GateModelQuantumTaskResult.from_object(results)
-
-
-@wrap_results.register
-def _(
-    results: AnalogHamiltonianSimulationTaskResult,
-) -> AnalogHamiltonianSimulationQuantumTaskResult:
-    return AnalogHamiltonianSimulationQuantumTaskResult.from_object(results)
-
-
-@wrap_results.register
-def _(results: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
-    return AnnealingQuantumTaskResult.from_object(results)

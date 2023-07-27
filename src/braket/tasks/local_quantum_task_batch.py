@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from concurrent.futures.thread import ThreadPoolExecutor
-from itertools import repeat
 from os import cpu_count
 from typing import Dict, List, Optional, Union
 
@@ -27,6 +26,7 @@ from braket.tasks import (
     QuantumTaskBatch,
 )
 from braket.tasks.local_quantum_task import LocalQuantumTask
+from braket.tasks.quantum_task_helper import _batch_tasks_and_inputs
 
 
 class LocalQuantumTaskBatch(QuantumTaskBatch):
@@ -115,45 +115,11 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
             - If a Circuit task contains unbound parameters, an error will be
               raised before execution.
         """
-        inputs = inputs or {}
 
         if not max_parallel:
             max_parallel = cpu_count()
 
-        single_task = isinstance(
-            task_specifications,
-            (Circuit, Program, Problem, AnalogHamiltonianSimulation),
-        )
-
-        single_input = isinstance(inputs, dict)
-
-        if not single_task and not single_input:
-            if len(task_specifications) != len(inputs):
-                raise ValueError(
-                    "Multiple inputs and task specifications must " "be equal in number."
-                )
-        if single_task:
-            task_specifications = repeat(task_specifications)
-
-        if single_input:
-            inputs = repeat(inputs)
-
-        tasks_and_inputs = zip(task_specifications, inputs)
-
-        if single_task and single_input:
-            tasks_and_inputs = [next(tasks_and_inputs)]
-        else:
-            tasks_and_inputs = list(tasks_and_inputs)
-
-        for task_specification, input_map in tasks_and_inputs:
-            if isinstance(task_specification, Circuit):
-                param_names = {param.name for param in task_specification.parameters}
-                unbounded_parameters = param_names - set(input_map.keys())
-                if unbounded_parameters:
-                    raise ValueError(
-                        f"Cannot execute circuit with unbound parameters: "
-                        f"{unbounded_parameters}"
-                    )
+        tasks_and_inputs = _batch_tasks_and_inputs(task_specifications, inputs)
 
         with ThreadPoolExecutor(max_workers=min(max_parallel, len(tasks_and_inputs))) as executor:
             task_futures = [
