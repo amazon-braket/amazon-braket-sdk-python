@@ -17,7 +17,6 @@
 from typing import Any, Callable, Optional
 
 import oqpy.base
-from openpulse import ast
 
 from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm import types as aq_types
@@ -44,25 +43,6 @@ def if_exp(
         return _py_if_exp(cond, if_true, if_false)
 
 
-def _aq_type_from_ast_type(ast_type: ast.ClassicalType) -> type:
-    if isinstance(ast_type, ast.IntType):
-        return aq_types.IntVar
-    if isinstance(ast_type, ast.FloatType):
-        return aq_types.FloatVar
-    if isinstance(ast_type, ast.BoolType):
-        return aq_types.BoolVar
-    if isinstance(ast_type, ast.BitType):
-        return aq_types.BitVar
-    if isinstance(ast_type, ast.ArrayType):
-        return aq_types.ArrayVar
-
-
-def _aq_type(expr_or_var: Any) -> type:
-    if isinstance(expr_or_var, oqpy.base.OQPyExpression):
-        return _aq_type_from_ast_type(expr_or_var.type)
-    return type(expr_or_var)
-
-
 def _oqpy_if_exp(
     cond: Any,
     if_true: Callable[[None], Any],
@@ -77,13 +57,13 @@ def _oqpy_if_exp(
     result_var = None
     with oqpy.If(oqpy_program, cond):
         true_result = aq_types.wrap_value(if_true())
-        true_result_type = _aq_type(true_result)
+        true_result_type = aq_types.var_type_from_oqpy(true_result)
         if true_result is not None:
             result_var = true_result_type()
             oqpy_program.set(result_var, true_result)
     with oqpy.Else(oqpy_program):
         false_result = aq_types.wrap_value(if_false())
-        false_result_type = _aq_type(false_result)
+        false_result_type = aq_types.var_type_from_oqpy(false_result)
         if false_result_type != true_result_type:
             raise UnsupportedConditionalExpressionError(true_result_type, false_result_type)
         if false_result is not None:

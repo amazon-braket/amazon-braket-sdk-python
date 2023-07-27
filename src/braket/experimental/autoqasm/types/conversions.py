@@ -19,6 +19,7 @@ from typing import Any, Union
 
 import numpy as np
 import oqpy
+from openpulse import ast
 
 from braket.experimental.autoqasm import types as aq_types
 
@@ -54,6 +55,41 @@ def map_type(python_type: type) -> type:
 
     # TODO add all supported types
     return python_type
+
+
+def var_type_from_ast_type(ast_type: ast.ClassicalType) -> type:
+    """Converts an OpenQASM AST type to the corresponding AutoQASM variable type.
+
+    Args:
+        ast_type (ast.ClassicalType): The OpenQASM AST type to be converted.
+
+    Returns:
+        type: The corresponding AutoQASM variable type.
+    """
+    if isinstance(ast_type, ast.IntType):
+        return aq_types.IntVar
+    if isinstance(ast_type, ast.FloatType):
+        return aq_types.FloatVar
+    if isinstance(ast_type, ast.BoolType):
+        return aq_types.BoolVar
+    if isinstance(ast_type, ast.BitType):
+        return aq_types.BitVar
+    if isinstance(ast_type, ast.ArrayType):
+        return aq_types.ArrayVar
+
+
+def var_type_from_oqpy(expr_or_var: Union[oqpy.base.OQPyExpression, oqpy.base.Var]) -> type:
+    """Returns the AutoQASM variable type corresponding to the provided OQPy object.
+
+    Args:
+        expr_or_var (Union[OQPyExpression, Var]): An OQPy expression or variable.
+
+    Returns:
+        type: The corresponding AutoQASM variable type.
+    """
+    if isinstance(expr_or_var, oqpy.base.OQPyExpression):
+        return var_type_from_ast_type(expr_or_var.type)
+    return type(expr_or_var)
 
 
 @singledispatch

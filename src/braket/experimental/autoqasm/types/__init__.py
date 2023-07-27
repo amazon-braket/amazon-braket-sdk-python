@@ -15,7 +15,7 @@
 for type handling.
 """
 
-from .conversions import map_type, wrap_value  # noqa: F401
+from .conversions import map_type, var_type_from_oqpy, wrap_value  # noqa: F401
 from .types import (  # noqa: F401
     ArrayVar,
     BitVar,
