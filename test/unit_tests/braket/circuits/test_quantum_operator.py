@@ -46,29 +46,29 @@ def test_fixed_qubit_count_implemented():
     assert operator.qubit_count == _DummyQuantumOperator.fixed_qubit_count()
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_qubit_count_fixed_qubit_count_unequal():
-    _DummyQuantumOperator(qubit_count=1, ascii_symbols=["foo", "bar"])
+    with pytest.raises(ValueError):
+        _DummyQuantumOperator(qubit_count=1, ascii_symbols=["foo", "bar"])
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_qubit_count_not_int():
-    QuantumOperator(qubit_count="hello", ascii_symbols=[])
+    with pytest.raises(TypeError):
+        QuantumOperator(qubit_count="hello", ascii_symbols=[])
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_qubit_count_lt_one():
-    QuantumOperator(qubit_count=0, ascii_symbols=[])
+    with pytest.raises(ValueError):
+        QuantumOperator(qubit_count=0, ascii_symbols=[])
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_none_ascii():
-    QuantumOperator(qubit_count=1, ascii_symbols=None)
+    with pytest.raises(ValueError):
+        QuantumOperator(qubit_count=1, ascii_symbols=None)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_mismatch_length_ascii():
-    QuantumOperator(qubit_count=1, ascii_symbols=["foo", "bar"])
+    with pytest.raises(ValueError):
+        QuantumOperator(qubit_count=1, ascii_symbols=["foo", "bar"])
 
 
 def test_name(quantum_operator):
@@ -85,29 +85,29 @@ def test_getters():
     assert quantum_operator.ascii_symbols == ascii_symbols
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_qubit_count_setter(quantum_operator):
-    quantum_operator.qubit_count = 10
+    with pytest.raises(AttributeError):
+        quantum_operator.qubit_count = 10
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_ascii_symbols_setter(quantum_operator):
-    quantum_operator.ascii_symbols = ["foo", "bar"]
+    with pytest.raises(AttributeError):
+        quantum_operator.ascii_symbols = ["foo", "bar"]
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_name_setter(quantum_operator):
-    quantum_operator.name = "hi"
+    with pytest.raises(AttributeError):
+        quantum_operator.name = "hi"
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_to_ir_not_implemented_by_default(quantum_operator):
-    quantum_operator.to_ir(None)
+    with pytest.raises(NotImplementedError):
+        quantum_operator.to_ir(None)
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_to_matrix_not_implemented_by_default(quantum_operator):
-    quantum_operator.to_matrix(None)
+    with pytest.raises(NotImplementedError):
+        quantum_operator.to_matrix(None)
 
 
 def test_matrix_equivalence():

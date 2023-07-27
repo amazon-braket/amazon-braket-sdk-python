@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from braket.aws.aws_session import AwsSession
+from braket.jobs import Framework, image_uris
 from braket.jobs.config import (
     CheckpointConfig,
     DeviceConfig,
@@ -178,8 +179,8 @@ def prepare_quantum_job(
             "compressionType": "GZIP",
         }
     }
-    if image_uri:
-        algorithm_specification["containerImage"] = {"uri": image_uri}
+    image_uri = image_uri or image_uris.retrieve_image(Framework.BASE, aws_session.region)
+    algorithm_specification["containerImage"] = {"uri": image_uri}
     if not output_data_config.s3Path:
         output_data_config.s3Path = AwsSession.construct_s3_uri(
             default_bucket,

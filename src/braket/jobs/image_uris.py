@@ -42,16 +42,8 @@ def retrieve_image(framework: Framework, region: str) -> str:
     # Validate framework
     framework = Framework(framework)
     config = _config_for_framework(framework)
-    framework_version = max(version for version in config["versions"])
-    version_config = config["versions"][framework_version]
-    registry = _registry_for_region(version_config, region)
-    tag = ""
-    if framework == Framework.PL_TENSORFLOW:
-        tag = f"{version_config['repository']}:{framework_version}-gpu-py310-cu118-ubuntu20.04"
-    elif framework == Framework.PL_PYTORCH:
-        tag = f"{version_config['repository']}:{framework_version}-gpu-py310-cu118-ubuntu20.04"
-    else:
-        tag = f"{version_config['repository']}:{framework_version}-cpu-py310-ubuntu22.04"
+    registry = _registry_for_region(config, region)
+    tag = f"{config['repository']}:latest"
     return f"{registry}.dkr.ecr.{region}.amazonaws.com/{tag}"
 
 
@@ -82,10 +74,9 @@ def _registry_for_region(config: Dict[str, str], region: str) -> str:
     Raises:
         ValueError: If the supplied region is invalid or not supported.
     """
-    registry_config = config["registries"]
-    if region not in registry_config:
+    if region not in (supported_regions := config["supported_regions"]):
         raise ValueError(
             f"Unsupported region: {region}. You may need to upgrade your SDK version for newer "
-            f"regions. Supported region(s): {list(registry_config.keys())}"
+            f"regions. Supported region(s): {supported_regions}"
         )
-    return registry_config[region]
+    return config["registry"]
