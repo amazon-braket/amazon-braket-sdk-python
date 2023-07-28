@@ -36,9 +36,9 @@ def test_ascii_symbols(compiler_directive, ascii_symbols):
     assert compiler_directive.ascii_symbols == tuple(ascii_symbols)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_none_ascii():
-    CompilerDirective(ascii_symbols=None)
+    with pytest.raises(ValueError):
+        CompilerDirective(ascii_symbols=None)
 
 
 def test_name(compiler_directive):
@@ -46,9 +46,9 @@ def test_name(compiler_directive):
     assert compiler_directive.name == expected
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_counterpart_not_implemented_by_default(compiler_directive):
-    compiler_directive.counterpart()
+    with pytest.raises(NotImplementedError):
+        compiler_directive.counterpart()
 
 
 def test_str(compiler_directive):

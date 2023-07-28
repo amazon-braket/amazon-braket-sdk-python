@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.52.0 (2023-07-25)
+
+### Features
+
+ * Support symbolic expressions in `from_ir`
+
+### Bug Fixes and Other Changes
+
+ * local import in job example
+ * Add parameter support
+
 ## v1.51.0 (2023-07-21)
 
 ### Features

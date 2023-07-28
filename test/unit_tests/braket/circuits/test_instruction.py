@@ -36,14 +36,14 @@ def ccry():
     return Instruction(Gate.Ry(1.23), 0, control=[1, 2])
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_empty_operator():
-    Instruction(None, target=0)
+    with pytest.raises(ValueError):
+        Instruction(None, target=0)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_non_matching_qubit_set_and_qubit_count():
-    Instruction(Gate.CNot(), target=[0, 0])
+    with pytest.raises(ValueError):
+        Instruction(Gate.CNot(), target=[0, 0])
 
 
 def test_init_with_qubits():
@@ -79,14 +79,14 @@ def test_getters():
     assert instr.target == QubitSet([0, 1])
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_operator_setter(instr):
-    instr.operator = Gate.H()
+    with pytest.raises(AttributeError):
+        instr.operator = Gate.H()
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_target_setter(instr):
-    instr.target = QubitSet(0)
+    with pytest.raises(AttributeError):
+        instr.target = QubitSet(0)
 
 
 def test_adjoint_gate():
@@ -100,9 +100,9 @@ def test_adjoint_compiler_directive():
     assert instr == [Instruction(compiler_directives.EndVerbatimBox())]
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_adjoint_unsupported():
-    Instruction(Noise.BitFlip(0.1), 0).adjoint()
+    with pytest.raises(NotImplementedError):
+        Instruction(Noise.BitFlip(0.1), 0).adjoint()
 
 
 def test_str(instr):

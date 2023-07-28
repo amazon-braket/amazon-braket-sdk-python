@@ -498,20 +498,20 @@ def test_parameterized_noise():
 # Additional Unitary noise tests
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrices", invalid_kraus_matrices)
 def test_kraus_invalid_matrix(matrices):
-    Noise.Kraus(matrices=matrices)
+    with pytest.raises(ValueError):
+        Noise.Kraus(matrices=matrices)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_kraus_matrix_target_size_mismatch():
-    Circuit().kraus(
-        matrices=[np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])], targets=[0]
-    )
+    with pytest.raises(ValueError):
+        Circuit().kraus(
+            matrices=[np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])],
+            targets=[0],
+        )
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     "probs",
     [
@@ -524,7 +524,8 @@ def test_kraus_matrix_target_size_mismatch():
     ],
 )
 def test_invalid_values_pauli_channel_two_qubit(probs):
-    Noise.TwoQubitPauliChannel(probs)
+    with pytest.raises(ValueError):
+        Noise.TwoQubitPauliChannel(probs)
 
 
 @pytest.mark.parametrize(
