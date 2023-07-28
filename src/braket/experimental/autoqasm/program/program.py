@@ -144,6 +144,21 @@ class ProgramConversionContext:
 
         raise NotImplementedError(f"Program's do not yet support type {kind}.")
 
+    def is_var_name_used(self, var_name: str) -> bool:
+        """Check if the variable already exists in the oqpy program.
+
+        Args:
+            var_name (str): variable name
+
+        Returns:
+            bool: Return True if the variable already exists
+        """
+        oqpy_program = self.get_oqpy_program()
+        return (
+            var_name in oqpy_program.declared_vars.keys()
+            or var_name in oqpy_program.undeclared_vars.keys()
+        )
+
     def get_oqpy_program(self) -> oqpy.Program:
         """Gets the oqpy program from the top of the stack.
 

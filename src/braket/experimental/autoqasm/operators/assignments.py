@@ -43,6 +43,11 @@ def assign_stmt(target_name: str, value: Any) -> Any:
     if isinstance(value, UndefinedReturnValue):
         return value
 
+    is_target_name_used = program.get_program_conversion_context().is_var_name_used(target_name)
+    is_value_name_used = isinstance(
+        value, oqpy.base.Var
+    ) and program.get_program_conversion_context().is_var_name_used(value.name)
+
     if target_name == constants.RETVAL_VARIABLE_NAME:
         # AutoGraph transpiles return statements like
         #    return <return_value>
@@ -52,52 +57,32 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         # The special logic here is to handle this case properly and avoid
         # declaring a new variable unless it is necessary.
 
-        if isinstance(value, oqpy.base.Var) and _is_variable_used(value.name):
+        if is_value_name_used:
             # This is a value which already exists as a variable in the program.
             # Return it directly without wrapping it or declaring a new variable.
             return value
 
         value = types.wrap_value(value)
 
-    if isinstance(value, oqpy.base.Var):
-        oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    if not isinstance(value, oqpy.base.Var):
+        return value
 
-        is_target_name_used = _is_variable_used(target_name)
-        is_value_name_used = _is_variable_used(value.name)
+    if is_target_name_used:
+        target = _get_oqpy_program_variable(target_name)
+        _validate_variables_type_size(target, value)
+    else:
+        target = copy.copy(value)
+        target.init_expression = None
+        target.name = target_name
 
-        if is_target_name_used:
-            target = _get_oqpy_program_variable(target_name)
-            _validate_variables_type_size(target, value)
-        else:
-            target = copy.copy(value)
-            target.init_expression = None
-            target.name = target_name
-
-        if is_value_name_used or value.init_expression is None:
-            oqpy_program.set(target, value)
-        else:
-            # Set to `value.init_expression` to avoid declaring an unnecessary variable.
-            oqpy_program.set(target, value.init_expression)
-
-        return target
-
-    return value
-
-
-def _is_variable_used(var_name: str) -> bool:
-    """Check if the variable already exists in the oqpy program.
-
-    Args:
-        var_name (str): variable name
-
-    Returns:
-        bool: Return True if the variable already exists
-    """
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    return (
-        var_name in oqpy_program.declared_vars.keys()
-        or var_name in oqpy_program.undeclared_vars.keys()
-    )
+    if is_value_name_used or value.init_expression is None:
+        oqpy_program.set(target, value)
+    else:
+        # Set to `value.init_expression` to avoid declaring an unnecessary variable.
+        oqpy_program.set(target, value.init_expression)
+
+    return target
 
 
 def _get_oqpy_program_variable(var_name: str) -> oqpy.base.Var:

@@ -595,10 +595,11 @@ def test_assignment_py(value: Any) -> None:
     Args:
         value (Any): Assignment value.
     """
-    new_value = aq.operators.assign_stmt(
-        target_name="foo",
-        value=value,
-    )
+    with aq.build_program():
+        new_value = aq.operators.assign_stmt(
+            target_name="foo",
+            value=value,
+        )
     assert new_value == value
 
 
