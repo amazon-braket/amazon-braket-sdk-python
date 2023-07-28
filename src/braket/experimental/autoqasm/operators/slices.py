@@ -89,12 +89,14 @@ def _oqpy_set_item(target: Any, i: Any, x: Any) -> Any:
     if not isinstance(target, oqpy.BitVar):
         raise NotImplementedError("Slice assignment is not supported.")
 
+    is_var_name_used = program.get_program_conversion_context().is_var_name_used(x.name)
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    if x.name in oqpy_program.declared_vars.keys():
-        value = x
+    if is_var_name_used or x.init_expression is None:
+        oqpy_program.set(target[i], x)
     else:
-        value = x.init_expression
-    oqpy_program.set(target[i], value)
+        # Set to `x.init_expression` to avoid declaring an unnecessary variable.
+        oqpy_program.set(target[i], x.init_expression)
+
     return target
 
 

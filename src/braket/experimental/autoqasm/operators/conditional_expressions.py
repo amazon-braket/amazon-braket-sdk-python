@@ -18,8 +18,9 @@ from typing import Any, Callable, Optional
 
 import oqpy.base
 
-from braket.experimental.autoqasm import program
-from braket.experimental.autoqasm.types import is_qasm_type
+from braket.experimental.autoqasm import program as aq_program
+from braket.experimental.autoqasm import types as aq_types
+from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
 
 
 def if_exp(
@@ -36,7 +37,7 @@ def if_exp(
     Returns:
         Any: The value returned from the conditional expression.
     """
-    if is_qasm_type(cond):
+    if aq_types.is_qasm_type(cond):
         return _oqpy_if_exp(cond, if_true, if_false, expr_repr)
     else:
         return _py_if_exp(cond, if_true, if_false)
@@ -47,15 +48,25 @@ def _oqpy_if_exp(
     if_true: Callable[[None], Any],
     if_false: Callable[[None], Any],
     expr_repr: Optional[str],
-) -> None:
+) -> Optional[oqpy.base.Var]:
     """Overload of if_exp that stages an oqpy conditional."""
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    if isinstance(cond, oqpy.base.Var) and cond.name not in oqpy_program.declared_vars.keys():
-        oqpy_program.declare(cond)
+    result_var = None
+    oqpy_program = aq_program.get_program_conversion_context().get_oqpy_program()
     with oqpy.If(oqpy_program, cond):
-        if_true()
+        true_result = aq_types.wrap_value(if_true())
+        true_result_type = aq_types.var_type_from_oqpy(true_result)
+        if true_result is not None:
+            result_var = true_result_type()
+            oqpy_program.set(result_var, true_result)
     with oqpy.Else(oqpy_program):
-        if_false()
+        false_result = aq_types.wrap_value(if_false())
+        false_result_type = aq_types.var_type_from_oqpy(false_result)
+        if false_result_type != true_result_type:
+            raise UnsupportedConditionalExpressionError(true_result_type, false_result_type)
+        if false_result is not None:
+            oqpy_program.set(result_var, false_result)
+
+    return result_var
 
 
 def _py_if_exp(cond: Any, if_true: Callable[[None], Any], if_false: Callable[[None], Any]) -> Any:

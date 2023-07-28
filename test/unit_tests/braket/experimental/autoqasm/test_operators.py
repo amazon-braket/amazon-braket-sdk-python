@@ -19,6 +19,7 @@ import oqpy.base
 import pytest
 
 import braket.experimental.autoqasm as aq
+from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
 from braket.experimental.autoqasm.gates import cnot, h, measure, x
 
 
@@ -79,6 +80,96 @@ def test_conditional_expressions_py_cond(if_true: dict, if_false: dict) -> None:
     assert str(py_cond) not in qasm
     assert if_true["qasm"] in qasm
     assert if_false["qasm"] not in qasm
+
+
+def test_inline_conditional_assignment() -> None:
+    """Tests conditional expression where the if and else clauses return different types."""
+
+    @aq.function
+    def cond_exp_assignment():
+        a = aq.IntVar(2) * aq.IntVar(3) if aq.BoolVar(True) else aq.IntVar(4)  # noqa: F841
+
+    expected = """OPENQASM 3.0;
+int[32] __int_3__;
+int[32] __int_1__ = 2;
+int[32] __int_2__ = 3;
+bool __bool_0__ = true;
+int[32] __int_4__ = 4;
+int[32] a;
+if (__bool_0__) {
+    __int_3__ = __int_1__ * __int_2__;
+} else {
+    __int_3__ = __int_4__;
+}
+a = __int_3__;"""
+
+    assert cond_exp_assignment().to_ir() == expected
+
+
+@pytest.mark.parametrize(
+    "else_value",
+    [
+        lambda: aq.FloatVar(2),
+        lambda: aq.BoolVar(False),
+        lambda: aq.BitVar(0),
+        lambda: aq.ArrayVar(dimensions=[3]),
+    ],
+)
+def test_unsupported_inline_conditional_assignment(else_value) -> None:
+    """Tests conditional expression where the if and else clauses return different types."""
+
+    @aq.function
+    def cond_exp_assignment_different_types():
+        a = aq.IntVar(1) if aq.BoolVar(True) else else_value()  # noqa: F841
+
+    with pytest.raises(UnsupportedConditionalExpressionError):
+        cond_exp_assignment_different_types()
+
+
+def test_branch_assignment_undeclared() -> None:
+    """Tests if-else branch where an undeclared variable is assigned in both branches."""
+
+    @aq.function
+    def branch_assignment_undeclared():
+        if aq.BoolVar(True):
+            a = aq.IntVar(1)  # noqa: F841
+        else:
+            a = aq.IntVar(2)  # noqa: F841
+
+    expected = """OPENQASM 3.0;
+int[32] a;
+bool __bool_0__ = true;
+if (__bool_0__) {
+    a = 1;
+} else {
+    a = 2;
+}"""
+
+    assert branch_assignment_undeclared().to_ir() == expected
+
+
+def test_branch_assignment_declared() -> None:
+    """Tests if-else branch where a declared variable is assigned in both branches."""
+
+    @aq.function
+    def branch_assignment_declared():
+        a = aq.IntVar(5)
+        if aq.BoolVar(True):
+            a = aq.IntVar(6)  # noqa: F841
+        else:
+            a = aq.IntVar(7)  # noqa: F841
+
+    expected = """OPENQASM 3.0;
+int[32] a;
+bool __bool_1__ = true;
+a = 5;
+if (__bool_1__) {
+    a = 6;
+} else {
+    a = 7;
+}"""
+
+    assert branch_assignment_declared().to_ir() == expected
 
 
 def for_body(i: aq.QubitIdentifierType) -> None:
@@ -357,8 +448,10 @@ def test_slice_bits() -> None:
         a[3] = b
 
     expected = """OPENQASM 3.0;
-bit[6] a = 0;
-bit b = 1;
+bit[6] a;
+bit b;
+a = 0;
+b = 1;
 a[3] = b;"""
 
     assert slice().to_ir() == expected
@@ -374,11 +467,13 @@ def test_slice_bits_w_measure() -> None:
         b0[3] = c
 
     expected = """OPENQASM 3.0;
-qubit[1] __qubits__;
 bit[10] b0;
+bit[10] __bit_0__;
+bit c;
+qubit[1] __qubits__;
+b0 = __bit_0__;
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];
-bit c;
 c = __bit_1__;
 b0[3] = c;"""
 
@@ -388,9 +483,9 @@ b0[3] = c;"""
 @pytest.mark.parametrize(
     "target_name,value,expected_qasm",
     [
-        ("foo", oqpy.IntVar(5), "\nint[32] foo = 5;"),
-        ("bar", oqpy.FloatVar(1.2), "\nfloat[64] bar = 1.2;"),
-        ("baz", oqpy.BitVar(0), "\nbit baz = 0;"),
+        ("foo", oqpy.IntVar(5), "\nint[32] foo;\nfoo = 5;"),
+        ("bar", oqpy.FloatVar(1.2), "\nfloat[64] bar;\nbar = 1.2;"),
+        ("baz", oqpy.BitVar(0), "\nbit baz;\nbaz = 0;"),
     ],
 )
 def test_assignment_qasm_undeclared_target(
@@ -500,10 +595,11 @@ def test_assignment_py(value: Any) -> None:
     Args:
         value (Any): Assignment value.
     """
-    new_value = aq.operators.assign_stmt(
-        target_name="foo",
-        value=value,
-    )
+    with aq.build_program():
+        new_value = aq.operators.assign_stmt(
+            target_name="foo",
+            value=value,
+        )
     assert new_value == value
 
 

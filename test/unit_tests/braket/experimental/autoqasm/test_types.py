@@ -58,7 +58,8 @@ def test_return_bit():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> bit {
-    bit res = 1;
+    bit res;
+    res = 1;
     return res;
 }
 bit __bit_1__;
@@ -81,7 +82,8 @@ def test_return_int():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> int[32] {
-    int[32] res = 1;
+    int[32] res;
+    res = 1;
     return res;
 }
 int[32] __int_1__ = 0;
@@ -104,7 +106,8 @@ def test_return_float():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> float[64] {
-    float[64] res = 1.0;
+    float[64] res;
+    res = 1.0;
     return res;
 }
 float[64] __float_1__ = 0.0;
@@ -127,7 +130,8 @@ def test_return_bool():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> bool {
-    bool res = true;
+    bool res;
+    res = true;
     return res;
 }
 bool __bool_1__ = false;
@@ -153,8 +157,10 @@ def test_return_bin_expr():
 def add(int[32] a, int[32] b) -> int[32] {
     return a + b;
 }
-int[32] a = 5;
-int[32] b = 6;
+int[32] a;
+int[32] b;
+a = 5;
+b = 6;
 int[32] __int_2__ = 0;
 __int_2__ = add(a, b);"""
 
@@ -168,7 +174,9 @@ def test_return_none():
     def ret_test() -> None:
         return None
 
-    ret_test().to_ir()
+    expected = "OPENQASM 3.0;"
+
+    assert ret_test().to_ir() == expected
 
 
 def test_return_array():
@@ -185,7 +193,8 @@ def test_return_array():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> array[int[32], 3] {
-    array[int[32], 3] res = {1, 2, 3};
+    array[int[32], 3] res;
+    res = {1, 2, 3};
     return res;
 }
 array[int[32], 3] __arr_1__ = {};
@@ -208,7 +217,8 @@ def test_return_func_call():
 
     expected = """OPENQASM 3.0;
 def helper() -> int[32] {
-    int[32] res = 1;
+    int[32] res;
+    res = 1;
     return res;
 }
 int[32] __int_1__ = 0;
@@ -289,7 +299,8 @@ def test_map_array():
     expected = """OPENQASM 3.0;
 def annotation_test(array[int[32], 10] input) {
 }
-array[int[32], 10] a = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+array[int[32], 10] a;
+a = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 annotation_test(a);"""
 
     assert main().to_ir() == expected
@@ -310,7 +321,8 @@ def test_map_other():
     expected = """OPENQASM 3.0;
 def annotation_test(bit input) {
 }
-bit a = 1;
+bit a;
+a = 1;
 annotation_test(a);"""
 
     assert main().to_ir() == expected
@@ -349,7 +361,8 @@ def test_unnamed_retval_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_test() -> int[32] {
-    int[32] retval_ = 1;
+    int[32] retval_;
+    retval_ = 1;
     return retval_;
 }
 int[32] __int_1__ = 0;
@@ -371,7 +384,8 @@ def test_unnamed_retval_qasm_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_test() -> bit {
-    bit retval_ = 1;
+    bit retval_;
+    retval_ = 1;
     return retval_;
 }
 bit __bit_1__;
@@ -390,14 +404,16 @@ def test_recursive_unassigned_retval_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
+    int[32] retval_;
     int[32] __int_1__ = 0;
     __int_1__ = retval_recursive();
-    int[32] retval_ = 1;
+    retval_ = 1;
     return retval_;
 }
+int[32] retval_;
 int[32] __int_3__ = 0;
 __int_3__ = retval_recursive();
-int[32] retval_ = 1;"""
+retval_ = 1;"""
 
     assert retval_recursive().to_ir() == expected_qasm
 
@@ -412,18 +428,20 @@ def test_recursive_assigned_retval_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
+    int[32] a;
+    int[32] retval_;
     int[32] __int_1__ = 0;
     __int_1__ = retval_recursive();
-    int[32] a;
     a = __int_1__;
-    int[32] retval_ = 1;
+    retval_ = 1;
     return retval_;
 }
+int[32] a;
+int[32] retval_;
 int[32] __int_3__ = 0;
 __int_3__ = retval_recursive();
-int[32] a;
 a = __int_3__;
-int[32] retval_ = 1;"""
+retval_ = 1;"""
 
     assert retval_recursive().to_ir() == expected_qasm
 
@@ -453,7 +471,8 @@ def retval_recursive() -> int[32] {
     return 2 * __int_1__ + (__int_3__ + 2) / 3;
 }
 def retval_constant() -> int[32] {
-    int[32] retval_ = 3;
+    int[32] retval_;
+    retval_ = 3;
     return retval_;
 }
 int[32] __int_4__ = 0;

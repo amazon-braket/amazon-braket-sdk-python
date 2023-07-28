@@ -203,13 +203,13 @@ def bell_measurement_undeclared() -> None:
 
 def test_bell_measurement_undeclared() -> None:
     expected = """OPENQASM 3.0;
+bit[2] c;
 qubit[2] __qubits__;
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
 bit[2] __bit_0__;
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
-bit[2] c;
 c = __bit_0__;"""
     assert bell_measurement_undeclared().to_ir() == expected
 
@@ -225,8 +225,9 @@ def bell_measurement_declared() -> None:
 
 def test_bell_measurement_declared() -> None:
     expected = """OPENQASM 3.0;
+bit[2] c;
 qubit[2] __qubits__;
-bit[2] c = {0, 0};
+c = {0, 0};
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
 bit[2] __bit_1__;
@@ -246,12 +247,12 @@ def bell_partial_measurement() -> None:
 
 def test_bell_partial_measurement() -> None:
     expected = """OPENQASM 3.0;
+bit c;
 qubit[2] __qubits__;
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[1];
-bit c;
 c = __bit_0__;"""
     assert bell_partial_measurement().to_ir() == expected
 
@@ -401,13 +402,13 @@ def qasm_inline_var_condition() -> aq.BitVar:
 def test_qasm_inline_var_condition() -> None:
     """Tests the QASM contents of qasm_inline_var_condition."""
     expected = """OPENQASM 3.0;
+bit __bit_0__ = 1;
+int[32] __int_1__ = 1;
 qubit[2] __qubits__;
 h __qubits__[0];
-bit __bit_0__ = 1;
 if (__bit_0__) {
     cnot __qubits__[0], __qubits__[1];
 }
-int[32] __int_1__ = 1;
 if (__int_1__) {
     x __qubits__[0];
 } else {
@@ -734,15 +735,21 @@ def test_classical_variables_types():
         c = aq.FloatVar(3.4)  # noqa: F841
 
     expected = """OPENQASM 3.0;
-bit a = 0;
-a = 1;
-int[32] i = 1;
+bit a;
+int[32] i;
 bit[2] a_array;
+bit[2] __bit_3__;
+int[32] b;
+float[64] c;
+a = 0;
+a = 1;
+i = 1;
+a_array = __bit_3__;
 a_array[0] = 0;
 a_array[i] = 1;
-int[32] b = 10;
+b = 10;
 b = 15;
-float[64] c = 1.2;
+c = 1.2;
 c = 3.4;"""
     assert prog().to_ir() == expected
 
@@ -756,9 +763,10 @@ def test_classical_variables_assignment():
         a = b  # declared target, declared value # noqa: F841
 
     expected = """OPENQASM 3.0;
-int[32] a = 1;
-a = 2;
+int[32] a;
 int[32] b;
+a = 1;
+a = 2;
 b = a;
 a = b;"""
     assert prog().to_ir() == expected
@@ -771,12 +779,12 @@ def test_assignment_measurement_results():
         b = a  # noqa: F841
 
     expected = """OPENQASM 3.0;
+bit a;
+bit b;
 qubit[1] __qubits__;
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];
-bit a;
 a = __bit_0__;
-bit b;
 b = a;"""
     assert prog().to_ir() == expected
 
