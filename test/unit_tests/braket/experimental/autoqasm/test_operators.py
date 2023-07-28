@@ -93,9 +93,9 @@ def test_inline_conditional_assignment() -> None:
 int[32] __int_3__;
 int[32] __int_1__ = 2;
 int[32] __int_2__ = 3;
+bool __bool_0__ = true;
 int[32] __int_4__ = 4;
 int[32] a;
-bool __bool_0__ = true;
 if (__bool_0__) {
     __int_3__ = __int_1__ * __int_2__;
 } else {
@@ -161,8 +161,8 @@ def test_branch_assignment_declared() -> None:
 
     expected = """OPENQASM 3.0;
 int[32] a;
-a = 5;
 bool __bool_1__ = true;
+a = 5;
 if (__bool_1__) {
     a = 6;
 } else {

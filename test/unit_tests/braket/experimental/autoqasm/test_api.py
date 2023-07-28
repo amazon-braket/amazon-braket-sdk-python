@@ -402,13 +402,13 @@ def qasm_inline_var_condition() -> aq.BitVar:
 def test_qasm_inline_var_condition() -> None:
     """Tests the QASM contents of qasm_inline_var_condition."""
     expected = """OPENQASM 3.0;
+bit __bit_0__ = 1;
+int[32] __int_1__ = 1;
 qubit[2] __qubits__;
 h __qubits__[0];
-bit __bit_0__ = 1;
 if (__bit_0__) {
     cnot __qubits__[0], __qubits__[1];
 }
-int[32] __int_1__ = 1;
 if (__int_1__) {
     x __qubits__[0];
 } else {

@@ -50,11 +50,8 @@ def _oqpy_if_exp(
     expr_repr: Optional[str],
 ) -> Optional[oqpy.base.Var]:
     """Overload of if_exp that stages an oqpy conditional."""
-    oqpy_program = aq_program.get_program_conversion_context().get_oqpy_program()
-    if isinstance(cond, oqpy.base.Var) and cond.name not in oqpy_program.declared_vars.keys():
-        oqpy_program.declare(cond)
-
     result_var = None
+    oqpy_program = aq_program.get_program_conversion_context().get_oqpy_program()
     with oqpy.If(oqpy_program, cond):
         true_result = aq_types.wrap_value(if_true())
         true_result_type = aq_types.var_type_from_oqpy(true_result)

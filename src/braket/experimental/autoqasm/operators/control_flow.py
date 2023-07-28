@@ -154,8 +154,6 @@ def _oqpy_if_stmt(
 ) -> None:
     """Overload of if_stmt that stages an oqpy cond."""
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    if isinstance(cond, oqpy.base.Var) and cond.name not in oqpy_program.declared_vars.keys():
-        oqpy_program.declare(cond)
     with oqpy.If(oqpy_program, cond):
         body()
     with oqpy.Else(oqpy_program):
