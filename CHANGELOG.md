@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.53.0 (2023-07-31)
+
+### Features
+
+ * point image uri to latest tag
+
+### Bug Fixes and Other Changes
+
+ * Update quantum job tests for latest containers
+ * build(deps): bump pypa/gh-action-pypi-publish from 1.8.7 to 1.8.8
+ * move import back to top level in job example
+ * update doc string for handle_parameter_value
+ * change all tests in the circuit test path to use with pytest.raises
+ * pull latest container image by default
+
 ## v1.52.0 (2023-07-25)
 
 ### Features
