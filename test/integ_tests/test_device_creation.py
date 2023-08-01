@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from enum import EnumMeta
 from typing import List, Set
 
 import pytest
@@ -129,7 +130,11 @@ def test_device_enum():
         _validate_device(device, active_providers)
 
     # validate all devices in enum
-    providers = [getattr(Devices, attr) for attr in dir(Devices) if not attr.startswith("__")]
+    providers = [
+        device
+        for attr in dir(Devices)
+        if isinstance((device := getattr(Devices, attr)), EnumMeta)
+    ]
     for provider in providers:
         devices = [getattr(provider, attr) for attr in dir(provider) if not attr.startswith("__")]
         for arn in devices:
