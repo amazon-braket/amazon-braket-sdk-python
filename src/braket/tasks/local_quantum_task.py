@@ -19,6 +19,7 @@ from typing import Dict, Optional, Union
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
+from braket.default_simulator.simulator import BaseLocalSimulator
 from braket.ir.ahs import Program as AHSProgram
 from braket.ir.openqasm import Program
 from braket.task_result import (
@@ -59,7 +60,7 @@ class LocalQuantumTask(QuantumTask):
         task_specification: Union[
             Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram
         ],
-        delegate,  # noqa
+        delegate: BaseLocalSimulator,
         shots: int = 0,
         inputs: Optional[Dict[str, float]] = None,
         *args,
@@ -73,7 +74,7 @@ class LocalQuantumTask(QuantumTask):
             task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram]):  # noqa
                 The specification of the task to run on device.
 
-            delegate ('LocalSimulator'): LocalSimulator to run the task on.
+            delegate (BaseLocalSimulator): Concrete simulator based on BaseLocalSimulator to run the task on.
 
             shots (int): The number of times to run the task on the device. If the device is a
                 simulator, this implies the state is sampled N times, where N = `shots`.
