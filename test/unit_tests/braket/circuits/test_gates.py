@@ -933,12 +933,12 @@ def test_bind_values(gate):
     new_gate = param_gate.bind_values(**mapping)
     expected = gate(*range(num_params))
 
-    assert type(new_gate) == type(param_gate) and new_gate == expected
+    assert type(new_gate) is type(param_gate) and new_gate == expected
     if triple_angled:
         for angle in new_gate.angle_1, new_gate.angle_2, new_gate.angle_3:
-            assert type(angle) == float
+            assert isinstance(angle, float)
     else:
-        assert type(new_gate.angle) == float
+        assert isinstance(new_gate.angle, float)
 
 
 def test_bind_values_pulse_gate():
