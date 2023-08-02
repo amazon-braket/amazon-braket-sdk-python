@@ -131,9 +131,7 @@ def test_device_enum():
 
     # validate all devices in enum
     providers = [
-        device
-        for attr in dir(Devices)
-        if isinstance((device := getattr(Devices, attr)), EnumMeta)
+        device for attr in dir(Devices) if isinstance((device := getattr(Devices, attr)), EnumMeta)
     ]
     for provider in providers:
         devices = [getattr(provider, attr) for attr in dir(provider) if not attr.startswith("__")]
