@@ -11,7 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from enum import Enum, EnumMeta
 from typing import List, Set
 
 import pytest
@@ -131,17 +130,8 @@ def test_device_enum():
         _validate_device(device, active_providers)
 
     # validate all devices in enum
-    providers = [
-        provider
-        for attr in dir(Devices)
-        if isinstance((provider := getattr(Devices, attr)), EnumMeta)
-    ]
+    providers = [getattr(Devices, attr) for attr in dir(Devices) if not attr.startswith("__")]
     for provider in providers:
-        devices = [
-            device
-            for attr in dir(provider)
-            if isinstance((device := getattr(provider, attr)), Enum)
-        ]
-        for arn in devices:
-            device = AwsDevice(arn)
+        for device_arn in provider:
+            device = AwsDevice(device_arn)
             _validate_device(device, active_providers)
