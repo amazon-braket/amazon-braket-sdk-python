@@ -74,7 +74,7 @@ class LocalQuantumTask(QuantumTask):
             task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram]):  # noqa
                 The specification of the task to run on device.
 
-            delegate (BaseLocalSimulator): Concrete simulator based on BaseLocalSimulator to run the task on.
+            delegate (BaseLocalSimulator): Concrete simulator based of BaseLocalSimulator to run the task on.
 
             shots (int): The number of times to run the task on the device. If the device is a
                 simulator, this implies the state is sampled N times, where N = `shots`.
