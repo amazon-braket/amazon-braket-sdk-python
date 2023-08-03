@@ -138,22 +138,20 @@ timeline
     Project setup <br> (make dev)   : Code checkout
                                     : Virtual environment
                                     : Dependencies
-                                    : Git pre-commit hooks
                                     : Local branch
                                     : Local changes
                                     : Local tests
 
-    Pre-Pull Request <br> (make PR)     : Code linting
-                                        : Docs linting
-                                        : Static typing analysis
-                                        : Tests (unit|integration)
+    Pre-Pull Request <br> (make PR)     : Code linting (tox -e linters)
+                                        : Docs linting (tox -e docs)
+                                        : Static typing analysis (covered by the linters)
+                                        : Tests (tox -e unit-tests|tox -e integ-tests)
 
     Pull Request <br> (CI checks)   : Semantic PR title check
                                     : Related issue check
                                     : Acknowledgment check
                                     : Code coverage diff
                                     : Dependencies check
-                                    : GitHub Actions security check
 
     After merge <br> (CI checks)    : End-to-end tests
                                     : GitHub Actions check
