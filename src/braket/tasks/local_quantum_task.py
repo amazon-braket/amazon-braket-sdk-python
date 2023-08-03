@@ -12,14 +12,18 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
-from typing import Union
+import threading
+from asyncio import AbstractEventLoop, Task
+from typing import Optional, Union
 
+from braket.simulator.quantum_task import QuantumExecuteManager
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
     PhotonicModelQuantumTaskResult,
     QuantumTask,
 )
+from braket.tasks.quantum_task_helper import _wrap_results
 
 
 class LocalQuantumTask(QuantumTask):
@@ -30,29 +34,95 @@ class LocalQuantumTask(QuantumTask):
 
     def __init__(
         self,
-        result: Union[
-            GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-        ],
+        result: Optional[
+            Union[
+                GateModelQuantumTaskResult,
+                AnnealingQuantumTaskResult,
+                PhotonicModelQuantumTaskResult,
+            ]
+        ] = None,
     ):
-        self._id = result.task_metadata.id
         self._result = result
+        self._loop = asyncio.new_event_loop()
 
-    @property
+    @staticmethod
+    def create(
+        execute_manager: QuantumExecuteManager,
+        *args,
+        **kwargs,
+    ) -> "LocalQuantumTask":
+        """LocalQuantumTask factory method that serializes a quantum task specification
+        (either a quantum circuit or problem), computes the result,
+        and returns back an LocalQuantumTask tracking the execution.
+
+        Args:
+            execute_manager (QuantumExecuteManager):  Execute Manager
+
+        Returns:
+            : LocalQuantumTask tracking the task execution on the device.
+        """
+        task = LocalQuantumTask()
+        task._execute_manager = execute_manager
+        task.async_result()
+        return task
+
     def id(self) -> str:
-        return str(self._id)
+        return self._execute_manager.id()
 
     def cancel(self) -> None:
         """Cancel the quantum task."""
-        raise NotImplementedError("Cannot cancel completed local task")
+        if hasattr(self, "_execute_manager"):
+            return self._execute_manager.cancel()
+        raise NotImplementedError("LocalQuantumTask does not support cancelling")
 
     def state(self) -> str:
-        return "COMPLETED"
+        """Get the state of the quantum task from task manager.
+        Otherwise, use the thread to return status.
+        Returns:
+            str: State of the quantum task.
+        """
+        try:
+            state = self._execute_manager.state()
+        except (NotImplementedError, AttributeError):
+            state = self._status()
+        return state
+
+    def _status(self) -> str:
+        if hasattr(self, "_thread"):
+            if self._thread.is_alive():
+                return "RUNNING"
+
+            return "COMPLETED"
+        return "CREATED"
 
     def result(
         self,
-    ) -> Union[
-        GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
-    ]:
+    ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
+        """
+        Get the quantum task result by running the task on the designated local simulator.
+        Once the task is completed, the result is returned as a
+        `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
+
+        This method is a blocking thread call and synchronously returns a result.
+        Call `async_result()` if you require an asynchronous invocation.
+
+        Returns:
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: # noqa
+            The result of the task, if the task completed successfully; returns `None` if the task
+            did not complete successfully.
+
+        Raises:
+            Exception:
+                Raises an exception raised in the thread while running the task on the simulator.
+        """
+        if not self._result:
+            self._thread.join()
+
+            if self._task._exception:
+                raise self._task._exception
+
+            self._result = _wrap_results(self._task._result)
+
         return self._result
 
     def async_result(self) -> asyncio.Task:
@@ -60,8 +130,65 @@ class LocalQuantumTask(QuantumTask):
         Returns:
             Task: Get the quantum task result asynchronously.
         """
-        # TODO: Allow for asynchronous simulation
-        raise NotImplementedError("Asynchronous local simulation unsupported")
 
-    def __repr__(self) -> str:
-        return f"LocalQuantumTask('id':{self.id})"
+        return self._get_task()
+
+    def _create_task(self) -> asyncio.Task:
+        """
+        Wrap the `_wait_for_completion` coroutine inside a future-like object.
+        Invoking this method starts the coroutine and returns back the future-like object
+        that contains it. Note that this does not block on the coroutine to finish.
+
+        Returns:
+            asyncio.Task: An asyncio Task that contains the `_wait_for_completion()` coroutine.
+        """
+        return self._loop.create_task(self._async_run_internal())
+
+    def _run_event_loop(self, loop: AbstractEventLoop, task: Task) -> None:
+        """
+        Run the event loop with the given task.
+
+        Parameters:
+        - loop (asyncio.AbstractEventLoop): The asyncio event loop to use for running the task.
+        - task (coroutine): The coroutine or future
+                        that represents the task to run in the event loop.
+
+        Raises:
+        - Exception: If an exception occurs during the execution of the task.
+
+        Description:
+        This method sets the specified event loop using asyncio.set_event_loop(),
+        and then runs the event loop until the given task is completed.
+        If any other exception occurs during the execution of the task, it is re-raised
+        to be handled in the calling context.
+
+        Note:
+        - This method assumes that the event loop is not already running in the current thread.
+        - It is intended to be used internally or by advanced asyncio applications.
+
+        Example:
+        # Create and run an event loop with a task
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(some_coroutine())
+        _run_event_loop(loop, task)
+        """
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(task)
+        except Exception as e:
+            raise e
+
+    def _get_task(self) -> asyncio.Task:
+        if not hasattr(self, "_task") or (
+            self._task.done() and not self._task.cancelled() and self._result is None
+        ):
+            self._task = self._create_task()
+            self._thread = threading.Thread(
+                target=self._run_event_loop, args=(self._loop, self._task)
+            )
+            self._thread.start()
+
+        return self._task
+
+    async def _async_run_internal(self):
+        return self._execute_manager.run()

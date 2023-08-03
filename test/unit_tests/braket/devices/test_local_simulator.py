@@ -23,6 +23,7 @@ from braket.ahs.atom_arrangement import AtomArrangement
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit, FreeParameter
+from braket.default_simulator.local_quantum_execute_manager import LocalQuantumExecuteManager
 from braket.device_schema import DeviceCapabilities
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
@@ -113,11 +114,14 @@ class DummyCircuitSimulator(BraketSimulator):
         shots: Optional[int],
         inputs: Optional[Dict[str, float]],
         *args,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT
+
+    def execute_manager(self, *args, **kwargs):
+        return LocalQuantumExecuteManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -157,6 +161,9 @@ class DummyJaqcdSimulator(BraketSimulator):
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT
+
+    def execute_manager(self, *args, **kwargs):
+        return LocalQuantumExecuteManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -198,6 +205,9 @@ class DummyProgramSimulator(BraketSimulator):
     ) -> GateModelTaskResult:
         return GATE_MODEL_RESULT
 
+    def execute_manager(self, *args, **kwargs):
+        return LocalQuantumExecuteManager(self, *args, **kwargs)
+
     @property
     def properties(self) -> DeviceCapabilities:
         return DeviceCapabilities.parse_obj(
@@ -226,6 +236,9 @@ class DummyProgramSimulator(BraketSimulator):
 class DummyAnnealingSimulator(BraketSimulator):
     def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> AnnealingTaskResult:
         return ANNEALING_RESULT
+
+    def execute_manager(self, *args, **kwargs):
+        return LocalQuantumExecuteManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -257,6 +270,9 @@ class DummyRydbergSimulator(BraketSimulator):
         self, program: AnalogHamiltonianSimulation, *args, **kwargs
     ) -> AnalogHamiltonianSimulationTaskResult:
         return AHS_RESULT
+
+    def execute_manager(self, *args, **kwargs):
+        return LocalQuantumExecuteManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -397,7 +413,7 @@ def test_run_gate_model_inputs():
     dummy.run = Mock(return_value=GATE_MODEL_RESULT)
     sim = LocalSimulator(dummy)
     circuit = Circuit().rx(0, FreeParameter("theta"))
-    task = sim.run(circuit, inputs={"theta": 2}, shots=10)
+    result = sim.run(circuit, inputs={"theta": 2}, shots=10).result()
     dummy.run.assert_called_with(
         Program(
             source="\n".join(
@@ -414,7 +430,7 @@ def test_run_gate_model_inputs():
         ),
         10,
     )
-    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_program_model_inputs():
@@ -432,20 +448,20 @@ def test_run_program_model_inputs():
     )
     program = Program.construct(source="\n".join(source_string), inputs=inputs)
     update_inputs = {"beta": 3}
-    task = sim.run(program, inputs=update_inputs, shots=10)
+    result = sim.run(program, inputs=update_inputs, shots=10).result()
     assert program.inputs == inputs
     program.inputs.update(update_inputs)
     dummy.run.assert_called_with(program, 10)
-    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_jaqcd_only():
     dummy = DummyJaqcdSimulator()
     sim = LocalSimulator(dummy)
-    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    result = sim.run(Circuit().h(0).cnot(0, 1), 10).result()
     dummy.assert_shots(10)
     dummy.assert_qubits(2)
-    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_program_model():
@@ -467,11 +483,15 @@ c = measure q;
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_run_gate_model_value_error():
     dummy = DummyCircuitSimulator()
     sim = LocalSimulator(dummy)
-    sim.run(Circuit().h(0).cnot(0, 1))
+    with pytest.raises(
+        ValueError,
+        match="No result types specified for circuit and shots=0. "
+        "See `braket.circuits.result_types`",
+    ):
+        sim.run(Circuit().h(0).cnot(0, 1))
 
 
 def test_run_annealing():
@@ -503,22 +523,28 @@ def test_init_unregistered_backend():
     LocalSimulator("foo")
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_run_unsupported_type():
     sim = LocalSimulator(DummyCircuitSimulator())
-    sim.run("I'm unsupported")
+    with pytest.raises(NotImplementedError, match="Unsupported task type <class 'str'>"):
+        sim.run("I'm unsupported")
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_run_annealing_unsupported():
     sim = LocalSimulator(DummyCircuitSimulator())
-    sim.run(Problem(ProblemType.ISING))
+    with pytest.raises(
+        NotImplementedError,
+        match=f"{type(DummyCircuitSimulator())} does not support quantum annealing problems",
+    ):
+        sim.run(Problem(ProblemType.ISING))
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_run_qubit_gate_unsupported():
     sim = LocalSimulator(DummyAnnealingSimulator())
-    sim.run(Circuit().h(0).cnot(0, 1), 1000)
+    with pytest.raises(
+        NotImplementedError,
+        match=f"{type(DummyAnnealingSimulator())} does not support qubit gate-based programs",
+    ):
+        sim.run(Circuit().h(0).cnot(0, 1), 1000)
 
 
 def test_properties():
