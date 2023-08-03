@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.53.1 (2023-08-03)
+
+### Bug Fixes and Other Changes
+
+ * Support OpenQASM `Program`s in `from_ir`
+
 ## v1.53.0.post0 (2023-08-02)
 
 ### Documentation Changes
