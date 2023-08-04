@@ -450,7 +450,7 @@ def test_slice_bits() -> None:
     expected = """OPENQASM 3.0;
 bit[6] a;
 bit b;
-a = 0;
+a = "000000";
 b = 1;
 a[3] = b;"""
 
@@ -468,10 +468,9 @@ def test_slice_bits_w_measure() -> None:
 
     expected = """OPENQASM 3.0;
 bit[10] b0;
-bit[10] __bit_0__;
 bit c;
 qubit[1] __qubits__;
-b0 = __bit_0__;
+b0 = "0000000000";
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];
 c = __bit_1__;

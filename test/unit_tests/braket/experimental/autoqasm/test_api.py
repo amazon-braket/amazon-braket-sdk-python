@@ -207,17 +207,21 @@ bit[2] c;
 qubit[2] __qubits__;
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
-bit[2] __bit_0__;
+bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
 c = __bit_0__;"""
     assert bell_measurement_undeclared().to_ir() == expected
 
 
+def test_sim_bell_measurement_undeclared() -> None:
+    _test_on_local_sim(bell_measurement_undeclared())
+
+
 @aq.function
 def bell_measurement_declared() -> None:
     """A function that generates and measures a two-qubit Bell state."""
-    c = aq.BitVar([0, 0], size=2)
+    c = aq.BitVar(0, size=2)
     h(0)
     cnot(0, 1)
     c = measure([0, 1])  # noqa: F841
@@ -227,14 +231,18 @@ def test_bell_measurement_declared() -> None:
     expected = """OPENQASM 3.0;
 bit[2] c;
 qubit[2] __qubits__;
-c = {0, 0};
+c = "00";
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
-bit[2] __bit_1__;
+bit[2] __bit_1__ = "00";
 __bit_1__[0] = measure __qubits__[0];
 __bit_1__[1] = measure __qubits__[1];
 c = __bit_1__;"""
     assert bell_measurement_declared().to_ir() == expected
+
+
+def test_sim_bell_measurement_declared() -> None:
+    _test_on_local_sim(bell_measurement_declared())
 
 
 @aq.function
@@ -441,11 +449,15 @@ def test_simple_measurement() -> None:
     """Test that a program with only measurements is generated correctly."""
     expected = """OPENQASM 3.0;
 qubit[6] __qubits__;
-bit[3] __bit_0__;
+bit[3] __bit_0__ = "000";
 __bit_0__[0] = measure __qubits__[5];
 __bit_0__[1] = measure __qubits__[2];
 __bit_0__[2] = measure __qubits__[1];"""
     assert ground_state_measurements().to_ir() == expected
+
+
+def test_sim_simple_measurement() -> None:
+    _test_on_local_sim(ground_state_measurements())
 
 
 def test_simple_measurement_return() -> None:
@@ -459,7 +471,7 @@ def test_simple_measurement_return() -> None:
 
     expected = """OPENQASM 3.0;
 def ground_state_measurements() -> bit[3] {
-    bit[3] __bit_0__;
+    bit[3] __bit_0__ = "000";
     __bit_0__[0] = measure __qubits__[5];
     __bit_0__[1] = measure __qubits__[2];
     __bit_0__[2] = measure __qubits__[1];
@@ -738,13 +750,12 @@ def test_classical_variables_types():
 bit a;
 int[32] i;
 bit[2] a_array;
-bit[2] __bit_3__;
 int[32] b;
 float[64] c;
 a = 0;
 a = 1;
 i = 1;
-a_array = __bit_3__;
+a_array = "00";
 a_array[0] = 0;
 a_array[i] = 1;
 b = 10;
