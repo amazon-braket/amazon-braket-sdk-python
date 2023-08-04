@@ -1,5 +1,43 @@
 # Changelog
 
+## v1.53.1 (2023-08-03)
+
+### Bug Fixes and Other Changes
+
+ * Support OpenQASM `Program`s in `from_ir`
+
+## v1.53.0.post0 (2023-08-02)
+
+### Documentation Changes
+
+ * fix flake8 issues in tests
+
+## v1.53.0 (2023-07-31)
+
+### Features
+
+ * point image uri to latest tag
+
+### Bug Fixes and Other Changes
+
+ * Update quantum job tests for latest containers
+ * build(deps): bump pypa/gh-action-pypi-publish from 1.8.7 to 1.8.8
+ * move import back to top level in job example
+ * update doc string for handle_parameter_value
+ * change all tests in the circuit test path to use with pytest.raises
+ * pull latest container image by default
+
+## v1.52.0 (2023-07-25)
+
+### Features
+
+ * Support symbolic expressions in `from_ir`
+
+### Bug Fixes and Other Changes
+
+ * local import in job example
+ * Add parameter support
+
 ## v1.51.0 (2023-07-21)
 
 ### Features

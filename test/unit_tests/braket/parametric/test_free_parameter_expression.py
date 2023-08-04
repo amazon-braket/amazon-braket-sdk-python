@@ -168,4 +168,4 @@ def test_sub_return_expression():
 def test_subs_if_free_parameter(param, kwargs, expected_value, expected_type):
     value = subs_if_free_parameter(param, **kwargs)
     assert value == expected_value
-    assert type(value) == expected_type
+    assert isinstance(value, expected_type)

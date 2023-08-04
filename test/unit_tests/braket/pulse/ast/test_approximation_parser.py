@@ -289,7 +289,7 @@ def test_predefined_frame(port):
     expected_phases["frame1"].put(0, 0).put(2e-9, 0)
 
     for statement in pulse_seq._program._state.body:
-        assert type(statement) != ast.FrameType
+        assert not isinstance(statement, ast.FrameType)
 
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 
