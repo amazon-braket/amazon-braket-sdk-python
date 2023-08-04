@@ -729,23 +729,24 @@ for int i in [0:2] {
     assert bell_in_for_loop().to_ir() == expected
 
 
+@aq.function
+def classical_variables_types() -> None:
+    a = aq.BitVar(0)
+    a = aq.BitVar(1)  # noqa: F841
+
+    i = aq.IntVar(1)
+    a_array = aq.BitVar(size=2)
+    a_array[0] = aq.BitVar(0)
+    a_array[i] = aq.BitVar(1)
+
+    b = aq.IntVar(10)
+    b = aq.IntVar(15)  # noqa: F841
+
+    c = aq.FloatVar(1.2)
+    c = aq.FloatVar(3.4)  # noqa: F841
+
+
 def test_classical_variables_types():
-    @aq.function
-    def prog() -> None:
-        a = aq.BitVar(0)
-        a = aq.BitVar(1)  # noqa: F841
-
-        i = aq.IntVar(1)
-        a_array = aq.BitVar(size=2)
-        a_array[0] = aq.BitVar(0)
-        a_array[i] = aq.BitVar(1)
-
-        b = aq.IntVar(10)
-        b = aq.IntVar(15)  # noqa: F841
-
-        c = aq.FloatVar(1.2)
-        c = aq.FloatVar(3.4)  # noqa: F841
-
     expected = """OPENQASM 3.0;
 bit a;
 int[32] i;
@@ -762,7 +763,11 @@ b = 10;
 b = 15;
 c = 1.2;
 c = 3.4;"""
-    assert prog().to_ir() == expected
+    assert classical_variables_types().to_ir() == expected
+
+
+def test_sim_classical_variables_types():
+    _test_on_local_sim(classical_variables_types())
 
 
 def test_classical_variables_assignment():
