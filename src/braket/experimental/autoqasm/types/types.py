@@ -17,6 +17,7 @@ from typing import Any, Optional
 
 import oqpy
 import oqpy.base
+from openpulse import ast
 
 from braket.experimental.autoqasm import program
 
@@ -68,6 +69,9 @@ class BitVar(oqpy.BitVar):
     def __init__(self, *args, **kwargs):
         super(BitVar, self).__init__(*args, **kwargs)
         self.name = program.get_program_conversion_context().next_var_name(oqpy.BitVar)
+        if self.size:
+            value = self.init_expression or 0
+            self.init_expression = ast.BitstringLiteral(value, self.size)
 
 
 class BoolVar(oqpy.BoolVar):
