@@ -213,6 +213,13 @@ def test_cancel():
     task.cancel()
 
 
+def test_cancel_task_without_result():
+    sim = LocalSimulator(DummyProgramSimulator())
+    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    with pytest.raises(Exception, match="LocalQuantumTask does not support cancelling"):
+        task.cancel()
+
+
 def test_async():
     sim = LocalSimulator(DummyProgramSimulator())
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)

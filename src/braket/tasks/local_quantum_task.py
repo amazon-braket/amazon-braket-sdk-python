@@ -67,7 +67,7 @@ class LocalQuantumTask(QuantumTask):
         return task
 
     def id(self) -> str:
-        return self._execute_manager.id()
+        raise NotImplementedError("Id is not generated for LocalQuantumTask")
 
     def cancel(self) -> None:
         """Cancel the quantum task."""
