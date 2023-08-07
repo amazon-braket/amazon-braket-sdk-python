@@ -22,6 +22,7 @@ import oqpy.base
 
 from braket.experimental.autoqasm import constants, program, types
 from braket.experimental.autoqasm.autograph.operators.variables import UndefinedReturnValue
+from braket.experimental.autoqasm.types.conversions import var_type_from_oqpy
 
 
 def assign_stmt(target_name: str, value: Any) -> Any:
@@ -109,7 +110,7 @@ def _validate_variables_type_size(var1: oqpy.base.Var, var2: oqpy.base.Var) -> N
     var1_size = var1.size or 1
     var2_size = var2.size or 1
 
-    if type(var1) != type(var2):
+    if var_type_from_oqpy(var1) != var_type_from_oqpy(var2):
         raise ValueError("Variables in assignment statements must have the same type")
     if var1_size != var2_size:
         raise ValueError("Variables in assignment statements must have the same size")
