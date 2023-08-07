@@ -606,6 +606,7 @@ def _(
         ir_type=IRType.OPENQASM,
         serialization_properties=serialization_properties,
         gate_definitions=gate_definitions,
+        inputs=inputs,
     )
 
     if inputs:

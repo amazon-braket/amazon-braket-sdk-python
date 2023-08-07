@@ -1099,6 +1099,7 @@ class Circuit:
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
         gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
+        inputs: Optional[Dict[str, float]] = {},
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """
         Converts the circuit into the canonical intermediate representation.
@@ -1134,6 +1135,7 @@ class Circuit:
             return self._to_openqasm(
                 serialization_properties or OpenQASMSerializationProperties(),
                 gate_definitions.copy() if gate_definitions is not None else None,
+                inputs
             )
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
@@ -1183,8 +1185,9 @@ class Circuit:
         self,
         serialization_properties: OpenQASMSerializationProperties,
         gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+        inputs: Dict[str, float]
     ) -> OpenQasmProgram:
-        ir_instructions = self._create_openqasm_header(serialization_properties, gate_definitions)
+        ir_instructions = self._create_openqasm_header(serialization_properties, gate_definitions, inputs)
         openqasm_ir_type = IRType.OPENQASM
         ir_instructions.extend(
             [
@@ -1220,6 +1223,7 @@ class Circuit:
         self,
         serialization_properties: OpenQASMSerializationProperties,
         gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+        inputs: Dict[str, float]
     ) -> List[str]:
         ir_instructions = ["OPENQASM 3.0;"]
         for parameter in self.parameters:
@@ -1235,8 +1239,7 @@ class Circuit:
                 f"Invalid qubit_reference_type "
                 f"{serialization_properties.qubit_reference_type} supplied."
             )
-
-        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions)
+        frame_wf_declarations = self._generate_frame_wf_defcal_declarations(gate_definitions, inputs)
         if frame_wf_declarations:
             ir_instructions.append(frame_wf_declarations)
         return ir_instructions
@@ -1256,11 +1259,11 @@ class Circuit:
                 waveforms[waveform.id] = waveform
 
     def _generate_frame_wf_defcal_declarations(
-        self, gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]
+        self, gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]], inputs: Dict[str, float]
     ) -> Optional[str]:
         program = oqpy.Program(None)
 
-        frames, waveforms = self._get_frames_waveforms_from_instrs(gate_definitions)
+        frames, waveforms = self._get_frames_waveforms_from_instrs(gate_definitions, inputs)
 
         if gate_definitions is not None:
             self._validate_gate_calbrations_uniqueness(gate_definitions, frames, waveforms)
@@ -1302,7 +1305,7 @@ class Circuit:
         return None
 
     def _get_frames_waveforms_from_instrs(
-        self, gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]
+        self, gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]], inputs: Dict[str, float]
     ) -> Tuple[Dict[Frame], Dict[ArbitraryWaveform]]:
         from braket.circuits.gates import PulseGate
 
@@ -1317,9 +1320,9 @@ class Circuit:
                     _validate_uniqueness(waveforms, waveform)
                     waveforms[waveform.id] = waveform
             # this will change with full parametric calibration support
-            elif isinstance(instruction.operator, Parameterizable) and gate_definitions is not None:
+            elif (gate_definitions is not None):
                 fixed_argument_calibrations = self._add_fixed_argument_calibrations(
-                    gate_definitions, instruction
+                    gate_definitions, instruction, inputs
                 )
                 gate_definitions.update(fixed_argument_calibrations)
         return frames, waveforms
@@ -1328,6 +1331,7 @@ class Circuit:
         self,
         gate_definitions: Dict[Tuple[Gate, QubitSet], PulseSequence],
         instruction: Instruction,
+        inputs: Dict[str, float]
     ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
         """Adds calibrations with arguments set to the instruction parameter values
 
@@ -1358,17 +1362,15 @@ class Circuit:
         for key, calibration in gate_definitions.items():
             gate = key[0]
             target = key[1]
+            free_parameter_number = sum(
+                    [isinstance(p, FreeParameterExpression) for p in gate.parameters]
+                ) if isinstance(gate, Parameterizable) else 0
             if target != instruction.target:
                 continue
-            if isinstance(gate, type(instruction.operator)) and len(
+            if isinstance(gate, type(instruction.operator)) and isinstance(instruction.operator, Parameterizable) and len(
                 instruction.operator.parameters
-            ) == len(gate.parameters):
-                free_parameter_number = sum(
-                    [isinstance(p, FreeParameterExpression) for p in gate.parameters]
-                )
-                if free_parameter_number == 0:
-                    continue
-                elif free_parameter_number < len(gate.parameters):
+            ) == len(gate.parameters) and free_parameter_number > 0:
+                if free_parameter_number < len(gate.parameters):
                     raise NotImplementedError(
                         "Calibrations with a partial number of fixed parameters are not supported."
                     )
@@ -1385,9 +1387,17 @@ class Circuit:
                 additional_calibrations[bound_key] = calibration(
                     **{
                         p.name if isinstance(p, FreeParameterExpression) else p: v
-                        for p, v in zip(gate.parameters, instruction.operator.parameters)
+                        for p, v in zip(gate.parameters, instruction.operator.parameters, inputs)
                     }
                 )
+                if additional_calibrations[bound_key].parameters:
+                    raise ValueError(f"All gate parameters should be bound. Missing {additional_calibrations[bound_key].parameters}")
+            elif calibration.parameters:
+                additional_calibrations[key] = calibration(
+                    **inputs
+                )
+                if additional_calibrations[key].parameters:
+                    raise ValueError(f"All gate parameters should be bound. Missing {additional_calibrations[key].parameters}")
         return additional_calibrations
 
     def as_unitary(self) -> np.ndarray:
