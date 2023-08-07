@@ -348,6 +348,32 @@ annotation_test(__bit_0__);"""
     assert main().to_ir() == expected
 
 
+def test_map_and_assign_arg():
+    """Test input parameter handling which is assigned to another variable."""
+
+    @aq.function
+    def assign_param(c: int) -> None:
+        d = aq.IntVar(4)
+        c = d  # noqa: F841
+
+    @aq.function
+    def main():
+        c = aq.IntVar(0)
+        assign_param(c)
+
+    expected = """OPENQASM 3.0;
+def assign_param(int[32] c) {
+    int[32] d;
+    d = 4;
+    c = d;
+}
+int[32] c;
+c = 0;
+assign_param(c);"""
+
+    assert main().to_ir() == expected
+
+
 def test_unnamed_retval_python_type() -> None:
     """Tests subroutines which return unnamed Python values."""
 
