@@ -39,6 +39,12 @@ def test_empty_function(empty_program) -> None:
     assert empty_program().to_ir() == expected
 
 
+def test_empty_function_double_wrapped(empty_program) -> None:
+    """Test that a double-wrapped function with no instructions generates an empty program."""
+    expected = """OPENQASM 3.0;"""
+    assert aq.function(empty_program)().to_ir() == expected
+
+
 def test_sim_empty(empty_program) -> None:
     """Test an empty subroutine on the local simulator."""
     _test_on_local_sim(empty_program())
