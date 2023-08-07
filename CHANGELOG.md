@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.53.2 (2023-08-07)
+
+### Bug Fixes and Other Changes
+
+ * don't wrap FreeParameterExpression input as string
+
 ## v1.53.1 (2023-08-03)
 
 ### Bug Fixes and Other Changes
