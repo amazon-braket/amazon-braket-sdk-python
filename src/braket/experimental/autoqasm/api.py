@@ -389,7 +389,7 @@ def _dummy_function(f_source: Callable) -> Callable:
     return_instance = _make_return_instance(f_source, aq_program.get_program_conversion_context())
 
     def f_dummy(*args, **kwargs) -> Any:
-        return return_instance  # pramga: no coverage
+        return return_instance  # pragma: no cover
 
     f_dummy.__name__ = copy.deepcopy(f_source.__name__)
     f_dummy.__defaults__ = copy.deepcopy(f_source.__defaults__)
