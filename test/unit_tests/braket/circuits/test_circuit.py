@@ -1161,11 +1161,7 @@ def test_parametric_circuit_with_missing_arg_defcal(pulse_sequence, pulse_sequen
     circ = Circuit().h(0, power=-2.5).h(0, power=0).rx(0, angle=0.45)
     serialization_properties = OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL)
     calibration_key_2 = (Gate.Rx(FreeParameter("theta")), QubitSet([0]))
-    gate_calibrations = GateCalibrations(
-        {
-            calibration_key_2: pulse_sequence_2
-        }
-    )
+    gate_calibrations = GateCalibrations({calibration_key_2: pulse_sequence_2})
 
     expected_ir = OpenQasmProgram(
         source="\n".join(
