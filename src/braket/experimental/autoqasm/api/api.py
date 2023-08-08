@@ -50,9 +50,6 @@ def function(f: Callable) -> Callable[[Any], aq_program.Program]:
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    if is_autograph_artifact(f):
-        return f
-
     # Update documentation with user configuration
     try:
         if f.__doc__ is None:
@@ -81,9 +78,6 @@ Keyword Args:
         ),
     )
     wrapper = wrapper_factory(f)
-
-    if decorators:
-        wrapper = tf_decorator.rewrap(f_wrapper, f, wrapper)
 
     return autograph_artifact(wrapper)
 
@@ -328,9 +322,13 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
     """
     root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
 
+    # Explicit qubit declarations are not supported currently, thus the following check is redundant.
+    # Commenting out the check for now, but leaving the code in place in case we decide to
+    # support explicit qubit declarations.
+
     # Return early if the qubit register is already declared
-    if aq_constants.QUBIT_REGISTER in root_oqpy_program.declared_vars:
-        return
+    # if aq_constants.QUBIT_REGISTER in root_oqpy_program.declared_vars:
+    #     return
 
     # Declare the global qubit register if necessary
     user_specified_num_qubits = program_conversion_context.get_declared_qubits()
@@ -370,7 +368,7 @@ def _dummy_function(f_source: Callable) -> Callable:
     return_instance = _make_return_instance(f_source, aq_program.get_program_conversion_context())
 
     def f_dummy(*args, **kwargs) -> Any:
-        return return_instance
+        return return_instance  # pragma: no cover
 
     f_dummy.__name__ = copy.deepcopy(f_source.__name__)
     f_dummy.__defaults__ = copy.deepcopy(f_source.__defaults__)
