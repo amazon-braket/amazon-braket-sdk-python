@@ -155,11 +155,16 @@ def gate_calibrations(pulse_sequence, pulse_sequence_2):
         Gate.MS(FreeParameter("alpha"), FreeParameter("beta"), FreeParameter("gamma")),
         QubitSet([0, 1]),
     )
+    calibration_key_4 = (
+        Gate.XY(FreeParameter("alpha")),
+        QubitSet([1, 2]),
+    )
     return GateCalibrations(
         {
             calibration_key: pulse_sequence,
             calibration_key_2: pulse_sequence,
             calibration_key_3: pulse_sequence_2,
+            calibration_key_4: pulse_sequence_2,
         }
     )
 
@@ -982,6 +987,40 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "ms(-0.1, -0.2, -0.3) q[0], q[1];",
                         "b[0] = measure q[0];",
                         "b[1] = measure q[1];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
+        (
+            Circuit().h(0, power=-2.5).h(0, power=0).xy(1, 2, -0.1),
+            OpenQASMSerializationProperties(QubitReferenceType.VIRTUAL),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[3] b;",
+                        "qubit[3] q;",
+                        "cal {",
+                        "    waveform drag_gauss_wf = drag_gaussian"
+                        + "(3000000.0ns, 400000000.0ns, 0.2, 1, false);",
+                        "}",
+                        "defcal z $0, $1 {",
+                        "    set_frequency(predefined_frame_1, 6000000.0);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "defcal xy(-0.1) $1, $2 {",
+                        "    shift_phase(predefined_frame_1, -0.1);",
+                        "    set_phase(predefined_frame_1, 2);",
+                        "    shift_phase(predefined_frame_1, 1);",
+                        "    play(predefined_frame_1, drag_gauss_wf);",
+                        "}",
+                        "inv @ pow(2.5) @ h q[0];",
+                        "pow(0) @ h q[0];",
+                        "xy(-0.1) q[1], q[2];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
                     ]
                 ),
                 inputs={},
