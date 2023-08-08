@@ -1407,7 +1407,8 @@ class Circuit:
                     p.name if isinstance(p, FreeParameterExpression) else p: v
                     for p, v in zip(gate.parameters, instruction.operator.parameters)
                 }
-                bound_values.update(inputs)
+                for k, v in inputs.items():
+                    bound_values[k] = bound_values.get(k, v)
 
                 additional_calibrations[bound_key] = calibration(**bound_values)
                 if additional_calibrations[bound_key].parameters:
@@ -1415,7 +1416,7 @@ class Circuit:
                         f"All gate parameters should be bound. "
                         f"Missing {additional_calibrations[bound_key].parameters}"
                     )
-            elif calibration.parameters:
+            elif calibration.parameters and isinstance(gate, type(instruction.operator)):
                 additional_calibrations[key] = calibration(**inputs)
                 if additional_calibrations[key].parameters:
                     raise ValueError(
