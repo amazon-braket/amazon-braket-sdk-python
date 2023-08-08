@@ -21,6 +21,10 @@ class AutoQasmError(Exception):
     """Base class for all AutoQASM exceptions."""
 
 
+class UnsupportedFeature(AutoQasmError):
+    """AutoQASM unsupported feature."""
+
+
 class UnknownQubitCountError(AutoQasmError):
     """Missing declaration for the number of qubits."""
 
