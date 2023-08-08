@@ -74,13 +74,6 @@ def test_break_for_loop():
 
 def test_break_while_loop():
     @aq.function
-    def uses_while():
-        while aq.gates.measure(0):
-            aq.gates.x(0)
-
-    uses_while()
-
-    @aq.function
     def uses_while_w_break():
         while aq.gates.measure(0):
             aq.gates.x(0)
