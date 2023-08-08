@@ -846,7 +846,7 @@ def test_main_return():
     def main() -> int:
         return 1
 
-    with pytest.warns(UserWarning, match="`output` is currently unsupported"):
+    with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
         main()
 
 

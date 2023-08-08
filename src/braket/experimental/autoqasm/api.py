@@ -245,15 +245,11 @@ def _convert_program_as_main(
         args (List[Any]): Arguments passed to the program when called.
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
     """
-    program_conversion_context.in_main(True)
-
     # Process the program
     aq_transpiler.converted_call(f, args, kwargs, options=options)
 
     # Modify program to add qubit declaration if necessary
     _add_qubit_declaration(program_conversion_context)
-
-    program_conversion_context.in_main(False)
 
 
 def _convert_program_as_subroutine(
@@ -276,8 +272,6 @@ def _convert_program_as_subroutine(
         args (List[Any]): Arguments passed to the program when called.
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
     """
-    program_conversion_context.in_main(False)
-
     oqpy_program = program_conversion_context.get_oqpy_program()
 
     if f not in program_conversion_context.subroutines_processing:

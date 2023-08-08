@@ -25,8 +25,8 @@ from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 class ReturnValidator(converter.Base):
     def visit_Return(self, node: ast.stmt) -> ast.stmt:
         aq_context = program.get_program_conversion_context()
-        if aq_context.is_in_main and node.value is not None:
-            warnings.warn("`output` is currently unsupported; `return` statement has no effect.")
+        if not aq_context.subroutines_processing and node.value is not None:
+            warnings.warn("Return value from top level function is ignored.")
         return node
 
 
