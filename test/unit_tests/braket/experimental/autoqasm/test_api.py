@@ -839,3 +839,13 @@ cnot __qubits__[0], __qubits__[3];
 cnot __qubits__[0], __qubits__[4];"""
 
     assert make_ghz(5).to_ir() == expected
+
+
+def test_double_decorated_function():
+    @aq.function
+    @aq.function
+    def empty_program() -> None:
+        pass
+
+    expected = """OPENQASM 3.0;"""
+    assert empty_program().to_ir() == expected

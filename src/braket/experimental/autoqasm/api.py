@@ -88,17 +88,11 @@ def _function_without_params(
     if is_autograph_artifact(f):
         return f
 
-    f_wrapper = f
-    decorators, f = tf_decorator.unwrap(f)
-
     wrapper_factory = _convert_wrapper(
         user_config=user_config,
         recursive=False,
     )
     wrapper = wrapper_factory(f)
-
-    if decorators:
-        wrapper = tf_decorator.rewrap(f_wrapper, f, wrapper)
 
     return autograph_artifact(wrapper)
 
@@ -357,10 +351,6 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
     """
     root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
 
-    # Return early if the qubit register is already declared
-    if aq_constants.QUBIT_REGISTER in root_oqpy_program.declared_vars:
-        return
-
     # Declare the global qubit register if necessary
     user_specified_num_qubits = program_conversion_context.get_declared_qubits()
 
@@ -399,7 +389,7 @@ def _dummy_function(f_source: Callable) -> Callable:
     return_instance = _make_return_instance(f_source, aq_program.get_program_conversion_context())
 
     def f_dummy(*args, **kwargs) -> Any:
-        return return_instance
+        return return_instance  # pramga: no coverage
 
     f_dummy.__name__ = copy.deepcopy(f_source.__name__)
     f_dummy.__defaults__ = copy.deepcopy(f_source.__defaults__)
