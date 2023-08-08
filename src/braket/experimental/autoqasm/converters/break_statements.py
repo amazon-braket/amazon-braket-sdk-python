@@ -17,6 +17,7 @@
 import ast
 
 from braket.experimental.autoqasm import errors
+from braket.experimental.autoqasm.autograph.converters import break_statements
 from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 
 
@@ -29,4 +30,6 @@ class BreakValidator(converter.Base):
 def transform(
     node: ast.stmt, ctx: ag_ctx.ControlStatusCtx, default_to_null_return: bool = True
 ) -> ast.stmt:
-    return BreakValidator(ctx).visit(node)
+    node = BreakValidator(ctx).visit(node)
+    # When break statements are supported, we may want to fall back on default behavior
+    return break_statements.transform(node, ctx)  # pragma: no cover
