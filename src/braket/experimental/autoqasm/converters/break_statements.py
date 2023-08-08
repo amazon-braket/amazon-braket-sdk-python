@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 
-"""Converters for return statement nodes."""
+"""Converters for break statement nodes."""
 
 import ast
 
