@@ -121,20 +121,20 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
             max_parallel = cpu_count()
 
         tasks_and_inputs = _batch_tasks_and_inputs(task_specifications, inputs)
-        execute_managers = []
+        execution_managers = []
         for task, inp in tasks_and_inputs:
             args_ = _convert_to_sim_format(task, delegate, shots, inputs=inp) + list(args)
-            execute_managers.append(delegate.execute_manager(*args_, **kwargs))
+            execution_managers.append(delegate.execution_manager(*args_, **kwargs))
 
-        with ThreadPoolExecutor(max_workers=min(max_parallel, len(execute_managers))) as executor:
+        with ThreadPoolExecutor(max_workers=min(max_parallel, len(execution_managers))) as executor:
             task_futures = [
                 executor.submit(
                     LocalQuantumTask.create,
-                    execute_manager,
+                    execution_manager,
                     *args,
                     **kwargs,
                 )
-                for execute_manager in execute_managers
+                for execution_manager in execution_managers
             ]
 
         tasks = [future.result() for future in task_futures]

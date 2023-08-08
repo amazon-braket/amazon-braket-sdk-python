@@ -18,7 +18,7 @@ import numpy as np
 import pytest
 
 from braket.circuits import Circuit
-from braket.default_simulator.local_quantum_execute_manager import LocalQuantumExecuteManager
+from braket.default_simulator.local_execution_manager import LocalExecutionManager
 from braket.device_schema import DeviceCapabilities
 from braket.devices import LocalSimulator
 from braket.ir.openqasm import Program
@@ -66,8 +66,8 @@ class DummyProgramSimulator(BraketSimulator):
     ) -> GateModelTaskResult:
         return GATE_MODEL_RESULT
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -104,8 +104,8 @@ class DummyProgramSleepSimulator(BraketSimulator):
         sleep(5)
         return GATE_MODEL_RESULT
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -141,8 +141,8 @@ class DummyExceptionSimulator(BraketSimulator):
     ) -> GateModelTaskResult:
         raise Exception("Catch in main thread")
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -216,7 +216,7 @@ def test_cancel():
 def test_cancel_task_without_result():
     sim = LocalSimulator(DummyProgramSimulator())
     task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    with pytest.raises(Exception, match="LocalQuantumTask does not support cancelling"):
+    with pytest.raises(NotImplementedError, match="LocalQuantumTask does not support cancelling"):
         task.cancel()
 
 

@@ -23,7 +23,7 @@ from braket.ahs.atom_arrangement import AtomArrangement
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.annealing import Problem, ProblemType
 from braket.circuits import Circuit, FreeParameter
-from braket.default_simulator.local_quantum_execute_manager import LocalQuantumExecuteManager
+from braket.default_simulator.local_execution_manager import LocalExecutionManager
 from braket.device_schema import DeviceCapabilities
 from braket.devices import LocalSimulator, local_simulator
 from braket.ir.openqasm import Program
@@ -120,8 +120,8 @@ class DummyCircuitSimulator(BraketSimulator):
         self._qubits = qubits
         return GATE_MODEL_RESULT
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -162,8 +162,8 @@ class DummyJaqcdSimulator(BraketSimulator):
         self._qubits = qubits
         return GATE_MODEL_RESULT
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -205,8 +205,8 @@ class DummyProgramSimulator(BraketSimulator):
     ) -> GateModelTaskResult:
         return GATE_MODEL_RESULT
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -237,8 +237,8 @@ class DummyAnnealingSimulator(BraketSimulator):
     def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> AnnealingTaskResult:
         return ANNEALING_RESULT
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -271,8 +271,8 @@ class DummyRydbergSimulator(BraketSimulator):
     ) -> AnalogHamiltonianSimulationTaskResult:
         return AHS_RESULT
 
-    def execute_manager(self, *args, **kwargs):
-        return LocalQuantumExecuteManager(self, *args, **kwargs)
+    def execution_manager(self, *args, **kwargs):
+        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:

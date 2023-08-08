@@ -16,7 +16,7 @@ import threading
 from asyncio import AbstractEventLoop, Task
 from typing import Optional, Union
 
-from braket.simulator.quantum_task import QuantumExecuteManager
+from braket.simulator.quantum_task import ExecutionManager
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
@@ -47,7 +47,7 @@ class LocalQuantumTask(QuantumTask):
 
     @staticmethod
     def create(
-        execute_manager: QuantumExecuteManager,
+        execution_manager: ExecutionManager,
         *args,
         **kwargs,
     ) -> "LocalQuantumTask":
@@ -56,13 +56,13 @@ class LocalQuantumTask(QuantumTask):
         and returns back an LocalQuantumTask tracking the execution.
 
         Args:
-            execute_manager (QuantumExecuteManager):  Execute Manager
+            execution_manager (ExecutionManager):  Execution Manager
 
         Returns:
             : LocalQuantumTask tracking the task execution on the device.
         """
         task = LocalQuantumTask()
-        task._execute_manager = execute_manager
+        task._execution_manager = execution_manager
         task.async_result()
         return task
 
@@ -71,18 +71,18 @@ class LocalQuantumTask(QuantumTask):
 
     def cancel(self) -> None:
         """Cancel the quantum task."""
-        if hasattr(self, "_execute_manager"):
-            return self._execute_manager.cancel()
-        raise NotImplementedError("LocalQuantumTask does not support cancelling")
+        if hasattr(self, "_execution_manager"):
+            return self._execution_manager.cancel()
+        raise NotImplementedError("LocalQuantumTask cannot cancel a completed task")
 
     def state(self) -> str:
-        """Get the state of the quantum task from task manager.
+        """Get the state of the quantum task from execution manager.
         Otherwise, use the thread to return status.
         Returns:
             str: State of the quantum task.
         """
         try:
-            state = self._execute_manager.state()
+            state = self._execution_manager.state()
         except (NotImplementedError, AttributeError):
             state = self._status()
         return state
@@ -191,4 +191,4 @@ class LocalQuantumTask(QuantumTask):
         return self._task
 
     async def _async_run_internal(self):
-        return self._execute_manager.run()
+        return self._execution_manager.result()

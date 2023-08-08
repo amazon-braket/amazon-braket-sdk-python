@@ -91,9 +91,9 @@ class LocalSimulator(Device):
         args = _convert_to_sim_format(
             task_specification, self._delegate, shots, inputs=inputs
         ) + list(args)
-        execute_manager = self._delegate.execute_manager(*args, **kwargs)
+        execution_manager = self._delegate.execution_manager(*args, **kwargs)
 
-        return LocalQuantumTask.create(execute_manager, *args, **kwargs)
+        return LocalQuantumTask.create(execution_manager, *args, **kwargs)
 
     def run_batch(
         self,
