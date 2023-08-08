@@ -144,8 +144,8 @@ class BraketProgramContext(AbstractProgramContext):
 
         Returns:
             Union[float, FreeParameterExpression]: Return the value directly if numeric,
-                otherwise wraps the symbolic expression as a `FreeParameterExpression`.
+            otherwise wraps the symbolic expression as a `FreeParameterExpression`.
         """
         if isinstance(value, Expr):
-            return FreeParameterExpression(str(value))
+            return FreeParameterExpression(value)
         return value
