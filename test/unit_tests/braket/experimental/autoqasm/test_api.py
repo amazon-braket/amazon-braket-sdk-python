@@ -839,3 +839,25 @@ cnot __qubits__[0], __qubits__[3];
 cnot __qubits__[0], __qubits__[4];"""
 
     assert make_ghz(5).to_ir() == expected
+
+
+def test_main_return():
+    @aq.function
+    def main() -> int:
+        return 1
+
+    with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
+        main()
+
+
+def test_main_no_return():
+    @aq.function
+    def tester(x: int) -> int:
+        return measure(x)
+
+    @aq.function(num_qubits=3)
+    def main():
+        x = 3
+        tester(x)
+
+    main()

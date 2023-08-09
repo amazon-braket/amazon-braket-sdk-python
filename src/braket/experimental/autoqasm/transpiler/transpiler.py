@@ -36,7 +36,6 @@ from braket.experimental.autoqasm.autograph.converters import (
     functions,
     lists,
     logical_expressions,
-    return_statements,
     slices,
     variables,
 )
@@ -59,7 +58,7 @@ from braket.experimental.autoqasm.autograph.pyct.static_analysis import (
     reaching_definitions,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_stack
-from braket.experimental.autoqasm.converters import assignments, break_statements
+from braket.experimental.autoqasm.converters import assignments, break_statements, return_statements
 
 
 class PyToOqpy(transpiler.PyToPy):
