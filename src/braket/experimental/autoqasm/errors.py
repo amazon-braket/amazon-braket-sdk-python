@@ -25,6 +25,10 @@ class UnsupportedFeature(AutoQasmError):
     """AutoQASM unsupported feature."""
 
 
+class MissingParameterTypeError(AutoQasmError):
+    """AutoQASM requires type hints for subroutine parameters."""
+
+
 class UnknownQubitCountError(AutoQasmError):
     """Missing declaration for the number of qubits."""
 

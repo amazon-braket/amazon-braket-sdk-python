@@ -520,3 +520,18 @@ def test_error_for_tuple_param() -> None:
 
     with pytest.raises(TypeError):
         main()
+
+
+def test_error_for_missing_param_type() -> None:
+    """Parameters require type hints."""
+
+    @aq.function
+    def param_test(input):
+        pass
+
+    @aq.function
+    def main():
+        param_test(aq.BitVar(1))
+
+    with pytest.raises(aq.errors.MissingParameterTypeError):
+        main()

@@ -433,6 +433,12 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 
     new_params = [first_param]
     for param in sig.parameters.values():
+        if param.annotation is param.empty:
+            raise errors.MissingParameterTypeError(
+                f'Parameter "{param.name}" for subroutine "{_func.__name__}" '
+                "is missing a required type hint."
+            )
+
         new_param = inspect.Parameter(
             name=param.name, kind=param.kind, annotation=aq_types.map_type(param.annotation)
         )
