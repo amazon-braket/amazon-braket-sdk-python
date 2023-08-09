@@ -505,3 +505,18 @@ int[32] __int_4__ = 0;
 __int_4__ = retval_recursive();"""
 
     assert caller().to_ir() == expected_qasm
+
+
+def test_error_for_tuple_param() -> None:
+    """Tuples are not supported as parameters."""
+
+    @aq.function
+    def param_test(input: Tuple):
+        pass
+
+    @aq.function
+    def main():
+        param_test(aq.BitVar(1))
+
+    with pytest.raises(TypeError):
+        main()
