@@ -48,10 +48,10 @@ def map_type(python_type: type) -> type:
             raise errors.ParameterTypeError("Please supply a type argument to list.")
         elif issubclass(type_args[0], (int, np.integer)):
             # TODO: Update array length to match the input rather than hardcoding
-            #       OQPY and QASM require arrays have a set length. python doesn't require this,
-            #       so the length of the array is indeterminate.
-            #       At this point we only have access to the _parameter_ (type hint), not the
-            #       _argument_ (concrete value), which is the only place length information is stored
+            # OQPY and QASM require arrays have a set length. python doesn't require this,
+            # so the length of the array is indeterminate.
+            # At this point we only have access to the _parameter_ (type hint), not the
+            # _argument_ (concrete value), which is the only place length information is stored
             # Here's where the info is stored for oqpy variables:
             # ctx = program.get_program_conversion_context()
             # dims = ctx.get_oqpy_program().declared_vars[name_of_var].dimensions
