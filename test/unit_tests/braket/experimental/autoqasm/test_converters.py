@@ -59,3 +59,25 @@ b = 1.2;
 a = 1;
 e = a;"""
     assert qasm == expected_qasm
+
+
+def test_break_for_loop():
+    @aq.function
+    def main():
+        for i in aq.range(3):
+            aq.gates.h(i)
+            break
+
+    with pytest.raises(aq.errors.UnsupportedFeature):
+        main()
+
+
+def test_break_while_loop():
+    @aq.function
+    def uses_while_w_break():
+        while aq.gates.measure(0):
+            aq.gates.x(0)
+            break
+
+    with pytest.raises(aq.errors.UnsupportedFeature):
+        uses_while_w_break()
