@@ -53,7 +53,10 @@ def map_type(python_type: type) -> type:
         # dims = ctx.get_oqpy_program().declared_vars[name_of_var].dimensions
         return oqpy.ArrayVar[oqpy.IntVar, 10]
     if issubclass(origin_type, tuple):
-        raise TypeError('Tuples are not supported as parameters to AutoQASM functions; please separate the tuple into multiple parameters or use a list instead.')
+        raise TypeError(
+            "Tuples are not supported as parameters to AutoQASM functions; "
+            "please separate the tuple into multiple parameters or use a list instead."
+        )
 
     # TODO add all supported types
     return python_type
