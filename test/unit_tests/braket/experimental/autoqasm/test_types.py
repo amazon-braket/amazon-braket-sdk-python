@@ -607,6 +607,54 @@ __arr_1__ = ret_test();"""
     assert main().to_ir() == expected
 
 
+def test_ignore_missing_ret_typehint_list():
+    """Test type discovery of return types with no annotations."""
+
+    @aq.function
+    def ret_test():
+        return [1, 2, 3]
+
+    @aq.function(num_qubits=4)
+    def main():
+        ret_test()
+
+    expected = """OPENQASM 3.0;
+def ret_test() -> array[int[32], 10] {
+    array[int[32], 10] retval_;
+    retval_ = {1, 2, 3};
+    return retval_;
+}
+array[int[32], 10] __arr_1__ = {};
+qubit[4] __qubits__;
+__arr_1__ = ret_test();"""
+
+    assert main().to_ir() == expected
+
+
+def test_ignore_missing_ret_typehint_float():
+    """Test type discovery of return types with no annotations."""
+
+    @aq.function
+    def ret_test():
+        return 1.2
+
+    @aq.function(num_qubits=4)
+    def main():
+        ret_test()
+
+    expected = """OPENQASM 3.0;
+def ret_test() -> float[64] {
+    float[64] retval_;
+    retval_ = 1.2;
+    return retval_;
+}
+qubit[4] __qubits__;
+float[64] __float_1__;
+__float_1__ = ret_test();"""
+
+    assert main().to_ir() == expected
+
+
 def test_param_array_list_missing_arg():
     """Test list parameter with missing type arg (list rather than list[int])."""
 

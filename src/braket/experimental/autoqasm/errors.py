@@ -26,7 +26,7 @@ class UnsupportedFeatureError(AutoQasmError):
 
 
 class ParameterTypeError(AutoQasmError):
-    """AutoQASM unsupported feature."""
+    """AutoQASM parameter type error."""
 
 
 class MissingParameterTypeError(AutoQasmError):
