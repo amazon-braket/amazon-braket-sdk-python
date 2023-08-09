@@ -21,7 +21,11 @@ class AutoQasmError(Exception):
     """Base class for all AutoQASM exceptions."""
 
 
-class UnsupportedFeature(AutoQasmError):
+class UnsupportedFeatureError(AutoQasmError):
+    """AutoQASM unsupported feature."""
+
+
+class ParameterTypeError(AutoQasmError):
     """AutoQASM unsupported feature."""
 
 

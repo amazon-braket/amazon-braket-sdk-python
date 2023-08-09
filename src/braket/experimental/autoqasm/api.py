@@ -290,10 +290,10 @@ def _convert_program_as_subroutine(
         subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
 
     # Add the subroutine invocation to the program
-    return_instance = _make_return_instance(f, program_conversion_context)
+    ret_type = subroutine_function_call.subroutine_decl.return_type
+    return_instance = _make_return_instance_from_oqpy_return_type(ret_type)
     return_variable = None
     if isinstance(return_instance, list):
-        ret_type = subroutine_function_call.subroutine_decl.return_type
         return_variable = aq_types.ArrayVar(
             return_instance,
             dimensions=[d.value for d in ret_type.dimensions],
@@ -320,9 +320,18 @@ def _convert_program_as_subroutine(
         root_oqpy_program._add_subroutine(subroutine_name, subroutine_function_call.subroutine_decl)
 
 
-def _make_return_instance(
-    f: Callable, program_conversion_context: aq_program.ProgramConversionContext
-) -> Any:
+def _make_return_instance_from_oqpy_return_type(return_type) -> Any:
+    if not return_type:
+        return None
+
+    return_type = aq_types.conversions.var_type_from_ast_type(return_type)
+    if return_type == aq_types.ArrayVar:
+        return []
+    return return_type()
+
+
+def _make_return_instance_from_f_annotation(f: Callable) -> Any:
+    # TODO: Recursive functions should work even if the user's type hint is wrong
     annotations = f.__annotations__
     return_type = annotations["return"] if "return" in annotations else None
 
@@ -386,7 +395,7 @@ def _clone_function(f_source: Callable) -> Callable:
 
 
 def _dummy_function(f_source: Callable) -> Callable:
-    return_instance = _make_return_instance(f_source, aq_program.get_program_conversion_context())
+    return_instance = _make_return_instance_from_f_annotation(f_source)
 
     def f_dummy(*args, **kwargs) -> Any:
         return return_instance  # pragma: no cover

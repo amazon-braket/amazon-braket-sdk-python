@@ -68,7 +68,7 @@ def test_break_for_loop():
             aq.gates.h(i)
             break
 
-    with pytest.raises(aq.errors.UnsupportedFeature):
+    with pytest.raises(aq.errors.UnsupportedFeatureError):
         main()
 
 
@@ -79,5 +79,5 @@ def test_break_while_loop():
             aq.gates.x(0)
             break
 
-    with pytest.raises(aq.errors.UnsupportedFeature):
+    with pytest.raises(aq.errors.UnsupportedFeatureError):
         uses_while_w_break()

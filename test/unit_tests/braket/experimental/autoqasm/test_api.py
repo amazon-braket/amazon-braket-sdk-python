@@ -382,7 +382,7 @@ def qasm_simple_condition(bool do_cnot) -> bool {
     return do_cnot;
 }
 qubit[2] __qubits__;
-bool __bool_0__ = false;
+bool __bool_0__;
 """
     expected += f"__bool_0__ = qasm_simple_condition({'true' if do_cnot else 'false'});"
     assert qasm_simple_condition_wrapper(do_cnot).to_ir() == expected

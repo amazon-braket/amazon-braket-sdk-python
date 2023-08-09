@@ -86,7 +86,7 @@ def ret_test() -> int[32] {
     res = 1;
     return res;
 }
-int[32] __int_1__ = 0;
+int[32] __int_1__;
 __int_1__ = ret_test();"""
 
     assert main().to_ir() == expected
@@ -110,7 +110,7 @@ def ret_test() -> float[64] {
     res = 1.0;
     return res;
 }
-float[64] __float_1__ = 0.0;
+float[64] __float_1__;
 __float_1__ = ret_test();"""
 
     assert main().to_ir() == expected
@@ -134,7 +134,7 @@ def ret_test() -> bool {
     res = true;
     return res;
 }
-bool __bool_1__ = false;
+bool __bool_1__;
 __bool_1__ = ret_test();"""
 
     assert main().to_ir() == expected
@@ -161,7 +161,7 @@ int[32] a;
 int[32] b;
 a = 5;
 b = 6;
-int[32] __int_2__ = 0;
+int[32] __int_2__;
 __int_2__ = add(a, b);"""
 
     assert ret_test().to_ir() == expected
@@ -203,6 +203,29 @@ __arr_1__ = ret_test();"""
     assert main().to_ir() == expected
 
 
+def test_return_python_array():
+    """Test returning a python array."""
+
+    @aq.function
+    def tester(arr: list[int]) -> list[int]:
+        return [1, 2, 3]
+
+    @aq.function(num_qubits=4)
+    def main():
+        tester()
+
+    expected = """OPENQASM 3.0;
+def tester(array[int[32], 10] arr) -> array[int[32], 10] {
+    array[int[32], 10] retval_;
+    retval_ = {1, 2, 3};
+    return retval_;
+}
+array[int[32], 10] __arr_1__ = {};
+qubit[4] __qubits__;
+__arr_1__ = tester();"""
+    assert main().to_ir() == expected
+
+
 def test_return_func_call():
     """Test returning the result of another function call."""
 
@@ -221,7 +244,7 @@ def helper() -> int[32] {
     res = 1;
     return res;
 }
-int[32] __int_1__ = 0;
+int[32] __int_1__;
 __int_1__ = helper();"""
 
     assert ret_test().to_ir() == expected
@@ -391,7 +414,7 @@ def retval_test() -> int[32] {
     retval_ = 1;
     return retval_;
 }
-int[32] __int_1__ = 0;
+int[32] __int_1__;
 __int_1__ = retval_test();"""
 
     assert caller().to_ir() == expected_qasm
@@ -431,13 +454,13 @@ def test_recursive_unassigned_retval_python_type() -> None:
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
     int[32] retval_;
-    int[32] __int_1__ = 0;
+    int[32] __int_1__;
     __int_1__ = retval_recursive();
     retval_ = 1;
     return retval_;
 }
 int[32] retval_;
-int[32] __int_3__ = 0;
+int[32] __int_3__;
 __int_3__ = retval_recursive();
 retval_ = 1;"""
 
@@ -456,7 +479,7 @@ def test_recursive_assigned_retval_python_type() -> None:
 def retval_recursive() -> int[32] {
     int[32] a;
     int[32] retval_;
-    int[32] __int_1__ = 0;
+    int[32] __int_1__;
     __int_1__ = retval_recursive();
     a = __int_1__;
     retval_ = 1;
@@ -464,7 +487,7 @@ def retval_recursive() -> int[32] {
 }
 int[32] a;
 int[32] retval_;
-int[32] __int_3__ = 0;
+int[32] __int_3__;
 __int_3__ = retval_recursive();
 a = __int_3__;
 retval_ = 1;"""
@@ -490,9 +513,9 @@ def test_recursive_retval_expression_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
-    int[32] __int_1__ = 0;
+    int[32] __int_1__;
     __int_1__ = retval_recursive();
-    int[32] __int_3__ = 0;
+    int[32] __int_3__;
     __int_3__ = retval_constant();
     return 2 * __int_1__ + (__int_3__ + 2) / 3;
 }
@@ -501,7 +524,7 @@ def retval_constant() -> int[32] {
     retval_ = 3;
     return retval_;
 }
-int[32] __int_4__ = 0;
+int[32] __int_4__;
 __int_4__ = retval_recursive();"""
 
     assert caller().to_ir() == expected_qasm
@@ -534,4 +557,66 @@ def test_error_for_missing_param_type() -> None:
         param_test(aq.BitVar(1))
 
     with pytest.raises(aq.errors.MissingParameterTypeError):
+        main()
+
+
+def test_ignore_ret_typehint_bool():
+    """Test type discovery of boolean return values."""
+
+    @aq.function
+    def ret_test() -> list[int]:
+        return True
+
+    @aq.function
+    def main() -> bool:
+        ret_test()
+
+    expected = """OPENQASM 3.0;
+def ret_test() -> bool {
+    bool retval_;
+    retval_ = true;
+    return retval_;
+}
+bool __bool_1__;
+__bool_1__ = ret_test();"""
+
+    assert main().to_ir() == expected
+
+
+def test_ignore_ret_typehint_list():
+    """Test type discovery of boolean return values."""
+
+    @aq.function
+    def ret_test() -> int:
+        return [1, 2, 3]
+
+    @aq.function(num_qubits=4)
+    def main() -> float:
+        ret_test()
+
+    expected = """OPENQASM 3.0;
+def ret_test() -> array[int[32], 10] {
+    array[int[32], 10] retval_;
+    retval_ = {1, 2, 3};
+    return retval_;
+}
+array[int[32], 10] __arr_1__ = {};
+qubit[4] __qubits__;
+__arr_1__ = ret_test();"""
+
+    assert main().to_ir() == expected
+
+
+def test_param_array_list_missing_arg():
+    """Test list parameter with missing type arg (list rather than list[int])."""
+
+    @aq.function
+    def param_test(arr: list) -> int:
+        return 1
+
+    @aq.function(num_qubits=4)
+    def main():
+        param_test()
+
+    with pytest.raises(aq.errors.ParameterTypeError):
         main()
