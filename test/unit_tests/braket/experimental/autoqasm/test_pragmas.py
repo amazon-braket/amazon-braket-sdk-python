@@ -24,7 +24,7 @@ def test_with_verbatim_box() -> None:
     def program_func() -> None:
         """User program to test."""
         h(0)
-        with aq.Verbatim():
+        with aq.verbatim():
             cnot(1, 2)
 
     expected = """OPENQASM 3.0;
