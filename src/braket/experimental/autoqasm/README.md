@@ -17,6 +17,17 @@ please continue to use the rest of the Amazon Braket Python SDK by following
 If you are interested in our active development efforts, and you are not
 afraid of a few bugs, please keep on reading!
 
+## Why AutoQASM?
+
+AutoQASM provides a Pythonic developer experience for writing quantum programs. The working title "AutoQASM" is derived from the name of the [AutoGraph component of TensorFlow](https://www.tensorflow.org/api_docs/python/tf/autograph). AutoQASM uses AutoGraph to construct quantum assembly (QASM) programs rather than TensorFlow graphs.
+
+AutoQASM is a Python library. It is not the same as [OpenQASM](https://openqasm.com), which is a common language for representing quantum programs. However, AutoQASM does support serializing quantum programs to OpenQASM, which allows the programs to interoperate with any library or service that supports OpenQASM programs, such as Amazon Braket. Although it is still a work in progress, the intent is that AutoQASM will support any quantum programming paradigm which falls into the OpenQASM 3.0 language scope. 
+
+AutoQASM provides a natural interface for expressing quantum programs with mid-circuit measurements and classical control flow using native Python language features. It allows the construction of modular programs consisting of common programming constructs such as loops and subroutines, and it preserves this modularity when serializing the program to OpenQASM. This enables a more imperative programming style than constructing programs via a series of function calls on a Circuit object.
+
+See the [Quick Start](#quick-start) section below, as well as the AutoQASM [example notebooks](../../../../examples/autoqasm), for examples of AutoQASM usage.
+
+
 ## Installation
 
 AutoQASM is an experimental module and is not yet part of the released Amazon Braket SDK.
