@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.53.3 (2023-08-08)
+
+### Bug Fixes and Other Changes
+
+ * fix a bug in time series and add trapezoidal time series
+
 ## v1.53.2 (2023-08-07)
 
 ### Bug Fixes and Other Changes
