@@ -1132,17 +1132,25 @@ class Circuit:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     @staticmethod
-    def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None) -> Circuit:
+    def from_ir(
+        source: Union[str, OpenQasmProgram], inputs: Optional[Dict[str, io_type]] = None
+    ) -> Circuit:
         """
         Converts an OpenQASM program to a Braket Circuit object.
 
         Args:
-            source (str): OpenQASM string.
+            source (Union[str, OpenQasmProgram]): OpenQASM string.
             inputs (Optional[Dict[str, io_type]]): Inputs to the circuit.
 
         Returns:
             Circuit: Braket Circuit implementing the OpenQASM program.
         """
+        if isinstance(source, OpenQasmProgram):
+            if inputs:
+                inputs_copy = source.inputs.copy() if source.inputs is not None else {}
+                inputs_copy.update(inputs)
+                inputs = inputs_copy
+            source = source.source
         from braket.circuits.braket_program_context import BraketProgramContext
 
         return Interpreter(BraketProgramContext()).build_circuit(

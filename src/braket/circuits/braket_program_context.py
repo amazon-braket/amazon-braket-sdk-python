@@ -147,5 +147,5 @@ class BraketProgramContext(AbstractProgramContext):
             otherwise wraps the symbolic expression as a `FreeParameterExpression`.
         """
         if isinstance(value, Expr):
-            return FreeParameterExpression(str(value))
+            return FreeParameterExpression(value)
         return value
