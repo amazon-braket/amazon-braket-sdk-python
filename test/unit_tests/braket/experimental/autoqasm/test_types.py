@@ -179,7 +179,7 @@ def test_return_none():
     assert ret_test().to_ir() == expected
 
 
-def test_return_array():
+def test_return_array_int():
     """Test return type discovery of array values."""
 
     @aq.function
@@ -204,7 +204,7 @@ __arr_1__ = ret_test();"""
 
 
 def test_return_python_array():
-    """Test returning a python array."""
+    """Test returning a python array of ints."""
 
     @aq.function
     def tester(arr: List[int]) -> List[int]:
@@ -224,6 +224,21 @@ array[int[32], 10] __arr_1__ = {};
 qubit[4] __qubits__;
 __arr_1__ = tester();"""
     assert main().to_ir() == expected
+
+
+def test_return_array_unsupported():
+    """Test unsupported array type."""
+
+    @aq.function
+    def tester(arr: List[float]) -> List[float]:
+        return [1.2, 2.1]
+
+    @aq.function(num_qubits=4)
+    def main():
+        tester([3.3])
+
+    with pytest.raises(aq.errors.ParameterTypeError):
+        assert main()
 
 
 def test_return_func_call():
@@ -528,6 +543,28 @@ int[32] __int_4__;
 __int_4__ = retval_recursive();"""
 
     assert caller().to_ir() == expected_qasm
+
+
+def test_recursive_list() -> None:
+    """Tests recursive subroutines which return a list."""
+
+    @aq.function
+    def retval_recursive() -> List[int]:
+        retval_recursive()
+        return [1]
+
+    assert "-> array[int[32], 10]" in retval_recursive().to_ir()
+
+
+def test_recursive_oqpy_type() -> None:
+    """Tests recursive subroutines which returns an oqpy type."""
+
+    @aq.function
+    def retval_recursive() -> aq.BitVar:
+        retval_recursive()
+        return aq.BitVar(0)
+
+    assert "-> bit" in retval_recursive().to_ir()
 
 
 def test_error_for_tuple_param() -> None:

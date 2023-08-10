@@ -46,16 +46,21 @@ def map_type(python_type: type) -> type:
     if issubclass(origin_type, list):
         if not type_args:
             raise errors.ParameterTypeError("Please supply a type argument to list.")
-        elif issubclass(type_args[0], (int, np.integer)):
-            # TODO: Update array length to match the input rather than hardcoding
-            # OQPY and QASM require arrays have a set length. python doesn't require this,
-            # so the length of the array is indeterminate.
-            # At this point we only have access to the _parameter_ (type hint), not the
-            # _argument_ (concrete value), which is the only place length information is stored
-            # Here's where the info is stored for oqpy variables:
-            # ctx = program.get_program_conversion_context()
-            # dims = ctx.get_oqpy_program().declared_vars[name_of_var].dimensions
-            return oqpy.ArrayVar[oqpy.IntVar, 10]
+
+        item_type = map_type(type_args[0])
+        if not item_type == oqpy.IntVar:
+            raise errors.ParameterTypeError(
+                f"Unsupported array type: {item_type}. AutoQASM arrays only support ints."
+            )
+        # TODO: Update array length to match the input rather than hardcoding
+        # OQPY and QASM require arrays have a set length. python doesn't require this,
+        # so the length of the array is indeterminate.
+        # At this point we only have access to the _parameter_ (type hint), not the
+        # _argument_ (concrete value), which is the only place length information is stored
+        # Here's where the info is stored for oqpy variables:
+        # ctx = program.get_program_conversion_context()
+        # dims = ctx.get_oqpy_program().declared_vars[name_of_var].dimensions
+        return oqpy.ArrayVar[oqpy.IntVar, 10]
     if issubclass(origin_type, tuple):
         raise TypeError(
             "Tuples are not supported as parameters to AutoQASM functions; "
