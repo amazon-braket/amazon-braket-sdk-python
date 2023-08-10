@@ -27,7 +27,7 @@ from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
 from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
-from braket.tasks.quantum_task_helper import _convert_to_sim_format
+from braket.tasks.quantum_task_helper import _convert_to_sim_format, _wrap_results
 
 _simulator_devices = {
     entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
@@ -95,7 +95,7 @@ class LocalSimulator(Device):
             execution_manager = self._delegate.execution_manager(*args, **kwargs)
             return LocalQuantumTask.create(execution_manager, *args, **kwargs)
         else:
-            result = self._delegate.run(*self.args, **self.kwargs)
+            result = _wrap_results(self._delegate.run(*args, **kwargs))
             return LocalQuantumTask(result)
 
     def run_batch(

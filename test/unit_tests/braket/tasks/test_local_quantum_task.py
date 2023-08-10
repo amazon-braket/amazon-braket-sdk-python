@@ -94,6 +94,40 @@ class DummyProgramSimulator(BraketSimulator):
         )
 
 
+class DummyProgramSimulatorWithoutExecutionManager(BraketSimulator):
+    def run(
+        self,
+        openqasm_ir: Program,
+        shots: int = 0,
+        batch_size: int = 1,
+    ) -> GateModelTaskResult:
+        return GATE_MODEL_RESULT
+
+    @property
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "00:00",
+                            "windowEndHour": "23:59:59",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.openqasm.program": {
+                        "actionType": "braket.ir.openqasm.program",
+                        "version": ["1"],
+                    }
+                },
+                "deviceParameters": {},
+            }
+        )
+
+
 class DummyProgramSleepSimulator(BraketSimulator):
     def run(
         self,
@@ -180,8 +214,11 @@ def test_result():
     assert result == RESULT
 
 
-def test_result_from_sim():
-    sim = LocalSimulator(DummyProgramSimulator())
+@pytest.mark.parametrize(
+    "simulator", [(DummyProgramSimulator()), (DummyProgramSimulatorWithoutExecutionManager())]
+)
+def test_result_from_sim(simulator):
+    sim = LocalSimulator(simulator)
     local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     result = local_quantum_task.result()
     assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
@@ -192,13 +229,6 @@ def test_exception_from_sim():
     local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     with pytest.raises(Exception, match="Catch in main thread"):
         local_quantum_task.result()
-
-
-def test_result_without_passing_in_result():
-    sim = LocalSimulator(DummyProgramSimulator())
-    local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    result = local_quantum_task.result()
-    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_running():
@@ -222,14 +252,8 @@ def test_cancel_task_without_result():
 
 def test_async():
     sim = LocalSimulator(DummyProgramSimulator())
-    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    assert isinstance(task.async_result(), asyncio.Task)
-
-
-def test_async_without_result():
-    sim = LocalSimulator(DummyProgramSimulator())
     local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
-    local_quantum_task.async_result()
+    assert isinstance(local_quantum_task.async_result(), asyncio.Task)
     local_quantum_task._thread.join()
     assert _wrap_results(
         local_quantum_task._task._result
