@@ -621,7 +621,7 @@ __bool_1__ = ret_test();"""
 
 
 def test_ignore_ret_typehint_list():
-    """Test type discovery of boolean return values."""
+    """Test type discovery of list return values."""
 
     @aq.function
     def ret_test() -> int:
