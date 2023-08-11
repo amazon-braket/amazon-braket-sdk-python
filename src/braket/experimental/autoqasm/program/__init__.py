@@ -15,7 +15,7 @@
 for AutoQASM.
 """
 
-from .pragmas import Verbatim  # noqa: F401
+from .pragmas import Verbatim as verbatim  # noqa: F401
 from .program import (  # noqa: F401
     Program,
     ProgramConversionContext,
