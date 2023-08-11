@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 
-"""Instructions that apply to qubits.
+"""Non-unitary instructions that apply to qubits.
 """
 
 

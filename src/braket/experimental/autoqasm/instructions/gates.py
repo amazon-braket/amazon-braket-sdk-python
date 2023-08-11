@@ -12,11 +12,12 @@
 # language governing permissions and limitations under the License.
 
 
-"""Quantum gates, which are applied to qubits. Some gates take parameters as arguments in addition
-to the qubits.
+"""Quantum gates, unitary instructions, that apply to qubits.
 """
+from inspect import Parameter, Signature
+from typing import Dict, Tuple
 
-from braket.experimental.autoqasm import instructions, program
+from braket.experimental.autoqasm import program
 
 from .qubits import _qubit
 
@@ -39,6 +40,28 @@ def define_gate(name: str, n_control: int, n_target: int, n_angle: int, descript
         oqpy_program = program.get_program_conversion_context().get_oqpy_program()
         oqpy_program.gate(qubits, name, *angles)
 
+    quantum_gate.__name__ = name
+    quantum_gate.__doc__ = _gate_doc(n_control, n_target, n_angle, description)
+
+    signature, annotations = _gate_annotations(n_control, n_target, n_angle)
+    quantum_gate.__annotations__ = annotations
+    quantum_gate.__signature__ = signature
+
+    globals()[name] = quantum_gate
+
+
+def _gate_doc(n_control: int, n_target: int, n_angle: int, description: str) -> str:
+    """Return docstring of the gate.
+
+    Args:
+        n_control (int): Number of control qubits.
+        n_target (int): Number of target qubits.
+        n_angle (int): Number of angles.
+        description (str): Description of the gate.
+
+    Returns:
+        str: docstring of the gate.
+    """
     gate_doc = description + "\n\n Args:"
     for i in range(n_control):
         gate_doc += f"\n\tcontrol_{i} (QubitIdentifierType): Control qubit {i}."
@@ -46,9 +69,44 @@ def define_gate(name: str, n_control: int, n_target: int, n_angle: int, descript
         gate_doc += f"\n\ttarget_{i} (QubitIdentifierType): Target qubit {i}."
     for i in range(n_angle):
         gate_doc += f"\n\tangle_{i} (float): Rotation angle {i} in radians."
-    quantum_gate.__doc__ = gate_doc
+    return gate_doc
 
-    setattr(instructions, name, quantum_gate)
+
+def _gate_annotations(n_control: int, n_target: int, n_angle: int) -> Tuple[Signature, Dict]:
+    """Return function signature and type annotations of the gate.
+
+    Args:
+        n_control (int): Number of control qubits.
+        n_target (int): Number of target qubits.
+        n_angle (int): Number of angles.
+
+    Returns:
+        Signature, dict: signature and type annotations of the gate.
+    """
+    parameters = []
+    annotations = {}
+
+    for i in range(n_control):
+        name = f"control_{i}"
+        parameters.append(
+            Parameter(name=name, annotation=int, kind=Parameter.POSITIONAL_OR_KEYWORD)
+        )
+        annotations[name] = int
+    for i in range(n_target):
+        name = f"target_{i}"
+        parameters.append(
+            Parameter(name=name, annotation=int, kind=Parameter.POSITIONAL_OR_KEYWORD)
+        )
+        annotations[name] = int
+    for i in range(n_angle):
+        name = f"angle_{i}"
+        parameters.append(
+            Parameter(name=name, annotation=float, kind=Parameter.POSITIONAL_OR_KEYWORD)
+        )
+        annotations[name] = float
+
+    signature = Signature(parameters)
+    return signature, annotations
 
 
 define_gate("h", 0, 1, 0, "Hadamard gate.")
