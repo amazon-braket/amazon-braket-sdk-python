@@ -71,6 +71,23 @@ def function(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_prog
         return _function_with_params
 
 
+def gate(*args) -> Callable[[Any], None]:
+    """Decorator that converts a function into a callable gate definition.
+
+    Returns:
+        Callable[[Any], None]: A callable which can be used as a custom gate inside an
+        aq.function or inside another aq.gate.
+    """
+    f = args[0]
+    if is_autograph_artifact(f):
+        return f
+
+    wrapper_factory = _convert_gate_wrapper()
+    wrapper = wrapper_factory(f)
+
+    return autograph_artifact(wrapper)
+
+
 def _function_without_params(
     f: Callable, user_config: aq_program.UserConfig
 ) -> Callable[[Any], aq_program.Program]:
@@ -88,7 +105,7 @@ def _function_without_params(
     if is_autograph_artifact(f):
         return f
 
-    wrapper_factory = _convert_wrapper(
+    wrapper_factory = _convert_program_wrapper(
         user_config=user_config,
         recursive=False,
     )
@@ -97,7 +114,7 @@ def _function_without_params(
     return autograph_artifact(wrapper)
 
 
-def _convert_wrapper(
+def _convert_program_wrapper(
     user_config: aq_program.UserConfig,
     recursive: bool = False,
     optional_features: Optional[Tuple[converter.Feature]] = None,
@@ -125,7 +142,7 @@ def _convert_wrapper(
     """
 
     def _decorator(f: Callable) -> Callable[[Any], aq_program.Program]:
-        """Decorator implementation."""
+        """aq.function decorator implementation."""
 
         def _wrapper(*args, **kwargs) -> Union[aq_program.Program, Optional[oqpy.base.Var]]:
             """Wrapper that calls the converted version of f."""
@@ -137,7 +154,27 @@ def _convert_wrapper(
                 user_requested=user_requested,
                 optional_features=optional_features,
             )
-            return _convert(f, conversion_ctx, options, user_config, args, kwargs)
+            return _convert_program(f, conversion_ctx, options, user_config, args, kwargs)
+
+        if inspect.isfunction(f) or inspect.ismethod(f):
+            _wrapper = functools.update_wrapper(_wrapper, f)
+
+        decorated_wrapper = tf_decorator.make_decorator(f, _wrapper)
+        return autograph_artifact(decorated_wrapper)
+
+    return _decorator
+
+
+def _convert_gate_wrapper(
+    conversion_ctx: Optional[ag_ctx.ControlStatusCtx] = ag_ctx.NullCtx(),
+) -> Callable:
+    def _decorator(f: Callable) -> Callable[[Any], None]:
+        """aq.gate decorator implementation."""
+
+        def _wrapper(*args, **kwargs) -> Callable:
+            """Wrapper that calls the converted version of f."""
+            options = converter.ConversionOptions()
+            return _convert_gate(f, conversion_ctx, options)
 
         if inspect.isfunction(f) or inspect.ismethod(f):
             _wrapper = functools.update_wrapper(_wrapper, f)
@@ -165,7 +202,15 @@ def _validate_subroutine_args(user_config: aq_program.UserConfig) -> None:
         raise errors.InconsistentNumQubits()
 
 
-def _convert(
+def _convert_gate(
+    f: Callable,
+    conversion_ctx: ag_ctx.ControlStatusCtx,
+    options: converter.ConversionOptions,
+) -> Callable:
+    pass
+
+
+def _convert_program(
     f: Callable,
     conversion_ctx: ag_ctx.ControlStatusCtx,
     options: converter.ConversionOptions,
