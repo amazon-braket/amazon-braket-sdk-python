@@ -20,7 +20,7 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
-from braket.experimental.autoqasm.gates import cnot, h, measure, x
+from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 
 
 @pytest.fixture

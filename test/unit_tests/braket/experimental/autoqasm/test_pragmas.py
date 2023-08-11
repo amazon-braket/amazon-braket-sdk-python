@@ -14,7 +14,7 @@
 """Tests for pragmas."""
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.gates import cnot, h
+from braket.experimental.autoqasm.instructions import cnot, h
 
 
 def test_with_verbatim_box() -> None:
