@@ -27,7 +27,11 @@ from braket.tasks import (
     QuantumTaskBatch,
 )
 from braket.tasks.local_quantum_task import LocalQuantumTask
-from braket.tasks.quantum_task_helper import _batch_tasks_and_inputs, _convert_to_sim_format
+from braket.tasks.quantum_task_helper import (
+    _batch_tasks_and_inputs,
+    _convert_to_sim_format,
+    _wrap_results,
+)
 
 
 class LocalQuantumTaskBatch(QuantumTaskBatch):
@@ -124,23 +128,38 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
         execution_managers = []
         for task, inp in tasks_and_inputs:
             args_ = _convert_to_sim_format(task, delegate, shots, inputs=inp) + list(args)
-            execution_managers.append(delegate.execution_manager(*args_, **kwargs))
+            try:
+                execution_managers.append(delegate.execution_manager(*args_, **kwargs))
+            except AttributeError:
+                execution_managers.append([args_, kwargs])
 
         with ThreadPoolExecutor(max_workers=min(max_parallel, len(execution_managers))) as executor:
-            task_futures = [
-                executor.submit(
-                    LocalQuantumTask.create,
-                    execution_manager,
-                    *args,
-                    **kwargs,
-                )
-                for execution_manager in execution_managers
-            ]
+            if hasattr(delegate, "execution_manager"):
+                task_futures = [
+                    executor.submit(
+                        LocalQuantumTask.create,
+                        execution_manager,
+                        *args,
+                        **kwargs,
+                    )
+                    for execution_manager in execution_managers
+                ]
 
-        tasks = [future.result() for future in task_futures]
-        local_quantum_task_batch = LocalQuantumTaskBatch()
-        local_quantum_task_batch._tasks = tasks
-        return local_quantum_task_batch
+                tasks = [future.result() for future in task_futures]
+                local_quantum_task_batch = LocalQuantumTaskBatch()
+                local_quantum_task_batch._tasks = tasks
+                return local_quantum_task_batch
+            else:
+                task_futures = [
+                    executor.submit(
+                        delegate.run,
+                        *args_,
+                        **kwargs,
+                    )
+                    for args_, kwargs in execution_managers
+                ]
+                results = [_wrap_results(future.result()) for future in task_futures]
+                return LocalQuantumTaskBatch(results)
 
     def results(
         self,

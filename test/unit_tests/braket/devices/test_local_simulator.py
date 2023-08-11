@@ -120,9 +120,6 @@ class DummyCircuitSimulator(BraketSimulator):
         self._qubits = qubits
         return GATE_MODEL_RESULT
 
-    def execution_manager(self, *args, **kwargs):
-        return LocalExecutionManager(self, *args, **kwargs)
-
     @property
     def properties(self) -> DeviceCapabilities:
         return DeviceCapabilities.parse_obj(
@@ -161,9 +158,6 @@ class DummyJaqcdSimulator(BraketSimulator):
         self._shots = shots
         self._qubits = qubits
         return GATE_MODEL_RESULT
-
-    def execution_manager(self, *args, **kwargs):
-        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -205,6 +199,40 @@ class DummyProgramSimulator(BraketSimulator):
     ) -> GateModelTaskResult:
         return GATE_MODEL_RESULT
 
+    @property
+    def properties(self) -> DeviceCapabilities:
+        return DeviceCapabilities.parse_obj(
+            {
+                "service": {
+                    "executionWindows": [
+                        {
+                            "executionDay": "Everyday",
+                            "windowStartHour": "00:00",
+                            "windowEndHour": "23:59:59",
+                        }
+                    ],
+                    "shotsRange": [1, 10],
+                },
+                "action": {
+                    "braket.ir.openqasm.program": {
+                        "actionType": "braket.ir.openqasm.program",
+                        "version": ["1"],
+                    }
+                },
+                "deviceParameters": {},
+            }
+        )
+
+
+class DummyProgramSimulatorWithExecutionManager(BraketSimulator):
+    def run(
+        self,
+        openqasm_ir: Program,
+        shots: int = 0,
+        batch_size: int = 1,
+    ) -> GateModelTaskResult:
+        return GATE_MODEL_RESULT
+
     def execution_manager(self, *args, **kwargs):
         return LocalExecutionManager(self, *args, **kwargs)
 
@@ -237,9 +265,6 @@ class DummyAnnealingSimulator(BraketSimulator):
     def run(self, problem: ir.annealing.Problem, *args, **kwargs) -> AnnealingTaskResult:
         return ANNEALING_RESULT
 
-    def execution_manager(self, *args, **kwargs):
-        return LocalExecutionManager(self, *args, **kwargs)
-
     @property
     def properties(self) -> DeviceCapabilities:
         return DeviceCapabilities.parse_obj(
@@ -270,9 +295,6 @@ class DummyRydbergSimulator(BraketSimulator):
         self, program: AnalogHamiltonianSimulation, *args, **kwargs
     ) -> AnalogHamiltonianSimulationTaskResult:
         return AHS_RESULT
-
-    def execution_manager(self, *args, **kwargs):
-        return LocalExecutionManager(self, *args, **kwargs)
 
     @property
     def properties(self) -> DeviceCapabilities:
@@ -365,8 +387,11 @@ def test_batch_with_annealing_problems():
         assert x == AnnealingQuantumTaskResult.from_object(ANNEALING_RESULT)
 
 
-def test_batch_circuit_without_inputs():
-    dummy = DummyProgramSimulator()
+@pytest.mark.parametrize(
+    "simulator", [(DummyProgramSimulator()), (DummyProgramSimulatorWithExecutionManager())]
+)
+def test_batch_circuit_without_inputs(simulator):
+    dummy = simulator
     bell = Circuit().h(0).cnot(0, 1)
     device = LocalSimulator(dummy)
     num_tasks = 10
@@ -377,8 +402,11 @@ def test_batch_circuit_without_inputs():
         assert x == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_batch_circuit_with_unbound_parameters():
-    dummy = DummyProgramSimulator()
+@pytest.mark.parametrize(
+    "simulator", [(DummyProgramSimulator()), (DummyProgramSimulatorWithExecutionManager())]
+)
+def test_batch_circuit_with_unbound_parameters(simulator):
+    dummy = simulator
     device = LocalSimulator(dummy)
     theta = FreeParameter("theta")
     task = Circuit().rx(angle=theta, target=0)
@@ -388,8 +416,11 @@ def test_batch_circuit_with_unbound_parameters():
         device.run_batch(task, inputs=inputs, shots=10)
 
 
-def test_batch_circuit_with_single_task():
-    dummy = DummyProgramSimulator()
+@pytest.mark.parametrize(
+    "simulator", [(DummyProgramSimulator()), (DummyProgramSimulatorWithExecutionManager())]
+)
+def test_batch_circuit_with_single_task(simulator):
+    dummy = simulator
     bell = Circuit().h(0).cnot(0, 1)
     device = LocalSimulator(dummy)
     batch = device.run_batch(bell, shots=10)
@@ -397,8 +428,11 @@ def test_batch_circuit_with_single_task():
     assert batch.results()[0] == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_batch_circuit_with_task_and_input_mismatch():
-    dummy = DummyProgramSimulator()
+@pytest.mark.parametrize(
+    "simulator", [(DummyProgramSimulator()), (DummyProgramSimulatorWithExecutionManager())]
+)
+def test_batch_circuit_with_task_and_input_mismatch(simulator):
+    dummy = simulator
     bell = Circuit().h(0).cnot(0, 1)
     device = LocalSimulator(dummy)
     num_tasks = 10
@@ -413,7 +447,7 @@ def test_run_gate_model_inputs():
     dummy.run = Mock(return_value=GATE_MODEL_RESULT)
     sim = LocalSimulator(dummy)
     circuit = Circuit().rx(0, FreeParameter("theta"))
-    result = sim.run(circuit, inputs={"theta": 2}, shots=10).result()
+    task = sim.run(circuit, inputs={"theta": 2}, shots=10)
     dummy.run.assert_called_with(
         Program(
             source="\n".join(
@@ -430,11 +464,14 @@ def test_run_gate_model_inputs():
         ),
         10,
     )
-    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-def test_run_program_model_inputs():
-    dummy = DummyProgramSimulator()
+@pytest.mark.parametrize(
+    "simulator", [(DummyProgramSimulator()), (DummyProgramSimulatorWithExecutionManager())]
+)
+def test_run_program_model_inputs(simulator):
+    dummy = simulator
     dummy.run = Mock(return_value=GATE_MODEL_RESULT)
     sim = LocalSimulator(dummy)
     inputs = {"theta": 2}
@@ -448,20 +485,20 @@ def test_run_program_model_inputs():
     )
     program = Program.construct(source="\n".join(source_string), inputs=inputs)
     update_inputs = {"beta": 3}
-    result = sim.run(program, inputs=update_inputs, shots=10).result()
+    task = sim.run(program, inputs=update_inputs, shots=10)
     assert program.inputs == inputs
     program.inputs.update(update_inputs)
     dummy.run.assert_called_with(program, 10)
-    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_jaqcd_only():
     dummy = DummyJaqcdSimulator()
     sim = LocalSimulator(dummy)
-    result = sim.run(Circuit().h(0).cnot(0, 1), 10).result()
+    task = sim.run(Circuit().h(0).cnot(0, 1), 10)
     dummy.assert_shots(10)
     dummy.assert_qubits(2)
-    assert result == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
+    assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
 def test_run_program_model():
