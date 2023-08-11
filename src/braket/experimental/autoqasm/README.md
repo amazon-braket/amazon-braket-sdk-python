@@ -7,15 +7,24 @@ for developing quantum programs.
 
 All of the code in the `experimental` module is _experimental_ software. We may change, remove, or
 deprecate parts of the AutoQASM API without notice. The name AutoQASM is a working title and is
-also subject to change. The name is inspired by the
-[AutoGraph module of TensorFlow](https://www.tensorflow.org/api_docs/python/tf/autograph),
-which we have used as a foundation for this project.
+also subject to change.
 
 For a fully supported quantum developer experience,
 please continue to use the rest of the Amazon Braket Python SDK by following
 [these instructions](https://github.com/aws/amazon-braket-sdk-python#installing-the-amazon-braket-python-sdk).
 If you are interested in our active development efforts, and you are not
 afraid of a few bugs, please keep on reading!
+
+## Why AutoQASM?
+
+AutoQASM provides a Pythonic developer experience for writing quantum programs. The working title "AutoQASM" is derived from the name of the [AutoGraph module of TensorFlow](https://www.tensorflow.org/api_docs/python/tf/autograph). AutoQASM uses AutoGraph to construct quantum assembly (QASM) programs rather than TensorFlow graphs.
+
+AutoQASM provides a natural interface for expressing quantum programs with mid-circuit measurements and classical control flow using native Python language features. It allows the construction of modular programs consisting of common programming constructs such as loops and subroutines, and it preserves this modularity when serializing the program to OpenQASM. This enables a more imperative programming style than constructing programs via a series of function calls on a circuit object.
+
+Although it is still a work in progress, the intent is that AutoQASM will support any quantum programming paradigm which falls into the [OpenQASM 3.0](https://openqasm.com) language scope. AutoQASM supports serializing quantum programs to OpenQASM, which allows the programs to interoperate with any library or service that supports OpenQASM programs, such as Amazon Braket.
+
+See the [Quick Start](#quick-start) section below, as well as the AutoQASM [example notebooks](../../../../examples/autoqasm), for examples of AutoQASM usage.
+
 
 ## Installation
 
