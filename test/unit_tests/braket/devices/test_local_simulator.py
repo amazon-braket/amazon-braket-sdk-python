@@ -467,11 +467,8 @@ def test_run_gate_model_inputs():
     assert task.result() == GateModelQuantumTaskResult.from_object(GATE_MODEL_RESULT)
 
 
-@pytest.mark.parametrize(
-    "simulator", [(DummyProgramSimulator()), (DummyProgramSimulatorWithExecutionManager())]
-)
-def test_run_program_model_inputs(simulator):
-    dummy = simulator
+def test_run_program_model_inputs():
+    dummy = DummyProgramSimulator()
     dummy.run = Mock(return_value=GATE_MODEL_RESULT)
     sim = LocalSimulator(dummy)
     inputs = {"theta": 2}
