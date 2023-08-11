@@ -12,17 +12,7 @@
 # language governing permissions and limitations under the License.
 
 
-"""Instructions that apply to qubits, including quantum gates, reset and measure.
-
-Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
-
-.. code-block:: python
-
-    @aq.function
-    def bell():
-        h(0)
-        cnot(0, 1)
-        measure([0, 1])
+"""Instructions that apply to qubits.
 """
 
 
