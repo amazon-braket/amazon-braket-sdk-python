@@ -71,6 +71,7 @@ def test_sub_wrong_param(free_parameter):
         "q",
         "bit",
         "qubit",
+        "_a",
         "\u03B8",
         "a\u03B8",
         "a123",
@@ -88,7 +89,6 @@ def test_valid_names(name):
     (
         "",
         "1",
-        "_a",
         "__a",
         "!",
         "\u33B8",

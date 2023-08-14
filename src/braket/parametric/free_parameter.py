@@ -13,10 +13,9 @@
 
 from __future__ import annotations
 
-from unicodedata import category
-
 from numbers import Number
 from typing import Dict, Union
+from unicodedata import category
 
 from sympy import Symbol
 
@@ -45,7 +44,9 @@ class FreeParameter(FreeParameterExpression):
         Initializes a new :class:'FreeParameter' object.
 
         Args:
-            name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
+            name (str): Name of the :class:'FreeParameter'. Must begin with a letter [A-Za-z],
+                an underscore or an element from the Unicode character categories Lu/Ll/Lt/Lm/Lo/Nl.
+                May not begin with two underscores '__'.
 
         Examples:
             >>> param1 = FreeParameter("theta")
@@ -103,15 +104,20 @@ class FreeParameter(FreeParameterExpression):
         }
 
     @staticmethod
-    def _validate_name(name):
+    def _validate_name(name: str) -> None:
         if not name:
             raise ValueError("Symbol names must be non empty")
-        unicode_category = category(name[0])
-        if not unicode_category:
-            raise ValueError("Symbol names must start with a valid character")
-        if not unicode_category.startswith("L") and unicode_category != "Nl":
-            raise ValueError("Symbol names must start with a letter")
-
+        if not isinstance(name, str):
+            raise TypeError("Symbol name must be a string")
+        if name.startswith("_"):
+            if name.startswith("__"):
+                raise ValueError("Symbol names must not start with two underscores '__'")
+        else:
+            unicode_category = category(name[0])
+            if not unicode_category:
+                raise ValueError("Symbol names must start with a valid character")
+            if not unicode_category.startswith("L") and unicode_category != "Nl":
+                raise ValueError("Symbol names must start with a letter or underscore")
 
     @classmethod
     def from_dict(cls, parameter: dict) -> FreeParameter:

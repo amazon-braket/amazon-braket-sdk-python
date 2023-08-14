@@ -679,12 +679,12 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] b;",
-                        "qubit[2] q;",
-                        "rx(0.15) q[0];",
-                        "rx(0.3) q[1];",
-                        "b[0] = measure q[0];",
-                        "b[1] = measure q[1];",
+                        "bit[2] __bits__;",
+                        "qubit[2] __qubits__;",
+                        "rx(0.15) __qubits__[0];",
+                        "rx(0.3) __qubits__[1];",
+                        "__bits__[0] = measure __qubits__[0];",
+                        "__bits__[1] = measure __qubits__[1];",
                     ]
                 ),
                 inputs={},
@@ -697,11 +697,11 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] b;",
+                        "bit[2] __bits__;",
                         "rx(0.15) $0;",
                         "rx(0.3) $4;",
-                        "b[0] = measure $0;",
-                        "b[1] = measure $4;",
+                        "__bits__[0] = measure $0;",
+                        "__bits__[1] = measure $4;",
                     ]
                 ),
                 inputs={},
@@ -739,11 +739,11 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[5] q;",
-                        "rx(0.15) q[0];",
-                        "rx(0.3) q[4];",
-                        "#pragma braket noise bit_flip(0.2) q[3]",
-                        "#pragma braket result expectation i(q[0])",
+                        "qubit[5] __qubits__;",
+                        "rx(0.15) __qubits__[0];",
+                        "rx(0.3) __qubits__[4];",
+                        "#pragma braket noise bit_flip(0.2) __qubits__[3]",
+                        "#pragma braket result expectation i(__qubits__[0])",
                     ]
                 ),
                 inputs={},
@@ -757,12 +757,12 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "input float theta;",
-                        "bit[2] b;",
-                        "qubit[2] q;",
-                        "rx(0.15) q[0];",
-                        "rx(theta) q[1];",
-                        "b[0] = measure q[0];",
-                        "b[1] = measure q[1];",
+                        "bit[2] __bits__;",
+                        "qubit[2] __qubits__;",
+                        "rx(0.15) __qubits__[0];",
+                        "rx(theta) __qubits__[1];",
+                        "__bits__[0] = measure __qubits__[0];",
+                        "__bits__[1] = measure __qubits__[1];",
                     ]
                 ),
                 inputs={},
@@ -778,16 +778,16 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[5] b;",
-                        "qubit[5] q;",
-                        "negctrl @ rx(0.15) q[2], q[0];",
-                        "ctrl(2) @ rx(0.3) q[2], q[3], q[1];",
-                        "ctrl(2) @ cnot q[2], q[3], q[4], q[0];",
-                        "b[0] = measure q[0];",
-                        "b[1] = measure q[1];",
-                        "b[2] = measure q[2];",
-                        "b[3] = measure q[3];",
-                        "b[4] = measure q[4];",
+                        "bit[5] __bits__;",
+                        "qubit[5] __qubits__;",
+                        "negctrl @ rx(0.15) __qubits__[2], __qubits__[0];",
+                        "ctrl(2) @ rx(0.3) __qubits__[2], __qubits__[3], __qubits__[1];",
+                        "ctrl(2) @ cnot __qubits__[2], __qubits__[3], __qubits__[4], __qubits__[0];",  # noqa
+                        "__bits__[0] = measure __qubits__[0];",
+                        "__bits__[1] = measure __qubits__[1];",
+                        "__bits__[2] = measure __qubits__[2];",
+                        "__bits__[3] = measure __qubits__[3];",
+                        "__bits__[4] = measure __qubits__[4];",
                     ]
                 ),
                 inputs={},
@@ -800,18 +800,18 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[7] b;",
-                        "qubit[7] q;",
-                        "cnot q[0], q[1];",
-                        "cnot q[3], q[2];",
-                        "ctrl @ cnot q[5], q[6], q[4];",
-                        "b[0] = measure q[0];",
-                        "b[1] = measure q[1];",
-                        "b[2] = measure q[2];",
-                        "b[3] = measure q[3];",
-                        "b[4] = measure q[4];",
-                        "b[5] = measure q[5];",
-                        "b[6] = measure q[6];",
+                        "bit[7] __bits__;",
+                        "qubit[7] __qubits__;",
+                        "cnot __qubits__[0], __qubits__[1];",
+                        "cnot __qubits__[3], __qubits__[2];",
+                        "ctrl @ cnot __qubits__[5], __qubits__[6], __qubits__[4];",
+                        "__bits__[0] = measure __qubits__[0];",
+                        "__bits__[1] = measure __qubits__[1];",
+                        "__bits__[2] = measure __qubits__[2];",
+                        "__bits__[3] = measure __qubits__[3];",
+                        "__bits__[4] = measure __qubits__[4];",
+                        "__bits__[5] = measure __qubits__[5];",
+                        "__bits__[6] = measure __qubits__[6];",
                     ]
                 ),
                 inputs={},
@@ -824,11 +824,11 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] b;",
-                        "qubit[1] q;",
-                        "inv @ pow(2.5) @ h q[0];",
-                        "pow(0) @ h q[0];",
-                        "b[0] = measure q[0];",
+                        "bit[1] __bits__;",
+                        "qubit[1] __qubits__;",
+                        "inv @ pow(2.5) @ h __qubits__[0];",
+                        "pow(0) @ h __qubits__[0];",
+                        "__bits__[0] = measure __qubits__[0];",
                     ]
                 ),
                 inputs={},
@@ -3024,7 +3024,7 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
     ).source == "\n".join(
         [
             "OPENQASM 3.0;",
-            "bit[2] b;",
+            "bit[2] __bits__;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(1000000.0ns, 700000000.0ns, 1, false);",
@@ -3046,8 +3046,8 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
             "    play(predefined_frame_1, drag_gauss_wf_2);",
             "}",
             "h $1;",
-            "b[0] = measure $0;",
-            "b[1] = measure $1;",
+            "__bits__[0] = measure $0;",
+            "__bits__[1] = measure $1;",
         ]
     )
 
@@ -3141,7 +3141,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
         [
             "OPENQASM 3.0;",
             "input float frequency;",
-            "bit[2] b;",
+            "bit[2] __bits__;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(10000.0ns, 700000000.0ns, 1, false);",
@@ -3151,8 +3151,8 @@ def test_parametrized_pulse_circuit(user_defined_frame):
             "    set_frequency(user_defined_frame_0, frequency);",
             "    play(user_defined_frame_0, gauss_wf);",
             "}",
-            "b[0] = measure $0;",
-            "b[1] = measure $1;",
+            "__bits__[0] = measure $0;",
+            "__bits__[1] = measure $1;",
         ]
     )
 
@@ -3166,7 +3166,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
     ).source == "\n".join(
         [
             "OPENQASM 3.0;",
-            "bit[2] b;",
+            "bit[2] __bits__;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(10000.0ns, 700000000.0ns, 1, false);",
@@ -3176,8 +3176,8 @@ def test_parametrized_pulse_circuit(user_defined_frame):
             "    set_frequency(user_defined_frame_0, 10000000.0);",
             "    play(user_defined_frame_0, gauss_wf);",
             "}",
-            "b[0] = measure $0;",
-            "b[1] = measure $1;",
+            "__bits__[0] = measure $0;",
+            "__bits__[1] = measure $1;",
         ]
     )
 
