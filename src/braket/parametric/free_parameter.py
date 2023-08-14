@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+from unicodedata import category
+
 from numbers import Number
 from typing import Dict, Union
 
@@ -49,6 +51,7 @@ class FreeParameter(FreeParameterExpression):
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
+        FreeParameter._validate_name(name)
         self._name = Symbol(name)
         super().__init__(expression=self._name)
 
@@ -98,6 +101,17 @@ class FreeParameter(FreeParameterExpression):
             "__class__": self.__class__.__name__,
             "name": self.name,
         }
+
+    @staticmethod
+    def _validate_name(name):
+        if not name:
+            raise ValueError("Symbol names must be non empty")
+        unicode_category = category(name[0])
+        if not unicode_category:
+            raise ValueError("Symbol names must start with a valid character")
+        if not unicode_category.startswith("L") and unicode_category != "Nl":
+            raise ValueError("Symbol names must start with a letter")
+
 
     @classmethod
     def from_dict(cls, parameter: dict) -> FreeParameter:
