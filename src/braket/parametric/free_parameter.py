@@ -47,12 +47,12 @@ class FreeParameter(FreeParameterExpression):
             name (str): Name of the :class:'FreeParameter'. Must begin with a letter [A-Za-z],
                 an underscore or an element from the Unicode character categories Lu/Ll/Lt/Lm/Lo/Nl.
                 Must not begin with two underscores '__'. May contain numbers [0-9] after the
-                first characeter.
+                first character.
 
         Examples:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
-            >>> param1 = FreeParameter("a1")
+            >>> param1 = FreeParameter("a1b2")
         """
         FreeParameter._validate_name(name)
         self._name = Symbol(name)
