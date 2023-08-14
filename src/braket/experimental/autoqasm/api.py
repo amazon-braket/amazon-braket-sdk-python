@@ -174,7 +174,7 @@ def _convert_gate_wrapper(
         def _wrapper(*args, **kwargs) -> Callable:
             """Wrapper that calls the converted version of f."""
             options = converter.ConversionOptions()
-            return _convert_gate(f, conversion_ctx, options)
+            return _convert_gate(f, conversion_ctx, options, args, kwargs)
 
         if inspect.isfunction(f) or inspect.ismethod(f):
             _wrapper = functools.update_wrapper(_wrapper, f)
@@ -200,14 +200,6 @@ def _validate_subroutine_args(user_config: aq_program.UserConfig) -> None:
     # Allow num_qubits only if the arg matches the value provided to the main function
     if user_config.num_qubits != aq_program.get_program_conversion_context().get_declared_qubits():
         raise errors.InconsistentNumQubits()
-
-
-def _convert_gate(
-    f: Callable,
-    conversion_ctx: ag_ctx.ControlStatusCtx,
-    options: converter.ConversionOptions,
-) -> Callable:
-    pass
 
 
 def _convert_program(
@@ -363,6 +355,44 @@ def _convert_program_as_subroutine(
         and subroutine_function_call.subroutine_decl is not None
     ):
         root_oqpy_program._add_subroutine(subroutine_name, subroutine_function_call.subroutine_decl)
+
+
+def _convert_gate(
+    f: Callable,
+    conversion_ctx: ag_ctx.ControlStatusCtx,
+    options: converter.ConversionOptions,
+    args: List[Any],
+    kwargs: Dict[str, Any],
+) -> Callable:
+    # We must be inside an active conversion context in order to invoke a gate
+    program_conversion_context = aq_program.get_program_conversion_context()
+
+    try:
+        with conversion_ctx:
+            # Convert the function via autograph into an oqpy gate definition
+            # NOTE: Process a clone of the function so that we don't modify the original object
+            # TODO- oqpy_gate = oqpy.gate(_wrap_for_oqpy_gate(_clone_function(f), options))
+
+            # Process the gate definition
+            # TODO- gate_call = oqpy_gate(oqpy_program, *args, **kwargs)
+
+            # Add the gate invocation to the program
+            # TODO
+
+            # Add the gate definition to the root-level program if necessary
+            root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+            assert root_oqpy_program  # TEMP
+            # TODO
+            # gate_name = gate_call.identifier.name
+            # if gate_name not in root_oqpy_program.gates and gate_call.gate_decl is not None:
+            #     root_oqpy_program._add_gate(gate_name, gate_call.gate_decl)
+    except Exception as e:
+        if isinstance(e, errors.AutoQasmError):
+            raise
+        elif hasattr(e, "ag_error_metadata"):
+            raise e.ag_error_metadata.to_exception(e)
+        else:
+            raise
 
 
 def _make_return_instance_from_oqpy_return_type(return_type) -> Any:
