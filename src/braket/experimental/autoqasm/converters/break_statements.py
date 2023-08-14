@@ -24,7 +24,7 @@ from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 class BreakValidator(converter.Base):
     def visit_Break(self, node: ast.stmt) -> ast.stmt:
         """Break statements are currently unsupported."""
-        raise errors.UnsupportedFeature("Break statements are currently unsupported.")
+        raise errors.UnsupportedFeatureError("Break statements are currently unsupported.")
 
 
 def transform(
