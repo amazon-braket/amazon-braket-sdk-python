@@ -88,10 +88,7 @@ def test_valid_names(name):
     "name",
     (
         "",
-        "1",
         "__a",
-        "!",
-        "\u33B8",
     ),
 )
 def test_invalid_names(name):

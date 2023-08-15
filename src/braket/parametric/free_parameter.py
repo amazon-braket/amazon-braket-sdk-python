@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from numbers import Number
 from typing import Dict, Union
-from unicodedata import category
 
 from sympy import Symbol
 
@@ -44,15 +43,12 @@ class FreeParameter(FreeParameterExpression):
         Initializes a new :class:'FreeParameter' object.
 
         Args:
-            name (str): Name of the :class:'FreeParameter'. Must begin with a letter [A-Za-z],
-                an underscore or an element from the Unicode character categories Lu/Ll/Lt/Lm/Lo/Nl.
-                Must not begin with two underscores '__'. May contain numbers [0-9] after the
-                first character.
+            name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
+                Must not start with '__'.
 
         Examples:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
-            >>> param1 = FreeParameter("a1b2Ï")
         """
         FreeParameter._validate_name(name)
         self._name = Symbol(name)
@@ -111,13 +107,8 @@ class FreeParameter(FreeParameterExpression):
             raise ValueError("FreeParameter names must be non empty")
         if not isinstance(name, str):
             raise TypeError("FreeParameter name must be a string")
-        if name.startswith("_"):
-            if name.startswith("__"):
-                raise ValueError("FreeParameter names must not start with two underscores '__'")
-        else:
-            uni_category = category(name[0])
-            if not uni_category or (not uni_category.startswith("L") and uni_category != "Nl"):
-                raise ValueError("FreeParameter names must start with a letter or underscore")
+        if name.startswith("__"):
+            raise ValueError("FreeParameter names must not start with two underscores '__'")
 
     @classmethod
     def from_dict(cls, parameter: dict) -> FreeParameter:
