@@ -208,6 +208,13 @@ def test_state():
     assert task.state() == "CREATED"
 
 
+def test_id():
+    sim = LocalSimulator(DummyProgramSimulator())
+    local_quantum_task = sim.run(Circuit().h(0).cnot(0, 1), 10)
+    with pytest.raises(NotImplementedError, match="Id is not generated for LocalQuantumTask"):
+        local_quantum_task.id()
+
+
 def test_result():
     task = LocalQuantumTask(RESULT)
     result = task.result()
