@@ -373,22 +373,21 @@ def _convert_gate(
         with conversion_ctx:
             # Convert the function via autograph into an oqpy gate definition
             # NOTE: Process a clone of the function so that we don't modify the original object
-            # TODO- oqpy_gate = oqpy.gate(_wrap_for_oqpy_gate(_clone_function(f), options))
-            gate_name = f.__name__
+            wrapped_f, qubit_indices, angle_indices, qubit_names, angle_names = _wrap_for_oqpy_gate(
+                _clone_function(f), options
+            )
 
             # Process the gate definition
-            # TODO- gate_call = oqpy_gate(oqpy_program, *args, **kwargs)
-            q = oqpy.Qubit("q", needs_declaration=False)  # TODO: base this on # of qubit args
-            with oqpy.gate(oqpy_program, q, gate_name):
-                # TODO: pass the oqpy Qubit objects here instead of the qubits from *args
-                # TODO: pass the oqpy AngleVar objects here instead of the values from *args
-                f(*args, **kwargs)
+            qubits = [oqpy.Qubit(name, needs_declaration=False) for name in qubit_names]
+            angles = [oqpy.AngleVar(name=name) for name in angle_names]
+            gate_name = f.__name__
+            with oqpy.gate(oqpy_program, qubits, gate_name, angles):
+                wrapped_f(qubits, *angles)
 
             # Add the gate invocation to the program
-            # TODO
-            target = args[0]  # TODO
-            gate_args = args[1:]  # TODO
-            aq_gates.custom(gate_name, [target], *gate_args)
+            qubit_args = [args[i] for i in qubit_indices]
+            angle_args = [args[i] for i in angle_indices]
+            aq_gates.custom(gate_name, qubit_args, *angle_args)
 
             # Add the gate definition to the root-level program if necessary
             # TODO - this is actually necessary! if a gate is called from a subroutine
@@ -540,3 +539,50 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 
     _func.__signature__ = sig.replace(parameters=new_params)
     return _func
+
+
+def _wrap_for_oqpy_gate(
+    f: Callable, options: converter.ConversionOptions
+) -> Tuple[Callable[[List[oqpy.Qubit], Any], None], List[int], List[int], List[str], List[str]]:
+    qubit_indices = []
+    qubit_names = []
+    angle_indices = []
+    angle_names = []
+    sig = inspect.signature(f)
+    for i, param in enumerate(sig.parameters.values()):
+        if param.annotation is param.empty:
+            raise errors.MissingParameterTypeError(
+                f'Parameter "{param.name}" for gate "{f.__name__}" '
+                "is missing a required type hint."
+            )
+
+        if param.annotation == aq_gates.QubitIdentifierType:
+            qubit_indices.append(i)
+            qubit_names.append(param.name)
+        elif param.annotation in [float, aq_types.FloatVar]:
+            angle_indices.append(i)
+            angle_names.append(param.name)
+        else:
+            raise errors.ParameterTypeError(
+                f'Parameter "{param.name}" for gate "{f.__name__}" '
+                "must have a type hint of either aq.qubit or float."
+            )
+
+    def _func(qubits: List[oqpy.Qubit], *args: Any) -> None:
+        q = qubits.copy()
+        a = list(args).copy() if args else []
+        f_args = []
+        while q or a:
+            i = len(f_args)
+            if i in qubit_indices:
+                f_args.append(q.pop(0))
+            elif i in angle_indices:
+                f_args.append(a.pop(0))
+            else:
+                raise errors.ParameterTypeError(
+                    f"Incorrect number of parameters passed to {f.__name__}"
+                )
+
+        f(*f_args)
+
+    return _func, qubit_indices, angle_indices, qubit_names, angle_names
