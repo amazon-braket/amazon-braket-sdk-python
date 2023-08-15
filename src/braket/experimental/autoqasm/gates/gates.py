@@ -27,6 +27,7 @@ Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
 
 
 from typing import Any, List
+
 from braket.experimental.autoqasm import program
 
 from .qubits import QubitIdentifierType, _qubit
