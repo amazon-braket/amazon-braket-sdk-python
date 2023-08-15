@@ -94,6 +94,6 @@ def test_valid_names(name):
         "\u33B8",
     ),
 )
-@pytest.mark.xfail(raises=ValueError, strict=True)
 def test_invalid_names(name):
-    FreeParameter(name)
+    with pytest.raises(ValueError):
+        FreeParameter(name)
