@@ -40,6 +40,8 @@ The Python code above outputs the following OpenQASM program:
     result[1] = measure __qubits__[1];
 """
 
+from oqpy import pi  # noqa: F401
+
 from .api import function, gate  # noqa: F401
 from .gates import QubitIdentifierType  # noqa: F401
 from .program import Program, build_program, verbatim  # noqa: F401

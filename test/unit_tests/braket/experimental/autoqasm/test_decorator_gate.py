@@ -19,11 +19,17 @@ import braket.experimental.autoqasm as aq
 
 def test_empty_gate() -> None:
     @aq.gate
-    def my_gate():
+    def my_gate(q):
         pass
 
     @aq.function
     def my_program():
-        my_gate()
+        my_gate(0)
 
-    my_program()
+    expected = """OPENQASM 3.0;
+gate my_gate q {
+}
+qubit[1] __qubits__;
+my_gate __qubits__[0];"""
+
+    assert my_program().to_ir() == expected

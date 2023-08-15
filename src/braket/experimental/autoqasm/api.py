@@ -23,6 +23,7 @@ import openqasm3.ast as qasm_ast
 import oqpy.base
 
 import braket.experimental.autoqasm.constants as aq_constants
+import braket.experimental.autoqasm.gates as aq_gates
 import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
@@ -366,26 +367,34 @@ def _convert_gate(
 ) -> Callable:
     # We must be inside an active conversion context in order to invoke a gate
     program_conversion_context = aq_program.get_program_conversion_context()
+    oqpy_program = program_conversion_context.get_oqpy_program()
 
     try:
         with conversion_ctx:
             # Convert the function via autograph into an oqpy gate definition
             # NOTE: Process a clone of the function so that we don't modify the original object
             # TODO- oqpy_gate = oqpy.gate(_wrap_for_oqpy_gate(_clone_function(f), options))
+            gate_name = f.__name__
 
             # Process the gate definition
             # TODO- gate_call = oqpy_gate(oqpy_program, *args, **kwargs)
+            q = oqpy.Qubit("q", needs_declaration=False)  # TODO: base this on # of qubit args
+            with oqpy.gate(oqpy_program, q, gate_name):
+                # TODO: pass the oqpy Qubit objects here instead of the qubits from *args
+                # TODO: pass the oqpy AngleVar objects here instead of the values from *args
+                f(*args, **kwargs)
 
             # Add the gate invocation to the program
             # TODO
+            target = args[0]  # TODO
+            gate_args = args[1:]  # TODO
+            aq_gates.custom(gate_name, [target], *gate_args)
 
             # Add the gate definition to the root-level program if necessary
-            root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
-            assert root_oqpy_program  # TEMP
-            # TODO
-            # gate_name = gate_call.identifier.name
-            # if gate_name not in root_oqpy_program.gates and gate_call.gate_decl is not None:
-            #     root_oqpy_program._add_gate(gate_name, gate_call.gate_decl)
+            # TODO - this is actually necessary! if a gate is called from a subroutine
+            # root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+            # if gate_name not in root_oqpy_program.gates:
+            #    root_oqpy_program._add_gate(gate_name, gate_stmt)
     except Exception as e:
         if isinstance(e, errors.AutoQasmError):
             raise
