@@ -23,7 +23,7 @@ import openqasm3.ast as qasm_ast
 import oqpy.base
 
 import braket.experimental.autoqasm.constants as aq_constants
-import braket.experimental.autoqasm.gates as aq_gates
+import braket.experimental.autoqasm.instructions as aq_instructions
 import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
@@ -387,7 +387,7 @@ def _convert_gate(
             # Add the gate invocation to the program
             qubit_args = [args[i] for i in qubit_indices]
             angle_args = [args[i] for i in angle_indices]
-            aq_gates.custom(gate_name, qubit_args, *angle_args)
+            aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
 
             # Add the gate definition to the root-level program if necessary
             # TODO - this is actually necessary! if a gate is called from a subroutine
@@ -556,7 +556,7 @@ def _wrap_for_oqpy_gate(
                 "is missing a required type hint."
             )
 
-        if param.annotation == aq_gates.QubitIdentifierType:
+        if param.annotation == aq_instructions.QubitIdentifierType:
             qubit_indices.append(i)
             qubit_names.append(param.name)
         elif param.annotation in [float, aq_types.FloatVar]:

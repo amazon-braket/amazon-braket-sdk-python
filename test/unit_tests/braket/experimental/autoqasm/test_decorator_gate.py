@@ -17,7 +17,7 @@
 from test_api import _test_on_local_sim
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.gates import h, measure, rx, rz
+from braket.experimental.autoqasm.instructions import h, measure, rx, rz
 
 
 def test_empty_gate() -> None:

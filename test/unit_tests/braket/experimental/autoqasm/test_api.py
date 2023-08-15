@@ -22,7 +22,7 @@ import braket.experimental.autoqasm as aq
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.gates import cnot, h, measure, x
+from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 

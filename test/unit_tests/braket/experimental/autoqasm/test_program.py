@@ -21,7 +21,7 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.circuits.serialization import IRType
-from braket.experimental.autoqasm.gates import cnot, measure, rx
+from braket.experimental.autoqasm.instructions import cnot, measure, rx
 
 
 def test_program_conversion_context() -> None:
@@ -57,7 +57,7 @@ def test_build_program() -> None:
 def test_to_ir() -> None:
     """Tests that an appropriate error is raised for unsupported ir_types."""
     with aq.build_program() as program_conversion_context:
-        aq.gates.h(0)
+        aq.instructions.h(0)
     prog = program_conversion_context.make_program()
     # No error for OpenQASM
     prog.to_ir(IRType.OPENQASM)

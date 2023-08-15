@@ -20,7 +20,7 @@ import pytest
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.autograph import ag_logging
 from braket.experimental.autoqasm.autograph.core.ag_ctx import ControlStatusCtx, Status
-from braket.experimental.autoqasm.gates import cnot, h, measure, x
+from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 
 
 def test_convert_invalid_object() -> None:

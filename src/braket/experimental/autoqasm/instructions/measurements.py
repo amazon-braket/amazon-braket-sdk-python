@@ -27,7 +27,7 @@ from typing import List, Union
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
-from braket.experimental.autoqasm.gates.qubits import QubitIdentifierType, _qubit
+from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType, _qubit
 
 
 def measure(qubits: Union[QubitIdentifierType, List[QubitIdentifierType]]) -> aq_types.BitVar:
