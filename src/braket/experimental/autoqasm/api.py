@@ -371,13 +371,10 @@ def _convert_gate(
 
     try:
         with conversion_ctx:
-            # Convert the function via autograph into an oqpy gate definition
-            # NOTE: Process a clone of the function so that we don't modify the original object
+            # Wrap the function into an oqpy gate definition
             wrapped_f, qubit_indices, angle_indices, qubit_names, angle_names = _wrap_for_oqpy_gate(
-                _clone_function(f), options
+                f, options
             )
-
-            # Process the gate definition
             qubits = [oqpy.Qubit(name, needs_declaration=False) for name in qubit_names]
             angles = [oqpy.AngleVar(name=name) for name in angle_names]
             gate_name = f.__name__

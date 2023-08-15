@@ -44,7 +44,7 @@ my_gate __qubits__[0];"""
 def test_nested_gates() -> None:
     @aq.gate
     def t(q: aq.qubit):
-        rz(q, aq.pi / 8)
+        rz(q, aq.pi / 4)
 
     @aq.gate
     def my_gate(q: aq.qubit, theta: float):
@@ -60,7 +60,7 @@ def test_nested_gates() -> None:
 
     expected = """OPENQASM 3.0;
 gate t q {
-    rz(pi / 8) q;
+    rz(pi / 4) q;
 }
 gate my_gate(theta) q {
     h q;
