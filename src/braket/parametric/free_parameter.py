@@ -115,10 +115,8 @@ class FreeParameter(FreeParameterExpression):
             if name.startswith("__"):
                 raise ValueError("FreeParameter names must not start with two underscores '__'")
         else:
-            unicode_category = category(name[0])
-            if not unicode_category:
-                raise ValueError("FreeParameter names must start with a valid character")
-            if not unicode_category.startswith("L") and unicode_category != "Nl":
+            uni_category = category(name[0])
+            if not uni_category or (not uni_category.startswith("L") and uni_category != "Nl"):
                 raise ValueError("FreeParameter names must start with a letter or underscore")
 
     @classmethod
