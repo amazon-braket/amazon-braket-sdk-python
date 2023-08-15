@@ -1406,10 +1406,29 @@ def test_circuit_to_ir_openqasm(circuit, serialization_properties, expected_ir):
         ),
     ],
 )
-def test_circuit_from_ir(expected_circuit, ir):
-    circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
+def test_from_ir(expected_circuit, ir):
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circuit
+    assert Circuit.from_ir(source=ir) == expected_circuit
 
-    assert circuit_from_ir == expected_circuit
+
+def test_from_ir_inputs_updated():
+    circuit = Circuit().rx(0, 0.2).ry(0, 0.1)
+    openqasm = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "input float theta;",
+                "input float phi;",
+                "bit[1] b;",
+                "qubit[1] q;",
+                "rx(theta) q[0];",
+                "ry(phi) q[0];",
+                "b[0] = measure q[0];",
+            ]
+        ),
+        inputs={"theta": 0.2, "phi": 0.3},
+    )
+    assert Circuit.from_ir(source=openqasm, inputs={"phi": 0.1}) == circuit
 
 
 @pytest.mark.parametrize(
@@ -1529,7 +1548,7 @@ def test_circuit_from_ir(expected_circuit, ir):
         ),
     ],
 )
-def test_circuit_from_ir_greater_functionality(expected_circuit, ir):
+def test_from_ir_advanced_openqasm(expected_circuit, ir):
     circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
 
     assert circuit_from_ir == expected_circuit
