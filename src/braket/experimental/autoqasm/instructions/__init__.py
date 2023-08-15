@@ -11,7 +11,19 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Quantum operations for use in AutoQASM programs."""
+"""Instructions that apply to qubits, including quantum gates, reset and measure.
 
-from .gates import QubitIdentifierType, cnot, cphaseshift, h, reset, rx, rz, x, y, z  # noqa: F401
+Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
+
+.. code-block:: python
+
+    @aq.function
+    def bell():
+        h(0)
+        cnot(0, 1)
+        measure([0, 1])
+"""
+
+from .gates import *  # noqa: F401, F403
+from .instructions import QubitIdentifierType, reset  # noqa: F401
 from .measurements import measure  # noqa: F401

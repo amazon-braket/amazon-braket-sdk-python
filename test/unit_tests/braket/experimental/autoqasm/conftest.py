@@ -18,7 +18,7 @@ from typing import Callable
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.gates import cnot, h
+from braket.experimental.autoqasm.instructions import cnot, h
 
 
 @pytest.fixture

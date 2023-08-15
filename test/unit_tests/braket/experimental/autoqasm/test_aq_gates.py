@@ -16,7 +16,46 @@
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.gates import cnot, cphaseshift, h, measure, reset, rx, rz, x, y, z
+from braket.experimental.autoqasm.instructions import (
+    ccnot,
+    cnot,
+    cphaseshift,
+    cphaseshift00,
+    cphaseshift01,
+    cphaseshift10,
+    cswap,
+    cv,
+    cy,
+    cz,
+    ecr,
+    gpi,
+    gpi2,
+    h,
+    i,
+    iswap,
+    measure,
+    ms,
+    phaseshift,
+    pswap,
+    reset,
+    rx,
+    ry,
+    rz,
+    s,
+    si,
+    swap,
+    t,
+    ti,
+    v,
+    vi,
+    x,
+    xx,
+    xy,
+    y,
+    yy,
+    z,
+    zz,
+)
 
 
 def test_bell_state_prep(bell_state_program) -> None:
@@ -41,10 +80,12 @@ cnot $0, $5;"""
 def test_bell_with_measure() -> None:
     """Tests Bell state with measurement result stored in an undeclared variable."""
     with aq.build_program() as program_conversion_context:
+        reset(0)
         h(0)
         cnot(0, 1)
         measure(0)
     expected = """OPENQASM 3.0;
+reset __qubits__[0];
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
 bit __bit_0__;
@@ -57,15 +98,42 @@ __bit_0__ = measure __qubits__[0];"""
 @pytest.mark.parametrize(
     "gate,qubits,params,expected_qasm",
     [
-        (h, [0], [], "\nh __qubits__[0];"),
-        (x, [0], [], "\nx __qubits__[0];"),
-        (y, [0], [], "\ny __qubits__[0];"),
-        (z, [0], [], "\nz __qubits__[0];"),
-        (rz, [0], [0.1], "\nrz(0.1) __qubits__[0];"),
-        (reset, [0], [], "\nreset __qubits__[0];"),
+        (ccnot, [0, 1, 2], [], "\nccnot __qubits__[0], __qubits__[1], __qubits__[2];"),
         (cnot, [0, 1], [], "\ncnot __qubits__[0], __qubits__[1];"),
         (cphaseshift, [0, 1], [0.1], "\ncphaseshift(0.1) __qubits__[0], __qubits__[1];"),
+        (cphaseshift00, [0, 1], [0.1], "\ncphaseshift00(0.1) __qubits__[0], __qubits__[1];"),
+        (cphaseshift01, [0, 1], [0.1], "\ncphaseshift01(0.1) __qubits__[0], __qubits__[1];"),
+        (cphaseshift10, [0, 1], [0.1], "\ncphaseshift10(0.1) __qubits__[0], __qubits__[1];"),
+        (cswap, [0, 1, 2], [], "\ncswap __qubits__[0], __qubits__[1], __qubits__[2];"),
+        (cv, [0, 1], [], "\ncv __qubits__[0], __qubits__[1];"),
+        (cy, [0, 1], [], "\ncy __qubits__[0], __qubits__[1];"),
+        (cz, [0, 1], [], "\ncz __qubits__[0], __qubits__[1];"),
+        (ecr, [0, 1], [], "\necr __qubits__[0], __qubits__[1];"),
+        (gpi, [0], [0.1], "\ngpi(0.1) __qubits__[0];"),
+        (gpi2, [0], [0.1], "\ngpi2(0.1) __qubits__[0];"),
+        (h, [0], [], "\nh __qubits__[0];"),
+        (i, [0], [], "\ni __qubits__[0];"),
+        (iswap, [0, 1], [], "\niswap __qubits__[0], __qubits__[1];"),
+        (ms, [0, 1], [0.1, 0.2, 0.3], "\nms(0.1, 0.2, 0.3) __qubits__[0], __qubits__[1];"),
+        (phaseshift, [0], [0.1], "\nphaseshift(0.1) __qubits__[0];"),
+        (pswap, [0, 1], [0.1], "\npswap(0.1) __qubits__[0], __qubits__[1];"),
         (rx, [0], [0.1], "\nrx(0.1) __qubits__[0];"),
+        (ry, [0], [0.1], "\nry(0.1) __qubits__[0];"),
+        (rz, [0], [0.1], "\nrz(0.1) __qubits__[0];"),
+        (s, [0], [], "\ns __qubits__[0];"),
+        (si, [0], [], "\nsi __qubits__[0];"),
+        (swap, [0, 1], [], "\nswap __qubits__[0], __qubits__[1];"),
+        (t, [0], [], "\nt __qubits__[0];"),
+        (ti, [0], [], "\nti __qubits__[0];"),
+        (v, [0], [], "\nv __qubits__[0];"),
+        (vi, [0], [], "\nvi __qubits__[0];"),
+        (x, [0], [], "\nx __qubits__[0];"),
+        (xx, [0, 1], [0.1], "\nxx(0.1) __qubits__[0], __qubits__[1];"),
+        (xy, [0, 1], [0.1], "\nxy(0.1) __qubits__[0], __qubits__[1];"),
+        (y, [0], [], "\ny __qubits__[0];"),
+        (yy, [0, 1], [0.1], "\nyy(0.1) __qubits__[0], __qubits__[1];"),
+        (z, [0], [], "\nz __qubits__[0];"),
+        (zz, [0, 1], [0.1], "\nzz(0.1) __qubits__[0], __qubits__[1];"),
     ],
 )
 def test_gates(gate, qubits, params, expected_qasm) -> None:

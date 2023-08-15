@@ -17,7 +17,7 @@ and running them on simulators and quantum hardware using Amazon Braket.
 The basic usage of AutoQASM is as follows:
 
     import braket.experimental.autoqasm as aq
-    from braket.experimental.autoqasm.gates import h, cnot, measure
+    from braket.experimental.autoqasm.instructions import h, cnot, measure
 
     @aq.function
     def my_program():
@@ -41,7 +41,7 @@ The Python code above outputs the following OpenQASM program:
 """
 
 from .api import function  # noqa: F401
-from .gates import QubitIdentifierType  # noqa: F401
+from .instructions import QubitIdentifierType  # noqa: F401
 from .program import Program, build_program, verbatim  # noqa: F401
 from .transpiler import transpiler  # noqa: F401
 from .types import ArrayVar, BitVar, BoolVar, FloatVar, IntVar  # noqa: F401
