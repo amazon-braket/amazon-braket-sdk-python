@@ -52,7 +52,7 @@ class FreeParameter(FreeParameterExpression):
         Examples:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
-            >>> param1 = FreeParameter("a1b2")
+            >>> param1 = FreeParameter("a1b2Ï")
         """
         FreeParameter._validate_name(name)
         self._name = Symbol(name)
@@ -108,18 +108,18 @@ class FreeParameter(FreeParameterExpression):
     @staticmethod
     def _validate_name(name: str) -> None:
         if not name:
-            raise ValueError("Symbol names must be non empty")
+            raise ValueError("FreeParameter names must be non empty")
         if not isinstance(name, str):
-            raise TypeError("Symbol name must be a string")
+            raise TypeError("FreeParameter name must be a string")
         if name.startswith("_"):
             if name.startswith("__"):
-                raise ValueError("Symbol names must not start with two underscores '__'")
+                raise ValueError("FreeParameter names must not start with two underscores '__'")
         else:
             unicode_category = category(name[0])
             if not unicode_category:
-                raise ValueError("Symbol names must start with a valid character")
+                raise ValueError("FreeParameter names must start with a valid character")
             if not unicode_category.startswith("L") and unicode_category != "Nl":
-                raise ValueError("Symbol names must start with a letter or underscore")
+                raise ValueError("FreeParameter names must start with a letter or underscore")
 
     @classmethod
     def from_dict(cls, parameter: dict) -> FreeParameter:
