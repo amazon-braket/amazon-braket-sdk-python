@@ -14,134 +14,443 @@
 
 """Quantum gates, unitary instructions, that apply to qubits.
 """
-from inspect import Parameter, Signature
-from typing import Dict, Tuple
-
 from braket.experimental.autoqasm import program
 
 from .qubits import _qubit
 
 
-def define_gate(name: str, n_control: int, n_target: int, n_angle: int, description: str) -> None:
-    """Define a quantum gate.
+def ccnot(control_0: int, control_1: int, target: int) -> None:
+    """CCNOT gate or Toffoli gate.
 
     Args:
-        name (str): Gate name.
-        n_control (int): Number of control qubits.
-        n_target (int): Number of target qubits.
-        n_angle (int): Number of angles.
-        description (str): Description of the gate.
+        control_0 (QubitIdentifierType): Control qubit 0.
+        control_1 (QubitIdentifierType): Control qubit 1.
+        target (QubitIdentifierType): Target qubit.
     """
-
-    def quantum_gate(*args):
-        n_qubits = n_control + n_target
-        qubits = [_qubit(q) for q in args[:n_qubits]]
-        angles = args[n_qubits : (n_qubits + n_angle)]
-        oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-        oqpy_program.gate(qubits, name, *angles)
-
-    quantum_gate.__name__ = name
-    quantum_gate.__doc__ = _gate_doc(n_control, n_target, n_angle, description)
-
-    signature, annotations = _gate_annotations(n_control, n_target, n_angle)
-    quantum_gate.__annotations__ = annotations
-    quantum_gate.__signature__ = signature
-
-    globals()[name] = quantum_gate
+    qubits = [_qubit(control_0), _qubit(control_1), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "ccnot")
 
 
-def _gate_doc(n_control: int, n_target: int, n_angle: int, description: str) -> str:
-    """Return docstring of the gate.
+def cnot(control: int, target: int) -> None:
+    """Controlled NOT gate.
 
     Args:
-        n_control (int): Number of control qubits.
-        n_target (int): Number of target qubits.
-        n_angle (int): Number of angles.
-        description (str): Description of the gate.
-
-    Returns:
-        str: docstring of the gate.
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
     """
-    gate_doc = description + "\n\n Args:"
-    for i in range(n_control):
-        gate_doc += f"\n\tcontrol_{i} (QubitIdentifierType): Control qubit {i}."
-    for i in range(n_target):
-        gate_doc += f"\n\ttarget_{i} (QubitIdentifierType): Target qubit {i}."
-    for i in range(n_angle):
-        gate_doc += f"\n\tangle_{i} (float): Rotation angle {i} in radians."
-    return gate_doc
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cnot")
 
 
-def _gate_annotations(n_control: int, n_target: int, n_angle: int) -> Tuple[Signature, Dict]:
-    """Return function signature and type annotations of the gate.
+def cphaseshift(control: int, target: int, angle: float) -> None:
+    """Controlled phase shift gate.
 
     Args:
-        n_control (int): Number of control qubits.
-        n_target (int): Number of target qubits.
-        n_angle (int): Number of angles.
-
-    Returns:
-        Signature, dict: signature and type annotations of the gate.
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
     """
-    parameters = []
-    annotations = {}
-
-    for i in range(n_control):
-        name = f"control_{i}"
-        parameters.append(
-            Parameter(name=name, annotation=int, kind=Parameter.POSITIONAL_OR_KEYWORD)
-        )
-        annotations[name] = int
-    for i in range(n_target):
-        name = f"target_{i}"
-        parameters.append(
-            Parameter(name=name, annotation=int, kind=Parameter.POSITIONAL_OR_KEYWORD)
-        )
-        annotations[name] = int
-    for i in range(n_angle):
-        name = f"angle_{i}"
-        parameters.append(
-            Parameter(name=name, annotation=float, kind=Parameter.POSITIONAL_OR_KEYWORD)
-        )
-        annotations[name] = float
-
-    signature = Signature(parameters)
-    return signature, annotations
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cphaseshift", angle)
 
 
-define_gate("h", 0, 1, 0, "Hadamard gate.")
-define_gate("i", 0, 1, 0, "Identity gate.")
-define_gate("x", 0, 1, 0, "Pauli-X gate.")
-define_gate("y", 0, 1, 0, "Pauli-Y gate.")
-define_gate("z", 0, 1, 0, "Pauli-Z gate.")
-define_gate("s", 0, 1, 0, "S gate.")
-define_gate("si", 0, 1, 0, "Conjugate transpose of S gate.")
-define_gate("t", 0, 1, 0, "T gate.")
-define_gate("ti", 0, 1, 0, "Conjugate transpose of T gate.")
-define_gate("v", 0, 1, 0, "Square root of not gate.")
-define_gate("vi", 0, 1, 0, "Conjugate transpose of square root of not gate.")
-define_gate("cnot", 1, 1, 0, "Controlled NOT gate.")
-define_gate("swap", 0, 2, 0, "Swap gate.")
-define_gate("iswap", 0, 2, 0, "ISwap gate.")
-define_gate("cv", 1, 1, 0, "Controlled Sqrt of NOT gate.")
-define_gate("cy", 1, 1, 0, "Controlled Pauli-Y gate.")
-define_gate("cz", 1, 1, 0, "Controlled Pauli-Z gate.")
-define_gate("ecr", 0, 2, 0, "An echoed RZX(pi/2) gate.")
-define_gate("ccnot", 2, 1, 0, "CCNOT gate or Toffoli gate.")
-define_gate("cswap", 1, 2, 0, "Controlled Swap gate.")
-define_gate("rx", 0, 1, 1, "X-axis rotation gate.")
-define_gate("ry", 0, 1, 1, "Y-axis rotation gate.")
-define_gate("rz", 0, 1, 1, "Z-axis rotation gate.")
-define_gate("phaseshift", 0, 1, 1, "Phase shift gate.")
-define_gate("pswap", 0, 2, 1, "PSwap gate.")
-define_gate("xy", 0, 2, 1, "XY gates")
-define_gate("cphaseshift", 1, 1, 1, "Controlled phase shift gate.")
-define_gate("cphaseshift00", 1, 1, 1, "Controlled phase shift gate for phasing the \\|00> state.")
-define_gate("cphaseshift01", 1, 1, 1, "Controlled phase shift gate for phasing the \\|01> state.")
-define_gate("cphaseshift10", 1, 1, 1, "Controlled phase shift gate for phasing the \\|10> state.")
-define_gate("xx", 0, 2, 1, "Ising XX coupling gate.")
-define_gate("yy", 0, 2, 1, "Ising YY coupling gate.")
-define_gate("zz", 0, 2, 1, "Ising ZZ coupling gate.")
-define_gate("gpi", 0, 1, 1, "IonQ GPi gate.")
-define_gate("gpi2", 0, 1, 1, "IonQ GPi2 gate.")
-define_gate("ms", 0, 2, 3, "IonQ Mølmer-Sørenson gate.")
+def cphaseshift00(control: int, target: int, angle: float) -> None:
+    """Controlled phase shift gate for phasing the \\|00> state.
+
+    Args:
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cphaseshift00", angle)
+
+
+def cphaseshift01(control: int, target: int, angle: float) -> None:
+    """Controlled phase shift gate for phasing the \\|01> state.
+
+    Args:
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cphaseshift01", angle)
+
+
+def cphaseshift10(control: int, target: int, angle: float) -> None:
+    """Controlled phase shift gate for phasing the \\|10> state.
+
+    Args:
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cphaseshift10", angle)
+
+
+def cswap(control: int, target_0: int, target_1: int) -> None:
+    """Controlled Swap gate.
+
+    Args:
+        control (QubitIdentifierType): Control qubit.
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+    """
+    qubits = [_qubit(control), _qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cswap")
+
+
+def cv(control: int, target: int) -> None:
+    """Controlled Sqrt of NOT gate.
+
+    Args:
+        control_0 (QubitIdentifierType): Control qubit 0.
+        target_0 (QubitIdentifierType): Target qubit 0.
+    """
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cv")
+
+
+def cy(control: int, target: int) -> None:
+    """Controlled Pauli-Y gate.
+
+    Args:
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cy")
+
+
+def cz(control: int, target: int) -> None:
+    """Controlled Pauli-Z gate.
+
+    Args:
+        control_0 (QubitIdentifierType): Control qubit.
+        target_0 (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(control), _qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "cz")
+
+
+def ecr(target_0: int, target_1: int) -> None:
+    """An echoed RZX(pi/2) gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "ecr")
+
+
+def gpi(target: int, angle: float) -> None:
+    """IonQ GPi gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "gpi", angle)
+
+
+def gpi2(target: int, angle: float) -> None:
+    """IonQ GPi2 gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "gpi2", angle)
+
+
+def h(target: int) -> None:
+    """Hadamard gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "h")
+
+
+def i(target: int) -> None:
+    """Identity gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "i")
+
+
+def iswap(target_0: int, target_1: int) -> None:
+    """ISwap gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "iswap")
+
+
+def ms(target_0: int, target_1: int, angle_0: float, angle_1: float, angle_2: float) -> None:
+    """IonQ Mølmer-Sørenson gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+        angle_0 (float): Rotation angle 0 in radians.
+        angle_1 (float): Rotation angle 1 in radians.
+        angle_2 (float): Rotation angle 2 in radians.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    angles = [angle_0, angle_1, angle_2]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "ms", *angles)
+
+
+def phaseshift(target: int, angle: float) -> None:
+    """Phase shift gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "phaseshift", angle)
+
+
+def pswap(target_0: int, target_1: int, angle: float) -> None:
+    """PSwap gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    angles = [angle]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "pswap", *angles)
+
+
+def rx(target: int, angle: float) -> None:
+    """X-axis rotation gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "rx", angle)
+
+
+def ry(target: int, angle: float) -> None:
+    """Y-axis rotation gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "ry", angle)
+
+
+def rz(target: int, angle: float) -> None:
+    """Z-axis rotation gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "rz", angle)
+
+
+def s(target: int) -> None:
+    """S gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "s")
+
+
+def si(target: int) -> None:
+    """Conjugate transpose of S gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "si")
+
+
+def swap(target_0: int, target_1: int) -> None:
+    """Swap gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "swap")
+
+
+def t(target: int) -> None:
+    """T gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "t")
+
+
+def ti(target: int) -> None:
+    """Conjugate transpose of T gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "ti")
+
+
+def v(target: int) -> None:
+    """Square root of not gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "v")
+
+
+def vi(target: int) -> None:
+    """Conjugate transpose of square root of not gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "vi")
+
+
+def x(target: int) -> None:
+    """Pauli-X gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "x")
+
+
+def xx(target_0: int, target_1: int, angle: float) -> None:
+    """Ising XX coupling gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "xx", angle)
+
+
+def xy(target_0: int, target_1: int, angle: float) -> None:
+    """XY gates
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "xy", angle)
+
+
+def y(target: int) -> None:
+    """Pauli-Y gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "y")
+
+
+def yy(target_0: int, target_1: int, angle: float) -> None:
+    """Ising YY coupling gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "yy", angle)
+
+
+def z(target: int) -> None:
+    """Pauli-Z gate.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+    """
+    qubits = [_qubit(target)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "z")
+
+
+def zz(target_0: int, target_1: int, angle: float) -> None:
+    """Ising ZZ coupling gate.
+
+    Args:
+        target_0 (QubitIdentifierType): Target qubit 0.
+        target_1 (QubitIdentifierType): Target qubit 1.
+        angle (float): Rotation angle in radians.
+    """
+    qubits = [_qubit(target_0), _qubit(target_1)]
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate(qubits, "zz", angle)
