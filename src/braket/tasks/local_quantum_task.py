@@ -16,7 +16,7 @@ import threading
 from asyncio import AbstractEventLoop, Task
 from typing import Optional, Union
 
-from braket.simulator.quantum_task import ExecutionManager
+from braket.simulator.execution_manager import ExecutionManager
 from braket.tasks import (
     AnnealingQuantumTaskResult,
     GateModelQuantumTaskResult,
@@ -67,6 +67,12 @@ class LocalQuantumTask(QuantumTask):
         return task
 
     def id(self) -> str:
+        """Id of the quantum task.
+        Returns:
+            str : Id from execution manager
+        """
+        if hasattr(self, "_execution_manager"):
+            return str(self._execution_manager.id())
         raise NotImplementedError("Id is not generated for LocalQuantumTask")
 
     def cancel(self) -> None:
@@ -82,10 +88,9 @@ class LocalQuantumTask(QuantumTask):
             str: State of the quantum task.
         """
         try:
-            state = self._execution_manager.state()
+            return self._execution_manager.state()
         except (NotImplementedError, AttributeError):
-            state = self._status()
-        return state
+            return self._status()
 
     def _status(self) -> str:
         if hasattr(self, "_thread"):
