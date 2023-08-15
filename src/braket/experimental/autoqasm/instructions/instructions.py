@@ -15,17 +15,22 @@
 """Non-unitary instructions that apply to qubits.
 """
 
+from typing import Any, List
 
 from braket.experimental.autoqasm import program
 
 from .qubits import QubitIdentifierType, _qubit
 
 
-def reset(q: QubitIdentifierType) -> None:
+def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any):
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.gate([_qubit(q) for q in qubits], name, *args)
+
+
+def reset(target: QubitIdentifierType) -> None:
     """Adds a reset instruction on a specified qubit.
 
     Args:
-        q (QubitIdentifierType): The target qubit.
+        target (QubitIdentifierType): The target qubit.
     """
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    oqpy_program.gate(_qubit(q), "reset")
+    _qubit_instruction("reset", [target])
