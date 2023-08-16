@@ -1161,3 +1161,9 @@ def test_gate_power(gate, target, power, expected_ir):
         )
         == expected_ir
     )
+
+
+def test_hash():
+    assert hash(Gate.Unitary(Gate.CCNot().to_matrix())) == hash(
+        Gate.Unitary(Gate.CCNot().to_matrix())
+    )

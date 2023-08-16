@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.54.0 (2023-08-16)
+
+### Features
+
+ * enable gate calibrations on supported devices
+
 ## v1.53.4 (2023-08-15)
 
 ### Bug Fixes and Other Changes

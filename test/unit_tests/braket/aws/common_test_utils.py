@@ -200,6 +200,7 @@ def run_and_assert(
     poll_timeout_seconds,  # Treated as positional arg
     poll_interval_seconds,  # Treated as positional arg
     inputs,  # Treated as positional arg
+    gate_definitions,  # Treated as positional arg
     extra_args,
     extra_kwargs,
 ):
@@ -217,6 +218,8 @@ def run_and_assert(
         run_args.append(poll_interval_seconds)
     if inputs is not None:
         run_args.append(inputs)
+    if gate_definitions is not None:
+        run_args.append(gate_definitions)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
 
@@ -233,6 +236,7 @@ def run_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
+        gate_definitions,
         extra_args,
         extra_kwargs,
     )
@@ -258,6 +262,7 @@ def run_batch_and_assert(
     poll_timeout_seconds,
     poll_interval_seconds,
     inputs,
+    gate_definitions,
     extra_args,
     extra_kwargs,
 ):
@@ -282,6 +287,8 @@ def run_batch_and_assert(
         run_args.append(poll_interval_seconds)
     if inputs is not None:
         run_args.append(inputs)
+    if gate_definitions is not None:
+        run_args.append(gate_definitions)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
 
@@ -298,6 +305,7 @@ def run_batch_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
+        gate_definitions,
         extra_args,
         extra_kwargs,
     )
@@ -324,6 +332,7 @@ def _create_task_args_and_kwargs(
     poll_timeout_seconds,
     poll_interval_seconds,
     inputs,
+    gate_definitions,
     extra_args,
     extra_kwargs,
 ):
@@ -342,6 +351,7 @@ def _create_task_args_and_kwargs(
             if poll_interval_seconds is not None
             else default_poll_interval,
             "inputs": inputs,
+            "gate_definitions": gate_definitions,
         }
     )
     return create_args, create_kwargs

@@ -10,10 +10,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+import io
 import json
 import os
 from datetime import datetime
 from unittest.mock import Mock, PropertyMock, patch
+from urllib.error import URLError
 
 import networkx as nx
 import pytest
@@ -31,17 +33,15 @@ from common_test_utils import (
 )
 from jsonschema import validate
 
-from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask, AwsQuantumTaskBatch
-from braket.circuits import Circuit, FreeParameter
+from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
+from braket.circuits import Circuit, FreeParameter, Gate, QubitSet
+from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
 from braket.device_schema.dwave import DwaveDeviceCapabilities
-from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
-    PulseDeviceActionProperties,
-)
 from braket.device_schema.rigetti import RigettiDeviceCapabilities
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.ir.openqasm import Program as OpenQasmProgram
-from braket.pulse import Frame, Port
+from braket.pulse import DragGaussianWaveform, Frame, Port, PulseSequence
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
     "braketSchemaHeader": {
@@ -78,6 +78,136 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
 )
 
 
+MOCK_gate_calibrations_JSON = {
+    "gates": {
+        "0": {
+            "cphaseshift": [
+                {
+                    "name": "cphaseshift",
+                    "qubits": ["0", "1"],
+                    "arguments": ["-1.5707963267948966"],
+                    "calibrations": [
+                        {
+                            "name": "barrier",
+                            "arguments": [{"name": "qubit", "value": "0", "type": "string"}],
+                        },
+                        {
+                            "name": "play",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
+                                {
+                                    "name": "waveform",
+                                    "value": "wf_drag_gaussian_0",
+                                    "type": "waveform",
+                                },
+                            ],
+                        },
+                        {
+                            "name": "barrier",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"}
+                            ],
+                        },
+                        {
+                            "name": "barrier",
+                            "arguments": None,
+                        },
+                        {
+                            "name": "delay",
+                            "arguments": [
+                                {"name": "duration", "value": 3e-07, "type": "float"},
+                                {"name": "qubit", "value": "0", "type": "string"},
+                                {"name": "qubit", "value": "1", "type": "string"},
+                            ],
+                        },
+                        {
+                            "name": "delay",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
+                                {"name": "duration", "value": 3e-07, "type": "float"},
+                            ],
+                        },
+                        {
+                            "name": "shift_phase",
+                            "arguments": [
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
+                                {"name": "phase", "value": 3e-07, "type": "float"},
+                            ],
+                        },
+                        {
+                            "name": "shift_frequency",
+                            "arguments": [
+                                {"name": "frequency", "value": "theta", "type": "expr"},
+                                {"name": "frame", "value": "q0_q1_cphase_frame", "type": "frame"},
+                                {"name": "extra", "value": "q0_q1_cphase_frame", "type": "string"},
+                            ],
+                        },
+                    ],
+                }
+            ],
+            "rx": [
+                {
+                    "gateName": "rx",
+                    "gateId": "rz_1",
+                    "qubits": "0",
+                    "arguments": ["theta"],
+                    "calibrations": [
+                        {"name": "barrier", "arguments": None},
+                    ],
+                }
+            ],
+        },
+        "0_1": {
+            "cz": [
+                {
+                    "gateName": "cz",
+                    "gateId": "cz_0_1",
+                    "qubits": ["1", "0"],
+                    "arguments": [],
+                    "calibrations": [
+                        {"name": "barrier", "arguments": None},
+                    ],
+                }
+            ],
+            "rx_12": [],
+        },
+    },
+    "waveforms": {
+        "q0_q1_cz_CZ": {
+            "waveformId": "q0_q1_cz_CZ",
+            "amplitudes": [[0.0, 0.0], [0.0, 0.0]],
+        },
+        "wf_drag_gaussian_0": {
+            "waveformId": "wf_drag_gaussian_0",
+            "name": "drag_gaussian",
+            "arguments": [
+                {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
+            ],
+        },
+        "wf_gaussian_0": {
+            "waveformId": "wf_gaussian_0",
+            "name": "gaussian",
+            "arguments": [
+                {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+            ],
+        },
+        "wf_constant": {
+            "waveformId": "wf_constant",
+            "name": "constant",
+            "arguments": [
+                {"name": "length", "value": 2, "type": "float"},
+                {"name": "iq", "value": 0.23, "type": "complex"},
+            ],
+        },
+    },
+}
+
+
 def test_mock_rigetti_schema_1():
     validate(MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1, RigettiDeviceCapabilities.schema())
 
@@ -85,7 +215,7 @@ def test_mock_rigetti_schema_1():
 MOCK_GATE_MODEL_QPU_1 = {
     "deviceName": "Aspen-10",
     "deviceType": "QPU",
-    "providerName": "provider1",
+    "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
 }
@@ -495,6 +625,7 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
             "qhpSpecificProperties": None,
         }
     },
+    "nativeGateCalibrationsRef": "file://hostname/foo/bar",
 }
 
 
@@ -516,6 +647,7 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
             "qhpSpecificProperties": None,
         }
     },
+    "nativeGateCalibrationssRef": "file://hostname/foo/bar",
 }
 
 
@@ -534,6 +666,32 @@ def get_pulse_model(capabilities_json):
                 }
             ],
             "shotsRange": [1, 10],
+        },
+        "provider": {
+            "specs": {
+                "1Q": {
+                    "0": {
+                        "fActiveReset": 0.9715,
+                        "fRO": 0.951,
+                        "f1QRB": 0.997339217568556,
+                        "f1QRB_std_err": 0.00006690422818326937,
+                        "f1Q_simultaneous_RB": 0.9949723201166536,
+                        "f1Q_simultaneous_RB_std_err": 0.00021695233492231294,
+                        "T1": 0.000010019627401991471,
+                        "T2": 0.000018156447816365015,
+                    }
+                },
+                "2Q": {
+                    "0-1": {
+                        "fCZ": 0.9586440436264603,
+                        "fCZ_std_err": 0.007025921432645824,
+                        "fCPHASE": 0.9287330972713645,
+                        "fCPHASE_std_err": 0.009709406809550082,
+                        "fXY": 0.9755179214520402,
+                        "fXY_std_err": 0.0060234488782598536,
+                    },
+                },
+            }
         },
         "action": {
             "braket.ir.jaqcd.program": {
@@ -554,7 +712,7 @@ def get_pulse_model(capabilities_json):
     return {
         "deviceName": "M-2-Pulse",
         "deviceType": "QPU",
-        "providerName": "provider1",
+        "providerName": "Rigetti",
         "deviceStatus": "OFFLINE",
         "deviceCapabilities": device_obj.json(),
     }
@@ -586,6 +744,104 @@ def test_device_pulse_metadata(pulse_device_capabilities):
         assert frame.properties == pulse_device_capabilities["frames"]["q0_q1_cphase_frame"]
     else:
         assert device.frames == {}
+
+
+def test_gate_calibration_refresh_no_url(arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+
+    assert device.refresh_gate_calibrations() == None
+
+
+@patch("urllib.request.urlopen")
+def test_device_gate_calibrations_exists(mock_url_request):
+    # The data is accessed using a device manager so here data is prepped and passed for the return val.
+    response_data_content = {
+        "gates": {
+            "0_1": {
+                "cphaseshift": [
+                    {
+                        "name": "cphaseshift",
+                        "qubits": ["0", "1"],
+                        "arguments": ["-1.5707963267948966"],
+                        "calibrations": [
+                            {
+                                "name": "play",
+                                "arguments": [
+                                    {
+                                        "name": "waveform",
+                                        "value": "wf_drag_gaussian_0",
+                                        "type": "waveform",
+                                    },
+                                    {
+                                        "name": "frame",
+                                        "value": "q0_q1_cphase_frame",
+                                        "type": "frame",
+                                    },
+                                ],
+                            },
+                        ],
+                    }
+                ],
+                "rx_12": [{"name": "rx_12", "qubits": ["0"]}],
+            },
+        },
+        "waveforms": {
+            "wf_drag_gaussian_0": {
+                "waveformId": "wf_drag_gaussian_0",
+                "name": "drag_gaussian",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                    {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                    {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
+                ],
+            },
+        },
+    }
+
+    response_data_stream = io.BytesIO(json.dumps(response_data_content).encode("utf-8"))
+    mock_url_request.return_value.__enter__.return_value = response_data_stream
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    )
+    device = AwsDevice(RIGETTI_ARN, mock_session)
+
+    expected_waveforms = {
+        "wf_drag_gaussian_0": DragGaussianWaveform(
+            length=6.000000000000001e-8,
+            sigma=6.369913502160144e-9,
+            amplitude=-0.4549282253548838,
+            beta=7.494904522022295e-10,
+            id="wf_drag_gaussian_0",
+        )
+    }
+    expected_ngc = GateCalibrations(
+        pulse_sequences={
+            (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): PulseSequence().play(
+                device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"]
+            )
+        }
+    )
+    assert device.gate_calibrations == expected_ngc
+    # Called twice to check that the property stays the same after being initially fetched
+    assert device.gate_calibrations == expected_ngc
+
+
+@pytest.mark.xfail(raises=URLError)
+@patch("urllib.request.urlopen")
+def test_refresh_data_url_error(mock_url_request):
+    mock_url_request.side_effect = URLError("mock reason")
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    )
+    device = AwsDevice(RIGETTI_ARN, mock_session)
+
+    device.gate_calibrations
 
 
 def test_equality(arn):
@@ -1054,6 +1310,7 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
         None,
         None,
         None,
+        None,
     )
     device._aws_session.default_bucket.assert_not_called()
 
@@ -1227,6 +1484,7 @@ def _run_and_assert(
     poll_timeout_seconds=None,  # Treated as positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
+    gate_definitions=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1243,6 +1501,7 @@ def _run_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
+        gate_definitions,
         extra_args,
         extra_kwargs,
     )
@@ -1260,6 +1519,7 @@ def _run_batch_and_assert(
     poll_timeout_seconds=None,  # Treated as a positional arg
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
+    gate_definitions=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1279,6 +1539,7 @@ def _run_batch_and_assert(
         poll_timeout_seconds,
         poll_interval_seconds,
         inputs,
+        gate_definitions,
         extra_args,
         extra_kwargs,
     )
@@ -1569,3 +1830,110 @@ def test_device_topology_graph_data(get_device_data, expected_graph, arn):
     new_val = "new_val"
     device._topology_graph = new_val
     assert device.topology_graph == new_val
+
+
+def test_device_no_href():
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    device = AwsDevice(DWAVE_ARN, mock_session)
+
+
+def test_parse_calibration_data():
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    )
+    device = AwsDevice(DWAVE_ARN, mock_session)
+    calibration_data = device._parse_calibration_json(MOCK_gate_calibrations_JSON)
+    device_ngc = GateCalibrations(calibration_data)
+
+    expected_waveforms = {
+        "wf_drag_gaussian_0": DragGaussianWaveform(
+            length=6.000000000000001e-8,
+            sigma=6.369913502160144e-9,
+            amplitude=-0.4549282253548838,
+            beta=7.494904522022295e-10,
+            id="wf_drag_gaussian_0",
+        )
+    }
+    expected_pulse_sequences = {
+        (Gate.CPhaseShift(-1.5707963267948966), QubitSet([0, 1])): PulseSequence()
+        .barrier(QubitSet(0))
+        .play(device.frames["q0_q1_cphase_frame"], expected_waveforms["wf_drag_gaussian_0"])
+        .barrier([device.frames["q0_q1_cphase_frame"]])
+        .barrier([])
+        .delay(QubitSet([0, 1]), 3e-07)
+        .delay([device.frames["q0_q1_cphase_frame"]], 3e-07)
+        .shift_phase(device.frames["q0_q1_cphase_frame"], 3e-07)
+        .shift_frequency(device.frames["q0_q1_cphase_frame"], FreeParameter("theta")),
+        (Gate.Rx(FreeParameter("theta")), QubitSet(0)): PulseSequence().barrier([]),
+        (Gate.CZ(), QubitSet([1, 0])): PulseSequence().barrier([]),
+    }
+    expected_ngc = GateCalibrations(pulse_sequences=expected_pulse_sequences)
+    assert device_ngc == expected_ngc
+
+
+@pytest.mark.parametrize(
+    "bad_input",
+    [
+        (
+            {
+                "gates": {
+                    "0": {
+                        "rx": [
+                            {
+                                "name": "rx",
+                                "qubits": ["0"],
+                                "arguments": ["-1.5707963267948966"],
+                                "calibrations": [
+                                    {
+                                        "name": "incorrect_instr",
+                                        "arguments": [
+                                            {"name": "qubit", "value": "0", "type": "string"}
+                                        ],
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                },
+                "waveforms": {},
+            }
+        ),
+        (
+            {
+                "gates": {
+                    "0": {
+                        "rx": [
+                            {
+                                "name": "cphaseshift",
+                                "qubits": ["0"],
+                                "arguments": ["-1.5707963267948966"],
+                                "calibrations": [
+                                    {
+                                        "name": "delay",
+                                        "arguments": [
+                                            {"name": "bad_value", "value": "1", "type": "float"},
+                                            {"name": "qubit", "value": None, "type": "string"},
+                                        ],
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                },
+                "waveforms": {
+                    "blankId_waveform": {"waveformId": "blankId_waveform", "name": "bad_waveform"},
+                },
+            }
+        ),
+    ],
+)
+@pytest.mark.xfail(raises=ValueError)
+def test_parse_calibration_data_bad_instr(bad_input):
+    mock_session = Mock()
+    mock_session.get_device.return_value = get_pulse_model(
+        MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1
+    )
+    device = AwsDevice(DWAVE_ARN, mock_session)
+    device._parse_calibration_json(bad_input)
