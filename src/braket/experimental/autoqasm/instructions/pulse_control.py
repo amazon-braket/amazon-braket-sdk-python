@@ -25,7 +25,7 @@ from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
 from braket.pulse.waveforms import Waveform
 
-from .qubits import QubitIdentifierType
+from .qubits import QubitIdentifierType, is_qubit_identifier_type
 
 
 def _pulse_instruction(name: str, frame: Frame, *args) -> None:
@@ -126,7 +126,7 @@ def delay(
     """
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
-    if all(isinstance(q, QubitIdentifierType) for q in qubits_or_frames):
+    if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(qubits_or_frames)
     _pulse_instruction("delay", qubits_or_frames, duration)
 
@@ -143,6 +143,6 @@ def barrier(
     """
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
-    if all(isinstance(q, QubitIdentifierType) for q in qubits_or_frames):
+    if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(qubits_or_frames)
     _pulse_instruction("barrier", qubits_or_frames)
