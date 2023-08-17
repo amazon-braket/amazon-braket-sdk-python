@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Instructions that apply to qubits, including quantum gates, reset and measure.
+"""Instructions that apply to qubits or frames, including quantum gates, reset, measure
+and pulse control.
 
 Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
 

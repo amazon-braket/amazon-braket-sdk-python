@@ -12,6 +12,9 @@
 # language governing permissions and limitations under the License.
 
 
+"""Pulse control instructions that apply to frames or qubits.
+"""
+
 from typing import List, Union
 
 import oqpy
