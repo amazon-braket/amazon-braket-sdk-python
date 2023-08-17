@@ -50,8 +50,7 @@ class FreeParameter(FreeParameterExpression):
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        FreeParameter._validate_name(name)
-        self._name = Symbol(name)
+        self._set_name(name)
         super().__init__(expression=self._name)
 
     @property
@@ -100,6 +99,10 @@ class FreeParameter(FreeParameterExpression):
             "__class__": self.__class__.__name__,
             "name": self.name,
         }
+
+    def _set_name(self, name: str) -> None:
+        FreeParameter._validate_name(name)
+        self._name = Symbol(name)
 
     @staticmethod
     def _validate_name(name: str) -> None:
