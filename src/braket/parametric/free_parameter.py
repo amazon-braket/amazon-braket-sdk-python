@@ -109,7 +109,7 @@ class FreeParameter(FreeParameterExpression):
         if not name:
             raise ValueError("FreeParameter names must be non empty")
         if not isinstance(name, str):
-            raise TypeError("FreeParameter name must be a string")
+            raise TypeError("FreeParameter names must be strings")
         if name.startswith("__"):
             raise ValueError("FreeParameter names must not start with two underscores '__'")
 
