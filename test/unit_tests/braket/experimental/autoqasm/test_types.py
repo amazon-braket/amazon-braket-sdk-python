@@ -527,7 +527,7 @@ def test_recursive_retval_expression_python_type() -> None:
         return retval_recursive()
 
     expected_qasm = """OPENQASM 3.0;
-def retval_recursive() -> int[32] {
+def retval_recursive() -> int {
     int[32] __int_1__;
     __int_1__ = retval_recursive();
     int[32] __int_3__;

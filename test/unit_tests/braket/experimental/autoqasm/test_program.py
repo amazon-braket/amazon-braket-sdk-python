@@ -97,8 +97,8 @@ def circuit(float[64] angle) {
 }
 qubit[2] __qubits__;
 for int i in [0:"""
-            + str(scale - 1)
-            + """] {
+            + str(scale)
+            + """ - 1] {
     circuit("""
             + str(angle)
             + """);

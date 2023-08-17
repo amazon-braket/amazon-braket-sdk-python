@@ -36,7 +36,7 @@ setup(
         # Pin the latest commit of the qubit-array branch of ajberdy/oqpy.git to get the version of
         # oqpy which contains changes that AutoQASM relies on, including the QubitArray type.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
-        "oqpy @ git+https://github.com/ajberdy/oqpy.git@7e5885af6193009265c8195dad7553db02bdfd96#egg=oqpy",  # noqa E501
+        "oqpy @ git+https://github.com/ajberdy/oqpy.git@ffc2fbc5619f29373c84ada68e3bfa9651b8db42#egg=oqpy",  # noqa E501
         "setuptools",
         "backoff",
         "boltons",

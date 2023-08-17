@@ -316,7 +316,7 @@ def test_ghz_qasm_for_loop() -> None:
     expected = """OPENQASM 3.0;
 qubit[5] __qubits__;
 h __qubits__[0];
-for int i in [0:3] {
+for int i in [0:4 - 1] {
     cnot __qubits__[i], __qubits__[i + 1];
 }"""
     assert ghz_qasm_for_loop().to_ir() == expected
@@ -684,10 +684,10 @@ def test_multi_for_loop() -> None:
     """
     expected = """OPENQASM 3.0;
 qubit[6] __qubits__;
-for int i in [0:2] {
+for int i in [0:3 - 1] {
     cnot __qubits__[i], __qubits__[i + 1];
 }
-for int i in [0:4] {
+for int i in [0:5 - 1] {
     h __qubits__[i];
 }"""
 
@@ -722,7 +722,7 @@ def bell(int[32] q0, int[32] q1) {
     cnot __qubits__[q0], __qubits__[q1];
 }
 qubit[5] __qubits__;
-for int i in [0:2] {
+for int i in [0:3 - 1] {
     bell(0, 1);
 }"""
 
