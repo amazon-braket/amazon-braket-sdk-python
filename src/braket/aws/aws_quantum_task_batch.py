@@ -15,8 +15,7 @@ from __future__ import annotations
 
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
-from itertools import repeat
-from typing import Dict, List, Set, Tuple, Union
+from typing import Dict, List, Set, Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -26,6 +25,7 @@ from braket.circuits import Circuit
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
+from braket.tasks.quantum_task_helper import _batch_tasks_and_inputs
 
 
 class AwsQuantumTaskBatch(QuantumTaskBatch):
@@ -124,61 +124,6 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         self._aws_quantum_task_kwargs = aws_quantum_task_kwargs
 
     @staticmethod
-    def _tasks_and_inputs(
-        task_specifications: Union[
-            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
-            List[
-                Union[
-                    Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
-                ]
-            ],
-        ],
-        inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
-    ) -> List[
-        Tuple[
-            Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
-            Dict[str, float],
-        ]
-    ]:
-        inputs = inputs or {}
-
-        single_task = isinstance(
-            task_specifications,
-            (Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation),
-        )
-        single_input = isinstance(inputs, dict)
-
-        if not single_task and not single_input:
-            if len(task_specifications) != len(inputs):
-                raise ValueError(
-                    "Multiple inputs and task specifications must " "be equal in number."
-                )
-        if single_task:
-            task_specifications = repeat(task_specifications)
-
-        if single_input:
-            inputs = repeat(inputs)
-
-        tasks_and_inputs = zip(task_specifications, inputs)
-
-        if single_task and single_input:
-            tasks_and_inputs = [next(tasks_and_inputs)]
-
-        tasks_and_inputs = list(tasks_and_inputs)
-
-        for task_specification, input_map in tasks_and_inputs:
-            if isinstance(task_specification, Circuit):
-                param_names = {param.name for param in task_specification.parameters}
-                unbounded_parameters = param_names - set(input_map.keys())
-                if unbounded_parameters:
-                    raise ValueError(
-                        f"Cannot execute circuit with unbound parameters: "
-                        f"{unbounded_parameters}"
-                    )
-
-        return tasks_and_inputs
-
-    @staticmethod
     def _execute(
         aws_session: AwsSession,
         device_arn: str,
@@ -200,7 +145,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         *args,
         **kwargs,
     ) -> List[AwsQuantumTask]:
-        tasks_and_inputs = AwsQuantumTaskBatch._tasks_and_inputs(task_specifications, inputs)
+        tasks_and_inputs = _batch_tasks_and_inputs(task_specifications, inputs)
         max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in tasks_and_inputs]
         try:
