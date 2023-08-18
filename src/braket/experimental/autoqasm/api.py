@@ -398,7 +398,7 @@ def _convert_gate(
         if isinstance(e, errors.AutoQasmError):
             raise
         elif hasattr(e, "ag_error_metadata"):
-            raise e.ag_error_metadata.to_exception(e)
+            raise e.ag_error_metadata.to_exception(e)  # TODO - need code coverage for this line
         else:
             raise
 
