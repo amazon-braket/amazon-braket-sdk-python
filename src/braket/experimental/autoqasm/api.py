@@ -372,18 +372,19 @@ def _convert_gate(
     try:
         with conversion_ctx:
             # Wrap the function into an oqpy gate definition
-            wrapped_f, qubit_indices, angle_indices, qubit_names, angle_names = _wrap_for_oqpy_gate(
-                f, options
-            )
+            wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
+            qubit_names = [name for name, is_qubit in gate_args if is_qubit]
             qubits = [oqpy.Qubit(name, needs_declaration=False) for name in qubit_names]
+            angle_names = [name for name, is_qubit in gate_args if not is_qubit]
             angles = [oqpy.AngleVar(name=name) for name in angle_names]
             gate_name = f.__name__
             with oqpy.gate(oqpy_program, qubits, gate_name, angles):
+                # TODO - enforce that nothing gets added to the program inside here except gates
                 wrapped_f(qubits, *angles)
 
             # Add the gate invocation to the program
-            qubit_args = [args[i] for i in qubit_indices]
-            angle_args = [args[i] for i in angle_indices]
+            qubit_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if is_qubit]
+            angle_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if not is_qubit]
             aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
 
             # Add the gate definition to the root-level program if necessary
@@ -540,11 +541,8 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 
 def _wrap_for_oqpy_gate(
     f: Callable, options: converter.ConversionOptions
-) -> Tuple[Callable[[List[oqpy.Qubit], Any], None], List[int], List[int], List[str], List[str]]:
-    qubit_indices = []
-    qubit_names = []
-    angle_indices = []
-    angle_names = []
+) -> Tuple[Callable[[List[oqpy.Qubit], Any], None], List[Tuple[str, bool]]]:
+    gate_args = []
     sig = inspect.signature(f)
     for i, param in enumerate(sig.parameters.values()):
         if param.annotation is param.empty:
@@ -554,11 +552,9 @@ def _wrap_for_oqpy_gate(
             )
 
         if param.annotation == aq_instructions.QubitIdentifierType:
-            qubit_indices.append(i)
-            qubit_names.append(param.name)
+            gate_args.append((param.name, True))
         elif param.annotation in [float, aq_types.FloatVar]:
-            angle_indices.append(i)
-            angle_names.append(param.name)
+            gate_args.append((param.name, False))
         else:
             raise errors.ParameterTypeError(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
@@ -566,20 +562,26 @@ def _wrap_for_oqpy_gate(
             )
 
     def _func(qubits: List[oqpy.Qubit], *args: Any) -> None:
-        q = qubits.copy()
-        a = list(args).copy() if args else []
-        f_args = []
-        while q or a:
-            i = len(f_args)
-            if i in qubit_indices:
-                f_args.append(q.pop(0))
-            elif i in angle_indices:
-                f_args.append(a.pop(0))
-            else:
-                raise errors.ParameterTypeError(
-                    f"Incorrect number of parameters passed to {f.__name__}"
-                )
+        qubits = qubits.copy()
+        angles = list(args).copy() if args else []
 
+        qubit_args = [name for name, is_qubit in gate_args if is_qubit]
+        if len(qubits) != len(qubit_args):
+            raise errors.ParameterTypeError(
+                f"Incorrect number of qubits passed to {f.__name__}. "
+                f"Expected {len(qubit_args)}, got {len(qubits)}."
+            )
+
+        angle_args = [name for name, is_qubit in gate_args if not is_qubit]
+        if len(angles) != len(angle_args):
+            raise errors.ParameterTypeError(
+                f"Incorrect number of angles passed to {f.__name__}. "
+                f"Expected {len(angle_args)}, got {len(angles)}."
+            )
+
+        f_args = []
+        for _, is_qubit in gate_args:
+            f_args.append(qubits.pop(0) if is_qubit else angles.pop(0))
         f(*f_args)
 
-    return _func, qubit_indices, angle_indices, qubit_names, angle_names
+    return _func, gate_args
