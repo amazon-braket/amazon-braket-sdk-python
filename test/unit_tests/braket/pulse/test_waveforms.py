@@ -124,9 +124,7 @@ def test_drag_gaussian_waveform():
     assert wf.sigma == sigma
     assert wf.length == length
 
-    _assert_wf_qasm(
-        wf, "waveform drag_gauss_wf = drag_gaussian(4.0ns, 300.0ms, 0.6, 0.4, false);"
-    )
+    _assert_wf_qasm(wf, "waveform drag_gauss_wf = drag_gaussian(4.0ns, 300.0ms, 0.6, 0.4, false);")
 
 
 def test_drag_gaussian_waveform_default_params():
@@ -204,9 +202,7 @@ def test_drag_gaussian_wf_free_params():
 
     wf_3 = wf.bind_values(length_v=0.6, sigma_a=0.3, sigma_b=0.1, beta_y=0.2, amp_z=0.1)
     assert wf_3.parameters == [0.6, 0.4, 0.2, 0.1]
-    _assert_wf_qasm(
-        wf_3, "waveform d_gauss_wf = drag_gaussian(600.0ms, 400.0ms, 0.2, 0.1, false);"
-    )
+    _assert_wf_qasm(wf_3, "waveform d_gauss_wf = drag_gaussian(600.0ms, 400.0ms, 0.2, 0.1, false);")
 
 
 def test_gaussian_waveform_default_params():
@@ -247,9 +243,7 @@ def test_gaussian_wf_free_params():
 
     wf_2 = wf.bind_values(length_v=0.6, sigma_x=0.4)
     assert wf_2.parameters == [0.6, 0.4, FreeParameter("amp_z")]
-    _assert_wf_qasm(
-        wf_2, "waveform gauss_wf = gaussian(600.0ms, 400.0ms, amp_z, false);"
-    )
+    _assert_wf_qasm(wf_2, "waveform gauss_wf = gaussian(600.0ms, 400.0ms, amp_z, false);")
 
     wf_3 = wf.bind_values(length_v=0.6, sigma_x=0.3, amp_z=0.1)
     assert wf_3.parameters == [0.6, 0.3, 0.1]

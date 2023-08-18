@@ -3047,10 +3047,8 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
-            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1,"
-            " false);",
-            "    waveform drag_gauss_wf_2 = drag_gaussian(3.0ms, 400.0ms, "
-            "0.2, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
+            "    waveform drag_gauss_wf_2 = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "}",
             "h $0;",
             "cal {",
