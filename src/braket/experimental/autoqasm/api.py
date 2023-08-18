@@ -380,6 +380,8 @@ def _convert_gate(
             gate_name = f.__name__
             with oqpy.gate(oqpy_program, qubits, gate_name, angles):
                 # TODO - enforce that nothing gets added to the program inside here except gates
+                # TODO - enforce that gates added here only operate on the qubit args of the gate
+                # TODO - enforce that the gate has at least one qubit argument
                 wrapped_f(qubits, *angles)
 
             # Add the gate invocation to the program
@@ -564,21 +566,6 @@ def _wrap_for_oqpy_gate(
     def _func(qubits: List[oqpy.Qubit], *args: Any) -> None:
         qubits = qubits.copy()
         angles = list(args).copy() if args else []
-
-        qubit_args = [name for name, is_qubit in gate_args if is_qubit]
-        if len(qubits) != len(qubit_args):
-            raise errors.ParameterTypeError(
-                f"Incorrect number of qubits passed to {f.__name__}. "
-                f"Expected {len(qubit_args)}, got {len(qubits)}."
-            )
-
-        angle_args = [name for name, is_qubit in gate_args if not is_qubit]
-        if len(angles) != len(angle_args):
-            raise errors.ParameterTypeError(
-                f"Incorrect number of angles passed to {f.__name__}. "
-                f"Expected {len(angle_args)}, got {len(angles)}."
-            )
-
         f_args = []
         for _, is_qubit in gate_args:
             f_args.append(qubits.pop(0) if is_qubit else angles.pop(0))

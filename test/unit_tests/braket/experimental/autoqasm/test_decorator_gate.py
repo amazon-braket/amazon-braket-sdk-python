@@ -14,31 +14,114 @@
 """AutoQASM tests exercising the @aq.gate decorator and related functionality.
 """
 
+import pytest
 from test_api import _test_on_local_sim
 
 import braket.experimental.autoqasm as aq
+from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.instructions import h, measure, rx, rz
 
 
-def test_empty_gate() -> None:
-    @aq.gate
-    def my_gate(q: aq.qubit):
-        pass
+@aq.gate
+def empty_gate(q: aq.qubit):
+    pass
 
+
+def test_empty_gate() -> None:
     @aq.function
     def my_program():
-        my_gate(0)
+        empty_gate(0)
 
     expected = """OPENQASM 3.0;
-gate my_gate q {
+gate empty_gate q {
 }
 qubit[1] __qubits__;
-my_gate __qubits__[0];"""
+empty_gate __qubits__[0];"""
 
     program = my_program()
     assert program.to_ir() == expected
 
     _test_on_local_sim(program)
+
+
+def test_double_gate_decorator() -> None:
+    double_decorated = aq.gate(empty_gate)
+
+    @aq.function
+    def my_program():
+        double_decorated(0)
+
+    expected = """OPENQASM 3.0;
+gate empty_gate q {
+}
+qubit[1] __qubits__;
+empty_gate __qubits__[0];"""
+
+    program = my_program()
+    assert program.to_ir() == expected
+
+
+def test_gate_class() -> None:
+    """Tests the aq.gate decorator on a class."""
+
+    @aq.gate
+    class MyGate:
+        def __init__(self, q: aq.qubit):
+            h(q)
+
+    @aq.function
+    def main():
+        MyGate(0)
+
+    expected = """OPENQASM 3.0;
+gate MyGate q {
+    h q;
+}
+qubit[1] __qubits__;
+MyGate __qubits__[0];"""
+
+    program = main()
+    assert program.to_ir() == expected
+
+
+def test_incorrect_args() -> None:
+    @aq.gate
+    def my_gate(q: aq.qubit, theta: float):
+        h(q)
+        rx(q, theta)
+
+    @aq.function
+    def incorrect_arg_types():
+        my_gate(0.25, 0)
+
+    with pytest.raises(TypeError):
+        incorrect_arg_types()
+
+
+def test_missing_annotation() -> None:
+    @aq.gate
+    def my_gate(a):
+        pass
+
+    @aq.function
+    def my_program():
+        my_gate("test")
+
+    with pytest.raises(errors.MissingParameterTypeError):
+        my_program()
+
+
+def test_incorrect_annotation() -> None:
+    @aq.gate
+    def my_gate(a: str):
+        pass
+
+    @aq.function
+    def my_program():
+        my_gate("test")
+
+    with pytest.raises(errors.ParameterTypeError):
+        my_program()
 
 
 def test_nested_gates() -> None:
