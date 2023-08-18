@@ -82,7 +82,7 @@ def test_merge_cal_box() -> None:
         defcalgrammar "openpulse";
         cal {
             barrier $0;
-            delay[340000000.0ns] $3, $4;
+            delay[340.0ms] $3, $4;
         }
         """
     ).strip()
@@ -123,19 +123,19 @@ def test_merge_cal_box() -> None:
             [0.12],
             "\ncal {\n    set_scale(predefined_frame_1, 0.12);\n}",
         ),
-        (delay, 3, [0.34], "\ncal {\n    delay[340000000.0ns] $3;\n}"),
-        (delay, [3, 4], [0.34], "\ncal {\n    delay[340000000.0ns] $3, $4;\n}"),
+        (delay, 3, [0.34], "\ncal {\n    delay[340.0ms] $3;\n}"),
+        (delay, [3, 4], [0.34], "\ncal {\n    delay[340.0ms] $3, $4;\n}"),
         (
             delay,
             FRAME1,
             [0.34],
-            "\ncal {\n    delay[340000000.0ns] predefined_frame_1;\n}",
+            "\ncal {\n    delay[340.0ms] predefined_frame_1;\n}",
         ),
         (
             delay,
             [FRAME1, FRAME2],
             [0.34],
-            "\ncal {\n    delay[340000000.0ns] predefined_frame_1, predefined_frame_2;\n}",
+            "\ncal {\n    delay[340.0ms] predefined_frame_1, predefined_frame_2;\n}",
         ),
         (barrier, 3, [], "\ncal {\n    barrier $3;\n}"),
         (barrier, [3, 4], [], "\ncal {\n    barrier $3, $4;\n}"),
