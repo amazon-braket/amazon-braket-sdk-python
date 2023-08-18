@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 from typing import List, Set
 
 import pytest
@@ -55,6 +56,12 @@ def test_device_across_regions(aws_session):
 def test_get_devices_arn(arn):
     results = AwsDevice.get_devices(arns=[arn])
     assert results[0].arn == arn
+
+
+@pytest.mark.parametrize("arn", [(PULSE_ARN)])
+def test_device_gate_calibrations(arn, aws_session):
+    device = AwsDevice(arn, aws_session=aws_session)
+    assert device.gate_calibrations
 
 
 def test_get_devices_others():
@@ -131,7 +138,6 @@ def test_device_enum():
     # validate all devices in enum
     providers = [getattr(Devices, attr) for attr in dir(Devices) if not attr.startswith("__")]
     for provider in providers:
-        devices = [getattr(provider, attr) for attr in dir(provider) if not attr.startswith("__")]
-        for arn in devices:
-            device = AwsDevice(arn)
+        for device_arn in provider:
+            device = AwsDevice(device_arn)
             _validate_device(device, active_providers)
