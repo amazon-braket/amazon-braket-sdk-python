@@ -46,7 +46,7 @@ class PulseSequence:
 
     def __init__(self):
         self._capture_v0_count = 0
-        self._program = Program()
+        self._program = Program(simplify_constants=False)
         self._frames = {}
         self._waveforms = {}
         self._free_parameters = set()
@@ -278,7 +278,7 @@ class PulseSequence:
         tree: ast.Program = program.to_ast(include_externs=False, ignore_needs_declaration=True)
         new_tree: ast.Program = _FreeParameterTransformer(param_values).visit(tree)
 
-        new_program = Program()
+        new_program = Program(simplify_constants=False)
         new_program.declared_vars = program.declared_vars
         new_program.undeclared_vars = program.undeclared_vars
         for x in new_tree.statements:

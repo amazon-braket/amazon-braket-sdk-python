@@ -80,7 +80,7 @@ def test_to_ir(pulse_sequence):
             "OPENQASM 3.0;",
             "defcal rx(1.0) $0, $1 {",
             "    barrier test_frame_rf;",
-            "    delay[1000000000000.0ns] test_frame_rf;",
+            "    delay[1000s] test_frame_rf;",
             "}",
         ]
     )
@@ -100,7 +100,7 @@ def test_to_ir_with_bad_key(pulse_sequence):
             "OPENQASM 3.0;",
             "defcal z $0, $1 {",
             "    barrier test_frame_rf;",
-            "    delay[1000000000000.0ns] test_frame_rf;",
+            "    delay[1000s] test_frame_rf;",
             "}",
         ]
     )
@@ -118,7 +118,7 @@ def test_to_ir_with_key(pulse_sequence):
             "OPENQASM 3.0;",
             "defcal z $0, $1 {",
             "    barrier test_frame_rf;",
-            "    delay[1000000000000.0ns] test_frame_rf;",
+            "    delay[1000s] test_frame_rf;",
             "}",
         ]
     )

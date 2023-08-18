@@ -518,7 +518,7 @@ def test_recursive_retval_expression_python_type() -> None:
         return 3
 
     @aq.function
-    def retval_recursive() -> int:
+    def retval_recursive() -> float:
         a = 2 * retval_recursive() + (retval_constant() + 2) / 3
         return a
 
@@ -527,20 +527,20 @@ def test_recursive_retval_expression_python_type() -> None:
         return retval_recursive()
 
     expected_qasm = """OPENQASM 3.0;
-def retval_recursive() -> int[32] {
-    int[32] __int_1__;
-    __int_1__ = retval_recursive();
+def retval_recursive() -> float[64] {
+    float[64] __float_1__;
+    __float_1__ = retval_recursive();
     int[32] __int_3__;
     __int_3__ = retval_constant();
-    return 2 * __int_1__ + (__int_3__ + 2) / 3;
+    return 2 * __float_1__ + (__int_3__ + 2) / 3;
 }
 def retval_constant() -> int[32] {
     int[32] retval_;
     retval_ = 3;
     return retval_;
 }
-int[32] __int_4__;
-__int_4__ = retval_recursive();"""
+float[64] __float_4__;
+__float_4__ = retval_recursive();"""
 
     assert caller().to_ir() == expected_qasm
 

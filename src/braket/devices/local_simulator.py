@@ -212,7 +212,9 @@ class LocalSimulator(Device):
         **kwargs,
     ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
         """Wraps _run_interal for pickle dump"""
-        return self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
+        return self._run_internal(
+            task_specification, shots, inputs=inputs, *args, **kwargs
+        )  # pragma: no cover (this line sometimes doesn't get detected by codecov)
 
     @singledispatchmethod
     def _get_simulator(self, simulator: Union[str, BraketSimulator]) -> LocalSimulator:
