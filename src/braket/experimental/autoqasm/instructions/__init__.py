@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Instructions that apply to qubits, including quantum gates, reset and measure.
+"""Instructions that apply to qubits or frames, including quantum gates, reset, measure
+and pulse control.
 
 Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
 
@@ -27,3 +28,4 @@ Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
 from .gates import *  # noqa: F401, F403
 from .instructions import QubitIdentifierType, reset  # noqa: F401
 from .measurements import measure  # noqa: F401
+from .pulse_control import *  # noqa: F401, F403
