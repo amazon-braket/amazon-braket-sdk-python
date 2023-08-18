@@ -25,6 +25,18 @@ from braket.experimental.autoqasm import constants, errors, program
 QubitIdentifierType = Union[int, oqpy._ClassicalVar, oqpy.base.OQPyExpression, str]
 
 
+def is_qubit_identifier_type(qubit: Any) -> bool:
+    """Checks if a given object is a qubit identifier type.
+
+    Args:
+        qubit (Any): The object to check.
+
+    Returns:
+        bool: True if the object is a qubit identifier type, False otherwise.
+    """
+    return isinstance(qubit, QubitIdentifierType.__args__)
+
+
 def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> str:
     # TODO: We should index into a oqpy.QubitArray rather
     # than manually generating the string to index into
