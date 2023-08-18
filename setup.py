@@ -27,7 +27,7 @@ setup(
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
-        "amazon-braket-schemas>=1.18.0",
+        "amazon-braket-schemas>=1.19.1",
         # Pin the latest commit of mcm-sim branch of aws/amazon-braket-default-simulator-python.git
         # to get the version of the simulator that supports the mcm=True argument for Monte Carlo
         # simulation of mid-circuit measurement, which AutoQASM requires.
@@ -36,7 +36,7 @@ setup(
         # Pin the latest commit of the qubit-array branch of ajberdy/oqpy.git to get the version of
         # oqpy which contains changes that AutoQASM relies on, including the QubitArray type.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
-        "oqpy @ git+https://github.com/ajberdy/oqpy.git@7e5885af6193009265c8195dad7553db02bdfd96#egg=oqpy",  # noqa E501
+        "oqpy @ git+https://github.com/ajberdy/oqpy.git@26cf4f9089c3b381370917734d2d964c45c4458d#egg=oqpy",  # noqa E501
         "setuptools",
         "backoff",
         "boltons",

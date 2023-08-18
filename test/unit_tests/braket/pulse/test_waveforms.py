@@ -10,6 +10,7 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 import math
 import re
 from copy import deepcopy
@@ -21,6 +22,7 @@ from oqpy import Program
 from braket.circuits.free_parameter import FreeParameter
 from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
 from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 
 
 @pytest.mark.parametrize(
@@ -72,7 +74,7 @@ def test_constant_waveform():
     assert wf.iq == iq
     assert wf.id == id
 
-    _assert_wf_qasm(wf, "waveform const_wf_x = constant(4000000.0ns, 4);")
+    _assert_wf_qasm(wf, "waveform const_wf_x = constant(4.0ms, 4);")
 
 
 def test_constant_waveform_default_params():
@@ -106,7 +108,7 @@ def test_constant_wf_free_params():
     wf_2 = wf.bind_values(length_v=2e-6, length_w=4e-6)
     assert len(wf_2.parameters) == 1
     assert math.isclose(wf_2.parameters[0], 6e-6)
-    _assert_wf_qasm(wf_2, "waveform const_wf = constant(6000.0ns, 2.0 - 3.0im);")
+    _assert_wf_qasm(wf_2, "waveform const_wf = constant(6.0us, 2.0 - 3.0im);")
 
 
 def test_drag_gaussian_waveform():
@@ -124,9 +126,7 @@ def test_drag_gaussian_waveform():
     assert wf.sigma == sigma
     assert wf.length == length
 
-    _assert_wf_qasm(
-        wf, "waveform drag_gauss_wf = drag_gaussian(4.0ns, 300000000.0ns, 0.6, 0.4, false);"
-    )
+    _assert_wf_qasm(wf, "waveform drag_gauss_wf = drag_gaussian(4.0ns, 300.0ms, 0.6, 0.4, false);")
 
 
 def test_drag_gaussian_waveform_default_params():
@@ -165,7 +165,7 @@ def test_gaussian_waveform():
     assert wf.sigma == sigma
     assert wf.length == length
 
-    _assert_wf_qasm(wf, "waveform gauss_wf = gaussian(4.0ns, 300000000.0ns, 0.4, false);")
+    _assert_wf_qasm(wf, "waveform gauss_wf = gaussian(4.0ns, 300.0ms, 0.4, false);")
 
 
 def test_drag_gaussian_wf_free_params():
@@ -198,15 +198,13 @@ def test_drag_gaussian_wf_free_params():
     ]
     _assert_wf_qasm(
         wf_2,
-        "waveform d_gauss_wf = drag_gaussian(600000000.0ns, (1000000000.0*sigma_b "
+        "waveform d_gauss_wf = drag_gaussian(600.0ms, (1000000000.0*sigma_b "
         "+ 400000000.0)ns, beta_y, amp_z, false);",
     )
 
     wf_3 = wf.bind_values(length_v=0.6, sigma_a=0.3, sigma_b=0.1, beta_y=0.2, amp_z=0.1)
     assert wf_3.parameters == [0.6, 0.4, 0.2, 0.1]
-    _assert_wf_qasm(
-        wf_3, "waveform d_gauss_wf = drag_gaussian(600000000.0ns, 400000000.0ns, 0.2, 0.1, false);"
-    )
+    _assert_wf_qasm(wf_3, "waveform d_gauss_wf = drag_gaussian(600.0ms, 400.0ms, 0.2, 0.1, false);")
 
 
 def test_gaussian_waveform_default_params():
@@ -247,16 +245,77 @@ def test_gaussian_wf_free_params():
 
     wf_2 = wf.bind_values(length_v=0.6, sigma_x=0.4)
     assert wf_2.parameters == [0.6, 0.4, FreeParameter("amp_z")]
-    _assert_wf_qasm(
-        wf_2, "waveform gauss_wf = gaussian(600000000.0ns, 400000000.0ns, amp_z, false);"
-    )
+    _assert_wf_qasm(wf_2, "waveform gauss_wf = gaussian(600.0ms, 400.0ms, amp_z, false);")
 
     wf_3 = wf.bind_values(length_v=0.6, sigma_x=0.3, amp_z=0.1)
     assert wf_3.parameters == [0.6, 0.3, 0.1]
-    _assert_wf_qasm(wf_3, "waveform gauss_wf = gaussian(600000000.0ns, 300000000.0ns, 0.1, false);")
+    _assert_wf_qasm(wf_3, "waveform gauss_wf = gaussian(600.0ms, 300.0ms, 0.1, false);")
 
 
 def _assert_wf_qasm(waveform, expected_qasm):
     p = Program(None)
     p.declare(waveform._to_oqpy_expression())
     assert ast_to_qasm(p.to_ast(include_externs=False)) == expected_qasm
+
+
+@pytest.mark.parametrize(
+    "waveform_json, waveform",
+    [
+        (
+            {
+                "waveformId": "q0_q1_cz_CZ",
+                "amplitudes": [[0.0, 0.0], [0.0, 0.0]],
+            },
+            ArbitraryWaveform(id="q0_q1_cz_CZ", amplitudes=[complex(0.0, 0.0), complex(0.0, 0.0)]),
+        ),
+        (
+            {
+                "waveformId": "wf_drag_gaussian_0",
+                "name": "drag_gaussian",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                    {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                    {"name": "beta", "value": 7.494904522022295e-10, "type": "float"},
+                ],
+            },
+            DragGaussianWaveform(
+                id="wf_drag_gaussian_0",
+                sigma=6.369913502160144e-9,
+                length=6.000000000000001e-8,
+                beta=7.494904522022295e-10,
+                amplitude=-0.4549282253548838,
+            ),
+        ),
+        (
+            {
+                "waveformId": "wf_gaussian_0",
+                "name": "gaussian",
+                "arguments": [
+                    {"name": "length", "value": 6.000000000000001e-8, "type": "float"},
+                    {"name": "sigma", "value": 6.369913502160144e-9, "type": "float"},
+                    {"name": "amplitude", "value": -0.4549282253548838, "type": "float"},
+                ],
+            },
+            GaussianWaveform(
+                id="wf_gaussian_0",
+                length=6.000000000000001e-8,
+                sigma=6.369913502160144e-9,
+                amplitude=-0.4549282253548838,
+            ),
+        ),
+        (
+            {
+                "waveformId": "wf_constant",
+                "name": "constant",
+                "arguments": [
+                    {"name": "length", "value": 2.1, "type": "float"},
+                    {"name": "iq", "value": 0.23, "type": "complex"},
+                ],
+            },
+            ConstantWaveform(id="wf_constant", length=2.1, iq=0.23),
+        ),
+    ],
+)
+def test_parse_waveform_from_calibration_schema(waveform_json, waveform):
+    assert _parse_waveform_from_calibration_schema(waveform_json) == waveform

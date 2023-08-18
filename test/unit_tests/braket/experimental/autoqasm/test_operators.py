@@ -191,7 +191,7 @@ def test_control_flow_for_loop_qasm() -> None:
 
     qasm = program_conversion_context.make_program().to_ir()
     expected_qasm = """OPENQASM 3.0;
-for int idx in [0:2] {
+for int idx in [0:3 - 1] {
     h __qubits__[idx];
 }"""
 

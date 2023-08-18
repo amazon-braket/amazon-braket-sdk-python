@@ -47,14 +47,17 @@ class Program:
     """The program that has been generated with AutoQASM. This object can
     be passed to the run() method of a Braket Device."""
 
-    def __init__(self, oqpy_program: oqpy.Program):
+    def __init__(self, oqpy_program: oqpy.Program, has_pulse_control: bool = False):
         """Initializes an AutoQASM Program object.
 
         Args:
             oqpy_program (oqpy.Program): The oqpy program object which
                 contains the generated program.
+            has_pulse_control (bool): Whether the program contains pulse
+                control instructions. Defaults to False.
         """
         self._oqpy_program = oqpy_program
+        self._has_pulse_control = has_pulse_control
 
     def to_ir(
         self,
@@ -73,7 +76,7 @@ class Program:
             str: A representation of the program in the `ir_type` format.
         """
         if ir_type == IRType.OPENQASM:
-            return self._oqpy_program.to_qasm()
+            return self._oqpy_program.to_qasm(encal_declarations=self._has_pulse_control)
 
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
@@ -88,6 +91,7 @@ class ProgramConversionContext:
         self.return_variable = None
         self._qubits_seen = set()
         self._var_idx = 0
+        self._has_pulse_control = False
 
     def make_program(self) -> Program:
         """Makes a Program object using the oqpy program from this conversion context.
@@ -95,7 +99,7 @@ class ProgramConversionContext:
         Returns:
             Program: The program object.
         """
-        return Program(self.get_oqpy_program())
+        return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property
     def qubits(self) -> List[int]:
