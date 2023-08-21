@@ -161,3 +161,34 @@ __bit_0__[1] = measure __qubits__[1];"""
     assert program.to_ir() == expected
 
     _test_on_local_sim(program)
+
+
+def test_gate_called_from_subroutine() -> None:
+    @aq.gate
+    def t(q: aq.Qubit):
+        rz(q, aq.pi / 4)
+
+    @aq.function
+    def subroutine(q0: int, q1: int):
+        t(q0)
+        t(q1)
+
+    @aq.function(num_qubits=4)
+    def main():
+        subroutine(0, 1)
+        subroutine(2, 3)
+
+    expected = """OPENQASM 3.0;
+def subroutine(int[32] q0, int[32] q1) {
+    t __qubits__[q0];
+    t __qubits__[q1];
+}
+gate t q {
+    rz(pi / 4) q;
+}
+qubit[4] __qubits__;
+subroutine(0, 1);
+subroutine(2, 3);"""
+
+    program = main()
+    assert program.to_ir() == expected
