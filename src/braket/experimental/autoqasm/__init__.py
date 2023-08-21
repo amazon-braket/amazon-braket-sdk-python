@@ -43,7 +43,7 @@ The Python code above outputs the following OpenQASM program:
 from oqpy import pi  # noqa: F401
 
 from .api import function, gate  # noqa: F401
-from .instructions import QubitIdentifierType as qubit  # noqa: F401
+from .instructions import QubitIdentifierType as Qubit  # noqa: F401
 from .program import Program, build_program, verbatim  # noqa: F401
 from .transpiler import transpiler  # noqa: F401
 from .types import ArrayVar, BitVar, BoolVar, FloatVar, IntVar  # noqa: F401

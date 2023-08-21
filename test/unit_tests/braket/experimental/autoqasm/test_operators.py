@@ -172,7 +172,7 @@ if (__bool_1__) {
     assert branch_assignment_declared().to_ir() == expected
 
 
-def for_body(i: aq.qubit) -> None:
+def for_body(i: aq.Qubit) -> None:
     h(i)
 
 

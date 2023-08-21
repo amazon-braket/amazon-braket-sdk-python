@@ -546,7 +546,7 @@ def _wrap_for_oqpy_gate(
 ) -> Tuple[Callable[[List[oqpy.Qubit], Any], None], List[Tuple[str, bool]]]:
     gate_args = []
     sig = inspect.signature(f)
-    for i, param in enumerate(sig.parameters.values()):
+    for param in sig.parameters.values():
         if param.annotation is param.empty:
             raise errors.MissingParameterTypeError(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
@@ -560,7 +560,7 @@ def _wrap_for_oqpy_gate(
         else:
             raise errors.ParameterTypeError(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
-                "must have a type hint of either aq.qubit or float."
+                "must have a type hint of either aq.Qubit or float."
             )
 
     def _func(qubits: List[oqpy.Qubit], *args: Any) -> None:

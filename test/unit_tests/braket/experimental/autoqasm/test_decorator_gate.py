@@ -23,7 +23,7 @@ from braket.experimental.autoqasm.instructions import h, measure, rx, rz
 
 
 @aq.gate
-def empty_gate(q: aq.qubit):
+def empty_gate(q: aq.Qubit):
     pass
 
 
@@ -66,7 +66,7 @@ def test_gate_class() -> None:
 
     @aq.gate
     class MyGate:
-        def __init__(self, q: aq.qubit):
+        def __init__(self, q: aq.Qubit):
             h(q)
 
     @aq.function
@@ -86,7 +86,7 @@ MyGate __qubits__[0];"""
 
 def test_incorrect_args() -> None:
     @aq.gate
-    def my_gate(q: aq.qubit, theta: float):
+    def my_gate(q: aq.Qubit, theta: float):
         h(q)
         rx(q, theta)
 
@@ -126,11 +126,11 @@ def test_incorrect_annotation() -> None:
 
 def test_nested_gates() -> None:
     @aq.gate
-    def t(q: aq.qubit):
+    def t(q: aq.Qubit):
         rz(q, aq.pi / 4)
 
     @aq.gate
-    def my_gate(q: aq.qubit, theta: float):
+    def my_gate(q: aq.Qubit, theta: float):
         h(q)
         t(q)
         rx(q, theta)
