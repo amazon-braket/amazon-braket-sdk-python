@@ -72,18 +72,29 @@ def function(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_prog
         return _function_with_params
 
 
-def gate(*args) -> Callable[[Any], None]:
+def gate(*args, declaration_only: bool = False) -> Callable[[Any], None]:
     """Decorator that converts a function into a callable gate definition.
 
     Returns:
         Callable[[Any], None]: A callable which can be used as a custom gate inside an
         aq.function or inside another aq.gate.
     """
+    if not args:
+        # In this case, declaration_only was supplied, and we don't know `f` yet.
+        # Matches the following syntax:
+        #    @aq.gate(declaration_only=True)
+        #    def my_func(...):
+        # Equivalently: `gate(declaration_only=True)(my_func)`
+        def _gate_with_params(*args):
+            return gate(*args, declaration_only=declaration_only)
+
+        return _gate_with_params
+
     f = args[0]
     if is_autograph_artifact(f):
         return f
 
-    wrapper_factory = _convert_gate_wrapper()
+    wrapper_factory = _convert_gate_wrapper(declaration_only)
     wrapper = wrapper_factory(f)
 
     return autograph_artifact(wrapper)
@@ -166,13 +177,13 @@ def _convert_program_wrapper(
     return _decorator
 
 
-def _convert_gate_wrapper() -> Callable:
+def _convert_gate_wrapper(declaration_only: bool) -> Callable:
     def _decorator(f: Callable) -> Callable[[Any], None]:
         """aq.gate decorator implementation."""
 
         def _wrapper(*args, **kwargs) -> Callable:
             """Wrapper that calls the converted version of f."""
-            return _convert_gate(f, args, kwargs)
+            return _convert_gate(f, declaration_only, args, kwargs)
 
         if inspect.isfunction(f) or inspect.ismethod(f):
             _wrapper = functools.update_wrapper(_wrapper, f)
@@ -357,6 +368,7 @@ def _convert_program_as_subroutine(
 
 def _convert_gate(
     f: Callable,
+    declaration_only: bool,
     args: List[Any],
     kwargs: Dict[str, Any],
 ) -> Callable:
@@ -366,30 +378,33 @@ def _convert_gate(
 
     # Wrap the function into an oqpy gate definition
     wrapped_f, gate_args = _wrap_for_oqpy_gate(f)
+    gate_name = f.__name__
     qubit_names = [name for name, is_qubit in gate_args if is_qubit]
     qubits = [oqpy.Qubit(name, needs_declaration=False) for name in qubit_names]
     if not qubits:
         raise errors.ParameterTypeError(
-            f'Gate definition "{f.__name__}" has no arguments of type aq.Qubit. '
+            f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
             "Every gate definition must contain at least one qubit argument."
         )
 
-    angle_names = [name for name, is_qubit in gate_args if not is_qubit]
-    angles = [oqpy.AngleVar(name=name) for name in angle_names]
-    gate_name = f.__name__
-    with program_conversion_context.gate_definition(gate_name, qubits, angles):
-        # TODO - enforce that nothing gets added to the program inside here except gates
-        wrapped_f(qubits, *angles)
+    if not declaration_only:
+        # Process the gate definition
+        angle_names = [name for name, is_qubit in gate_args if not is_qubit]
+        angles = [oqpy.AngleVar(name=name) for name in angle_names]
+        with program_conversion_context.gate_definition(gate_name, qubits, angles):
+            # TODO - enforce that nothing gets added to the program inside here except gates
+            wrapped_f(qubits, *angles)
 
     # Add the gate invocation to the program
     qubit_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if is_qubit]
     angle_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if not is_qubit]
     aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
 
-    # Add the gate definition to the root-level program if necessary
-    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
-    if gate_name not in root_oqpy_program.gates:
-        root_oqpy_program._add_gate(gate_name, oqpy_program.gates[gate_name])
+    if not declaration_only:
+        # Add the gate definition to the root-level program if necessary
+        root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+        if gate_name not in root_oqpy_program.gates:
+            root_oqpy_program._add_gate(gate_name, oqpy_program.gates[gate_name])
 
 
 def _make_return_instance_from_oqpy_return_type(return_type) -> Any:

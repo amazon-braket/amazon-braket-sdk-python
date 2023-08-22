@@ -150,8 +150,10 @@ def test_invalid_qubit_used() -> None:
 
     with pytest.raises(errors.InvalidGateDefinition) as e:
         my_program()
-    assert ('Gate definition "my_gate" uses qubit "1" '
-            'which is not an argument to the gate.' in str(e))
+    assert (
+        'Gate definition "my_gate" uses qubit "1" '
+        "which is not an argument to the gate." in str(e)
+    )
 
 
 def test_nested_gates() -> None:
@@ -219,6 +221,25 @@ gate t q {
 qubit[4] __qubits__;
 subroutine(0, 1);
 subroutine(2, 3);"""
+
+    program = main()
+    assert program.to_ir() == expected
+
+
+def test_gate_declaration_only() -> None:
+    @aq.gate(declaration_only=True)
+    def my_gate(q: aq.Qubit):
+        pass
+
+    @aq.function
+    def main():
+        h(0)
+        my_gate(0)
+
+    expected = """OPENQASM 3.0;
+qubit[1] __qubits__;
+h __qubits__[0];
+my_gate __qubits__[0];"""
 
     program = main()
     assert program.to_ir() == expected
