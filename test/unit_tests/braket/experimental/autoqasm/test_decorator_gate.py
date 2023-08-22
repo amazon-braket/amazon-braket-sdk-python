@@ -14,6 +14,7 @@
 """AutoQASM tests exercising the @aq.gate decorator and related functionality.
 """
 
+import numpy as np
 import pytest
 from test_api import _test_on_local_sim
 
@@ -155,7 +156,7 @@ def test_no_qubit_args() -> None:
 
     @aq.function
     def my_program():
-        not_a_gate(aq.pi)
+        not_a_gate(np.pi)
 
     with pytest.raises(
         errors.ParameterTypeError,
@@ -184,7 +185,7 @@ def test_invalid_qubit_used() -> None:
 def test_nested_gates() -> None:
     @aq.gate
     def t(q: aq.Qubit):
-        rz(q, aq.pi / 4)
+        rz(q, np.pi / 4)
 
     @aq.gate
     def my_gate(q: aq.Qubit, theta: float):
@@ -194,8 +195,8 @@ def test_nested_gates() -> None:
 
     @aq.function
     def my_program():
-        my_gate(0, aq.pi / 4)
-        my_gate(1, 3 * aq.pi / 4)
+        my_gate(0, np.pi / 4)
+        my_gate(1, 3 * np.pi / 4)
         measure([0, 1])
 
     expected = """OPENQASM 3.0;
@@ -223,7 +224,7 @@ __bit_0__[1] = measure __qubits__[1];"""
 def test_gate_called_from_subroutine() -> None:
     @aq.gate
     def t(q: aq.Qubit):
-        rz(q, aq.pi / 4)
+        rz(q, np.pi / 4)
 
     @aq.function
     def subroutine(q0: int, q1: int):
