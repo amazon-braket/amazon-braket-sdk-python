@@ -395,16 +395,15 @@ def _convert_gate(
             # TODO - enforce that nothing gets added to the program inside here except gates
             wrapped_f(qubits, *angles)
 
-    # Add the gate invocation to the program
-    qubit_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if is_qubit]
-    angle_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if not is_qubit]
-    aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
-
-    if not declaration_only:
         # Add the gate definition to the root-level program if necessary
         root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
         if gate_name not in root_oqpy_program.gates:
             root_oqpy_program._add_gate(gate_name, oqpy_program.gates[gate_name])
+
+    # Add the gate invocation to the program
+    qubit_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if is_qubit]
+    angle_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if not is_qubit]
+    aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
 
 
 def _make_return_instance_from_oqpy_return_type(return_type) -> Any:
