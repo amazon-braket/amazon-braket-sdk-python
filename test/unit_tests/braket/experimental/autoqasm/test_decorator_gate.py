@@ -19,7 +19,7 @@ from test_api import _test_on_local_sim
 
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.instructions import h, measure, rx, rz
+from braket.experimental.autoqasm.instructions import h, measure, rx, rz, x
 
 
 @aq.gate
@@ -136,6 +136,21 @@ def test_no_qubit_args() -> None:
     with pytest.raises(errors.ParameterTypeError) as e:
         my_program()
     assert "no arguments of type aq.Qubit" in str(e)
+
+
+def test_invalid_qubit_used() -> None:
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        h(q)
+        x(1)  # invalid
+
+    @aq.function
+    def my_program():
+        my_gate(0)
+
+    with pytest.raises(errors.InvalidGateDefinition) as e:
+        my_program()
+    assert "Gate definition my_gate uses qubit 1 which is not an argument to the gate." in str(e)
 
 
 def test_nested_gates() -> None:

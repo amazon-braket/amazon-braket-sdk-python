@@ -379,7 +379,6 @@ def _convert_gate(
     gate_name = f.__name__
     with program_conversion_context.gate_definition(gate_name, qubits, angles):
         # TODO - enforce that nothing gets added to the program inside here except gates
-        # TODO - enforce that gates added here only operate on the qubit args of the gate
         wrapped_f(qubits, *angles)
 
     # Add the gate invocation to the program

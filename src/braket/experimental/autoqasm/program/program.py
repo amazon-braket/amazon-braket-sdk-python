@@ -88,7 +88,7 @@ class ProgramConversionContext:
     def __init__(self, user_config: Optional[UserConfig] = None):
         self.oqpy_program_stack = [oqpy.Program()]
         self.subroutines_processing = set()  # the set of subroutines queued for processing
-        self.in_gate_definition = False
+        self.gate_definitions_processing = []
         self.user_config = user_config or UserConfig()
         self.return_variable = None
         self._qubits_seen = set()
@@ -196,11 +196,13 @@ class ProgramConversionContext:
             angles (List[float]): The list of angle arguments to the gate.
         """
         try:
-            self.in_gate_definition = True
+            self.gate_definitions_processing.append(
+                {"name": gate_name, "qubits": qubits, "angles": angles}
+            )
             with oqpy.gate(self.get_oqpy_program(), qubits, gate_name, angles):
                 yield
         finally:
-            self.in_gate_definition = False
+            self.gate_definitions_processing.pop()
 
 
 @contextlib.contextmanager
