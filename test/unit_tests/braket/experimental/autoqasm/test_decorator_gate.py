@@ -62,7 +62,7 @@ empty_gate __qubits__[0];"""
 
 
 def test_gate_class() -> None:
-    """Tests the aq.gate decorator on a class."""
+    """Tests the aq.gate decorator on something that is not a function."""
 
     @aq.gate
     class MyGate:
@@ -73,18 +73,42 @@ def test_gate_class() -> None:
     def main():
         MyGate(0)
 
-    expected = """OPENQASM 3.0;
-gate MyGate q {
-    h q;
-}
-qubit[1] __qubits__;
-MyGate __qubits__[0];"""
-
-    program = main()
-    assert program.to_ir() == expected
+    with pytest.raises(ValueError):
+        main()
 
 
-def test_incorrect_args() -> None:
+def test_invalid_symbol() -> None:
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        h(q)
+        not_a_symbol()  # noqa: F821
+
+    @aq.function
+    def main():
+        my_gate(0)
+
+    with pytest.raises(NameError):
+        main()
+
+
+def test_incorrect_arg_count() -> None:
+    @aq.gate
+    def my_gate(q0: aq.Qubit, q1: aq.Qubit):
+        h(q0)
+        x(q1)
+
+    @aq.function
+    def incorrect_arg_count():
+        my_gate(0)
+
+    with pytest.raises(
+        errors.ParameterTypeError,
+        match='Incorrect number of arguments passed to gate "my_gate". ' "Expected 2, got 1.",
+    ):
+        incorrect_arg_count()
+
+
+def test_incorrect_arg_types() -> None:
     @aq.gate
     def my_gate(q: aq.Qubit, theta: float):
         h(q)
@@ -133,9 +157,11 @@ def test_no_qubit_args() -> None:
     def my_program():
         not_a_gate(aq.pi)
 
-    with pytest.raises(errors.ParameterTypeError) as e:
+    with pytest.raises(
+        errors.ParameterTypeError,
+        match='Gate definition "not_a_gate" has no arguments of type aq.Qubit.',
+    ):
         my_program()
-    assert 'Gate definition "not_a_gate" has no arguments of type aq.Qubit.' in str(e)
 
 
 def test_invalid_qubit_used() -> None:
@@ -148,12 +174,11 @@ def test_invalid_qubit_used() -> None:
     def my_program():
         my_gate(0)
 
-    with pytest.raises(errors.InvalidGateDefinition) as e:
+    with pytest.raises(
+        errors.InvalidGateDefinition,
+        match='Gate definition "my_gate" uses qubit "1" which is not an argument to the gate.',
+    ):
         my_program()
-    assert (
-        'Gate definition "my_gate" uses qubit "1" '
-        "which is not an argument to the gate." in str(e)
-    )
 
 
 def test_nested_gates() -> None:
