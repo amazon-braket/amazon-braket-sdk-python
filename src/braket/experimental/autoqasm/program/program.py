@@ -16,12 +16,12 @@
 import contextlib
 import threading
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 
 import oqpy.base
 
 from braket.circuits.serialization import IRType
-from braket.experimental.autoqasm import constants
+from braket.experimental.autoqasm import constants, errors
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -164,6 +164,27 @@ class ProgramConversionContext:
             var_name in oqpy_program.declared_vars.keys()
             or var_name in oqpy_program.undeclared_vars.keys()
         )
+
+    def validate_target_qubits(self, qubits: List[Any]) -> None:
+        """Validate that the specified qubits are valid target qubits at this point in the program.
+
+        Args:
+            qubits (List[Any]): The list of target qubits to validate.
+
+        Raises:
+            errors.InvalidGateDefinition: Target qubits are invalid in the current gate definition.
+        """
+        if self.gate_definitions_processing:
+            gate_name = self.gate_definitions_processing[-1]["name"]
+            gate_qubit_args = self.gate_definitions_processing[-1]["qubits"]
+            for qubit in qubits:
+                if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
+                    qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
+                    raise errors.InvalidGateDefinition(
+                        f'Gate definition "{gate_name}" uses qubit "{qubit_name}" which is not '
+                        "an argument to the gate. Gates may only operate on qubits which are "
+                        "passed as arguments."
+                    )
 
     def get_oqpy_program(self) -> oqpy.Program:
         """Gets the oqpy program from the top of the stack.

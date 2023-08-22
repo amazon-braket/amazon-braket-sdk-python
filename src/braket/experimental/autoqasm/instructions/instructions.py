@@ -17,9 +17,6 @@
 
 from typing import Any, List
 
-import oqpy
-
-from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm import program as aq_program
 
 from .qubits import QubitIdentifierType, _qubit
@@ -29,17 +26,7 @@ def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any)
     # If this is an instruction inside a gate definition, ensure that it only operates on
     # qubits which are passed as arguments to the gate definition.
     program_conversion_context = aq_program.get_program_conversion_context()
-    if program_conversion_context.gate_definitions_processing:
-        gate_name = program_conversion_context.gate_definitions_processing[-1]["name"]
-        gate_qubit_args = program_conversion_context.gate_definitions_processing[-1]["qubits"]
-        for qubit in qubits:
-            if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
-                qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
-                raise errors.InvalidGateDefinition(
-                    f'Gate definition "{gate_name}" uses qubit "{qubit_name}" which is not '
-                    "an argument to the gate. Gates may only operate on qubits which are "
-                    "passed as arguments."
-                )
+    program_conversion_context.validate_target_qubits(qubits)
 
     # Add the instruction to the program.
     oqpy_program = program_conversion_context.get_oqpy_program()
