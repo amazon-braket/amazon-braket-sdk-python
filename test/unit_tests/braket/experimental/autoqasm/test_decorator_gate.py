@@ -124,6 +124,20 @@ def test_incorrect_annotation() -> None:
         my_program()
 
 
+def test_no_qubit_args() -> None:
+    @aq.gate
+    def not_a_gate(angle: float):
+        pass
+
+    @aq.function
+    def my_program():
+        not_a_gate(aq.pi)
+
+    with pytest.raises(errors.ParameterTypeError) as e:
+        my_program()
+    assert "no arguments of type aq.Qubit" in str(e)
+
+
 def test_nested_gates() -> None:
     @aq.gate
     def t(q: aq.Qubit):

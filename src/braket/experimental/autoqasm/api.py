@@ -368,13 +368,18 @@ def _convert_gate(
     wrapped_f, gate_args = _wrap_for_oqpy_gate(f)
     qubit_names = [name for name, is_qubit in gate_args if is_qubit]
     qubits = [oqpy.Qubit(name, needs_declaration=False) for name in qubit_names]
+    if not qubits:
+        raise errors.ParameterTypeError(
+            f'Gate definition "{f.__name__}" has no arguments of type aq.Qubit. '
+            "Every gate definition must contain at least one qubit argument."
+        )
+
     angle_names = [name for name, is_qubit in gate_args if not is_qubit]
     angles = [oqpy.AngleVar(name=name) for name in angle_names]
     gate_name = f.__name__
-    with oqpy.gate(oqpy_program, qubits, gate_name, angles):
+    with program_conversion_context.gate_definition(gate_name, qubits, angles):
         # TODO - enforce that nothing gets added to the program inside here except gates
         # TODO - enforce that gates added here only operate on the qubit args of the gate
-        # TODO - enforce that the gate has at least one qubit argument
         wrapped_f(qubits, *angles)
 
     # Add the gate invocation to the program

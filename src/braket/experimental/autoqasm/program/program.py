@@ -13,6 +13,7 @@
 
 """AutoQASM Program class, context managers, and related functions."""
 
+import contextlib
 import threading
 from dataclasses import dataclass
 from typing import List, Optional
@@ -87,6 +88,7 @@ class ProgramConversionContext:
     def __init__(self, user_config: Optional[UserConfig] = None):
         self.oqpy_program_stack = [oqpy.Program()]
         self.subroutines_processing = set()  # the set of subroutines queued for processing
+        self.in_gate_definition = False
         self.user_config = user_config or UserConfig()
         self.return_variable = None
         self._qubits_seen = set()
@@ -171,52 +173,38 @@ class ProgramConversionContext:
         """
         return self.oqpy_program_stack[-1]
 
-    class OqpyProgramContextManager:
-        """Context manager responsible for managing the oqpy programs which are used
-        by the ProgramConversionContext."""
-
-        def __init__(self, oqpy_program: oqpy.Program, oqpy_program_stack: List[oqpy.Program]):
-            self.oqpy_program = oqpy_program
-            self.oqpy_program_stack = oqpy_program_stack
-
-        def __enter__(self):
-            self.oqpy_program_stack.append(self.oqpy_program)
-
-        def __exit__(self, exc_type, exc_value, exc_tb):
-            self.oqpy_program_stack.pop()
-
-    def push_oqpy_program(self, oqpy_program: oqpy.Program) -> OqpyProgramContextManager:
+    @contextlib.contextmanager
+    def push_oqpy_program(self, oqpy_program: oqpy.Program):
         """Pushes the provided oqpy program onto the stack.
 
         Args:
             oqpy_program (Program): The oqpy program to push onto the stack.
-
-        Returns:
-            OqpyProgramContextManager: A context manager which will pop the provided
-            oqpy program from the stack when exited.
         """
-        return self.OqpyProgramContextManager(oqpy_program, self.oqpy_program_stack)
+        try:
+            self.oqpy_program_stack.append(oqpy_program)
+            yield
+        finally:
+            self.oqpy_program_stack.pop()
+
+    @contextlib.contextmanager
+    def gate_definition(self, gate_name: str, qubits: List[oqpy.Qubit], angles: List[float]):
+        """Sets the program conversion context into a gate definition context.
+
+        Args:
+            gate_name (str): The name of the gate being defined.
+            qubits (List[oqpy.Qubit]): The list of qubit arguments to the gate.
+            angles (List[float]): The list of angle arguments to the gate.
+        """
+        try:
+            self.in_gate_definition = True
+            with oqpy.gate(self.get_oqpy_program(), qubits, gate_name, angles):
+                yield
+        finally:
+            self.in_gate_definition = False
 
 
-class ProgramContextManager:
-    """Context responsible for managing the ProgramConversionContext."""
-
-    def __init__(self, user_config):
-        self.owns_program_conversion_context = False
-        self.user_config = user_config
-
-    def __enter__(self) -> ProgramConversionContext:
-        if not _get_local().program_conversion_context:
-            _get_local().program_conversion_context = ProgramConversionContext(self.user_config)
-            self.owns_program_conversion_context = True
-        return _get_local().program_conversion_context
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        if self.owns_program_conversion_context:
-            _get_local().program_conversion_context = None
-
-
-def build_program(user_config: Optional[UserConfig] = None) -> ProgramContextManager:
+@contextlib.contextmanager
+def build_program(user_config: Optional[UserConfig] = None):
     """Creates a context manager which ensures there is a valid thread-local
     ProgramConversionContext object. If this context manager created the
     ProgramConversionContext object, it removes it from thread-local storage when
@@ -231,17 +219,21 @@ def build_program(user_config: Optional[UserConfig] = None) -> ProgramContextMan
 
     Args:
         user_config (Optional[UserConfig]): User-supplied program building options.
-
-    Returns:
-        ProgramContextManager: The context manager which manages
-        the thread-local Program object.
     """
-    return ProgramContextManager(user_config)
+    try:
+        owns_program_conversion_context = False
+        if not _get_local().program_conversion_context:
+            _get_local().program_conversion_context = ProgramConversionContext(user_config)
+            owns_program_conversion_context = True
+        yield _get_local().program_conversion_context
+    finally:
+        if owns_program_conversion_context:
+            _get_local().program_conversion_context = None
 
 
 def in_active_program_conversion_context() -> bool:
     """Indicates whether a program conversion context exists in the current scope,
-    that is, whether there is an active ProgramContextManager.
+    that is, whether there is an active program conversion context.
 
     Returns:
         bool: Whether there is a program currently being built.
@@ -252,8 +244,8 @@ def in_active_program_conversion_context() -> bool:
 def get_program_conversion_context() -> ProgramConversionContext:
     """Gets the current thread-local ProgramConversionContext object.
 
-    Must be called inside an active ProgramContextManager (that is, while building a program) so
-    that there is a valid thread-local ProgramConversionContext object.
+    Must be called inside an active program conversion context (that is, while building a program)
+    so that there is a valid thread-local ProgramConversionContext object.
 
     Returns:
         ProgramConversionContext: The thread-local ProgramConversionContext object.
