@@ -81,7 +81,7 @@ def test_invalid_symbol() -> None:
     @aq.gate
     def my_gate(q: aq.Qubit):
         h(q)
-        not_a_symbol()  # noqa: F821
+        not_a_symbol()  # noqa: F821 # type: ignore
 
     @aq.function
     def main():
