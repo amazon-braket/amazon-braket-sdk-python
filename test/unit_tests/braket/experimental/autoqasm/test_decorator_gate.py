@@ -135,7 +135,7 @@ def test_no_qubit_args() -> None:
 
     with pytest.raises(errors.ParameterTypeError) as e:
         my_program()
-    assert "no arguments of type aq.Qubit" in str(e)
+    assert 'Gate definition "not_a_gate" has no arguments of type aq.Qubit.' in str(e)
 
 
 def test_invalid_qubit_used() -> None:
@@ -150,7 +150,8 @@ def test_invalid_qubit_used() -> None:
 
     with pytest.raises(errors.InvalidGateDefinition) as e:
         my_program()
-    assert "Gate definition my_gate uses qubit 1 which is not an argument to the gate." in str(e)
+    assert ('Gate definition "my_gate" uses qubit "1" '
+            'which is not an argument to the gate.' in str(e))
 
 
 def test_nested_gates() -> None:

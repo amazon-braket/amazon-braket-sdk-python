@@ -36,10 +36,12 @@ def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any)
             if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
                 qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
                 raise errors.InvalidGateDefinition(
-                    f"Gate definition {gate_name} uses qubit {qubit_name} which is not an argument "
-                    "to the gate. Gates may only operate on qubits which are passed as arguments."
+                    f'Gate definition "{gate_name}" uses qubit "{qubit_name}" which is not '
+                    'an argument to the gate. Gates may only operate on qubits which are '
+                    'passed as arguments.'
                 )
 
+    # Add the instruction to the program.
     oqpy_program = program_conversion_context.get_oqpy_program()
     oqpy_program.gate([_qubit(q) for q in qubits], name, *args)
 
