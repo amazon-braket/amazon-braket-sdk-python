@@ -19,7 +19,7 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.instructions import rx
-from braket.experimental.autoqasm.instructions.pulse import (
+from braket.experimental.autoqasm.pulse import (
     barrier,
     capture_v0,
     delay,
