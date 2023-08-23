@@ -22,7 +22,7 @@ from braket.experimental.autoqasm import program as aq_program
 from .qubits import QubitIdentifierType, _qubit
 
 
-def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any):
+def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any) -> None:
     # If this is an instruction inside a gate definition, ensure that it only operates on
     # qubits which are passed as arguments to the gate definition.
     program_conversion_context = aq_program.get_program_conversion_context()

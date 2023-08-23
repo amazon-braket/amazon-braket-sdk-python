@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 
-"""Pulse control instructions that apply to frames or qubits.
+"""Pulse instructions that apply to frames or qubits.
 """
 
 from typing import List, Union
@@ -21,18 +21,20 @@ import oqpy
 
 from braket.circuits.qubit_set import QubitSet
 from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm.instructions.qubits import (
+    QubitIdentifierType,
+    is_qubit_identifier_type,
+)
 from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
 from braket.pulse.waveforms import Waveform
 
-from .qubits import QubitIdentifierType, is_qubit_identifier_type
-
 
 def _pulse_instruction(name: str, frame: Frame, *args) -> None:
-    """Define a pulse control instruction.
+    """Define a pulse instruction.
 
     Args:
-        name (str): Name of the pulse control instruction.
+        name (str): Name of the pulse instruction.
         frame (Frame): Frame for which the instruction is apply to.
     """
     program_conversion_context = program.get_program_conversion_context()
@@ -121,11 +123,10 @@ def delay(
     """Adds an instruction to advance the frame clock by the specified `duration` value.
 
     Args:
-        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType,
-            List[QubitIdentifierType]]): Qubits or frame(s) on which the delay needs to be
-            introduced.
+        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]):
+            Qubits or frame(s) on which the delay needs to be introduced.
         duration (float): Value (in seconds) defining the duration of the delay.
-    """
+    """  # noqa: E501
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
@@ -141,10 +142,9 @@ def barrier(
     supports barrier.
 
     Args:
-        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType,
-            List[QubitIdentifierType]]): Qubits or frame(s) on which the barrier needs to be
-            introduced.
-    """
+        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]):
+            Qubits or frame(s) on which the barrier needs to be introduced.
+    """  # noqa: E501
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
