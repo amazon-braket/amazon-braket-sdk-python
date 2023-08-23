@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.54.1 (2023-08-22)
+
+### Bug Fixes and Other Changes
+
+ * update: restricting parameter names to not collide with ones we use for OpenQASM generation.
+
 ## v1.54.0 (2023-08-16)
 
 ### Features
