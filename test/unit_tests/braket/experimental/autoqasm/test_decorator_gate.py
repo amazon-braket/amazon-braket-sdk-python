@@ -104,7 +104,7 @@ def test_incorrect_arg_count() -> None:
 
     with pytest.raises(
         errors.ParameterTypeError,
-        match='Incorrect number of arguments passed to gate "my_gate". ' "Expected 2, got 1.",
+        match='Incorrect number of arguments passed to gate "my_gate". Expected 2, got 1.',
     ):
         incorrect_arg_count()
 

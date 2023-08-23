@@ -88,9 +88,9 @@ class ProgramConversionContext:
     def __init__(self, user_config: Optional[UserConfig] = None):
         self.oqpy_program_stack = [oqpy.Program()]
         self.subroutines_processing = set()  # the set of subroutines queued for processing
-        self.gate_definitions_processing = []
         self.user_config = user_config or UserConfig()
         self.return_variable = None
+        self._gate_definitions_processing = []
         self._qubits_seen = set()
         self._var_idx = 0
         self._has_pulse_control = False
@@ -174,9 +174,9 @@ class ProgramConversionContext:
         Raises:
             errors.InvalidGateDefinition: Target qubits are invalid in the current gate definition.
         """
-        if self.gate_definitions_processing:
-            gate_name = self.gate_definitions_processing[-1]["name"]
-            gate_qubit_args = self.gate_definitions_processing[-1]["qubits"]
+        if self._gate_definitions_processing:
+            gate_name = self._gate_definitions_processing[-1]["name"]
+            gate_qubit_args = self._gate_definitions_processing[-1]["qubits"]
             for qubit in qubits:
                 if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
                     qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
@@ -217,13 +217,13 @@ class ProgramConversionContext:
             angles (List[float]): The list of angle arguments to the gate.
         """
         try:
-            self.gate_definitions_processing.append(
+            self._gate_definitions_processing.append(
                 {"name": gate_name, "qubits": qubits, "angles": angles}
             )
             with oqpy.gate(self.get_oqpy_program(), qubits, gate_name, angles):
                 yield
         finally:
-            self.gate_definitions_processing.pop()
+            self._gate_definitions_processing.pop()
 
 
 @contextlib.contextmanager
