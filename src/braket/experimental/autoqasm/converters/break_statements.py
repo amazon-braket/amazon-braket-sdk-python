@@ -30,6 +30,17 @@ class BreakValidator(converter.Base):
 def transform(
     node: ast.stmt, ctx: ag_ctx.ControlStatusCtx, default_to_null_return: bool = True
 ) -> ast.stmt:
+    """AutoQASM-specific break statement handling.
+
+    Args:
+        node (ast.stmt): Break statement node to transform.
+        ctx (ag_ctx.ControlStatusCtx): Transformer context.
+        default_to_null_return (bool): Whether to return null by default.
+            Defaults to True.
+
+    Returns:
+        ast.stmt: Transformed break statement node.
+    """
     node = BreakValidator(ctx).visit(node)
     # When break statements are supported, we may want to fall back on default behavior
     return break_statements.transform(node, ctx)  # pragma: no cover

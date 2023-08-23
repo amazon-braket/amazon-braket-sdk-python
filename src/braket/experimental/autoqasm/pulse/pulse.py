@@ -123,11 +123,10 @@ def delay(
     """Adds an instruction to advance the frame clock by the specified `duration` value.
 
     Args:
-        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType,
-            List[QubitIdentifierType]]): Qubits or frame(s) on which the delay needs to be
-            introduced.
+        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]):
+            Qubits or frame(s) on which the delay needs to be introduced.
         duration (float): Value (in seconds) defining the duration of the delay.
-    """
+    """  # noqa: E501
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
@@ -143,10 +142,9 @@ def barrier(
     supports barrier.
 
     Args:
-        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType,
-            List[QubitIdentifierType]]): Qubits or frame(s) on which the barrier needs to be
-            introduced.
-    """
+        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]):
+            Qubits or frame(s) on which the barrier needs to be introduced.
+    """  # noqa: E501
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):

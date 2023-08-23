@@ -136,8 +136,8 @@ def cv(
     """Controlled Sqrt of NOT gate.
 
     Args:
-        control_0 (QubitIdentifierType): Control qubit 0.
-        target_0 (QubitIdentifierType): Target qubit 0.
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
 
     """
     _qubit_instruction("cv", [control, target])
@@ -164,8 +164,8 @@ def cz(
     """Controlled Pauli-Z gate.
 
     Args:
-        control_0 (QubitIdentifierType): Control qubit.
-        target_0 (QubitIdentifierType): Target qubit.
+        control (QubitIdentifierType): Control qubit.
+        target (QubitIdentifierType): Target qubit.
 
     """
     _qubit_instruction("cz", [control, target])

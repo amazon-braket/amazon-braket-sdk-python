@@ -43,7 +43,8 @@ def function(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_prog
     function is called, and a new Program object is returned.
 
     Args:
-        num_qubits (int): Configuration to set the total number of qubits to declare in the program.
+        num_qubits (Optional[int]): Configuration to set the total number of qubits to declare in
+            the program.
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted
@@ -65,7 +66,7 @@ def function(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_prog
         #    @aq.function(num_qubits=x)
         #    def my_func(...):
         # Equivalently: `function(num_qubits=x)(my_func)`
-        def _function_with_params(f):
+        def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
             return _function_without_params(f, user_config=user_config)
 
         return _function_with_params
@@ -320,7 +321,7 @@ def _convert_program_as_subroutine(
         root_oqpy_program._add_subroutine(subroutine_name, subroutine_function_call.subroutine_decl)
 
 
-def _make_return_instance_from_oqpy_return_type(return_type) -> Any:
+def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:
     if not return_type:
         return None
 
