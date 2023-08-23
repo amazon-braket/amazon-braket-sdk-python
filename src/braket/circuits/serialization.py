@@ -39,7 +39,7 @@ class OpenQASMSerializationProperties:
     Properties for serializing a circuit to OpenQASM.
 
     qubit_reference_type (QubitReferenceType): determines whether to use
-        logical qubits or physical qubits (q[i] vs $i).
+        logical qubits or physical qubits (__qubits__[i] vs $i).
     """
 
     qubit_reference_type: QubitReferenceType = QubitReferenceType.VIRTUAL
@@ -53,7 +53,7 @@ class OpenQASMSerializationProperties:
             str: The OpenQASM representation of the target qubit.
         """
         qubit_reference_format = (
-            "q[{}]" if self.qubit_reference_type == QubitReferenceType.VIRTUAL else "${}"
+            "__qubits__[{}]" if self.qubit_reference_type == QubitReferenceType.VIRTUAL else "${}"
         )
         return qubit_reference_format.format(target)
 
