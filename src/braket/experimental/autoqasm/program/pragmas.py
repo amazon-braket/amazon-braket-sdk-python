@@ -18,7 +18,7 @@ Pragmas specify how a program should be compiled or executed. In AutoQASM, we su
 
 .. code-block:: python
 
-    @aq.function
+    @aq.main
     def pragma_example() -> None:
         with aq.Verbatim():
             h(0)

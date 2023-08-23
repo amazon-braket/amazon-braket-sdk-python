@@ -85,7 +85,7 @@ def test_conditional_expressions_py_cond(if_true: dict, if_false: dict) -> None:
 def test_inline_conditional_assignment() -> None:
     """Tests conditional expression where the if and else clauses return different types."""
 
-    @aq.function
+    @aq.main
     def cond_exp_assignment():
         a = aq.IntVar(2) * aq.IntVar(3) if aq.BoolVar(True) else aq.IntVar(4)  # noqa: F841
 
@@ -118,7 +118,7 @@ a = __int_3__;"""
 def test_unsupported_inline_conditional_assignment(else_value) -> None:
     """Tests conditional expression where the if and else clauses return different types."""
 
-    @aq.function
+    @aq.main
     def cond_exp_assignment_different_types():
         a = aq.IntVar(1) if aq.BoolVar(True) else else_value()  # noqa: F841
 
@@ -129,7 +129,7 @@ def test_unsupported_inline_conditional_assignment(else_value) -> None:
 def test_branch_assignment_undeclared() -> None:
     """Tests if-else branch where an undeclared variable is assigned in both branches."""
 
-    @aq.function
+    @aq.main
     def branch_assignment_undeclared():
         if aq.BoolVar(True):
             a = aq.IntVar(1)  # noqa: F841
@@ -151,7 +151,7 @@ if (__bool_0__) {
 def test_branch_assignment_declared() -> None:
     """Tests if-else branch where a declared variable is assigned in both branches."""
 
-    @aq.function
+    @aq.main
     def branch_assignment_declared():
         a = aq.IntVar(5)
         if aq.BoolVar(True):
@@ -441,7 +441,7 @@ def test_slice_bits() -> None:
     """Test that bit var slicing and assignment works when assigning to a
     size 1 bit."""
 
-    @aq.function
+    @aq.main
     def slice():
         a = aq.BitVar(0, size=6)
         b = aq.BitVar(1)
@@ -460,7 +460,7 @@ a[3] = b;"""
 def test_slice_bits_w_measure() -> None:
     """Test assignment of one bit in an array to a measurement result."""
 
-    @aq.function
+    @aq.main
     def measure_to_slice():
         b0 = aq.BitVar(size=10)
         c = measure(0)
@@ -606,7 +606,7 @@ def test_assignment_py(value: Any) -> None:
 def test_py_if_stmt(value: int) -> None:
     """Test Python if branches on true and false conditions."""
 
-    @aq.function
+    @aq.main
     def test_control_flow(a: int):
         "Quick if statement test"
         if a:
@@ -625,7 +625,7 @@ qubit[1] __qubits__;
 def test_py_while() -> None:
     """Test Python while loop."""
 
-    @aq.function
+    @aq.main
     def test_control_flow():
         "Quick while loop test"
         a = 3

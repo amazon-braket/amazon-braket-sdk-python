@@ -47,12 +47,12 @@ def test_qasm_range(
 def test_return_bit():
     """Test type discovery of bit return values."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test() -> aq.BitVar:
         res = aq.BitVar(1)
         return res
 
-    @aq.function
+    @aq.main
     def main() -> aq.BitVar:
         return ret_test()
 
@@ -71,12 +71,12 @@ __bit_1__ = ret_test();"""
 def test_return_int():
     """Test type discovery of int return values."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test() -> int:
         res = aq.IntVar(1)
         return res
 
-    @aq.function
+    @aq.main
     def main() -> int:
         return ret_test()
 
@@ -95,12 +95,12 @@ __int_1__ = ret_test();"""
 def test_return_float():
     """Test type discovery of float return values."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test() -> float:
         res = aq.FloatVar(1.0)
         return res
 
-    @aq.function
+    @aq.main
     def main() -> float:
         return ret_test()
 
@@ -119,12 +119,12 @@ __float_1__ = ret_test();"""
 def test_return_bool():
     """Test type discovery of boolean return values."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test() -> bool:
         res = aq.BoolVar(True)
         return res
 
-    @aq.function
+    @aq.main
     def main() -> bool:
         return ret_test()
 
@@ -143,11 +143,11 @@ __bool_1__ = ret_test();"""
 def test_return_bin_expr():
     """Test type discovery of int return values from an expression."""
 
-    @aq.function
+    @aq.subroutine
     def add(a: int, b: int) -> int:
         return a + b
 
-    @aq.function
+    @aq.main
     def ret_test() -> int:
         a = aq.IntVar(5)
         b = aq.IntVar(6)
@@ -170,7 +170,7 @@ __int_2__ = add(a, b);"""
 def test_return_none():
     """Test discovery of None return annotation."""
 
-    @aq.function
+    @aq.main
     def ret_test() -> None:
         return None
 
@@ -182,12 +182,12 @@ def test_return_none():
 def test_return_array_int():
     """Test return type discovery of array values."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test() -> List[int]:
         res = aq.ArrayVar([1, 2, 3], dimensions=[3])
         return res
 
-    @aq.function
+    @aq.main
     def main() -> List[int]:
         return ret_test()
 
@@ -206,11 +206,11 @@ __arr_1__ = ret_test();"""
 def test_return_python_array():
     """Test returning a python array of ints."""
 
-    @aq.function
+    @aq.subroutine
     def tester(arr: List[int]) -> List[int]:
         return [1, 2, 3]
 
-    @aq.function(num_qubits=4)
+    @aq.main(num_qubits=4)
     def main():
         tester()
 
@@ -229,11 +229,11 @@ __arr_1__ = tester();"""
 def test_return_array_unsupported():
     """Test unsupported array type."""
 
-    @aq.function
+    @aq.subroutine
     def tester(arr: List[float]) -> List[float]:
         return [1.2, 2.1]
 
-    @aq.function(num_qubits=4)
+    @aq.main(num_qubits=4)
     def main():
         tester([3.3])
 
@@ -244,12 +244,12 @@ def test_return_array_unsupported():
 def test_return_func_call():
     """Test returning the result of another function call."""
 
-    @aq.function
+    @aq.subroutine
     def helper() -> int:
         res = aq.IntVar(1)
         return res
 
-    @aq.function
+    @aq.main
     def ret_test() -> int:
         return helper()
 
@@ -268,11 +268,11 @@ __int_1__ = helper();"""
 def test_map_bool():
     """Test boolean input parameter type."""
 
-    @aq.function
+    @aq.subroutine
     def annotation_test(input: bool):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         annotation_test(True)
 
@@ -287,11 +287,11 @@ annotation_test(true);"""
 def test_map_int():
     """Test integer input parameter type."""
 
-    @aq.function
+    @aq.subroutine
     def annotation_test(input: int):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         annotation_test(1)
 
@@ -306,11 +306,11 @@ annotation_test(1);"""
 def test_map_float():
     """Test float input parameter type."""
 
-    @aq.function
+    @aq.subroutine
     def annotation_test(input: float):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         annotation_test(1.0)
 
@@ -325,11 +325,11 @@ annotation_test(1.0);"""
 def test_map_array():
     """Test array input parameter type."""
 
-    @aq.function
+    @aq.subroutine
     def annotation_test(input: List[int]):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         a = aq.ArrayVar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dimensions=[10])
         annotation_test(a)
@@ -347,11 +347,11 @@ annotation_test(a);"""
 def test_map_other():
     """Test unexpected input parameter type handling."""
 
-    @aq.function
+    @aq.subroutine
     def annotation_test(input: aq.BitVar):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         a = aq.BitVar(1)
         annotation_test(a)
@@ -369,11 +369,11 @@ annotation_test(a);"""
 def test_map_other_unnamed_arg():
     """Test unexpected input parameter type handling with unnamed arg."""
 
-    @aq.function
+    @aq.subroutine
     def annotation_test(input: aq.BitVar):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         annotation_test(aq.BitVar(1))
 
@@ -389,12 +389,12 @@ annotation_test(__bit_0__);"""
 def test_map_and_assign_arg():
     """Test input parameter handling which is assigned to another variable."""
 
-    @aq.function
+    @aq.subroutine
     def assign_param(c: int) -> None:
         d = aq.IntVar(4)
         c = d  # noqa: F841
 
-    @aq.function
+    @aq.main
     def main():
         c = aq.IntVar(0)
         assign_param(c)
@@ -415,11 +415,11 @@ assign_param(c);"""
 def test_unnamed_retval_python_type() -> None:
     """Tests subroutines which return unnamed Python values."""
 
-    @aq.function
+    @aq.subroutine
     def retval_test() -> int:
         return 1
 
-    @aq.function
+    @aq.main
     def caller() -> int:
         return retval_test()
 
@@ -438,11 +438,11 @@ __int_1__ = retval_test();"""
 def test_unnamed_retval_qasm_type() -> None:
     """Tests subroutines which return unnamed QASM values."""
 
-    @aq.function
+    @aq.subroutine
     def retval_test() -> aq.BitVar:
         return aq.BitVar(1)
 
-    @aq.function
+    @aq.main
     def caller() -> aq.BitVar:
         return retval_test()
 
@@ -461,10 +461,14 @@ __bit_1__ = retval_test();"""
 def test_recursive_unassigned_retval_python_type() -> None:
     """Tests recursive subroutines which do not assign the return value to a variable."""
 
-    @aq.function
+    @aq.subroutine
     def retval_recursive() -> int:
         retval_recursive()
         return 1
+
+    @aq.main
+    def main():
+        retval_recursive()
 
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
@@ -474,21 +478,23 @@ def retval_recursive() -> int[32] {
     retval_ = 1;
     return retval_;
 }
-int[32] retval_;
 int[32] __int_3__;
-__int_3__ = retval_recursive();
-retval_ = 1;"""
+__int_3__ = retval_recursive();"""
 
-    assert retval_recursive().to_ir() == expected_qasm
+    assert main().to_ir() == expected_qasm
 
 
 def test_recursive_assigned_retval_python_type() -> None:
     """Tests recursive subroutines which assign the return value to a variable."""
 
-    @aq.function
+    @aq.subroutine
     def retval_recursive() -> int:
         a = retval_recursive()  # noqa: F841
         return 1
+
+    @aq.main
+    def main():
+        retval_recursive()
 
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
@@ -500,29 +506,25 @@ def retval_recursive() -> int[32] {
     retval_ = 1;
     return retval_;
 }
-int[32] a;
-int[32] retval_;
 int[32] __int_3__;
-__int_3__ = retval_recursive();
-a = __int_3__;
-retval_ = 1;"""
+__int_3__ = retval_recursive();"""
 
-    assert retval_recursive().to_ir() == expected_qasm
+    assert main().to_ir() == expected_qasm
 
 
 def test_recursive_retval_expression_python_type() -> None:
     """Tests recursive subroutines which use the return value in an expression."""
 
-    @aq.function
+    @aq.subroutine
     def retval_constant() -> int:
         return 3
 
-    @aq.function
+    @aq.subroutine
     def retval_recursive() -> float:
         a = 2 * retval_recursive() + (retval_constant() + 2) / 3
         return a
 
-    @aq.function
+    @aq.main
     def caller() -> int:
         return retval_recursive()
 
@@ -548,33 +550,41 @@ __float_4__ = retval_recursive();"""
 def test_recursive_list() -> None:
     """Tests recursive subroutines which return a list."""
 
-    @aq.function
+    @aq.subroutine
     def retval_recursive() -> List[int]:
         retval_recursive()
         return [1]
 
-    assert "-> array[int[32], 10]" in retval_recursive().to_ir()
+    @aq.main
+    def main():
+        retval_recursive()
+
+    assert "-> array[int[32], 10]" in main().to_ir()
 
 
 def test_recursive_oqpy_type() -> None:
     """Tests recursive subroutines which returns an oqpy type."""
 
-    @aq.function
+    @aq.subroutine
     def retval_recursive() -> aq.BitVar:
         retval_recursive()
         return aq.BitVar(0)
 
-    assert "-> bit" in retval_recursive().to_ir()
+    @aq.main
+    def main():
+        retval_recursive()
+
+    assert "-> bit" in main().to_ir()
 
 
 def test_error_for_tuple_param() -> None:
     """Tuples are not supported as parameters."""
 
-    @aq.function
+    @aq.subroutine
     def param_test(input: Tuple):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         param_test(aq.BitVar(1))
 
@@ -585,11 +595,11 @@ def test_error_for_tuple_param() -> None:
 def test_error_for_missing_param_type() -> None:
     """Parameters require type hints."""
 
-    @aq.function
+    @aq.subroutine
     def param_test(input):
         pass
 
-    @aq.function
+    @aq.main
     def main():
         param_test(aq.BitVar(1))
 
@@ -600,11 +610,11 @@ def test_error_for_missing_param_type() -> None:
 def test_ignore_ret_typehint_bool():
     """Test type discovery of boolean return values."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test() -> List[int]:
         return True
 
-    @aq.function
+    @aq.main
     def main() -> bool:
         ret_test()
 
@@ -623,11 +633,11 @@ __bool_1__ = ret_test();"""
 def test_ignore_ret_typehint_list():
     """Test type discovery of list return values."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test() -> int:
         return [1, 2, 3]
 
-    @aq.function(num_qubits=4)
+    @aq.main(num_qubits=4)
     def main() -> float:
         ret_test()
 
@@ -647,11 +657,11 @@ __arr_1__ = ret_test();"""
 def test_ignore_missing_ret_typehint_list():
     """Test type discovery of return types with no annotations."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test():
         return [1, 2, 3]
 
-    @aq.function(num_qubits=4)
+    @aq.main(num_qubits=4)
     def main():
         ret_test()
 
@@ -671,11 +681,11 @@ __arr_1__ = ret_test();"""
 def test_ignore_missing_ret_typehint_float():
     """Test type discovery of return types with no annotations."""
 
-    @aq.function
+    @aq.subroutine
     def ret_test():
         return 1.2
 
-    @aq.function(num_qubits=4)
+    @aq.main(num_qubits=4)
     def main():
         ret_test()
 
@@ -695,11 +705,11 @@ __float_1__ = ret_test();"""
 def test_param_array_list_missing_arg():
     """Test list parameter with missing type arg (list rather than list[int])."""
 
-    @aq.function
+    @aq.subroutine
     def param_test(arr: List) -> int:
         return 1
 
-    @aq.function(num_qubits=4)
+    @aq.main(num_qubits=4)
     def main():
         param_test()
 

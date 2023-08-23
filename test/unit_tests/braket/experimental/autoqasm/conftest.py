@@ -22,6 +22,22 @@ from braket.experimental.autoqasm.instructions import cnot, h
 
 
 @pytest.fixture
+def empty_subroutine() -> Callable:
+    """Empty subroutine fixture.
+
+    Returns:
+        Callable: the aq program.
+    """
+
+    @aq.subroutine
+    def empty_function() -> None:
+        """A function that does nothing."""
+        pass
+
+    return empty_function
+
+
+@pytest.fixture
 def empty_program() -> Callable:
     """Empty program fixture.
 
@@ -29,12 +45,29 @@ def empty_program() -> Callable:
         Callable: the aq program.
     """
 
-    @aq.function
+    @aq.main
     def empty_function() -> None:
         """A function that does nothing."""
         pass
 
     return empty_function
+
+
+@pytest.fixture
+def bell_state_subroutine() -> Callable:
+    """Bell state preparation subroutine fixture.
+
+    Returns:
+        Callable: the aq program.
+    """
+
+    @aq.subroutine
+    def bell_state() -> None:
+        """A function that generates a two-qubit Bell state."""
+        h(0)
+        cnot(0, 1)
+
+    return bell_state
 
 
 @pytest.fixture
@@ -45,13 +78,30 @@ def bell_state_program() -> Callable:
         Callable: the aq program.
     """
 
-    @aq.function
+    @aq.main
     def bell_state() -> None:
         """A function that generates a two-qubit Bell state."""
         h(0)
         cnot(0, 1)
 
     return bell_state
+
+
+@pytest.fixture
+def physical_bell_subroutine() -> Callable:
+    """Physical bell state preparation program fixture.
+
+    Returns:
+        Callable: the aq program.
+    """
+
+    @aq.subroutine
+    def physical_bell() -> None:
+        """A function that generates a two-qubit Bell state on particular qubits."""
+        h("$0")
+        cnot("$0", "$5")
+
+    return physical_bell
 
 
 @pytest.fixture
@@ -62,7 +112,7 @@ def physical_bell_program() -> Callable:
         Callable: the aq program.
     """
 
-    @aq.function
+    @aq.main
     def physical_bell() -> None:
         """A function that generates a two-qubit Bell state on particular qubits."""
         h("$0")

@@ -55,19 +55,6 @@ Specify the number of qubits used by your program by supplying the \
         return self.message
 
 
-class InconsistentNumQubits(AutoQasmError):
-    """Num qubits supplied to main function does not match subroutine."""
-
-    def __init__(self):
-        self.message = """\
-The number of qubits specified by one of your functions does not match the \
-argument supplied elsewhere. Remove the `num_qubits` argument from nested \
-function calls."""
-
-    def __str__(self):
-        return self.message
-
-
 class UnsupportedConditionalExpressionError(AutoQasmError):
     """Conditional expressions which return values are not supported."""
 

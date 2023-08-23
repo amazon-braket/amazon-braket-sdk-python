@@ -69,12 +69,12 @@ def test_to_ir() -> None:
 def test_multiprocessing() -> None:
     """Tests multiprocessing with the aq.Program object."""
 
-    @aq.function
+    @aq.subroutine
     def circuit(angle: float):
         rx(0, angle)
         cnot(0, 1)
 
-    @aq.function
+    @aq.main
     def zne(scale: int, angle: float) -> aq.BitVar:
         for i in aq.range(scale):
             circuit(angle)
