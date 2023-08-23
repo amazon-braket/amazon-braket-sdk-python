@@ -28,4 +28,3 @@ Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
 from .gates import *  # noqa: F401, F403
 from .instructions import QubitIdentifierType, reset  # noqa: F401
 from .measurements import measure  # noqa: F401
-from .pulse_control import *  # noqa: F401, F403

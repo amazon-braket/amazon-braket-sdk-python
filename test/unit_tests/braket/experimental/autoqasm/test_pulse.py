@@ -18,11 +18,11 @@ import textwrap
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.instructions import (
+from braket.experimental.autoqasm.instructions import rx
+from braket.experimental.autoqasm.pulse import (
     barrier,
     capture_v0,
     delay,
-    h,
     play,
     set_frequency,
     set_phase,
@@ -44,7 +44,7 @@ def test_mix_gate_pulse() -> None:
     @aq.function
     def my_program():
         shift_frequency(FRAME1, 0.1234)
-        h(1)
+        rx(1, 0.1)
         play(FRAME1, WAVEFORM)
 
     expected = textwrap.dedent(
@@ -58,7 +58,7 @@ def test_mix_gate_pulse() -> None:
         cal {
             shift_frequency(predefined_frame_1, 0.1234);
         }
-        h __qubits__[1];
+        rx(0.1) __qubits__[1];
         cal {
             play(predefined_frame_1, arb_wf);
         }
