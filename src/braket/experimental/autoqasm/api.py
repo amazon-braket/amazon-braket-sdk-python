@@ -388,13 +388,15 @@ def _convert_gate(
     try:
         # We must be inside an active conversion context in order to invoke a gate
         program_conversion_context = aq_program.get_program_conversion_context()
-        oqpy_program = program_conversion_context.get_oqpy_program()
 
         # Wrap the function into an oqpy gate definition
         wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
         gate_name = f.__name__
-        qubit_names = [name for name, is_qubit in gate_args if is_qubit]
-        qubits = [oqpy.Qubit(name, needs_declaration=False) for name in qubit_names]
+
+        # Validate that the gate definition acts on at least one qubit
+        qubits = [
+            oqpy.Qubit(name, needs_declaration=False) for name, is_qubit in gate_args if is_qubit
+        ]
         if not qubits:
             raise errors.ParameterTypeError(
                 f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
@@ -403,8 +405,7 @@ def _convert_gate(
 
         if not declaration_only:
             # Process the gate definition
-            angle_names = [name for name, is_qubit in gate_args if not is_qubit]
-            angles = [oqpy.AngleVar(name=name) for name in angle_names]
+            angles = [oqpy.AngleVar(name=name) for name, is_qubit in gate_args if not is_qubit]
             with program_conversion_context.gate_definition(gate_name, qubits, angles):
                 # TODO - enforce that nothing gets added to the program inside here except gates
                 wrapped_f(qubits, *angles)
@@ -412,7 +413,8 @@ def _convert_gate(
             # Add the gate definition to the root-level program if necessary
             root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
             if gate_name not in root_oqpy_program.gates:
-                root_oqpy_program._add_gate(gate_name, oqpy_program.gates[gate_name])
+                gate_stmt = program_conversion_context.get_oqpy_program().gates[gate_name]
+                root_oqpy_program._add_gate(gate_name, gate_stmt)
 
         # Add the gate invocation to the program
         if len(args) != len(gate_args):
