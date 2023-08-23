@@ -195,7 +195,7 @@ class ProgramConversionContext:
         return self.oqpy_program_stack[-1]
 
     @contextlib.contextmanager
-    def push_oqpy_program(self, oqpy_program: oqpy.Program):
+    def push_oqpy_program(self, oqpy_program: oqpy.Program) -> None:
         """Pushes the provided oqpy program onto the stack.
 
         Args:
@@ -208,12 +208,14 @@ class ProgramConversionContext:
             self.oqpy_program_stack.pop()
 
     @contextlib.contextmanager
-    def gate_definition(self, gate_name: str, qubits: List[oqpy.Qubit], angles: List[float]):
+    def gate_definition(
+        self, gate_name: str, qubits: List[oqpy.Qubit], angles: List[float]
+    ) -> None:
         """Sets the program conversion context into a gate definition context.
 
         Args:
             gate_name (str): The name of the gate being defined.
-            qubits (List[oqpy.Qubit]): The list of qubit arguments to the gate.
+            qubits (List[Qubit]): The list of qubit arguments to the gate.
             angles (List[float]): The list of angle arguments to the gate.
         """
         try:
@@ -227,7 +229,7 @@ class ProgramConversionContext:
 
 
 @contextlib.contextmanager
-def build_program(user_config: Optional[UserConfig] = None):
+def build_program(user_config: Optional[UserConfig] = None) -> None:
     """Creates a context manager which ensures there is a valid thread-local
     ProgramConversionContext object. If this context manager created the
     ProgramConversionContext object, it removes it from thread-local storage when

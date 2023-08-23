@@ -77,13 +77,13 @@ def gate(*args, declaration_only: bool = False) -> Callable[[Any], None]:
     """Decorator that converts a function into a callable gate definition.
 
     Args:
-        declaration_only (bool, optional): If declaration_only is True, the provided body of the
+        declaration_only (bool): If declaration_only is True, the provided body of the
             gate definition is ignored, and only the gate signature is declared so that it can be
             called from elsewhere in the program. This may be used, for example, if the program
             is being combined with an external list of gate definitions. Defaults to False.
 
     Returns:
-        Callable[[Any], None]: A callable which can be used as a custom gate inside an
+        Callable[[Any],]: A callable which can be used as a custom gate inside an
         aq.function or inside another aq.gate.
     """
     if not args:
@@ -92,7 +92,7 @@ def gate(*args, declaration_only: bool = False) -> Callable[[Any], None]:
         #    @aq.gate(declaration_only=True)
         #    def my_func(...):
         # Equivalently: `gate(declaration_only=True)(my_func)`
-        def _gate_with_params(*args):
+        def _gate_with_params(*args) -> Callable[[Any], None]:
             return gate(*args, declaration_only=declaration_only)
 
         return _gate_with_params
