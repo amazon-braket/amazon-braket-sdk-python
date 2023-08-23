@@ -24,6 +24,14 @@ from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 
 class ReturnValidator(converter.Base):
     def visit_Return(self, node: ast.stmt) -> ast.stmt:
+        """AutoQASM-specific return statement validation.
+
+        Args:
+            node (ast.stmt): Return statement node to transform.
+
+        Returns:
+            ast.stmt: Transformed return statement node.
+        """
         aq_context = program.get_program_conversion_context()
         if not aq_context.subroutines_processing and node.value is not None:
             warnings.warn("Return value from top level function is ignored.")

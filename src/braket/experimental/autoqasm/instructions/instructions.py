@@ -22,7 +22,7 @@ from braket.experimental.autoqasm import program
 from .qubits import QubitIdentifierType, _qubit
 
 
-def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any):
+def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any) -> None:
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     oqpy_program.gate([_qubit(q) for q in qubits], name, *args)
 
