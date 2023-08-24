@@ -857,7 +857,7 @@ def test_main_return():
 
 
 def test_main_no_return():
-    @aq.main
+    @aq.subroutine
     def tester(x: int) -> int:
         return measure(x)
 

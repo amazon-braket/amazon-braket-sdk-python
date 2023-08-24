@@ -235,6 +235,11 @@ def _convert_program(
             "function, decorate it with '@autoqasm.main', and call your subroutine "
             "from within that function."
         )
+    elif not is_subroutine and aq_program.in_active_program_conversion_context():
+        raise errors.AutoQasmTypeError(
+            f"Cannot call main function '{f.__name__}' from another main function. Did you mean "
+            "to use '@autoqasm.subroutine'?"
+        )
 
     with aq_program.build_program(user_config) as program_conversion_context:
         try:
