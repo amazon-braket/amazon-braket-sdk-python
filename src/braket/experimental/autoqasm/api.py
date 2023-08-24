@@ -386,7 +386,7 @@ def _convert_gate(
         # Process the gate definition
         with program_conversion_context.gate_definition(gate_name, gate_args):
             # TODO - enforce that nothing gets added to the program inside here except gates
-            wrapped_f(gate_args.qubits, *gate_args.angles)
+            wrapped_f(gate_args._args)
 
         # Add the gate definition to the root-level program if necessary
         root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
@@ -553,7 +553,7 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 def _wrap_for_oqpy_gate(
     f: Callable,
     options: converter.ConversionOptions,
-) -> Tuple[Callable[[List[oqpy.Qubit], Any], None], aq_program.GateArgs]:
+) -> Tuple[Callable[..., None], aq_program.GateArgs]:
     gate_args = aq_program.GateArgs()
     sig = inspect.signature(f)
     for param in sig.parameters.values():
@@ -573,12 +573,7 @@ def _wrap_for_oqpy_gate(
                 "must have a type hint of either aq.Qubit or float."
             )
 
-    def _func(qubits: List[oqpy.Qubit], *args: Any) -> None:
-        qubits = qubits.copy()
-        angles = list(args).copy() if args else []
-        f_args = []
-        for i in range(len(gate_args)):
-            f_args.append(qubits.pop(0) if i in gate_args.qubit_indices else angles.pop(0))
-        aq_transpiler.converted_call(f, f_args, kwargs={}, options=options)
+    def _func(*args: Any) -> None:
+        aq_transpiler.converted_call(f, *args, kwargs={}, options=options)
 
     return _func, gate_args
