@@ -404,10 +404,10 @@ def test_run_gate_model_inputs():
                 (
                     "OPENQASM 3.0;",
                     "input float theta;",
-                    "bit[1] b;",
-                    "qubit[1] q;",
-                    "rx(theta) q[0];",
-                    "b[0] = measure q[0];",
+                    "bit[1] __bits__;",
+                    "qubit[1] __qubits__;",
+                    "rx(theta) __qubits__[0];",
+                    "__bits__[0] = measure __qubits__[0];",
                 )
             ),
             inputs={"theta": 2},
