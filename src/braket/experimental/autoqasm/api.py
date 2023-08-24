@@ -81,9 +81,6 @@ def subroutine(*args) -> Callable[[Any], aq_program.Program]:
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    # TODO: subroutine shouldn't be called directly. This needs to move inside the wrapper.
-    # if not aq_program.in_active_program_conversion_context():
-    #     raise errors.AutoQasmError("TODO")
     return _function_wrapper(*args, user_config=None, is_subroutine=True)
 
 
