@@ -60,7 +60,7 @@ def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.
         #    @aq.main
         #    def my_func(...):
         # Equivalently, `main(my_func, num_qubits=None)`
-        return _function_without_params(args[0], user_config=user_config)
+        return _function_wrapper(args[0], user_config=user_config)
     else:
         # In this case, num_qubits was supplied, and we don't know `f` yet.
         # Matches the following syntax:
@@ -68,9 +68,23 @@ def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.
         #    def my_func(...):
         # Equivalently: `main(num_qubits=x)(my_func)`
         def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
-            return _function_without_params(f, user_config=user_config)
+            return _function_wrapper(f, user_config=user_config)
 
         return _function_with_params
+
+
+def subroutine(*args) -> Callable[[Any], aq_program.Program]:
+    """Decorator that converts a function into a callable that will insert a subroutine into
+    the quantum program.
+
+    Returns:
+        Callable[[Any], Program]: A callable which returns the converted
+        quantum program when called.
+    """
+    # TODO: subroutine shouldn't be called directly. This needs to move inside the wrapper.
+    # if not aq_program.in_active_program_conversion_context():
+    #     raise errors.AutoQasmError("TODO")
+    return _function_wrapper(*args, user_config=None, is_subroutine=True)
 
 
 def gate(*args) -> Callable[[Any], None]:
@@ -85,26 +99,12 @@ def gate(*args) -> Callable[[Any], None]:
         return f
 
     wrapper_factory = _convert_gate_wrapper()
-    wrapper = wrapper_factory(f)
 
-    return autograph_artifact(wrapper)
-
-
-def subroutine(*args) -> Callable[[Any], aq_program.Program]:
-    """Decorator that converts a function into a callable that will insert a subroutine into
-    the quantum program.
-
-    Returns:
-        Callable[[Any], Program]: A callable which returns the converted
-        quantum program when called.
-    """
-    # TODO: subroutine shouldn't be called directly. This needs to move inside the wrapper.
-    # if not aq_program.in_active_program_conversion_context():
-    #     raise errors.AutoQasmError("TODO")
-    return _function_without_params(*args, user_config=None, is_subroutine=True)
+    return autograph_artifact(wrapper_factory(f))
 
 
-def _function_without_params(
+def _function_wrapper(
+    # Update to use a callback
     f: Callable, user_config: aq_program.UserConfig, is_subroutine: bool = False
 ) -> Callable[[Any], aq_program.Program]:
     """Wrapping and conversion logic around the user function `f`.
@@ -126,9 +126,8 @@ def _function_without_params(
         user_config=user_config,
         is_subroutine=is_subroutine,
     )
-    wrapper = wrapper_factory(f)
 
-    return autograph_artifact(wrapper)
+    return autograph_artifact(wrapper_factory(f))
 
 
 def _convert_program_wrapper(
@@ -207,8 +206,8 @@ def _convert_program(
 ) -> Union[aq_program.Program, Optional[oqpy.base.Var]]:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
 
-    This function adds error handling around `_convert_program_as_subroutine`
-    and `_convert_program_as_main`, where the conversion logic itself lives.
+    This function adds error handling around `_convert_subroutine`
+    and `_convert_main`, where the conversion logic itself lives.
 
     Args:
         f (Callable): The function to be converted.
@@ -227,11 +226,11 @@ def _convert_program(
         try:
             with conversion_ctx:
                 if is_subroutine:
-                    _convert_program_as_subroutine(
+                    _convert_subroutine(
                         f, program_conversion_context, options, args, kwargs
                     )
                 else:
-                    _convert_program_as_main(f, program_conversion_context, options, args, kwargs)
+                    _convert_main(f, program_conversion_context, options, args, kwargs)
         except Exception as e:
             if isinstance(e, errors.AutoQasmError):
                 raise
@@ -246,7 +245,7 @@ def _convert_program(
     return program_conversion_context.make_program()
 
 
-def _convert_program_as_main(
+def _convert_main(
     f: Callable,
     program_conversion_context: aq_program.ProgramConversionContext,
     options: converter.ConversionOptions,
@@ -255,7 +254,7 @@ def _convert_program_as_main(
 ) -> None:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
     Puts the contents of `f` at the global level of the program, rather than
-    putting it into a subroutine as done in `_convert_program_as_subroutine`.
+    putting it into a subroutine as done in `_convert_subroutine`.
 
     Some program pre- and post-processing occurs here, such as adding a qubit
     declaration and adding the subroutine invocation at the top level.
@@ -274,7 +273,7 @@ def _convert_program_as_main(
     _add_qubit_declaration(program_conversion_context)
 
 
-def _convert_program_as_subroutine(
+def _convert_subroutine(
     f: Callable,
     program_conversion_context: aq_program.ProgramConversionContext,
     options: converter.ConversionOptions,
