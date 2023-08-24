@@ -113,8 +113,8 @@ def _function_wrapper(
     Args:
         f (Callable): The target function to be converted which represents
             the entry point of the quantum program.
-        user_config (UserConfig): User-specified settings that influence program building
-        TODO
+        user_config (UserConfig): User-specified settings that influence program building.
+        is_subroutine (bool): If the function corresponds to a subroutine or main.
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted
@@ -140,7 +140,8 @@ def _convert_program_wrapper(
     that returns a Program object containing the quantum program.
 
     Args:
-        user_config (UserConfig): User-specified settings that influence program building
+        user_config (UserConfig): User-specified settings that influence program building.
+        is_subroutine (bool): If the function corresponds to a subroutine or main.
 
     Returns:
         Callable: a decorator that converts the given function into an equivalent
@@ -220,6 +221,8 @@ def _convert_program(
         user_config (UserConfig): User-specified settings that influence program building
         args (List[Any]): Arguments passed to the program when called.
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
+        is_subroutine (bool): If the function corresponds to a subroutine or main.
+
 
     Returns:
         Union[Program, Optional[Var]]: The converted program, if this is a top-level call
