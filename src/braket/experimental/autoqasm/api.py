@@ -229,6 +229,13 @@ def _convert_program(
         to the conversion process. Or, the oqpy variable returned from the converted function,
         if this is a subroutine conversion.
     """
+    if is_subroutine and not aq_program.in_active_program_conversion_context():
+        raise errors.AutoQasmTypeError(
+            "Subroutines shouldn't be called directly. Please define an entry point "
+            "function, decorate it with '@autoqasm.main', and call your subroutine "
+            "from within that function."
+        )
+
     with aq_program.build_program(user_config) as program_conversion_context:
         try:
             with conversion_ctx:

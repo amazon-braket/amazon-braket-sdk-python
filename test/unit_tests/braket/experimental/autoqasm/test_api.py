@@ -869,18 +869,51 @@ def test_main_no_return():
     main()
 
 
-# TODO test new functionality
-# subroutine directly, subroutine from subroutine, main from main
+def test_subroutine_args():
+    """Test that subroutines will fail if supplied args."""
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
 
-# this can't happen anymore but should still be tested (subroutine doesn't take args)
-# def test_mismatched_qubits():
-#     @aq.subroutine(num_qubits=4)
-#     def subroutine() -> None:
-#         _ = measure(0)
+        @aq.subroutine(num_qubits=5)
+        def bell(q0: int, q1: int) -> None:
+            h(q0)
+            cnot(q0, q1)
 
-#     @aq.main(num_qubits=8)
-#     def main() -> None:
-#         subroutine()
 
-#     with pytest.raises(errors.InconsistentNumQubits):
-#         main()
+def test_direct_subroutine_call_w_args():
+    """Shouldn't be able to call a subroutine directly."""
+
+    @aq.subroutine
+    def bell(q0: int, q1: int) -> None:
+        h(q0)
+        cnot(q0, q1)
+
+    with pytest.raises(errors.AutoQasmTypeError):
+        bell()
+
+
+def test_direct_subroutine_call_no_args():
+    """Shouldn't be able to call a subroutine directly."""
+
+    @aq.subroutine
+    def bell() -> None:
+        h(0)
+        cnot(0, 1)
+
+    with pytest.raises(errors.AutoQasmTypeError):
+        bell()
+
+
+def test_main_from_main():
+    """Can't call main from main!"""
+
+    @aq.main
+    def bell(q0: int, q1: int) -> None:
+        h(q0)
+        cnot(q0, q1)
+
+    @aq.main
+    def main():
+        bell(0, 1)
+
+    with pytest.raises(errors.AutoQasmTypeError):
+        main()
