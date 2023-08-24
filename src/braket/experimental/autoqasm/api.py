@@ -377,20 +377,16 @@ def _convert_gate(
         gate_name = f.__name__
 
         # Validate that the gate definition acts on at least one qubit
-        qubits = [
-            oqpy.Qubit(name, needs_declaration=False) for name, is_qubit in gate_args if is_qubit
-        ]
-        if not qubits:
+        if not gate_args.qubits:
             raise errors.ParameterTypeError(
                 f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
                 "Every gate definition must contain at least one qubit argument."
             )
 
         # Process the gate definition
-        angles = [oqpy.AngleVar(name=name) for name, is_qubit in gate_args if not is_qubit]
-        with program_conversion_context.gate_definition(gate_name, qubits, angles):
+        with program_conversion_context.gate_definition(gate_name, gate_args):
             # TODO - enforce that nothing gets added to the program inside here except gates
-            wrapped_f(qubits, *angles)
+            wrapped_f(gate_args.qubits, *gate_args.angles)
 
         # Add the gate definition to the root-level program if necessary
         root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
@@ -404,8 +400,8 @@ def _convert_gate(
                 f'Incorrect number of arguments passed to gate "{gate_name}". '
                 f"Expected {len(gate_args)}, got {len(args)}."
             )
-        qubit_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if is_qubit]
-        angle_args = [args[i] for i, (_, is_qubit) in enumerate(gate_args) if not is_qubit]
+        qubit_args = [args[i] for i in gate_args.qubit_indices]
+        angle_args = [args[i] for i in gate_args.angle_indices]
         aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
     except Exception as e:
         if isinstance(e, errors.AutoQasmError):
@@ -557,8 +553,8 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 def _wrap_for_oqpy_gate(
     f: Callable,
     options: converter.ConversionOptions,
-) -> Tuple[Callable[[List[oqpy.Qubit], Any], None], List[Tuple[str, bool]]]:
-    gate_args = []
+) -> Tuple[Callable[[List[oqpy.Qubit], Any], None], aq_program.GateArgs]:
+    gate_args = aq_program.GateArgs()
     sig = inspect.signature(f)
     for param in sig.parameters.values():
         if param.annotation is param.empty:
@@ -568,9 +564,9 @@ def _wrap_for_oqpy_gate(
             )
 
         if param.annotation == aq_instructions.QubitIdentifierType:
-            gate_args.append((param.name, True))
+            gate_args.append(param.name, True)
         elif param.annotation in [float, aq_types.FloatVar]:
-            gate_args.append((param.name, False))
+            gate_args.append(param.name, False)
         else:
             raise errors.ParameterTypeError(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
@@ -581,8 +577,8 @@ def _wrap_for_oqpy_gate(
         qubits = qubits.copy()
         angles = list(args).copy() if args else []
         f_args = []
-        for _, is_qubit in gate_args:
-            f_args.append(qubits.pop(0) if is_qubit else angles.pop(0))
+        for i in range(len(gate_args)):
+            f_args.append(qubits.pop(0) if i in gate_args.qubit_indices else angles.pop(0))
         aq_transpiler.converted_call(f, f_args, kwargs={}, options=options)
 
     return _func, gate_args

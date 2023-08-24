@@ -16,7 +16,7 @@
 import contextlib
 import threading
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 import oqpy.base
 
@@ -80,6 +80,44 @@ class Program:
             return self._oqpy_program.to_qasm(encal_declarations=self._has_pulse_control)
 
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
+
+
+class GateArgs:
+    """Represents a list of qubit and angle arguments for a gate definition."""
+
+    def __init__(self):
+        self._args: List[Union[oqpy.Qubit, oqpy.AngleVar]] = []
+
+    def __len__(self):
+        return len(self._args)
+
+    def append(self, name: str, is_qubit: bool) -> None:
+        """Appends an argument to the list of gate arguments.
+
+        Args:
+            name (str): The name of the argument.
+            is_qubit (bool): Whether the argument represents a qubit.
+        """
+        if is_qubit:
+            self._args.append(oqpy.Qubit(name, needs_declaration=False))
+        else:
+            self._args.append(oqpy.AngleVar(name=name))
+
+    @property
+    def qubits(self) -> List[oqpy.Qubit]:
+        return [self._args[i] for i in self.qubit_indices]
+
+    @property
+    def angles(self) -> List[oqpy.AngleVar]:
+        return [self._args[i] for i in self.angle_indices]
+
+    @property
+    def qubit_indices(self) -> List[int]:
+        return [i for i, arg in enumerate(self._args) if isinstance(arg, oqpy.Qubit)]
+
+    @property
+    def angle_indices(self) -> List[int]:
+        return [i for i, arg in enumerate(self._args) if isinstance(arg, oqpy.AngleVar)]
 
 
 class ProgramConversionContext:
@@ -176,7 +214,7 @@ class ProgramConversionContext:
         """
         if self._gate_definitions_processing:
             gate_name = self._gate_definitions_processing[-1]["name"]
-            gate_qubit_args = self._gate_definitions_processing[-1]["qubits"]
+            gate_qubit_args = self._gate_definitions_processing[-1]["gate_args"].qubits
             for qubit in qubits:
                 if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
                     qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
@@ -208,21 +246,16 @@ class ProgramConversionContext:
             self.oqpy_program_stack.pop()
 
     @contextlib.contextmanager
-    def gate_definition(
-        self, gate_name: str, qubits: List[oqpy.Qubit], angles: List[float]
-    ) -> None:
+    def gate_definition(self, gate_name: str, gate_args: GateArgs) -> None:
         """Sets the program conversion context into a gate definition context.
 
         Args:
             gate_name (str): The name of the gate being defined.
-            qubits (List[Qubit]): The list of qubit arguments to the gate.
-            angles (List[float]): The list of angle arguments to the gate.
+            gate_args (GateArgs): The list of arguments to the gate.
         """
         try:
-            self._gate_definitions_processing.append(
-                {"name": gate_name, "qubits": qubits, "angles": angles}
-            )
-            with oqpy.gate(self.get_oqpy_program(), qubits, gate_name, angles):
+            self._gate_definitions_processing.append({"name": gate_name, "gate_args": gate_args})
+            with oqpy.gate(self.get_oqpy_program(), gate_args.qubits, gate_name, gate_args.angles):
                 yield
         finally:
             self._gate_definitions_processing.pop()
