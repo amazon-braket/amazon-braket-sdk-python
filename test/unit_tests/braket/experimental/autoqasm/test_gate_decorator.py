@@ -92,6 +92,65 @@ def test_invalid_symbol() -> None:
         main()
 
 
+def test_duplicate_gate_names() -> None:
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        h(q)
+
+    @aq.gate
+    def my_gate(q: aq.Qubit, angle: float):  # noqa: F811
+        rx(q, angle)
+
+    @aq.function
+    def main():
+        my_gate(0, np.pi / 4)
+
+    expected = """OPENQASM 3.0;
+gate my_gate(angle) q {
+    rx(angle) q;
+}
+qubit[1] __qubits__;
+my_gate(pi / 4) __qubits__[0];"""
+
+    program = main()
+    assert program.to_ir() == expected
+
+
+def test_duplicate_gate_names_in_subroutine() -> None:
+    """Verify that gates can only be defined at the top level."""
+
+    @aq.function
+    def define_gate_in_subroutine():
+        @aq.gate
+        def my_gate(q: aq.Qubit):
+            h(q)
+
+        my_gate(1)
+
+    @aq.gate
+    def my_gate(q: aq.Qubit, angle: float):
+        rx(q, angle)
+
+    @aq.function
+    def main():
+        my_gate(0, np.pi / 4)
+        define_gate_in_subroutine()
+
+    expected = """OPENQASM 3.0;
+def define_gate_in_subroutine() {
+    h __qubits__[1];
+}
+gate my_gate(angle) q {
+    rx(angle) q;
+}
+qubit[2] __qubits__;
+my_gate(pi / 4) __qubits__[0];
+define_gate_in_subroutine();"""
+
+    program = main()
+    assert program.to_ir() == expected
+
+
 def test_incorrect_arg_count() -> None:
     @aq.gate
     def my_gate(q0: aq.Qubit, q1: aq.Qubit):
