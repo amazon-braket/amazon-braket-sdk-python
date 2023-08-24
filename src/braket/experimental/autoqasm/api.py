@@ -104,8 +104,9 @@ def gate(*args) -> Callable[[Any], None]:
 
 
 def _function_wrapper(
-    # Update to use a callback
-    f: Callable, user_config: aq_program.UserConfig, is_subroutine: bool = False
+    f: Callable,
+    user_config: aq_program.UserConfig,
+    is_subroutine: bool = False,
 ) -> Callable[[Any], aq_program.Program]:
     """Wrapping and conversion logic around the user function `f`.
 
@@ -122,6 +123,7 @@ def _function_wrapper(
     if is_autograph_artifact(f):
         return f
 
+    # TODO: (laurecap) Update to accept a callback
     wrapper_factory = _convert_program_wrapper(
         user_config=user_config,
         is_subroutine=is_subroutine,
@@ -157,7 +159,9 @@ def _convert_program_wrapper(
                 user_requested=True,
                 optional_features=_autograph_optional_features(),
             )
-            return _convert_program(f, conversion_ctx, options, user_config, args, kwargs, is_subroutine)
+            return _convert_program(
+                f, conversion_ctx, options, user_config, args, kwargs, is_subroutine
+            )
 
         if inspect.isfunction(f) or inspect.ismethod(f):
             _wrapper = functools.update_wrapper(_wrapper, f)
@@ -226,9 +230,7 @@ def _convert_program(
         try:
             with conversion_ctx:
                 if is_subroutine:
-                    _convert_subroutine(
-                        f, program_conversion_context, options, args, kwargs
-                    )
+                    _convert_subroutine(f, program_conversion_context, options, args, kwargs)
                 else:
                     _convert_main(f, program_conversion_context, options, args, kwargs)
         except Exception as e:
@@ -460,9 +462,7 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
 
 def _clone_function(f_source: Callable) -> Callable:
     if not hasattr(f_source, "__code__"):
-        raise ValueError(
-            f"AutoQASM encountered a callable that it cannot process: {f_source}."
-        )
+        raise ValueError(f"AutoQASM encountered a callable that it cannot process: {f_source}.")
     f_clone = FunctionType(
         copy.deepcopy(f_source.__code__),
         copy.copy(f_source.__globals__),
