@@ -17,13 +17,19 @@
 
 from typing import Any, List
 
-from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import program as aq_program
 
 from .qubits import QubitIdentifierType, _qubit
 
 
 def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any) -> None:
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    # If this is an instruction inside a gate definition, ensure that it only operates on
+    # qubits which are passed as arguments to the gate definition.
+    program_conversion_context = aq_program.get_program_conversion_context()
+    program_conversion_context.validate_target_qubits(qubits)
+
+    # Add the instruction to the program.
+    oqpy_program = program_conversion_context.get_oqpy_program()
     oqpy_program.gate([_qubit(q) for q in qubits], name, *args)
 
 

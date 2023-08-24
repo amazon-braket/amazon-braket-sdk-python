@@ -105,3 +105,8 @@ def _(qid: str) -> oqpy.Qubit:
         return oqpy.PhysicalQubits[qubit_idx]
     else:
         raise ValueError(f"invalid qubit label: '{qid}'")
+
+
+@_qubit.register
+def _(qid: oqpy.Qubit) -> oqpy.Qubit:
+    return qid

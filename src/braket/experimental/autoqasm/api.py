@@ -23,6 +23,7 @@ import openqasm3.ast as qasm_ast
 import oqpy.base
 
 import braket.experimental.autoqasm.constants as aq_constants
+import braket.experimental.autoqasm.instructions as aq_instructions
 import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
@@ -72,6 +73,23 @@ def function(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_prog
         return _function_with_params
 
 
+def gate(*args) -> Callable[[Any], None]:
+    """Decorator that converts a function into a callable gate definition.
+
+    Returns:
+        Callable[[Any],]: A callable which can be used as a custom gate inside an
+        aq.function or inside another aq.gate.
+    """
+    f = args[0]
+    if is_autograph_artifact(f):
+        return f
+
+    wrapper_factory = _convert_gate_wrapper()
+    wrapper = wrapper_factory(f)
+
+    return autograph_artifact(wrapper)
+
+
 def _function_without_params(
     f: Callable, user_config: aq_program.UserConfig
 ) -> Callable[[Any], aq_program.Program]:
@@ -89,7 +107,7 @@ def _function_without_params(
     if is_autograph_artifact(f):
         return f
 
-    wrapper_factory = _convert_wrapper(
+    wrapper_factory = _convert_program_wrapper(
         user_config=user_config,
         recursive=False,
     )
@@ -98,10 +116,9 @@ def _function_without_params(
     return autograph_artifact(wrapper)
 
 
-def _convert_wrapper(
+def _convert_program_wrapper(
     user_config: aq_program.UserConfig,
     recursive: bool = False,
-    optional_features: Optional[Tuple[converter.Feature]] = None,
     user_requested: bool = True,
     conversion_ctx: Optional[ag_ctx.ControlStatusCtx] = ag_ctx.NullCtx(),
 ) -> Callable:
@@ -112,9 +129,6 @@ def _convert_wrapper(
         user_config (UserConfig): User-specified settings that influence program building
         recursive (bool): whether to recursively convert any functions or classes
             that the converted function may use. Defaults to False.
-        optional_features (Optional[Tuple[Feature]]): allows toggling
-            optional or experimental features. When set to None, only the core features are
-            enabled. Defaults to None.
         user_requested (bool): whether this is a function that the user explicitly
             asked to be converted. See ConversionOptions.user_requested. Defaults to True.
         conversion_ctx (Optional[ControlStatusCtx]): the Autograph context in
@@ -126,7 +140,7 @@ def _convert_wrapper(
     """
 
     def _decorator(f: Callable) -> Callable[[Any], aq_program.Program]:
-        """Decorator implementation."""
+        """aq.function decorator implementation."""
 
         def _wrapper(*args, **kwargs) -> Union[aq_program.Program, Optional[oqpy.base.Var]]:
             """Wrapper that calls the converted version of f."""
@@ -136,9 +150,29 @@ def _convert_wrapper(
             options = converter.ConversionOptions(
                 recursive=recursive,
                 user_requested=user_requested,
-                optional_features=optional_features,
+                optional_features=_autograph_optional_features(),
             )
-            return _convert(f, conversion_ctx, options, user_config, args, kwargs)
+            return _convert_program(f, conversion_ctx, options, user_config, args, kwargs)
+
+        if inspect.isfunction(f) or inspect.ismethod(f):
+            _wrapper = functools.update_wrapper(_wrapper, f)
+
+        decorated_wrapper = tf_decorator.make_decorator(f, _wrapper)
+        return autograph_artifact(decorated_wrapper)
+
+    return _decorator
+
+
+def _convert_gate_wrapper() -> Callable:
+    def _decorator(f: Callable) -> Callable[[Any], None]:
+        """aq.gate decorator implementation."""
+
+        def _wrapper(*args, **kwargs) -> Callable:
+            """Wrapper that calls the converted version of f."""
+            options = converter.ConversionOptions(
+                optional_features=_autograph_optional_features(),
+            )
+            return _convert_gate(f, options, args, kwargs)
 
         if inspect.isfunction(f) or inspect.ismethod(f):
             _wrapper = functools.update_wrapper(_wrapper, f)
@@ -166,7 +200,14 @@ def _validate_subroutine_args(user_config: aq_program.UserConfig) -> None:
         raise errors.InconsistentNumQubits()
 
 
-def _convert(
+def _autograph_optional_features() -> Tuple[converter.Feature]:
+    # Exclude autograph features which are TensorFlow-specific
+    return converter.Feature.all_but(
+        (converter.Feature.NAME_SCOPES, converter.Feature.AUTO_CONTROL_DEPS)
+    )
+
+
+def _convert_program(
     f: Callable,
     conversion_ctx: ag_ctx.ControlStatusCtx,
     options: converter.ConversionOptions,
@@ -321,6 +362,56 @@ def _convert_program_as_subroutine(
         root_oqpy_program._add_subroutine(subroutine_name, subroutine_function_call.subroutine_decl)
 
 
+def _convert_gate(
+    f: Callable,
+    options: converter.ConversionOptions,
+    args: List[Any],
+    kwargs: Dict[str, Any],
+) -> Callable:
+    try:
+        # We must be inside an active conversion context in order to invoke a gate
+        program_conversion_context = aq_program.get_program_conversion_context()
+
+        # Wrap the function into an oqpy gate definition
+        wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
+        gate_name = f.__name__
+
+        # Validate that the gate definition acts on at least one qubit
+        if not gate_args.qubits:
+            raise errors.ParameterTypeError(
+                f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
+                "Every gate definition must contain at least one qubit argument."
+            )
+
+        # Process the gate definition
+        with program_conversion_context.gate_definition(gate_name, gate_args):
+            # TODO - enforce that nothing gets added to the program inside here except gates
+            wrapped_f(gate_args._args)
+
+        # Add the gate definition to the root-level program if necessary
+        root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+        if gate_name not in root_oqpy_program.gates:
+            gate_stmt = program_conversion_context.get_oqpy_program().gates[gate_name]
+            root_oqpy_program._add_gate(gate_name, gate_stmt)
+
+        # Add the gate invocation to the program
+        if len(args) != len(gate_args):
+            raise errors.ParameterTypeError(
+                f'Incorrect number of arguments passed to gate "{gate_name}". '
+                f"Expected {len(gate_args)}, got {len(args)}."
+            )
+        qubit_args = [args[i] for i in gate_args.qubit_indices]
+        angle_args = [args[i] for i in gate_args.angle_indices]
+        aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
+    except Exception as e:
+        if isinstance(e, errors.AutoQasmError):
+            raise
+        elif hasattr(e, "ag_error_metadata"):
+            raise e.ag_error_metadata.to_exception(e)
+        else:
+            raise
+
+
 def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:
     if not return_type:
         return None
@@ -457,3 +548,32 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 
     _func.__signature__ = sig.replace(parameters=new_params)
     return _func
+
+
+def _wrap_for_oqpy_gate(
+    f: Callable,
+    options: converter.ConversionOptions,
+) -> Tuple[Callable[..., None], aq_program.GateArgs]:
+    gate_args = aq_program.GateArgs()
+    sig = inspect.signature(f)
+    for param in sig.parameters.values():
+        if param.annotation is param.empty:
+            raise errors.MissingParameterTypeError(
+                f'Parameter "{param.name}" for gate "{f.__name__}" '
+                "is missing a required type hint."
+            )
+
+        if param.annotation == aq_instructions.QubitIdentifierType:
+            gate_args.append(param.name, True)
+        elif param.annotation in [float, aq_types.FloatVar]:
+            gate_args.append(param.name, False)
+        else:
+            raise errors.ParameterTypeError(
+                f'Parameter "{param.name}" for gate "{f.__name__}" '
+                "must have a type hint of either aq.Qubit or float."
+            )
+
+    def _func(*args: Any) -> None:
+        aq_transpiler.converted_call(f, *args, kwargs={}, options=options)
+
+    return _func, gate_args

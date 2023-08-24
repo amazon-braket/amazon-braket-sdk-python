@@ -33,6 +33,10 @@ class MissingParameterTypeError(AutoQasmError):
     """AutoQASM requires type hints for subroutine parameters."""
 
 
+class InvalidGateDefinition(AutoQasmError):
+    """Gate definition does not meet the necessary requirements."""
+
+
 class UnknownQubitCountError(AutoQasmError):
     """Missing declaration for the number of qubits."""
 
