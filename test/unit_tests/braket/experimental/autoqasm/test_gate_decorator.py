@@ -309,22 +309,3 @@ subroutine(2, 3);"""
 
     program = main()
     assert program.to_ir() == expected
-
-
-def test_gate_declaration_only() -> None:
-    @aq.gate(declaration_only=True)
-    def my_gate(q: aq.Qubit):
-        pass
-
-    @aq.function
-    def main():
-        h(0)
-        my_gate(0)
-
-    expected = """OPENQASM 3.0;
-qubit[1] __qubits__;
-h __qubits__[0];
-my_gate __qubits__[0];"""
-
-    program = main()
-    assert program.to_ir() == expected
