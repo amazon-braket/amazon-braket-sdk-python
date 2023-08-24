@@ -98,8 +98,9 @@ def subroutine(*args) -> Callable[[Any], aq_program.Program]:
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    if not aq_program.in_active_program_conversion_context():
-        raise errors.AutoQasmError("TODO")
+    # TODO: subroutine shouldn't be called directly. This needs to move inside the wrapper.
+    # if not aq_program.in_active_program_conversion_context():
+    #     raise errors.AutoQasmError("TODO")
     return _function_without_params(*args, user_config=None, is_subroutine=True)
 
 
@@ -123,7 +124,6 @@ def _function_without_params(
 
     wrapper_factory = _convert_program_wrapper(
         user_config=user_config,
-        recursive=False,
         is_subroutine=is_subroutine,
     )
     wrapper = wrapper_factory(f)
@@ -133,27 +133,19 @@ def _function_without_params(
 
 def _convert_program_wrapper(
     user_config: aq_program.UserConfig,
-    recursive: bool = False,
     is_subroutine: bool = False,
-    user_requested: bool = True,
-    conversion_ctx: Optional[ag_ctx.ControlStatusCtx] = ag_ctx.NullCtx(),
 ) -> Callable:
     """Generates a factory which does the conversion of a function into a callable
     that returns a Program object containing the quantum program.
 
     Args:
         user_config (UserConfig): User-specified settings that influence program building
-        recursive (bool): whether to recursively convert any functions or classes
-            that the converted function may use. Defaults to False.
-        user_requested (bool): whether this is a function that the user explicitly
-            asked to be converted. See ConversionOptions.user_requested. Defaults to True.
-        conversion_ctx (Optional[ControlStatusCtx]): the Autograph context in
-            which `f` is used. Defaults to ag_ctx.NullCtx().
 
     Returns:
         Callable: a decorator that converts the given function into an equivalent
         function that uses AutoQASM operations.
     """
+    conversion_ctx = ag_ctx.NullCtx()
 
     def _decorator(f: Callable) -> Callable[[Any], aq_program.Program]:
         """aq.function decorator implementation."""
@@ -162,8 +154,8 @@ def _convert_program_wrapper(
             """Wrapper that calls the converted version of f."""
             # This code is executed once the decorated function is called
             options = converter.ConversionOptions(
-                recursive=recursive,
-                user_requested=user_requested,
+                recursive=False,
+                user_requested=True,
                 optional_features=_autograph_optional_features(),
             )
             return _convert_program(f, conversion_ctx, options, user_config, args, kwargs, is_subroutine)
