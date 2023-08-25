@@ -54,6 +54,7 @@ def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.
     user_config = aq_program.UserConfig(num_qubits=num_qubits)
 
     if not args:
+
         def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
             return _function_wrapper(f, _convert_main, converter_args={"user_config": user_config})
 
