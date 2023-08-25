@@ -48,21 +48,21 @@ def test_sim_bell_state(bell_state_program) -> None:
     _test_on_local_sim(bell_state_program())
 
 
-def test_multiple_calls(empty_program, bell_state_program) -> None:
-    """Tests multiple calls to a single aq.function to ensure that each resulting
+def test_multiple_calls(empty_subroutine, bell_state_subroutine) -> None:
+    """Tests multiple calls to a single aq.main to ensure that each resulting
     Program object has the expected contents.
     """
 
     def count_function_calls(program: aq.Program, func_name: str) -> int:
         return program.to_ir().count(f"{func_name}();")
 
-    @aq.function
+    @aq.main
     def empty_program_wrapper():
-        empty_program()
+        empty_subroutine()
 
-    @aq.function
+    @aq.main
     def bell_state_program_wrapper():
-        bell_state_program()
+        bell_state_subroutine()
 
     first_program = empty_program_wrapper()
     assert 1 == count_function_calls(first_program, "empty_function")
@@ -77,14 +77,14 @@ def test_multiple_calls(empty_program, bell_state_program) -> None:
     assert 1 == count_function_calls(third_program, "bell_state")
 
 
-def test_subroutines(empty_program, bell_state_program, physical_bell_program):
+def test_subroutines(empty_subroutine, bell_state_subroutine, physical_bell_subroutine):
     """Tests calling several subroutines consecutively."""
 
-    @aq.function
+    @aq.main
     def call_subroutines() -> None:
-        empty_program()
-        bell_state_program()
-        physical_bell_program()
+        empty_subroutine()
+        bell_state_subroutine()
+        physical_bell_subroutine()
 
     expected = """OPENQASM 3.0;
 def empty_function() {
@@ -107,19 +107,19 @@ physical_bell();"""
     _test_on_local_sim(call_subroutines())
 
 
-@aq.function
+@aq.subroutine
 def do_h(q: int):
     h(q)
 
 
-@aq.function(num_qubits=6)
+@aq.subroutine
 def recursive_h(q: int):
     do_h(q)
     if q > 0:
         recursive_h(q - 1)
 
 
-@aq.function(num_qubits=6)
+@aq.main(num_qubits=6)
 def recursive_h_wrapper(q: int):
     recursive_h(q)
 
@@ -145,6 +145,10 @@ def test_sim_recursive_h_wrapper():
 
 
 def test_recursive_h():
+    @aq.main(num_qubits=6)
+    def main(n: int):
+        recursive_h(n)
+
     expected = """OPENQASM 3.0;
 def do_h(int[32] q) {
     h __qubits__[q];
@@ -156,22 +160,18 @@ def recursive_h(int[32] q) {
     }
 }
 qubit[6] __qubits__;
-do_h(5);
 recursive_h(4);"""
-    assert recursive_h(5).to_ir() == expected
+
+    assert main(4).to_ir() == expected
 
 
-def test_sim_recursive_h():
-    _test_on_local_sim(recursive_h(5))
-
-
-@aq.function
+@aq.subroutine
 def bell_state_arbitrary_qubits(q0: int, q1: int) -> None:
     h(q0)
     cnot(q0, q1)
 
 
-@aq.function(num_qubits=4)
+@aq.main(num_qubits=4)
 def double_bell_state() -> None:
     bell_state_arbitrary_qubits(0, 1)
     bell_state_arbitrary_qubits(2, 3)
@@ -193,7 +193,7 @@ def test_sim_double_bell() -> None:
     _test_on_local_sim(double_bell_state())
 
 
-@aq.function
+@aq.main
 def bell_measurement_undeclared() -> None:
     """A function that generates and measures a two-qubit Bell state."""
     h(0)
@@ -218,7 +218,7 @@ def test_sim_bell_measurement_undeclared() -> None:
     _test_on_local_sim(bell_measurement_undeclared())
 
 
-@aq.function
+@aq.main
 def bell_measurement_declared() -> None:
     """A function that generates and measures a two-qubit Bell state."""
     c = aq.BitVar(0, size=2)
@@ -245,7 +245,7 @@ def test_sim_bell_measurement_declared() -> None:
     _test_on_local_sim(bell_measurement_declared())
 
 
-@aq.function
+@aq.main
 def bell_partial_measurement() -> None:
     """A function that generates and measures a two-qubit Bell state."""
     h(0)
@@ -265,7 +265,7 @@ c = __bit_0__;"""
     assert bell_partial_measurement().to_ir() == expected
 
 
-@aq.function
+@aq.main
 def bell_measurement_invalid_declared_type() -> None:
     """A function that generates and measures a two-qubit Bell state. But stores
     reuslt in an variable with invalid type.
@@ -284,7 +284,7 @@ def test_bell_measurement_invalid_declared_type() -> None:
     assert expected_error_message in str(exc_info.value)
 
 
-@aq.function
+@aq.main
 def bell_measurement_invalid_declared_size() -> None:
     """A function that generates and measures a two-qubit Bell state. But stores
     reuslt in an variable with invalid size.
@@ -303,7 +303,7 @@ def test_bell_measurement_invalid_declared_size() -> None:
     assert expected_error_message in str(exc_info.value)
 
 
-@aq.function(num_qubits=5)
+@aq.main(num_qubits=5)
 def ghz_qasm_for_loop() -> None:
     """A function that generates a GHZ state using a QASM for loop."""
     n_qubits = 5
@@ -326,7 +326,7 @@ def test_sim_ghz_qasm_for_loop() -> None:
     _test_on_local_sim(ghz_qasm_for_loop())
 
 
-@aq.function
+@aq.main
 def ghz_py_for_loop() -> None:
     """A function that generates a GHZ state using a Python for loop."""
     n_qubits = 5
@@ -350,7 +350,7 @@ def test_sim_ghz_py_for_loop() -> None:
     _test_on_local_sim(ghz_py_for_loop())
 
 
-@aq.function
+@aq.subroutine
 def qasm_simple_condition(do_cnot: bool) -> bool:
     """A function that contains a QASM conditional statement.
 
@@ -366,7 +366,7 @@ def qasm_simple_condition(do_cnot: bool) -> bool:
     return do_cnot
 
 
-@aq.function
+@aq.main
 def qasm_simple_condition_wrapper(do_cnot: bool):
     qasm_simple_condition(do_cnot)
 
@@ -393,7 +393,7 @@ def test_sim_qasm_simple_condition(do_cnot: bool) -> None:
     _test_on_local_sim(qasm_simple_condition_wrapper(do_cnot))
 
 
-@aq.function
+@aq.main
 def qasm_inline_var_condition() -> aq.BitVar:
     """A function that contains a QASM conditional statement with an inline var condition.
 
@@ -432,7 +432,7 @@ def test_sim_qasm_inline_var_condition() -> None:
     _test_on_local_sim(qasm_inline_var_condition())
 
 
-@aq.function
+@aq.main
 def ground_state_measurements() -> aq.BitVar:
     """Measure a few ground state qubits."""
     return measure([5, 2, 1])
@@ -465,12 +465,17 @@ def test_simple_measurement_return() -> None:
     the measurement results are returned from a subroutine.
     """
 
-    @aq.function
+    @aq.subroutine
+    def ground_state_measurements_subroutine() -> aq.BitVar:
+        """Measure a few ground state qubits."""
+        return measure([5, 2, 1])
+
+    @aq.main
     def ground_state_measurements_wrapper() -> None:
-        ground_state_measurements()
+        ground_state_measurements_subroutine()
 
     expected = """OPENQASM 3.0;
-def ground_state_measurements() -> bit[3] {
+def ground_state_measurements_subroutine() -> bit[3] {
     bit[3] __bit_0__ = "000";
     __bit_0__[0] = measure __qubits__[5];
     __bit_0__[1] = measure __qubits__[2];
@@ -481,11 +486,11 @@ qubit[6] __qubits__;
 """
     # TODO: this should be `bit[3]`, but there's a bug. It's being tracked in an issue.
     expected += """bit __bit_1__;
-__bit_1__ = ground_state_measurements();"""
+__bit_1__ = ground_state_measurements_subroutine();"""
     assert ground_state_measurements_wrapper().to_ir() == expected
 
 
-@aq.function
+@aq.main
 def qasm_measurement_condition() -> aq.BitVar:
     """A function that contains a mid-circuit measurement conditional.
 
@@ -528,16 +533,20 @@ def test_py_int_qubit_decl() -> None:
     assert "\nqubit[5] __qubits__;" in qasm
 
 
-def test_physical_qubit_decl(physical_bell_program) -> None:
+def test_physical_qubit_decl(physical_bell_subroutine) -> None:
     """Tests e.g. h("$0"). Note that physical qubits aren't declared."""
-    qasm = physical_bell_program().to_ir()
-    assert "__qubits__" not in qasm
+
+    @aq.main
+    def main():
+        physical_bell_subroutine()
+
+    assert "__qubits__" not in main().to_ir()
 
 
 def test_invalid_physical_qubit_fails() -> None:
     """Tests invalid physical qubit formatting."""
 
-    @aq.function
+    @aq.main
     def broken() -> None:
         "Uses invalid string for qubit index"
         cnot("$0l", "$O1")
@@ -549,7 +558,7 @@ def test_invalid_physical_qubit_fails() -> None:
 def test_invalid_qubit_label_fails() -> None:
     """Tests random string fails for qubit label."""
 
-    @aq.function
+    @aq.main
     def broken() -> None:
         "Uses invalid string for qubit index"
         h("nope")
@@ -561,7 +570,7 @@ def test_invalid_qubit_label_fails() -> None:
 def test_float_qubit_index_fails() -> None:
     """Tests floats fails for qubit label."""
 
-    @aq.function
+    @aq.main
     def broken() -> None:
         "Uses float for qubit index"
         i = 1
@@ -574,7 +583,7 @@ def test_float_qubit_index_fails() -> None:
 def test_bool_qubit_index_fails() -> None:
     """Tests that an error is raised for boolean qubit type."""
 
-    @aq.function
+    @aq.main
     def broken() -> None:
         "Uses invalid type for qubit index"
         h(True)
@@ -586,7 +595,7 @@ def test_bool_qubit_index_fails() -> None:
 def test_invalid_qubit_type_fails() -> None:
     """Tests that an error is raised for other unusual qubit types."""
 
-    @aq.function
+    @aq.main
     def broken() -> None:
         "Uses invalid type for qubit index"
         h(h)
@@ -598,13 +607,13 @@ def test_invalid_qubit_type_fails() -> None:
 def test_bit_array_name() -> None:
     """Tests that auto declared bits are given a reasonable name."""
 
-    @aq.function
+    @aq.subroutine
     def my_program() -> aq.BitVar:
         """Program which requires generating a bit"""
         h(0)
         return measure(0)
 
-    @aq.function
+    @aq.main
     def my_program_wrapper() -> None:
         my_program()
 
@@ -615,7 +624,7 @@ def test_bit_array_name() -> None:
     assert expected in my_program_wrapper().to_ir()
 
 
-@aq.function
+@aq.main
 def reset() -> None:
     "Reset qubit 0."
     if measure(0):
@@ -653,7 +662,7 @@ def test_program_simple_expr() -> None:
     an error if the user doesn't specify the number of qubits.
     """
 
-    @aq.function
+    @aq.main
     def simple_range() -> None:
         "Uses aq.range iterator for qubit index."
         for i in aq.range(5):
@@ -668,7 +677,7 @@ def test_program_with_expr() -> None:
     an error if the user doesn't specify the number of qubits.
     """
 
-    @aq.function
+    @aq.main
     def qubit_expr() -> None:
         "Uses aq.range iterator for qubit index."
         for i in aq.range(5):
@@ -691,7 +700,7 @@ for int i in [0:5 - 1] {
     h __qubits__[i];
 }"""
 
-    @aq.function(num_qubits=6)
+    @aq.main(num_qubits=6)
     def prog():
         for i in aq.range(3):
             cnot(i, i + 1)
@@ -702,13 +711,13 @@ for int i in [0:5 - 1] {
     assert prog().to_ir() == expected
 
 
-@aq.function
+@aq.subroutine
 def bell(q0: int, q1: int) -> None:
     h(q0)
     cnot(q0, q1)
 
 
-@aq.function(num_qubits=5)
+@aq.main(num_qubits=5)
 def bell_in_for_loop() -> None:
     for i in aq.range(3):
         bell(0, 1)
@@ -729,7 +738,7 @@ for int i in [0:3 - 1] {
     assert bell_in_for_loop().to_ir() == expected
 
 
-@aq.function
+@aq.main
 def classical_variables_types() -> None:
     a = aq.BitVar(0)
     a = aq.BitVar(1)  # noqa: F841
@@ -771,7 +780,7 @@ def test_sim_classical_variables_types():
 
 
 def test_classical_variables_assignment():
-    @aq.function
+    @aq.main
     def prog() -> None:
         a = aq.IntVar(1)  # undeclared target, undeclared value
         a = aq.IntVar(2)  # declared target, undeclared value
@@ -789,7 +798,7 @@ a = b;"""
 
 
 def test_assignment_measurement_results():
-    @aq.function
+    @aq.main
     def prog() -> None:
         a = measure(0)
         b = a  # noqa: F841
@@ -805,21 +814,8 @@ b = a;"""
     assert prog().to_ir() == expected
 
 
-def test_mismatched_qubits():
-    @aq.function(num_qubits=4)
-    def subroutine() -> None:
-        _ = measure(0)
-
-    @aq.function(num_qubits=8)
-    def main() -> None:
-        subroutine()
-
-    with pytest.raises(errors.InconsistentNumQubits):
-        main()
-
-
 def test_nested_function():
-    @aq.function
+    @aq.main
     def make_ghz(n: int) -> None:
         def ghz(n: int):
             if n == 1:
@@ -842,8 +838,8 @@ cnot __qubits__[0], __qubits__[4];"""
 
 
 def test_double_decorated_function():
-    @aq.function
-    @aq.function
+    @aq.main
+    @aq.main
     def empty_program() -> None:
         pass
 
@@ -852,7 +848,7 @@ def test_double_decorated_function():
 
 
 def test_main_return():
-    @aq.function
+    @aq.main
     def main() -> int:
         return 1
 
@@ -861,13 +857,63 @@ def test_main_return():
 
 
 def test_main_no_return():
-    @aq.function
+    @aq.subroutine
     def tester(x: int) -> int:
         return measure(x)
 
-    @aq.function(num_qubits=3)
+    @aq.main(num_qubits=3)
     def main():
         x = 3
         tester(x)
 
     main()
+
+
+def test_subroutine_args():
+    """Test that subroutines will fail if supplied args."""
+    with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+
+        @aq.subroutine(num_qubits=5)
+        def bell(q0: int, q1: int) -> None:
+            h(q0)
+            cnot(q0, q1)
+
+
+def test_direct_subroutine_call_w_args():
+    """Shouldn't be able to call a subroutine directly."""
+
+    @aq.subroutine
+    def bell(q0: int, q1: int) -> None:
+        h(q0)
+        cnot(q0, q1)
+
+    with pytest.raises(errors.AutoQasmTypeError):
+        bell()
+
+
+def test_direct_subroutine_call_no_args():
+    """Shouldn't be able to call a subroutine directly."""
+
+    @aq.subroutine
+    def bell() -> None:
+        h(0)
+        cnot(0, 1)
+
+    with pytest.raises(errors.AutoQasmTypeError):
+        bell()
+
+
+def test_main_from_main():
+    """Can't call main from main!"""
+
+    @aq.main
+    def bell(q0: int, q1: int) -> None:
+        h(q0)
+        cnot(q0, q1)
+
+    @aq.main
+    def main():
+        bell(0, 1)
+
+    with pytest.raises(errors.AutoQasmTypeError):
+        main()

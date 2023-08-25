@@ -18,7 +18,7 @@ Example of using a `h` gate and a `cnot` gate to create a Bell circuit:
 
 .. code-block:: python
 
-    @aq.function
+    @aq.main
     def bell():
         h(0)
         cnot(0, 1)

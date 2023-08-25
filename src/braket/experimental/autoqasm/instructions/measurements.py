@@ -17,7 +17,7 @@ Example of measuring qubit 0:
 
 .. code-block:: python
 
-    @aq.function
+    @aq.main
     def my_program():
         measure(0)
 """

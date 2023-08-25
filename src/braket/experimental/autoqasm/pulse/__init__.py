@@ -21,7 +21,7 @@ Example of a program that uses only pulse instructions:
 
 .. code-block:: python
 
-    @aq.function
+    @aq.main
     def my_pulse_program():
         pulse.shift_frequency(frame, 123)
         pulse.delay([3, 4], 0.34)

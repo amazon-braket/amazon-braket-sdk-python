@@ -41,7 +41,7 @@ WAVEFORM = ArbitraryWaveform([complex(1, 0.4), 0, 0.3, complex(0.1, 0.2)], id="a
 def test_mix_gate_pulse() -> None:
     """Test mixed usage of gates and pulses."""
 
-    @aq.function
+    @aq.main
     def my_program():
         shift_frequency(FRAME1, 0.1234)
         rx(1, 0.1)
@@ -71,7 +71,7 @@ def test_mix_gate_pulse() -> None:
 def test_merge_cal_box() -> None:
     """Test subsequent cal boxes are merged."""
 
-    @aq.function
+    @aq.main
     def my_program():
         barrier(0)
         delay([3, 4], 0.34)

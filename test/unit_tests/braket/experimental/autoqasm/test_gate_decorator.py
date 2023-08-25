@@ -29,7 +29,7 @@ def empty_gate(q: aq.Qubit):
 
 
 def test_empty_gate() -> None:
-    @aq.function
+    @aq.main
     def my_program():
         empty_gate(0)
 
@@ -48,7 +48,7 @@ empty_gate __qubits__[0];"""
 def test_double_gate_decorator() -> None:
     double_decorated = aq.gate(empty_gate)
 
-    @aq.function
+    @aq.main
     def my_program():
         double_decorated(0)
 
@@ -70,7 +70,7 @@ def test_gate_class() -> None:
         def __init__(self, q: aq.Qubit):
             h(q)
 
-    @aq.function
+    @aq.main
     def main():
         MyGate(0)
 
@@ -84,7 +84,7 @@ def test_invalid_symbol() -> None:
         h(q)
         not_a_symbol()  # noqa: F821 # type: ignore
 
-    @aq.function
+    @aq.main
     def main():
         my_gate(0)
 
@@ -101,7 +101,7 @@ def test_duplicate_gate_names() -> None:
     def my_gate(q: aq.Qubit, angle: float):  # noqa: F811
         rx(q, angle)
 
-    @aq.function
+    @aq.main
     def main():
         my_gate(0, np.pi / 4)
 
@@ -119,7 +119,7 @@ my_gate(pi / 4) __qubits__[0];"""
 def test_duplicate_gate_names_in_subroutine() -> None:
     """Verify that gates can only be defined at the top level."""
 
-    @aq.function
+    @aq.subroutine
     def define_gate_in_subroutine():
         @aq.gate
         def my_gate(q: aq.Qubit):
@@ -131,7 +131,7 @@ def test_duplicate_gate_names_in_subroutine() -> None:
     def my_gate(q: aq.Qubit, angle: float):
         rx(q, angle)
 
-    @aq.function
+    @aq.main
     def main():
         my_gate(0, np.pi / 4)
         define_gate_in_subroutine()
@@ -157,7 +157,7 @@ def test_incorrect_arg_count() -> None:
         h(q0)
         x(q1)
 
-    @aq.function
+    @aq.main
     def incorrect_arg_count():
         my_gate(0)
 
@@ -174,7 +174,7 @@ def test_incorrect_arg_types() -> None:
         h(q)
         rx(q, theta)
 
-    @aq.function
+    @aq.main
     def incorrect_arg_types():
         my_gate(0.25, 0)
 
@@ -187,7 +187,7 @@ def test_missing_annotation() -> None:
     def my_gate(a):
         pass
 
-    @aq.function
+    @aq.main
     def my_program():
         my_gate("test")
 
@@ -200,7 +200,7 @@ def test_incorrect_annotation() -> None:
     def my_gate(a: str):
         pass
 
-    @aq.function
+    @aq.main
     def my_program():
         my_gate("test")
 
@@ -213,7 +213,7 @@ def test_no_qubit_args() -> None:
     def not_a_gate(angle: float):
         pass
 
-    @aq.function
+    @aq.main
     def my_program():
         not_a_gate(np.pi)
 
@@ -230,7 +230,7 @@ def test_invalid_qubit_used() -> None:
         h(q)
         x(1)  # invalid
 
-    @aq.function
+    @aq.main
     def my_program():
         my_gate(0)
 
@@ -252,7 +252,7 @@ def test_nested_gates() -> None:
         t(q)
         rx(q, theta)
 
-    @aq.function
+    @aq.main
     def my_program():
         my_gate(0, np.pi / 4)
         my_gate(1, 3 * np.pi / 4)
@@ -285,12 +285,12 @@ def test_gate_called_from_subroutine() -> None:
     def t(q: aq.Qubit):
         rz(q, np.pi / 4)
 
-    @aq.function
+    @aq.subroutine
     def subroutine(q0: int, q1: int):
         t(q0)
         t(q1)
 
-    @aq.function(num_qubits=4)
+    @aq.main(num_qubits=4)
     def main():
         subroutine(0, 1)
         subroutine(2, 3)

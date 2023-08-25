@@ -20,7 +20,7 @@ from braket.experimental.autoqasm.instructions import cnot, h
 def test_with_verbatim_box() -> None:
     """Tests the with statement with verbatim box `Verbatim`."""
 
-    @aq.function
+    @aq.main
     def program_func() -> None:
         """User program to test."""
         h(0)

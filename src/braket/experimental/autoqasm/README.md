@@ -49,14 +49,14 @@ import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.instructions import h, cnot, measure
 ```
 
-To create a quantum program using the AutoQASM experience, you decorate a function with `@aq.function`.
+To create a quantum program using the AutoQASM experience, you decorate a function with `@aq.main`.
 This allows AutoQASM to hook into the program definition and generate an output format that is accepted
 by quantum devices.
 
 For instance, we can create a Bell state like so:
 ```
 # A program that generates a maximally entangled state
-@aq.function
+@aq.main
 def bell_state() -> None:
     h(0)
     cnot(0, 1)
@@ -68,7 +68,7 @@ AutoQASM enables users to use more complicated program constructs with a compact
 structure. We can demonstrate this with a program that conditionally prepares multiple Bell states
 on qubit pairs (1, 2) and (3, 4).
 ```
-@aq.function(num_qubits=5)
+@aq.main(num_qubits=5)
 def conditional_multi_bell_states() -> None:
     h(0)
     if measure(0):
@@ -82,7 +82,7 @@ def conditional_multi_bell_states() -> None:
 my_bell_program = conditional_multi_bell_states()
 ```
 
-AutoQASM can support nested subroutines and complex control flow. You can use the Python runtime
+AutoQASM can support subroutines and complex control flow. You can use the Python runtime
 and quantum runtime side-by-side. For the moment, we support only a few quantum operations such as
 `h`, `x`, `cnot`, and `measure`. There are rough edges at the moment, but we're actively smoothing
 them out!
@@ -103,7 +103,7 @@ For more example usage of AutoQASM, visit the [example notebooks](../../../../ex
 ## Architecture
 
 AutoQASM is built on top of the `autograph` component of TensorFlow. A quantum program is
-written as a Python function which includes an `@aq.function` decorator. When calling this
+written as a Python function which is decorated with `@aq.main`. When calling this
 decorated function, the user’s Python function is converted into a transformed Python function
 by `autograph`. This transformed function is then executed to produce an AutoQASM `Program`
 object which can be simulated and/or serialized to OpenQASM.

@@ -19,7 +19,7 @@ The basic usage of AutoQASM is as follows:
     import braket.experimental.autoqasm as aq
     from braket.experimental.autoqasm.instructions import h, cnot, measure
 
-    @aq.function
+    @aq.main
     def my_program():
         h(0)
         cnot(0, 1)
@@ -40,7 +40,7 @@ The Python code above outputs the following OpenQASM program:
     result[1] = measure __qubits__[1];
 """
 
-from .api import function, gate  # noqa: F401
+from .api import gate, main, subroutine  # noqa: F401
 from .instructions import QubitIdentifierType as Qubit  # noqa: F401
 from .program import Program, build_program, verbatim  # noqa: F401
 from .transpiler import transpiler  # noqa: F401
