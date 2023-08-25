@@ -239,19 +239,11 @@ def _convert_program(
         )
 
     with aq_program.build_program(user_config) as program_conversion_context:
-        try:
-            with conversion_ctx:
-                if is_subroutine:
-                    _convert_subroutine(f, program_conversion_context, options, args, kwargs)
-                else:
-                    _convert_main(f, program_conversion_context, options, args, kwargs)
-        except Exception as e:
-            if isinstance(e, errors.AutoQasmError):
-                raise
-            elif hasattr(e, "ag_error_metadata"):
-                raise e.ag_error_metadata.to_exception(e)
+        with conversion_ctx:
+            if is_subroutine:
+                _convert_subroutine(f, program_conversion_context, options, args, kwargs)
             else:
-                raise
+                _convert_main(f, program_conversion_context, options, args, kwargs)
 
     if is_subroutine:
         return program_conversion_context.return_variable
@@ -367,48 +359,40 @@ def _convert_gate(
     args: List[Any],
     kwargs: Dict[str, Any],
 ) -> Callable:
-    try:
-        # We must be inside an active conversion context in order to invoke a gate
-        program_conversion_context = aq_program.get_program_conversion_context()
+    # We must be inside an active conversion context in order to invoke a gate
+    program_conversion_context = aq_program.get_program_conversion_context()
 
-        # Wrap the function into an oqpy gate definition
-        wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
-        gate_name = f.__name__
+    # Wrap the function into an oqpy gate definition
+    wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
+    gate_name = f.__name__
 
-        # Validate that the gate definition acts on at least one qubit
-        if not gate_args.qubits:
-            raise errors.ParameterTypeError(
-                f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
-                "Every gate definition must contain at least one qubit argument."
-            )
+    # Validate that the gate definition acts on at least one qubit
+    if not gate_args.qubits:
+        raise errors.ParameterTypeError(
+            f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
+            "Every gate definition must contain at least one qubit argument."
+        )
 
-        # Process the gate definition
-        with program_conversion_context.gate_definition(gate_name, gate_args):
-            # TODO - enforce that nothing gets added to the program inside here except gates
-            wrapped_f(gate_args._args)
+    # Process the gate definition
+    with program_conversion_context.gate_definition(gate_name, gate_args):
+        # TODO - enforce that nothing gets added to the program inside here except gates
+        wrapped_f(gate_args._args)
 
-        # Add the gate definition to the root-level program if necessary
-        root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
-        if gate_name not in root_oqpy_program.gates:
-            gate_stmt = program_conversion_context.get_oqpy_program().gates[gate_name]
-            root_oqpy_program._add_gate(gate_name, gate_stmt)
+    # Add the gate definition to the root-level program if necessary
+    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+    if gate_name not in root_oqpy_program.gates:
+        gate_stmt = program_conversion_context.get_oqpy_program().gates[gate_name]
+        root_oqpy_program._add_gate(gate_name, gate_stmt)
 
-        # Add the gate invocation to the program
-        if len(args) != len(gate_args):
-            raise errors.ParameterTypeError(
-                f'Incorrect number of arguments passed to gate "{gate_name}". '
-                f"Expected {len(gate_args)}, got {len(args)}."
-            )
-        qubit_args = [args[i] for i in gate_args.qubit_indices]
-        angle_args = [args[i] for i in gate_args.angle_indices]
-        aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
-    except Exception as e:
-        if isinstance(e, errors.AutoQasmError):
-            raise
-        elif hasattr(e, "ag_error_metadata"):
-            raise e.ag_error_metadata.to_exception(e)
-        else:
-            raise
+    # Add the gate invocation to the program
+    if len(args) != len(gate_args):
+        raise errors.ParameterTypeError(
+            f'Incorrect number of arguments passed to gate "{gate_name}". '
+            f"Expected {len(gate_args)}, got {len(args)}."
+        )
+    qubit_args = [args[i] for i in gate_args.qubit_indices]
+    angle_args = [args[i] for i in gate_args.angle_indices]
+    aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
 
 
 def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:

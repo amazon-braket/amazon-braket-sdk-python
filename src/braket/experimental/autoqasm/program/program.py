@@ -284,6 +284,13 @@ def build_program(user_config: Optional[UserConfig] = None) -> None:
             _get_local().program_conversion_context = ProgramConversionContext(user_config)
             owns_program_conversion_context = True
         yield _get_local().program_conversion_context
+    except Exception as e:
+        if isinstance(e, errors.AutoQasmError):
+            raise
+        elif hasattr(e, "ag_error_metadata"):
+            raise e.ag_error_metadata.to_exception(e)
+        else:
+            raise
     finally:
         if owns_program_conversion_context:
             _get_local().program_conversion_context = None
