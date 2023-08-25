@@ -60,7 +60,7 @@ def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.
         #    @aq.main
         #    def my_func(...):
         # Equivalently, `main(my_func, num_qubits=None)`
-        return _function_wrapper(args[0], user_config=user_config)
+        return _function_wrapper(args[0], _convert_main, wrapper_args={"user_config": user_config})
     else:
         # In this case, num_qubits was supplied, and we don't know `f` yet.
         # Matches the following syntax:
@@ -68,7 +68,7 @@ def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.
         #    def my_func(...):
         # Equivalently: `main(num_qubits=x)(my_func)`
         def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
-            return _function_wrapper(f, user_config=user_config)
+            return _function_wrapper(f, _convert_main, wrapper_args={"user_config": user_config})
 
         return _function_with_params
 
@@ -81,7 +81,7 @@ def subroutine(*args) -> Callable[[Any], aq_program.Program]:
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    return _function_wrapper(*args, user_config=None, is_subroutine=True)
+    return _function_wrapper(args[0], _convert_subroutine)
 
 
 def gate(*args) -> Callable[[Any], None]:
@@ -91,27 +91,21 @@ def gate(*args) -> Callable[[Any], None]:
         Callable[[Any],]: A callable which can be used as a custom gate inside an
         aq.function or inside another aq.gate.
     """
-    f = args[0]
-    if is_autograph_artifact(f):
-        return f
-
-    wrapper_factory = _convert_gate_wrapper()
-
-    return autograph_artifact(wrapper_factory(f))
+    return _function_wrapper(args[0], _convert_gate)
 
 
 def _function_wrapper(
     f: Callable,
-    user_config: aq_program.UserConfig,
-    is_subroutine: bool = False,
+    callback: Callable,
+    wrapper_args: Optional[Dict[str, Any]] = None,
 ) -> Callable[[Any], aq_program.Program]:
     """Wrapping and conversion logic around the user function `f`.
 
     Args:
         f (Callable): The target function to be converted which represents
             the entry point of the quantum program.
-        user_config (UserConfig): User-specified settings that influence program building.
-        is_subroutine (bool): If the function corresponds to a subroutine or main.
+        callback (Callable): TODO
+        wrapper_args (Optional[Dict[str, Any]]): TODO
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted
@@ -120,66 +114,18 @@ def _function_wrapper(
     if is_autograph_artifact(f):
         return f
 
-    # TODO: (laurecap) Update to accept a callback
-    wrapper_factory = _convert_program_wrapper(
-        user_config=user_config,
-        is_subroutine=is_subroutine,
-    )
+    if not wrapper_args:
+        wrapper_args = {}
 
-    return autograph_artifact(wrapper_factory(f))
-
-
-def _convert_program_wrapper(
-    user_config: aq_program.UserConfig,
-    is_subroutine: bool = False,
-) -> Callable:
-    """Generates a factory which does the conversion of a function into a callable
-    that returns a Program object containing the quantum program.
-
-    Args:
-        user_config (UserConfig): User-specified settings that influence program building.
-        is_subroutine (bool): If the function corresponds to a subroutine or main.
-
-    Returns:
-        Callable: a decorator that converts the given function into an equivalent
-        function that uses AutoQASM operations.
-    """
-    conversion_ctx = ag_ctx.NullCtx()
-
-    def _decorator(f: Callable) -> Callable[[Any], aq_program.Program]:
-        """aq.function decorator implementation."""
-
-        def _wrapper(*args, **kwargs) -> Union[aq_program.Program, Optional[oqpy.base.Var]]:
-            """Wrapper that calls the converted version of f."""
-            # This code is executed once the decorated function is called
-            options = converter.ConversionOptions(
-                recursive=False,
-                user_requested=True,
-                optional_features=_autograph_optional_features(),
-            )
-            return _convert_program(
-                f, conversion_ctx, options, user_config, args, kwargs, is_subroutine
-            )
-
-        if inspect.isfunction(f) or inspect.ismethod(f):
-            _wrapper = functools.update_wrapper(_wrapper, f)
-
-        decorated_wrapper = tf_decorator.make_decorator(f, _wrapper)
-        return autograph_artifact(decorated_wrapper)
-
-    return _decorator
-
-
-def _convert_gate_wrapper() -> Callable:
     def _decorator(f: Callable) -> Callable[[Any], None]:
-        """aq.gate decorator implementation."""
-
         def _wrapper(*args, **kwargs) -> Callable:
             """Wrapper that calls the converted version of f."""
             options = converter.ConversionOptions(
+                user_requested=True,
                 optional_features=_autograph_optional_features(),
             )
-            return _convert_gate(f, options, args, kwargs)
+            # Call the appropriate function converter
+            return callback(f, options, args, kwargs, **wrapper_args)
 
         if inspect.isfunction(f) or inspect.ismethod(f):
             _wrapper = functools.update_wrapper(_wrapper, f)
@@ -187,7 +133,7 @@ def _convert_gate_wrapper() -> Callable:
         decorated_wrapper = tf_decorator.make_decorator(f, _wrapper)
         return autograph_artifact(decorated_wrapper)
 
-    return _decorator
+    return autograph_artifact(_decorator(f))
 
 
 def _autograph_optional_features() -> Tuple[converter.Feature]:
@@ -197,66 +143,12 @@ def _autograph_optional_features() -> Tuple[converter.Feature]:
     )
 
 
-def _convert_program(
-    f: Callable,
-    conversion_ctx: ag_ctx.ControlStatusCtx,
-    options: converter.ConversionOptions,
-    user_config: aq_program.UserConfig,
-    args: List[Any],
-    kwargs: Dict[str, Any],
-    is_subroutine: bool,
-) -> Union[aq_program.Program, Optional[oqpy.base.Var]]:
-    """Convert the initial callable `f` into a full AutoQASM program `program`.
-
-    This function adds error handling around `_convert_subroutine`
-    and `_convert_main`, where the conversion logic itself lives.
-
-    Args:
-        f (Callable): The function to be converted.
-        conversion_ctx (ControlStatusCtx): the Autograph context in which `f` is used.
-        options (converter.ConversionOptions): Converter options.
-        user_config (UserConfig): User-specified settings that influence program building
-        args (List[Any]): Arguments passed to the program when called.
-        kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
-        is_subroutine (bool): If the function corresponds to a subroutine or main.
-
-
-    Returns:
-        Union[Program, Optional[Var]]: The converted program, if this is a top-level call
-        to the conversion process. Or, the oqpy variable returned from the converted function,
-        if this is a subroutine conversion.
-    """
-    if is_subroutine and not aq_program.in_active_program_conversion_context():
-        raise errors.AutoQasmTypeError(
-            "Subroutines shouldn't be called directly. Please define an entry point "
-            "function, decorate it with '@aq.main', and call your subroutine "
-            "from within that function."
-        )
-    elif not is_subroutine and aq_program.in_active_program_conversion_context():
-        raise errors.AutoQasmTypeError(
-            f"Cannot call main function '{f.__name__}' from another main function. Did you mean "
-            "to use '@aq.subroutine'?"
-        )
-
-    with aq_program.build_program(user_config) as program_conversion_context:
-        with conversion_ctx:
-            if is_subroutine:
-                _convert_subroutine(f, program_conversion_context, options, args, kwargs)
-            else:
-                _convert_main(f, program_conversion_context, options, args, kwargs)
-
-    if is_subroutine:
-        return program_conversion_context.return_variable
-
-    return program_conversion_context.make_program()
-
-
 def _convert_main(
     f: Callable,
-    program_conversion_context: aq_program.ProgramConversionContext,
     options: converter.ConversionOptions,
     args: List[Any],
     kwargs: Dict[str, Any],
+    user_config: aq_program.UserConfig,
 ) -> None:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
     Puts the contents of `f` at the global level of the program, rather than
@@ -267,21 +159,62 @@ def _convert_main(
 
     Args:
         f (Callable): The function to be converted.
-        program_conversion_context (ProgramConversionContext): The program being converted.
         options (converter.ConversionOptions): Converter options.
         args (List[Any]): Arguments passed to the program when called.
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
+        user_config (UserConfig): User-specified settings that influence program building.
     """
-    # Process the program
-    aq_transpiler.converted_call(f, args, kwargs, options=options)
+    if aq_program.in_active_program_conversion_context():
+        raise errors.AutoQasmTypeError(
+            f"Cannot call main function '{f.__name__}' from another main function. Did you mean "
+            "to use '@aq.subroutine'?"
+        )
 
-    # Modify program to add qubit declaration if necessary
-    _add_qubit_declaration(program_conversion_context)
+    with aq_program.build_program(user_config) as program_conversion_context:
+        # Process the program
+        aq_transpiler.converted_call(f, args, kwargs, options=options)
+
+        # Modify program to add qubit declaration if necessary
+        _add_qubit_declaration(program_conversion_context)
+
+    return program_conversion_context.make_program()
+
+
+def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConversionContext) -> None:
+    """Modify the program to include a global qubit register declaration.
+
+    The number of qubits declared is pulled from either the user config (supplied explicitly
+    via kwargs when calling the program) or an attempt is made to dynamically determine the total
+    number of qubits used by inspecting the program.
+
+    Args:
+        program_conversion_context (ProgramConversionContext): The program conversion context.
+    """
+    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+
+    # Declare the global qubit register if necessary
+    user_specified_num_qubits = program_conversion_context.get_declared_qubits()
+
+    if user_specified_num_qubits is not None:
+        # User-supplied qubit count
+        root_oqpy_program.declare(
+            [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, user_specified_num_qubits)],
+            to_beginning=True,
+        )
+
+    else:
+        # Qubit count from program inspection
+        qubits = program_conversion_context.qubits
+        max_qubit_index = qubits[-1] if len(qubits) else None
+        if max_qubit_index is not None:
+            root_oqpy_program.declare(
+                [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, max_qubit_index + 1)],
+                to_beginning=True,
+            )
 
 
 def _convert_subroutine(
     f: Callable,
-    program_conversion_context: aq_program.ProgramConversionContext,
     options: converter.ConversionOptions,
     args: List[Any],
     kwargs: Dict[str, Any],
@@ -294,63 +227,74 @@ def _convert_subroutine(
 
     Args:
         f (Callable): The function to be converted.
-        program_conversion_context (ProgramConversionContext): The program being converted.
         options (converter.ConversionOptions): Converter options.
         args (List[Any]): Arguments passed to the program when called.
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
     """
-    oqpy_program = program_conversion_context.get_oqpy_program()
-
-    if f not in program_conversion_context.subroutines_processing:
-        # Mark that we are starting to process this function to short-circuit recursion
-        program_conversion_context.subroutines_processing.add(f)
-
-        # Convert the function via autograph into an oqpy subroutine
-        # NOTE: Process a clone of the function so that we don't modify the original object
-        oqpy_sub = oqpy.subroutine(_wrap_for_oqpy_subroutine(_clone_function(f), options))
-
-        # Process the program
-        subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
-
-        # Mark that we are finished processing this function
-        program_conversion_context.subroutines_processing.remove(f)
-    else:
-        # Convert the function via autograph into an oqpy subroutine
-        # NOTE: Recursive call; process a dummy version of the function instead
-        oqpy_sub = oqpy.subroutine(_wrap_for_oqpy_subroutine(_dummy_function(f), options))
-
-        # Process the program
-        subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
-
-    # Add the subroutine invocation to the program
-    ret_type = subroutine_function_call.subroutine_decl.return_type
-    return_instance = _make_return_instance_from_oqpy_return_type(ret_type)
-    return_variable = None
-    if isinstance(return_instance, list):
-        return_variable = aq_types.ArrayVar(
-            return_instance,
-            dimensions=[d.value for d in ret_type.dimensions],
+    if not aq_program.in_active_program_conversion_context():
+        raise errors.AutoQasmTypeError(
+            "Subroutines shouldn't be called directly. Please define an entry point "
+            "function, decorate it with '@aq.main', and call your subroutine "
+            "from within that function."
         )
-        oqpy_program.set(return_variable, subroutine_function_call)
-    elif return_instance is not None:
-        return_variable = aq_types.wrap_value(return_instance)
-        oqpy_program.declare(return_variable)
-        oqpy_program.set(return_variable, subroutine_function_call)
-    else:
-        function_call = subroutine_function_call.to_ast(oqpy_program)
-        oqpy_program._add_statement(qasm_ast.ExpressionStatement(function_call))
 
-    # Store the return variable in the program conversion context
-    program_conversion_context.return_variable = return_variable
+    with aq_program.build_program() as program_conversion_context:
+        oqpy_program = program_conversion_context.get_oqpy_program()
 
-    # Add the subroutine definition to the root-level program if necessary
-    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
-    subroutine_name = subroutine_function_call.identifier.name
-    if (
-        subroutine_name not in root_oqpy_program.subroutines
-        and subroutine_function_call.subroutine_decl is not None
-    ):
-        root_oqpy_program._add_subroutine(subroutine_name, subroutine_function_call.subroutine_decl)
+        if f not in program_conversion_context.subroutines_processing:
+            # Mark that we are starting to process this function to short-circuit recursion
+            program_conversion_context.subroutines_processing.add(f)
+
+            # Convert the function via autograph into an oqpy subroutine
+            # NOTE: Process a clone of the function so that we don't modify the original object
+            oqpy_sub = oqpy.subroutine(_wrap_for_oqpy_subroutine(_clone_function(f), options))
+
+            # Process the program
+            subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
+
+            # Mark that we are finished processing this function
+            program_conversion_context.subroutines_processing.remove(f)
+        else:
+            # Convert the function via autograph into an oqpy subroutine
+            # NOTE: Recursive call; process a dummy version of the function instead
+            oqpy_sub = oqpy.subroutine(_wrap_for_oqpy_subroutine(_dummy_function(f), options))
+
+            # Process the program
+            subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
+
+        # Add the subroutine invocation to the program
+        ret_type = subroutine_function_call.subroutine_decl.return_type
+        return_instance = _make_return_instance_from_oqpy_return_type(ret_type)
+        return_variable = None
+        if isinstance(return_instance, list):
+            return_variable = aq_types.ArrayVar(
+                return_instance,
+                dimensions=[d.value for d in ret_type.dimensions],
+            )
+            oqpy_program.set(return_variable, subroutine_function_call)
+        elif return_instance is not None:
+            return_variable = aq_types.wrap_value(return_instance)
+            oqpy_program.declare(return_variable)
+            oqpy_program.set(return_variable, subroutine_function_call)
+        else:
+            function_call = subroutine_function_call.to_ast(oqpy_program)
+            oqpy_program._add_statement(qasm_ast.ExpressionStatement(function_call))
+
+        # Store the return variable in the program conversion context
+        program_conversion_context.return_variable = return_variable
+
+        # Add the subroutine definition to the root-level program if necessary
+        root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+        subroutine_name = subroutine_function_call.identifier.name
+        if (
+            subroutine_name not in root_oqpy_program.subroutines
+            and subroutine_function_call.subroutine_decl is not None
+        ):
+            root_oqpy_program._add_subroutine(
+                subroutine_name, subroutine_function_call.subroutine_decl
+            )
+
+    return program_conversion_context.return_variable
 
 
 def _convert_gate(
@@ -421,39 +365,6 @@ def _make_return_instance_from_f_annotation(f: Callable) -> Any:
             return_instance = return_type()
 
     return return_instance
-
-
-def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConversionContext) -> None:
-    """Modify the program to include a global qubit register declaration.
-
-    The number of qubits declared is pulled from either the user config (supplied explicitly
-    via kwargs when calling the program) or an attempt is made to dynamically determine the total
-    number of qubits used by inspecting the program.
-
-    Args:
-        program_conversion_context (ProgramConversionContext): The program conversion context.
-    """
-    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
-
-    # Declare the global qubit register if necessary
-    user_specified_num_qubits = program_conversion_context.get_declared_qubits()
-
-    if user_specified_num_qubits is not None:
-        # User-supplied qubit count
-        root_oqpy_program.declare(
-            [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, user_specified_num_qubits)],
-            to_beginning=True,
-        )
-
-    else:
-        # Qubit count from program inspection
-        qubits = program_conversion_context.qubits
-        max_qubit_index = qubits[-1] if len(qubits) else None
-        if max_qubit_index is not None:
-            root_oqpy_program.declare(
-                [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, max_qubit_index + 1)],
-                to_beginning=True,
-            )
 
 
 def _clone_function(f_source: Callable) -> Callable:
