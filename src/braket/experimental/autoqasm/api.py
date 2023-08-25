@@ -229,13 +229,13 @@ def _convert_program(
     if is_subroutine and not aq_program.in_active_program_conversion_context():
         raise errors.AutoQasmTypeError(
             "Subroutines shouldn't be called directly. Please define an entry point "
-            "function, decorate it with '@autoqasm.main', and call your subroutine "
+            "function, decorate it with '@aq.main', and call your subroutine "
             "from within that function."
         )
     elif not is_subroutine and aq_program.in_active_program_conversion_context():
         raise errors.AutoQasmTypeError(
             f"Cannot call main function '{f.__name__}' from another main function. Did you mean "
-            "to use '@autoqasm.subroutine'?"
+            "to use '@aq.subroutine'?"
         )
 
     with aq_program.build_program(user_config) as program_conversion_context:
