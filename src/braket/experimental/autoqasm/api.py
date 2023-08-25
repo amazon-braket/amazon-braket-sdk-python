@@ -17,7 +17,7 @@ import copy
 import functools
 import inspect
 from types import FunctionType
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -28,7 +28,7 @@ import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
+from braket.experimental.autoqasm.autograph.core import converter
 from braket.experimental.autoqasm.autograph.impl.api_core import (
     autograph_artifact,
     is_autograph_artifact,
