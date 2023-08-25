@@ -51,26 +51,15 @@ def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    # First, we just process the arguments to the decorator function
     user_config = aq_program.UserConfig(num_qubits=num_qubits)
 
-    if len(args):
-        # In this case, num_qubits wasn't supplied.
-        # Matches the following syntax:
-        #    @aq.main
-        #    def my_func(...):
-        # Equivalently, `main(my_func, num_qubits=None)`
-        return _function_wrapper(args[0], _convert_main, wrapper_args={"user_config": user_config})
-    else:
-        # In this case, num_qubits was supplied, and we don't know `f` yet.
-        # Matches the following syntax:
-        #    @aq.main(num_qubits=x)
-        #    def my_func(...):
-        # Equivalently: `main(num_qubits=x)(my_func)`
+    if not args:
         def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
-            return _function_wrapper(f, _convert_main, wrapper_args={"user_config": user_config})
+            return _function_wrapper(f, _convert_main, converter_args={"user_config": user_config})
 
         return _function_with_params
+
+    return _function_wrapper(args[0], _convert_main, converter_args={"user_config": user_config})
 
 
 def subroutine(*args) -> Callable[[Any], aq_program.Program]:
@@ -96,16 +85,16 @@ def gate(*args) -> Callable[[Any], None]:
 
 def _function_wrapper(
     f: Callable,
-    callback: Callable,
-    wrapper_args: Optional[Dict[str, Any]] = None,
+    converter_callback: Callable,
+    converter_args: Optional[Dict[str, Any]] = None,
 ) -> Callable[[Any], aq_program.Program]:
     """Wrapping and conversion logic around the user function `f`.
 
     Args:
         f (Callable): The target function to be converted which represents
             the entry point of the quantum program.
-        callback (Callable): TODO
-        wrapper_args (Optional[Dict[str, Any]]): TODO
+        converter_callback (Callable): The function converter, e.g., _convert_main.
+        converter_args (Optional[Dict[str, Any]]): Extra arguments for the function converter.
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted
@@ -114,26 +103,23 @@ def _function_wrapper(
     if is_autograph_artifact(f):
         return f
 
-    if not wrapper_args:
-        wrapper_args = {}
+    if not converter_args:
+        converter_args = {}
 
-    def _decorator(f: Callable) -> Callable[[Any], None]:
-        def _wrapper(*args, **kwargs) -> Callable:
-            """Wrapper that calls the converted version of f."""
-            options = converter.ConversionOptions(
-                user_requested=True,
-                optional_features=_autograph_optional_features(),
-            )
-            # Call the appropriate function converter
-            return callback(f, options, args, kwargs, **wrapper_args)
+    def _wrapper(*args, **kwargs) -> Callable:
+        """Wrapper that calls the converted version of f."""
+        options = converter.ConversionOptions(
+            user_requested=True,
+            optional_features=_autograph_optional_features(),
+        )
+        # Call the appropriate function converter
+        return converter_callback(f, options, args, kwargs, **converter_args)
 
-        if inspect.isfunction(f) or inspect.ismethod(f):
-            _wrapper = functools.update_wrapper(_wrapper, f)
+    if inspect.isfunction(f) or inspect.ismethod(f):
+        _wrapper = functools.update_wrapper(_wrapper, f)
 
-        decorated_wrapper = tf_decorator.make_decorator(f, _wrapper)
-        return autograph_artifact(decorated_wrapper)
-
-    return autograph_artifact(_decorator(f))
+    decorated_wrapper = tf_decorator.make_decorator(f, _wrapper)
+    return autograph_artifact(decorated_wrapper)
 
 
 def _autograph_optional_features() -> Tuple[converter.Feature]:
@@ -297,104 +283,6 @@ def _convert_subroutine(
     return program_conversion_context.return_variable
 
 
-def _convert_gate(
-    f: Callable,
-    options: converter.ConversionOptions,
-    args: List[Any],
-    kwargs: Dict[str, Any],
-) -> Callable:
-    # We must be inside an active conversion context in order to invoke a gate
-    program_conversion_context = aq_program.get_program_conversion_context()
-
-    # Wrap the function into an oqpy gate definition
-    wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
-    gate_name = f.__name__
-
-    # Validate that the gate definition acts on at least one qubit
-    if not gate_args.qubits:
-        raise errors.ParameterTypeError(
-            f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
-            "Every gate definition must contain at least one qubit argument."
-        )
-
-    # Process the gate definition
-    with program_conversion_context.gate_definition(gate_name, gate_args):
-        # TODO - enforce that nothing gets added to the program inside here except gates
-        wrapped_f(gate_args._args)
-
-    # Add the gate definition to the root-level program if necessary
-    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
-    if gate_name not in root_oqpy_program.gates:
-        gate_stmt = program_conversion_context.get_oqpy_program().gates[gate_name]
-        root_oqpy_program._add_gate(gate_name, gate_stmt)
-
-    # Add the gate invocation to the program
-    if len(args) != len(gate_args):
-        raise errors.ParameterTypeError(
-            f'Incorrect number of arguments passed to gate "{gate_name}". '
-            f"Expected {len(gate_args)}, got {len(args)}."
-        )
-    qubit_args = [args[i] for i in gate_args.qubit_indices]
-    angle_args = [args[i] for i in gate_args.angle_indices]
-    aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
-
-
-def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:
-    if not return_type:
-        return None
-
-    return_type = aq_types.conversions.var_type_from_ast_type(return_type)
-    if return_type == aq_types.ArrayVar:
-        return []
-    return return_type()
-
-
-def _make_return_instance_from_f_annotation(f: Callable) -> Any:
-    # TODO: Recursive functions should work even if the user's type hint is wrong
-    annotations = f.__annotations__
-    return_type = annotations["return"] if "return" in annotations else None
-
-    return_instance = None
-    if return_type and aq_types.is_qasm_type(return_type):
-        return_instance = return_type()
-    elif return_type:
-        if hasattr(return_type, "__origin__"):
-            # Types from python's typing module, such as `List`. origin gives us `list``
-            return_instance = return_type.__origin__()
-        else:
-            return_instance = return_type()
-
-    return return_instance
-
-
-def _clone_function(f_source: Callable) -> Callable:
-    if not hasattr(f_source, "__code__"):
-        raise ValueError(f"AutoQASM encountered a callable that it cannot process: {f_source}.")
-    f_clone = FunctionType(
-        copy.deepcopy(f_source.__code__),
-        copy.copy(f_source.__globals__),
-        copy.deepcopy(f_source.__name__),
-        copy.deepcopy(f_source.__defaults__),
-        copy.copy(f_source.__closure__),
-    )
-    setattr(f_clone, "__signature__", copy.deepcopy(inspect.signature(f_source)))
-    setattr(f_clone, "__annotations__", copy.deepcopy(f_source.__annotations__))
-    return f_clone
-
-
-def _dummy_function(f_source: Callable) -> Callable:
-    return_instance = _make_return_instance_from_f_annotation(f_source)
-
-    def f_dummy(*args, **kwargs) -> Any:
-        return return_instance  # pragma: no cover
-
-    f_dummy.__name__ = copy.deepcopy(f_source.__name__)
-    f_dummy.__defaults__ = copy.deepcopy(f_source.__defaults__)
-    setattr(f_dummy, "__signature__", copy.deepcopy(inspect.signature(f_source)))
-    setattr(f_dummy, "__annotations__", copy.deepcopy(f_source.__annotations__))
-    return f_dummy
-
-
 def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions) -> Callable:
     """Wraps the given function into a callable expected by oqpy.subroutine.
 
@@ -444,6 +332,104 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
 
     _func.__signature__ = sig.replace(parameters=new_params)
     return _func
+
+
+def _clone_function(f_source: Callable) -> Callable:
+    if not hasattr(f_source, "__code__"):
+        raise ValueError(f"AutoQASM encountered a callable that it cannot process: {f_source}.")
+    f_clone = FunctionType(
+        copy.deepcopy(f_source.__code__),
+        copy.copy(f_source.__globals__),
+        copy.deepcopy(f_source.__name__),
+        copy.deepcopy(f_source.__defaults__),
+        copy.copy(f_source.__closure__),
+    )
+    setattr(f_clone, "__signature__", copy.deepcopy(inspect.signature(f_source)))
+    setattr(f_clone, "__annotations__", copy.deepcopy(f_source.__annotations__))
+    return f_clone
+
+
+def _dummy_function(f_source: Callable) -> Callable:
+    return_instance = _make_return_instance_from_f_annotation(f_source)
+
+    def f_dummy(*args, **kwargs) -> Any:
+        return return_instance  # pragma: no cover
+
+    f_dummy.__name__ = copy.deepcopy(f_source.__name__)
+    f_dummy.__defaults__ = copy.deepcopy(f_source.__defaults__)
+    setattr(f_dummy, "__signature__", copy.deepcopy(inspect.signature(f_source)))
+    setattr(f_dummy, "__annotations__", copy.deepcopy(f_source.__annotations__))
+    return f_dummy
+
+
+def _make_return_instance_from_f_annotation(f: Callable) -> Any:
+    # TODO: Recursive functions should work even if the user's type hint is wrong
+    annotations = f.__annotations__
+    return_type = annotations["return"] if "return" in annotations else None
+
+    return_instance = None
+    if return_type and aq_types.is_qasm_type(return_type):
+        return_instance = return_type()
+    elif return_type:
+        if hasattr(return_type, "__origin__"):
+            # Types from python's typing module, such as `List`. origin gives us `list``
+            return_instance = return_type.__origin__()
+        else:
+            return_instance = return_type()
+
+    return return_instance
+
+
+def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:
+    if not return_type:
+        return None
+
+    return_type = aq_types.conversions.var_type_from_ast_type(return_type)
+    if return_type == aq_types.ArrayVar:
+        return []
+    return return_type()
+
+
+def _convert_gate(
+    f: Callable,
+    options: converter.ConversionOptions,
+    args: List[Any],
+    kwargs: Dict[str, Any],
+) -> Callable:
+    # We must be inside an active conversion context in order to invoke a gate
+    program_conversion_context = aq_program.get_program_conversion_context()
+
+    # Wrap the function into an oqpy gate definition
+    wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
+    gate_name = f.__name__
+
+    # Validate that the gate definition acts on at least one qubit
+    if not gate_args.qubits:
+        raise errors.ParameterTypeError(
+            f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
+            "Every gate definition must contain at least one qubit argument."
+        )
+
+    # Process the gate definition
+    with program_conversion_context.gate_definition(gate_name, gate_args):
+        # TODO - enforce that nothing gets added to the program inside here except gates
+        wrapped_f(gate_args._args)
+
+    # Add the gate definition to the root-level program if necessary
+    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+    if gate_name not in root_oqpy_program.gates:
+        gate_stmt = program_conversion_context.get_oqpy_program().gates[gate_name]
+        root_oqpy_program._add_gate(gate_name, gate_stmt)
+
+    # Add the gate invocation to the program
+    if len(args) != len(gate_args):
+        raise errors.ParameterTypeError(
+            f'Incorrect number of arguments passed to gate "{gate_name}". '
+            f"Expected {len(gate_args)}, got {len(args)}."
+        )
+    qubit_args = [args[i] for i in gate_args.qubit_indices]
+    angle_args = [args[i] for i in gate_args.angle_indices]
+    aq_instructions.instructions._qubit_instruction(gate_name, qubit_args, *angle_args)
 
 
 def _wrap_for_oqpy_gate(
