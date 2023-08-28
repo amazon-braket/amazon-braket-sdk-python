@@ -16,6 +16,7 @@
 import contextlib
 import threading
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, List, Optional, Union
 
 import oqpy.base
@@ -42,6 +43,24 @@ class UserConfig:
     """User-specified configurations that influence program building."""
 
     num_qubits: Optional[int] = None
+
+
+class ProgramScope(Enum):
+    """Values used to specify the desired scope of a program to obtain."""
+
+    CURRENT = 0
+    """References the current scope of the program conversion context."""
+    MAIN = 1
+    """References the top-level (root) scope of the program conversion context."""
+
+
+class ProgramMode(Enum):
+    """Values used to specify the desired mode of a program conversion context."""
+
+    NONE = 0
+    """For general program conversion where all operations are allowed."""
+    UNITARY = 1
+    """For program conversion inside a context where only unitary operations are allowed."""
 
 
 class Program:
@@ -124,10 +143,10 @@ class ProgramConversionContext:
     """The data structure used while converting a program. Intended for internal use."""
 
     def __init__(self, user_config: Optional[UserConfig] = None):
-        self.oqpy_program_stack = [oqpy.Program()]
         self.subroutines_processing = set()  # the set of subroutines queued for processing
         self.user_config = user_config or UserConfig()
         self.return_variable = None
+        self._oqpy_program_stack = [oqpy.Program()]
         self._gate_definitions_processing = []
         self._qubits_seen = set()
         self._var_idx = 0
@@ -203,14 +222,15 @@ class ProgramConversionContext:
             or var_name in oqpy_program.undeclared_vars.keys()
         )
 
-    def validate_target_qubits(self, qubits: List[Any]) -> None:
-        """Validate that the specified qubits are valid target qubits at this point in the program.
+    def validate_gate_targets(self, qubits: List[Any], angles: List[Any]) -> None:
+        """Validate that the specified gate targets are valid at this point in the program.
 
         Args:
             qubits (List[Any]): The list of target qubits to validate.
+            angles (List[Any]): The list of target angles to validate.
 
         Raises:
-            errors.InvalidGateDefinition: Target qubits are invalid in the current gate definition.
+            errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
         if self._gate_definitions_processing:
             gate_name = self._gate_definitions_processing[-1]["name"]
@@ -223,14 +243,50 @@ class ProgramConversionContext:
                         "an argument to the gate. Gates may only operate on qubits which are "
                         "passed as arguments."
                     )
+            gate_angle_args = self._gate_definitions_processing[-1]["gate_args"].angles
+            gate_angle_arg_names = [arg.name for arg in gate_angle_args]
+            for angle in angles:
+                if isinstance(angle, oqpy.base.Var) and angle.name not in gate_angle_arg_names:
+                    raise errors.InvalidGateDefinition(
+                        f'Gate definition "{gate_name}" uses angle "{angle.name}" which is not '
+                        "an argument to the gate. Gates may only use constant angles or angles "
+                        "passed as arguments."
+                    )
 
-    def get_oqpy_program(self) -> oqpy.Program:
-        """Gets the oqpy program from the top of the stack.
+    def get_oqpy_program(
+        self, scope: ProgramScope = ProgramScope.CURRENT, mode: ProgramMode = ProgramMode.NONE
+    ) -> oqpy.Program:
+        """Gets the oqpy.Program object associated with this program conversion context.
+
+        Args:
+            scope (ProgramScope): The scope of the oqpy.Program to retrieve.
+                Defaults to ProgramScope.CURRENT.
+            mode (ProgramMode): The mode for which the oqpy.Program is being retrieved.
+                Defaults to ProgramMode.NONE.
+
+        Raises:
+            errors.InvalidGateDefinition: If this function is called from within a gate
+            definition where only unitary gate operations are allowed, and the
+            `mode` parameter is not specified as `ProgramMode.UNITARY`.
 
         Returns:
-            oqpy.Program: The current oqpy program.
+            oqpy.Program: The requested oqpy program.
         """
-        return self.oqpy_program_stack[-1]
+        if self._gate_definitions_processing and mode != ProgramMode.UNITARY:
+            gate_name = self._gate_definitions_processing[-1]["name"]
+            raise errors.InvalidGateDefinition(
+                f'Gate definition "{gate_name}" contains invalid operations. '
+                "A gate definition must only call unitary gate operations."
+            )
+
+        if scope == ProgramScope.CURRENT:
+            requested_index = -1
+        elif scope == ProgramScope.MAIN:
+            requested_index = 0
+        else:
+            raise NotImplementedError("Unexpected ProgramScope value")
+
+        return self._oqpy_program_stack[requested_index]
 
     @contextlib.contextmanager
     def push_oqpy_program(self, oqpy_program: oqpy.Program) -> None:
@@ -240,10 +296,10 @@ class ProgramConversionContext:
             oqpy_program (Program): The oqpy program to push onto the stack.
         """
         try:
-            self.oqpy_program_stack.append(oqpy_program)
+            self._oqpy_program_stack.append(oqpy_program)
             yield
         finally:
-            self.oqpy_program_stack.pop()
+            self._oqpy_program_stack.pop()
 
     @contextlib.contextmanager
     def gate_definition(self, gate_name: str, gate_args: GateArgs) -> None:
@@ -255,7 +311,12 @@ class ProgramConversionContext:
         """
         try:
             self._gate_definitions_processing.append({"name": gate_name, "gate_args": gate_args})
-            with oqpy.gate(self.get_oqpy_program(), gate_args.qubits, gate_name, gate_args.angles):
+            with oqpy.gate(
+                self.get_oqpy_program(mode=ProgramMode.UNITARY),
+                gate_args.qubits,
+                gate_name,
+                gate_args.angles,
+            ):
                 yield
         finally:
             self._gate_definitions_processing.pop()
