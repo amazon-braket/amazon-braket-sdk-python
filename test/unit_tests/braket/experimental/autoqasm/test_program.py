@@ -28,15 +28,15 @@ def test_program_conversion_context() -> None:
     """Tests the ProgramConversionContext class."""
     prog = aq.program.ProgramConversionContext()
     initial_oqpy_program = prog.get_oqpy_program()
-    assert len(prog.oqpy_program_stack) == 1
+    assert len(prog._oqpy_program_stack) == 1
 
     new_oqpy_program = oqpy.Program()
     with prog.push_oqpy_program(new_oqpy_program):
-        assert len(prog.oqpy_program_stack) == 2
+        assert len(prog._oqpy_program_stack) == 2
         assert prog.get_oqpy_program() == new_oqpy_program
 
     assert prog.get_oqpy_program() == initial_oqpy_program
-    assert len(prog.oqpy_program_stack) == 1
+    assert len(prog._oqpy_program_stack) == 1
 
 
 def test_build_program() -> None:

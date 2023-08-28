@@ -177,7 +177,7 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
     Args:
         program_conversion_context (ProgramConversionContext): The program conversion context.
     """
-    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+    root_oqpy_program = program_conversion_context.get_root_oqpy_program()
 
     # Declare the global qubit register if necessary
     user_specified_num_qubits = program_conversion_context.get_declared_qubits()
@@ -271,7 +271,7 @@ def _convert_subroutine(
         program_conversion_context.return_variable = return_variable
 
         # Add the subroutine definition to the root-level program if necessary
-        root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+        root_oqpy_program = program_conversion_context.get_root_oqpy_program()
         subroutine_name = subroutine_function_call.identifier.name
         if (
             subroutine_name not in root_oqpy_program.subroutines
@@ -416,9 +416,9 @@ def _convert_gate(
         wrapped_f(gate_args._args)
 
     # Add the gate definition to the root-level program if necessary
-    root_oqpy_program = program_conversion_context.oqpy_program_stack[0]
+    root_oqpy_program = program_conversion_context.get_root_oqpy_program_unitary()
     if gate_name not in root_oqpy_program.gates:
-        gate_stmt = program_conversion_context.get_oqpy_program().gates[gate_name]
+        gate_stmt = program_conversion_context.get_oqpy_program_unitary().gates[gate_name]
         root_oqpy_program._add_gate(gate_name, gate_stmt)
 
     # Add the gate invocation to the program
