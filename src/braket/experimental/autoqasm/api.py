@@ -413,7 +413,6 @@ def _convert_gate(
 
     # Process the gate definition
     with program_conversion_context.gate_definition(gate_name, gate_args):
-        # TODO - enforce that nothing gets added to the program inside here except gates
         wrapped_f(gate_args._args)
 
     # Add the gate definition to the root-level program if necessary

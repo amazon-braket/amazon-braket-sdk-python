@@ -203,14 +203,15 @@ class ProgramConversionContext:
             or var_name in oqpy_program.undeclared_vars.keys()
         )
 
-    def validate_target_qubits(self, qubits: List[Any]) -> None:
-        """Validate that the specified qubits are valid target qubits at this point in the program.
+    def validate_gate_targets(self, qubits: List[Any], angles: List[Any]) -> None:
+        """Validate that the specified gate targets are valid at this point in the program.
 
         Args:
             qubits (List[Any]): The list of target qubits to validate.
+            angles (List[Any]): The list of target angles to validate.
 
         Raises:
-            errors.InvalidGateDefinition: Target qubits are invalid in the current gate definition.
+            errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
         if self._gate_definitions_processing:
             gate_name = self._gate_definitions_processing[-1]["name"]
@@ -223,9 +224,38 @@ class ProgramConversionContext:
                         "an argument to the gate. Gates may only operate on qubits which are "
                         "passed as arguments."
                     )
+            gate_angle_args = self._gate_definitions_processing[-1]["gate_args"].angles
+            gate_angle_arg_names = [arg.name for arg in gate_angle_args]
+            for angle in angles:
+                if isinstance(angle, oqpy.base.Var) and angle.name not in gate_angle_arg_names:
+                    raise errors.InvalidGateDefinition(
+                        f'Gate definition "{gate_name}" uses angle "{angle.name}" which is not '
+                        "an argument to the gate. Gates may only use constant angles or angles "
+                        "passed as arguments."
+                    )
 
     def get_oqpy_program(self) -> oqpy.Program:
         """Gets the oqpy program from the top of the stack.
+
+        Raises:
+            errors.InvalidGateDefinition: If this function is called from within a gate
+            definition where only unitary gate operations are allowed.
+
+        Returns:
+            oqpy.Program: The current oqpy program.
+        """
+        if self._gate_definitions_processing:
+            gate_name = self._gate_definitions_processing[-1]["name"]
+            raise errors.InvalidGateDefinition(
+                f'Gate definition "{gate_name}" contains invalid operations. '
+                "A gate definition must only call unitary gate operations."
+            )
+        return self.oqpy_program_stack[-1]
+
+    def get_oqpy_program_unitary(self) -> oqpy.Program:
+        """Gets the oqpy program from the top of the stack.
+        Only unitary gate operations should be added to the program
+        returned from this function.
 
         Returns:
             oqpy.Program: The current oqpy program.
@@ -255,7 +285,9 @@ class ProgramConversionContext:
         """
         try:
             self._gate_definitions_processing.append({"name": gate_name, "gate_args": gate_args})
-            with oqpy.gate(self.get_oqpy_program(), gate_args.qubits, gate_name, gate_args.angles):
+            with oqpy.gate(
+                self.get_oqpy_program_unitary(), gate_args.qubits, gate_name, gate_args.angles
+            ):
                 yield
         finally:
             self._gate_definitions_processing.pop()

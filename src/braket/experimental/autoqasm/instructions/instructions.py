@@ -22,14 +22,20 @@ from braket.experimental.autoqasm import program as aq_program
 from .qubits import QubitIdentifierType, _qubit
 
 
-def _qubit_instruction(name: str, qubits: List[QubitIdentifierType], *args: Any) -> None:
+def _qubit_instruction(
+    name: str, qubits: List[QubitIdentifierType], *args: Any, is_unitary: bool = True
+) -> None:
     # If this is an instruction inside a gate definition, ensure that it only operates on
-    # qubits which are passed as arguments to the gate definition.
+    # qubits and angles which are passed as arguments to the gate definition.
     program_conversion_context = aq_program.get_program_conversion_context()
-    program_conversion_context.validate_target_qubits(qubits)
+    program_conversion_context.validate_gate_targets(qubits, args)
 
     # Add the instruction to the program.
-    oqpy_program = program_conversion_context.get_oqpy_program()
+    oqpy_program = (
+        program_conversion_context.get_oqpy_program_unitary()
+        if is_unitary
+        else program_conversion_context.get_oqpy_program()
+    )
     oqpy_program.gate([_qubit(q) for q in qubits], name, *args)
 
 
@@ -39,4 +45,4 @@ def reset(target: QubitIdentifierType) -> None:
     Args:
         target (QubitIdentifierType): The target qubit.
     """
-    _qubit_instruction("reset", [target])
+    _qubit_instruction("reset", [target], is_unitary=False)

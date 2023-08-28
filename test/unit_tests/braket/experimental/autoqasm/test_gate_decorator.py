@@ -20,7 +20,7 @@ from test_api import _test_on_local_sim
 
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.instructions import h, measure, rx, rz, x
+from braket.experimental.autoqasm.instructions import h, measure, reset, rx, rz, x
 
 
 @aq.gate
@@ -237,6 +237,61 @@ def test_invalid_qubit_used() -> None:
     with pytest.raises(
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses qubit "1" which is not an argument to the gate.',
+    ):
+        my_program()
+
+
+def test_invalid_angle_used() -> None:
+    with aq.build_program():
+        beta = aq.FloatVar()
+
+    @aq.gate
+    def my_gate(q: aq.Qubit, theta: float):
+        rx(q, theta)
+        rx(q, beta)  # invalid
+
+    @aq.main
+    def my_program():
+        my_gate(0, np.pi / 2)
+
+    with pytest.raises(
+        errors.InvalidGateDefinition,
+        match='Gate definition "my_gate" uses angle (.*) which is not an argument to the gate.',
+    ):
+        my_program()
+
+
+def test_invalid_instruction() -> None:
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        h(q)
+        reset(q)  # invalid
+
+    @aq.main
+    def my_program():
+        my_gate(0)
+
+    with pytest.raises(
+        errors.InvalidGateDefinition,
+        match='Gate definition "my_gate" contains invalid operations.',
+    ):
+        my_program()
+
+
+def test_invalid_control_flow() -> None:
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        h(q)
+        if measure(q):
+            x(q)
+
+    @aq.main
+    def my_program():
+        my_gate(0)
+
+    with pytest.raises(
+        errors.InvalidGateDefinition,
+        match='Gate definition "my_gate" contains invalid operations.',
     ):
         my_program()
 
