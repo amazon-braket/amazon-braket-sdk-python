@@ -22,6 +22,14 @@ from braket.circuits.qubit import Qubit, QubitInput
 QubitSetInput = Union[QubitInput, Iterable[QubitInput]]
 
 
+def _flatten(other: Any) -> Any:
+    if isinstance(other, Iterable) and not isinstance(other, str):
+        for item in other:
+            yield from _flatten(item)
+    else:
+        yield other
+
+
 class QubitSet(IndexedSet):
     """
     An ordered, unique set of quantum bits.
@@ -53,13 +61,6 @@ class QubitSet(IndexedSet):
             Qubit(2)
             Qubit(3)
         """
-
-        def _flatten(other: Any) -> Any:
-            if isinstance(other, Iterable) and not isinstance(other, str):
-                for item in other:
-                    yield from _flatten(item)
-            else:
-                yield other
 
         _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None
         super().__init__(_qubits)
