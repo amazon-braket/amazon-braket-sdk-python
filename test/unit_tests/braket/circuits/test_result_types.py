@@ -155,7 +155,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.Expectation(Observable.I(), target=0),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result expectation i(q[0])",
+            "#pragma braket result expectation i(__qubits__[0])",
         ),
         (
             ResultType.Expectation(Observable.I()),
@@ -175,7 +175,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.DensityMatrix([0, 2]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result density_matrix q[0], q[2]",
+            "#pragma braket result density_matrix __qubits__[0], __qubits__[2]",
         ),
         (
             ResultType.DensityMatrix(0),
@@ -195,7 +195,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.Probability([0, 2]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result probability q[0], q[2]",
+            "#pragma braket result probability __qubits__[0], __qubits__[2]",
         ),
         (
             ResultType.Probability(0),
@@ -205,7 +205,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.Sample(Observable.I(), target=0),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result sample i(q[0])",
+            "#pragma braket result sample i(__qubits__[0])",
         ),
         (
             ResultType.Sample(Observable.I()),
@@ -215,7 +215,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.Variance(Observable.I(), target=0),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result variance i(q[0])",
+            "#pragma braket result variance i(__qubits__[0])",
         ),
         (
             ResultType.Variance(Observable.I()),
@@ -225,12 +225,12 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
         (
             ResultType.AdjointGradient(Observable.I(), target=0, parameters=["alpha", "beta"]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result adjoint_gradient expectation(i(q[0])) alpha, beta",
+            "#pragma braket result adjoint_gradient expectation(i(__qubits__[0])) alpha, beta",
         ),
         (
             ResultType.AdjointGradient(Observable.I(), target=0, parameters=["alpha"]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result adjoint_gradient expectation(i(q[0])) alpha",
+            "#pragma braket result adjoint_gradient expectation(i(__qubits__[0])) alpha",
         ),
         (
             ResultType.AdjointGradient(
@@ -239,7 +239,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
                 parameters=[FreeParameter("alpha"), "beta", FreeParameter("gamma")],
             ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result adjoint_gradient expectation(h(q[0]) @ i(q[1])) "
+            "#pragma braket result adjoint_gradient expectation(h(__qubits__[0]) @ i(__qubits__[1])) "  # noqa
             "alpha, beta, gamma",
         ),
         (
@@ -249,20 +249,20 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
                 parameters=[FreeParameter("alpha"), "beta", FreeParameter("gamma")],
             ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result adjoint_gradient expectation(h(q[0]) @ i(q[1]) + 2 * z(q[2])) "
+            "#pragma braket result adjoint_gradient expectation(h(__qubits__[0]) @ i(__qubits__[1]) + 2 * z(__qubits__[2])) "  # noqa
             "alpha, beta, gamma",
         ),
         (
             ResultType.AdjointGradient(Observable.I(), target=0, parameters=[]),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result adjoint_gradient expectation(i(q[0])) all",
+            "#pragma braket result adjoint_gradient expectation(i(__qubits__[0])) all",
         ),
         (
             ResultType.AdjointGradient(
                 Observable.X() @ Observable.Y(), target=[0, 1], parameters=[]
             ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
-            "#pragma braket result adjoint_gradient expectation(x(q[0]) @ y(q[1])) all",
+            "#pragma braket result adjoint_gradient expectation(x(__qubits__[0]) @ y(__qubits__[1])) all",  # noqa
         ),
         (
             ResultType.AdjointGradient(
@@ -270,7 +270,7 @@ def test_ir_result_level(testclass, subroutine_name, irclass, input, ir_input):
             ),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             "#pragma braket result adjoint_gradient expectation(hermitian([[1+0im, 0im], "
-            "[0im, 1+0im]]) q[0]) all",
+            "[0im, 1+0im]]) __qubits__[0]) all",
         ),
     ],
 )
