@@ -21,6 +21,7 @@ from braket.circuits.qubit import Qubit, QubitInput
 
 QubitSetInput = Union[QubitInput, Iterable[QubitInput]]
 
+
 def _flatten(other: Any) -> Any:
     if isinstance(other, Iterable) and not isinstance(other, str):
         for item in other:
