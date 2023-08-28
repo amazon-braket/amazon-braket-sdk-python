@@ -234,58 +234,32 @@ class ProgramConversionContext:
                         "passed as arguments."
                     )
 
-    def _get_oqpy_program(self, index: int, for_unitary: bool) -> oqpy.Program:
+    def get_oqpy_program(self, root: bool = False, for_unitary: bool = False) -> oqpy.Program:
+        """Gets the oqpy.Program object associated with this program conversion context.
+
+        Args:
+            root (bool): Whether to get the oqpy.Program from the root level
+                of this program conversion context. If false, the current program is
+                returned. Defaults to False.
+            for_unitary (bool): Whether the oqpy.Program is being retrieved in
+                the context of a unitary gate definition. Defaults to False.
+
+        Raises:
+            errors.InvalidGateDefinition: If this function is called from within a gate
+            definition where only unitary gate operations are allowed, and the
+            `for_unitary` parameter is specified as `False`.
+
+        Returns:
+            oqpy.Program: The requested oqpy program.
+        """
         if not for_unitary and self._gate_definitions_processing:
             gate_name = self._gate_definitions_processing[-1]["name"]
             raise errors.InvalidGateDefinition(
                 f'Gate definition "{gate_name}" contains invalid operations. '
                 "A gate definition must only call unitary gate operations."
             )
-        return self._oqpy_program_stack[index]
-
-    def get_oqpy_program(self) -> oqpy.Program:
-        """Gets the oqpy program from the top of the stack.
-
-        Raises:
-            errors.InvalidGateDefinition: If this function is called from within a gate
-            definition where only unitary gate operations are allowed.
-
-        Returns:
-            oqpy.Program: The current oqpy program.
-        """
-        return self._get_oqpy_program(index=-1, for_unitary=False)
-
-    def get_oqpy_program_unitary(self) -> oqpy.Program:
-        """Gets the oqpy program from the top of the stack.
-        Only unitary gate operations should be added to the program
-        returned from this function.
-
-        Returns:
-            oqpy.Program: The current oqpy program.
-        """
-        return self._get_oqpy_program(index=-1, for_unitary=True)
-
-    def get_root_oqpy_program(self) -> oqpy.Program:
-        """Gets the root oqpy program.
-
-        Raises:
-            errors.InvalidGateDefinition: If this function is called from within a gate
-            definition where only unitary gate operations are allowed.
-
-        Returns:
-            oqpy.Program: The root oqpy program.
-        """
-        return self._get_oqpy_program(index=0, for_unitary=False)
-
-    def get_root_oqpy_program_unitary(self) -> oqpy.Program:
-        """Gets the root oqpy program.
-        Only unitary gate operations should be added to the program
-        returned from this function.
-
-        Returns:
-            oqpy.Program: The root oqpy program.
-        """
-        return self._get_oqpy_program(index=0, for_unitary=True)
+        requested_index = 0 if root else -1
+        return self._oqpy_program_stack[requested_index]
 
     @contextlib.contextmanager
     def push_oqpy_program(self, oqpy_program: oqpy.Program) -> None:
@@ -311,7 +285,10 @@ class ProgramConversionContext:
         try:
             self._gate_definitions_processing.append({"name": gate_name, "gate_args": gate_args})
             with oqpy.gate(
-                self.get_oqpy_program_unitary(), gate_args.qubits, gate_name, gate_args.angles
+                self.get_oqpy_program(for_unitary=True),
+                gate_args.qubits,
+                gate_name,
+                gate_args.angles,
             ):
                 yield
         finally:
