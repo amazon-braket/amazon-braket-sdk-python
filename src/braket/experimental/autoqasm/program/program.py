@@ -16,6 +16,7 @@
 import contextlib
 import threading
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, List, Optional, Union
 
 import oqpy.base
@@ -42,6 +43,24 @@ class UserConfig:
     """User-specified configurations that influence program building."""
 
     num_qubits: Optional[int] = None
+
+
+class ProgramScope(Enum):
+    """Values used to specify the desired scope of a program to obtain."""
+
+    CURRENT = 0
+    """References the current scope of the program conversion context."""
+    MAIN = 1
+    """References the top-level (root) scope of the program conversion context."""
+
+
+class ProgramMode(Enum):
+    """Values used to specify the desired mode of a program conversion context."""
+
+    NONE = 0
+    """For general program conversion where all operations are allowed."""
+    UNITARY = 1
+    """For program conversion inside a context where only unitary operations are allowed."""
 
 
 class Program:
@@ -234,31 +253,39 @@ class ProgramConversionContext:
                         "passed as arguments."
                     )
 
-    def get_oqpy_program(self, root: bool = False, for_unitary: bool = False) -> oqpy.Program:
+    def get_oqpy_program(
+        self, scope: ProgramScope = ProgramScope.CURRENT, mode: ProgramMode = ProgramMode.NONE
+    ) -> oqpy.Program:
         """Gets the oqpy.Program object associated with this program conversion context.
 
         Args:
-            root (bool): Whether to get the oqpy.Program from the root level
-                of this program conversion context. If false, the current program is
-                returned. Defaults to False.
-            for_unitary (bool): Whether the oqpy.Program is being retrieved in
-                the context of a unitary gate definition. Defaults to False.
+            scope (ProgramScope): The scope of the oqpy.Program to retrieve.
+                Defaults to ProgramScope.CURRENT.
+            mode (ProgramMode): The mode for which the oqpy.Program is being retrieved.
+                Defaults to ProgramMode.NONE.
 
         Raises:
             errors.InvalidGateDefinition: If this function is called from within a gate
             definition where only unitary gate operations are allowed, and the
-            `for_unitary` parameter is specified as `False`.
+            `mode` parameter is not specified as `ProgramMode.UNITARY`.
 
         Returns:
             oqpy.Program: The requested oqpy program.
         """
-        if not for_unitary and self._gate_definitions_processing:
+        if self._gate_definitions_processing and mode != ProgramMode.UNITARY:
             gate_name = self._gate_definitions_processing[-1]["name"]
             raise errors.InvalidGateDefinition(
                 f'Gate definition "{gate_name}" contains invalid operations. '
                 "A gate definition must only call unitary gate operations."
             )
-        requested_index = 0 if root else -1
+
+        if scope == ProgramScope.CURRENT:
+            requested_index = -1
+        elif scope == ProgramScope.MAIN:
+            requested_index = 0
+        else:
+            raise NotImplementedError("Unexpected ProgramScope value")
+
         return self._oqpy_program_stack[requested_index]
 
     @contextlib.contextmanager
@@ -285,7 +312,7 @@ class ProgramConversionContext:
         try:
             self._gate_definitions_processing.append({"name": gate_name, "gate_args": gate_args})
             with oqpy.gate(
-                self.get_oqpy_program(for_unitary=True),
+                self.get_oqpy_program(mode=ProgramMode.UNITARY),
                 gate_args.qubits,
                 gate_name,
                 gate_args.angles,

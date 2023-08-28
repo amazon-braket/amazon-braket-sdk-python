@@ -20,6 +20,8 @@ from .program import (  # noqa: F401
     GateArgs,
     Program,
     ProgramConversionContext,
+    ProgramMode,
+    ProgramScope,
     UserConfig,
     build_program,
     get_program_conversion_context,
