@@ -21,6 +21,7 @@ import pytest
 import braket.experimental.autoqasm as aq
 from braket.aws import AwsDevice
 from braket.devices import Devices
+from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.instructions import h
 
 
@@ -34,3 +35,12 @@ def test_device_parameter(device_parameter: Any) -> None:
 
     program = my_program()
     assert program.to_ir()
+
+
+def test_insufficient_qubits() -> None:
+    @aq.main(device=Devices.Amazon.SV1, num_qubits=35)
+    def my_program():
+        pass
+
+    with pytest.raises(errors.InsufficientQubitCountError):
+        my_program()

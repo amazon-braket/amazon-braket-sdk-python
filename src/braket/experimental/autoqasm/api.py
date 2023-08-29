@@ -191,29 +191,36 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
     Args:
         program_conversion_context (ProgramConversionContext): The program conversion context.
     """
-    root_oqpy_program = program_conversion_context.get_oqpy_program(
-        scope=aq_program.ProgramScope.MAIN
-    )
+    num_qubits = None
 
-    # Declare the global qubit register if necessary
+    # User-supplied qubit count
     user_specified_num_qubits = program_conversion_context.get_declared_qubits()
-
     if user_specified_num_qubits is not None:
-        # User-supplied qubit count
-        root_oqpy_program.declare(
-            [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, user_specified_num_qubits)],
-            to_beginning=True,
-        )
+        num_qubits = user_specified_num_qubits
 
-    else:
-        # Qubit count from program inspection
+    # Qubit count from program inspection
+    if num_qubits is None:
         qubits = program_conversion_context.qubits
         max_qubit_index = qubits[-1] if len(qubits) else None
         if max_qubit_index is not None:
-            root_oqpy_program.declare(
-                [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, max_qubit_index + 1)],
-                to_beginning=True,
-            )
+            num_qubits = max_qubit_index + 1
+
+    # Validate that the target device has enough qubits
+    device = program_conversion_context.get_target_device()
+    if device and num_qubits and num_qubits > device.properties.paradigm.qubitCount:
+        raise errors.InsufficientQubitCountError(
+            f'Program requires {num_qubits} qubits, but target device "{device.name}" has '
+            f'only {device.properties.paradigm.qubitCount} qubits.')
+
+    # Declare the global qubit register if necessary
+    if num_qubits is not None:
+        root_oqpy_program = program_conversion_context.get_oqpy_program(
+            scope=aq_program.ProgramScope.MAIN
+        )
+        root_oqpy_program.declare(
+            [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, num_qubits)],
+            to_beginning=True,
+        )
 
 
 def _convert_subroutine(
