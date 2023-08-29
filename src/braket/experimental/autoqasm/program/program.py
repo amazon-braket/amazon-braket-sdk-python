@@ -186,6 +186,12 @@ class ProgramConversionContext:
         """
         return self.user_config.num_qubits
 
+    def get_target_device(self) -> Optional[AwsDevice]:
+        """Return the target device for the program, as specified by the user.
+        Returns None if the user did not specify a target device.
+        """
+        return self.user_config.device
+
     def next_var_name(self, kind: type) -> str:
         """Return the next name for a new classical variable.
 
