@@ -21,8 +21,10 @@ from typing import Any, List, Optional, Union
 
 import oqpy.base
 
+from braket.aws import AwsDevice
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm import constants, errors
+from braket.experimental.autoqasm.interface import AutoQasmProgram
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -43,6 +45,10 @@ class UserConfig:
     """User-specified configurations that influence program building."""
 
     num_qubits: Optional[int] = None
+    """The total number of qubits to declare in the program."""
+
+    device: Optional[AwsDevice] = None
+    """The target device for the program."""
 
 
 class ProgramScope(Enum):
@@ -63,7 +69,7 @@ class ProgramMode(Enum):
     """For program conversion inside a context where only unitary operations are allowed."""
 
 
-class Program:
+class Program(AutoQasmProgram):
     """The program that has been generated with AutoQASM. This object can
     be passed to the run() method of a Braket Device."""
 

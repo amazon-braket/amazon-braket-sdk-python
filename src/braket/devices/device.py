@@ -14,9 +14,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 
-import braket.experimental.autoqasm as aq
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
+from braket.experimental.autoqasm.interface import AutoQasmProgram
 from braket.tasks.quantum_task import QuantumTask
 from braket.tasks.quantum_task_batch import QuantumTaskBatch
 
@@ -36,7 +36,7 @@ class Device(ABC):
     @abstractmethod
     def run(
         self,
-        task_specification: Union[Circuit, Problem, aq.Program],
+        task_specification: Union[Circuit, Problem, AutoQasmProgram],
         shots: Optional[int],
         inputs: Optional[Dict[str, float]],
         *args,
@@ -46,7 +46,7 @@ class Device(ABC):
         or an annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem, Program]): Specification of a task
+            task_specification (Union[Circuit, Problem, AutoQasmProgram]): Specification of a task
                 to run on device.
             shots (Optional[int]): The number of times to run the task on the device.
                 Default is `None`.
@@ -62,8 +62,8 @@ class Device(ABC):
     def run_batch(
         self,
         task_specifications: Union[
-            Union[Circuit, Problem, aq.Program],
-            List[Union[Circuit, Problem, aq.Program]],
+            Union[Circuit, Problem, AutoQasmProgram],
+            List[Union[Circuit, Problem, AutoQasmProgram]],
         ],
         shots: Optional[int],
         max_parallel: Optional[int],
@@ -74,7 +74,7 @@ class Device(ABC):
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, Program], List[Union[Circuit, Problem, Program]]]): # noqa E501
+            task_specifications (Union[Union[Circuit, Problem, AutoQasmProgram], List[Union[Circuit, Problem, AutoQasmProgram]]]): # noqa E501
                 Single instance or list of circuits or problems to run on device.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
             max_parallel (Optional[int]): The maximum number of tasks to run  in parallel.
