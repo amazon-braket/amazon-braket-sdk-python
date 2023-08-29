@@ -205,23 +205,26 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
         if max_qubit_index is not None:
             num_qubits = max_qubit_index + 1
 
+    # Early return if we are not going to declare any qubits
+    if num_qubits is None:
+        return
+
     # Validate that the target device has enough qubits
     device = program_conversion_context.get_target_device()
-    if device and num_qubits and num_qubits > device.properties.paradigm.qubitCount:
+    if device and num_qubits > device.properties.paradigm.qubitCount:
         raise errors.InsufficientQubitCountError(
             f'Program requires {num_qubits} qubits, but target device "{device.name}" has '
             f"only {device.properties.paradigm.qubitCount} qubits."
         )
 
-    # Declare the global qubit register if necessary
-    if num_qubits is not None:
-        root_oqpy_program = program_conversion_context.get_oqpy_program(
-            scope=aq_program.ProgramScope.MAIN
-        )
-        root_oqpy_program.declare(
-            [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, num_qubits)],
-            to_beginning=True,
-        )
+    # Declare the global qubit register
+    root_oqpy_program = program_conversion_context.get_oqpy_program(
+        scope=aq_program.ProgramScope.MAIN
+    )
+    root_oqpy_program.declare(
+        [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, num_qubits)],
+        to_beginning=True,
+    )
 
 
 def _convert_subroutine(
