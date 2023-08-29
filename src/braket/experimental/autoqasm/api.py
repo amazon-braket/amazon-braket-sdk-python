@@ -210,7 +210,8 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
     if device and num_qubits and num_qubits > device.properties.paradigm.qubitCount:
         raise errors.InsufficientQubitCountError(
             f'Program requires {num_qubits} qubits, but target device "{device.name}" has '
-            f'only {device.properties.paradigm.qubitCount} qubits.')
+            f"only {device.properties.paradigm.qubitCount} qubits."
+        )
 
     # Declare the global qubit register if necessary
     if num_qubits is not None:
