@@ -917,3 +917,20 @@ def test_main_from_main():
 
     with pytest.raises(errors.AutoQasmTypeError):
         main()
+
+
+def test_empty_decorator_parentheses():
+    @aq.subroutine()
+    def nothing():
+        pass
+
+    @aq.main()
+    def main():
+        nothing()
+
+    expected = """OPENQASM 3.0;
+def nothing() {
+}
+nothing();"""
+
+    assert main().to_ir() == expected
