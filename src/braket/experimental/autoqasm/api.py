@@ -34,6 +34,7 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
     is_autograph_artifact,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
+from braket.experimental.autoqasm.program.gate_calibrations import GateCalibrations
 
 
 def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.Program]:
@@ -158,6 +159,10 @@ def _convert_main(
         )
 
     with aq_program.build_program(user_config) as program_conversion_context:
+        # register calibration definitions
+        gate_calibrations = kwargs.pop("gate_calibrations", GateCalibrations())
+        gate_calibrations._register_to_program_context(program_conversion_context)
+
         # Process the program
         aq_transpiler.converted_call(f, args, kwargs, options=options)
 

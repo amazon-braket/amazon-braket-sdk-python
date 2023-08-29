@@ -12,17 +12,23 @@
 # language governing permissions and limitations under the License.
 
 """AutoQASM Program class, context managers, and related functions."""
+from __future__ import annotations
 
 import contextlib
 import threading
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 import oqpy.base
 
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm import constants, errors
+from braket.experimental.autoqasm.instructions.qubits import _qubit
+
+if TYPE_CHECKING:
+    from braket.experimental.autoqasm import Qubit
+
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -61,6 +67,8 @@ class ProgramMode(Enum):
     """For general program conversion where all operations are allowed."""
     UNITARY = 1
     """For program conversion inside a context where only unitary operations are allowed."""
+    PULSE = 2
+    """For program conversion inside a context where only pulse operations are allowed."""
 
 
 class Program:
@@ -148,6 +156,7 @@ class ProgramConversionContext:
         self.return_variable = None
         self._oqpy_program_stack = [oqpy.Program()]
         self._gate_definitions_processing = []
+        self._calibration_definitions_processing = []
         self._qubits_seen = set()
         self._var_idx = 0
         self._has_pulse_control = False
@@ -278,6 +287,12 @@ class ProgramConversionContext:
                 f'Gate definition "{gate_name}" contains invalid operations. '
                 "A gate definition must only call unitary gate operations."
             )
+        if self._calibration_definitions_processing and mode != ProgramMode.PULSE:
+            gate_name = self._calibration_definitions_processing[-1]["name"]
+            raise errors.InvalidGateDefinition(
+                f'Calibration definition "{gate_name}" contains invalid operations. '
+                "A calibration definition must only call pulse operations."
+            )
 
         if scope == ProgramScope.CURRENT:
             requested_index = -1
@@ -320,6 +335,32 @@ class ProgramConversionContext:
                 yield
         finally:
             self._gate_definitions_processing.pop()
+
+    @contextlib.contextmanager
+    def calibration_definition(
+        self, gate_name: str, qubits: Tuple[Qubit], angles: Tuple[float]
+    ) -> None:
+        """Sets the program conversion context into a calibration definition context.
+
+        Args:
+            gate_name (str): The name of the gate being defined.
+            qubits (Tuple[Qubit]): The list of qubits to the gate.
+            angles (Tuple[float]): The angles at which the gate calibration is defined.
+        """
+        try:
+            qubits = [_qubit(q) for q in qubits]
+            self._calibration_definitions_processing.append(
+                {"name": gate_name, "qubits": qubits, "angles": angles}
+            )
+            with oqpy.defcal(
+                self.get_oqpy_program(mode=ProgramMode.PULSE),
+                qubits,
+                gate_name,
+                angles,
+            ):
+                yield
+        finally:
+            self._calibration_definitions_processing.pop()
 
 
 @contextlib.contextmanager

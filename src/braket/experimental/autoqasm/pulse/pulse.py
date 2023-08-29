@@ -20,7 +20,7 @@ from typing import List, Union
 import oqpy
 
 from braket.circuits.qubit_set import QubitSet
-from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm.instructions.qubits import (
     QubitIdentifierType,
     is_qubit_identifier_type,
@@ -37,13 +37,19 @@ def _pulse_instruction(name: str, frame: Frame, *args) -> None:
         name (str): Name of the pulse instruction.
         frame (Frame): Frame for which the instruction is apply to.
     """
-    program_conversion_context = program.get_program_conversion_context()
+    program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context._has_pulse_control = True
 
     pulse_sequence = PulseSequence()
-    pulse_sequence._program = program_conversion_context.get_oqpy_program()
-    with oqpy.Cal(pulse_sequence._program):
+    pulse_sequence._program = program_conversion_context.get_oqpy_program(
+        mode=aq_program.ProgramMode.PULSE
+    )
+
+    if program_conversion_context._calibration_definitions_processing:
         getattr(pulse_sequence, name)(frame, *args)
+    else:
+        with oqpy.Cal(pulse_sequence._program):
+            getattr(pulse_sequence, name)(frame, *args)
 
 
 def set_frequency(frame: Frame, frequency: float) -> None:
