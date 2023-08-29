@@ -25,10 +25,9 @@ from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
-from braket.circuits.serialization import IRType
+from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType, DeviceCapabilities
 from braket.devices.device import Device
-from braket.experimental.autoqasm.interface import AutoQasmProgram
 from braket.ir.ahs import Program as AHSProgram
 from braket.ir.openqasm import Program
 from braket.simulator import BraketSimulator
@@ -69,7 +68,7 @@ class LocalSimulator(Device):
     def run(
         self,
         task_specification: Union[
-            Circuit, Problem, Program, AnalogHamiltonianSimulation, AutoQasmProgram
+            Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: int = 0,
         inputs: Optional[Dict[str, float]] = None,
@@ -79,7 +78,7 @@ class LocalSimulator(Device):
         """Runs the given task with the wrapped local simulator.
 
         Args:
-            task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AutoQasmProgram]): # noqa E501
+            task_specification (Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]): # noqa E501
                 The task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
@@ -108,8 +107,10 @@ class LocalSimulator(Device):
     def run_batch(
         self,
         task_specifications: Union[
-            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AutoQasmProgram],
-            List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AutoQasmProgram]],
+            Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram],
+            List[
+                Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]
+            ],
         ],
         shots: Optional[int] = 0,
         max_parallel: Optional[int] = None,
@@ -120,7 +121,7 @@ class LocalSimulator(Device):
         """Executes a batch of tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AutoQasmProgram], List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, AutoQasmProgram]]]): # noqa E501
+            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram], List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa E501
                 Single instance or list of task specification.
             shots (Optional[int]): The number of times to run the task.
                 Default: 0.
@@ -204,7 +205,7 @@ class LocalSimulator(Device):
     def _run_internal_wrap(
         self,
         task_specification: Union[
-            Circuit, Problem, Program, AnalogHamiltonianSimulation, AutoQasmProgram
+            Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: Optional[int] = None,
         inputs: Optional[Dict[str, float]] = None,
@@ -238,7 +239,7 @@ class LocalSimulator(Device):
     def _run_internal(
         self,
         task_specification: Union[
-            Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram, AutoQasmProgram
+            Circuit, Problem, Program, AnalogHamiltonianSimulation, AHSProgram, SerializableProgram
         ],
         shots: Optional[int] = None,
         *args,
@@ -306,7 +307,7 @@ class LocalSimulator(Device):
     @_run_internal.register
     def _(
         self,
-        program: AutoQasmProgram,
+        program: SerializableProgram,
         shots: Optional[int] = None,
         inputs: Optional[Dict[str, float]] = None,
         *args,

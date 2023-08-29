@@ -22,9 +22,8 @@ from typing import Any, List, Optional, Union
 import oqpy.base
 
 from braket.aws import AwsDevice
-from braket.circuits.serialization import IRType
+from braket.circuits.serialization import IRType, SerializableProgram
 from braket.experimental.autoqasm import constants, errors
-from braket.experimental.autoqasm.interface import AutoQasmProgram
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -69,7 +68,7 @@ class ProgramMode(Enum):
     """For program conversion inside a context where only unitary operations are allowed."""
 
 
-class Program(AutoQasmProgram):
+class Program(SerializableProgram):
     """The program that has been generated with AutoQASM. This object can
     be passed to the run() method of a Braket Device."""
 
