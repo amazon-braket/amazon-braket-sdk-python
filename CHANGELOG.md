@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.54.2 (2023-08-28)
+
+### Bug Fixes and Other Changes
+
+ * readthedocs integration
+ * build(deps): bump pypa/gh-action-pypi-publish from 1.8.8 to 1.8.10
+
 ## v1.54.1 (2023-08-22)
 
 ### Bug Fixes and Other Changes
