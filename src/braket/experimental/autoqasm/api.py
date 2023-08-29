@@ -104,7 +104,11 @@ def _function_wrapper(
         quantum program when called.
     """
     if not args:
-
+        # This the case where a decorator is called with only keyword args, for example:
+        #     @aq.main(num_qubits=4)
+        #     def my_function():
+        # To make this work, here we simply return another wrapper function which expects
+        # a Callable as the first argument.
         def _function_wrapper_with_params(*args) -> Callable[[Any], aq_program.Program]:
             return _function_wrapper(args, converter_callback, converter_args=converter_args)
 
