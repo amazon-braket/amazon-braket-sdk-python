@@ -34,7 +34,8 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
     is_autograph_artifact,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
-from braket.experimental.autoqasm.instructions import QubitIdentifierType as Qubit
+from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
+from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 
 
@@ -101,7 +102,7 @@ def calibration(
         angles (Union[float, Iterable[float]]): The angles at which the gate calibration is
                 defined. Defaults to [].
     """
-    if isinstance(qubits, Qubit):
+    if is_qubit_identifier_type(qubits):
         qubits = [qubits]
     if isinstance(angles, float):
         angles = [angles]
