@@ -17,7 +17,7 @@ import copy
 import functools
 import inspect
 from types import FunctionType
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -86,26 +86,36 @@ def gate(*args) -> Callable[[Any], None]:
     return _function_wrapper(args[0], _convert_gate)
 
 
-def calibration(gate_name: str, qubits: Tuple[Qubit], angles: Tuple[float] = ()):
+def calibration(
+    gate_name: str,
+    qubits: Union[Qubit, Iterable[Qubit]],
+    angles: Union[float, Iterable[float]] = [],
+):
     """A decorator that register the decorated function as a calibration definition of a gate
     in this `GateCalibrations` object.
 
     Args:
         gate_name (str): Name of the gate
-        qubits (Tuple[Qubit]): The qubits on which the gate calibration is defined.
-        angles (Tuple[float], optional): The angles at which the gate calibration is defined.
-            Defaults to ().
+        qubits (Union[Qubit,Iterable[Qubit]]): The qubits on which the gate calibration is
+            defined.
+        angles (Union[float, Iterable[float]]): The angles at which the gate calibration is
+                defined. Defaults to [].
     """
+    if isinstance(qubits, Qubit):
+        qubits = [qubits]
+    if isinstance(angles, float):
+        angles = [angles]
 
-    def wrapper(f: Callable):
-        return GateCalibration(
-            gate_name=gate_name,
-            qubits=qubits,
-            angles=angles,
-            calibration_callable=f,
-        )
+    converter_args = {
+        "gate_name": gate_name,
+        "qubits": qubits,
+        "angles": angles,
+    }
 
-    return wrapper
+    def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
+        return _function_wrapper(f, _convert_calibration, converter_args)
+
+    return _function_with_params
 
 
 def _function_wrapper(
@@ -491,3 +501,24 @@ def _wrap_for_oqpy_gate(
         aq_transpiler.converted_call(f, *args, kwargs={}, options=options)
 
     return _func, gate_args
+
+
+def _convert_calibration(
+    f: Callable,
+    options: converter.ConversionOptions,
+    args: List[Any],
+    kwargs: Dict[str, Any],
+    gate_name: str,
+    qubits: List[int],
+    angles: List[float],
+) -> None:
+    with aq_program.build_program() as program_conversion_context:
+        with program_conversion_context.calibration_definition(gate_name, qubits, angles):
+            aq_transpiler.converted_call(f, args, kwargs, options=options)
+
+    return GateCalibration(
+        gate_name=gate_name,
+        qubits=qubits,
+        angles=angles,
+        oqpy_program=program_conversion_context.get_oqpy_program(),
+    )

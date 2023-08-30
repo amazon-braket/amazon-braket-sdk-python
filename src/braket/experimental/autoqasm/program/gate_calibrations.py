@@ -14,49 +14,30 @@
 
 from __future__ import annotations
 
-from typing import Callable, Tuple
+from typing import Iterable
 
-from braket.experimental.autoqasm import program as aq_program
+import oqpy
+
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
-from braket.pulse import PulseSequence
 
 
 class GateCalibration:
     def __init__(
         self,
         gate_name: str,
-        qubits: Tuple[Qubit],
-        angles: Tuple[float],
-        calibration_callable: Callable,
+        qubits: Iterable[Qubit],
+        angles: Iterable[float],
+        oqpy_program: oqpy.Program,
     ):
         """_summary_
 
         Args:
             gate_name (str): Name of the gate.
             qubits (Tuple[Qubit]): The qubits on which the gate calibration is defined.
-            angles (Tuple[float], optional): The angles at which the gate calibration is defined.
-            calibration_callable (Callable): _description_
+            angles (Tuple[float]): The angles at which the gate calibration is defined.
+            calibration_callable (oqpy.Program): _description_
         """
         self.gate_name = gate_name
         self.qubits = qubits
         self.angles = angles
-        self.calibration_callable = calibration_callable
-
-    def _to_oqpy_program(self) -> PulseSequence:
-        with aq_program.build_program() as program_conversion_context:
-            self._register_to_program_context(program_conversion_context)
-        return program_conversion_context.get_oqpy_program()
-
-    def _register_to_program_context(
-        self, program_conversion_context: aq_program.ProgramConversionContext
-    ) -> None:
-        """Register the gate calibrations to a program conversion_context.
-
-        Args:
-            program_conversion_context (aq_program.ProgramConversionContext): The program context
-                to register the gate calibrations.
-        """
-        with program_conversion_context.calibration_definition(
-            self.gate_name, self.qubits, self.angles
-        ):
-            self.calibration_callable()
+        self.oqpy_program = oqpy_program

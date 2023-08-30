@@ -18,7 +18,7 @@ import contextlib
 import threading
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Union
 
 import oqpy.base
 
@@ -99,7 +99,7 @@ class Program:
 
         combined_oqpy_program = oqpy.Program()
         for gc in gate_calibrations:
-            combined_oqpy_program += gc._to_oqpy_program()
+            combined_oqpy_program += gc.oqpy_program
         self._oqpy_program = combined_oqpy_program + self._oqpy_program
         return self
 
@@ -354,7 +354,7 @@ class ProgramConversionContext:
 
     @contextlib.contextmanager
     def calibration_definition(
-        self, gate_name: str, qubits: Tuple[Qubit], angles: Tuple[float]
+        self, gate_name: str, qubits: Iterable[Qubit], angles: Iterable[float]
     ) -> None:
         """Sets the program conversion context into a calibration definition context.
 

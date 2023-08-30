@@ -50,5 +50,5 @@ def test_gate_calibrations():
         h __qubits__[1];
         """
     ).strip()
-    qasm = my_program().bind_calibrations([cal_1, cal_2]).to_ir()
+    qasm = my_program().bind_calibrations([cal_1(), cal_2()]).to_ir()
     assert qasm == expected
