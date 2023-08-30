@@ -34,7 +34,8 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
     is_autograph_artifact,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
-from braket.experimental.autoqasm.program.gate_calibrations import GateCalibrations
+from braket.experimental.autoqasm.instructions import QubitIdentifierType as Qubit
+from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 
 
 def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.Program]:
@@ -83,6 +84,28 @@ def gate(*args) -> Callable[[Any], None]:
         aq.function or inside another aq.gate.
     """
     return _function_wrapper(args[0], _convert_gate)
+
+
+def calibration(gate_name: str, qubits: Tuple[Qubit], angles: Tuple[float] = ()):
+    """A decorator that register the decorated function as a calibration definition of a gate
+    in this `GateCalibrations` object.
+
+    Args:
+        gate_name (str): Name of the gate
+        qubits (Tuple[Qubit]): The qubits on which the gate calibration is defined.
+        angles (Tuple[float], optional): The angles at which the gate calibration is defined.
+            Defaults to ().
+    """
+
+    def wrapper(f: Callable):
+        return GateCalibration(
+            gate_name=gate_name,
+            qubits=qubits,
+            angles=angles,
+            calibration_callable=f,
+        )
+
+    return wrapper
 
 
 def _function_wrapper(
@@ -159,10 +182,6 @@ def _convert_main(
         )
 
     with aq_program.build_program(user_config) as program_conversion_context:
-        # register calibration definitions
-        gate_calibrations = kwargs.pop("gate_calibrations", GateCalibrations())
-        gate_calibrations._register_to_program_context(program_conversion_context)
-
         # Process the program
         aq_transpiler.converted_call(f, args, kwargs, options=options)
 

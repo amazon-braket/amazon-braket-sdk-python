@@ -16,16 +16,13 @@ generating OpenQASM, and in turn verifying the OpenQASM by running against
 the local simulator.
 """
 
-import textwrap
-
 import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
-from braket.experimental.autoqasm import errors, pulse
+from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.instructions import cnot, h, measure, x
-from braket.experimental.autoqasm.program.gate_calibrations import GateCalibrations
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
@@ -920,39 +917,3 @@ def test_main_from_main():
 
     with pytest.raises(errors.AutoQasmTypeError):
         main()
-
-
-def test_gate_calibrations():
-    """test multiple gate calibrations"""
-    gate_calibrations = GateCalibrations()
-
-    @gate_calibrations.register("h", (0,))
-    def cal_1():
-        pulse.barrier(0)
-
-    @gate_calibrations.register("h", (1,))
-    def cal_2():
-        pulse.delay(1, 0.123)
-
-    @aq.main
-    def my_program():
-        h(0)
-        h(1)
-
-    expected = textwrap.dedent(
-        """
-        OPENQASM 3.0;
-        defcalgrammar "openpulse";
-        qubit[2] __qubits__;
-        defcal h __qubits__[0] {
-            barrier $0;
-        }
-        defcal h __qubits__[1] {
-            delay[123.0ms] $1;
-        }
-        h __qubits__[0];
-        h __qubits__[1];
-        """
-    ).strip()
-    qasm = my_program(gate_calibrations=gate_calibrations).to_ir()
-    assert qasm == expected

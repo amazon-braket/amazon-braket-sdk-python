@@ -18,17 +18,15 @@ import contextlib
 import threading
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import oqpy.base
 
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm import constants, errors
+from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import _qubit
-
-if TYPE_CHECKING:
-    from braket.experimental.autoqasm import Qubit
-
+from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -86,6 +84,24 @@ class Program:
         """
         self._oqpy_program = oqpy_program
         self._has_pulse_control = has_pulse_control
+
+    def bind_calibrations(
+        self, gate_calibrations: Union[GateCalibration, List[GateCalibration]]
+    ) -> Program:
+        """Binds the gate calibrations to the program.
+
+        Args:
+            gate_calibrations (Union[GateCalibration, List[GateCalibration]]): The gate
+                calibrations to bind.
+        """
+        if isinstance(gate_calibrations, GateCalibration):
+            gate_calibrations = [gate_calibrations]
+
+        combined_oqpy_program = oqpy.Program()
+        for gc in gate_calibrations:
+            combined_oqpy_program += gc._to_oqpy_program()
+        self._oqpy_program = combined_oqpy_program + self._oqpy_program
+        return self
 
     def to_ir(
         self,
