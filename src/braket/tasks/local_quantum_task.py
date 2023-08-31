@@ -23,7 +23,7 @@ from braket.tasks import (
 
 
 class LocalQuantumTask(QuantumTask):
-    """A task containing the results of a local simulation.
+    """A quantum task containing the results of a local simulation.
 
     Since this class is instantiated with the results, cancel() and run_async() are unsupported.
     """

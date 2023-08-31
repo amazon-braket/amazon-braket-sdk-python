@@ -8,12 +8,12 @@ Learn more about the indivudal features of Amazon Braket.
     :maxdepth: 2
 
 *******************************************************************************************************************************************************************************************************************************
-`Getting notifications when a task completes <https://github.com/aws/amazon-braket-examples/blob/main/examples/braket_features/Getting_notifications_when_a_task_completes/Getting_notifications_when_a_task_completes.ipynb>`_
+`Getting notifications when a quantum task completes <https://github.com/aws/amazon-braket-examples/blob/main/examples/braket_features/Getting_notifications_when_a_quantum_task_completes/Getting_notifications_when_a_quantum_task_completes.ipynb>`_
 *******************************************************************************************************************************************************************************************************************************
 
 This tutorial illustrates how Amazon Braket integrates with Amazon EventBridge for 
 event-based processing. In the tutorial, you will learn how to configure Amazon Braket 
-and Amazon Eventbridge to receive text notification about task completions on your phone. 
+and Amazon Eventbridge to receive text notification about quantum task completions on your phone. 
 
 *************************************************************************************************************************************************************
 `Allocating Qubits on QPU Devices <https://github.com/aws/amazon-braket-examples/blob/main/examples/braket_features/Allocating_Qubits_on_QPU_Devices.ipynb>`_
