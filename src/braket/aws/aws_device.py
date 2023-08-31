@@ -128,7 +128,8 @@ class AwsDevice(Device):
 
         Args:
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
-                Specification of quantum task (circuit or annealing problem or program) to run on device.
+                Specification of quantum task (circuit, OpenQASM program or AHS program)
+                to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
                 save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
