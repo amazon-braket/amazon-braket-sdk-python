@@ -39,8 +39,9 @@ class CwlInsightsMetricsFetcher(object):
                 in seconds. Default: 10 seconds.
             poll_interval_seconds (float): The interval of time, in seconds, between polling
                 for results. Default: 1 second.
-            logger (Logger): Logger object with which to write logs, such as task statuses
-                while waiting for a task to be in a terminal state. Default is `getLogger(__name__)`
+            logger (Logger): Logger object with which to write logs, such as quantum task statuses
+                while waiting for a quantum task to be in a terminal state. Default is
+                `getLogger(__name__)`
         """
         self._poll_timeout_seconds = poll_timeout_seconds
         self._poll_interval_seconds = poll_interval_seconds
@@ -136,18 +137,18 @@ class CwlInsightsMetricsFetcher(object):
         job_end_time: int = None,
     ) -> Dict[str, List[Union[str, float, int]]]:
         """
-        Synchronously retrieves all the algorithm metrics logged by a given Job.
+        Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:
-            job_name (str): The name of the Job. The name must be exact to ensure only the relevant
-                metrics are retrieved.
+            job_name (str): The name of the Hybrid Job. The name must be exact to ensure only the
+                relevant metrics are retrieved.
             metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
             statistic (MetricStatistic): The statistic to determine which metric value to use
                 when there is a conflict. Default is MetricStatistic.MAX.
-            job_start_time (int): The time when the job started.
+            job_start_time (int): The time when the hybrid job started.
                 Default: 3 hours before job_end_time.
-            job_end_time (int): If the job is complete, this should be the time at which the
-                job finished. Default: current time.
+            job_end_time (int): If the hybrid job is complete, this should be the time at which the
+                hybrid job finished. Default: current time.
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
@@ -164,7 +165,8 @@ class CwlInsightsMetricsFetcher(object):
         query_end_time = job_end_time or int(time.time())
         query_start_time = job_start_time or query_end_time - self.QUERY_DEFAULT_JOB_DURATION
 
-        # The job name needs to be unique to prevent jobs with similar names from being conflated.
+        # The hybrid job name needs to be unique to prevent jobs with similar names from being
+        # conflated.
         query = (
             f"fields @timestamp, @message "
             f"| filter @logStream like /^{job_name}\\// "

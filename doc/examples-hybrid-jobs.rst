@@ -20,7 +20,7 @@ This tutorial shows how to run your first Amazon Braket Hybrid Job.
 This notebook demonstrates a typical quantum machine learning workflow, including uploading data, monitoring training, and tuning hyperparameters.
 
 ********************************************************************************************************************************************************************************************
-`Using Pennylane with Braket Jobs <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_jobs/2_Using_PennyLane_with_Braket_Jobs/Using_PennyLane_with_Braket_Jobs.ipynb>`_
+`Using Pennylane with Braket Hybrid Jobs <https://github.com/aws/amazon-braket-examples/blob/main/examples/hybrid_jobs/2_Using_PennyLane_with_Braket_Hybrid_Jobs/Using_PennyLane_with_Braket_Hybrid_Jobs.ipynb>`_
 ********************************************************************************************************************************************************************************************
 
 In this tutorial, we use PennyLane within Amazon Braket Hybrid Jobs to run the Quantum Approximate Optimization Algorithm (QAOA) on a Max-Cut problem.

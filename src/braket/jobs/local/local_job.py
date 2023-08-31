@@ -31,7 +31,7 @@ from braket.jobs_data import PersistedJobData
 
 
 class LocalQuantumJob(QuantumJob):
-    """Amazon Braket implementation of a quantum job that runs locally."""
+    """Amazon Braket implementation of a hybrid job that runs locally."""
 
     @classmethod
     def create(
@@ -50,42 +50,42 @@ class LocalQuantumJob(QuantumJob):
         aws_session: AwsSession = None,
         local_container_update: bool = True,
     ) -> LocalQuantumJob:
-        """Creates and runs job by setting up and running the customer script in a local
+        """Creates and runs hybrid job by setting up and running the customer script in a local
         docker container.
 
         Args:
             device (str): ARN for the AWS device which is primarily accessed for the execution
-                of this job. Alternatively, a string of the format "local:<provider>/<simulator>"
-                for using a local simulator for the job. This string will be available as the
-                environment variable `AMZN_BRAKET_DEVICE_ARN` inside the job container when
-                using a Braket container.
+                of this hybrid job. Alternatively, a string of the format
+                "local:<provider>/<simulator>" for using a local simulator for the hybrid job. This
+                string will be available as the environment variable `AMZN_BRAKET_DEVICE_ARN` inside
+                the hybrid job container when using a Braket container.
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
                 tar.gz file. Otherwise, source_module may be a file or directory.
 
-            entry_point (str): A str that specifies the entry point of the job, relative to
+            entry_point (str): A str that specifies the entry point of the hybrid job, relative to
                 the source module. The entry point must be in the format
                 `importable.module` or `importable.module:callable`. For example,
                 `source_module.submodule:start_here` indicates the `start_here` function
                 contained in `source_module.submodule`. If source_module is an S3 URI,
                 entry point must be given. Default: source_module's name
 
-            image_uri (str): A str that specifies the ECR image to use for executing the job.
+            image_uri (str): A str that specifies the ECR image to use for executing the hybrid job.
                 `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
                 for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
-            job_name (str): A str that specifies the name with which the job is created.
+            job_name (str): A str that specifies the name with which the hybrid job is created.
                 Default: f'{image_uri_type}-{timestamp}'.
 
             code_location (str): The S3 prefix URI where custom code will be uploaded.
                 Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
-            role_arn (str): This field is currently not used for local jobs. Local jobs will use
-                the current role's credentials. This may be subject to change.
+            role_arn (str): This field is currently not used for local hybrid jobs. Local hybrid
+                jobs will use the current role's credentials. This may be subject to change.
 
-            hyperparameters (Dict[str, Any]): Hyperparameters accessible to the job.
-                The hyperparameters are made accessible as a Dict[str, str] to the job.
+            hyperparameters (Dict[str, Any]): Hyperparameters accessible to the hybrid job.
+                The hyperparameters are made accessible as a Dict[str, str] to the hybrid job.
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
@@ -97,7 +97,8 @@ class LocalQuantumJob(QuantumJob):
                 channel name "input".
                 Default: {}.
 
-            output_data_config (OutputDataConfig): Specifies the location for the output of the job.
+            output_data_config (OutputDataConfig): Specifies the location for the output of the
+                hybrid job.
                 Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
                 kmsKeyId=None).
 
@@ -114,7 +115,7 @@ class LocalQuantumJob(QuantumJob):
                 Default: True.
 
         Returns:
-            LocalQuantumJob: The representation of a local Braket Job.
+            LocalQuantumJob: The representation of a local Braket Hybrid Job.
         """
         create_job_kwargs = prepare_quantum_job(
             device=device,
@@ -164,8 +165,8 @@ class LocalQuantumJob(QuantumJob):
     def __init__(self, arn: str, run_log: str = None):
         """
         Args:
-            arn (str): The ARN of the job.
-            run_log (str): The container output log of running the job with the given arn.
+            arn (str): The ARN of the hybrid job.
+            run_log (str): The container output log of running the hybrid job with the given arn.
         """
         if not arn.startswith("local:job/"):
             raise ValueError(f"Arn {arn} is not a valid local job arn")
@@ -177,20 +178,20 @@ class LocalQuantumJob(QuantumJob):
 
     @property
     def arn(self) -> str:
-        """str: The ARN (Amazon Resource Name) of the quantum job."""
+        """str: The ARN (Amazon Resource Name) of the hybrid job."""
         return self._arn
 
     @property
     def name(self) -> str:
-        """str: The name of the quantum job."""
+        """str: The name of the hybrid job."""
         return self._name
 
     @property
     def run_log(self) -> str:
-        """Gets the run output log from running the job.
+        """Gets the run output log from running the hybrid job.
 
         Returns:
-            str:  The container output log from running the job.
+            str:  The container output log from running the hybrid job.
         """
         if not self._run_log:
             try:
@@ -201,7 +202,7 @@ class LocalQuantumJob(QuantumJob):
         return self._run_log
 
     def state(self, use_cached_value: bool = False) -> str:
-        """The state of the quantum job.
+        """The state of the hybrid job.
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
@@ -213,7 +214,7 @@ class LocalQuantumJob(QuantumJob):
         return "COMPLETED"
 
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
-        """When running the quantum job in local mode, the metadata is not available.
+        """When running the hybrid job in local mode, the metadata is not available.
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
@@ -225,7 +226,7 @@ class LocalQuantumJob(QuantumJob):
         pass
 
     def cancel(self) -> str:
-        """When running the quantum job in local mode, the cancelling a running is not possible.
+        """When running the hybrid job in local mode, the cancelling a running is not possible.
         Returns:
             str: None
         """
@@ -237,11 +238,11 @@ class LocalQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
-        """When running the quantum job in local mode, results are automatically stored locally.
+        """When running the hybrid job in local mode, results are automatically stored locally.
 
         Args:
             extract_to (str): The directory to which the results are extracted. The results
-                are extracted to a folder titled with the job name within this directory.
+                are extracted to a folder titled with the hybrid job name within this directory.
                 Default= `Current working directory`.
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
                 Default: 10 days.
@@ -255,7 +256,7 @@ class LocalQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> Dict[str, Any]:
-        """Retrieves the job result persisted using save_job_result() function.
+        """Retrieves the hybrid job result persisted using save_job_result() function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
@@ -264,7 +265,7 @@ class LocalQuantumJob(QuantumJob):
                 Default: 5 seconds.
 
         Returns:
-            Dict[str, Any]: Dict specifying the job results.
+            Dict[str, Any]: Dict specifying the hybrid job results.
         """
         try:
             with open(os.path.join(self.name, "results.json"), "r") as f:
@@ -308,13 +309,13 @@ class LocalQuantumJob(QuantumJob):
         return parser.get_parsed_metrics(metric_type, statistic)
 
     def logs(self, wait: bool = False, poll_interval_seconds: int = 5) -> None:
-        """Display container logs for a given job
+        """Display container logs for a given hybrid job
 
         Args:
-            wait (bool): `True` to keep looking for new log entries until the job completes;
+            wait (bool): `True` to keep looking for new log entries until the hybrid job completes;
                 otherwise `False`. Default: `False`.
             poll_interval_seconds (int): The interval of time, in seconds, between polling for
-                new log entries and job completion (default: 5).
+                new log entries and hybrid job completion (default: 5).
 
         """
         return print(self.run_log)

@@ -64,17 +64,17 @@ def save_job_checkpoint(
 
 def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict[str, Any]:
     """
-    Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
-    file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
-    checkpoint data you expect to be available in the file path specified by the `CHECKPOINT_DIR`
-    container environment variable.
+    Loads the hybrid job checkpoint data stored for the job named 'job_name', with the checkpoint
+    file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any hybrid job
+    whose checkpoint data you expect to be available in the file path specified by the
+    `CHECKPOINT_DIR` container environment variable.
 
-    Note: This function for loading job checkpoints is only for use inside the job container
+    Note: This function for loading hybrid job checkpoints is only for use inside the job container
           as it writes data to directories and references env variables set in the containers.
 
 
     Args:
-        job_name (str): str that specifies the name of the job whose checkpoints
+        job_name (str): str that specifies the name of the hybrid job whose checkpoints
             are to be loaded.
         checkpoint_file_suffix (str): str specifying the file suffix that is used to
             locate the checkpoint file to load. The resulting file name
@@ -113,7 +113,7 @@ def save_job_result(
     environment variable `AMZN_BRAKET_JOB_RESULTS_DIR`, with the filename 'results.json'.
     The `result_data` values are serialized to the specified `data_format`.
 
-    Note: This function for storing the results is only for use inside the job container
+    Note: This function for storing the results is only for use inside the hybrid job container
           as it writes data to directories and references env variables set in the containers.
 
 
