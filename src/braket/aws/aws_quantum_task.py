@@ -73,8 +73,8 @@ from braket.tracking.tracking_events import _TaskCompletionEvent
 
 
 class AwsQuantumTask(QuantumTask):
-    """Amazon Braket implementation of a quantum task. A quantum task can be a circuit or an
-    annealing problem."""
+    """Amazon Braket implementation of a quantum task. A quantum task can be a circuit,
+    an OpenQASM program or an AHS program."""
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
