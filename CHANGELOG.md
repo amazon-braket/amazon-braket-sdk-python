@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.54.3 (2023-08-30)
+
+### Bug Fixes and Other Changes
+
+ * Move inline `_flatten` to top of `qubit_set.py`
+ * build(deps): bump actions/setup-python from 4.6.1 to 4.7.0
+
+## v1.54.2 (2023-08-28)
+
+### Bug Fixes and Other Changes
+
+ * readthedocs integration
+ * build(deps): bump pypa/gh-action-pypi-publish from 1.8.8 to 1.8.10
+
 ## v1.54.1 (2023-08-22)
 
 ### Bug Fixes and Other Changes

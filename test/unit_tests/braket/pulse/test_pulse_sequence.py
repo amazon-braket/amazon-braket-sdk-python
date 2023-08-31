@@ -27,7 +27,7 @@ from braket.pulse import (
 
 @pytest.fixture
 def port():
-    return Port(port_id="device_port_x0", dt=1e-9, properties={})
+    return Port(port_id="device_port_x0", dt=1e-3, properties={})
 
 
 @pytest.fixture
