@@ -25,7 +25,7 @@ class CheckpointConfig:
 
 @dataclass
 class InstanceConfig:
-    """Configuration of the instances used to execute the job."""
+    """Configuration of the instances used to execute the hybrid job."""
 
     instanceType: str = "ml.m5.large"
     volumeSizeInGb: int = 30
@@ -34,7 +34,7 @@ class InstanceConfig:
 
 @dataclass
 class OutputDataConfig:
-    """Configuration that specifies the location for the output of the job."""
+    """Configuration that specifies the location for the output of the hybrid job."""
 
     s3Path: Optional[str] = None
     kmsKeyId: Optional[str] = None
@@ -42,7 +42,7 @@ class OutputDataConfig:
 
 @dataclass
 class StoppingCondition:
-    """Conditions that specify when the job should be forcefully stopped."""
+    """Conditions that specify when the hybrid job should be forcefully stopped."""
 
     maxRuntimeInSeconds: int = 5 * 24 * 60 * 60
 
@@ -64,7 +64,7 @@ class S3DataSourceConfig:
         s3_data,
         content_type=None,
     ):
-        """Create a definition for input data used by a Braket job.
+        """Create a definition for input data used by a Braket Hybrid job.
 
         Args:
             s3_data (str): Defines the location of s3 data to train on.

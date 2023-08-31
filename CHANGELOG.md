@@ -1,5 +1,37 @@
 # Changelog
 
+## v1.54.3 (2023-08-30)
+
+### Bug Fixes and Other Changes
+
+ * Move inline `_flatten` to top of `qubit_set.py`
+ * build(deps): bump actions/setup-python from 4.6.1 to 4.7.0
+
+## v1.54.2 (2023-08-28)
+
+### Bug Fixes and Other Changes
+
+ * readthedocs integration
+ * build(deps): bump pypa/gh-action-pypi-publish from 1.8.8 to 1.8.10
+
+## v1.54.1 (2023-08-22)
+
+### Bug Fixes and Other Changes
+
+ * update: restricting parameter names to not collide with ones we use for OpenQASM generation.
+
+## v1.54.0 (2023-08-16)
+
+### Features
+
+ * enable gate calibrations on supported devices
+
+## v1.53.4 (2023-08-15)
+
+### Bug Fixes and Other Changes
+
+ * docs: add mermaid diagram to describe the CI flow
+
 ## v1.53.3 (2023-08-08)
 
 ### Bug Fixes and Other Changes
