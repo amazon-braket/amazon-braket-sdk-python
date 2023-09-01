@@ -123,15 +123,16 @@ class AwsDevice(Device):
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
         """
-        Run a quantum task specification on this device. A task can be a circuit or an
+        Run a quantum task specification on this device. A quantum task can be a circuit or an
         annealing problem.
 
         Args:
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
-                Specification of task (circuit or annealing problem or program) to run on device.
+                Specification of quantum task (circuit, OpenQASM program or AHS program)
+                to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the task's results to. Default is `<default_bucket>/tasks` if evoked outside a
-                Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
+                save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
+                Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
@@ -233,20 +234,20 @@ class AwsDevice(Device):
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
-        """Executes a batch of tasks in parallel
+        """Executes a batch of quantum tasks in parallel
 
         Args:
             task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], List[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing problems, pulse sequences,
                 or photonics program to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
+                save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            max_parallel (Optional[int]): The maximum number of tasks to run on AWS in parallel.
+            max_parallel (Optional[int]): The maximum number of quantum tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
-                concurrent tasks on the device. Default: 10
+                concurrent quantum tasks on the device. Default: 10
             max_connections (int): The maximum number of connections in the Boto3 connection pool.
                 Also the maximum number of thread pool workers for the batch. Default: 100
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
@@ -264,7 +265,7 @@ class AwsDevice(Device):
                 Default: None.
 
         Returns:
-            AwsQuantumTaskBatch: A batch containing all of the tasks run
+            AwsQuantumTaskBatch: A batch containing all of the quantum tasks run
 
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`

@@ -71,7 +71,7 @@ class Tracker:
         Resources tracked by this tracker.
 
         Returns:
-            List[str]: The list of task ids for tasks tracked by this tracker.
+            List[str]: The list of quantum task ids for quantum tasks tracked by this tracker.
         """
         return list(self._resources.keys())
 
@@ -98,8 +98,8 @@ class Tracker:
         """
         Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
 
-        Note: The cost of a simulator task is not available until after the results for the task
-        have been fetched. Call `result()` on an `AwsQuantumTask` before estimating its cost
+        Note: The cost of a simulator quantum task is not available until after the results for the
+        task have been fetched. Call `result()` on an `AwsQuantumTask` before estimating its cost
         to ensure that the simulator usage is included in the cost estimate.
 
         Note: Charges shown are estimates based on your Amazon Braket simulator and quantum
@@ -123,9 +123,9 @@ class Tracker:
 
         Returns:
             Dict[str,Dict[str,Any]] : A dictionary where each key is a device arn, and maps to
-            a dictionary sumarizing the tasks run on the device. The summary includes the
+            a dictionary sumarizing the quantum tasks run on the device. The summary includes the
             total shots sent to the device and the most recent status of the quantum tasks
-            created on this device. For finished tasks on simulator devices, the summary
+            created on this device. For finished quantum tasks on simulator devices, the summary
             also includes the duration of the simulation.
 
         Example:

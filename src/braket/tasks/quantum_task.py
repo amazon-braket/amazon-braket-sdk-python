@@ -26,9 +26,9 @@ class QuantumTask(ABC):
     @property
     @abstractmethod
     def id(self) -> str:
-        """Get the task ID.
+        """Get the quantum task ID.
         Returns:
-            str: The task ID.
+            str: The quantum task ID.
         """
 
     @abstractmethod
@@ -71,6 +71,6 @@ class QuantumTask(ABC):
                 request. Default is False.
 
         Returns:
-            Dict[str, Any]: The metadata regarding the task. If `use_cached_value` is True,
+            Dict[str, Any]: The metadata regarding the quantum task. If `use_cached_value` is True,
             then the value retrieved from the most recent request is used.
         """
