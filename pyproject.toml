@@ -1,2 +1,84 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "amazon-braket-sdk"
+dynamic = ["version"]
+description = "An open source library for interacting with quantum computing devices on Amazon Braket"
+readme = "README.md"
+license = "apache-2.0"
+requires-python = ">= 3.8.2"
+authors = [
+    { name = "Amazon Web Services" },
+]
+keywords = [
+    "AWS",
+    "Amazon",
+    "Quantum",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "amazon-braket-default-simulator>=1.19.1",
+    "amazon-braket-schemas>=1.19.1",
+    "numpy<=1.23.4",
+    "backoff",
+    "boltons",
+    "boto3>=1.22.3",
+    "nest-asyncio",
+    "networkx",
+    "numpy",
+    "openpulse",
+    "openqasm3",
+    "oqpy~=0.2.1",
+    "setuptools",
+    "sympy",
+]
+
+[project.optional-dependencies]
+test = [
+    "black",
+    "botocore",
+    "flake8-rst-docstrings",
+    "flake8<=5.0.4",
+    "isort",
+    "jsonschema==3.2.0",
+    "pre-commit",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "pytest-rerunfailures",
+    "pytest-xdist",
+    "sphinx",
+    "sphinx-rtd-theme",
+    "sphinxcontrib-apidoc",
+    "tox",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/aws/amazon-braket-sdk-python"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/braket/_sdk/_version.py"
+
 [tool.black]
 line-length = 100
