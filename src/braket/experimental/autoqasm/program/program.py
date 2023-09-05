@@ -21,7 +21,8 @@ from typing import Any, List, Optional, Union
 
 import oqpy.base
 
-from braket.circuits.serialization import IRType
+from braket.aws import AwsDevice
+from braket.circuits.serialization import IRType, SerializableProgram
 from braket.experimental.autoqasm import constants, errors
 
 # Create the thread-local object for the program conversion context.
@@ -43,6 +44,10 @@ class UserConfig:
     """User-specified configurations that influence program building."""
 
     num_qubits: Optional[int] = None
+    """The total number of qubits to declare in the program."""
+
+    device: Optional[AwsDevice] = None
+    """The target device for the program."""
 
 
 class ProgramScope(Enum):
@@ -63,7 +68,7 @@ class ProgramMode(Enum):
     """For program conversion inside a context where only unitary operations are allowed."""
 
 
-class Program:
+class Program(SerializableProgram):
     """The program that has been generated with AutoQASM. This object can
     be passed to the run() method of a Braket Device."""
 
@@ -179,6 +184,12 @@ class ProgramConversionContext:
         Returns None if the user did not specify how many qubits are in the program.
         """
         return self.user_config.num_qubits
+
+    def get_target_device(self) -> Optional[AwsDevice]:
+        """Return the target device for the program, as specified by the user.
+        Returns None if the user did not specify a target device.
+        """
+        return self.user_config.device
 
     def next_var_name(self, kind: type) -> str:
         """Return the next name for a new classical variable.

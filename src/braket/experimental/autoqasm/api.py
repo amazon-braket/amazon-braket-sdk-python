@@ -17,7 +17,7 @@ import copy
 import functools
 import inspect
 from types import FunctionType
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -27,6 +27,7 @@ import braket.experimental.autoqasm.instructions as aq_instructions
 import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
+from braket.aws import AwsDevice
 from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.autograph.core import converter
 from braket.experimental.autoqasm.autograph.impl.api_core import (
@@ -36,7 +37,9 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 
 
-def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.Program]:
+def main(
+    *args, num_qubits: Optional[int] = None, device: Optional[Union[AwsDevice, str]] = None
+) -> Callable[[Any], aq_program.Program]:
     """Decorator that converts a function into a callable that returns
     a Program object containing the quantum program.
 
@@ -46,21 +49,21 @@ def main(*args, num_qubits: Optional[int] = None) -> Callable[[Any], aq_program.
     Args:
         num_qubits (Optional[int]): Configuration to set the total number of qubits to declare in
             the program.
+        device (Optional[Union[AwsDevice, str]]): Configuration to set the target device for the
+            program. Can be either an AwsDevice object or a valid Amazon Braket device ARN.
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    user_config = aq_program.UserConfig(num_qubits=num_qubits)
+    if isinstance(device, str):
+        device = AwsDevice(device)
 
-    if not args:
-
-        def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
-            return _function_wrapper(f, _convert_main, converter_args={"user_config": user_config})
-
-        return _function_with_params
-
-    return _function_wrapper(args[0], _convert_main, converter_args={"user_config": user_config})
+    return _function_wrapper(
+        args,
+        _convert_main,
+        converter_args={"user_config": aq_program.UserConfig(num_qubits=num_qubits, device=device)},
+    )
 
 
 def subroutine(*args) -> Callable[[Any], aq_program.Program]:
@@ -71,7 +74,7 @@ def subroutine(*args) -> Callable[[Any], aq_program.Program]:
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    return _function_wrapper(args[0], _convert_subroutine)
+    return _function_wrapper(args, _convert_subroutine)
 
 
 def gate(*args) -> Callable[[Any], None]:
@@ -81,19 +84,18 @@ def gate(*args) -> Callable[[Any], None]:
         Callable[[Any],]: A callable which can be used as a custom gate inside an
         aq.function or inside another aq.gate.
     """
-    return _function_wrapper(args[0], _convert_gate)
+    return _function_wrapper(args, _convert_gate)
 
 
 def _function_wrapper(
-    f: Callable,
+    args: Tuple[Any],
     converter_callback: Callable,
     converter_args: Optional[Dict[str, Any]] = None,
 ) -> Callable[[Any], aq_program.Program]:
     """Wrapping and conversion logic around the user function `f`.
 
     Args:
-        f (Callable): The target function to be converted which represents
-            the entry point of the quantum program.
+        args (Tuple[Any]): The arguments to the decorated function.
         converter_callback (Callable): The function converter, e.g., _convert_main.
         converter_args (Optional[Dict[str, Any]]): Extra arguments for the function converter.
 
@@ -101,6 +103,18 @@ def _function_wrapper(
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
+    if not args:
+        # This the case where a decorator is called with only keyword args, for example:
+        #     @aq.main(num_qubits=4)
+        #     def my_function():
+        # To make this work, here we simply return another wrapper function which expects
+        # a Callable as the first argument.
+        def _function_wrapper_with_params(*args) -> Callable[[Any], aq_program.Program]:
+            return _function_wrapper(args, converter_callback, converter_args=converter_args)
+
+        return _function_wrapper_with_params
+
+    f = args[0]
     if is_autograph_artifact(f):
         return f
 
@@ -177,29 +191,40 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
     Args:
         program_conversion_context (ProgramConversionContext): The program conversion context.
     """
-    root_oqpy_program = program_conversion_context.get_oqpy_program(
-        scope=aq_program.ProgramScope.MAIN
-    )
+    num_qubits = None
 
-    # Declare the global qubit register if necessary
+    # User-supplied qubit count
     user_specified_num_qubits = program_conversion_context.get_declared_qubits()
-
     if user_specified_num_qubits is not None:
-        # User-supplied qubit count
-        root_oqpy_program.declare(
-            [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, user_specified_num_qubits)],
-            to_beginning=True,
-        )
+        num_qubits = user_specified_num_qubits
 
-    else:
-        # Qubit count from program inspection
+    # Qubit count from program inspection
+    if num_qubits is None:
         qubits = program_conversion_context.qubits
         max_qubit_index = qubits[-1] if len(qubits) else None
         if max_qubit_index is not None:
-            root_oqpy_program.declare(
-                [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, max_qubit_index + 1)],
-                to_beginning=True,
-            )
+            num_qubits = max_qubit_index + 1
+
+    # Early return if we are not going to declare any qubits
+    if num_qubits is None:
+        return
+
+    # Validate that the target device has enough qubits
+    device = program_conversion_context.get_target_device()
+    if device and num_qubits > device.properties.paradigm.qubitCount:
+        raise errors.InsufficientQubitCountError(
+            f'Program requires {num_qubits} qubits, but target device "{device.name}" has '
+            f"only {device.properties.paradigm.qubitCount} qubits."
+        )
+
+    # Declare the global qubit register
+    root_oqpy_program = program_conversion_context.get_oqpy_program(
+        scope=aq_program.ProgramScope.MAIN
+    )
+    root_oqpy_program.declare(
+        [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, num_qubits)],
+        to_beginning=True,
+    )
 
 
 def _convert_subroutine(

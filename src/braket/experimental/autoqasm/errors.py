@@ -48,15 +48,19 @@ class UnknownQubitCountError(AutoQasmError):
         self.message = """Unspecified number of qubits.
 
 Specify the number of qubits used by your program by supplying the \
-`num_qubits` argument to `autoqasm.function`. For example:
+`num_qubits` argument to `aq.main`. For example:
 
-    @autoqasm.function(num_qubits=5)
-    def my_autoqasm_function():
+    @aq.main(num_qubits=5)
+    def my_autoqasm_program():
         ...
 """
 
     def __str__(self):
         return self.message
+
+
+class InsufficientQubitCountError(AutoQasmError):
+    """Target device does not have enough qubits for the program."""
 
 
 class UnsupportedConditionalExpressionError(AutoQasmError):
