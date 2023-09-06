@@ -3,6 +3,6 @@ repos:
     hooks:
       - id: tox_lintrs
         name: linters
-        entry: tox -e linters
+        entry: tox -e linters_check
         language: system
         types: [python]
