@@ -23,10 +23,10 @@ from braket.jobs.local import LocalQuantumJob
 
 
 def test_completed_local_job(aws_session, capsys):
-    """Asserts the job is completed with the respective files and folders for logs,
+    """Asserts the hybrid job is completed with the respective files and folders for logs,
     results and checkpoints. Validate the results are what we expect. Also,
     assert that logs contains all the necessary steps for setup and running
-    the job is displayed to the user.
+    the hybrid job is displayed to the user.
     """
     absolute_source_module = str(Path("test/integ_tests/job_test_script.py").resolve())
     current_dir = Path.cwd()
@@ -104,7 +104,7 @@ def test_completed_local_job(aws_session, capsys):
 
 
 def test_failed_local_job(aws_session, capsys):
-    """Asserts the job is failed with the output, checkpoints not created in bucket
+    """Asserts the hybrid job is failed with the output, checkpoints not created in bucket
     and only logs are populated. Validate the calling result function raises
     the ValueError. Also, check if the logs displays the required error message.
     """

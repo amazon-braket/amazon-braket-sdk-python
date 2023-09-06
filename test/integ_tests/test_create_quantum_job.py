@@ -21,8 +21,8 @@ from braket.aws.aws_quantum_job import AwsQuantumJob
 
 
 def test_failed_quantum_job(aws_session, capsys):
-    """Asserts the job is failed with the output, checkpoints,
-    tasks not created in bucket and only input is uploaded to s3. Validate the
+    """Asserts the hybrid job is failed with the output, checkpoints,
+    quantum tasks not created in bucket and only input is uploaded to s3. Validate the
     results/download results have the response raising RuntimeError. Also,
     check if the logs displays the Assertion Error.
     """
@@ -76,10 +76,10 @@ def test_failed_quantum_job(aws_session, capsys):
 
 
 def test_completed_quantum_job(aws_session, capsys):
-    """Asserts the job is completed with the output, checkpoints, tasks and
-    script folder created in S3 for respective job. Validate the results are
+    """Asserts the hybrid job is completed with the output, checkpoints, quantum tasks and
+    script folder created in S3 for respective hybrid job. Validate the results are
     downloaded and results are what we expect. Also, assert that logs contains all the
-    necessary steps for setup and running the job and is displayed to the user.
+    necessary steps for setup and running the hybrid job and is displayed to the user.
     """
 
     job = AwsQuantumJob.create(
