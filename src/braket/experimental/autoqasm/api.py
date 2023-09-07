@@ -60,8 +60,8 @@ def main(
         device = AwsDevice(device)
 
     return _function_wrapper(
-        args,
-        _convert_main,
+        *args,
+        converter_callback=_convert_main,
         converter_args={"user_config": aq_program.UserConfig(num_qubits=num_qubits, device=device)},
     )
 
@@ -74,7 +74,7 @@ def subroutine(*args) -> Callable[[Any], aq_program.Program]:
         Callable[[Any], Program]: A callable which returns the converted
         quantum program when called.
     """
-    return _function_wrapper(args, _convert_subroutine)
+    return _function_wrapper(*args, converter_callback=_convert_subroutine)
 
 
 def gate(*args) -> Callable[[Any], None]:
@@ -84,18 +84,17 @@ def gate(*args) -> Callable[[Any], None]:
         Callable[[Any],]: A callable which can be used as a custom gate inside an
         aq.function or inside another aq.gate.
     """
-    return _function_wrapper(args, _convert_gate)
+    return _function_wrapper(*args, converter_callback=_convert_gate)
 
 
 def _function_wrapper(
-    args: Tuple[Any],
+    *args: Tuple[Any],
     converter_callback: Callable,
     converter_args: Optional[Dict[str, Any]] = None,
 ) -> Callable[[Any], aq_program.Program]:
     """Wrapping and conversion logic around the user function `f`.
 
     Args:
-        args (Tuple[Any]): The arguments to the decorated function.
         converter_callback (Callable): The function converter, e.g., _convert_main.
         converter_args (Optional[Dict[str, Any]]): Extra arguments for the function converter.
 
@@ -107,12 +106,11 @@ def _function_wrapper(
         # This the case where a decorator is called with only keyword args, for example:
         #     @aq.main(num_qubits=4)
         #     def my_function():
-        # To make this work, here we simply return another wrapper function which expects
-        # a Callable as the first argument.
-        def _function_wrapper_with_params(*args) -> Callable[[Any], aq_program.Program]:
-            return _function_wrapper(args, converter_callback, converter_args=converter_args)
-
-        return _function_wrapper_with_params
+        # To make this work, here we simply return a partial application of this function
+        # which still expects a Callable as the first argument.
+        return functools.partial(
+            _function_wrapper, converter_callback=converter_callback, converter_args=converter_args
+        )
 
     f = args[0]
     if is_autograph_artifact(f):
