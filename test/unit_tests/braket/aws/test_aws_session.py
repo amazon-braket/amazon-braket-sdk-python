@@ -418,16 +418,20 @@ def test_create_quantum_task_with_job_token(aws_session):
 def test_get_quantum_task(aws_session):
     arn = "foo:bar:arn"
     status = "STATUS"
+    queue_info = ["QueueInfo"]
     return_value = {"quantumTaskArn": arn, "status": status}
     aws_session.braket_client.get_quantum_task.return_value = return_value
 
     assert aws_session.get_quantum_task(arn) == return_value
-    aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
+    aws_session.braket_client.get_quantum_task.assert_called_with(
+        quantumTaskArn=arn, additionalAttributeNames=queue_info
+    )
 
 
 def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_found_response):
     arn = "foo:bar:arn"
     status = "STATUS"
+    queue_info = ["QueueInfo"]
     return_value = {"quantumTaskArn": arn, "status": status}
 
     aws_session.braket_client.get_quantum_task.side_effect = [
@@ -437,7 +441,9 @@ def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_f
     ]
 
     assert aws_session.get_quantum_task(arn) == return_value
-    aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
+    aws_session.braket_client.get_quantum_task.assert_called_with(
+        quantumTaskArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_quantum_task.call_count == 3
 
 

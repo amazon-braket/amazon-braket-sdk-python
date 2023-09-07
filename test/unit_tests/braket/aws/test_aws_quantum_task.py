@@ -47,6 +47,7 @@ from braket.error_mitigation.debias import Debias
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse import Frame, Port, PulseSequence
+from braket.queue_information import QueuePosition, QueuePriority
 from braket.tasks import (
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
@@ -200,6 +201,23 @@ def test_metadata_call_if_none(quantum_task):
     quantum_task._aws_session.get_quantum_task.return_value = metadata_1
     assert quantum_task.metadata(use_cached_value=True) == metadata_1
     quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
+
+
+def test_queue_position(quantum_task):
+    state_1 = "QUEUED"
+    _mock_metadata(quantum_task._aws_session, state_1)
+    assert quantum_task.queue_position() == QueuePosition(
+        queue_position="2", queue_priority=QueuePriority.NORMAL, message=None
+    )
+
+    state_2 = "COMPLETED"
+    message = (
+        f"'Task is in {state_2} status. AmazonBraket does not show queue position for this status.'"
+    )
+    _mock_metadata(quantum_task._aws_session, state_2)
+    assert quantum_task.queue_position() == QueuePosition(
+        queue_position="None", queue_priority=QueuePriority.NORMAL, message=message
+    )
 
 
 def test_state(quantum_task):
@@ -1097,11 +1115,32 @@ def _assert_create_quantum_task_called_with(
 
 
 def _mock_metadata(aws_session, state):
-    aws_session.get_quantum_task.return_value = {
-        "status": state,
-        "outputS3Bucket": S3_TARGET.bucket,
-        "outputS3Directory": S3_TARGET.key,
-    }
+    message = (
+        f"'Task is in {state} status. AmazonBraket does not show queue position for this status.'"
+    )
+    if state in AwsQuantumTask.TERMINAL_STATES or state in ["RUNNING", "CANCELLING"]:
+        aws_session.get_quantum_task.return_value = {
+            "status": state,
+            "outputS3Bucket": S3_TARGET.bucket,
+            "outputS3Directory": S3_TARGET.key,
+            "queueInfo": {
+                "queue": "QUANTUM_TASKS_QUEUE",
+                "position": "None",
+                "queuePriority": "Normal",
+                "message": message,
+            },
+        }
+    else:
+        aws_session.get_quantum_task.return_value = {
+            "status": state,
+            "outputS3Bucket": S3_TARGET.bucket,
+            "outputS3Directory": S3_TARGET.key,
+            "queueInfo": {
+                "queue": "QUANTUM_TASKS_QUEUE",
+                "position": "2",
+                "queuePriority": "Normal",
+            },
+        }
 
 
 def _mock_s3(aws_session, result):

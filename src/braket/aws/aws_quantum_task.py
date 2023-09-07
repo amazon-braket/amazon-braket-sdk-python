@@ -54,6 +54,7 @@ from braket.error_mitigation import ErrorMitigation
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse.pulse_sequence import PulseSequence
+from braket.queue_information.queue_position import QueuePosition, QueuePriority
 from braket.schema_common import BraketSchemaBase
 from braket.task_result import (
     AnalogHamiltonianSimulationTaskResult,
@@ -313,6 +314,40 @@ class AwsQuantumTask(QuantumTask):
             `metadata()`
         """
         return self._status(use_cached_value)
+
+    def queue_position(self) -> QueuePosition:
+        """
+        The queue position details for the quantum task.
+
+        Returns:
+            QueuePosition: Instance containing the queue position information
+            for the task.
+
+            Note: The queue_position is only returned when task is not in
+            RUNNING/CANCELLING/TERMINAL states, else queue_position is returned as "None".
+
+        Examples:
+            task status = QUEUED
+            >>> task.queue_position()
+            QueuePosition(queue_position='2', queue_priority=<QueuePriority.NORMAL: 'Normal'>,
+            message=None)
+
+            task status = COMPLETED
+            >>> task.queue_position()
+            QueuePosition(queue_position='2',
+            queue_priority=<QueuePriority.NORMAL: 'Normal'>,
+            message='Task is in COMPLETED status. AmazonBraket does
+                        not show queue position for this status.')
+        """
+        response = self.metadata()["queueInfo"]
+        queue_position = response["position"]
+        queue_priority = QueuePriority(response["queuePriority"])
+
+        if queue_position == "None":
+            message = response["message"]
+            return QueuePosition(queue_position, queue_priority, message)
+
+        return QueuePosition(queue_position, queue_priority)
 
     def _status(self, use_cached_value: bool = False) -> str:
         metadata = self.metadata(use_cached_value)
