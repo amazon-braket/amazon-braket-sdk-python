@@ -28,6 +28,7 @@ import braket.experimental.autoqasm.program as aq_program
 import braket.experimental.autoqasm.transpiler as aq_transpiler
 import braket.experimental.autoqasm.types as aq_types
 from braket.aws import AwsDevice
+from braket.devices.device import Device
 from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.autograph.core import converter
 from braket.experimental.autoqasm.autograph.impl.api_core import (
@@ -38,7 +39,7 @@ from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 
 
 def main(
-    *args, num_qubits: Optional[int] = None, device: Optional[Union[AwsDevice, str]] = None
+    *args, num_qubits: Optional[int] = None, device: Optional[Union[Device, str]] = None
 ) -> Callable[[Any], aq_program.Program]:
     """Decorator that converts a function into a callable that returns
     a Program object containing the quantum program.
@@ -49,8 +50,8 @@ def main(
     Args:
         num_qubits (Optional[int]): Configuration to set the total number of qubits to declare in
             the program.
-        device (Optional[Union[AwsDevice, str]]): Configuration to set the target device for the
-            program. Can be either an AwsDevice object or a valid Amazon Braket device ARN.
+        device (Optional[Union[Device, str]]): Configuration to set the target device for the
+            program. Can be either an Device object or a valid Amazon Braket device ARN.
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted

@@ -21,8 +21,8 @@ from typing import Any, List, Optional, Union
 
 import oqpy.base
 
-from braket.aws import AwsDevice
 from braket.circuits.serialization import IRType, SerializableProgram
+from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
 
 # Create the thread-local object for the program conversion context.
@@ -46,7 +46,7 @@ class UserConfig:
     num_qubits: Optional[int] = None
     """The total number of qubits to declare in the program."""
 
-    device: Optional[AwsDevice] = None
+    device: Optional[Device] = None
     """The target device for the program."""
 
 
@@ -185,7 +185,7 @@ class ProgramConversionContext:
         """
         return self.user_config.num_qubits
 
-    def get_target_device(self) -> Optional[AwsDevice]:
+    def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
         Returns None if the user did not specify a target device.
         """
