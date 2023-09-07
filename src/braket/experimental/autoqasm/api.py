@@ -98,7 +98,7 @@ def pulse_sequence(*args, **kwargs):
         return main(*args, **kwargs)
 
 
-def _calibration(*, implements: Callable, **kwargs):
+def _calibration(*args, implements: Callable, **kwargs):
     """A decorator that register the decorated function as a calibration definition of a gate
     in this `GateCalibrations` object.
 
@@ -111,10 +111,7 @@ def _calibration(*, implements: Callable, **kwargs):
     """
     converter_args = {"gate_function": implements, **kwargs}
 
-    def _function_with_params(f: Callable) -> Callable[[Any], aq_program.Program]:
-        return _function_wrapper(f, _convert_calibration, converter_args)
-
-    return _function_with_params
+    return _function_wrapper(args, _convert_calibration, converter_args)
 
 
 def _function_wrapper(
