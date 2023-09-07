@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Callable, Iterable
 
 import oqpy
 
@@ -24,7 +24,7 @@ from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType
 class GateCalibration:
     def __init__(
         self,
-        gate_name: str,
+        gate_function: Callable,
         qubits: Iterable[Qubit],
         angles: Iterable[float],
         oqpy_program: oqpy.Program,
@@ -32,12 +32,12 @@ class GateCalibration:
         """_summary_
 
         Args:
-            gate_name (str): Name of the gate.
+            gate_function (Callable): The gate function which calibration is defined.
             qubits (Tuple[Qubit]): The qubits on which the gate calibration is defined.
             angles (Tuple[float]): The angles at which the gate calibration is defined.
             calibration_callable (oqpy.Program): _description_
         """
-        self.gate_name = gate_name
+        self.gate_function = gate_function
         self.qubits = qubits
         self.angles = angles
         self.oqpy_program = oqpy_program
