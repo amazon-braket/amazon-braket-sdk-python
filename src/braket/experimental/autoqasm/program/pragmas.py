@@ -31,20 +31,19 @@ The verbatim pragma would then apply to the `h` and `cnot`, but not the `x`.
 
 import contextlib
 
-import oqpy.base
-
 from braket.experimental.autoqasm import program
 
 
 @contextlib.contextmanager
 def verbatim() -> None:
     """Context management protocol that, when used with a `with` statement, wraps the code block
-    in a verbatim box.
+    in a verbatim block.
 
-    The verbatim pragma around a code block specifies that operations are to be executed as
+    A verbatim block specifies that operations contained within the block are to be executed as
     programmed without compilation or modification of any sort.
+
+    Raises:
+        errors.VerbatimBlockNotAllowed: If the target device does not support verbatim blocks.
     """
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    oqpy_program.pragma("braket verbatim")
-    with oqpy.Box(oqpy_program):
+    with program.get_program_conversion_context().verbatim_block():
         yield

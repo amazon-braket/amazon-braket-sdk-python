@@ -156,6 +156,7 @@ class ProgramConversionContext:
         self._gate_definitions_processing = []
         self._gates_defined = set()
         self._gates_used = set()
+        self._in_verbatim = False
         self._virtual_qubits_used = set()
         self._var_idx = 0
         self._has_pulse_control = False
@@ -202,7 +203,27 @@ class ProgramConversionContext:
         return self.user_config.num_qubits
 
     def register_gate(self, gate_name: str) -> None:
-        """Register a gate that is used in this program."""
+        """Register a gate that is used in this program.
+
+        Args:
+            gate_name (str): The name of the gate being used.
+
+        Raises:
+            errors.UnsupportedNativeGate: If the gate is being used inside a verbatim block
+                and the gate is not a native gate of the target device.
+        """
+        # If we are in verbatim and there is a target device specified, validate that the
+        # provided gate is a native gate on the target device.
+        device = self.get_target_device()
+        if device and self._in_verbatim:
+            native_gates = device.properties.paradigm.nativeGateSet
+            if gate_name not in native_gates:
+                raise errors.UnsupportedNativeGate(
+                    f'The gate "{gate_name}" is not a native gate of the target '
+                    f'device "{device.name}". Only native gates may be used inside a verbatim '
+                    f"block. The native gates of the device are: {native_gates}"
+                )
+
         self._gates_used.add(gate_name)
 
     def get_target_device(self) -> Optional[Device]:
@@ -354,6 +375,32 @@ class ProgramConversionContext:
                 yield
         finally:
             self._gate_definitions_processing.pop()
+
+    @contextlib.contextmanager
+    def verbatim_block(self) -> None:
+        """Sets the program conversion context into a verbatim block context.
+
+        Raises:
+            errors.VerbatimBlockNotAllowed: If the target device does not support verbatim blocks.
+        """
+        device = self.get_target_device()
+        if (
+            device
+            and "verbatim"
+            not in device.properties.action[DeviceActionType.OPENQASM].supportedPragmas
+        ):
+            raise errors.VerbatimBlockNotAllowed(
+                f'The target device "{device.name}" does not support verbatim blocks.'
+            )
+
+        self._in_verbatim = True
+        try:
+            oqpy_program = self.get_oqpy_program()
+            oqpy_program.pragma("braket verbatim")
+            with oqpy.Box(oqpy_program):
+                yield
+        finally:
+            self._in_verbatim = False
 
 
 @contextlib.contextmanager

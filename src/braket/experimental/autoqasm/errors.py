@@ -45,6 +45,14 @@ class UnsupportedGate(AutoQasmError):
     """Gate is not supported by the target device."""
 
 
+class UnsupportedNativeGate(AutoQasmError):
+    """Native gate is not supported by the target device."""
+
+
+class VerbatimBlockNotAllowed(AutoQasmError):
+    """Verbatim block is not supported by the target device."""
+
+
 class UnknownQubitCountError(AutoQasmError):
     """Missing declaration for the number of qubits."""
 
