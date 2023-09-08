@@ -20,7 +20,7 @@ Pragmas specify how a program should be compiled or executed. In AutoQASM, we su
 
     @aq.main
     def pragma_example() -> None:
-        with aq.Verbatim():
+        with aq.verbatim():
             h(0)
             cnot(0, 1)
         x(0)
@@ -29,24 +29,22 @@ The verbatim pragma would then apply to the `h` and `cnot`, but not the `x`.
 """
 
 
+import contextlib
+
 import oqpy.base
 
 from braket.experimental.autoqasm import program
 
 
-class Verbatim:
+@contextlib.contextmanager
+def verbatim() -> None:
     """Context management protocol that, when used with a `with` statement, wraps the code block
     in a verbatim box.
 
     The verbatim pragma around a code block specifies that operations are to be executed as
     programmed without compilation or modification of any sort.
     """
-
-    def __enter__(self):
-        oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-        self.box = oqpy.Box(oqpy_program)
-        oqpy_program.pragma("braket verbatim")
-        self.box.__enter__()
-
-    def __exit__(self, exc_type, exc, traceback):
-        return self.box.__exit__(exc_type, exc, traceback)
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program.pragma("braket verbatim")
+    with oqpy.Box(oqpy_program):
+        yield
