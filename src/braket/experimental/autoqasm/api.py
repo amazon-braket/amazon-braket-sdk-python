@@ -36,7 +36,7 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
-from braket.experimental.autoqasm.instructions.qubits import _qubit, is_qubit_identifier_type
+from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 
 
@@ -574,7 +574,7 @@ def _convert_calibration(
 
     fixed_valued_qubits = [decorator_kwargs[name] for name in decorator_qubit_names]
     fixed_valued_angles = [decorator_kwargs[name] for name in decorator_angle_names]
-    variable_qubits = [_qubit(q.name) for q in func_args.qubits]
+    variable_qubits = [oqpy.Qubit(name=q.name) for q in func_args.qubits]
     variable_angles = [oqpy.FloatVar(name=a.name) for a in func_args.angles]
     qubits = fixed_valued_qubits + variable_qubits
     angles = fixed_valued_angles + variable_angles
@@ -630,7 +630,13 @@ def _validate_calibration_args(
             decorator_args[qubit_arg.name]
         ):
             raise errors.ParameterTypeError(
-                f'Parameter "{qubit_arg.name}" must have a type hint of float.'
+                f'Parameter "{qubit_arg.name}" must have a type of aq.Qubit.'
+            )
+        if qubit_arg.name in func_args_names and qubit_arg.name not in [
+            var.name for var in func_args.angles
+        ]:
+            raise errors.ParameterTypeError(
+                f'Parameter "{qubit_arg.name}" must have a type hint of aq.Qubit.'
             )
 
     for angle_arg in gate_args.angles:
@@ -638,7 +644,7 @@ def _validate_calibration_args(
             decorator_args[angle_arg.name], float
         ):
             raise errors.ParameterTypeError(
-                f'Parameter "{angle_arg.name}" must have a type hint of float.'
+                f'Parameter "{angle_arg.name}" must have a type of float.'
             )
         if angle_arg.name in func_args_names and angle_arg.name not in [
             var.name for var in func_args.angles

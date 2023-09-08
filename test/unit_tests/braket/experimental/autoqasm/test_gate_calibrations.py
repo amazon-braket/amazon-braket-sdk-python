@@ -113,11 +113,15 @@ def test_gate_calibrations_invalid_type():
     def cal_4(angle: aq.Qubit):
         pulse.delay(1, angle)
 
+    @aq.pulse_sequence(implements=rx)
+    def cal_5(target: float, angle: aq.Qubit):
+        pulse.delay(0, angle)
+
     @aq.main
     def my_program():
         rx("$1", 1.0)
 
-    for cal in [cal_1, cal_2, cal_3, cal_4]:
+    for cal in [cal_1, cal_2, cal_3, cal_4, cal_5]:
         with pytest.raises(errors.ParameterTypeError):
             _ = my_program().bind_calibrations(cal)
 
