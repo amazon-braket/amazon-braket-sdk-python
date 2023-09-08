@@ -21,7 +21,7 @@ from braket.aws.aws_session import AwsSession
 
 
 class _LocalJobContainer(object):
-    """Uses docker CLI to run Braket Jobs on a local docker container."""
+    """Uses docker CLI to run Braket Hybrid Jobs on a local docker container."""
 
     ECR_URI_PATTERN = r"^((\d+)\.dkr\.ecr\.([^.]+)\.[^/]*)/([^:]*):(.*)$"
     CONTAINER_CODE_PATH = "/opt/ml/code/"
@@ -33,7 +33,8 @@ class _LocalJobContainer(object):
         logger: Logger = getLogger(__name__),
         force_update: bool = False,
     ):
-        """Represents and provides functions for interacting with a Braket Jobs docker container.
+        """Represents and provides functions for interacting with a Braket Hybrid Jobs docker
+        container.
 
         The function "end_session" must be called when the container is no longer needed.
         Args:
@@ -71,7 +72,7 @@ class _LocalJobContainer(object):
             environment_variables (Dict[str, str]): A dictionary of environment variables and
                 their values.
         Returns:
-            List[str]: The list of parameters to use when running a job that will include the
+            List[str]: The list of parameters to use when running a hybrid job that will include the
             provided environment variables as part of the runtime.
         """
         env_list = []
@@ -229,11 +230,11 @@ class _LocalJobContainer(object):
         self,
         environment_variables: Dict[str, str],
     ) -> None:
-        """Runs a Braket job in a local container.
+        """Runs a Braket Hybrid job in a local container.
 
         Args:
             environment_variables (Dict[str, str]): The environment variables to make available
-                as part of running the job.
+                as part of running the hybrid job.
         """
         start_program_name = self._check_output_formatted(
             ["docker", "exec", self._container_name, "printenv", "SAGEMAKER_PROGRAM"]

@@ -82,7 +82,7 @@ class LocalSimulator(Device):
                 The task specification.
             shots (int): The number of times to run the circuit or annealing problem.
                 Default is 0, which means that the simulator will compute the exact
-                results based on the task specification.
+                results based on the quantum task specification.
                 Sampling is not supported for shots=0.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this
@@ -118,21 +118,21 @@ class LocalSimulator(Device):
         *args,
         **kwargs,
     ) -> LocalQuantumTaskBatch:
-        """Executes a batch of tasks in parallel
+        """Executes a batch of quantum tasks in parallel
 
         Args:
             task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram], List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa E501
                 Single instance or list of task specification.
             shots (Optional[int]): The number of times to run the task.
                 Default: 0.
-            max_parallel (Optional[int]): The maximum number of tasks to run  in parallel. Default
+            max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel. Default
                 is the number of CPU.
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated with
                 this value. Default: {}.
 
         Returns:
-            LocalQuantumTaskBatch: A batch containing all of the tasks run
+            LocalQuantumTaskBatch: A batch containing all of the quantum tasks run
 
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`

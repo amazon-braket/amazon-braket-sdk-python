@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.54.3.post0 (2023-09-04)
+
+### Documentation Changes
+
+ * standardize task and job naming to quantum task and hybrid job
+
+## v1.54.3 (2023-08-30)
+
+### Bug Fixes and Other Changes
+
+ * Move inline `_flatten` to top of `qubit_set.py`
+ * build(deps): bump actions/setup-python from 4.6.1 to 4.7.0
+
 ## v1.54.2 (2023-08-28)
 
 ### Bug Fixes and Other Changes

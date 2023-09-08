@@ -34,8 +34,9 @@ class CwlMetricsFetcher(object):
             aws_session (AwsSession): AwsSession to connect to AWS with.
             poll_timeout_seconds (float): The polling timeout for retrieving the metrics,
                 in seconds. Default: 10 seconds.
-            logger (Logger): Logger object with which to write logs, such as task statuses
-                while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
+            logger (Logger): Logger object with which to write logs, such as quantum task statuses
+                while waiting for quantum task to be in a terminal state. Default is
+                `getLogger(__name__)`
         """
         self._poll_timeout_seconds = poll_timeout_seconds
         self._logger = logger
@@ -63,7 +64,7 @@ class CwlMetricsFetcher(object):
         parser: LogMetricsParser,
     ) -> None:
         """
-        Synchronously retrieves the algorithm metrics logged in a given job log stream.
+        Synchronously retrieves the algorithm metrics logged in a given hybrid job log stream.
 
         Args:
             stream_name (str): The name of the log stream.
@@ -94,14 +95,14 @@ class CwlMetricsFetcher(object):
 
     def _get_log_streams_for_job(self, job_name: str, timeout_time: float) -> List[str]:
         """
-        Retrieves the list of log streams relevant to a job.
+        Retrieves the list of log streams relevant to a hybrid job.
 
         Args:
-            job_name (str): The name of the job.
+            job_name (str): The name of the hybrid job.
             timeout_time (float) : Metrics cease getting streamed if the current time exceeds
                 the timeout time.
         Returns:
-            List[str] : A list of log stream names for the given job.
+            List[str] : A list of log stream names for the given hybrid job.
         """
         kwargs = {
             "logGroupName": self.LOG_GROUP_NAME,
@@ -130,11 +131,11 @@ class CwlMetricsFetcher(object):
         statistic: MetricStatistic = MetricStatistic.MAX,
     ) -> Dict[str, List[Union[str, float, int]]]:
         """
-        Synchronously retrieves all the algorithm metrics logged by a given Job.
+        Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:
-            job_name (str): The name of the Job. The name must be exact to ensure only the relevant
-                metrics are retrieved.
+            job_name (str): The name of the Hybrid Job. The name must be exact to ensure only the
+                relevant metrics are retrieved.
             metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
             statistic (MetricStatistic): The statistic to determine which metric value to use
                 when there is a conflict. Default is MetricStatistic.MAX.
