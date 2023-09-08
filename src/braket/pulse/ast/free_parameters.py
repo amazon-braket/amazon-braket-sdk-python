@@ -19,6 +19,9 @@ from openqasm3.visitor import QASMTransformer
 from oqpy.program import Program
 from oqpy.timing import OQDurationLiteral
 
+    def to_ast(self) -> ast.Identifier:
+        return self
+
 
 class _FreeParameterTransformer(QASMTransformer):
     """Walk the AST and evaluate FreeParameterExpressions."""
@@ -37,7 +40,7 @@ class _FreeParameterTransformer(QASMTransformer):
         using the given parameter values.
 
         Args:
-            identifier (Identifier): The identifier.
+            identifier (_FreeParameterExpressionIdentifier): The identifier.
 
         Returns:
             Union[Identifier, FloatLiteral]: The transformed identifier.
