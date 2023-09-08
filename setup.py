@@ -29,7 +29,7 @@ setup(
     install_requires=[
         "amazon-braket-schemas>=1.19.1",
         "amazon-braket-default-simulator>=1.19.1",
-        "oqpy~=0.2.1",
+        "oqpy~=0.3.1",
         "setuptools",
         "backoff",
         "boltons",

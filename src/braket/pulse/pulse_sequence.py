@@ -46,7 +46,7 @@ class PulseSequence:
 
     def __init__(self):
         self._capture_v0_count = 0
-        self._program = Program()
+        self._program = Program(simplify_constants=False)
         self._frames = {}
         self._waveforms = {}
         self._free_parameters = set()
@@ -183,10 +183,7 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        if isinstance(duration, FreeParameterExpression):
-            for p in duration.expression.free_symbols:
-                self._free_parameters.add(FreeParameter(p.name))
-            duration = OQDurationLiteral(duration)
+        duration = self._format_parameter_ast(duration, type_=ast.DurationType())
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
@@ -276,9 +273,9 @@ class PulseSequence:
         """
         program = deepcopy(self._program)
         tree: ast.Program = program.to_ast(include_externs=False, ignore_needs_declaration=True)
-        new_tree: ast.Program = _FreeParameterTransformer(param_values).visit(tree)
+        new_tree: ast.Program = _FreeParameterTransformer(param_values, program).visit(tree)
 
-        new_program = Program()
+        new_program = Program(simplify_constants=False)
         new_program.declared_vars = program.declared_vars
         new_program.undeclared_vars = program.undeclared_vars
         for x in new_tree.statements:
@@ -325,13 +322,19 @@ class PulseSequence:
         return ast_to_qasm(tree)
 
     def _format_parameter_ast(
-        self, parameter: Union[float, FreeParameterExpression]
+        self,
+        parameter: Union[float, FreeParameterExpression],
+        type_: ast.ClassicalType = ast.FloatType(),
     ) -> Union[float, _FreeParameterExpressionIdentifier]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
-            return _FreeParameterExpressionIdentifier(parameter)
-        return parameter
+            return _FreeParameterExpressionIdentifier(parameter, type_)
+        else:
+            if isinstance(type_, ast.FloatType):
+                return parameter
+            elif isinstance(type_, ast.DurationType):
+                return OQDurationLiteral(parameter)
 
     def _parse_arg_from_calibration_schema(
         self, argument: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]

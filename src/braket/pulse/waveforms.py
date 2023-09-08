@@ -21,7 +21,6 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
-from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
@@ -457,7 +456,7 @@ def _map_to_oqpy_type(
 ) -> Union[_FreeParameterExpressionIdentifier, OQPyExpression]:
     if isinstance(parameter, FreeParameterExpression):
         return (
-            OQDurationLiteral(parameter)
+            _FreeParameterExpressionIdentifier(parameter, duration)
             if is_duration_type
             else _FreeParameterExpressionIdentifier(parameter)
         )
