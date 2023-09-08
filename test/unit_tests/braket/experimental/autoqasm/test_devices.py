@@ -24,7 +24,7 @@ from braket.device_schema import DeviceActionType
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.devices import Devices
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.instructions import cphaseshift00, h, x
+from braket.experimental.autoqasm.instructions import cnot, cphaseshift00, h, x
 
 RIGETTI_REGION = "us-west-1"
 
@@ -179,3 +179,41 @@ def test_unsupported_verbatim_block(aws_device: Mock) -> None:
 
     with pytest.raises(errors.VerbatimBlockNotAllowed):
         my_program()
+
+
+def test_validate_connectivity(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["rx, ry, rz"]
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
+    aws_device.properties.paradigm.nativeGateSet = ["H", "CNOT"]
+    aws_device.properties.paradigm.connectivity.fullyConnected = False
+    aws_device.properties.paradigm.connectivity.connectivityGraph = {"0": ["2"], "1": ["0"]}
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            h("$0")
+            cnot("$0", "$1")
+
+    with pytest.raises(errors.InvalidTargetQubit):
+        my_program()
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            h("$0")
+            cnot("$0", "$2")
+            cnot("$1", "$0")
+
+    assert my_program().to_ir()
+
+    aws_device.properties.paradigm.connectivity.fullyConnected = True
+    aws_device.properties.paradigm.connectivity.connectivityGraph = {}
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            h("$0")
+            cnot("$0", "$7")
+            cnot("$5", "$2")
+
+    assert my_program().to_ir()

@@ -41,6 +41,10 @@ class InvalidGateDefinition(AutoQasmError):
     """Gate definition does not meet the necessary requirements."""
 
 
+class InvalidTargetQubit(AutoQasmError):
+    """Target qubit is invalid in the current context."""
+
+
 class UnsupportedGate(AutoQasmError):
     """Gate is not supported by the target device."""
 

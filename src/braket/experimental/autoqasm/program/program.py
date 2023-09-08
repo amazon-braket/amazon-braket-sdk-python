@@ -171,7 +171,12 @@ class ProgramConversionContext:
         device = self.get_target_device()
         if device:
             valid_gates = self._gates_defined.union(
-                device.properties.action[DeviceActionType.OPENQASM].supportedOperations
+                [
+                    op.lower()
+                    for op in device.properties.action[
+                        DeviceActionType.OPENQASM
+                    ].supportedOperations
+                ]
             )
             invalid_gates_used = self._gates_used.difference(valid_gates)
             if invalid_gates_used:
@@ -212,19 +217,21 @@ class ProgramConversionContext:
             errors.UnsupportedNativeGate: If the gate is being used inside a verbatim block
                 and the gate is not a native gate of the target device.
         """
+        if not self._in_verbatim:
+            self._gates_used.add(gate_name)
+            return
+
         # If we are in verbatim and there is a target device specified, validate that the
         # provided gate is a native gate on the target device.
         device = self.get_target_device()
-        if device and self._in_verbatim:
-            native_gates = device.properties.paradigm.nativeGateSet
+        if device:
+            native_gates = [gate.lower() for gate in device.properties.paradigm.nativeGateSet]
             if gate_name not in native_gates:
                 raise errors.UnsupportedNativeGate(
                     f'The gate "{gate_name}" is not a native gate of the target '
                     f'device "{device.name}". Only native gates may be used inside a verbatim '
                     f"block. The native gates of the device are: {native_gates}"
                 )
-
-        self._gates_used.add(gate_name)
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
@@ -282,30 +289,57 @@ class ProgramConversionContext:
             angles (List[Any]): The list of target angles to validate.
 
         Raises:
+            errors.InvalidTargetQubit: Target qubits are invalid in the current context.
             errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
-        if not self._gate_definitions_processing:
-            return
+        if self._in_verbatim:
+            self._validate_verbatim_target_qubits(qubits)
 
-        gate_name = self._gate_definitions_processing[-1]["name"]
-        gate_qubit_args = self._gate_definitions_processing[-1]["gate_args"].qubits
+        if self._gate_definitions_processing:
+            gate_name = self._gate_definitions_processing[-1]["name"]
+            gate_qubit_args = self._gate_definitions_processing[-1]["gate_args"].qubits
+            for qubit in qubits:
+                if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
+                    qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
+                    raise errors.InvalidGateDefinition(
+                        f'Gate definition "{gate_name}" uses qubit "{qubit_name}" which is not '
+                        "an argument to the gate. Gates may only operate on qubits which are "
+                        "passed as arguments."
+                    )
+            gate_angle_args = self._gate_definitions_processing[-1]["gate_args"].angles
+            gate_angle_arg_names = [arg.name for arg in gate_angle_args]
+            for angle in angles:
+                if isinstance(angle, oqpy.base.Var) and angle.name not in gate_angle_arg_names:
+                    raise errors.InvalidGateDefinition(
+                        f'Gate definition "{gate_name}" uses angle "{angle.name}" which is not '
+                        "an argument to the gate. Gates may only use constant angles or angles "
+                        "passed as arguments."
+                    )
+
+    def _validate_verbatim_target_qubits(self, qubits: List[Any]) -> None:
+        # Only physical target qubits are allowed in a verbatim block:
         for qubit in qubits:
-            if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
+            if not isinstance(qubit, str):
                 qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
-                raise errors.InvalidGateDefinition(
-                    f'Gate definition "{gate_name}" uses qubit "{qubit_name}" which is not '
-                    "an argument to the gate. Gates may only operate on qubits which are "
-                    "passed as arguments."
+                raise errors.InvalidTargetQubit(
+                    f'Qubit "{qubit_name}" is not a physical qubit. Only physical qubits such '
+                    'as "$0" can be targeted inside a verbatim block.'
                 )
-        gate_angle_args = self._gate_definitions_processing[-1]["gate_args"].angles
-        gate_angle_arg_names = [arg.name for arg in gate_angle_args]
-        for angle in angles:
-            if isinstance(angle, oqpy.base.Var) and angle.name not in gate_angle_arg_names:
-                raise errors.InvalidGateDefinition(
-                    f'Gate definition "{gate_name}" uses angle "{angle.name}" which is not '
-                    "an argument to the gate. Gates may only use constant angles or angles "
-                    "passed as arguments."
-                )
+
+        # Validate physical qubit connectivity on the target device:
+        device = self.get_target_device()
+        if device and not device.properties.paradigm.connectivity.fullyConnected:
+            connectivity_graph = device.properties.paradigm.connectivity.connectivityGraph
+            start_qubit = qubits[0].strip("$")
+            valid_target_qubits = connectivity_graph[start_qubit]
+            for qubit in qubits[1:]:
+                target_qubit = qubit.strip("$")
+                if target_qubit not in valid_target_qubits:
+                    raise errors.InvalidTargetQubit(
+                        f'Qubit "{start_qubit}" is not connected to qubit "{target_qubit}" '
+                        f'on device "{device.name}". The connectivity graph of the device is: '
+                        f"{connectivity_graph}"
+                    )
 
     def get_oqpy_program(
         self, scope: ProgramScope = ProgramScope.CURRENT, mode: ProgramMode = ProgramMode.NONE
