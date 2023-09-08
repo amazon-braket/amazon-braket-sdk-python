@@ -608,14 +608,11 @@ def _validate_calibration_args(
         func_args (aq_program.GateArgs): The gate function arguments.
     """
     gate_args = _get_gate_args(gate_function)
-    gate_args_names = [var.name for var in gate_args.angles] + [
-        var.name for var in gate_args.qubits
-    ]
-    func_args_names = [var.name for var in func_args.angles] + [
-        var.name for var in func_args.qubits
-    ]
+    gate_args_names = [var.name for var in gate_args._args]
+    func_args_names = [var.name for var in func_args._args]
     decorator_args_names = decorator_args.keys()
 
+    # validate the name of args
     if not set(gate_args_names) == set(decorator_args_names) | set(func_args_names):
         raise errors.InvalidCalibrationDefinition(
             "The union of calibration decorator arguments and function arguments must match the"
@@ -626,6 +623,29 @@ def _validate_calibration_args(
         raise errors.InvalidCalibrationDefinition(
             "The function arguments must not duplicate any argument in the calibration decorator."
         )
+
+    # validate the type of args
+    for qubit_arg in gate_args.qubits:
+        if qubit_arg.name in decorator_args_names and not is_qubit_identifier_type(
+            decorator_args[qubit_arg.name]
+        ):
+            raise errors.ParameterTypeError(
+                f'Parameter "{qubit_arg.name}" must have a type hint of float.'
+            )
+
+    for angle_arg in gate_args.angles:
+        if angle_arg.name in decorator_args_names and not isinstance(
+            decorator_args[angle_arg.name], float
+        ):
+            raise errors.ParameterTypeError(
+                f'Parameter "{angle_arg.name}" must have a type hint of float.'
+            )
+        if angle_arg.name in func_args_names and angle_arg.name not in [
+            var.name for var in func_args.angles
+        ]:
+            raise errors.ParameterTypeError(
+                f'Parameter "{angle_arg.name}" must have a type hint of float.'
+            )
 
 
 def _categorize_calibration_decorator_args(decorator_kwargs) -> Tuple[List[str], List[str]]:
@@ -646,7 +666,7 @@ def _categorize_calibration_decorator_args(decorator_kwargs) -> Tuple[List[str],
         elif isinstance(v, float):
             decorator_angle_names.append(k)
         else:
-            raise errors.InvalidCalibrationDefinition(
+            raise errors.ParameterTypeError(
                 f"Argument {k} does not have a valid type of qubits (aq.Qubit) or angles (float). "
             )
 

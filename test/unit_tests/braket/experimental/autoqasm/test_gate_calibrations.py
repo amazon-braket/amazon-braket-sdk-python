@@ -80,7 +80,7 @@ def test_gate_calibrations_variable_args():
 
 
 def test_gate_calibrations_invalid_args():
-    """test gate calibrations with invalid args"""
+    """test gate calibrations with invalid args name"""
 
     @aq.pulse_sequence(implements=rx, target="$1", foo=0)
     def cal_1(angle: float):
@@ -92,6 +92,34 @@ def test_gate_calibrations_invalid_args():
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
         _ = my_program().bind_calibrations(cal_1)
+
+
+def test_gate_calibrations_invalid_type():
+    """test gate calibrations with invalid args type"""
+
+    @aq.pulse_sequence(implements=rx, target=0.123)
+    def cal_1(angle: float):
+        pulse.delay(1, angle)
+
+    @aq.pulse_sequence(implements=rx, target={"foo": "bar"})
+    def cal_2(angle: float):
+        pulse.delay(1, angle)
+
+    @aq.pulse_sequence(implements=rx, target=0, angle="$0")
+    def cal_3():
+        pulse.delay(1, 0.123)
+
+    @aq.pulse_sequence(implements=rx, target=0)
+    def cal_4(angle: aq.Qubit):
+        pulse.delay(1, angle)
+
+    @aq.main
+    def my_program():
+        rx("$1", 1.0)
+
+    for cal in [cal_1, cal_2, cal_3, cal_4]:
+        with pytest.raises(errors.ParameterTypeError):
+            _ = my_program().bind_calibrations(cal)
 
 
 def test_gate_calibrations_insufficient_args():
