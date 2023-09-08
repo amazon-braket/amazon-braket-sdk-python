@@ -20,21 +20,26 @@ from oqpy.timing import OQDurationLiteral
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
-class _FreeParameterExpressionIdentifier(ast.Identifier):
+class _FreeParameterExpressionIdentifier(ast.QASMNode):
     """Dummy AST node with FreeParameterExpression instance attached"""
 
     def __init__(
-        self, expression: FreeParameterExpression, type: ast.ClassicalType = ast.FloatType()
+        self, expression: FreeParameterExpression, type_: ast.ClassicalType = ast.FloatType()
     ):
-        super().__init__(name=f"FreeParameterExpression({expression})")
+        self.name = f"FreeParameterExpression({expression})"
         self._expression = expression
-        self.type = type
+        self.type_ = type_
 
     @property
     def expression(self) -> FreeParameterExpression:
         return self._expression
 
-    def to_ast(self) -> ast.Identifier:
+    def __repr__(self) -> str:
+        return f"_FreeParameterExpressionIdentifier(name={self.name})"
+
+    def to_ast(self, program: Program) -> ast.Expression:
+        if isinstance(self.type_, ast.DurationType):
+            return ast.DurationLiteral(self, ast.TimeUnit.s)
         return self
 
 
@@ -58,11 +63,24 @@ class _FreeParameterTransformer(QASMTransformer):
         """
         new_value = identifier.expression.subs(self.param_values)
         if isinstance(new_value, FreeParameterExpression):
-            return _FreeParameterExpressionIdentifier(new_value, identifier.type)
-        else:
-            if isinstance(identifier.type, ast.FloatType):
-                return ast.FloatLiteral(new_value)
-            elif isinstance(identifier.type, ast.DurationType):
-                return OQDurationLiteral(new_value).to_ast(self.program)
-            else:
-                raise NotImplementedError(f"{identifier.type} is not a supported type.")
+            return _FreeParameterExpressionIdentifier(new_value, identifier.type_)
+        return ast.FloatLiteral(new_value)
+
+    def visit_DurationLiteral(self, duration_literal: ast.DurationLiteral) -> ast.DurationLiteral:
+        """Visit Duration Literal.
+            node.value, node.unit (node.unit.name, node.unit.value)
+            1
+        Args:
+            duration_literal (DurationLiteral): The duration literal.
+        Returns:
+            DurationLiteral: The transformed duration literal.
+        """
+        duration = duration_literal.value
+        if not isinstance(duration, _FreeParameterExpressionIdentifier):
+            return duration_literal
+        new_duration = duration.expression.subs(self.param_values)
+        if isinstance(new_duration, FreeParameterExpression):
+            return _FreeParameterExpressionIdentifier(new_duration, duration.type_).to_ast(
+                self.program
+            )
+        return OQDurationLiteral(new_duration).to_ast(self.program)

@@ -331,10 +331,9 @@ class PulseSequence:
                 self._free_parameters.add(FreeParameter(p.name))
             return _FreeParameterExpressionIdentifier(parameter, type_)
         else:
-            if isinstance(type_, ast.FloatType):
-                return parameter
-            elif isinstance(type_, ast.DurationType):
+            if isinstance(type_, ast.DurationType):
                 return OQDurationLiteral(parameter)
+            return parameter
 
     def _parse_arg_from_calibration_schema(
         self, argument: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
