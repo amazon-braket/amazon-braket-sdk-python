@@ -633,7 +633,7 @@ def _validate_calibration_args(
                 f'Parameter "{qubit_arg.name}" must have a type of aq.Qubit.'
             )
         if qubit_arg.name in func_args_names and qubit_arg.name not in [
-            var.name for var in func_args.angles
+            var.name for var in func_args.qubits
         ]:
             raise errors.ParameterTypeError(
                 f'Parameter "{qubit_arg.name}" must have a type hint of aq.Qubit.'
