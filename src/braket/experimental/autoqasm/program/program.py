@@ -222,11 +222,12 @@ class ProgramConversionContext:
             return
 
         # If we are in verbatim and there is a target device specified, validate that the
-        # provided gate is a native gate on the target device.
+        # provided gate is a native gate on the target device (or is a custom gate definition).
         device = self.get_target_device()
         if device:
             native_gates = [gate.lower() for gate in device.properties.paradigm.nativeGateSet]
-            if gate_name not in native_gates:
+            allowed_verbatim_gates = self._gates_defined.union(native_gates)
+            if gate_name not in allowed_verbatim_gates:
                 raise errors.UnsupportedNativeGate(
                     f'The gate "{gate_name}" is not a native gate of the target '
                     f'device "{device.name}". Only native gates may be used inside a verbatim '
@@ -292,7 +293,7 @@ class ProgramConversionContext:
             errors.InvalidTargetQubit: Target qubits are invalid in the current context.
             errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
-        if self._in_verbatim:
+        if self._in_verbatim and not self._gate_definitions_processing:
             self._validate_verbatim_target_qubits(qubits)
 
         if self._gate_definitions_processing:
