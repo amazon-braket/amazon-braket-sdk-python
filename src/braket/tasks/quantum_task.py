@@ -47,7 +47,7 @@ class QuantumTask(ABC):
     def queue_position(self) -> QueuePosition:
         """Get the queue position of the quantum task.
         Returns:
-            Dict[str, str]: queue position of the quantum task.
+            QueuePosition: queue position of the quantum task.
         """
 
     @abstractmethod
