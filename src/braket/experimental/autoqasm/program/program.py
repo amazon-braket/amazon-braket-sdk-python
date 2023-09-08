@@ -243,26 +243,28 @@ class ProgramConversionContext:
         Raises:
             errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
-        if self._gate_definitions_processing:
-            gate_name = self._gate_definitions_processing[-1]["name"]
-            gate_qubit_args = self._gate_definitions_processing[-1]["gate_args"].qubits
-            for qubit in qubits:
-                if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
-                    qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
-                    raise errors.InvalidGateDefinition(
-                        f'Gate definition "{gate_name}" uses qubit "{qubit_name}" which is not '
-                        "an argument to the gate. Gates may only operate on qubits which are "
-                        "passed as arguments."
-                    )
-            gate_angle_args = self._gate_definitions_processing[-1]["gate_args"].angles
-            gate_angle_arg_names = [arg.name for arg in gate_angle_args]
-            for angle in angles:
-                if isinstance(angle, oqpy.base.Var) and angle.name not in gate_angle_arg_names:
-                    raise errors.InvalidGateDefinition(
-                        f'Gate definition "{gate_name}" uses angle "{angle.name}" which is not '
-                        "an argument to the gate. Gates may only use constant angles or angles "
-                        "passed as arguments."
-                    )
+        if not self._gate_definitions_processing:
+            return
+
+        gate_name = self._gate_definitions_processing[-1]["name"]
+        gate_qubit_args = self._gate_definitions_processing[-1]["gate_args"].qubits
+        for qubit in qubits:
+            if not isinstance(qubit, oqpy.Qubit) or qubit not in gate_qubit_args:
+                qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
+                raise errors.InvalidGateDefinition(
+                    f'Gate definition "{gate_name}" uses qubit "{qubit_name}" which is not '
+                    "an argument to the gate. Gates may only operate on qubits which are "
+                    "passed as arguments."
+                )
+        gate_angle_args = self._gate_definitions_processing[-1]["gate_args"].angles
+        gate_angle_arg_names = [arg.name for arg in gate_angle_args]
+        for angle in angles:
+            if isinstance(angle, oqpy.base.Var) and angle.name not in gate_angle_arg_names:
+                raise errors.InvalidGateDefinition(
+                    f'Gate definition "{gate_name}" uses angle "{angle.name}" which is not '
+                    "an argument to the gate. Gates may only use constant angles or angles "
+                    "passed as arguments."
+                )
 
     def get_oqpy_program(
         self, scope: ProgramScope = ProgramScope.CURRENT, mode: ProgramMode = ProgramMode.NONE
