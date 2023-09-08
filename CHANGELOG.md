@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.54.3.post0 (2023-09-04)
+
+### Documentation Changes
+
+ * standardize task and job naming to quantum task and hybrid job
+
 ## v1.54.3 (2023-08-30)
 
 ### Bug Fixes and Other Changes
