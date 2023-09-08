@@ -24,17 +24,17 @@ from braket.jobs.local.local_job_container import _LocalJobContainer
 def setup_container(
     container: _LocalJobContainer, aws_session: AwsSession, **creation_kwargs
 ) -> Dict[str, str]:
-    """Sets up a container with prerequisites for running a Braket Job. The prerequisites are
-    based on the options the customer has chosen for the job. Similarly, any environment variables
-    that are needed during runtime will be returned by this function.
+    """Sets up a container with prerequisites for running a Braket Hybrid Job. The prerequisites are
+    based on the options the customer has chosen for the hybrid job. Similarly, any environment
+    variables that are needed during runtime will be returned by this function.
 
     Args:
-        container(_LocalJobContainer): The container that will run the braket job.
+        container(_LocalJobContainer): The container that will run the braket hybrid job.
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
 
     Returns:
-        Dict[str, str]: A dictionary of environment variables that reflect Braket Jobs options
-        requested by the customer.
+        Dict[str, str]: A dictionary of environment variables that reflect Braket Hybrid Jobs
+        options requested by the customer.
     """
     logger = getLogger(__name__)
     _create_expected_paths(container, **creation_kwargs)
@@ -52,10 +52,10 @@ def setup_container(
 
 
 def _create_expected_paths(container: _LocalJobContainer, **creation_kwargs) -> None:
-    """Creates the basic paths required for Braket Jobs to run.
+    """Creates the basic paths required for Braket Hybrid Jobs to run.
 
     Args:
-        container(_LocalJobContainer): The container that will run the braket job.
+        container(_LocalJobContainer): The container that will run the braket hybrid job.
     """
     container.makedir("/opt/ml/model")
     container.makedir(creation_kwargs["checkpointConfig"]["localPath"])
@@ -95,7 +95,7 @@ def _get_env_script_mode_config(script_mode_config: Dict[str, str]) -> Dict[str,
 
     Args:
         script_mode_config (Dict[str, str]): The values for scriptModeConfig in the boto3 input
-            parameters for running a Braket Job.
+            parameters for running a Braket Hybrid Job.
 
     Returns:
         Dict[str, str]: The set of key/value pairs that should be added as environment variables
@@ -137,7 +137,7 @@ def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[st
 
 def _get_env_hyperparameters() -> Dict[str, str]:
     """Gets the env variable for hyperparameters. This should only be added if the customer has
-    provided hyperpameters to the job.
+    provided hyperpameters to the hybrid job.
 
     Returns:
         Dict[str, str]: The set of key/value pairs that should be added as environment variables
@@ -150,7 +150,7 @@ def _get_env_hyperparameters() -> Dict[str, str]:
 
 def _get_env_input_data() -> Dict[str, str]:
     """Gets the env variable for input data. This should only be added if the customer has
-    provided input data to the job.
+    provided input data to the hybrid job.
 
     Returns:
         Dict[str, str]: The set of key/value pairs that should be added as environment variables
@@ -187,13 +187,13 @@ def _download_input_data(
     download_dir: str,
     input_data: Dict[str, Any],
 ) -> None:
-    """Downloads input data for a job.
+    """Downloads input data for a hybrid job.
 
     Args:
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
         download_dir (str): The directory path to download to.
         input_data (Dict[str, Any]): One of the input data in the boto3 input parameters for
-            running a Braket Job.
+            running a Braket Hybrid Job.
     """
     # If s3 prefix is the full name of a directory and all keys are inside
     # that directory, the contents of said directory will be copied into a

@@ -30,7 +30,8 @@ InstructionOperator = Operator
 
 class Instruction:
     """
-    An instruction is a quantum directive that describes the task to perform on a quantum device.
+    An instruction is a quantum directive that describes the quantum task to perform on a quantum
+    device.
     """
 
     def __init__(

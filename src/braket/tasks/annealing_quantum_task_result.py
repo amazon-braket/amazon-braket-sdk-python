@@ -35,8 +35,8 @@ class AnnealingQuantumTaskResult:
             output or energy of the solutions.
         variable_count (int): the number of variables
         problem_type (ProblemType): the type of annealing problem
-        task_metadata (TaskMetadata): Task metadata.
-        additional_metadata (AdditionalMetadata): Additional metadata about the task
+        task_metadata (TaskMetadata): Quantum task metadata.
+        additional_metadata (AdditionalMetadata): Additional metadata about the quantum task
     """
 
     record_array: numpy.recarray
