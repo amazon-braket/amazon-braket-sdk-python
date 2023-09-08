@@ -20,10 +20,11 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.aws import AwsDevice
+from braket.device_schema import DeviceActionType
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.devices import Devices
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.instructions import h
+from braket.experimental.autoqasm.instructions import cphaseshift00, h
 
 RIGETTI_REGION = "us-west-1"
 
@@ -48,10 +49,10 @@ MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON = {
         "shotsRange": [1, 10],
     },
     "action": {
-        "braket.ir.jaqcd.program": {
-            "actionType": "braket.ir.jaqcd.program",
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
             "version": ["1"],
-            "supportedOperations": ["H"],
+            "supportedOperations": ["h"],
         }
     },
     "paradigm": {"qubitCount": 30},
@@ -98,6 +99,9 @@ def aws_device():
     _aws_device = Mock()
     _aws_device.name = "Mock SV1 Device"
     _aws_device.properties.paradigm.qubitCount = 34
+    _aws_device_action = Mock()
+    _aws_device_action.supportedOperations = ["h"]
+    _aws_device.properties.action = {DeviceActionType.OPENQASM: _aws_device_action}
     return _aws_device
 
 
@@ -133,4 +137,13 @@ def test_insufficient_qubits(aws_device: Mock) -> None:
         pass
 
     with pytest.raises(errors.InsufficientQubitCountError):
+        my_program()
+
+
+def test_unsupported_gate(aws_device: Mock) -> None:
+    @aq.main(device=aws_device)
+    def my_program():
+        cphaseshift00(0, 1, 0.123)
+
+    with pytest.raises(errors.UnsupportedGate):
         my_program()

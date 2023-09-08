@@ -31,6 +31,7 @@ def _qubit_instruction(
     program_conversion_context.validate_gate_targets(qubits, args)
 
     # Add the instruction to the program.
+    program_conversion_context.register_gate(name)
     program_mode = aq_program.ProgramMode.UNITARY if is_unitary else aq_program.ProgramMode.NONE
     oqpy_program = program_conversion_context.get_oqpy_program(mode=program_mode)
     oqpy_program.gate([_qubit(q) for q in qubits], name, *args)

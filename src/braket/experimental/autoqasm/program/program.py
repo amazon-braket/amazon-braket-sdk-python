@@ -22,6 +22,7 @@ from typing import Any, List, Optional, Union
 import oqpy.base
 
 from braket.circuits.serialization import IRType, SerializableProgram
+from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
 
@@ -153,7 +154,9 @@ class ProgramConversionContext:
         self.return_variable = None
         self._oqpy_program_stack = [oqpy.Program()]
         self._gate_definitions_processing = []
-        self._qubits_seen = set()
+        self._gates_defined = set()
+        self._gates_used = set()
+        self._virtual_qubits_used = set()
         self._var_idx = 0
         self._has_pulse_control = False
 
@@ -163,6 +166,19 @@ class ProgramConversionContext:
         Returns:
             Program: The program object.
         """
+        # Validate the gates for the target device
+        device = self.get_target_device()
+        if device:
+            valid_gates = self._gates_defined.union(
+                device.properties.action[DeviceActionType.OPENQASM].supportedOperations
+            )
+            invalid_gates_used = self._gates_used.difference(valid_gates)
+            if invalid_gates_used:
+                raise errors.UnsupportedGate(
+                    f'The target device "{device.name}" does not support '
+                    f"the following gates used in the program: {invalid_gates_used}"
+                )
+
         return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property
@@ -173,17 +189,21 @@ class ProgramConversionContext:
             List[int]: The list of virtual qubits, e.g. [0, 1, 2]
         """
         # Can be memoized or otherwise made more performant
-        return sorted(list(self._qubits_seen))
+        return sorted(list(self._virtual_qubits_used))
 
     def register_qubit(self, qubit: int) -> None:
-        """Register a virtual qubit to use in this program."""
-        self._qubits_seen.add(qubit)
+        """Register a virtual qubit that is used in this program."""
+        self._virtual_qubits_used.add(qubit)
 
     def get_declared_qubits(self) -> Optional[int]:
         """Return the number of qubits to declare in the program, as specified by the user.
         Returns None if the user did not specify how many qubits are in the program.
         """
         return self.user_config.num_qubits
+
+    def register_gate(self, gate_name: str) -> None:
+        """Register a gate that is used in this program."""
+        self._gates_used.add(gate_name)
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
@@ -322,6 +342,7 @@ class ProgramConversionContext:
             gate_name (str): The name of the gate being defined.
             gate_args (GateArgs): The list of arguments to the gate.
         """
+        self._gates_defined.add(gate_name)
         try:
             self._gate_definitions_processing.append({"name": gate_name, "gate_args": gate_args})
             with oqpy.gate(
