@@ -15,7 +15,6 @@ import asyncio
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Union
 
-from braket.queue_information.queue_position import QueuePosition
 from braket.tasks.annealing_quantum_task_result import AnnealingQuantumTaskResult
 from braket.tasks.gate_model_quantum_task_result import GateModelQuantumTaskResult
 from braket.tasks.photonic_model_quantum_task_result import PhotonicModelQuantumTaskResult
@@ -41,13 +40,6 @@ class QuantumTask(ABC):
         """Get the state of the quantum task.
         Returns:
             str: State of the quantum task.
-        """
-
-    @abstractmethod
-    def queue_position(self) -> QueuePosition:
-        """Get the queue position of the quantum task.
-        Returns:
-            QueuePosition: queue position of the quantum task.
         """
 
     @abstractmethod

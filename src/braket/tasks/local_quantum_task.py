@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import asyncio
-from typing import Dict, Union
+from typing import Union
 
 from braket.tasks import (
     AnnealingQuantumTaskResult,
@@ -47,9 +47,6 @@ class LocalQuantumTask(QuantumTask):
 
     def state(self) -> str:
         return "COMPLETED"
-
-    def queue_position(self) -> Dict[str, str]:
-        raise NotImplementedError("Cannot show queue position for completed task")
 
     def result(
         self,

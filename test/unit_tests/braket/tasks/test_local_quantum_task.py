@@ -56,12 +56,6 @@ def test_async():
     TASK.async_result()
 
 
-def test_queue_position():
-    error_message = "Cannot show queue position for completed task"
-    with pytest.raises(NotImplementedError, match=error_message):
-        TASK.queue_position()
-
-
 def test_str():
     expected = "LocalQuantumTask('id':{})".format(TASK.id)
     assert str(TASK) == expected

@@ -30,9 +30,9 @@ class QueuePriority(str, Enum):
 
 
 @dataclass
-class QueuePosition:
+class QuantumTaskQueueInfo:
     """
-    Represents information related to data fetched from metadata.
+    Represents quantum tasks queue information.
 
     Attributes:
         queue_position (str): current position of your quantum task within a respective

@@ -12,9 +12,9 @@
 # language governing permissions and limitations under the License.
 
 from braket.aws import AwsDevice
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueuePriority
 from braket.circuits import Circuit
 from braket.devices import Devices
-from braket.queue_information import QueuePosition, QueuePriority
 
 
 def test_task_queue_position():
@@ -27,7 +27,7 @@ def test_task_queue_position():
     queue_information = task.queue_position()
 
     # data type validations
-    assert isinstance(queue_information, QueuePosition)
+    assert isinstance(queue_information, QuantumTaskQueueInfo)
     assert isinstance(queue_information.queue_priority, QueuePriority)
     assert isinstance(queue_information.queue_position, str)
 

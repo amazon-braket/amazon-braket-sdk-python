@@ -26,6 +26,7 @@ from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueuePriority
 from braket.circuits import Circuit
 from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import (
@@ -47,7 +48,6 @@ from braket.error_mitigation.debias import Debias
 from braket.ir.blackbird import Program as BlackbirdProgram
 from braket.ir.openqasm import Program as OpenQASMProgram
 from braket.pulse import Frame, Port, PulseSequence
-from braket.queue_information import QueuePosition, QueuePriority
 from braket.tasks import (
     AnalogHamiltonianSimulationQuantumTaskResult,
     AnnealingQuantumTaskResult,
@@ -206,7 +206,7 @@ def test_metadata_call_if_none(quantum_task):
 def test_queue_position(quantum_task):
     state_1 = "QUEUED"
     _mock_metadata(quantum_task._aws_session, state_1)
-    assert quantum_task.queue_position() == QueuePosition(
+    assert quantum_task.queue_position() == QuantumTaskQueueInfo(
         queue_position="2", queue_priority=QueuePriority.NORMAL, message=None
     )
 
@@ -215,7 +215,7 @@ def test_queue_position(quantum_task):
         f"'Task is in {state_2} status. AmazonBraket does not show queue position for this status.'"
     )
     _mock_metadata(quantum_task._aws_session, state_2)
-    assert quantum_task.queue_position() == QueuePosition(
+    assert quantum_task.queue_position() == QuantumTaskQueueInfo(
         queue_position="None", queue_priority=QueuePriority.NORMAL, message=message
     )
 
