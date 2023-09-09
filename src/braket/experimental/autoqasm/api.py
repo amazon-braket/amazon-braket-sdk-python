@@ -90,7 +90,7 @@ def gate(*args) -> Callable[[Any], None]:
     return _function_wrapper(args, _convert_gate)
 
 
-def gate_calibration(*args, implements: Callable, **kwargs) -> Callable[None, GateCalibration]:
+def gate_calibration(*args, implements: Callable, **kwargs) -> Callable[[], GateCalibration]:
     """A decorator that register the decorated function as a gate calibration definition. The
     decorated function is added to a main program using `with_calibrations` method of the main
     program. The fixed values of qubits or angles that the calibration is implemented against
@@ -101,7 +101,7 @@ def gate_calibration(*args, implements: Callable, **kwargs) -> Callable[None, Ga
         implements (Callable): Gate function.
 
     Returns:
-        Callable[, GateCalibration]: A callable to be added to a main program using
+        Callable[[], GateCalibration]: A callable to be added to a main program using
         `with_calibrations` method of the main program.
     """
     converter_args = {"gate_function": implements, **kwargs}
