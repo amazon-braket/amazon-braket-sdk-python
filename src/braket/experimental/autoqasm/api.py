@@ -566,31 +566,48 @@ def _convert_calibration(
     Returns:
         GateCalibration: Object representing the calibration definition.
     """
-    decorator_qubit_names, decorator_angle_names = _categorize_calibration_decorator_args(
-        decorator_kwargs
-    )
     func_args = _get_gate_args(f)
     _validate_calibration_args(gate_function, decorator_kwargs, func_args)
 
-    fixed_valued_qubits = [decorator_kwargs[name] for name in decorator_qubit_names]
-    fixed_valued_angles = [decorator_kwargs[name] for name in decorator_angle_names]
-    variable_qubits = [oqpy.Qubit(name=q.name) for q in func_args.qubits]
-    variable_angles = [oqpy.FloatVar(name=a.name) for a in func_args.angles]
-    qubits = fixed_valued_qubits + variable_qubits
-    angles = fixed_valued_angles + variable_angles
+    union_deco_func_args = {**decorator_kwargs, **{var.name: var for var in func_args._args}}
 
-    func_call_kwargs = {var.name: var for var in variable_qubits + variable_angles}
+    gate_calibration_qubits = []
+    gate_calibration_angles = []
+    gate_args = _get_gate_args(gate_function)
+    for i, var in enumerate(gate_args._args):
+        name = var.name
+        value = union_deco_func_args[name]
+        is_qubit = i in gate_args.qubit_indices
+
+        if is_qubit and not is_qubit_identifier_type(value):
+            raise errors.ParameterTypeError(f'Parameter "{name}" must have a type of aq.Qubit.')
+
+        if not is_qubit and not isinstance(value, (float, oqpy.AngleVar)):
+            raise errors.ParameterTypeError(f'Parameter "{name}" must have a type of float.')
+
+        if is_qubit:
+            gate_calibration_qubits.append(value)
+        else:
+            gate_calibration_angles.append(value)
+
+    func_call_kwargs = {
+        **{var.name: var for var in func_args.qubits},
+        **{
+            var.name: oqpy.FloatVar(name=var.name, needs_declaration=False)
+            for var in func_args.angles
+        },
+    }
 
     with aq_program.build_program() as program_conversion_context:
         with program_conversion_context.calibration_definition(
-            gate_function.__name__, qubits, angles
+            gate_function.__name__, gate_calibration_qubits, gate_calibration_angles
         ):
             aq_transpiler.converted_call(f, [], func_call_kwargs, options=options)
 
     return GateCalibration(
         gate_function=gate_function,
-        qubits=qubits,
-        angles=angles,
+        qubits=gate_calibration_qubits,
+        angles=gate_calibration_angles,
         oqpy_program=program_conversion_context.get_oqpy_program(),
     )
 
@@ -623,57 +640,3 @@ def _validate_calibration_args(
         raise errors.InvalidCalibrationDefinition(
             "The function arguments must not duplicate any argument in the calibration decorator."
         )
-
-    # validate the type of args
-    for qubit_arg in gate_args.qubits:
-        if qubit_arg.name in decorator_args_names and not is_qubit_identifier_type(
-            decorator_args[qubit_arg.name]
-        ):
-            raise errors.ParameterTypeError(
-                f'Parameter "{qubit_arg.name}" must have a type of aq.Qubit.'
-            )
-        if qubit_arg.name in func_args_names and qubit_arg.name not in [
-            var.name for var in func_args.qubits
-        ]:
-            raise errors.ParameterTypeError(
-                f'Parameter "{qubit_arg.name}" must have a type hint of aq.Qubit.'
-            )
-
-    for angle_arg in gate_args.angles:
-        if angle_arg.name in decorator_args_names and not isinstance(
-            decorator_args[angle_arg.name], float
-        ):
-            raise errors.ParameterTypeError(
-                f'Parameter "{angle_arg.name}" must have a type of float.'
-            )
-        if angle_arg.name in func_args_names and angle_arg.name not in [
-            var.name for var in func_args.angles
-        ]:
-            raise errors.ParameterTypeError(
-                f'Parameter "{angle_arg.name}" must have a type hint of float.'
-            )
-
-
-def _categorize_calibration_decorator_args(decorator_kwargs) -> Tuple[List[str], List[str]]:
-    """Categorize the calibration decorator arguments into qubit and angle.
-
-    Args:
-        decorator_kwargs (Dict[str, Any]): The calibration decorator arguments.
-
-    Returns:
-        Tuple[List[str], List[str]]: The qubit and angle names.
-    """
-    decorator_qubit_names = []
-    decorator_angle_names = []
-
-    for k, v in decorator_kwargs.items():
-        if is_qubit_identifier_type(v):
-            decorator_qubit_names.append(k)
-        elif isinstance(v, float):
-            decorator_angle_names.append(k)
-        else:
-            raise errors.ParameterTypeError(
-                f"Argument {k} does not have a valid type of qubits (aq.Qubit) or angles (float). "
-            )
-
-    return decorator_qubit_names, decorator_angle_names

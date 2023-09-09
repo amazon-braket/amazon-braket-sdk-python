@@ -22,7 +22,7 @@ from openpulse.printer import dumps
 
 from braket.experimental.autoqasm import constants, errors, program
 
-QubitIdentifierType = Union[int, oqpy._ClassicalVar, oqpy.base.OQPyExpression, str]
+QubitIdentifierType = Union[int, oqpy._ClassicalVar, oqpy.base.OQPyExpression, str, oqpy.Qubit]
 
 
 def is_qubit_identifier_type(qubit: Any) -> bool:

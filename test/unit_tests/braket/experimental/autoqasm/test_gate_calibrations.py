@@ -69,7 +69,7 @@ def test_gate_calibrations_variable_args():
     expected = textwrap.dedent(
         """
         OPENQASM 3.0;
-        defcal rx(float[64] angle) $1 {
+        defcal rx(angle[32] angle) $1 {
             delay[angle * 1s] $1;
         }
         rx(1.0) $1;
@@ -221,7 +221,7 @@ def test_gate_calibrations_with_gate_definition():
         gate my_gate(a) q {
             h q;
         }
-        defcal my_gate(float[64] a) $0 {
+        defcal my_gate(angle[32] a) $0 {
             barrier $0;
             delay[a * 1s] $0;
         }
