@@ -89,11 +89,16 @@ class Program(SerializableProgram):
         self._oqpy_program = oqpy_program
         self._has_pulse_control = has_pulse_control
 
-    def bind_calibrations(self, gate_calibrations: Union[Callable, List[Callable]]) -> Program:
-        """Binds the gate calibrations to the program.
+    def with_calibrations(self, gate_calibrations: Union[Callable, List[Callable]]) -> Program:
+        """Add the gate calibrations to the program. The calibration added program is returned
+        as a new object. The original program is not modified.
 
         Args:
-            gate_calibrations (Union[Callable, List[Callable]]): The gate calibrations to bind.
+            gate_calibrations (Union[Callable, List[Callable]]): The gate calibrations to add to
+                the main program. Calibration are passed as callable without evaluation.
+
+        Returns:
+            Program: The program with gate calibrations added.
         """
         if isinstance(gate_calibrations, Callable):
             gate_calibrations = [gate_calibrations]

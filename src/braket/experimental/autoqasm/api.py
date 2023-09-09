@@ -90,24 +90,15 @@ def gate(*args) -> Callable[[Any], None]:
     return _function_wrapper(args, _convert_gate)
 
 
-def pulse_sequence(*args, **kwargs):
-    if "implements" in kwargs:
-        assert len(args) == 0, "Cannot specify both `implements` and positional arguments."
-        return _calibration(**kwargs)
-    else:
-        return main(*args, **kwargs)
-
-
-def _calibration(*args, implements: Callable, **kwargs):
-    """A decorator that register the decorated function as a calibration definition of a gate
-    in this `GateCalibrations` object.
+def gate_calibration(*args, implements: Callable, **kwargs):
+    """A decorator that register the decorated function as a gate calibration definition. The
+    decorated function is added to a main program using `with_calibrations` method of the main.
+    main program.
 
     Args:
-        gate_name (str): Name of the gate
-        qubits (Union[Qubit,Iterable[Qubit]]): The qubits on which the gate calibration is
-            defined.
-        angles (Union[float, Iterable[float]]): The angles at which the gate calibration is
-                defined. Defaults to [].
+        implements (Callable): Gate function.
+        kwargs (Union[Qubit, float]): The fixed value of qubits or angles that the calibration is
+            implemented against. The name of the kwargs must match the args of the gate function.
     """
     converter_args = {"gate_function": implements, **kwargs}
 

@@ -25,11 +25,11 @@ from braket.experimental.autoqasm.instructions import h, rx
 def test_gate_calibrations_fixed_args():
     """test gate calibrations with fixed args"""
 
-    @aq.pulse_sequence(implements=h, target="$0")
+    @aq.gate_calibration(implements=h, target="$0")
     def cal_1():
         pulse.barrier(0)
 
-    @aq.pulse_sequence(implements=rx, target="$1", angle=1.789)
+    @aq.gate_calibration(implements=rx, target="$1", angle=1.789)
     def cal_2():
         pulse.delay(1, 0.123)
 
@@ -51,14 +51,14 @@ def test_gate_calibrations_fixed_args():
         rx(1.0) $1;
         """
     ).strip()
-    qasm = my_program().bind_calibrations([cal_1, cal_2]).to_ir()
+    qasm = my_program().with_calibrations([cal_1, cal_2]).to_ir()
     assert qasm == expected
 
 
 def test_gate_calibrations_variable_args():
     """test gate calibrations with variable args"""
 
-    @aq.pulse_sequence(implements=rx, target="$1")
+    @aq.gate_calibration(implements=rx, target="$1")
     def cal_1(angle: float):
         pulse.delay(1, angle)
 
@@ -75,14 +75,14 @@ def test_gate_calibrations_variable_args():
         rx(1.0) $1;
         """
     ).strip()
-    qasm = my_program().bind_calibrations(cal_1).to_ir()
+    qasm = my_program().with_calibrations(cal_1).to_ir()
     assert qasm == expected
 
 
 def test_gate_calibrations_invalid_args():
     """test gate calibrations with invalid args name"""
 
-    @aq.pulse_sequence(implements=rx, target="$1", foo=0)
+    @aq.gate_calibration(implements=rx, target="$1", foo=0)
     def cal_1(angle: float):
         pulse.delay(1, angle)
 
@@ -91,29 +91,29 @@ def test_gate_calibrations_invalid_args():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().bind_calibrations(cal_1)
+        _ = my_program().with_calibrations(cal_1)
 
 
 def test_gate_calibrations_invalid_type():
     """test gate calibrations with invalid args type"""
 
-    @aq.pulse_sequence(implements=rx, target=0.123)
+    @aq.gate_calibration(implements=rx, target=0.123)
     def cal_1(angle: float):
         pulse.delay(1, angle)
 
-    @aq.pulse_sequence(implements=rx, target={"foo": "bar"})
+    @aq.gate_calibration(implements=rx, target={"foo": "bar"})
     def cal_2(angle: float):
         pulse.delay(1, angle)
 
-    @aq.pulse_sequence(implements=rx, target=0, angle="$0")
+    @aq.gate_calibration(implements=rx, target=0, angle="$0")
     def cal_3():
         pulse.delay(1, 0.123)
 
-    @aq.pulse_sequence(implements=rx, target=0)
+    @aq.gate_calibration(implements=rx, target=0)
     def cal_4(angle: aq.Qubit):
         pulse.delay(1, angle)
 
-    @aq.pulse_sequence(implements=rx)
+    @aq.gate_calibration(implements=rx)
     def cal_5(target: float, angle: aq.Qubit):
         pulse.delay(0, angle)
 
@@ -123,17 +123,17 @@ def test_gate_calibrations_invalid_type():
 
     for cal in [cal_1, cal_2, cal_3, cal_4, cal_5]:
         with pytest.raises(errors.ParameterTypeError):
-            _ = my_program().bind_calibrations(cal)
+            _ = my_program().with_calibrations(cal)
 
 
 def test_gate_calibrations_insufficient_args():
     """test gate calibrations with insufficient args"""
 
-    @aq.pulse_sequence(implements=rx, target="$1")
+    @aq.gate_calibration(implements=rx, target="$1")
     def cal_1():
         pulse.delay(1, 0.123)
 
-    @aq.pulse_sequence(implements=rx)
+    @aq.gate_calibration(implements=rx)
     def cal_2(angle: float):
         pulse.delay(1, angle)
 
@@ -142,16 +142,16 @@ def test_gate_calibrations_insufficient_args():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().bind_calibrations(cal_1)
+        _ = my_program().with_calibrations(cal_1)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().bind_calibrations(cal_2)
+        _ = my_program().with_calibrations(cal_2)
 
 
 def test_gate_calibrations_duplicated_args():
     """test gate calibrations with duplicated args"""
 
-    @aq.pulse_sequence(implements=rx, target="$1", angle=0.123)
+    @aq.gate_calibration(implements=rx, target="$1", angle=0.123)
     def cal_1(angle: float):
         pulse.delay(1, angle)
 
@@ -160,13 +160,13 @@ def test_gate_calibrations_duplicated_args():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().bind_calibrations(cal_1)
+        _ = my_program().with_calibrations(cal_1)
 
 
 def test_gate_calibrations_invalid_instructions():
     """test gate calibrations with invalid instructions that are not pulse"""
 
-    @aq.pulse_sequence(implements=rx, target="$1")
+    @aq.gate_calibration(implements=rx, target="$1")
     def cal_1(angle: float):
         h(0)
         pulse.delay(1, angle)
@@ -176,13 +176,13 @@ def test_gate_calibrations_invalid_instructions():
         rx("$1", 1.0)
 
     with pytest.raises(errors.InvalidCalibrationDefinition):
-        _ = my_program().bind_calibrations(cal_1)
+        _ = my_program().with_calibrations(cal_1)
 
 
 def test_gate_calibrations_bind_calibrations_not_inplace():
     """test that bind_calibrations does not modify the original program"""
 
-    @aq.pulse_sequence(implements=rx, target="$1")
+    @aq.gate_calibration(implements=rx, target="$1")
     def cal_1(angle: float):
         pulse.delay(1, angle)
 
@@ -194,7 +194,7 @@ def test_gate_calibrations_bind_calibrations_not_inplace():
     def my_program_2():
         rx("$1", 1.0)
 
-    _ = my_program_1().bind_calibrations(cal_1)
+    _ = my_program_1().with_calibrations(cal_1)
 
     assert my_program_1().to_ir() == my_program_2().to_ir()
 
@@ -206,7 +206,7 @@ def test_gate_calibrations_with_gate_definition():
     def my_gate(q: aq.Qubit, a: float):
         h(q)
 
-    @aq.pulse_sequence(implements=my_gate, q="$0")
+    @aq.gate_calibration(implements=my_gate, q="$0")
     def cal_1(a: float):
         pulse.barrier(0)
         pulse.delay(0, a)
@@ -229,27 +229,5 @@ def test_gate_calibrations_with_gate_definition():
         my_gate(0.123) __qubits__[2];
         """
     ).strip()
-    qasm = my_program().bind_calibrations(cal_1).to_ir()
-    assert qasm == expected
-
-
-def test_pulse_sequence_without_implements_kwargs():
-    """test pulse_sequence without an `implements` kwargs"""
-
-    @aq.pulse_sequence
-    def my_pulse_sequence(a: float):
-        pulse.barrier(0)
-        pulse.delay(0, a)
-
-    expected = textwrap.dedent(
-        """
-        OPENQASM 3.0;
-        defcalgrammar "openpulse";
-        cal {
-            barrier $0;
-            delay[123.0ms] $0;
-        }
-        """
-    ).strip()
-    qasm = my_pulse_sequence(0.123).to_ir()
+    qasm = my_program().with_calibrations(cal_1).to_ir()
     assert qasm == expected
