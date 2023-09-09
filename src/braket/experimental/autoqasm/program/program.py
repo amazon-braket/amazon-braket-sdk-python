@@ -106,7 +106,7 @@ class Program(SerializableProgram):
 
         combined_oqpy_program = oqpy.Program()
         for gc in gate_calibrations:
-            combined_oqpy_program += gc().oqpy_program
+            combined_oqpy_program += gc().program._oqpy_program
         self._oqpy_program = combined_oqpy_program + self._oqpy_program
         return self
 
@@ -376,8 +376,8 @@ class ProgramConversionContext:
 
         Args:
             gate_name (str): The name of the gate being defined.
-            qubits (Tuple[Qubit]): The list of qubits to the gate.
-            angles (Tuple[float]): The angles at which the gate calibration is defined.
+            qubits (Iterable[Qubit]): The list of qubits to the gate.
+            angles (Iterable[float]): The angles at which the gate calibration is defined.
         """
         try:
             qubits = [_qubit(q) for q in qubits]
