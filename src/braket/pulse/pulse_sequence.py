@@ -329,7 +329,9 @@ class PulseSequence:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
-            return _FreeParameterExpressionIdentifier(parameter, type_)
+            if isinstance(type_, ast.DurationType):
+                return FreeParameterExpression(parameter, type_)
+            return parameter
         else:
             if isinstance(type_, ast.DurationType):
                 return OQDurationLiteral(parameter)

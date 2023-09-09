@@ -17,7 +17,6 @@ from openpulse.printer import Printer
 from openqasm3.ast import DurationLiteral
 from openqasm3.printer import PrinterState
 
-from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
 
 

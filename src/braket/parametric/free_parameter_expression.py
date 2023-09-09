@@ -15,8 +15,17 @@ from __future__ import annotations
 
 import ast
 from numbers import Number
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
+from openpulse.ast import (
+    ClassicalType,
+    DurationLiteral,
+    DurationType,
+    FloatType,
+    QASMNode,
+    TimeUnit,
+)
+from oqpy import Program
 from sympy import Expr, Float, Symbol, sympify
 
 
@@ -30,7 +39,11 @@ class FreeParameterExpression:
     present will NOT run. Values must be substituted prior to execution.
     """
 
-    def __init__(self, expression: Union[FreeParameterExpression, Number, Expr, str]):
+    def __init__(
+        self,
+        expression: Union[FreeParameterExpression, Number, Expr, str],
+        _type: Optional[ClassicalType] = None,
+    ):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
@@ -39,6 +52,7 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
+            _type (Optional[ClassicalType]): type of the expression
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
@@ -51,8 +65,11 @@ class FreeParameterExpression:
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
         }
+        self._type = _type if _type is not None else FloatType()
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
+            if _type is None:
+                self._type = expression._type
         elif isinstance(expression, (Number, Expr)):
             self._expression = expression
         elif isinstance(expression, str):
@@ -169,6 +186,34 @@ class FreeParameterExpression:
             str: The expression of the class:'FreeParameterExpression' to represent the class.
         """
         return repr(self.expression)
+
+    def to_ast(self, program: Program) -> QASMNode:
+        """Creates an AST node for the :class:'FreeParameterExpression'.
+
+        Args:
+            program (Program): Unused.
+
+        Returns:
+            QASMNode: The AST node.
+        """
+        if isinstance(self._type, DurationType):
+            return DurationLiteral(_FreeParameterExpressionIdentifier(self), TimeUnit.s)
+        return _FreeParameterExpressionIdentifier(self)
+
+
+class _FreeParameterExpressionIdentifier(QASMNode):
+    """Dummy AST node with FreeParameterExpression instance attached"""
+
+    def __init__(self, expression: FreeParameterExpression):
+        self.name = f"FreeParameterExpression({expression})"
+        self._expression = expression
+
+    @property
+    def expression(self) -> FreeParameterExpression:
+        return self._expression
+
+    def __repr__(self) -> str:
+        return f"_FreeParameterExpressionIdentifier(name={self.name})"
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
