@@ -90,15 +90,19 @@ def gate(*args) -> Callable[[Any], None]:
     return _function_wrapper(args, _convert_gate)
 
 
-def gate_calibration(*args, implements: Callable, **kwargs):
+def gate_calibration(*args, implements: Callable, **kwargs) -> Callable[None, GateCalibration]:
     """A decorator that register the decorated function as a gate calibration definition. The
-    decorated function is added to a main program using `with_calibrations` method of the main.
-    main program.
+    decorated function is added to a main program using `with_calibrations` method of the main
+    program. The fixed values of qubits or angles that the calibration is implemented against
+    are supplied as kwargs. The name of the kwargs must match the args of the gate function it
+    implements.
 
     Args:
         implements (Callable): Gate function.
-        kwargs (Union[Qubit, float]): The fixed value of qubits or angles that the calibration is
-            implemented against. The name of the kwargs must match the args of the gate function.
+
+    Returns:
+        Callable[, GateCalibration]: A callable to be added to a main program using
+        `with_calibrations` method of the main program.
     """
     converter_args = {"gate_function": implements, **kwargs}
 
@@ -495,7 +499,7 @@ def _wrap_for_oqpy_gate(
         options (converter.ConversionOptions): Converter options.
 
     Returns:
-        Callable: The modified function for use with oqpy.gate.
+        Callable[...,]: The modified function for use with oqpy.gate.
     """
 
     def _func(*args: Any) -> None:
@@ -512,7 +516,7 @@ def _get_gate_args(f: Callable) -> aq_program.GateArgs:
 
     Returns:
         aq_program.GateArgs: Object representing a list of qubit and angle arguments for
-            a gate definition.
+        a gate definition.
     """
     gate_args = aq_program.GateArgs()
     sig = inspect.signature(f)
@@ -552,7 +556,6 @@ def _convert_calibration(
         args (List[Any]): Arguments passed to the program when called.
         kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
         gate_function (Callable): The gate function which calibration is being defined.
-        decorator_kwargs: Keyword arguments passed to the calibration decorator.
 
     Returns:
         GateCalibration: Object representing the calibration definition.
@@ -599,7 +602,7 @@ def _convert_calibration(
         gate_function=gate_function,
         qubits=gate_calibration_qubits,
         angles=gate_calibration_angles,
-        oqpy_program=program_conversion_context.get_oqpy_program(),
+        program=program_conversion_context.make_program(),
     )
 
 
