@@ -41,6 +41,7 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
+            _type (Optional[ClassicalType]): type of the expression
 
         Raises:
             NotImplementedError: Raised if the expression is not of type
@@ -57,6 +58,7 @@ class FreeParameterExpression:
             ast.Pow: self.__pow__,
             ast.USub: self.__neg__,
         }
+        self._type = _type if _type is not None else FloatType()
         if isinstance(expression, FreeParameterExpression):
             self._expression = expression.expression
         elif isinstance(expression, (Number, sympy.Expr)):
