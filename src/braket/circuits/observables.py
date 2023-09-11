@@ -31,6 +31,7 @@ from braket.circuits.quantum_operator_helpers import (
 )
 from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.pulse.pulse_sequence import PulseSequence
 
 
 class H(StandardObservable):
@@ -151,6 +152,14 @@ class X(StandardObservable):
             return f"{coef_prefix}x({qubit_target})"
         else:
             return f"{coef_prefix}x all"
+
+    def _to_pulse_sequence(
+        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+    ) -> PulseSequence:
+        pulse_sequence = PulseSequence()
+        for gate in self.basis_rotation_gates:
+            pulse_sequence += gate.pulse_sequence
+        return pulse_sequence
 
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)

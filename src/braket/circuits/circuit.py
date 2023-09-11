@@ -15,13 +15,30 @@ from __future__ import annotations
 
 import warnings
 from numbers import Number
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
+
+if TYPE_CHECKING:
+    from braket.aws.aws_device import AwsDevice
 
 import numpy as np
 import oqpy
 
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
+from braket.circuits.circuit_pulse_sequence import CircuitPulseSequenceBuilder
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -1093,6 +1110,26 @@ class Circuit:
             str: An ASCII string circuit diagram.
         """
         return circuit_diagram_class.build_diagram(self)
+
+    def pulse_sequence(
+        self,
+        device: AwsDevice,
+        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+        pulse_sequence_builder_class: Type = CircuitPulseSequenceBuilder,
+    ) -> PulseSequence:
+        """
+        Get the associated pulse sequence for the current circuit.
+
+        Args:
+            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]):
+                Additional gate definitions
+            pulse_sequence_builder_class (Type): A `CircuitPulseSequenceBuilder` class that builds
+                the pulse sequence for this circuit. Default = `CircuitPulseSequenceBuilder`.
+
+        Returns:
+            PulseSequence: A PulseSequence corresponding to the full circuit.
+        """
+        return pulse_sequence_builder_class(device, gate_definitions).build_pulse_sequence(self)
 
     def to_ir(
         self,

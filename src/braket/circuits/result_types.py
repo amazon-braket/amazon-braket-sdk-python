@@ -491,6 +491,14 @@ class Expectation(ObservableResultType):
         )
         return f"#pragma braket result expectation {observable_ir}"
 
+    def to_pulse_sequence(self, serialization_properties: OpenQASMSerializationProperties) -> str:
+        observable_pulse_sequence = self.observable.to_pulse_sequence(
+            target=self.target,
+            ir_type=IRType.OPENQASM,
+            serialization_properties=serialization_properties,
+        )
+        return observable_pulse_sequence
+
     @staticmethod
     @circuit.subroutine(register=True)
     def expectation(observable: Observable, target: QubitSetInput = None) -> ResultType:

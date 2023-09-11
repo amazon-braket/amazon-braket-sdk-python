@@ -421,6 +421,37 @@ class PulseSequence:
             param_values[str(key)] = val
         return self.make_bound_pulse_sequence(param_values)
 
+    def __iadd__(self, other: PulseSequence) -> PulseSequence:
+        """In-place concatenation of pulse sequence."""
+        if self._capture_v0_count:
+            raise ValueError(
+                "Cannot add a pulse sequence to another one that has already measurement"
+                " instructions."
+            )
+        for frameId, frame in other._frames.items():
+            _validate_uniqueness(self._frames, frame)
+            self._frames[frameId] = frame
+        for waveformId, waveform in other._waveforms.items():
+            _validate_uniqueness(self._waveforms, waveform)
+            self._waveforms[waveformId] = waveform
+        for fp in other._free_parameters:
+            if fp in self._free_parameters:
+                raise ValueError(
+                    f"A free parameter with the name {fp.name} already exists in the pulse"
+                    " sequence. Please rename this free parameter."
+                )
+            self._free_parameters.add(fp)
+
+        self._program += other._program
+        return self
+
+    def __add__(self, other: PulseSequence) -> PulseSequence:
+        """Return concatenation of two programs."""
+        assert isinstance(other, PulseSequence)
+        self_copy = deepcopy(self)
+        self_copy += other
+        return self_copy
+
     def __eq__(self, other):
         return (
             isinstance(other, PulseSequence)

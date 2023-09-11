@@ -25,6 +25,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.pulse.pulse_sequence import PulseSequence
 
 
 class ResultType:
@@ -116,6 +117,21 @@ class ResultType:
             str: Representing the openqasm representation of the result type.
         """
         raise NotImplementedError("to_openqasm has not been implemented yet.")
+
+    def to_pulse_sequence(
+        self, serialization_properties: OpenQASMSerializationProperties
+    ) -> PulseSequence:
+        """
+        Returns the openqasm string representation of the result type.
+
+        Args:
+            serialization_properties (OpenQASMSerializationProperties): The serialization properties
+                to use while serializing the object to the IR representation.
+
+        Returns:
+            str: Representing the openqasm representation of the result type.
+        """
+        raise NotImplementedError("to_pulse_sequence has not been implemented yet.")
 
     def copy(
         self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
