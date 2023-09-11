@@ -15,12 +15,13 @@
 """Pulse instructions that apply to frames or qubits.
 """
 
+import re
 from typing import List, Union
 
 import oqpy
 
 from braket.circuits.qubit_set import QubitSet
-from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm.instructions.qubits import (
     QubitIdentifierType,
     is_qubit_identifier_type,
@@ -37,13 +38,39 @@ def _pulse_instruction(name: str, frame: Frame, *args) -> None:
         name (str): Name of the pulse instruction.
         frame (Frame): Frame for which the instruction is apply to.
     """
-    program_conversion_context = program.get_program_conversion_context()
+    program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context._has_pulse_control = True
 
     pulse_sequence = PulseSequence()
-    pulse_sequence._program = program_conversion_context.get_oqpy_program()
-    with oqpy.Cal(pulse_sequence._program):
+    pulse_sequence._program = program_conversion_context.get_oqpy_program(
+        mode=aq_program.ProgramMode.PULSE
+    )
+
+    if program_conversion_context._calibration_definitions_processing:
         getattr(pulse_sequence, name)(frame, *args)
+    else:
+        with oqpy.Cal(pulse_sequence._program):
+            getattr(pulse_sequence, name)(frame, *args)
+
+
+def _physical_qubit_to_braket_qubit(qids: List[str]) -> QubitSet:
+    """Convert a physical qubit label to a QubitSet.
+
+    Args:
+        qids (List[str]): Physical qubit labels.
+
+    Returns:
+        QubitSet: Represent physical qubits.
+    """
+    braket_qubits = []
+    for qid in qids:
+        if not (isinstance(qid, str) and re.match(r"\$\d+", qid)):
+            raise ValueError(
+                f"invalid physical qubit label: '{qid}'. Physical qubit must be labeled as a string"
+                "with `$` followed by an integer. For example: `$1`."
+            )
+        braket_qubits.append(int(qid[1:]))
+    return QubitSet(braket_qubits)
 
 
 def set_frequency(frame: Frame, frequency: float) -> None:
@@ -130,7 +157,7 @@ def delay(
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
-        qubits_or_frames = QubitSet(qubits_or_frames)
+        qubits_or_frames = _physical_qubit_to_braket_qubit(qubits_or_frames)
     _pulse_instruction("delay", qubits_or_frames, duration)
 
 
@@ -148,5 +175,5 @@ def barrier(
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
-        qubits_or_frames = QubitSet(qubits_or_frames)
+        qubits_or_frames = _physical_qubit_to_braket_qubit(qubits_or_frames)
     _pulse_instruction("barrier", qubits_or_frames)
