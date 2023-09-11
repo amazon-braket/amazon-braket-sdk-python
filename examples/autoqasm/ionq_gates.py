@@ -10,11 +10,6 @@ def h(q: aq.Qubit):
 
 
 @aq.gate
-def x(q: aq.Qubit):
-    gpi(q, 0)
-
-
-@aq.gate
 def u(q: aq.Qubit, a: float, b: float, c: float):
     gpi2(q, a)
     gpi(q, b)
