@@ -36,6 +36,9 @@ from braket.experimental.autoqasm.autograph.impl.api_core import (
     is_autograph_artifact,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
+from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
+from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
+from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
 
 
 def main(
@@ -86,6 +89,25 @@ def gate(*args) -> Callable[[Any], None]:
         aq.function or inside another aq.gate.
     """
     return _function_wrapper(*args, converter_callback=_convert_gate)
+
+
+def gate_calibration(*args, implements: Callable, **kwargs) -> Callable[[], GateCalibration]:
+    """A decorator that register the decorated function as a gate calibration definition. The
+    decorated function is added to a main program using `with_calibrations` method of the main
+    program. The fixed values of qubits or angles that the calibration is implemented against
+    are supplied as kwargs. The name of the kwargs must match the args of the gate function it
+    implements.
+
+    Args:
+        implements (Callable): Gate function.
+
+    Returns:
+        Callable[[], GateCalibration]: A callable to be added to a main program using
+        `with_calibrations` method of the main program.
+    """
+    converter_args = {"gate_function": implements, **kwargs}
+
+    return _function_wrapper(args, _convert_calibration, converter_args)
 
 
 def _function_wrapper(
@@ -429,10 +451,11 @@ def _convert_gate(
     program_conversion_context = aq_program.get_program_conversion_context()
 
     # Wrap the function into an oqpy gate definition
-    wrapped_f, gate_args = _wrap_for_oqpy_gate(f, options)
+    wrapped_f = _wrap_for_oqpy_gate(f, options)
     gate_name = f.__name__
 
     # Validate that the gate definition acts on at least one qubit
+    gate_args = _get_gate_args(f)
     if not gate_args.qubits:
         raise errors.ParameterTypeError(
             f'Gate definition "{gate_name}" has no arguments of type aq.Qubit. '
@@ -467,7 +490,33 @@ def _convert_gate(
 def _wrap_for_oqpy_gate(
     f: Callable,
     options: converter.ConversionOptions,
-) -> Tuple[Callable[..., None], aq_program.GateArgs]:
+) -> Callable[..., None]:
+    """Wraps the given function into a callable expected by oqpy.gate.
+
+    Args:
+        f (Callable): The function to be wrapped.
+        options (converter.ConversionOptions): Converter options.
+
+    Returns:
+        Callable[...,]: The modified function for use with oqpy.gate.
+    """
+
+    def _func(*args: Any) -> None:
+        aq_transpiler.converted_call(f, *args, kwargs={}, options=options)
+
+    return _func
+
+
+def _get_gate_args(f: Callable) -> aq_program.GateArgs:
+    """Build a GateArgs object from the function signature of a gate.
+
+    Args:
+        f (Callable): Gate function
+
+    Returns:
+        aq_program.GateArgs: Object representing a list of qubit and angle arguments for
+        a gate definition.
+    """
     gate_args = aq_program.GateArgs()
     sig = inspect.signature(f)
     for param in sig.parameters.values():
@@ -486,8 +535,101 @@ def _wrap_for_oqpy_gate(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
                 "must have a type hint of either aq.Qubit or float."
             )
+    return gate_args
 
-    def _func(*args: Any) -> None:
-        aq_transpiler.converted_call(f, *args, kwargs={}, options=options)
 
-    return _func, gate_args
+def _convert_calibration(
+    f: Callable,
+    options: converter.ConversionOptions,
+    args: List[Any],
+    kwargs: Dict[str, Any],
+    gate_function: Callable,
+    **decorator_kwargs,
+) -> GateCalibration:
+    """Convert the initial callable `f` into a GateCalibration object that will be added to
+    the main program as defcal.
+
+    Args:
+        f (Callable): The function to be converted.
+        options (converter.ConversionOptions): Converter options.
+        args (List[Any]): Arguments passed to the program when called.
+        kwargs (Dict[str, Any]): Keyword arguments passed to the program when called.
+        gate_function (Callable): The gate function which calibration is being defined.
+
+    Returns:
+        GateCalibration: Object representing the calibration definition.
+    """
+    func_args = _get_gate_args(f)
+    _validate_calibration_args(gate_function, decorator_kwargs, func_args)
+
+    union_deco_func_args = {**decorator_kwargs, **{var.name: var for var in func_args._args}}
+
+    gate_calibration_qubits = []
+    gate_calibration_angles = []
+    gate_args = _get_gate_args(gate_function)
+    for i, var in enumerate(gate_args._args):
+        name = var.name
+        value = union_deco_func_args[name]
+        is_qubit = i in gate_args.qubit_indices
+
+        if is_qubit and not is_qubit_identifier_type(value):
+            raise errors.ParameterTypeError(f'Parameter "{name}" must have a type of aq.Qubit.')
+
+        if not is_qubit and not isinstance(value, (float, oqpy.AngleVar)):
+            raise errors.ParameterTypeError(f'Parameter "{name}" must have a type of float.')
+
+        if is_qubit:
+            gate_calibration_qubits.append(value)
+        else:
+            gate_calibration_angles.append(value)
+
+    func_call_kwargs = {
+        **{var.name: var for var in func_args.qubits},
+        **{
+            var.name: oqpy.FloatVar(name=var.name, needs_declaration=False)
+            for var in func_args.angles
+        },
+    }
+
+    with aq_program.build_program() as program_conversion_context:
+        with program_conversion_context.calibration_definition(
+            gate_function.__name__, gate_calibration_qubits, gate_calibration_angles
+        ):
+            aq_transpiler.converted_call(f, [], func_call_kwargs, options=options)
+
+    return GateCalibration(
+        gate_function=gate_function,
+        qubits=gate_calibration_qubits,
+        angles=gate_calibration_angles,
+        program=program_conversion_context.make_program(),
+    )
+
+
+def _validate_calibration_args(
+    gate_function: Callable,
+    decorator_args: Dict[str, Union[Qubit, float]],
+    func_args: aq_program.GateArgs,
+) -> None:
+    """Validate the arguments passed to the calibration decorator and function.
+
+    Args:
+        gate_function (Callable): The gate function which calibration is being defined.
+        decorator_args (Dict[str, Union[Qubit, float]]): The calibration decorator arguments.
+        func_args (aq_program.GateArgs): The gate function arguments.
+    """
+    gate_args = _get_gate_args(gate_function)
+    gate_args_names = [var.name for var in gate_args._args]
+    func_args_names = [var.name for var in func_args._args]
+    decorator_args_names = decorator_args.keys()
+
+    # validate the name of args
+    if not set(gate_args_names) == set(decorator_args_names) | set(func_args_names):
+        raise errors.InvalidCalibrationDefinition(
+            "The union of calibration decorator arguments and function arguments must match the"
+            " gate arguments."
+        )
+
+    if any(name in decorator_args_names for name in func_args_names):
+        raise errors.InvalidCalibrationDefinition(
+            "The function arguments must not duplicate any argument in the calibration decorator."
+        )

@@ -12,12 +12,13 @@
 # language governing permissions and limitations under the License.
 
 """AutoQASM Program class, context managers, and related functions."""
+from __future__ import annotations
 
 import contextlib
 import threading
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, List, Optional, Union
+from typing import Any, Callable, Iterable, List, Optional, Union
 
 import oqpy.base
 
@@ -25,6 +26,8 @@ from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
+from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
+from braket.experimental.autoqasm.instructions.qubits import _qubit
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -67,6 +70,8 @@ class ProgramMode(Enum):
     """For general program conversion where all operations are allowed."""
     UNITARY = 1
     """For program conversion inside a context where only unitary operations are allowed."""
+    PULSE = 2
+    """For program conversion inside a context where only pulse operations are allowed."""
 
 
 class Program(SerializableProgram):
@@ -84,6 +89,27 @@ class Program(SerializableProgram):
         """
         self._oqpy_program = oqpy_program
         self._has_pulse_control = has_pulse_control
+
+    def with_calibrations(self, gate_calibrations: Union[Callable, List[Callable]]) -> Program:
+        """Add the gate calibrations to the program. The calibration added program is returned
+        as a new object. The original program is not modified.
+
+        Args:
+            gate_calibrations (Union[Callable, List[Callable]]): The gate calibrations to add to
+                the main program. Calibration are passed as callable without evaluation.
+
+        Returns:
+            Program: The program with gate calibrations added.
+        """
+        if isinstance(gate_calibrations, Callable):
+            gate_calibrations = [gate_calibrations]
+        assert all(isinstance(gc, Callable) for gc in gate_calibrations)
+
+        combined_oqpy_program = oqpy.Program()
+        for gc in gate_calibrations:
+            combined_oqpy_program += gc().program._oqpy_program
+        combined_oqpy_program += self._oqpy_program
+        return Program(combined_oqpy_program, self._has_pulse_control)
 
     def to_ir(
         self,
@@ -154,6 +180,7 @@ class ProgramConversionContext:
         self.return_variable = None
         self._oqpy_program_stack = [oqpy.Program()]
         self._gate_definitions_processing = []
+        self._calibration_definitions_processing = []
         self._gates_defined = set()
         self._gates_used = set()
         self._in_verbatim = False
@@ -357,6 +384,9 @@ class ProgramConversionContext:
             errors.InvalidGateDefinition: If this function is called from within a gate
             definition where only unitary gate operations are allowed, and the
             `mode` parameter is not specified as `ProgramMode.UNITARY`.
+            errors.InvalidCalibrationDefinition: If this function is called from within a
+            calibration definition where only pulse operations are allowed, and the
+            `mode` parameter is not specified as `ProgramMode.PULSE`.
 
         Returns:
             oqpy.Program: The requested oqpy program.
@@ -366,6 +396,12 @@ class ProgramConversionContext:
             raise errors.InvalidGateDefinition(
                 f'Gate definition "{gate_name}" contains invalid operations. '
                 "A gate definition must only call unitary gate operations."
+            )
+        if self._calibration_definitions_processing and mode != ProgramMode.PULSE:
+            gate_name = self._calibration_definitions_processing[-1]["name"]
+            raise errors.InvalidCalibrationDefinition(
+                f'Calibration definition "{gate_name}" contains invalid operations. '
+                "A calibration definition must only call pulse operations."
             )
 
         if scope == ProgramScope.CURRENT:
@@ -410,6 +446,32 @@ class ProgramConversionContext:
                 yield
         finally:
             self._gate_definitions_processing.pop()
+
+    @contextlib.contextmanager
+    def calibration_definition(
+        self, gate_name: str, qubits: Iterable[Qubit], angles: Iterable[float]
+    ) -> None:
+        """Sets the program conversion context into a calibration definition context.
+
+        Args:
+            gate_name (str): The name of the gate being defined.
+            qubits (Iterable[Qubit]): The list of qubits to the gate.
+            angles (Iterable[float]): The angles at which the gate calibration is defined.
+        """
+        try:
+            qubits = [_qubit(q) for q in qubits]
+            self._calibration_definitions_processing.append(
+                {"name": gate_name, "qubits": qubits, "angles": angles}
+            )
+            with oqpy.defcal(
+                self.get_oqpy_program(mode=ProgramMode.PULSE),
+                qubits,
+                gate_name,
+                angles,
+            ):
+                yield
+        finally:
+            self._calibration_definitions_processing.pop()
 
     @contextlib.contextmanager
     def verbatim_block(self) -> None:

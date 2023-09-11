@@ -73,8 +73,8 @@ def test_merge_cal_box() -> None:
 
     @aq.main
     def my_program():
-        barrier(0)
-        delay([3, 4], 0.34)
+        barrier("$0")
+        delay(["$3", "$4"], 0.34)
 
     expected = textwrap.dedent(
         """
@@ -123,8 +123,8 @@ def test_merge_cal_box() -> None:
             [0.12],
             "\ncal {\n    set_scale(predefined_frame_1, 0.12);\n}",
         ),
-        (delay, 3, [0.34], "\ncal {\n    delay[340.0ms] $3;\n}"),
-        (delay, [3, 4], [0.34], "\ncal {\n    delay[340.0ms] $3, $4;\n}"),
+        (delay, "$3", [0.34], "\ncal {\n    delay[340.0ms] $3;\n}"),
+        (delay, ["$3", "$4"], [0.34], "\ncal {\n    delay[340.0ms] $3, $4;\n}"),
         (
             delay,
             FRAME1,
@@ -137,8 +137,8 @@ def test_merge_cal_box() -> None:
             [0.34],
             "\ncal {\n    delay[340.0ms] predefined_frame_1, predefined_frame_2;\n}",
         ),
-        (barrier, 3, [], "\ncal {\n    barrier $3;\n}"),
-        (barrier, [3, 4], [], "\ncal {\n    barrier $3, $4;\n}"),
+        (barrier, "$3", [], "\ncal {\n    barrier $3;\n}"),
+        (barrier, ["$3", "$4"], [], "\ncal {\n    barrier $3, $4;\n}"),
         (barrier, FRAME1, [], "\ncal {\n    barrier predefined_frame_1;\n}"),
         (
             barrier,
@@ -164,3 +164,19 @@ def test_pulse_control(instruction, qubits_or_frames, params, expected_qasm) -> 
         instruction(qubits_or_frames, *params)
 
     assert expected_qasm in program_conversion_context.make_program().to_ir()
+
+
+@pytest.mark.parametrize(
+    "instruction,qubits_or_frames,params",
+    [
+        (barrier, "1", []),
+        (barrier, 1, []),
+        (barrier, ["1", "2"], []),
+        (barrier, [1, 2], []),
+    ],
+)
+def test_pulse_control_invalid_physical_qubit(instruction, qubits_or_frames, params) -> None:
+    """Test pulse control operations with invalid lables for physical qubits."""
+    with pytest.raises(ValueError):
+        with aq.build_program():
+            instruction(qubits_or_frames, *params)

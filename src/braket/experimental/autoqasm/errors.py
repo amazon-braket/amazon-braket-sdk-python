@@ -41,6 +41,10 @@ class InvalidGateDefinition(AutoQasmError):
     """Gate definition does not meet the necessary requirements."""
 
 
+class InvalidCalibrationDefinition(AutoQasmError):
+    """Calibration definition does not meet the necessary requirements."""
+
+
 class InvalidTargetQubit(AutoQasmError):
     """Target qubit is invalid in the current context."""
 
