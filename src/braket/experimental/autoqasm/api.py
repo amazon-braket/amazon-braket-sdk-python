@@ -105,9 +105,11 @@ def gate_calibration(*args, implements: Callable, **kwargs) -> Callable[[], Gate
         Callable[[], GateCalibration]: A callable to be added to a main program using
         `with_calibrations` method of the main program.
     """
-    converter_args = {"gate_function": implements, **kwargs}
-
-    return _function_wrapper(args, _convert_calibration, converter_args)
+    return _function_wrapper(
+        *args,
+        converter_callback=_convert_calibration,
+        converter_args={"gate_function": implements, **kwargs},
+    )
 
 
 def _function_wrapper(
