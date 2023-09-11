@@ -30,8 +30,17 @@ The verbatim pragma would then apply to the `h` and `cnot`, but not the `x`.
 
 
 import contextlib
+from enum import Enum
 
-from braket.experimental.autoqasm import program
+from braket.device_schema import DeviceActionType
+from braket.experimental.autoqasm import errors, program
+
+
+class PragmaType(str, Enum):
+    """Values used in pragma statements."""
+
+    VERBATIM = "braket verbatim"
+    """Denotes a box as a verbatim block."""
 
 
 @contextlib.contextmanager
@@ -43,7 +52,25 @@ def verbatim() -> None:
     programmed without compilation or modification of any sort.
 
     Raises:
-        errors.VerbatimBlockNotAllowed: If the target device does not support verbatim blocks.
+        errors.VerbatimBlockNotAllowed: If a verbatim block is not allowed at this point in
+            the program; for example, if the target device does not support verbatim blocks.
     """
-    with program.get_program_conversion_context().verbatim_block():
-        yield
+    program_conversion_context = program.get_program_conversion_context()
+
+    if program_conversion_context.in_verbatim_block:
+        raise errors.VerbatimBlockNotAllowed("Verbatim blocks cannot be nested.")
+
+    device = program_conversion_context.get_target_device()
+    if device:
+        supported_pragmas = device.properties.action[DeviceActionType.OPENQASM].supportedPragmas
+        if "verbatim" not in supported_pragmas:
+            raise errors.VerbatimBlockNotAllowed(
+                f'The target device "{device.name}" does not support verbatim blocks.'
+            )
+
+    try:
+        with program.get_program_conversion_context().box(pragma=PragmaType.VERBATIM):
+            program_conversion_context.in_verbatim_block = True
+            yield
+    finally:
+        program_conversion_context.in_verbatim_block = False

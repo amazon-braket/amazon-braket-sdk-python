@@ -20,6 +20,20 @@ from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.instructions import cnot, h
 
 
+def test_basic_box() -> None:
+    """Tests the box statement without a pragma."""
+    with aq.build_program() as program_conversion_context:
+        with program_conversion_context.box():
+            pass
+
+    expected = """OPENQASM 3.0;
+box {
+}"""
+
+    program = program_conversion_context.make_program()
+    assert program.to_ir() == expected
+
+
 def test_with_verbatim_box() -> None:
     """Tests the with statement with verbatim box `Verbatim`."""
 

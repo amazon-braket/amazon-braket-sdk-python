@@ -178,12 +178,12 @@ class ProgramConversionContext:
         self.subroutines_processing = set()  # the set of subroutines queued for processing
         self.user_config = user_config or UserConfig()
         self.return_variable = None
+        self.in_verbatim_block = False
         self._oqpy_program_stack = [oqpy.Program()]
         self._gate_definitions_processing = []
         self._calibration_definitions_processing = []
         self._gates_defined = set()
         self._gates_used = set()
-        self._in_verbatim = False
         self._virtual_qubits_used = set()
         self._var_idx = 0
         self._has_pulse_control = False
@@ -244,7 +244,7 @@ class ProgramConversionContext:
             errors.UnsupportedNativeGate: If the gate is being used inside a verbatim block
                 and the gate is not a native gate of the target device.
         """
-        if not self._in_verbatim:
+        if not self.in_verbatim_block:
             self._gates_used.add(gate_name)
             return
 
@@ -320,7 +320,7 @@ class ProgramConversionContext:
             errors.InvalidTargetQubit: Target qubits are invalid in the current context.
             errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
-        if self._in_verbatim and not self._gate_definitions_processing:
+        if self.in_verbatim_block and not self._gate_definitions_processing:
             self._validate_verbatim_target_qubits(qubits)
 
         if self._gate_definitions_processing:
@@ -476,34 +476,17 @@ class ProgramConversionContext:
             self._calibration_definitions_processing.pop()
 
     @contextlib.contextmanager
-    def verbatim_block(self) -> None:
-        """Sets the program conversion context into a verbatim block context.
+    def box(self, pragma: Optional[str] = None) -> None:
+        """Sets the program conversion context into a box context.
 
-        Raises:
-            errors.VerbatimBlockNotAllowed: If a verbatim block is not allowed at this point in
-                the program; for example, if the target device does not support verbatim blocks.
+        Args:
+            pragma (Optional[str]): Pragma to include before the box. Defaults to None.
         """
-        if self._in_verbatim:
-            raise errors.VerbatimBlockNotAllowed("Verbatim blocks cannot be nested.")
-
-        device = self.get_target_device()
-        if (
-            device
-            and "verbatim"
-            not in device.properties.action[DeviceActionType.OPENQASM].supportedPragmas
-        ):
-            raise errors.VerbatimBlockNotAllowed(
-                f'The target device "{device.name}" does not support verbatim blocks.'
-            )
-
-        self._in_verbatim = True
-        try:
-            oqpy_program = self.get_oqpy_program()
-            oqpy_program.pragma("braket verbatim")
-            with oqpy.Box(oqpy_program):
-                yield
-        finally:
-            self._in_verbatim = False
+        oqpy_program = self.get_oqpy_program()
+        if pragma:
+            oqpy_program.pragma(pragma)
+        with oqpy.Box(oqpy_program):
+            yield
 
 
 @contextlib.contextmanager
