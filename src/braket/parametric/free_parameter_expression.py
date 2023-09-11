@@ -21,8 +21,9 @@ from openpulse.ast import (
     ClassicalType,
     DurationLiteral,
     DurationType,
+    Expression,
     FloatType,
-    QASMNode,
+    Identifier,
     TimeUnit,
 )
 from oqpy import Program
@@ -187,33 +188,30 @@ class FreeParameterExpression:
         """
         return repr(self.expression)
 
-    def to_ast(self, program: Program) -> QASMNode:
+    def to_ast(self, program: Program) -> Expression:
         """Creates an AST node for the :class:'FreeParameterExpression'.
 
         Args:
             program (Program): Unused.
 
         Returns:
-            QASMNode: The AST node.
+            Expression: The AST node.
         """
         if isinstance(self._type, DurationType):
             return DurationLiteral(_FreeParameterExpressionIdentifier(self), TimeUnit.s)
         return _FreeParameterExpressionIdentifier(self)
 
 
-class _FreeParameterExpressionIdentifier(QASMNode):
+class _FreeParameterExpressionIdentifier(Identifier):
     """Dummy AST node with FreeParameterExpression instance attached"""
 
     def __init__(self, expression: FreeParameterExpression):
-        self.name = f"FreeParameterExpression({expression})"
+        super().__init__(name=f"FreeParameterExpression({expression})")
         self._expression = expression
 
     @property
     def expression(self) -> FreeParameterExpression:
         return self._expression
-
-    def __repr__(self) -> str:
-        return f"_FreeParameterExpressionIdentifier(name={self.name})"
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:

@@ -64,5 +64,4 @@ class _FreeParameterTransformer(QASMTransformer):
             return ast.DurationLiteral(
                 _FreeParameterExpressionIdentifier(new_duration), duration_literal.unit
             )
-            # return super().visit(duration_literal)
         return OQDurationLiteral(new_duration).to_ast(self.program)
