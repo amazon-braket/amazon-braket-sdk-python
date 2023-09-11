@@ -453,9 +453,11 @@ def _make_identifier_name() -> str:
 def _map_to_oqpy_type(
     parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
 ) -> Union[FreeParameterExpression, OQPyExpression]:
-    if isinstance(parameter, FreeParameterExpression) and is_duration_type:
-        return FreeParameterExpression(parameter, duration)
-    return parameter
+    return (
+        FreeParameterExpression(parameter, duration)
+        if isinstance(parameter, FreeParameterExpression) and is_duration_type
+        else parameter
+    )
 
 
 def _parse_waveform_from_calibration_schema(waveform: Dict) -> Waveform:

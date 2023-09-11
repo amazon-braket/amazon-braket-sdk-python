@@ -183,7 +183,7 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        duration = self._format_parameter_ast(duration, type_=ast.DurationType())
+        duration = self._format_parameter_ast(duration, _type=ast.DurationType())
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
@@ -324,18 +324,17 @@ class PulseSequence:
     def _format_parameter_ast(
         self,
         parameter: Union[float, FreeParameterExpression],
-        type_: ast.ClassicalType = ast.FloatType(),
+        _type: ast.ClassicalType = ast.FloatType(),
     ) -> Union[float, _FreeParameterExpressionIdentifier]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
-            if isinstance(type_, ast.DurationType):
-                return FreeParameterExpression(parameter, type_)
-            return parameter
-        else:
-            if isinstance(type_, ast.DurationType):
-                return OQDurationLiteral(parameter)
-            return parameter
+            return (
+                FreeParameterExpression(parameter, _type)
+                if isinstance(_type, ast.DurationType)
+                else parameter
+            )
+        return OQDurationLiteral(parameter) if isinstance(_type, ast.DurationType) else parameter
 
     def _parse_arg_from_calibration_schema(
         self, argument: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
