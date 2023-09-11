@@ -19,11 +19,12 @@ from typing import List, Union
 
 import oqpy
 
+from braket.circuits.qubit_set import QubitSet
 from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm.instructions.qubits import (
     QubitIdentifierType,
+    _get_physical_qubit_indices,
     is_qubit_identifier_type,
-    physical_qubit_to_braket_qubit,
 )
 from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
@@ -136,7 +137,7 @@ def delay(
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
-        qubits_or_frames = physical_qubit_to_braket_qubit(qubits_or_frames)
+        qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))
     _pulse_instruction("delay", qubits_or_frames, duration)
 
 
@@ -154,5 +155,5 @@ def barrier(
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
-        qubits_or_frames = physical_qubit_to_braket_qubit(qubits_or_frames)
+        qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))
     _pulse_instruction("barrier", qubits_or_frames)
