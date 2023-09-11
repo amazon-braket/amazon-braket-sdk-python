@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.55.0 (2023-09-09)
+
+### Features
+
+ * add Aria2 enum
+
 ## v1.54.3.post0 (2023-09-04)
 
 ### Documentation Changes
