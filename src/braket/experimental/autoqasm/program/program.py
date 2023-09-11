@@ -107,8 +107,8 @@ class Program(SerializableProgram):
         combined_oqpy_program = oqpy.Program()
         for gc in gate_calibrations:
             combined_oqpy_program += gc().program._oqpy_program
-        self._oqpy_program = combined_oqpy_program + self._oqpy_program
-        return self
+        combined_oqpy_program += self._oqpy_program
+        return Program(combined_oqpy_program, self._has_pulse_control)
 
     def to_ir(
         self,

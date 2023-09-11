@@ -187,16 +187,15 @@ def test_gate_calibrations_bind_calibrations_not_inplace():
         pulse.delay("$1", angle)
 
     @aq.main
-    def my_program_1():
+    def my_program():
         rx("$1", 1.0)
 
-    @aq.main
-    def my_program_2():
-        rx("$1", 1.0)
+    program_1 = my_program()
+    _ = program_1.with_calibrations(cal_1)
 
-    _ = my_program_1().with_calibrations(cal_1)
+    program_2 = my_program()
 
-    assert my_program_1().to_ir() == my_program_2().to_ir()
+    assert program_1.to_ir() == program_2.to_ir()
 
 
 def test_gate_calibrations_with_gate_definition():
