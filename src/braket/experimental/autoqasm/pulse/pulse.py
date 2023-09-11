@@ -15,16 +15,15 @@
 """Pulse instructions that apply to frames or qubits.
 """
 
-import re
 from typing import List, Union
 
 import oqpy
 
-from braket.circuits.qubit_set import QubitSet
 from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm.instructions.qubits import (
     QubitIdentifierType,
     is_qubit_identifier_type,
+    physical_qubit_to_braket_qubit,
 )
 from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
@@ -51,26 +50,6 @@ def _pulse_instruction(name: str, frame: Frame, *args) -> None:
     else:
         with oqpy.Cal(pulse_sequence._program):
             getattr(pulse_sequence, name)(frame, *args)
-
-
-def _physical_qubit_to_braket_qubit(qids: List[str]) -> QubitSet:
-    """Convert a physical qubit label to a QubitSet.
-
-    Args:
-        qids (List[str]): Physical qubit labels.
-
-    Returns:
-        QubitSet: Represent physical qubits.
-    """
-    braket_qubits = []
-    for qid in qids:
-        if not (isinstance(qid, str) and re.match(r"\$\d+", qid)):
-            raise ValueError(
-                f"invalid physical qubit label: '{qid}'. Physical qubit must be labeled as a string"
-                "with `$` followed by an integer. For example: `$1`."
-            )
-        braket_qubits.append(int(qid[1:]))
-    return QubitSet(braket_qubits)
 
 
 def set_frequency(frame: Frame, frequency: float) -> None:
@@ -157,7 +136,7 @@ def delay(
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
-        qubits_or_frames = _physical_qubit_to_braket_qubit(qubits_or_frames)
+        qubits_or_frames = physical_qubit_to_braket_qubit(qubits_or_frames)
     _pulse_instruction("delay", qubits_or_frames, duration)
 
 
@@ -175,5 +154,5 @@ def barrier(
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
-        qubits_or_frames = _physical_qubit_to_braket_qubit(qubits_or_frames)
+        qubits_or_frames = physical_qubit_to_braket_qubit(qubits_or_frames)
     _pulse_instruction("barrier", qubits_or_frames)

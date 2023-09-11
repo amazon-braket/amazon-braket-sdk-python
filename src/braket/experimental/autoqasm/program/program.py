@@ -27,7 +27,7 @@ from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
-from braket.experimental.autoqasm.instructions.qubits import _qubit
+from braket.experimental.autoqasm.instructions.qubits import _qubit, physical_qubit_to_braket_qubit
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -353,15 +353,17 @@ class ProgramConversionContext:
                     f'Qubit "{qubit_name}" is not a physical qubit. Only physical qubits such '
                     'as "$0" can be targeted inside a verbatim block.'
                 )
+        qubits = physical_qubit_to_braket_qubit(qubits)
 
         # Validate physical qubit connectivity on the target device:
         device = self.get_target_device()
         if device and not device.properties.paradigm.connectivity.fullyConnected:
+            # connectivityGraph uses integer qubit indices, but represented as strings.
             connectivity_graph = device.properties.paradigm.connectivity.connectivityGraph
-            start_qubit = qubits[0].strip("$")
+            start_qubit = f"{int(qubits[0])}"
             valid_target_qubits = connectivity_graph[start_qubit]
             for qubit in qubits[1:]:
-                target_qubit = qubit.strip("$")
+                target_qubit = f"{int(qubit)}"
                 if target_qubit not in valid_target_qubits:
                     raise errors.InvalidTargetQubit(
                         f'Qubit "{start_qubit}" is not connected to qubit "{target_qubit}" '

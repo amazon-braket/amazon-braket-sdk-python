@@ -14,12 +14,14 @@
 
 """Utility functions that handle qubit construction and naming."""
 
+import re
 from functools import singledispatch
-from typing import Any, Union
+from typing import Any, List, Union
 
 import oqpy.base
 from openpulse.printer import dumps
 
+from braket.circuits.qubit_set import QubitSet
 from braket.experimental.autoqasm import constants, errors, program
 
 QubitIdentifierType = Union[int, oqpy._ClassicalVar, oqpy.base.OQPyExpression, str, oqpy.Qubit]
@@ -35,6 +37,26 @@ def is_qubit_identifier_type(qubit: Any) -> bool:
         bool: True if the object is a qubit identifier type, False otherwise.
     """
     return isinstance(qubit, QubitIdentifierType.__args__)
+
+
+def physical_qubit_to_braket_qubit(qids: List[str]) -> QubitSet:
+    """Convert a physical qubit label to a QubitSet.
+
+    Args:
+        qids (List[str]): Physical qubit labels.
+
+    Returns:
+        QubitSet: Represent physical qubits.
+    """
+    braket_qubits = []
+    for qid in qids:
+        if not (isinstance(qid, str) and re.match(r"\$\d+", qid)):
+            raise ValueError(
+                f"invalid physical qubit label: '{qid}'. Physical qubit must be labeled as a string"
+                "with `$` followed by an integer. For example: `$1`."
+            )
+        braket_qubits.append(int(qid[1:]))
+    return QubitSet(braket_qubits)
 
 
 def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> str:
