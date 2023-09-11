@@ -480,8 +480,12 @@ class ProgramConversionContext:
         """Sets the program conversion context into a verbatim block context.
 
         Raises:
-            errors.VerbatimBlockNotAllowed: If the target device does not support verbatim blocks.
+            errors.VerbatimBlockNotAllowed: If a verbatim block is not allowed at this point in
+                the program; for example, if the target device does not support verbatim blocks.
         """
+        if self._in_verbatim:
+            raise errors.VerbatimBlockNotAllowed("Verbatim blocks cannot be nested.")
+
         device = self.get_target_device()
         if (
             device

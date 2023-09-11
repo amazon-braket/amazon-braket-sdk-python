@@ -41,6 +41,17 @@ box {
     assert program_func().to_ir() == expected
 
 
+def test_nested_verbatim_box() -> None:
+    @aq.main
+    def program_func() -> None:
+        with aq.verbatim():
+            with aq.verbatim():
+                h(0)
+
+    with pytest.raises(errors.VerbatimBlockNotAllowed):
+        program_func()
+
+
 def test_verbatim_box_invalid_target_qubit() -> None:
     @aq.main
     def program_func() -> None:
