@@ -169,6 +169,42 @@ def test_unsupported_native_gate(aws_device: Mock) -> None:
         my_program()
 
 
+def test_supported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h, x"]
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
+    aws_device.properties.paradigm.nativeGateSet = ["x"]
+
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        x(q)
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            x("$0")
+            my_gate("$0")
+
+    assert my_program().to_ir()
+
+
+def test_unsupported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h, x"]
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
+    aws_device.properties.paradigm.nativeGateSet = ["x"]
+
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        h(q)
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            my_gate("$0")
+
+    with pytest.raises(errors.UnsupportedNativeGate):
+        my_program()
+
+
 def test_unsupported_verbatim_block(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = []
 
