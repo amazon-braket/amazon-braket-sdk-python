@@ -197,14 +197,10 @@ class ProgramConversionContext:
         # Validate the gates for the target device
         device = self.get_target_device()
         if device:
-            valid_gates = self._gates_defined.union(
-                [
-                    op.lower()
-                    for op in device.properties.action[
-                        DeviceActionType.OPENQASM
-                    ].supportedOperations
-                ]
+            device_supported_gates = self._normalize_gate_names(
+                device.properties.action[DeviceActionType.OPENQASM].supportedOperations
             )
+            valid_gates = self._gates_defined.union(device_supported_gates)
             invalid_gates_used = self._gates_used.difference(valid_gates)
             if invalid_gates_used:
                 raise errors.UnsupportedGate(
@@ -252,7 +248,7 @@ class ProgramConversionContext:
         # provided gate is a native gate on the target device (or is a custom gate definition).
         device = self.get_target_device()
         if device:
-            native_gates = [gate.lower() for gate in device.properties.paradigm.nativeGateSet]
+            native_gates = self._normalize_gate_names(device.properties.paradigm.nativeGateSet)
             allowed_verbatim_gates = self._gates_defined.union(native_gates)
             if gate_name not in allowed_verbatim_gates:
                 raise errors.UnsupportedNativeGate(
@@ -343,6 +339,10 @@ class ProgramConversionContext:
                         "an argument to the gate. Gates may only use constant angles or angles "
                         "passed as arguments."
                     )
+
+    @staticmethod
+    def _normalize_gate_names(gate_names: Iterable[str]) -> List[str]:
+        return [gate_name.lower() for gate_name in gate_names]
 
     def _validate_verbatim_target_qubits(self, qubits: List[Any]) -> None:
         # Only physical target qubits are allowed in a verbatim block:
