@@ -22,11 +22,12 @@ from typing import Any, Callable, Iterable, List, Optional, Union
 
 import oqpy.base
 
-from braket.aws import AwsDevice
 from braket.circuits.serialization import IRType, SerializableProgram
+from braket.device_schema import DeviceActionType
+from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
-from braket.experimental.autoqasm.instructions.qubits import _qubit
+from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -49,7 +50,7 @@ class UserConfig:
     num_qubits: Optional[int] = None
     """The total number of qubits to declare in the program."""
 
-    device: Optional[AwsDevice] = None
+    device: Optional[Device] = None
     """The target device for the program."""
 
 
@@ -177,10 +178,13 @@ class ProgramConversionContext:
         self.subroutines_processing = set()  # the set of subroutines queued for processing
         self.user_config = user_config or UserConfig()
         self.return_variable = None
+        self.in_verbatim_block = False
         self._oqpy_program_stack = [oqpy.Program()]
         self._gate_definitions_processing = []
         self._calibration_definitions_processing = []
-        self._qubits_seen = set()
+        self._gates_defined = set()
+        self._gates_used = set()
+        self._virtual_qubits_used = set()
         self._var_idx = 0
         self._has_pulse_control = False
 
@@ -190,6 +194,20 @@ class ProgramConversionContext:
         Returns:
             Program: The program object.
         """
+        # Validate the gates for the target device
+        device = self.get_target_device()
+        if device:
+            device_supported_gates = self._normalize_gate_names(
+                device.properties.action[DeviceActionType.OPENQASM].supportedOperations
+            )
+            valid_gates = self._gates_defined.union(device_supported_gates)
+            invalid_gates_used = self._gates_used.difference(valid_gates)
+            if invalid_gates_used:
+                raise errors.UnsupportedGate(
+                    f'The target device "{device.name}" does not support '
+                    f"the following gates used in the program: {invalid_gates_used}"
+                )
+
         return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property
@@ -200,11 +218,11 @@ class ProgramConversionContext:
             List[int]: The list of virtual qubits, e.g. [0, 1, 2]
         """
         # Can be memoized or otherwise made more performant
-        return sorted(list(self._qubits_seen))
+        return sorted(list(self._virtual_qubits_used))
 
     def register_qubit(self, qubit: int) -> None:
-        """Register a virtual qubit to use in this program."""
-        self._qubits_seen.add(qubit)
+        """Register a virtual qubit that is used in this program."""
+        self._virtual_qubits_used.add(qubit)
 
     def get_declared_qubits(self) -> Optional[int]:
         """Return the number of qubits to declare in the program, as specified by the user.
@@ -212,7 +230,34 @@ class ProgramConversionContext:
         """
         return self.user_config.num_qubits
 
-    def get_target_device(self) -> Optional[AwsDevice]:
+    def register_gate(self, gate_name: str) -> None:
+        """Register a gate that is used in this program.
+
+        Args:
+            gate_name (str): The name of the gate being used.
+
+        Raises:
+            errors.UnsupportedNativeGate: If the gate is being used inside a verbatim block
+                and the gate is not a native gate of the target device.
+        """
+        if not self.in_verbatim_block:
+            self._gates_used.add(gate_name)
+            return
+
+        # If we are in verbatim and there is a target device specified, validate that the
+        # provided gate is a native gate on the target device (or is a custom gate definition).
+        device = self.get_target_device()
+        if device:
+            native_gates = self._normalize_gate_names(device.properties.paradigm.nativeGateSet)
+            allowed_verbatim_gates = self._gates_defined.union(native_gates)
+            if gate_name not in allowed_verbatim_gates:
+                raise errors.UnsupportedNativeGate(
+                    f'The gate "{gate_name}" is not a native gate of the target '
+                    f'device "{device.name}". Only native gates may be used inside a verbatim '
+                    f"block. The native gates of the device are: {native_gates}"
+                )
+
+    def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
         Returns None if the user did not specify a target device.
         """
@@ -268,8 +313,12 @@ class ProgramConversionContext:
             angles (List[Any]): The list of target angles to validate.
 
         Raises:
+            errors.InvalidTargetQubit: Target qubits are invalid in the current context.
             errors.InvalidGateDefinition: Targets are invalid in the current gate definition.
         """
+        if self.in_verbatim_block and not self._gate_definitions_processing:
+            self._validate_verbatim_target_qubits(qubits)
+
         if self._gate_definitions_processing:
             gate_name = self._gate_definitions_processing[-1]["name"]
             gate_qubit_args = self._gate_definitions_processing[-1]["gate_args"].qubits
@@ -289,6 +338,37 @@ class ProgramConversionContext:
                         f'Gate definition "{gate_name}" uses angle "{angle.name}" which is not '
                         "an argument to the gate. Gates may only use constant angles or angles "
                         "passed as arguments."
+                    )
+
+    @staticmethod
+    def _normalize_gate_names(gate_names: Iterable[str]) -> List[str]:
+        return [gate_name.lower() for gate_name in gate_names]
+
+    def _validate_verbatim_target_qubits(self, qubits: List[Any]) -> None:
+        # Only physical target qubits are allowed in a verbatim block:
+        for qubit in qubits:
+            if not isinstance(qubit, str):
+                qubit_name = qubit.name if isinstance(qubit, oqpy.Qubit) else str(qubit)
+                raise errors.InvalidTargetQubit(
+                    f'Qubit "{qubit_name}" is not a physical qubit. Only physical qubits such '
+                    'as "$0" can be targeted inside a verbatim block.'
+                )
+        qubits = _get_physical_qubit_indices(qubits)
+
+        # Validate physical qubit connectivity on the target device:
+        device = self.get_target_device()
+        if device and not device.properties.paradigm.connectivity.fullyConnected:
+            connectivity_graph = device.properties.paradigm.connectivity.connectivityGraph
+
+            # connectivity_graph uses integer qubit indices, but represented as strings.
+            start_qubit = qubits[0]
+            valid_target_qubits = connectivity_graph[str(start_qubit)]
+            for target_qubit in qubits[1:]:
+                if str(target_qubit) not in valid_target_qubits:
+                    raise errors.InvalidTargetQubit(
+                        f'Qubit "{start_qubit}" is not connected to qubit "{target_qubit}" '
+                        f'on device "{device.name}". The connectivity graph of the device is: '
+                        f"{connectivity_graph}"
                     )
 
     def get_oqpy_program(
@@ -356,6 +436,7 @@ class ProgramConversionContext:
             gate_name (str): The name of the gate being defined.
             gate_args (GateArgs): The list of arguments to the gate.
         """
+        self._gates_defined.add(gate_name)
         try:
             self._gate_definitions_processing.append({"name": gate_name, "gate_args": gate_args})
             with oqpy.gate(
@@ -393,6 +474,19 @@ class ProgramConversionContext:
                 yield
         finally:
             self._calibration_definitions_processing.pop()
+
+    @contextlib.contextmanager
+    def box(self, pragma: Optional[str] = None) -> None:
+        """Sets the program conversion context into a box context.
+
+        Args:
+            pragma (Optional[str]): Pragma to include before the box. Defaults to None.
+        """
+        oqpy_program = self.get_oqpy_program()
+        if pragma:
+            oqpy_program.pragma(pragma)
+        with oqpy.Box(oqpy_program):
+            yield
 
 
 @contextlib.contextmanager

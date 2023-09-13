@@ -45,6 +45,22 @@ class InvalidCalibrationDefinition(AutoQasmError):
     """Calibration definition does not meet the necessary requirements."""
 
 
+class InvalidTargetQubit(AutoQasmError):
+    """Target qubit is invalid in the current context."""
+
+
+class UnsupportedGate(AutoQasmError):
+    """Gate is not supported by the target device."""
+
+
+class UnsupportedNativeGate(AutoQasmError):
+    """Native gate is not supported by the target device."""
+
+
+class VerbatimBlockNotAllowed(AutoQasmError):
+    """Verbatim block is not supported by the target device."""
+
+
 class UnknownQubitCountError(AutoQasmError):
     """Missing declaration for the number of qubits."""
 

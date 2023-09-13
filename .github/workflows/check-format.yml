@@ -28,4 +28,4 @@ jobs:
     - name: Run code format checks
       run: |
         black --check . --extend-exclude=src/braket/experimental/autoqasm/autograph
-        flake8 --enable-extensions=BCS src/braket/experimental/autoqasm
+        flake8 --enable-extensions=BCS src
