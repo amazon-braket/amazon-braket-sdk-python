@@ -67,7 +67,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             Observable.I(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "i(__qubits__[3])",
+            "i(q[3])",
         ),
         (
             Observable.I(),
@@ -85,7 +85,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             Observable.X(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "x(__qubits__[3])",
+            "x(q[3])",
         ),
         (
             Observable.X(),
@@ -103,7 +103,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             Observable.Y(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "y(__qubits__[3])",
+            "y(q[3])",
         ),
         (
             Observable.Y(),
@@ -121,7 +121,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             Observable.Z(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "z(__qubits__[3])",
+            "z(q[3])",
         ),
         (
             Observable.Z(),
@@ -139,7 +139,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             Observable.H(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "h(__qubits__[3])",
+            "h(q[3])",
         ),
         (
             Observable.H(),
@@ -158,7 +158,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [1, 2],
             "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
-            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) __qubits__[1], __qubits__[2]",
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) q[1], q[2]",
         ),
         (
             Observable.Hermitian(np.eye(4)),
@@ -177,7 +177,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             Observable.H() @ Observable.Z(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3, 0],
-            "h(__qubits__[3]) @ z(__qubits__[0])",
+            "h(q[3]) @ z(q[0])",
         ),
         (
             Observable.H() @ Observable.Z(),
@@ -189,7 +189,7 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             Observable.H() @ Observable.Z() @ Observable.I(),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3, 0, 1],
-            "h(__qubits__[3]) @ z(__qubits__[0]) @ i(__qubits__[1])",
+            "h(q[3]) @ z(q[0]) @ i(q[1])",
         ),
         (
             Observable.H() @ Observable.Z() @ Observable.I(),
@@ -202,8 +202,8 @@ def test_to_ir(testobject, gateobject, expected_ir, basis_rotation_gates, eigenv
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3, 0, 1],
             "hermitian([[1+0im, 0im, 0im, 0im], [0im, 1+0im, 0im, 0im], "
-            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) __qubits__[3], __qubits__[0]"
-            " @ i(__qubits__[1])",
+            "[0im, 0im, 1+0im, 0im], [0im, 0im, 0im, 1+0im]]) q[3], q[0]"
+            " @ i(q[1])",
         ),
         (
             Observable.I() @ Observable.Hermitian(np.eye(4)),
