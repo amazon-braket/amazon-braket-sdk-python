@@ -20,10 +20,11 @@ import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.aws import AwsDevice
+from braket.device_schema import DeviceActionType
 from braket.device_schema.simulators import GateModelSimulatorDeviceCapabilities
 from braket.devices import Devices
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.instructions import h
+from braket.experimental.autoqasm.instructions import cnot, cphaseshift00, h, x
 
 RIGETTI_REGION = "us-west-1"
 
@@ -48,10 +49,10 @@ MOCK_GATE_MODEL_SIMULATOR_CAPABILITIES_JSON = {
         "shotsRange": [1, 10],
     },
     "action": {
-        "braket.ir.jaqcd.program": {
-            "actionType": "braket.ir.jaqcd.program",
+        "braket.ir.openqasm.program": {
+            "actionType": "braket.ir.openqasm.program",
             "version": ["1"],
-            "supportedOperations": ["H"],
+            "supportedOperations": ["h"],
         }
     },
     "paradigm": {"qubitCount": 30},
@@ -97,7 +98,11 @@ def aws_session():
 def aws_device():
     _aws_device = Mock()
     _aws_device.name = "Mock SV1 Device"
-    _aws_device.properties.paradigm.qubitCount = 34
+    _aws_device.properties.paradigm.qubitCount = 30
+    _aws_device_action = Mock()
+    _aws_device_action.supportedOperations = []
+    _aws_device_action.supportedPragmas = []
+    _aws_device.properties.action = {DeviceActionType.OPENQASM: _aws_device_action}
     return _aws_device
 
 
@@ -128,9 +133,123 @@ def test_device_parameter(
 
 
 def test_insufficient_qubits(aws_device: Mock) -> None:
-    @aq.main(device=aws_device, num_qubits=35)
+    aws_device.properties.paradigm.qubitCount = 9
+
+    @aq.main(device=aws_device, num_qubits=10)
     def my_program():
         pass
 
     with pytest.raises(errors.InsufficientQubitCountError):
         my_program()
+
+
+def test_unsupported_gate(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h"]
+
+    @aq.main(device=aws_device)
+    def my_program():
+        cphaseshift00(0, 1, 0.123)
+
+    with pytest.raises(errors.UnsupportedGate):
+        my_program()
+
+
+def test_unsupported_native_gate(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h, x"]
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
+    aws_device.properties.paradigm.nativeGateSet = ["x"]
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            x("$0")
+            h("$0")
+
+    with pytest.raises(errors.UnsupportedNativeGate):
+        my_program()
+
+
+def test_supported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h, x"]
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
+    aws_device.properties.paradigm.nativeGateSet = ["x"]
+
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        x(q)
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            x("$0")
+            my_gate("$0")
+
+    assert my_program().to_ir()
+
+
+def test_unsupported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h, x"]
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
+    aws_device.properties.paradigm.nativeGateSet = ["x"]
+
+    @aq.gate
+    def my_gate(q: aq.Qubit):
+        h(q)
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            my_gate("$0")
+
+    with pytest.raises(errors.UnsupportedNativeGate):
+        my_program()
+
+
+def test_unsupported_verbatim_block(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = []
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            h("$0")
+
+    with pytest.raises(errors.VerbatimBlockNotAllowed):
+        my_program()
+
+
+def test_validate_connectivity(aws_device: Mock) -> None:
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["rx, ry, rz"]
+    aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
+    aws_device.properties.paradigm.nativeGateSet = ["H", "CNOT"]
+    aws_device.properties.paradigm.connectivity.fullyConnected = False
+    aws_device.properties.paradigm.connectivity.connectivityGraph = {"0": ["2"], "1": ["0"]}
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            h("$0")
+            cnot("$0", "$1")
+
+    with pytest.raises(errors.InvalidTargetQubit):
+        my_program()
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            h("$0")
+            cnot("$0", "$2")
+            cnot("$1", "$0")
+
+    assert my_program().to_ir()
+
+    aws_device.properties.paradigm.connectivity.fullyConnected = True
+    aws_device.properties.paradigm.connectivity.connectivityGraph = {}
+
+    @aq.main(device=aws_device)
+    def my_program():
+        with aq.verbatim():
+            h("$0")
+            cnot("$0", "$7")
+            cnot("$5", "$2")
+
+    assert my_program().to_ir()

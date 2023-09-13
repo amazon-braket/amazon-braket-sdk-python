@@ -20,7 +20,7 @@ Pragmas specify how a program should be compiled or executed. In AutoQASM, we su
 
     @aq.main
     def pragma_example() -> None:
-        with aq.Verbatim():
+        with aq.verbatim():
             h(0)
             cnot(0, 1)
         x(0)
@@ -29,24 +29,48 @@ The verbatim pragma would then apply to the `h` and `cnot`, but not the `x`.
 """
 
 
-import oqpy.base
+import contextlib
+from enum import Enum
 
-from braket.experimental.autoqasm import program
+from braket.device_schema import DeviceActionType
+from braket.experimental.autoqasm import errors, program
 
 
-class Verbatim:
+class PragmaType(str, Enum):
+    """Values used in pragma statements."""
+
+    VERBATIM = "braket verbatim"
+    """Denotes a box as a verbatim block."""
+
+
+@contextlib.contextmanager
+def verbatim() -> None:
     """Context management protocol that, when used with a `with` statement, wraps the code block
-    in a verbatim box.
+    in a verbatim block.
 
-    The verbatim pragma around a code block specifies that operations are to be executed as
+    A verbatim block specifies that operations contained within the block are to be executed as
     programmed without compilation or modification of any sort.
+
+    Raises:
+        errors.VerbatimBlockNotAllowed: If a verbatim block is not allowed at this point in
+            the program; for example, if the target device does not support verbatim blocks.
     """
+    program_conversion_context = program.get_program_conversion_context()
 
-    def __enter__(self):
-        oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-        self.box = oqpy.Box(oqpy_program)
-        oqpy_program.pragma("braket verbatim")
-        self.box.__enter__()
+    if program_conversion_context.in_verbatim_block:
+        raise errors.VerbatimBlockNotAllowed("Verbatim blocks cannot be nested.")
 
-    def __exit__(self, exc_type, exc, traceback):
-        return self.box.__exit__(exc_type, exc, traceback)
+    device = program_conversion_context.get_target_device()
+    if device:
+        supported_pragmas = device.properties.action[DeviceActionType.OPENQASM].supportedPragmas
+        if "verbatim" not in supported_pragmas:
+            raise errors.VerbatimBlockNotAllowed(
+                f'The target device "{device.name}" does not support verbatim blocks.'
+            )
+
+    try:
+        with program.get_program_conversion_context().box(pragma=PragmaType.VERBATIM):
+            program_conversion_context.in_verbatim_block = True
+            yield
+    finally:
+        program_conversion_context.in_verbatim_block = False
