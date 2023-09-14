@@ -242,5 +242,9 @@ If you have feedback or features that you would like to see on Amazon Braket, we
 [Github issues](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
 to engage in the conversation, and +1 issues to help drive priority. 
 
+### Code contributors
+
+[![Contributors](https://contrib.rocks/image?repo=amazon-braket/amazon-braket-sdk-python)](https://github.com/amazon-braket/amazon-braket-sdk-python/graphs/contributors)```
+
 ## License
 This project is licensed under the Apache-2.0 License.
