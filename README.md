@@ -244,9 +244,7 @@ to engage in the conversation, and +1 issues to help drive priority.
 
 ### Code contributors
 
-<a href="https://github.com/amazon-braket/amazon-braket-sdk-python/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=amazon-braket/amazon-braket-sdk-python" />
-</a>
+[![Contributors](https://contrib.rocks/image?repo=amazon-braket/amazon-braket-sdk-python)](https://github.com/amazon-braket/amazon-braket-sdk-python/graphs/contributors)```
 
 ## License
 This project is licensed under the Apache-2.0 License.
