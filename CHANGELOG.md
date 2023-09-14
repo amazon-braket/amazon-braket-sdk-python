@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.55.1 (2023-09-14)
+
+### Bug Fixes and Other Changes
+
+ * Revert "update: restricting parameter names to not collide with ones we use for OpenQASM generation. (#675)"
+
+### Documentation Changes
+
+ * Replace aws org with amazon-braket
+
 ## v1.55.0 (2023-09-09)
 
 ### Features
