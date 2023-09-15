@@ -72,7 +72,7 @@ setup(
         ],
     },
     include_package_data=True,
-    url="https://github.com/aws/amazon-braket-sdk-python",
+    url="https://github.com/amazon-braket/amazon-braket-sdk-python",
     author="Amazon Web Services",
     description=(
         "An open source library for interacting with quantum computing devices on Amazon Braket"

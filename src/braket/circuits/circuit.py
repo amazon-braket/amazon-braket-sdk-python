@@ -1212,7 +1212,7 @@ class Circuit:
             )
             for idx, qubit in enumerate(qubits):
                 qubit_target = serialization_properties.format_target(int(qubit))
-                ir_instructions.append(f"__bits__[{idx}] = measure {qubit_target};")
+                ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
 
         return OpenQasmProgram.construct(source="\n".join(ir_instructions), inputs={})
 
@@ -1225,11 +1225,11 @@ class Circuit:
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
-            ir_instructions.append(f"bit[{self.qubit_count}] __bits__;")
+            ir_instructions.append(f"bit[{self.qubit_count}] b;")
 
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
-            ir_instructions.append(f"qubit[{total_qubits}] __qubits__;")
+            ir_instructions.append(f"qubit[{total_qubits}] q;")
         elif serialization_properties.qubit_reference_type != QubitReferenceType.PHYSICAL:
             raise ValueError(
                 f"Invalid qubit_reference_type "

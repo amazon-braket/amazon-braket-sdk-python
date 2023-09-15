@@ -547,7 +547,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.BitFlip(0.5),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "#pragma braket noise bit_flip(0.5) __qubits__[3]",
+            "#pragma braket noise bit_flip(0.5) q[3]",
         ),
         (
             Noise.BitFlip(0.5),
@@ -559,7 +559,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.PhaseFlip(0.5),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "#pragma braket noise phase_flip(0.5) __qubits__[3]",
+            "#pragma braket noise phase_flip(0.5) q[3]",
         ),
         (
             Noise.PhaseFlip(0.5),
@@ -571,7 +571,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.PauliChannel(0.1, 0.2, 0.3),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) __qubits__[3]",
+            "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) q[3]",
         ),
         (
             Noise.PauliChannel(0.1, 0.2, 0.3),
@@ -583,7 +583,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.Depolarizing(0.5),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "#pragma braket noise depolarizing(0.5) __qubits__[3]",
+            "#pragma braket noise depolarizing(0.5) q[3]",
         ),
         (
             Noise.Depolarizing(0.5),
@@ -595,7 +595,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.TwoQubitDepolarizing(0.5),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3, 5],
-            "#pragma braket noise two_qubit_depolarizing(0.5) __qubits__[3], __qubits__[5]",
+            "#pragma braket noise two_qubit_depolarizing(0.5) q[3], q[5]",
         ),
         (
             Noise.TwoQubitDepolarizing(0.5),
@@ -607,7 +607,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.TwoQubitDephasing(0.5),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3, 5],
-            "#pragma braket noise two_qubit_dephasing(0.5) __qubits__[3], __qubits__[5]",
+            "#pragma braket noise two_qubit_dephasing(0.5) q[3], q[5]",
         ),
         (
             Noise.TwoQubitDephasing(0.5),
@@ -619,7 +619,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.AmplitudeDamping(0.5),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "#pragma braket noise amplitude_damping(0.5) __qubits__[3]",
+            "#pragma braket noise amplitude_damping(0.5) q[3]",
         ),
         (
             Noise.AmplitudeDamping(0.5),
@@ -631,7 +631,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.GeneralizedAmplitudeDamping(0.5, 0.1),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "#pragma braket noise generalized_amplitude_damping(0.5, 0.1) __qubits__[3]",
+            "#pragma braket noise generalized_amplitude_damping(0.5, 0.1) q[3]",
         ),
         (
             Noise.GeneralizedAmplitudeDamping(0.5, 0.1),
@@ -643,7 +643,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             Noise.PhaseDamping(0.5),
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
             [3],
-            "#pragma braket noise phase_damping(0.5) __qubits__[3]",
+            "#pragma braket noise phase_damping(0.5) q[3]",
         ),
         (
             Noise.PhaseDamping(0.5),
@@ -668,7 +668,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             "[0, 0.31622776601683794, 0, 0], "
             "[0.31622776601683794, 0, 0, 0], "
             "[0, 0, 0, 0.31622776601683794], "
-            "[0, 0, 0.31622776601683794, 0]]) __qubits__[3], __qubits__[5]",
+            "[0, 0, 0.31622776601683794, 0]]) q[3], q[5]",
         ),
         (
             Noise.Kraus(
@@ -700,7 +700,7 @@ def test_valid_values_pauli_channel_two_qubit(probs):
             [3],
             "#pragma braket noise kraus(["
             "[0.9486833im, 0], [0, 0.9486833im]], ["
-            "[0, 0.31622777], [0.31622777, 0]]) __qubits__[3]",
+            "[0, 0.31622777], [0.31622777, 0]]) q[3]",
         ),
         (
             Noise.Kraus(

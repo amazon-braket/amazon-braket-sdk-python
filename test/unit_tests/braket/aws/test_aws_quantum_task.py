@@ -573,12 +573,12 @@ def test_create_pulse_gate_circuit(
     expected_openqasm = "\n".join(
         (
             "OPENQASM 3.0;",
-            "bit[2] __bits__;",
+            "bit[2] b;",
             "cal {",
             "    set_frequency(predefined_frame_1, 6000000.0);",
             "}",
-            "__bits__[0] = measure $0;",
-            "__bits__[1] = measure $1;",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
         )
     )
 
