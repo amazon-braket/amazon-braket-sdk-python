@@ -53,7 +53,10 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
-            _type (Optional[ClassicalType]): type of the expression
+            _type (Optional[ClassicalType]): The OpenQASM3 type associated with the expression.
+                Subtypes of openqasm3.ast.ClassicalType are used to specify how to express the
+                expression in the OpenQASM3 IR. Any type other than DurationType is considered
+                as FloatType.
 
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
