@@ -480,16 +480,20 @@ def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
 
 def test_get_job(aws_session, get_job_response):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
     aws_session.braket_client.get_job.return_value = get_job_response
 
     assert aws_session.get_job(arn) == get_job_response
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
 
 
 def test_get_job_retry(
     aws_session, get_job_response, throttling_response, resource_not_found_response
 ):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
 
     aws_session.braket_client.get_job.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
@@ -498,12 +502,15 @@ def test_get_job_retry(
     ]
 
     assert aws_session.get_job(arn) == get_job_response
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_job.call_count == 3
 
 
 def test_get_job_fail_after_retries(aws_session, throttling_response, resource_not_found_response):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
 
     aws_session.braket_client.get_job.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
@@ -513,12 +520,15 @@ def test_get_job_fail_after_retries(aws_session, throttling_response, resource_n
 
     with pytest.raises(ClientError):
         aws_session.get_job(arn)
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_job.call_count == 3
 
 
 def test_get_job_does_not_retry_other_exceptions(aws_session):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
     exception_response = {
         "Error": {
             "Code": "SomeOtherException",
@@ -532,7 +542,9 @@ def test_get_job_does_not_retry_other_exceptions(aws_session):
 
     with pytest.raises(ClientError):
         aws_session.get_job(arn)
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_job.call_count == 1
 
 

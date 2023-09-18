@@ -326,7 +326,7 @@ class AwsSession(object):
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
         """
-        return self.braket_client.get_job(jobArn=arn)
+        return self.braket_client.get_job(jobArn=arn, additionalAttributeNames=["QueueInfo"])
 
     def cancel_job(self, arn: str) -> Dict[str, Any]:
         """

@@ -46,3 +46,22 @@ class QuantumTaskQueueInfo:
     queue_type: QueueType
     queue_position: Optional[str] = None
     message: Optional[str] = None
+
+
+@dataclass
+class HybridJobQueueInfo:
+    """
+    Represents hybrid job queue information.
+
+    Attributes:
+        queue_position (Optional[str]): current position of your hybrid job within a respective
+            device queue. If the queue position of the hybrid job is greater than 15, we
+            return '>15' as the queue_position return value. The queue_position is only
+            returned when hybrid job is not in RUNNING/CANCELLING/TERMINAL states, else
+            queue_position is returned as None.
+        message (Optional[str]): Additional message information. This key is present only
+            if 'queue_position' is None. Default: None.
+    """
+
+    queue_position: Optional[str] = None
+    message: Optional[str] = None
