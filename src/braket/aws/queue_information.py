@@ -13,7 +13,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Dict, Optional
 
 
 class QueueType(str, Enum):
@@ -27,6 +27,24 @@ class QueueType(str, Enum):
 
     NORMAL = "Normal"
     PRIORITY = "Priority"
+
+
+@dataclass()
+class QueueDepthInfo:
+    """
+    Represents quantum tasks and hybrid jobs queue depth information.
+
+    Attributes:
+        quantum_task (str, Dict[QueuePriority, str]): number of quantum_tasks waiting
+            to run on a device. This includes both 'Normal' and 'Priority' tasks.
+            For Example, {'quantum_task': {QueueType.NORMAL: '7', QueueType.PRIORITY: '3'}}
+        job (str): number of hybrid jobs waiting to run on a device. Additionally, for QPUs if
+            hybrid jobs queue depth is 0, we display information about priority and count of the
+            running hybrid job. Example, 'job': '0 (1 prioritized job(s) running)'
+    """
+
+    quantum_task: Dict[QueueType, str]
+    job: str
 
 
 @dataclass
