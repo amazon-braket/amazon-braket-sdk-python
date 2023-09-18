@@ -24,7 +24,7 @@ import boto3
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
-from braket.aws.queue_information import QuantumTaskQueueInfo, QueuePriority
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueueType
 from braket.circuits import Instruction
 from braket.circuits.circuit import Circuit, Gate, QubitSet
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
@@ -320,34 +320,34 @@ class AwsQuantumTask(QuantumTask):
         The queue position details for the quantum task.
 
         Returns:
-            QuantumTaskQueueInfo: Instance containing the queue position information
-            for the task.
-
-            Note: The queue_position is only returned when task is not in
-            RUNNING/CANCELLING/TERMINAL states, else queue_position is returned as "None".
+            QuantumTaskQueueInfo: Instance of QuantumTaskQueueInfo class
+            representing the queue position information for the quantum task.
+            The queue_position is only returned when quantum task is not in
+            RUNNING/CANCELLING/TERMINAL states, else queue_position is returned as None.
+            The normal tasks refers to the quantum tasks not submitted via Hybrid Jobs.
+            Whereas, the priority tasks refers to the total number of quantum tasks waiting to run
+            submitted through Amazon Braket Hybrid Jobs. These tasks run before the normal tasks.
+            If the queue position for normal or priority quantum tasks is greater than 2000,
+            we display their respective queue position as '>2000'.
 
         Examples:
-            task status = QUEUED
+            task status = QUEUED and queue position is 2050
             >>> task.queue_position()
-            QuantumTaskQueueInfo(queue_position='2',
-            queue_priority=<QueuePriority.NORMAL: 'Normal'>, message=None)
+            QuantumTaskQueueInfo(queue_type=<QueueType.NORMAL: 'Normal'>,
+            queue_position='>2000', message=None)
 
             task status = COMPLETED
             >>> task.queue_position()
-            QuantumTaskQueueInfo(queue_position='2',
-            queue_priority=<QueuePriority.NORMAL: 'Normal'>,
-            message='Task is in COMPLETED status. AmazonBraket does
-                        not show queue position for this status.')
+            QuantumTaskQueueInfo(queue_type=<QueueType.NORMAL: 'Normal'>,
+            queue_position=None, message='Task is in COMPLETED status. AmazonBraket does
+            not show queue position for this status.')
         """
         response = self.metadata()["queueInfo"]
-        queue_position = response["position"]
-        queue_priority = QueuePriority(response["queuePriority"])
+        queue_type = QueueType(response["queuePriority"])
+        queue_position = None if response.get("position") == "None" else response.get("position")
+        message = response.get("message")
 
-        if queue_position == "None":
-            message = response["message"]
-            return QuantumTaskQueueInfo(queue_position, queue_priority, message)
-
-        return QuantumTaskQueueInfo(queue_position, queue_priority)
+        return QuantumTaskQueueInfo(queue_type, queue_position, message)
 
     def _status(self, use_cached_value: bool = False) -> str:
         metadata = self.metadata(use_cached_value)

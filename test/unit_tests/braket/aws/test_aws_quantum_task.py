@@ -26,7 +26,7 @@ from braket.annealing.problem import Problem, ProblemType
 from braket.aws import AwsQuantumTask
 from braket.aws.aws_quantum_task import _create_annealing_device_params
 from braket.aws.aws_session import AwsSession
-from braket.aws.queue_information import QuantumTaskQueueInfo, QueuePriority
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueueType
 from braket.circuits import Circuit
 from braket.circuits.gates import PulseGate
 from braket.circuits.serialization import (
@@ -207,7 +207,7 @@ def test_queue_position(quantum_task):
     state_1 = "QUEUED"
     _mock_metadata(quantum_task._aws_session, state_1)
     assert quantum_task.queue_position() == QuantumTaskQueueInfo(
-        queue_position="2", queue_priority=QueuePriority.NORMAL, message=None
+        queue_type=QueueType.NORMAL, queue_position="2", message=None
     )
 
     state_2 = "COMPLETED"
@@ -216,7 +216,7 @@ def test_queue_position(quantum_task):
     )
     _mock_metadata(quantum_task._aws_session, state_2)
     assert quantum_task.queue_position() == QuantumTaskQueueInfo(
-        queue_position="None", queue_priority=QueuePriority.NORMAL, message=message
+        queue_type=QueueType.NORMAL, queue_position=None, message=message
     )
 
 

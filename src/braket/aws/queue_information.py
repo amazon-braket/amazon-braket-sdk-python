@@ -16,7 +16,7 @@ from enum import Enum
 from typing import Optional
 
 
-class QueuePriority(str, Enum):
+class QueueType(str, Enum):
     """
     Enumerates the possible priorities for the queue.
 
@@ -35,14 +35,14 @@ class QuantumTaskQueueInfo:
     Represents quantum tasks queue information.
 
     Attributes:
-        queue_position (str): current position of your quantum task within a respective
-        device queue. This value can be "None" based on the state of the task.
-        queue_priority (QueuePriority): priority of the quantum_task in the queue,
-        either 'Normal' or 'Priority'.
+        queue_type (QueueType): type of the quantum_task queue either 'Normal'
+            or 'Priority'.
+        queue_position (Optional[str]): current position of your quantum task within a respective
+            device queue. This value can be None based on the state of the task. Default: None.
         message (Optional[str]): Additional message information. This key is present only
-        if 'queue_position' is "None". Default: None.
+            if 'queue_position' is None. Default: None.
     """
 
-    queue_position: Optional[str]
-    queue_priority: QueuePriority
+    queue_type: QueueType
+    queue_position: Optional[str] = None
     message: Optional[str] = None

@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from braket.aws import AwsDevice
-from braket.aws.queue_information import QuantumTaskQueueInfo, QueuePriority
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueueType
 from braket.circuits import Circuit
 from braket.devices import Devices
 
@@ -28,15 +28,15 @@ def test_task_queue_position():
 
     # data type validations
     assert isinstance(queue_information, QuantumTaskQueueInfo)
-    assert isinstance(queue_information.queue_priority, QueuePriority)
-    assert isinstance(queue_information.queue_position, str)
+    assert isinstance(queue_information.queue_type, QueueType)
+    assert isinstance(queue_information.queue_position, (str, type(None)))
 
     # assert queue priority
-    assert queue_information.queue_priority in [QueuePriority.NORMAL, QueuePriority.PRIORITY]
+    assert queue_information.queue_type in [QueueType.NORMAL, QueueType.PRIORITY]
 
     # assert message
-    if queue_information.queue_position == "None":
+    if queue_information.queue_position is None:
         assert queue_information.message is not None
-        assert isinstance(queue_information.message, str)
+        assert isinstance(queue_information.message, (str, type(None)))
     else:
         assert queue_information.message is None
