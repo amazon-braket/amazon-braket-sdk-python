@@ -483,9 +483,7 @@ def ground_state_measurements_subroutine() -> bit[3] {
     return __bit_0__;
 }
 qubit[6] __qubits__;
-"""
-    # TODO: this should be `bit[3]`, but there's a bug. It's being tracked in an issue.
-    expected += """bit __bit_1__;
+bit[3] __bit_1__ = "000";
 __bit_1__ = ground_state_measurements_subroutine();"""
     assert ground_state_measurements_wrapper().to_ir() == expected
 

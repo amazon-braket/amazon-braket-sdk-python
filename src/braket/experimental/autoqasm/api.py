@@ -437,10 +437,18 @@ def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:
     if not return_type:
         return None
 
-    return_type = aq_types.conversions.var_type_from_ast_type(return_type)
-    if return_type == aq_types.ArrayVar:
+    var_type = aq_types.conversions.var_type_from_ast_type(return_type)
+    if var_type == aq_types.ArrayVar:
         return []
-    return return_type()
+    if var_type == aq_types.BitVar:
+        return var_type(size=_get_bitvar_size(return_type))
+    return var_type()
+
+
+def _get_bitvar_size(node: qasm_ast.BitType) -> Optional[int]:
+    if not isinstance(node, qasm_ast.BitType) or not node.size:
+        return None
+    return node.size.value
 
 
 def _convert_gate(
