@@ -11,9 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-
 from braket.aws import AwsDevice, AwsQuantumJob
-from braket.aws.queue_information import HybridJobQueueInfo, QuantumTaskQueueInfo, QueueType
+from braket.aws.queue_information import (
+    HybridJobQueueInfo,
+    QuantumTaskQueueInfo,
+    QueueDepthInfo,
+    QueueType,
+)
 from braket.circuits import Circuit
 from braket.devices import Devices
 
@@ -62,3 +66,19 @@ def test_job_queue_position(aws_session):
     # assert message
     assert queue_information.queue_position is None
     assert isinstance(queue_information.message, str)
+
+
+def test_queue_depth():
+    device = AwsDevice(Devices.Amazon.SV1)
+
+    # call the queue_depth method.
+    queue_information = device.queue_depth()
+
+    # data type validations
+    assert isinstance(queue_information, QueueDepthInfo)
+    assert isinstance(queue_information.quantum_task, dict)
+    assert isinstance(queue_information.job, str)
+
+    for key, value in queue_information.quantum_task.items():
+        assert isinstance(key, QueueType)
+        assert isinstance(value, str)
