@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.55.1.post0 (2023-09-18)
+
+### Documentation Changes
+
+ * Remove trailing backquotes
+ * add code contributors to the readme
+ * change the sphinx requirement to be greater than 7.0.0
+
 ## v1.55.1 (2023-09-14)
 
 ### Bug Fixes and Other Changes
