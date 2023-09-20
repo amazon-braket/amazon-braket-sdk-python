@@ -4,31 +4,31 @@
 
 ```
 
-  * [**Grover**](modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Grover/Grover.ipynb)
+  * [**Grover**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Grover/Grover.ipynb)
 
     This tutorial provides a step-by-step walkthrough explaining Grover's quantum algorithm. We show how to build the corresponding quantum circuit with simple modular building blocks, by means of the Amazon Braket SDK. Specifically, we demonstrate how to build custom gates that are not part of the basic gate set provided by the SDK. A custom gate can used as a core quantum gate by registering it as a subroutine.
 
-  * [**Quantum Fourier transform**](modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Quantum_Fourier_Transform/Quantum_Fourier_Transform.ipynb)
+  * [**Quantum Fourier transform**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Quantum_Fourier_Transform/Quantum_Fourier_Transform.ipynb)
 
     This tutorial provides a detailed implementation of the Quantum Fourier Transform (QFT) and the inverse QFT, using the Amazon Braket SDK. We provide two different implementations: with and without recursion. The QFT is an important subroutine to many quantum algorithms, most famously Shor's algorithm for factoring, and the quantum phase estimation (QPE) algorithm for estimating the eigenvalues of a unitary operator. The QFT can be performed efficiently on a quantum computer, using only O(n<sup>2</sup>) single-qubit Hadamard gates and two-qubit controlled phase shift gates, where 𝑛 is the number of qubits. We first review the basics of the quantum Fourier transform, and its relationship to the discrete (classical) Fourier transform. We then implement the QFT in code two ways: recursively and non-recursively. This notebook also showcases the Amazon Braket `circuit.subroutine` functionality, which allows one to define custom methods and add them to the Circuit class.
 
-  * [**Quantum phase estimation**](modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Quantum_Phase_Estimation/Quantum_Phase_Estimation.ipynb)
+  * [**Quantum phase estimation**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Quantum_Phase_Estimation/Quantum_Phase_Estimation.ipynb)
 
     This tutorial provides a detailed implementation of the Quantum Phase Estimation (QPE) algorithm, through the Amazon Braket SDK. The QPE algorithm is designed to estimate the eigenvalues of a unitary operator 𝑈; it is a very important subroutine to many quantum algorithms, most famously Shor's algorithm for factoring, and the HHL algorithm (named after the physicists Harrow, Hassidim and Lloyd) for solving linear systems of equations on a quantum computer. Moreover, eigenvalue problems can be found across many disciplines and application areas, including (for example) principal component analysis (PCA) as used in machine learning, or in the solution of differential equations as relevant across mathematics, physics, engineering and chemistry. We first review the basics of the QPE algorithm. We then implement the QPE algorithm in code using the Amazon Braket SDK, and we illustrate the application of the algorithm with simple examples. This notebook also showcases the Amazon Braket `circuit.subroutine` functionality, which allows you to use custom-built gates as if they were any other built-in gates. This tutorial is set up to run on the local simulator or the on-demand simulator. Changing between these devices requires changing only one line of code, as demonstrated below in cell.
 
-  * [**Quantum amplitude amplification**](modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Quantum_Amplitude_Amplification/Quantum_Amplitude_Amplification.ipynb)
+  * [**Quantum amplitude amplification**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Quantum_Amplitude_Amplification/Quantum_Amplitude_Amplification.ipynb)
 
     This tutorial provides a detailed discussion and implementation of the Quantum Amplitude Amplification (QAA) algorithm, using the Amazon Braket SDK. QAA is a routine in quantum computing which generalizes the idea behind Grover's famous search algorithm, with applications across many quantum algorithms. In short, QAA uses an iterative approach to systematically increase the probability of finding one or multiple target states in a given search space. In a quantum computer, QAA can be used to obtain a quadratic speedup over several classical algorithms.
 
-  * [**Randomness generation**](modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Randomness/Randomness_Generation.ipynb)
+  * [**Randomness generation**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Randomness/Randomness_Generation.ipynb)
 
     This tutorial provides a detailed implementation of a quantum random number generation (QRNG). Random numbers are a ubiquitous resource in computation and cryptography. For example, in security, random numbers are crucial to creating keys for encryption. QRNGs, which make use of the inherent unpredictability in quantum physics, promise enhanced security compared to standard cryptographic pseudo-random number generators (CPRNGs) based on classical technologies. In the notebook, we program two separate quantum processor units (QPUs) from different suppliers in Amazon Braket to supply two streams of weakly random bits. We then show how to generate physically secure randomness from these two weak sources by means of classical post-processing based on randomness extractors.
 
-  * [**Simon's algorithm**](modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Simons_Algorithm/Simons_Algorithm.ipynb)
+  * [**Simon's algorithm**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Simons_Algorithm/Simons_Algorithm.ipynb)
 
     This tutorial provides a detailed discussion and implementation of Simon's algorithm, which provided the first example of an exponential speedup over the best known classical algorithm by using a quantum computer to solve a particular problem. Originally published in 1994, Simon's algorithm was a precursor to Shor's well-known factoring algorithm, and it served as inspiration for many of the seminal works in quantum computation that followed.
 
-  * [**Superdense coding**](modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Superdense_coding/Superdense_coding.ipynb) 
+  * [**Superdense coding**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_algorithms_and_protocols/canonical/Superdense_coding/Superdense_coding.ipynb) 
   
     This tutorial constructs an implementation of the *superdense coding protocol*, by means of the Amazon Braket SDK. Superdense coding is a method of transmitting two classical bits by sending only one qubit. Starting with a pair of entanged qubits, the sender (*aka* Alice) applies a certain quantum gate to their qubit and sends the result to the receiver (*aka* Bob), who is then able to decode the full two-bit message.
     
