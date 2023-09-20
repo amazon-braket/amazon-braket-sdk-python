@@ -9,7 +9,7 @@ hardware/error_mitigation.md
 hardware/pulse_control.md
 ```
 
-  * [**Allocating qubits on QPU devices**](https://mybinder.org/v2/gh/benhong-amzn/amazon-braket-examples.git/pure_reorg?labpath=modules/Continue_Exploring/quantum_hardware/Allocating_Qubits_on_QPU_Devices.ipynb)
+  * [**Allocating qubits on QPU devices**](https://mybinder.org/v2/gh/amazon-braket/amazon-braket-sdk-python.git/feature/read-the-docs?labpath=modules/Continue_Exploring/quantum_hardware/Allocating_Qubits_on_QPU_Devices.ipynb)
 
     This tutorial explains how you can use the Amazon Braket SDK to allocate the qubit selection for your circuits manually, when running on QPUs.
     
