@@ -5,5 +5,5 @@
 
 ../examples/getting_started
 ../examples/continue_exploring
-../badge/braket_badge
+../courses/braket_courses
 ```

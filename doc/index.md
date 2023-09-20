@@ -70,7 +70,7 @@ _apidoc/modules
 
 pages/examples/getting_started
 pages/examples/continue_exploring
-pages/badge/braket_badge
+pages/courses/braket_courses
 pages/qbraid/getting_started_with_qbraid
 ```
 
