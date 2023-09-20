@@ -16,17 +16,26 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
+    "myst_parser",
+    "sphinx_design",
 ]
 
-source_suffix = ".rst"
+myst_enable_extensions = ["colon_fence"]
+
+source_suffix = ['.rst', '.md']
 master_doc = "index"
 
 autoclass_content = "both"
 autodoc_member_order = "bysource"
 default_role = "py:obj"
 
-html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]
+html_theme = "sphinx_book_theme"
+html_logo = "_static/aws.png"
+html_title = "Amazon Braket Python SDK"
 htmlhelp_basename = "{}doc".format(project)
+
+html_css_files = ["custom.css"]
 
 language = "en"
 
