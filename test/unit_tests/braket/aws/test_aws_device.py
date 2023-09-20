@@ -1949,6 +1949,6 @@ def test_queue_depth(arn):
     mock_session.region = RIGETTI_REGION
     device = AwsDevice(arn, mock_session)
     assert device.queue_depth() == QueueDepthInfo(
-        quantum_task={QueueType.NORMAL: "19", QueueType.PRIORITY: "3"},
-        job="0 (3 prioritized job(s) running)",
+        quantum_tasks={QueueType.NORMAL: "19", QueueType.PRIORITY: "3"},
+        jobs="0 (3 prioritized job(s) running)",
     )

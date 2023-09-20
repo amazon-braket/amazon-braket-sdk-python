@@ -76,9 +76,9 @@ def test_queue_depth():
 
     # data type validations
     assert isinstance(queue_information, QueueDepthInfo)
-    assert isinstance(queue_information.quantum_task, dict)
-    assert isinstance(queue_information.job, str)
+    assert isinstance(queue_information.quantum_tasks, dict)
+    assert isinstance(queue_information.jobs, str)
 
-    for key, value in queue_information.quantum_task.items():
+    for key, value in queue_information.quantum_tasks.items():
         assert isinstance(key, QueueType)
         assert isinstance(value, str)

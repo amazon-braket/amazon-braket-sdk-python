@@ -690,14 +690,14 @@ class AwsDevice(Device):
             Queue depth information for a running job.
             >>> device = AwsDevice(Device.Amazon.SV1)
             >>> print(device.queue_depth())
-            QueueDepthInfo(quantum_task={<QueueType.NORMAL: 'Normal'>: '0',
-            <QueueType.PRIORITY: 'Priority'>: '1'}, job='0 (1 prioritized job(s) running)')
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '0',
+            <QueueType.PRIORITY: 'Priority'>: '1'}, jobs='0 (1 prioritized job(s) running)')
 
             If more than 4000 quantum tasks queued on a device.
             >>> device = AwsDevice(Device.Amazon.DM1)
             >>> print(device.queue_depth())
-            QueueDepthInfo(quantum_task={<QueueType.NORMAL: 'Normal'>: '>4000',
-            <QueueType.PRIORITY: 'Priority'>: '2000'}, job='100')
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '>4000',
+            <QueueType.PRIORITY: 'Priority'>: '2000'}, jobs='100')
         """
         metadata = self.aws_session.get_device(arn=self.arn)
         queue_metadata = metadata.get("deviceQueueInfo")
@@ -710,9 +710,9 @@ class AwsDevice(Device):
 
             if queue_name == "QUANTUM_TASKS_QUEUE":
                 priority_enum = QueueType(queue_priority)
-                queue_info.setdefault("quantum_task", {})[priority_enum] = queue_size
+                queue_info.setdefault("quantum_tasks", {})[priority_enum] = queue_size
             else:
-                queue_info["job"] = queue_size
+                queue_info["jobs"] = queue_size
 
         return QueueDepthInfo(**queue_info)
 
