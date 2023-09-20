@@ -35,8 +35,6 @@ html_logo = "_static/aws.png"
 html_title = "Amazon Braket Python SDK"
 htmlhelp_basename = "{}doc".format(project)
 
-html_css_files = ["custom.css"]
-
 language = "en"
 
 napoleon_use_rtype = False
