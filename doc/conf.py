@@ -16,9 +16,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
-    "myst_parser",
+    "nbsphinx",
+    "myst_nb",
     "sphinx_design",
 ]
+
+nb_execution_mode = 'off'
 
 myst_enable_extensions = ["colon_fence"]
 

@@ -1,9 +1,0 @@
-# Noise simulations
-
-This notebook collection provides a detailed overview of noise simulation on Amazon Braket. You will learn how to define noise channels, apply noise to new or existing circuits, and run those circuits on the Amazon Braket noise simulators. We also introduce noise models on Amazon Braket, along with details on how to create noise models containing different types of noise and instructions for how to apply the noise to a circuit. We show how to construct a noise model from device calibration data for real quantum processing units (QPUs) and also compare the measurement outcomes of circuits run on a noisy simulator with the same circuits run on QPUs to show that simulating circuits with noise models more closely mimics QPUs.
-
-  * [**Noise models on Amazon Braket**](https://mybinder.org/v2/gh/amazon-braket/amazon-braket-examples.git/feature/reorganized-examples?labpath=modules/Continue_Exploring/quantum_sims/noise_simulations/Noise_models_on_Amazon_Braket.ipynb)
-
-  * [**Noise models on Rigetti**](https://mybinder.org/v2/gh/amazon-braket/amazon-braket-examples.git/feature/reorganized-examples?labpath=modules/Continue_Exploring/quantum_sims/noise_simulations/Noise_models_on_Rigetti.ipynb)
-
-  * [**Simulating noise on Amazon Braket**](https://mybinder.org/v2/gh/amazon-braket/amazon-braket-examples.git/feature/reorganized-examples?labpath=modules/Continue_Exploring/quantum_sims/noise_simulations/Simulating_Noise_On_Amazon_Braket.ipynb)
