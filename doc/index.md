@@ -66,6 +66,15 @@ _apidoc/modules
 
 ```{toctree}
 :hidden:
+:caption: Pathways
+
+pages/pathways/newcomer
+pages/pathways/educator
+pages/pathways/researcher
+```
+
+```{toctree}
+:hidden:
 :caption: Modules
 
 pages/examples/getting_started
@@ -85,15 +94,6 @@ pages/examples/quantum_algorithms_and_protocols
 pages/examples/quantum_frameworks_and_plugins
 pages/examples/quantum_hardware
 pages/examples/quantum_sims
-```
-
-```{toctree}
-:hidden:
-:caption: Pathways
-
-pages/pathways/newcomer
-pages/pathways/educator
-pages/pathways/researcher
 ```
 
 ::::{grid} 1 2 2 3
