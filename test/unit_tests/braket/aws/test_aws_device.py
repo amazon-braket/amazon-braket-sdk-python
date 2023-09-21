@@ -1669,6 +1669,74 @@ def test_get_devices_simulators_only(mock_copy_session, aws_session):
     assert [result.name for result in results] == ["SV1"]
 
 
+@patch("braket.aws.aws_device.AwsSession.copy_session")
+def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
+    aws_session.search_devices.side_effect = [
+        # us-west-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            }
+        ],
+        ValueError("should not be reachable"),
+    ]
+    aws_session.get_device.side_effect = [
+        MOCK_GATE_MODEL_SIMULATOR,
+        ValueError("should not be reachable"),
+    ]
+    session_for_region = Mock()
+    session_for_region.search_devices.side_effect = [
+        # us-east-1
+        [
+            {
+                "deviceArn": IONQ_ARN,
+                "deviceName": "IonQ Device",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "IonQ",
+            },
+        ],
+        # us-west-2
+        ClientError(
+            {
+                "Error": {
+                    "Code": "Test Code",
+                    "Message": "Test Message",
+                }
+            },
+            "Test Operation",
+        ),
+        # eu-west-2
+        [
+            {
+                "deviceArn": OQC_ARN,
+                "deviceName": "Lucy",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "OQC",
+            }
+        ],
+        # Only two regions to search outside of current
+        ValueError("should not be reachable"),
+    ]
+    session_for_region.get_device.side_effect = [
+        MOCK_GATE_MODEL_QPU_2,
+        MOCK_GATE_MODEL_QPU_3,
+        ValueError("should not be reachable"),
+    ]
+    mock_copy_session.return_value = session_for_region
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    results = AwsDevice.get_devices(
+        statuses=["ONLINE"],
+        aws_session=aws_session,
+    )
+    assert [result.name for result in results] == ["Blah", "Lucy", "SV1"]
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_get_devices_invalid_order_by():
     AwsDevice.get_devices(order_by="foo")
