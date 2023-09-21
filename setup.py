@@ -58,6 +58,9 @@ setup(
             "sphinx",
             "sphinx-rtd-theme",
             "sphinxcontrib-apidoc",
+            "myst-nb"
+            "sphinx-design",
+            "sphinx-book-theme",
             "tox",
         ]
     },
