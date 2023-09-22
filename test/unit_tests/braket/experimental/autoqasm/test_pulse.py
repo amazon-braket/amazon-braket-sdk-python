@@ -50,7 +50,6 @@ def test_mix_gate_pulse() -> None:
     expected = textwrap.dedent(
         """
         OPENQASM 3.0;
-        defcalgrammar "openpulse";
         cal {
             waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};
         }
@@ -79,7 +78,6 @@ def test_merge_cal_box() -> None:
     expected = textwrap.dedent(
         """
         OPENQASM 3.0;
-        defcalgrammar "openpulse";
         cal {
             barrier $0;
             delay[340.0ms] $3, $4;
@@ -155,7 +153,12 @@ def test_merge_cal_box() -> None:
                 "\n    play(predefined_frame_1, arb_wf);\n}"
             ),
         ),
-        (capture_v0, FRAME1, [], "\ncal {\n    capture_v0(predefined_frame_1);\n}"),
+        (
+            capture_v0,
+            FRAME1,
+            [],
+            ("\nbit __bit_0__;" "\ncal {\n    __bit_0__ = capture_v0(predefined_frame_1);\n}"),
+        ),
     ],
 )
 def test_pulse_control(instruction, qubits_or_frames, params, expected_qasm) -> None:

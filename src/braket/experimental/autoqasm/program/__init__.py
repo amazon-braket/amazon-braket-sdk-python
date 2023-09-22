@@ -22,6 +22,7 @@ from .program import (  # noqa: F401
     ProgramConversionContext,
     ProgramMode,
     ProgramScope,
+    SerializationConfig,
     UserConfig,
     build_program,
     get_program_conversion_context,

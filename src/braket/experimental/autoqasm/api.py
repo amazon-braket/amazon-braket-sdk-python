@@ -42,7 +42,10 @@ from braket.experimental.autoqasm.program.gate_calibrations import GateCalibrati
 
 
 def main(
-    *args, num_qubits: Optional[int] = None, device: Optional[Union[Device, str]] = None
+    *args,
+    num_qubits: Optional[int] = None,
+    device: Optional[Union[Device, str]] = None,
+    serialization_config: Optional[aq_program.SerializationConfig] = None,
 ) -> Callable[[Any], aq_program.Program]:
     """Decorator that converts a function into a callable that returns
     a Program object containing the quantum program.
@@ -55,6 +58,8 @@ def main(
             the program.
         device (Optional[Union[Device, str]]): Configuration to set the target device for the
             program. Can be either an Device object or a valid Amazon Braket device ARN.
+        serialization_config (Optional[SerializationConfig]): Configuration for OpenQASM
+            serialization.
 
     Returns:
         Callable[[Any], Program]: A callable which returns the converted
@@ -66,7 +71,13 @@ def main(
     return _function_wrapper(
         *args,
         converter_callback=_convert_main,
-        converter_args={"user_config": aq_program.UserConfig(num_qubits=num_qubits, device=device)},
+        converter_args={
+            "user_config": aq_program.UserConfig(
+                num_qubits=num_qubits,
+                device=device,
+                serialization_config=serialization_config or aq_program.SerializationConfig(),
+            )
+        },
     )
 
 
