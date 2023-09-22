@@ -171,8 +171,8 @@ def barrier(
 def _pulse_sequence_capture_v0_with_return(self, frame: Frame) -> PulseSequence:
     """
     Implement a custom capturing method to be register it to the `PulseSequence` class. This method
-    adds an instruction to capture the bit output from measuring the specified frame and assign the
-    output to an bit variable explicitly.
+    adds an instruction to capture the bit output from measuring the specified frame and assigns
+    the output to a bit variable explicitly.
 
     Args:
         frame (Frame): Frame on which the capture operation needs to be performed.
