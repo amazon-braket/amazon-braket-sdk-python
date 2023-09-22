@@ -71,7 +71,7 @@ class UserConfig:
     device: Optional[Device] = None
     """The target device for the program."""
 
-    serialization_config: Optional[SerializationConfig] = SerializationConfig()
+    serialization_config: Optional[SerializationConfig] = field(default_factory=SerializationConfig)
     """OpenQASM serialization configurations."""
 
 
