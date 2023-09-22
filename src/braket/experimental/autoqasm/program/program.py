@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import contextlib
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Iterable, List, Optional, Union
 
@@ -48,8 +48,8 @@ class SerializationConfig:
     simplify_constants: Optional[bool] = False
     """Whether to simplify constants, such as pi, from numerics to symbols. Defaults to False."""
 
-    include_defcalgrammar: Optional[bool] = False
-    """Whether to include defcalgrammar. Default to False."""
+    auto_defcalgrammar: Optional[bool] = False
+    """Whether to automatically include defcalgrammar when pulses are used. Default to False."""
 
     include_externs: Optional[bool] = False
     """Whether to include externs. Default to False."""
@@ -57,7 +57,7 @@ class SerializationConfig:
     return_capture_to_bitvar: Optional[bool] = True
     """Whether to assign the return of capture_v0 to a bit variable. Default to True. """
 
-    _encal_declarations: Optional[bool] = None
+    _encal_declarations: Optional[bool] = field(init=False)
     """Oqpy's encal_declarations option. AutoQASM sets it to True if a program includes pulse."""
 
 
@@ -160,7 +160,7 @@ class Program(SerializableProgram):
             )
             if (
                 self.serialization_config._encal_declarations
-                and not self.serialization_config.include_defcalgrammar
+                and not self.serialization_config.auto_defcalgrammar
             ):
                 openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
             return openqasm_ir

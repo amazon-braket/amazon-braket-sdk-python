@@ -47,9 +47,9 @@ def test_serialization_config_simplify_constants() -> None:
     assert qasm == expected
 
 
-def test_serialization_config_include_defcalgrammar() -> None:
+def test_serialization_config_auto_defcalgrammar() -> None:
     """Tests serializing with defcalgrammar on top."""
-    serialization_config = SerializationConfig(include_defcalgrammar=True)
+    serialization_config = SerializationConfig(auto_defcalgrammar=True)
 
     @aq.main(serialization_config=serialization_config)
     def my_program():
