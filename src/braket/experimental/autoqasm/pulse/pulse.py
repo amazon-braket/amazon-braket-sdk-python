@@ -122,14 +122,7 @@ def capture_v0(frame: Frame) -> None:
     Args:
         frame (Frame): Frame on which the capture operation needs to be performed.
     """
-    serialization_config = (
-        aq_program.get_program_conversion_context().user_config.serialization_config
-    )
-
-    if serialization_config.return_capture_to_bitvar:
-        _pulse_instruction("_capture_v0_with_return", frame)
-    else:
-        _pulse_instruction("capture_v0", frame)
+    _pulse_instruction("_capture_v0_with_return", frame)
 
 
 def delay(

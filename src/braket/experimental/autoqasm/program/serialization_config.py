@@ -11,20 +11,22 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""This module implements the central program data structure and other related structures
-for AutoQASM.
-"""
 
-from .pragmas import verbatim  # noqa: F401
-from .program import (  # noqa: F401
-    GateArgs,
-    Program,
-    ProgramConversionContext,
-    ProgramMode,
-    ProgramScope,
-    UserConfig,
-    build_program,
-    get_program_conversion_context,
-    in_active_program_conversion_context,
-)
-from .serialization_config import OpenqasmSerializationConfig  # noqa: F401
+from dataclasses import dataclass
+from typing import Optional
+
+
+@dataclass
+class SerializationConfig:
+    """Abstract class for serialization configuration."""
+
+    pass
+
+
+@dataclass
+class OpenqasmSerializationConfig(SerializationConfig):
+    auto_defcalgrammar: Optional[bool] = False
+    """Whether to automatically include defcalgrammar when pulses are used. Default to False."""
+
+    include_externs: Optional[bool] = False
+    """Whether to include externs. Default to False."""

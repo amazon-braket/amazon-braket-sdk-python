@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import contextlib
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Iterable, List, Optional, Union
 
@@ -28,6 +28,10 @@ from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
+from braket.experimental.autoqasm.program.serialization_config import (
+    OpenqasmSerializationConfig,
+    SerializationConfig,
+)
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -44,24 +48,6 @@ def _get_local() -> threading.local:
 
 
 @dataclass
-class SerializationConfig:
-    simplify_constants: Optional[bool] = False
-    """Whether to simplify constants, such as pi, from numerics to symbols. Defaults to False."""
-
-    auto_defcalgrammar: Optional[bool] = False
-    """Whether to automatically include defcalgrammar when pulses are used. Default to False."""
-
-    include_externs: Optional[bool] = False
-    """Whether to include externs. Default to False."""
-
-    return_capture_to_bitvar: Optional[bool] = True
-    """Whether to assign the return of capture_v0 to a bit variable. Default to True. """
-
-    _encal_declarations: Optional[bool] = field(init=False)
-    """Oqpy's encal_declarations option. AutoQASM sets it to True if a program includes pulse."""
-
-
-@dataclass
 class UserConfig:
     """User-specified configurations that influence program building."""
 
@@ -70,9 +56,6 @@ class UserConfig:
 
     device: Optional[Device] = None
     """The target device for the program."""
-
-    serialization_config: Optional[SerializationConfig] = field(default_factory=SerializationConfig)
-    """OpenQASM serialization configurations."""
 
 
 class ProgramScope(Enum):
@@ -102,17 +85,18 @@ class Program(SerializableProgram):
     def __init__(
         self,
         oqpy_program: oqpy.Program,
-        serialization_config: SerializationConfig = SerializationConfig(),
+        has_pulse_control: bool = False,
     ):
         """Initializes an AutoQASM Program object.
 
         Args:
             oqpy_program (oqpy.Program): The oqpy program object which
                 contains the generated program.
-            serialization_config (SerializationConfig): Configurations for OpenQASM serialization.
+            has_pulse_control (bool): Whether the program contains pulse
+                control instructions. Defaults to False.
         """
         self._oqpy_program = oqpy_program
-        self.serialization_config = serialization_config
+        self._has_pulse_control = has_pulse_control
 
     def with_calibrations(self, gate_calibrations: Union[Callable, List[Callable]]) -> Program:
         """Add the gate calibrations to the program. The calibration added program is returned
@@ -129,23 +113,24 @@ class Program(SerializableProgram):
             gate_calibrations = [gate_calibrations]
         assert all(isinstance(gc, Callable) for gc in gate_calibrations)
 
-        combined_oqpy_program = oqpy.Program(
-            simplify_constants=self.serialization_config.simplify_constants
-        )
+        combined_oqpy_program = oqpy.Program(simplify_constants=False)
         for gc in gate_calibrations:
             combined_oqpy_program += gc().program._oqpy_program
         combined_oqpy_program += self._oqpy_program
-        return Program(combined_oqpy_program, self.serialization_config)
+        return Program(combined_oqpy_program, self._has_pulse_control)
 
     def to_ir(
         self,
         ir_type: IRType = IRType.OPENQASM,
+        serialization_config: SerializationConfig = OpenqasmSerializationConfig(),
     ) -> str:
         """Serializes the program into an intermediate representation.
 
         Args:
             ir_type (IRType): The IRType to use for converting the program to its
                 IR representation. Defaults to IRType.OPENQASM.
+            serialization_config (SerializationConfig): IR serialization configuration.
+                Default to OpenqasmSerializationConfig().
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.
@@ -155,13 +140,10 @@ class Program(SerializableProgram):
         """
         if ir_type == IRType.OPENQASM:
             openqasm_ir = self._oqpy_program.to_qasm(
-                encal_declarations=self.serialization_config._encal_declarations,
-                include_externs=self.serialization_config.include_externs,
+                encal_declarations=self._has_pulse_control,
+                include_externs=serialization_config.include_externs,
             )
-            if (
-                self.serialization_config._encal_declarations
-                and not self.serialization_config.auto_defcalgrammar
-            ):
+            if self._has_pulse_control and not serialization_config.auto_defcalgrammar:
                 openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
             return openqasm_ir
 
@@ -214,11 +196,7 @@ class ProgramConversionContext:
         self.user_config = user_config or UserConfig()
         self.return_variable = None
         self.in_verbatim_block = False
-        self._oqpy_program_stack = [
-            oqpy.Program(
-                simplify_constants=self.user_config.serialization_config.simplify_constants
-            )
-        ]
+        self._oqpy_program_stack = [oqpy.Program(simplify_constants=False)]
         self._gate_definitions_processing = []
         self._calibration_definitions_processing = []
         self._gates_defined = set()
@@ -246,9 +224,7 @@ class ProgramConversionContext:
                     f'The target device "{device.name}" does not support '
                     f"the following gates used in the program: {invalid_gates_used}"
                 )
-        serialization_config = self.user_config.serialization_config
-        serialization_config._encal_declarations = self._has_pulse_control
-        return Program(self.get_oqpy_program(), serialization_config=serialization_config)
+        return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property
     def qubits(self) -> List[int]:
