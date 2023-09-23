@@ -17,16 +17,14 @@ from typing import Optional
 
 
 @dataclass
-class SerializationConfig:
-    """Abstract class for serialization configuration."""
-
-    pass
-
-
-@dataclass
-class OpenQASMSerializationConfig(SerializationConfig):
+class OpenQASMSerializationProperties:
     auto_defcalgrammar: Optional[bool] = False
     """Whether to automatically include defcalgrammar when pulses are used. Default to False."""
 
     include_externs: Optional[bool] = False
     """Whether to include externs. Default to False."""
+
+
+# Type alias to refer to possible serialization properties. Can be expanded once
+# new properties are added.
+SerializationProperties = OpenQASMSerializationProperties

@@ -16,7 +16,7 @@
 import textwrap
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.program import OpenQASMSerializationConfig
+from braket.experimental.autoqasm.program import OpenQASMSerializationProperties
 from braket.experimental.autoqasm.pulse import barrier, play
 from braket.pulse import Frame, GaussianWaveform, Port
 
@@ -25,7 +25,7 @@ FRAME = Frame(frame_id="predefined_frame_1", frequency=2e9, port=PORT, phase=0, 
 WAVEFORM = GaussianWaveform(4e-3, 0.3, 0.7, True, "wf_dg")
 
 
-def test_openqasm_serialization_config_auto_defcalgrammar() -> None:
+def test_openqasm_serialization_properties_auto_defcalgrammar() -> None:
     """Tests serializing with defcalgrammar on top."""
 
     @aq.main
@@ -42,7 +42,7 @@ def test_openqasm_serialization_config_auto_defcalgrammar() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenQASMSerializationConfig(auto_defcalgrammar=True)
+        serialization_properties=OpenQASMSerializationProperties(auto_defcalgrammar=True)
     )
     assert qasm == expected_true
 
@@ -55,12 +55,12 @@ def test_openqasm_serialization_config_auto_defcalgrammar() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenQASMSerializationConfig(auto_defcalgrammar=False)
+        serialization_properties=OpenQASMSerializationProperties(auto_defcalgrammar=False)
     )
     assert qasm == expected_false
 
 
-def test_openqasm_serialization_config_include_externs() -> None:
+def test_openqasm_serialization_properties_include_externs() -> None:
     """Tests serializing with extern definition."""
 
     @aq.main
@@ -78,7 +78,7 @@ def test_openqasm_serialization_config_include_externs() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenQASMSerializationConfig(include_externs=True)
+        serialization_properties=OpenQASMSerializationProperties(include_externs=True)
     )
     assert qasm == expected_true
 
@@ -92,6 +92,6 @@ def test_openqasm_serialization_config_include_externs() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenQASMSerializationConfig(include_externs=False)
+        serialization_properties=OpenQASMSerializationProperties(include_externs=False)
     )
     assert qasm == expected_false

@@ -28,9 +28,9 @@ from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
-from braket.experimental.autoqasm.program.serialization_config import (
-    OpenQASMSerializationConfig,
-    SerializationConfig,
+from braket.experimental.autoqasm.program.serialization_properties import (
+    OpenQASMSerializationProperties,
+    SerializationProperties,
 )
 
 # Create the thread-local object for the program conversion context.
@@ -122,15 +122,15 @@ class Program(SerializableProgram):
     def to_ir(
         self,
         ir_type: IRType = IRType.OPENQASM,
-        serialization_config: SerializationConfig = OpenQASMSerializationConfig(),
+        serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
     ) -> str:
         """Serializes the program into an intermediate representation.
 
         Args:
             ir_type (IRType): The IRType to use for converting the program to its
                 IR representation. Defaults to IRType.OPENQASM.
-            serialization_config (SerializationConfig): IR serialization configuration.
-                Default to OpenQASMSerializationConfig().
+            serialization_properties (SerializationProperties): IR serialization configuration.
+                Default to OpenQASMSerializationProperties().
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.
@@ -141,9 +141,9 @@ class Program(SerializableProgram):
         if ir_type == IRType.OPENQASM:
             openqasm_ir = self._oqpy_program.to_qasm(
                 encal_declarations=self._has_pulse_control,
-                include_externs=serialization_config.include_externs,
+                include_externs=serialization_properties.include_externs,
             )
-            if self._has_pulse_control and not serialization_config.auto_defcalgrammar:
+            if self._has_pulse_control and not serialization_properties.auto_defcalgrammar:
                 openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
             return openqasm_ir
 
