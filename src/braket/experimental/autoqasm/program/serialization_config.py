@@ -24,7 +24,7 @@ class SerializationConfig:
 
 
 @dataclass
-class OpenqasmSerializationConfig(SerializationConfig):
+class OpenQASMSerializationConfig(SerializationConfig):
     auto_defcalgrammar: Optional[bool] = False
     """Whether to automatically include defcalgrammar when pulses are used. Default to False."""
 

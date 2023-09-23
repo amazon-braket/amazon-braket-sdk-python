@@ -16,7 +16,7 @@
 import textwrap
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.program import OpenqasmSerializationConfig
+from braket.experimental.autoqasm.program import OpenQASMSerializationConfig
 from braket.experimental.autoqasm.pulse import barrier, play
 from braket.pulse import Frame, GaussianWaveform, Port
 
@@ -42,7 +42,7 @@ def test_openqasm_serialization_config_auto_defcalgrammar() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenqasmSerializationConfig(auto_defcalgrammar=True)
+        serialization_config=OpenQASMSerializationConfig(auto_defcalgrammar=True)
     )
     assert qasm == expected_true
 
@@ -55,7 +55,7 @@ def test_openqasm_serialization_config_auto_defcalgrammar() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenqasmSerializationConfig(auto_defcalgrammar=False)
+        serialization_config=OpenQASMSerializationConfig(auto_defcalgrammar=False)
     )
     assert qasm == expected_false
 
@@ -78,7 +78,7 @@ def test_openqasm_serialization_config_include_externs() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenqasmSerializationConfig(include_externs=True)
+        serialization_config=OpenQASMSerializationConfig(include_externs=True)
     )
     assert qasm == expected_true
 
@@ -92,6 +92,6 @@ def test_openqasm_serialization_config_include_externs() -> None:
         """
     ).strip()
     qasm = my_program().to_ir(
-        serialization_config=OpenqasmSerializationConfig(include_externs=False)
+        serialization_config=OpenQASMSerializationConfig(include_externs=False)
     )
     assert qasm == expected_false

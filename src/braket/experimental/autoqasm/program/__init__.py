@@ -27,4 +27,4 @@ from .program import (  # noqa: F401
     get_program_conversion_context,
     in_active_program_conversion_context,
 )
-from .serialization_config import OpenqasmSerializationConfig  # noqa: F401
+from .serialization_config import OpenQASMSerializationConfig  # noqa: F401

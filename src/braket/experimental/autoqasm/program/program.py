@@ -29,7 +29,7 @@ from braket.experimental.autoqasm import constants, errors
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
 from braket.experimental.autoqasm.program.serialization_config import (
-    OpenqasmSerializationConfig,
+    OpenQASMSerializationConfig,
     SerializationConfig,
 )
 
@@ -122,7 +122,7 @@ class Program(SerializableProgram):
     def to_ir(
         self,
         ir_type: IRType = IRType.OPENQASM,
-        serialization_config: SerializationConfig = OpenqasmSerializationConfig(),
+        serialization_config: SerializationConfig = OpenQASMSerializationConfig(),
     ) -> str:
         """Serializes the program into an intermediate representation.
 
@@ -130,7 +130,7 @@ class Program(SerializableProgram):
             ir_type (IRType): The IRType to use for converting the program to its
                 IR representation. Defaults to IRType.OPENQASM.
             serialization_config (SerializationConfig): IR serialization configuration.
-                Default to OpenqasmSerializationConfig().
+                Default to OpenQASMSerializationConfig().
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.
