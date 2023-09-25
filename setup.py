@@ -32,11 +32,11 @@ setup(
         # to get the version of the simulator that supports the mcm=True argument for Monte Carlo
         # simulation of mid-circuit measurement, which AutoQASM requires.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
-        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@800a31a0860de5ec09532a3dbc127059d03cf9ac#egg=amazon-braket-default-simulator",  # noqa E501
-        # Pin the latest commit of the qubit-array branch of ajberdy/oqpy.git to get the version of
+        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@31d6c95f3ac250a0ccd04e1433ad61c8bfa4bde4#egg=amazon-braket-default-simulator",  # noqa E501
+        # Pin the latest commit of the main branch of openqasm/oqpy.git to get the version of
         # oqpy which contains changes that AutoQASM relies on, including the QubitArray type.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
-        "oqpy @ git+https://github.com/ajberdy/oqpy.git@26cf4f9089c3b381370917734d2d964c45c4458d#egg=oqpy",  # noqa E501
+        "oqpy @ git+https://github.com/openqasm/oqpy.git@4bb47dd59e07f03234872b1a5ec5c3c767abbdc1#egg=oqpy",  # noqa E501
         "setuptools",
         "backoff",
         "boltons",

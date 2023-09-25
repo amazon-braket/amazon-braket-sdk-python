@@ -17,7 +17,7 @@ from openpulse.printer import Printer
 from openqasm3.ast import DurationLiteral
 from openqasm3.printer import PrinterState
 
-from braket.parametric.free_parameter_expression import FreeParameterExpression
+from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
 
 
 class _PulsePrinter(Printer):
@@ -45,8 +45,8 @@ class _PulsePrinter(Printer):
             context (PrinterState): The printer state context.
         """
         duration = node.value
-        if isinstance(duration, FreeParameterExpression):
-            self.stream.write(f"({duration.expression}){node.unit.name}")
+        if isinstance(duration, _FreeParameterExpressionIdentifier):
+            self.stream.write(f"({duration.expression}) * 1{node.unit.name}")
         else:
             super().visit_DurationLiteral(node, context)
 

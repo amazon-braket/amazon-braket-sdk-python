@@ -962,7 +962,7 @@ def test_bind_values_pulse_gate():
         [
             "cal {",
             "    set_frequency(user_frame, b + 3);",
-            "    delay[(1000000000.0*c)ns] user_frame;",
+            "    delay[(c) * 1s] user_frame;",
             "}",
         ]
     )

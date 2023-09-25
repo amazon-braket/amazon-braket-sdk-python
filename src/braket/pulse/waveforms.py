@@ -21,7 +21,6 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
-from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
@@ -29,7 +28,6 @@ from braket.parametric.free_parameter_expression import (
     subs_if_free_parameter,
 )
 from braket.parametric.parameterizable import Parameterizable
-from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
 
 
 class Waveform(ABC):
@@ -454,14 +452,12 @@ def _make_identifier_name() -> str:
 
 def _map_to_oqpy_type(
     parameter: Union[FreeParameterExpression, float], is_duration_type: bool = False
-) -> Union[_FreeParameterExpressionIdentifier, OQPyExpression]:
-    if isinstance(parameter, FreeParameterExpression):
-        return (
-            OQDurationLiteral(parameter)
-            if is_duration_type
-            else _FreeParameterExpressionIdentifier(parameter)
-        )
-    return parameter
+) -> Union[FreeParameterExpression, OQPyExpression]:
+    return (
+        FreeParameterExpression(parameter, duration)
+        if isinstance(parameter, FreeParameterExpression) and is_duration_type
+        else parameter
+    )
 
 
 def _parse_waveform_from_calibration_schema(waveform: Dict) -> Waveform:

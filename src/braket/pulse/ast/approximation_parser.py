@@ -56,7 +56,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         self.amplitudes = defaultdict(TimeSeries)
         self.frequencies = defaultdict(TimeSeries)
         self.phases = defaultdict(TimeSeries)
-        context = _ParseState(variables=dict(), frame_data=_init_frame_data(frames))
+        context = _ParseState(variables={"pi": np.pi}, frame_data=_init_frame_data(frames))
         self._qubit_frames_mapping: Dict[str, List[str]] = _init_qubit_frame_mapping(frames)
         self.visit(program.to_ast(include_externs=False), context)
 
