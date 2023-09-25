@@ -28,6 +28,10 @@ from braket.devices.device import Device
 from braket.experimental.autoqasm import constants, errors
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import _get_physical_qubit_indices, _qubit
+from braket.experimental.autoqasm.program.serialization_properties import (
+    OpenQASMSerializationProperties,
+    SerializationProperties,
+)
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -78,7 +82,11 @@ class Program(SerializableProgram):
     """The program that has been generated with AutoQASM. This object can
     be passed to the run() method of a Braket Device."""
 
-    def __init__(self, oqpy_program: oqpy.Program, has_pulse_control: bool = False):
+    def __init__(
+        self,
+        oqpy_program: oqpy.Program,
+        has_pulse_control: bool = False,
+    ):
         """Initializes an AutoQASM Program object.
 
         Args:
@@ -105,21 +113,24 @@ class Program(SerializableProgram):
             gate_calibrations = [gate_calibrations]
         assert all(isinstance(gc, Callable) for gc in gate_calibrations)
 
-        combined_oqpy_program = oqpy.Program()
+        combined_oqpy_program = oqpy.Program(simplify_constants=False)
         for gc in gate_calibrations:
             combined_oqpy_program += gc().program._oqpy_program
         combined_oqpy_program += self._oqpy_program
-        return Program(combined_oqpy_program, self._has_pulse_control)
+        return Program(combined_oqpy_program, has_pulse_control=True)
 
     def to_ir(
         self,
         ir_type: IRType = IRType.OPENQASM,
+        serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
     ) -> str:
         """Serializes the program into an intermediate representation.
 
         Args:
             ir_type (IRType): The IRType to use for converting the program to its
                 IR representation. Defaults to IRType.OPENQASM.
+            serialization_properties (SerializationProperties): IR serialization configuration.
+                Default to OpenQASMSerializationProperties().
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.
@@ -128,7 +139,13 @@ class Program(SerializableProgram):
             str: A representation of the program in the `ir_type` format.
         """
         if ir_type == IRType.OPENQASM:
-            return self._oqpy_program.to_qasm(encal_declarations=self._has_pulse_control)
+            openqasm_ir = self._oqpy_program.to_qasm(
+                encal_declarations=self._has_pulse_control,
+                include_externs=serialization_properties.include_externs,
+            )
+            if self._has_pulse_control and not serialization_properties.auto_defcalgrammar:
+                openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
+            return openqasm_ir
 
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
@@ -179,7 +196,7 @@ class ProgramConversionContext:
         self.user_config = user_config or UserConfig()
         self.return_variable = None
         self.in_verbatim_block = False
-        self._oqpy_program_stack = [oqpy.Program()]
+        self._oqpy_program_stack = [oqpy.Program(simplify_constants=False)]
         self._gate_definitions_processing = []
         self._calibration_definitions_processing = []
         self._gates_defined = set()
@@ -207,7 +224,6 @@ class ProgramConversionContext:
                     f'The target device "{device.name}" does not support '
                     f"the following gates used in the program: {invalid_gates_used}"
                 )
-
         return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property

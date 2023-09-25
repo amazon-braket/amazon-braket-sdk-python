@@ -110,7 +110,7 @@ gate my_gate(angle) q {
     rx(angle) q;
 }
 qubit[1] __qubits__;
-my_gate(pi / 4) __qubits__[0];"""
+my_gate(0.7853981633974483) __qubits__[0];"""
 
     program = main()
     assert program.to_ir() == expected
@@ -144,7 +144,7 @@ gate my_gate(angle) q {
     rx(angle) q;
 }
 qubit[2] __qubits__;
-my_gate(pi / 4) __qubits__[0];
+my_gate(0.7853981633974483) __qubits__[0];
 define_gate_in_subroutine();"""
 
     program = main()
@@ -315,7 +315,7 @@ def test_nested_gates() -> None:
 
     expected = """OPENQASM 3.0;
 gate t q {
-    rz(pi / 4) q;
+    rz(0.7853981633974483) q;
 }
 gate my_gate(theta) q {
     h q;
@@ -323,8 +323,8 @@ gate my_gate(theta) q {
     rx(theta) q;
 }
 qubit[2] __qubits__;
-my_gate(pi / 4) __qubits__[0];
-my_gate(3 * pi / 4) __qubits__[1];
+my_gate(0.7853981633974483) __qubits__[0];
+my_gate(2.356194490192345) __qubits__[1];
 bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];"""

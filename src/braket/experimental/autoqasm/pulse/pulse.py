@@ -26,8 +26,10 @@ from braket.experimental.autoqasm.instructions.qubits import (
     _get_physical_qubit_indices,
     is_qubit_identifier_type,
 )
+from braket.experimental.autoqasm.types import BitVar
 from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
+from braket.pulse.pulse_sequence import _validate_uniqueness
 from braket.pulse.waveforms import Waveform
 
 
@@ -120,7 +122,7 @@ def capture_v0(frame: Frame) -> None:
     Args:
         frame (Frame): Frame on which the capture operation needs to be performed.
     """
-    _pulse_instruction("capture_v0", frame)
+    _pulse_instruction("_capture_v0_with_return", frame)
 
 
 def delay(
@@ -157,3 +159,27 @@ def barrier(
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))
     _pulse_instruction("barrier", qubits_or_frames)
+
+
+def _pulse_sequence_capture_v0_with_return(self, frame: Frame) -> PulseSequence:
+    """
+    Implement a custom capturing method to be register it to the `PulseSequence` class. This method
+    adds an instruction to capture the bit output from measuring the specified frame and assigns
+    the output to a bit variable explicitly.
+
+    Args:
+        frame (Frame): Frame on which the capture operation needs to be performed.
+
+    Returns:
+        PulseSequence: self, with the instruction added.
+    """
+    _validate_uniqueness(self._frames, frame)
+
+    extern_call = oqpy.declare_extern("capture_v0", [("frame", oqpy.FrameVar)], oqpy.bit)
+    self._program.set(BitVar(), extern_call(frame))
+    self._capture_v0_count += 1
+    self._frames[frame.id] = frame
+    return self
+
+
+setattr(PulseSequence, "_capture_v0_with_return", _pulse_sequence_capture_v0_with_return)
