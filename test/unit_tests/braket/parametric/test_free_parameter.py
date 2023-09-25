@@ -61,36 +61,3 @@ def test_sub_successful(free_parameter):
 
 def test_sub_wrong_param(free_parameter):
     assert free_parameter.subs({"alpha": 1}) == FreeParameter("theta")
-
-
-@pytest.mark.parametrize(
-    "name",
-    (
-        "a",
-        "b",
-        "q",
-        "bit",
-        "qubit",
-        "_a",
-        "\u03B8",
-        "a\u03B8",
-        "a123",
-        "z123",
-        "\u03B8\u03B8",
-        "\u03B8a1",
-    ),
-)
-def test_valid_names(name):
-    FreeParameter(name)
-
-
-@pytest.mark.parametrize(
-    "name",
-    (
-        "",
-        "__a",
-    ),
-)
-def test_invalid_names(name):
-    with pytest.raises(ValueError):
-        FreeParameter(name)

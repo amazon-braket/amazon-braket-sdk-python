@@ -43,8 +43,8 @@ class _IRQASMTransformer(QASMTransformer):
         ):
             # For capture_v0 nodes, it replaces it with classical assignment statements
             # of the form:
-            # __bits__[0] = capture_v0(...)
-            # __bits__[1] = capture_v0(...)
+            # b[0] = capture_v0(...)
+            # b[1] = capture_v0(...)
             new_val = ast.ClassicalAssignment(
                 # Ideally should use IndexedIdentifier here, but this works since it is just
                 # for printing.
