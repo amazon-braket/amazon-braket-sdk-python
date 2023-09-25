@@ -18,6 +18,7 @@
 from typing import List, Union
 
 import oqpy
+from openpulse import ast as openpulse_ast
 
 from braket.circuits.qubit_set import QubitSet
 from braket.experimental.autoqasm import program as aq_program
@@ -27,6 +28,8 @@ from braket.experimental.autoqasm.instructions.qubits import (
     is_qubit_identifier_type,
 )
 from braket.experimental.autoqasm.types import BitVar
+from braket.parametric.free_parameter import FreeParameter
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import _validate_uniqueness
@@ -127,19 +130,23 @@ def capture_v0(frame: Frame) -> None:
 
 def delay(
     qubits_or_frames: Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]],
-    duration: float,
+    duration: Union[float, oqpy.FloatVar],
 ) -> None:
     """Adds an instruction to advance the frame clock by the specified `duration` value.
 
     Args:
         qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]):
             Qubits or frame(s) on which the delay needs to be introduced.
-        duration (float): Value (in seconds) defining the duration of the delay.
+        duration (Union[float, FloatVar]): Value (in seconds) defining the duration of the delay.
     """  # noqa: E501
     if not isinstance(qubits_or_frames, List):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))
+    if isinstance(duration, oqpy.FloatVar):
+        duration = FreeParameterExpression(
+            expression=FreeParameter(duration.name), _type=openpulse_ast.DurationType
+        )
     _pulse_instruction("delay", qubits_or_frames, duration)
 
 
