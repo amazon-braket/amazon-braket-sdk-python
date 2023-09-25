@@ -144,9 +144,7 @@ def delay(
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))
     if isinstance(duration, oqpy.FloatVar):
-        duration = FreeParameterExpression(
-            expression=FreeParameter(duration.name), _type=openpulse_ast.DurationType
-        )
+        duration = FreeParameter(duration.name)
     _pulse_instruction("delay", qubits_or_frames, duration)
 
 
