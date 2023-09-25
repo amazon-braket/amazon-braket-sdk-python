@@ -252,7 +252,7 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
         scope=aq_program.ProgramScope.MAIN
     )
     root_oqpy_program.declare(
-        [oqpy.QubitArray(aq_constants.QUBIT_REGISTER, num_qubits)],
+        [oqpy.Qubit(aq_constants.QUBIT_REGISTER, num_qubits)],
         to_beginning=True,
     )
 

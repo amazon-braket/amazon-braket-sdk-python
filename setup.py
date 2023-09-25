@@ -34,7 +34,7 @@ setup(
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
         "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@31d6c95f3ac250a0ccd04e1433ad61c8bfa4bde4#egg=amazon-braket-default-simulator",  # noqa E501
         # Pin the latest commit of the main branch of openqasm/oqpy.git to get the version of
-        # oqpy which contains changes that AutoQASM relies on, including the QubitArray type.
+        # oqpy which contains changes that AutoQASM relies on.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
         "oqpy @ git+https://github.com/openqasm/oqpy.git@4bb47dd59e07f03234872b1a5ec5c3c767abbdc1#egg=oqpy",  # noqa E501
         "setuptools",
