@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.55.1.post0 (2023-09-18)
+
+### Documentation Changes
+
+ * Remove trailing backquotes
+ * add code contributors to the readme
+ * change the sphinx requirement to be greater than 7.0.0
+
+## v1.55.1 (2023-09-14)
+
+### Bug Fixes and Other Changes
+
+ * Revert "update: restricting parameter names to not collide with ones we use for OpenQASM generation. (#675)"
+
+### Documentation Changes
+
+ * Replace aws org with amazon-braket
+
+## v1.55.0 (2023-09-09)
+
+### Features
+
+ * add Aria2 enum
+
 ## v1.54.3.post0 (2023-09-04)
 
 ### Documentation Changes
