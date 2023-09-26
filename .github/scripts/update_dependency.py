@@ -22,7 +22,7 @@ from pathlib import Path
 # dependency, we can do this for the ones we own to make sure that when the sdk updates
 # its dependencies, these upstream github repos will not be impacted.
 
-package = "amazon-braket-sdk-staging"  # TODO: remove this before merging
+package = "amazon-braket-sdk"  # TODO: remove this before merging
 path = Path.cwd().parent.resolve()
 
 for line in fileinput.input("setup.py", inplace=True):
