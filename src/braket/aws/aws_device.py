@@ -17,6 +17,7 @@ import importlib
 import json
 import os
 import urllib.request
+import warnings
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
@@ -602,23 +603,32 @@ class AwsDevice(Device):
             types_for_region = sorted(
                 types if region == session_region else types - {AwsDeviceType.SIMULATOR}
             )
-            region_device_arns = [
-                result["deviceArn"]
-                for result in session_for_region.search_devices(
-                    arns=arns,
-                    names=names,
-                    types=types_for_region,
-                    statuses=statuses,
-                    provider_names=provider_names,
+            try:
+                region_device_arns = [
+                    result["deviceArn"]
+                    for result in session_for_region.search_devices(
+                        arns=arns,
+                        names=names,
+                        types=types_for_region,
+                        statuses=statuses,
+                        provider_names=provider_names,
+                    )
+                ]
+                device_map.update(
+                    {
+                        arn: AwsDevice(arn, session_for_region)
+                        for arn in region_device_arns
+                        if arn not in device_map
+                    }
                 )
-            ]
-            device_map.update(
-                {
-                    arn: AwsDevice(arn, session_for_region)
-                    for arn in region_device_arns
-                    if arn not in device_map
-                }
-            )
+            except ClientError as e:
+                error_code = e.response["Error"]["Code"]
+                warnings.warn(
+                    f"{error_code}: Unable to search region '{region}' for devices."
+                    " Please check your settings or try again later."
+                    f" Continuing without devices in '{region}'."
+                )
+
         devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
