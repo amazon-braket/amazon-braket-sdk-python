@@ -30,7 +30,6 @@ class Devices:
     class _IonQ(str, Enum):
         Harmony = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
         Aria1 = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1"
-        Aria2 = "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-2"
 
     class _OQC(str, Enum):
         Lucy = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"

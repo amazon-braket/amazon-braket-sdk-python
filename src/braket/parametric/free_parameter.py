@@ -44,12 +44,13 @@ class FreeParameter(FreeParameterExpression):
 
         Args:
             name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
+                Must not start with '__'.
 
         Examples:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        self._name = Symbol(name)
+        self._set_name(name)
         super().__init__(expression=self._name)
 
     @property
@@ -98,6 +99,19 @@ class FreeParameter(FreeParameterExpression):
             "__class__": self.__class__.__name__,
             "name": self.name,
         }
+
+    def _set_name(self, name: str) -> None:
+        FreeParameter._validate_name(name)
+        self._name = Symbol(name)
+
+    @staticmethod
+    def _validate_name(name: str) -> None:
+        if not name:
+            raise ValueError("FreeParameter names must be non empty")
+        if not isinstance(name, str):
+            raise TypeError("FreeParameter names must be strings")
+        if name.startswith("__"):
+            raise ValueError("FreeParameter names must not start with two underscores '__'")
 
     @classmethod
     def from_dict(cls, parameter: dict) -> FreeParameter:
