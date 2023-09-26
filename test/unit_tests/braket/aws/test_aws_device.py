@@ -34,6 +34,7 @@ from common_test_utils import (
 from jsonschema import validate
 
 from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
+from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, FreeParameter, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
@@ -76,7 +77,6 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
 MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
     MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1
 )
-
 
 MOCK_gate_calibrations_JSON = {
     "gates": {
@@ -218,6 +218,11 @@ MOCK_GATE_MODEL_QPU_1 = {
     "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
+    "deviceQueueInfo": [
+        {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "19", "queuePriority": "Normal"},
+        {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "3", "queuePriority": "Priority"},
+        {"queue": "JOBS_QUEUE", "queueSize": "0 (3 prioritized job(s) running)"},
+    ],
 }
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_2 = {
@@ -627,7 +632,6 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
     },
     "nativeGateCalibrationsRef": "file://hostname/foo/bar",
 }
-
 
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
     "braketSchemaHeader": {
@@ -1937,3 +1941,14 @@ def test_parse_calibration_data_bad_instr(bad_input):
     )
     device = AwsDevice(DWAVE_ARN, mock_session)
     device._parse_calibration_json(bad_input)
+
+
+def test_queue_depth(arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+    assert device.queue_depth() == QueueDepthInfo(
+        quantum_tasks={QueueType.NORMAL: "19", QueueType.PRIORITY: "3"},
+        jobs="0 (3 prioritized job(s) running)",
+    )

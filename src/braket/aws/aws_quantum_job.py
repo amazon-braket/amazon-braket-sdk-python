@@ -27,6 +27,7 @@ from botocore.exceptions import ClientError
 
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import HybridJobQueueInfo
 from braket.jobs import logs
 from braket.jobs.config import (
     CheckpointConfig,
@@ -277,6 +278,38 @@ class AwsQuantumJob(QuantumJob):
             `metadata()`
         """
         return self.metadata(use_cached_value).get("status")
+
+    def queue_position(self) -> HybridJobQueueInfo:
+        """
+        The queue position details for the hybrid job.
+
+        Returns:
+            HybridJobQueueInfo: Instance of HybridJobQueueInfo class representing
+            the queue position information for the hybrid job. The queue_position is
+            only returned when the hybrid job is not in RUNNING/CANCELLING/TERMINAL states,
+            else queue_position is returned as None. If the queue position of the hybrid
+            job is greater than 15, we return '>15' as the queue_position return value.
+
+        Examples:
+            job status = QUEUED and position is 2 in the queue.
+            >>> job.queue_position()
+            HybridJobQueueInfo(queue_position='2', message=None)
+
+            job status = QUEUED and position is 18 in the queue.
+            >>> job.queue_position()
+            HybridJobQueueInfo(queue_position='>15', message=None)
+
+            job status = COMPLETED
+            >>> job.queue_position()
+            HybridJobQueueInfo(queue_position=None,
+            message='Job is in COMPLETED status. AmazonBraket does
+                        not show queue position for this status.')
+        """
+        response = self.metadata()["queueInfo"]
+        queue_position = None if response.get("position") == "None" else response.get("position")
+        message = response.get("message")
+
+        return HybridJobQueueInfo(queue_position=queue_position, message=message)
 
     def logs(self, wait: bool = False, poll_interval_seconds: int = 5) -> None:
         """Display logs for a given hybrid job, optionally tailing them until hybrid job is

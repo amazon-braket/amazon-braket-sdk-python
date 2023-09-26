@@ -29,6 +29,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
@@ -666,6 +667,54 @@ class AwsDevice(Device):
                 f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
+
+    def queue_depth(self) -> QueueDepthInfo:
+        """
+        Task queue depth refers to the total number of quantum tasks currently waiting
+        to run on a particular device.
+
+        Returns:
+            QueueDepthInfo: Instance of the QueueDepth class representing queue depth
+            information for quantum tasks and hybrid jobs.
+            Queue depth refers to the number of quantum tasks and hybrid jobs queued on a particular
+            device. The normal tasks refers to the quantum tasks not submitted via Hybrid Jobs.
+            Whereas, the priority tasks refers to the total number of quantum tasks waiting to run
+            submitted through Amazon Braket Hybrid Jobs. These tasks run before the normal tasks.
+            If the queue depth for normal or priority quantum tasks is greater than 4000, we display
+            their respective queue depth as '>4000'. Similarly, for hybrid jobs if there are more
+            than 1000 jobs queued on a device, display the hybrid jobs queue depth as '>1000'.
+            Additionally, for QPUs if hybrid jobs queue depth is 0, we display information about
+            priority and count of the running hybrid job.
+
+        Example:
+            Queue depth information for a running job.
+            >>> device = AwsDevice(Device.Amazon.SV1)
+            >>> print(device.queue_depth())
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '0',
+            <QueueType.PRIORITY: 'Priority'>: '1'}, jobs='0 (1 prioritized job(s) running)')
+
+            If more than 4000 quantum tasks queued on a device.
+            >>> device = AwsDevice(Device.Amazon.DM1)
+            >>> print(device.queue_depth())
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '>4000',
+            <QueueType.PRIORITY: 'Priority'>: '2000'}, jobs='100')
+        """
+        metadata = self.aws_session.get_device(arn=self.arn)
+        queue_metadata = metadata.get("deviceQueueInfo")
+        queue_info = {}
+
+        for response in queue_metadata:
+            queue_name = response.get("queue")
+            queue_priority = response.get("queuePriority")
+            queue_size = response.get("queueSize")
+
+            if queue_name == "QUANTUM_TASKS_QUEUE":
+                priority_enum = QueueType(queue_priority)
+                queue_info.setdefault("quantum_tasks", {})[priority_enum] = queue_size
+            else:
+                queue_info["jobs"] = queue_size
+
+        return QueueDepthInfo(**queue_info)
 
     def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
         """
