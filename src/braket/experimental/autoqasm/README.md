@@ -98,6 +98,8 @@ task = device.run(my_bell_program, shots=100)
 result = task.result()
 ```
 
+Read more about AutoQASM decorators like `@aq.main` [here](doc/decorators.md).
+
 For more example usage of AutoQASM, visit the [example notebooks](../../../../examples/autoqasm).
 
 ## Architecture
