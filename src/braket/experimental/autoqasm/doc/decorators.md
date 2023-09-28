@@ -1,14 +1,14 @@
 # AutoQASM decorators
 
-AutoQASM function decorators are special wrapper objects that allow us to override the normal behavior of the wrapped code. This is how we are able to hook into normal python control flow statements add them to the quantum program within our wrapped functions, for instance.
+AutoQASM function decorators allow us to override the normal behavior of the decorated code. This is how we are able to hook into normal Python control flow statements and add them to the quantum program within our wrapped functions, for instance.
 
-There are a handful of decorators available through AutoQASM. Each one may attach its own special behaviors to the function it wraps. If you are new to AutoQASM, you can just use `@aq.main`! The other decorators unlock further capabilities, when you need it.
+There are a handful of decorators available through AutoQASM. Each one attaches its own special behaviors to the function it wraps. If you are new to AutoQASM, you can just use `@aq.main`! The other decorators unlock further capabilities, when you need it.
 
 ## `@aq.main`
 
 This decorator marks the entry point to a quantum program.
 
-You can include gates and pulse control, classical control and subroutine calls. When you call the function wrapped by `@aq.main`, you will get a `Program` object. The `Program` object can execute on Braket devices. The code snippet below creates a quantum program with `@aq.main` and runs it on the `AwsDevice` instantiated as `device`.
+You can include gates, pulse control, classical control and subroutine calls. When you call the function wrapped by `@aq.main`, you will get a `Program` object. The `Program` object can be executed on [devices available through Amazon Braket](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html), including local simulators. The code snippet below creates a quantum program with `@aq.main` and runs it on the `Device` instantiated as `device`.
 
 ```
 @aq.main(num_qubits=5)
@@ -24,7 +24,7 @@ ghz_state_program = ghz_state(max_qubits=5)
 device.run(ghz_state_program)
 ```
 
-When you run your quantum program, the Amazon Braket SDK automatically serializes the program to OpenQASM before sending it to the Amazon Braket service. In AutoQASM, you can optionally view the OpenQASM script of your quantum program before submitting to a device.
+When you run your quantum program, the Amazon Braket SDK automatically serializes the program to OpenQASM before sending it to the local simulator or the Amazon Braket service. In AutoQASM, you can optionally view the OpenQASM script of your quantum program before submitting to a device by calling `to_ir()` on the `Program` object.
 
 ```
 print(ghz_state_program.to_ir())
@@ -34,11 +34,11 @@ print(ghz_state_program.to_ir())
 
 This decorator declares a function to be a quantum program subroutine.
 
-Like any subroutine, `@aq.subroutine` is often used to simplify repeated code and increase the readability of a program, and it must be called at least once to have an effect.
+Like any subroutine, `@aq.subroutine` is often used to simplify repeated code and increase the readability of a program. A subroutine must be called at least once from within an `@aq.main` function or another `@aq.subroutine` function in order to be included in a program.
 
-AutoQASM must support typed serialization formats, and so you must provide type hints for the inputs of your subroutine definitions. Qubits are like global registers to our quantum computation, so virtual qubits used in the body of a subroutine definition must be passed as input arguments. 
+Because AutoQASM supports strongly-typed serialization formats such as OpenQASM, you must provide type hints for the inputs of your subroutine definitions.
 
-Our example below uses a subroutine to make two bell states.
+Our example below uses a subroutine to make Bell states on two pairs of qubits.
 ```
 @aq.subroutine
 def bell(q0: int, q1: int) -> None:
@@ -71,9 +71,9 @@ bell(2, 3);
 
 Represents a gate definition.
 
-Gate definitions define higher-level gates with support gates, and are often used to decompose a gate into the native gates of a device.
+Gate definitions define higher-level gates in terms of other gates, and are often used to decompose a gate into the native gates of a device.
 
-The body of a gate definition can only contain gates. Qubits used in the body of a gate definition must be passed as input arguments, with the type hint `aq.Qubit`. Like subroutines, a gate must be called by a main quantum program to have an effect.
+The body of a gate definition can only contain gates. Qubits used in the body of a gate definition must be passed as input arguments, with the type hint `aq.Qubit`. Like subroutines, a gate definition must be called from within the context of a main quantum program or subroutine in order to be included in the program.
 
 ```
 @aq.gate
@@ -98,8 +98,10 @@ This decorator allows you to register a calibration for a gate. A gate calibrati
 
 At the pulse level, qubits are no longer interchangable. Each one has unique properties. Thus, a gate calibration is usually defined for a concrete set of qubits and parameters, but you can use input arguments to your function as well.
 
-The body of a gate calibration must only contain pulse operations. This decorator requires one input arguments to specify the `Gate` that the calibration will be registered to. Concrete values for the qubits and parameters are supplied as keyword arguments to the decorator.
-The union of the arguments of the decorator and the decorated function must match the arguments of the gate to be implemented.
+The body of a function decorated with `@aq.gate_calibration` must only contain pulse operations.
+
+The first argument to the `@aq.gate_calibration` decorator must be the gate function that the calibration will be registered to. Concrete values for the qubits and parameters are supplied as keyword arguments to the decorator.
+Every qubit and angle parameter of the gate being implemented must appear either as an argument to the `@aq.gate_calibration` decorator, or as a parameter of the decorated function.
 
 For example, the gate `rx` takes two arguments, target and angle. Each arguments must be either set in the decorator or declared as an input parameter to the decorated function. To add the gate calibration to your program, use the `with_calibrations` method of the main program.
 
@@ -118,6 +120,6 @@ def cal_1(angle: float):
     
 @aq.main
 def my_program():
-    rx(0, 0.123)
-    measure(0)
+    rx("$0", 0.123)
+    measure("$0")
 ```
