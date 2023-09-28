@@ -24,6 +24,7 @@ import pytest
 from botocore.exceptions import ClientError
 
 from braket.aws import AwsQuantumJob, AwsSession
+from braket.aws.queue_information import HybridJobQueueInfo
 
 
 @pytest.fixture
@@ -224,6 +225,27 @@ def test_metadata_caching(quantum_job, aws_session, generate_get_job_response, q
     assert quantum_job.metadata(True) == get_job_response_running
     aws_session.get_job.assert_called_with(quantum_job_arn)
     assert aws_session.get_job.call_count == 1
+
+
+def test_queue_position(quantum_job, aws_session, generate_get_job_response):
+    state_1 = "COMPLETED"
+    queue_info = {
+        "queue": "JOBS_QUEUE",
+        "position": "None",
+        "message": "Job is in COMPLETED status. "
+        "AmazonBraket does not show queue position for this status.",
+    }
+    get_job_response_completed = generate_get_job_response(status=state_1, queueInfo=queue_info)
+    aws_session.get_job.return_value = get_job_response_completed
+    assert quantum_job.queue_position() == HybridJobQueueInfo(
+        queue_position=None, message=queue_info["message"]
+    )
+
+    state_2 = "QUEUED"
+    queue_info = {"queue": "JOBS_QUEUE", "position": "2"}
+    get_job_response_queued = generate_get_job_response(status=state_2, queueInfo=queue_info)
+    aws_session.get_job.return_value = get_job_response_queued
+    assert quantum_job.queue_position() == HybridJobQueueInfo(queue_position="2", message=None)
 
 
 def test_state(quantum_job, aws_session, generate_get_job_response, quantum_job_arn):
