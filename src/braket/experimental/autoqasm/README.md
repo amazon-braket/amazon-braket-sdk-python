@@ -25,7 +25,7 @@ modular programs consisting of common programming constructs such as loops and s
 enables a more imperative programming style than constructing programs via a series of function calls
 on a circuit object.
 
-AutoQASM can be serialized to OpenQASM. This textual representation of the quantum program is widely supported by various tools and is more suited for transport. A crucial part of our serialization process is that modular structures within the program are preserved when serializing to OpenQASM.
+AutoQASM programs can be serialized to OpenQASM. This textual representation for quantum programs is widely supported and enables interoperability among various frameworks. A crucial part of our serialization process is that modular structures within the program, such as loops and subroutines, are preserved when serializing to OpenQASM.
 
 Although it is still a work in progress, the intent is that AutoQASM will support any quantum programming paradigm which falls into the [OpenQASM 3.0](https://openqasm.com) language scope. AutoQASM supports serializing quantum programs to OpenQASM, which allows the programs to interoperate with any library or service that supports OpenQASM programs, such as Amazon Braket.
 
@@ -152,7 +152,7 @@ can be found in the [top-level README](../../../../README.md).
 
 ## Frequently asked questions
 
-###  1. Will AutoQASM build a library of quantum algorithms or quantum applications?
+###  1. Will AutoQASM be extended to contain a library of quantum algorithms or quantum applications?
 
 No, we are focused on AutoQASM as an interface for low-level expression of
 quantum programs: circuits, gates and pulses. Higher-level algorithm
@@ -177,8 +177,8 @@ allows one to also make use of Python, including the Amazon Braket SDK.
 AutoQASM lives alongside the Amazon Braket SDK as an experimental feature
 branch. It supplements the program building experience and integrates with
 Amazon Braket SDK features. For instance, one can build a program through
-AutoQASM, using Amazon Braket SDK device objects, and then run the program
-with the SDK.
+AutoQASM, and then use the SDK to run the program on a local simulator or on
+an Amazon Braket device.
 
 Quantum programs are serialized to OpenQASM before executing on Amazon
 Braket, and AutoQASM programs can be serialized to OpenQASM. Thus, we have a
