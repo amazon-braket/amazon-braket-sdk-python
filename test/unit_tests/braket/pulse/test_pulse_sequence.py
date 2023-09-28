@@ -80,6 +80,33 @@ def test_pulse_sequence_with_user_defined_frame(user_defined_frame):
     assert pulse_sequence.to_ir() == expected_str
 
 
+def test_pulse_sequence_with_modified_wf(predefined_frame_1):
+    pulse_sequence = PulseSequence().play(
+        predefined_frame_1, ConstantWaveform(length=1e-7, iq=complex(1), id="constant_wf")
+    )
+    expected_str = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    waveform constant_wf = constant(100.0ns, 1.0);",
+            "    play(predefined_frame_1, constant_wf);",
+            "}",
+        ]
+    )
+    expected_str_after_mod = "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "cal {",
+            "    waveform constant_wf = constant(200.0ns, 1.0);",
+            "    play(predefined_frame_1, constant_wf);",
+            "}",
+        ]
+    )
+    assert pulse_sequence.to_ir() == expected_str
+    pulse_sequence._waveforms["constant_wf"].length = 2e-7
+    assert pulse_sequence.to_ir() == expected_str_after_mod
+
+
 def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined_frame_2):
     param = FreeParameter("a") + 2 * FreeParameter("b")
     pulse_sequence = (
