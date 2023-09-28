@@ -161,16 +161,16 @@ AutoQASM functionality such as subroutines.
 
 ### 2. What is the relationship between AutoQASM and OpenQASM?
 
-AutoQASM can be seen as implementing a builder pattern for OpenQASM. It
-allows you serialize your program to OpenQASM with `Program.to_ir()`. The
-interface is not strongly tied to OpenQASM so we could serialize to other
-formats in the future.
-
-In other words, AutoQASM is a quantum programming interface built in Python.
+AutoQASM is a quantum programming interface built in Python.
 OpenQASM is a quantum assembly language, often used as a serialization format
 for quantum programming frameworks and quantum hardware providers. We can
 represent a quantum program equivalently in either format, but using AutoQASM
 allows one to also make use of Python, including the Amazon Braket SDK.
+
+AutoQASM can be seen as implementing a builder pattern for OpenQASM. It
+allows you serialize your program to OpenQASM with `Program.to_ir()`. The
+interface is not strongly tied to OpenQASM, so we could serialize to other
+formats in the future.
 
 ### 3. What is the relationship between AutoQASM and the Amazon Braket SDK?
 
@@ -179,11 +179,6 @@ branch. It supplements the program building experience and integrates with
 Amazon Braket SDK features. For instance, one can build a program through
 AutoQASM, and then use the SDK to run the program on a local simulator or on
 an Amazon Braket device.
-
-Quantum programs are serialized to OpenQASM before executing on Amazon
-Braket, and AutoQASM programs can be serialized to OpenQASM. Thus, we have a
-very lightweight integration to run AutoQASM programs through the Amazon
-Braket SDK.
 
 ### 4. Does AutoQASM support other providers beyond Amazon Braket?
 
@@ -209,33 +204,3 @@ AutoQASM will often support features that a particular device doesn't
 support. We intend that AutoQASM will eventually be able to generate any
 program representable by OpenQASM 3.0, with additional Python-side features
 such as validation and visualization.
-
-### 7. Is there a difference between classical conditionals and quantum conditionals?
-
-Yes. This is best demonstrated through examples.
-
-Below, we have a classical conditional statement that will execute on the
-control system of a quantum computer. A measurement occurs, and additional
-statements execute if the measurement returns `1`.
-```
-if measure(qubit0):
-   ...
-```
-
-Because AutoQASM is integrated with Python, we can also use client-side
-control flow to conditionally build our program. The statement is evaluated
-as soon as you run your code.
-
-```
-if device.num_qubits < 10:
-    ...
-```
-
-Quantum conditionals are more often referred to as _controlled gates_. The
-quintessential example is the `CNOT` gate, the controlled-NOT. It can be
-understood as a gate that flips a second qubit (target) when the input qubit
-(control) is in the `|1>` state.
-
-```
-cnot(control_qubit, target_qubit)
-```
