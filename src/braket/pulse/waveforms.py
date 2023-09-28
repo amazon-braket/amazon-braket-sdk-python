@@ -83,6 +83,9 @@ class ArbitraryWaveform(Waveform):
         self.amplitudes = list(amplitudes)
         self.id = id or _make_identifier_name()
 
+    def __repr__(self) -> str:
+        return f"ArbitraryWaveform('id': {self.id}, 'amplitudes': {self.amplitudes})"
+
     def __eq__(self, other):
         return isinstance(other, ArbitraryWaveform) and (self.amplitudes, self.id) == (
             other.amplitudes,
@@ -130,6 +133,9 @@ class ConstantWaveform(Waveform, Parameterizable):
         self.length = length
         self.iq = iq
         self.id = id or _make_identifier_name()
+
+    def __repr__(self) -> str:
+        return f"ConstantWaveform('id': {self.id}, 'length': {self.length}, 'iq': {self.iq})"
 
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
@@ -235,6 +241,13 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self.amplitude = amplitude
         self.zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
+
+    def __repr__(self) -> str:
+        return (
+            f"DragGaussianWaveform('id': {self.id}, 'length': {self.length}, "
+            f"'sigma': {self.sigma}, 'beta': {self.beta}, 'amplitude': {self.amplitude}, "
+            f"'zero_at_edges': {self.zero_at_edges})"
+        )
 
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
@@ -359,6 +372,12 @@ class GaussianWaveform(Waveform, Parameterizable):
         self.amplitude = amplitude
         self.zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
+
+    def __repr__(self) -> str:
+        return (
+            f"GaussianWaveform('id': {self.id}, 'length': {self.length}, 'sigma': {self.sigma}, "
+            f"'amplitude': {self.amplitude}, 'zero_at_edges': {self.zero_at_edges})"
+        )
 
     @property
     def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:

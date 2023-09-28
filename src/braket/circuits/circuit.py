@@ -57,9 +57,10 @@ from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
 from braket.ir.openqasm.program_v1 import io_type
-from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
+from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
+from braket.pulse.waveforms import Waveform
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1245,7 +1246,7 @@ class Circuit:
         self,
         gate_definitions: Dict[Tuple[Gate, QubitSet], PulseSequence],
         frames: Dict[Frame],
-        waveforms: Dict[ArbitraryWaveform],
+        waveforms: Dict[Waveform],
     ) -> None:
         for key, calibration in gate_definitions.items():
             for frame in calibration._frames.values():
@@ -1303,7 +1304,7 @@ class Circuit:
 
     def _get_frames_waveforms_from_instrs(
         self, gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]
-    ) -> Tuple[Dict[Frame], Dict[ArbitraryWaveform]]:
+    ) -> Tuple[Dict[Frame], Dict[Waveform]]:
         from braket.circuits.gates import PulseGate
 
         frames = {}
