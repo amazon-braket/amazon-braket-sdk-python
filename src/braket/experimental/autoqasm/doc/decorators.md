@@ -103,7 +103,7 @@ The body of a function decorated with `@aq.gate_calibration` must only contain p
 The first argument to the `@aq.gate_calibration` decorator must be the gate function that the calibration will be registered to. Concrete values for the qubits and parameters are supplied as keyword arguments to the decorator.
 Every qubit and angle parameter of the gate being implemented must appear either as an argument to the `@aq.gate_calibration` decorator, or as a parameter of the decorated function.
 
-For example, the gate `rx` takes two arguments, target and angle. Each arguments must be either set in the decorator or declared as an input parameter to the decorated function. To add the gate calibration to your program, use the `with_calibrations` method of the main program.
+For example, the gate `rx` takes two arguments, target and angle. Each arguments must be either set in the decorator or declared as an input parameter to the decorated function.
 
 ```
 # This calibration only applies to physical qubit zero, so we
@@ -117,9 +117,15 @@ def cal_1(angle: float):
     pulse.play(q0_rf_frame, waveform(angle))
     pulse.shift_frequency(q0_rf_frame, 321047.14178613486)
     pulse.barrier("$0")
-    
+```
+
+To add the gate calibration to your program, use the `with_calibrations` method of the main program.
+
+```
 @aq.main
 def my_program():
     rx("$0", 0.123)
     measure("$0")
+
+my_program().with_calibrations([cal_1])
 ```
