@@ -19,7 +19,13 @@ afraid of a few bugs, please keep on reading!
 
 AutoQASM provides a Pythonic developer experience for writing quantum programs. The working title "AutoQASM" is derived from the name of the [AutoGraph module of TensorFlow](https://www.tensorflow.org/api_docs/python/tf/autograph). AutoQASM uses AutoGraph to construct quantum assembly (QASM) programs rather than TensorFlow graphs.
 
-AutoQASM provides a natural interface for expressing quantum programs with mid-circuit measurements and classical control flow using native Python language features. It allows the construction of modular programs consisting of common programming constructs such as loops and subroutines, and it preserves this modularity when serializing the program to OpenQASM. This enables a more imperative programming style than constructing programs via a series of function calls on a circuit object.
+AutoQASM provides a natural interface for expressing quantum programs with mid-circuit measurements
+and classical control flow using native Python language features. It allows the construction of
+modular programs consisting of common programming constructs such as loops and subroutines. This
+enables a more imperative programming style than constructing programs via a series of function calls
+on a circuit object.
+
+AutoQASM programs can be serialized to OpenQASM. This textual representation for quantum programs is widely supported and enables interoperability among various frameworks. A crucial part of our serialization process is that modular structures within the program, such as loops and subroutines, are preserved when serializing to OpenQASM.
 
 Although it is still a work in progress, the intent is that AutoQASM will support any quantum programming paradigm which falls into the [OpenQASM 3.0](https://openqasm.com) language scope. AutoQASM supports serializing quantum programs to OpenQASM, which allows the programs to interoperate with any library or service that supports OpenQASM programs, such as Amazon Braket.
 
@@ -138,10 +144,65 @@ Please tag your question with "Amazon Braket" and mention AutoQASM in the questi
 
 ## Tests
 
-To run only AutoQASM tests (and skip the rest of the unit tests), run:
+To run only AutoQASM tests (and skip the rest of the Amazon Braket SDK unit tests), run:
 ```
 tox -e unit-tests -- test/unit_test/braket/experimental/autoqasm
 ```
 
 Note that you may first need to run `pip install -e .[test]`. More information on running tests
 can be found in the [top-level README](../../../../README.md).
+
+## Frequently asked questions
+
+###  1. Will AutoQASM be extended to contain a library of quantum algorithms or quantum applications?
+
+No, we are focused on AutoQASM as an interface for low-level expression of
+quantum programs: circuits, gates and pulses. Higher-level algorithm
+libraries could be implemented using AutoQASM and benefit from modular
+AutoQASM functionality such as subroutines.
+
+### 2. What is the relationship between AutoQASM and OpenQASM?
+
+AutoQASM is a quantum programming interface built in Python.
+OpenQASM is a quantum assembly language, often used as a serialization format
+for quantum programming frameworks and quantum hardware providers. We can
+represent a quantum program equivalently in either format, but using AutoQASM
+allows one to also make use of Python, including the Amazon Braket SDK.
+
+AutoQASM can be seen as implementing a builder pattern for OpenQASM. It
+allows you serialize your program to OpenQASM with `Program.to_ir()`. The
+interface is not strongly tied to OpenQASM, so we could serialize to other
+formats in the future.
+
+### 3. What is the relationship between AutoQASM and the Amazon Braket SDK?
+
+AutoQASM lives alongside the Amazon Braket SDK as an experimental feature
+branch. It supplements the program building experience and integrates with
+Amazon Braket SDK features. For instance, one can build a program through
+AutoQASM, and then use the SDK to run the program on a local simulator or on
+an Amazon Braket device.
+
+### 4. Does AutoQASM support other providers beyond Amazon Braket?
+
+Yes. AutoQASM serializes to OpenQASM, and so it is applicable to any library
+or QPU that supports OpenQASM. We do have features that use the Amazon Braket
+SDK, such as [device-specific validation](../../../../examples/autoqasm/4_Native_programming.ipynb).
+Because AutoQASM is open-source, anyone could
+build similar integrations for another service. Reach out if you're
+interested in doing this and would like support.
+
+
+### 5. Does AutoQASM offer special support for device-specific programming?
+
+Yes, AutoQASM has device-specific validation to support native programming.
+We plan to expand this functionality in the future. Learn more with our
+[native programming example notebook](../../../../examples/autoqasm/4_Native_programming.ipynb).
+
+### 6. Do the devices available through Amazon Braket support all of AutoQASM's features?
+
+No, for example, the `reset` instruction is not supported by all devices. In
+general, different QPUs and QHPs support different sets of features, so
+AutoQASM will often support features that a particular device doesn't
+support. We intend that AutoQASM will eventually be able to generate any
+program representable by OpenQASM 3.0, with additional Python-side features
+such as validation and visualization.
