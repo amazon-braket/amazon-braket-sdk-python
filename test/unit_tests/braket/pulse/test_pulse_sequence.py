@@ -128,23 +128,22 @@ def test_pulse_sequence_with_modified_wf(predefined_frame_1):
         ]
     )
     assert pulse_sequence.to_ir() == expected_str
-    pulse_sequence._waveforms["constant_wf"].iq = 0.5
-    pulse_sequence._waveforms["constant_wf"].length = 2e-7
+    pulse_sequence.waveforms["constant_wf"].iq = 0.5
+    pulse_sequence.waveforms["constant_wf"].length = 2e-7
 
-    pulse_sequence._waveforms["gauss_wf"].length = 17e-9
-    pulse_sequence._waveforms["gauss_wf"].sigma = 0.1
-    pulse_sequence._waveforms["gauss_wf"].amplitude = 0.2
-    pulse_sequence._waveforms["gauss_wf"].zero_at_edges = True
+    pulse_sequence.waveforms["gauss_wf"].length = 17e-9
+    pulse_sequence.waveforms["gauss_wf"].sigma = 0.1
+    pulse_sequence.waveforms["gauss_wf"].amplitude = 0.2
+    pulse_sequence.waveforms["gauss_wf"].zero_at_edges = True
 
-    pulse_sequence._waveforms["drag_gauss_wf"].length = 1e-6
-    pulse_sequence._waveforms["drag_gauss_wf"].sigma = 0.1
-    pulse_sequence._waveforms["drag_gauss_wf"].beta = 0.25
-    pulse_sequence._waveforms["drag_gauss_wf"].amplitude = 0.3
-    pulse_sequence._waveforms["drag_gauss_wf"].zero_at_edges = True
+    pulse_sequence.waveforms["drag_gauss_wf"].length = 1e-6
+    pulse_sequence.waveforms["drag_gauss_wf"].sigma = 0.1
+    pulse_sequence.waveforms["drag_gauss_wf"].beta = 0.25
+    pulse_sequence.waveforms["drag_gauss_wf"].amplitude = 0.3
+    pulse_sequence.waveforms["drag_gauss_wf"].zero_at_edges = True
 
-    pulse_sequence._waveforms["arb_wf"].amplitudes = [-complex(1, 0.4), 0, -0.3, -complex(0.1, 0.2)]
+    pulse_sequence.waveforms["arb_wf"].amplitudes = [-complex(1, 0.4), 0, -0.3, -complex(0.1, 0.2)]
 
-    # pulse_sequence.update_waveform(waveform_name="constant_wf", length=2e-7)
     assert pulse_sequence.to_ir() == expected_str_after_mod
 
 

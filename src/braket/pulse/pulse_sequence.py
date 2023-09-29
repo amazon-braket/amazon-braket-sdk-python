@@ -48,11 +48,11 @@ class PulseSequence:
         self._free_parameters = set()
 
     @property
-    def waveform(self):
+    def waveforms(self):
         return self._waveforms
 
-    @waveform.setter
-    def waveform(self, value):
+    @waveforms.setter
+    def waveforms(self, value):
         self._waveforms = value
 
     def to_time_trace(self) -> PulseSequenceTrace:
