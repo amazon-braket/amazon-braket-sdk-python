@@ -18,7 +18,6 @@
 from typing import List, Union
 
 import oqpy
-from openpulse import ast as openpulse_ast
 
 from braket.circuits.qubit_set import QubitSet
 from braket.experimental.autoqasm import program as aq_program
@@ -29,7 +28,6 @@ from braket.experimental.autoqasm.instructions.qubits import (
 )
 from braket.experimental.autoqasm.types import BitVar
 from braket.parametric.free_parameter import FreeParameter
-from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import _validate_uniqueness
