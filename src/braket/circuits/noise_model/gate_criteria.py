@@ -21,7 +21,7 @@ from braket.circuits.noise_model.criteria_input_parsing import (
     parse_operator_input,
     parse_qubit_input,
 )
-from braket.circuits.qubit_set import QubitSetInput
+from braket.qubits.qubit_set import QubitSetInput
 
 
 class GateCriteria(CircuitInstructionCriteria):

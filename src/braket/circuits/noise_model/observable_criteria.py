@@ -20,8 +20,8 @@ from braket.circuits.noise_model.criteria_input_parsing import (
 )
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
 from braket.circuits.observable import Observable
-from braket.circuits.qubit_set import QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
+from braket.qubits.qubit_set import QubitSetInput
 
 
 class ObservableCriteria(ResultTypeCriteria):

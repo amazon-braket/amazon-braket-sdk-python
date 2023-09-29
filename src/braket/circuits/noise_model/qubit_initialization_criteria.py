@@ -16,7 +16,7 @@ from typing import Any, Iterable, Optional, Set, Union
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import parse_qubit_input
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.qubits.qubit_set import QubitSet, QubitSetInput
 
 
 class QubitInitializationCriteria(InitializationCriteria):

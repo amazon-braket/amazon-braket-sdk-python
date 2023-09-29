@@ -18,12 +18,12 @@ from typing import Any, List, Optional, Sequence, Tuple, Type
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.qubits.qubit_set import QubitSet
 
 
 class Gate(QuantumOperator):

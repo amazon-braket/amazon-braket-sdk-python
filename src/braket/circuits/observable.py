@@ -21,12 +21,12 @@ import numpy as np
 
 from braket.circuits.gate import Gate
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.qubits.qubit_set import QubitSet
 
 
 class Observable(QuantumOperator):

@@ -22,7 +22,6 @@ from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
 from oqpy.timing import OQDurationLiteral
 
-from braket.circuits.qubit_set import QubitSet
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
@@ -36,6 +35,7 @@ from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
 from braket.pulse.waveforms import Waveform
+from braket.qubits.qubit_set import QubitSet
 
 
 class PulseSequence:

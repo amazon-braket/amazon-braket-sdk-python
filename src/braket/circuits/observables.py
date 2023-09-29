@@ -29,8 +29,8 @@ from braket.circuits.quantum_operator_helpers import (
     is_hermitian,
     verify_quantum_operator_matrix_dimensions,
 )
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.qubits.qubit_set import QubitSet
 
 
 class H(StandardObservable):

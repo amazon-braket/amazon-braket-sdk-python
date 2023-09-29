@@ -22,8 +22,8 @@ from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.result_type import ResultType
+from braket.qubits.qubit_set import QubitSet
 
 
 class AsciiCircuitDiagram(CircuitDiagram):

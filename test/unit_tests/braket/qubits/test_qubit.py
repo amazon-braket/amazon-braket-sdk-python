@@ -14,7 +14,7 @@
 import numpy as np
 import pytest
 
-from braket.circuits import Qubit
+from braket.qubits import Qubit
 
 
 @pytest.fixture

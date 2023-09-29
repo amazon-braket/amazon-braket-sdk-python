@@ -16,7 +16,7 @@ from typing import Optional, Set, Tuple, Union
 
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise_model.criteria import Criteria
-from braket.circuits.qubit_set import QubitSetInput
+from braket.qubits.qubit_set import QubitSetInput
 
 
 class CircuitInstructionCriteria(Criteria):
