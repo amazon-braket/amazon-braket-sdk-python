@@ -1259,7 +1259,7 @@ class Circuit:
     def _generate_frame_wf_defcal_declarations(
         self, gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]
     ) -> Optional[str]:
-        program = oqpy.Program(None)
+        program = oqpy.Program(None, simplify_constants=False)
 
         frames, waveforms = self._get_frames_waveforms_from_instrs(gate_definitions)
 
