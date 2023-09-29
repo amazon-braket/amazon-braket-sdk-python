@@ -34,7 +34,6 @@ setup(
         "backoff",
         "boltons",
         "boto3>=1.28.53",
-        "nest-asyncio",
         "networkx",
         "numpy",
         "openpulse",
