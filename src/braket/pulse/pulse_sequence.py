@@ -44,8 +44,16 @@ class PulseSequence:
         self._capture_v0_count = 0
         self._program = Program(simplify_constants=False)
         self._frames = {}
-        self._waveforms = {}
+        self._waveforms = WaveformDict({}, self)
         self._free_parameters = set()
+
+    @property
+    def waveform(self):
+        return self._waveforms
+
+    @waveform.setter
+    def waveform(self, value):
+        self._waveforms = value
 
     def to_time_trace(self) -> PulseSequenceTrace:
         """Generate an approximate trace of the amplitude, frequency, phase for each frame

@@ -19,7 +19,15 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
-from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
+from oqpy import (
+    WaveformVar,
+    bool_,
+    complex128,
+    convert_float_to_duration,
+    declare_waveform_generator,
+    duration,
+    float64,
+)
 from oqpy.base import OQPyExpression
 
 from braket.parametric.free_parameter import FreeParameter
@@ -30,6 +38,19 @@ from braket.parametric.free_parameter_expression import (
 from braket.parametric.parameterizable import Parameterizable
 
 
+class WaveformDict(dict):
+    def __init__(self, wf_dict: dict, pulse_sequence):
+        for wf in wf_dict.values():
+            wf._pulse_sequence = pulse_sequence
+        super().__init__(wf_dict)
+        self._pulse_sequence = pulse_sequence
+
+    def __setitem__(self, key: str, value: Waveform):
+        value = deepcopy(value)
+        value._pulse_sequence = self._pulse_sequence
+        super().__setitem__(key, value)
+
+
 class Waveform(ABC):
     """A waveform is a time-dependent envelope that can be used to emit signals on an output port
     or receive signals from an input port. As such, when transmitting signals to the qubit, a
@@ -38,6 +59,9 @@ class Waveform(ABC):
     time at which the signal is captured. See https://openqasm.com/language/openpulse.html#waveforms
     for more details.
     """
+
+    def __init__(self) -> None:
+        self._pulse_sequence = None
 
     @abstractmethod
     def _to_oqpy_expression(self) -> OQPyExpression:
@@ -82,8 +106,19 @@ class ArbitraryWaveform(Waveform):
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
-        self.amplitudes = list(amplitudes)
+        self._amplitudes = list(amplitudes)
         self.id = id or _make_identifier_name()
+        super().__init__()
+
+    @property
+    def amplitudes(self):
+        return self._amplitudes
+
+    @amplitudes.setter
+    def amplitudes(self, value):
+        self._amplitudes = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression = value
 
     def __repr__(self) -> str:
         return f"ArbitraryWaveform('id': {self.id}, 'amplitudes': {self.amplitudes})"
@@ -140,9 +175,34 @@ class ConstantWaveform(Waveform, Parameterizable):
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
-        self.length = length
-        self.iq = iq
+        self._length = length
+        self._iq = iq
         self.id = id or _make_identifier_name()
+        super().__init__()
+
+    @property
+    def iq(self):
+        return self._iq
+
+    @iq.setter
+    def iq(self, value):
+        self._iq = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "iq"
+            ] = value
+
+    @property
+    def length(self):
+        return self._length
+
+    @length.setter
+    def length(self, value):
+        self._length = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "length"
+            ] = convert_float_to_duration(value)
 
     def __repr__(self) -> str:
         return f"ConstantWaveform('id': {self.id}, 'length': {self.length}, 'iq': {self.iq})"
@@ -256,12 +316,73 @@ class DragGaussianWaveform(Waveform, Parameterizable):
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
-        self.length = length
-        self.sigma = sigma
-        self.beta = beta
-        self.amplitude = amplitude
-        self.zero_at_edges = zero_at_edges
+        self._length = length
+        self._sigma = sigma
+        self._beta = beta
+        self._amplitude = amplitude
+        self._zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
+        super().__init__()
+
+    @property
+    def length(self):
+        return self._length
+
+    @length.setter
+    def length(self, value):
+        self._length = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "length"
+            ] = convert_float_to_duration(value)
+
+    @property
+    def sigma(self):
+        return self._sigma
+
+    @sigma.setter
+    def sigma(self, value):
+        self._sigma = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "sigma"
+            ] = convert_float_to_duration(value)
+
+    @property
+    def beta(self):
+        return self._beta
+
+    @beta.setter
+    def beta(self, value):
+        self._beta = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "beta"
+            ] = value
+
+    @property
+    def amplitude(self):
+        return self._amplitude
+
+    @amplitude.setter
+    def amplitude(self, value):
+        self._amplitude = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "amplitude"
+            ] = value
+
+    @property
+    def zero_at_edges(self):
+        return self._zero_at_edges
+
+    @zero_at_edges.setter
+    def zero_at_edges(self, value):
+        self._zero_at_edges = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "zero_at_edges"
+            ] = value
 
     def __repr__(self) -> str:
         return (
@@ -396,11 +517,60 @@ class GaussianWaveform(Waveform, Parameterizable):
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
                 ascii characters is assigned by default.
         """
-        self.length = length
-        self.sigma = sigma
-        self.amplitude = amplitude
-        self.zero_at_edges = zero_at_edges
+        self._length = length
+        self._sigma = sigma
+        self._amplitude = amplitude
+        self._zero_at_edges = zero_at_edges
         self.id = id or _make_identifier_name()
+        super().__init__()
+
+    @property
+    def length(self):
+        return self._length
+
+    @length.setter
+    def length(self, value):
+        self._length = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "length"
+            ] = convert_float_to_duration(value)
+
+    @property
+    def sigma(self):
+        return self._sigma
+
+    @sigma.setter
+    def sigma(self, value):
+        self._sigma = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "sigma"
+            ] = convert_float_to_duration(value)
+
+    @property
+    def amplitude(self):
+        return self._amplitude
+
+    @amplitude.setter
+    def amplitude(self, value):
+        self._amplitude = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "amplitude"
+            ] = value
+
+    @property
+    def zero_at_edges(self):
+        return self._zero_at_edges
+
+    @zero_at_edges.setter
+    def zero_at_edges(self, value):
+        self._zero_at_edges = value
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                "zero_at_edges"
+            ] = value
 
     def __repr__(self) -> str:
         return (
