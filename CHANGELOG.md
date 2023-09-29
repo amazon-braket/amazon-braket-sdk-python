@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.56.1 (2023-09-27)
+
+### Bug Fixes and Other Changes
+
+ * fixing search device when don't have access to a region.
+
+## v1.56.0 (2023-09-26)
+
+### Features
+
+ * add queue visibility information
+
 ## v1.55.1.post0 (2023-09-18)
 
 ### Documentation Changes
