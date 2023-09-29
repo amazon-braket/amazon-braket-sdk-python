@@ -19,15 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
-from oqpy import (
-    WaveformVar,
-    bool_,
-    complex128,
-    convert_float_to_duration,
-    declare_waveform_generator,
-    duration,
-    float64,
-)
+from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
 
 from braket.parametric.free_parameter import FreeParameter
@@ -62,6 +54,12 @@ class Waveform(ABC):
 
     def __init__(self) -> None:
         self._pulse_sequence = None
+
+    def _modify_oqpy_waveform_var(self, key, value, type_=float64):
+        if self._pulse_sequence is not None:
+            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
+                key
+            ] = self._pulse_sequence._format_parameter_ast(value, type_)
 
     @abstractmethod
     def _to_oqpy_expression(self) -> OQPyExpression:
@@ -187,10 +185,7 @@ class ConstantWaveform(Waveform, Parameterizable):
     @iq.setter
     def iq(self, value):
         self._iq = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "iq"
-            ] = value
+        self._modify_oqpy_waveform_var("iq", value)
 
     @property
     def length(self):
@@ -199,10 +194,7 @@ class ConstantWaveform(Waveform, Parameterizable):
     @length.setter
     def length(self, value):
         self._length = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "length"
-            ] = convert_float_to_duration(value)
+        self._modify_oqpy_waveform_var("length", value, duration)
 
     def __repr__(self) -> str:
         return f"ConstantWaveform('id': {self.id}, 'length': {self.length}, 'iq': {self.iq})"
@@ -331,10 +323,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
     @length.setter
     def length(self, value):
         self._length = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "length"
-            ] = convert_float_to_duration(value)
+        self._modify_oqpy_waveform_var("length", value, duration)
 
     @property
     def sigma(self):
@@ -343,10 +332,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
     @sigma.setter
     def sigma(self, value):
         self._sigma = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "sigma"
-            ] = convert_float_to_duration(value)
+        self._modify_oqpy_waveform_var("sigma", value, duration)
 
     @property
     def beta(self):
@@ -355,10 +341,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
     @beta.setter
     def beta(self, value):
         self._beta = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "beta"
-            ] = value
+        self._modify_oqpy_waveform_var("beta", value)
 
     @property
     def amplitude(self):
@@ -367,10 +350,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
     @amplitude.setter
     def amplitude(self, value):
         self._amplitude = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "amplitude"
-            ] = value
+        self._modify_oqpy_waveform_var("amplitude", value)
 
     @property
     def zero_at_edges(self):
@@ -379,10 +359,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
     @zero_at_edges.setter
     def zero_at_edges(self, value):
         self._zero_at_edges = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "zero_at_edges"
-            ] = value
+        self._modify_oqpy_waveform_var("zero_at_edges", value)
 
     def __repr__(self) -> str:
         return (
@@ -531,10 +508,7 @@ class GaussianWaveform(Waveform, Parameterizable):
     @length.setter
     def length(self, value):
         self._length = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "length"
-            ] = convert_float_to_duration(value)
+        self._modify_oqpy_waveform_var("length", value, duration)
 
     @property
     def sigma(self):
@@ -543,10 +517,7 @@ class GaussianWaveform(Waveform, Parameterizable):
     @sigma.setter
     def sigma(self, value):
         self._sigma = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "sigma"
-            ] = convert_float_to_duration(value)
+        self._modify_oqpy_waveform_var("sigma", value, duration)
 
     @property
     def amplitude(self):
@@ -555,10 +526,7 @@ class GaussianWaveform(Waveform, Parameterizable):
     @amplitude.setter
     def amplitude(self, value):
         self._amplitude = value
-        if self._pulse_sequence is not None:
-            self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
-                "amplitude"
-            ] = value
+        self._modify_oqpy_waveform_var("amplitude", value)
 
     @property
     def zero_at_edges(self):
