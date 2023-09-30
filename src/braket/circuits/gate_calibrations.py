@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from braket.circuits.gate import Gate
 from braket.circuits.serialization import (
@@ -91,24 +91,30 @@ class GateCalibrations:
         return len(self._pulse_sequences)
 
     def filter(
-        self, gates: Optional[list[Gate]] = None, qubits: Optional[QubitSet] = None
+        self,
+        gates: Optional[list[Gate]] = None,
+        qubits: Optional[Union[QubitSet, list[QubitSet]]] = None,
     ) -> Optional[GateCalibrations]:
         """
         Filters the data based on optional lists of gates and QubitSets.
 
         Args:
             gates (Optional[list[Gate]]): An optional list of gates to filter on.
-            qubits (Optional[QubitSet]): An optional `QubitSet` to filter on.
+            qubits (Optional[Union[QubitSet, list[QubitSet]]]): An optional `QubitSet` or
+                list of `QubitSet` to filter on.
 
         Returns:
             Optional[GateCalibrations]: A filtered GateCalibrations object. Otherwise, returns
             none if no matches are found.
         """  # noqa: E501
         keys = self.pulse_sequences.keys()
+        if isinstance(qubits, QubitSet):
+            qubits = [qubits]
         filtered_calibration_keys = [
             tup
             for tup in keys
-            if (gates is None or tup[0] in gates) and (qubits is None or qubits.issubset(tup[1]))
+            if (gates is None or tup[0] in gates)
+            and (qubits is None or any(qset.issubset(tup[1]) for qset in qubits))
         ]
         return GateCalibrations(
             {k: v for (k, v) in self.pulse_sequences.items() if k in filtered_calibration_keys},
