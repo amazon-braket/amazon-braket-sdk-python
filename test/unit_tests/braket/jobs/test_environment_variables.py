@@ -56,7 +56,7 @@ def test_hyperparameters():
         "a": "a_val",
         "b": 2,
     }
-    with tempfile.NamedTemporaryFile(mode="w+") as temp, patch.dict(
+    with tempfile.NamedTemporaryFile(dir=".", suffix=".json", mode="w+") as temp, patch.dict(
         os.environ, {"AMZN_BRAKET_HP_FILE": temp.name}
     ):
         json.dump(hyperparameters, temp)
