@@ -14,7 +14,7 @@
 """Type conversions between Python and the autoqasm representation for types."""
 
 import typing
-from functools import singledispatch
+from functools import partialmethod, singledispatch
 from typing import Any, Union
 
 import numpy as np
@@ -52,6 +52,13 @@ def map_type(python_type: type) -> type:
             raise errors.ParameterTypeError(
                 f"Unsupported array type: {item_type}. AutoQASM arrays only support ints."
             )
+
+        def _partial_class(cls, *args, **kwargs) -> type:
+            class PartialCls(cls):
+                __init__ = partialmethod(cls.__init__, *args, **kwargs)
+
+            return PartialCls
+
         # TODO: Update array length to match the input rather than hardcoding
         # OQPY and QASM require arrays have a set length. python doesn't require this,
         # so the length of the array is indeterminate.
@@ -60,7 +67,7 @@ def map_type(python_type: type) -> type:
         # Here's where the info is stored for oqpy variables:
         # ctx = program.get_program_conversion_context()
         # dims = ctx.get_oqpy_program().declared_vars[name_of_var].dimensions
-        return oqpy.ArrayVar[oqpy.IntVar, 10]
+        return _partial_class(oqpy.ArrayVar, dimensions=[10], base_type=oqpy.IntVar)
     if issubclass(origin_type, tuple):
         raise TypeError(
             "Tuples are not supported as parameters to AutoQASM functions; "
