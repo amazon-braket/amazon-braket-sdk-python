@@ -11,9 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
 from typing import Any, Dict
 
+from braket.jobs.environment_variables import get_checkpoint_dir, get_job_name, get_results_dir
 from braket.jobs.serialization import deserialize_values, serialize_values
 from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
 
@@ -49,8 +49,8 @@ def save_job_checkpoint(
     """
     if not checkpoint_data:
         raise ValueError("The checkpoint_data argument cannot be empty.")
-    checkpoint_directory = os.environ["AMZN_BRAKET_CHECKPOINT_DIR"]
-    job_name = os.environ["AMZN_BRAKET_JOB_NAME"]
+    checkpoint_directory = get_checkpoint_dir()
+    job_name = get_job_name()
     checkpoint_file_path = (
         f"{checkpoint_directory}/{job_name}_{checkpoint_file_suffix}.json"
         if checkpoint_file_suffix
@@ -90,7 +90,7 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
         ValueError: If the data stored in the checkpoint file can't be deserialized (possibly due to
             corruption).
     """
-    checkpoint_directory = os.environ["AMZN_BRAKET_CHECKPOINT_DIR"]
+    checkpoint_directory = get_checkpoint_dir()
     checkpoint_file_path = (
         f"{checkpoint_directory}/{job_name}_{checkpoint_file_suffix}.json"
         if checkpoint_file_suffix
@@ -128,7 +128,7 @@ def save_job_result(
     """
     if not result_data:
         raise ValueError("The result_data argument cannot be empty.")
-    result_directory = os.environ["AMZN_BRAKET_JOB_RESULTS_DIR"]
+    result_directory = get_results_dir()
     result_path = f"{result_directory}/results.json"
     with open(result_path, "w") as f:
         serialized_data = serialize_values(result_data or {}, data_format)
