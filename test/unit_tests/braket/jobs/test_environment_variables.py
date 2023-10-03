@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from braket.jobs import (
@@ -52,13 +53,14 @@ def test_checkpoint_dir():
 
 def test_hyperparameters():
     assert get_hyperparameters() == {}
+    hp_file = "my_hyperparameters.json"
     hyperparameters = {
         "a": "a_val",
         "b": 2,
     }
-    with tempfile.NamedTemporaryFile(dir=".", suffix=".json", mode="w+") as temp, patch.dict(
-        os.environ, {"AMZN_BRAKET_HP_FILE": temp.name}
+    with tempfile.TemporaryDirectory() as temp_dir, patch.dict(
+        os.environ, {"AMZN_BRAKET_HP_FILE": str(Path(temp_dir) / hp_file)}
     ):
-        json.dump(hyperparameters, temp)
-        temp.seek(0)
+        with open(str(Path(temp_dir) / hp_file), "w") as f:
+            json.dump(hyperparameters, f)
         assert get_hyperparameters() == hyperparameters
