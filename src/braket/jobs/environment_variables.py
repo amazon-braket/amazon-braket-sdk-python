@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Dict
 
 
 def get_job_name() -> str:
@@ -58,7 +59,7 @@ def get_checkpoint_dir() -> str:
     return os.getenv("AMZN_BRAKET_CHECKPOINT_DIR", ".")
 
 
-def get_hyperparameters() -> dict[str, str]:
+def get_hyperparameters() -> Dict[str, str]:
     """
     Get the job checkpoint directory.
     Returns:
