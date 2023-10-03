@@ -20,7 +20,7 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
 from braket.circuits.noise_helpers import apply_noise_to_gates, apply_noise_to_moments
-from braket.circuits.qubit_set import QubitSet
+from braket.registers.qubit_set import QubitSet
 
 invalid_data_noise_type = [Gate.X(), None, 1.5]
 invalid_data_target_gates_type = [[-1, "foo"], [1.5, None, -1], "X", [Gate.X, "CNot"]]

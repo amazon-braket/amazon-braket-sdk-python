@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.56.2 (2023-10-03)
+
+### Bug Fixes and Other Changes
+
+ * Refactor Qubit and QubitSet to a separate module
+
 ## v1.56.1 (2023-09-27)
 
 ### Bug Fixes and Other Changes

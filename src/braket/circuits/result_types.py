@@ -22,13 +22,13 @@ from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
 from braket.circuits.observables import Sum
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import (
     ObservableParameterResultType,
     ObservableResultType,
     ResultType,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 """
 To add a new result type:

@@ -18,13 +18,13 @@ from typing import Any, Dict, List, Type, Union
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
 from braket.circuits.observables import Sum
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class ResultType:

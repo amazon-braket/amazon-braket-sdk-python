@@ -18,7 +18,7 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.noise_model.circuit_instruction_criteria import CircuitInstructionCriteria
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import parse_qubit_input
-from braket.circuits.qubit_set import QubitSetInput
+from braket.registers.qubit_set import QubitSetInput
 
 
 class UnitaryGateCriteria(CircuitInstructionCriteria):
