@@ -37,8 +37,8 @@ from braket.circuits.quantum_operator_helpers import (
     verify_quantum_operator_matrix_dimensions,
 )
 from braket.circuits.serialization import OpenQASMSerializationProperties
-from braket.qubits.qubit import QubitInput
-from braket.qubits.qubit_set import QubitSet, QubitSetInput
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 """
 To add a new Noise implementation:

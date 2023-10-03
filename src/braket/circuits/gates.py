@@ -42,8 +42,8 @@ from braket.circuits.quantum_operator_helpers import (
 from braket.circuits.serialization import OpenQASMSerializationProperties
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence
-from braket.qubits.qubit import QubitInput
-from braket.qubits.qubit_set import QubitSet, QubitSetInput
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 """
 To add a new gate:

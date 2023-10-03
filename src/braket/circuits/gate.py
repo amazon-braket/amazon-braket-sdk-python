@@ -23,7 +23,7 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
-from braket.qubits.qubit_set import QubitSet
+from braket.registers.qubit_set import QubitSet
 
 
 class Gate(QuantumOperator):

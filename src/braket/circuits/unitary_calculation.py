@@ -20,7 +20,7 @@ from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.default_simulator.linalg_utils import multiply_matrix
-from braket.qubits.qubit_set import QubitSet
+from braket.registers.qubit_set import QubitSet
 
 
 def _einsum_subscripts(targets: QubitSet, qubit_count: int) -> str:

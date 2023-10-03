@@ -28,7 +28,7 @@ from braket.circuits.result_type import (
     ResultType,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
-from braket.qubits.qubit_set import QubitSet, QubitSetInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 """
 To add a new result type:

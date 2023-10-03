@@ -58,8 +58,8 @@ from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
-from braket.qubits.qubit import QubitInput
-from braket.qubits.qubit_set import QubitSet, QubitSetInput
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]

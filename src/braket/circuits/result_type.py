@@ -23,8 +23,8 @@ from braket.circuits.serialization import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
-from braket.qubits.qubit import QubitInput
-from braket.qubits.qubit_set import QubitSet, QubitSetInput
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class ResultType:

@@ -26,7 +26,7 @@ from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, Criteria
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
 from braket.circuits.result_types import ObservableResultType
-from braket.qubits.qubit_set import QubitSetInput
+from braket.registers.qubit_set import QubitSetInput
 
 
 @dataclass

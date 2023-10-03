@@ -14,7 +14,7 @@
 from abc import abstractmethod
 
 from braket.circuits.noise_model.criteria import Criteria
-from braket.qubits.qubit_set import QubitSetInput
+from braket.registers.qubit_set import QubitSetInput
 
 
 class InitializationCriteria(Criteria):

@@ -17,7 +17,7 @@ from typing import Any, Sequence, Tuple
 
 from braket.circuits.operator import Operator
 from braket.circuits.serialization import IRType, SerializationProperties
-from braket.qubits.qubit_set import QubitSet
+from braket.registers.qubit_set import QubitSet
 
 
 class CompilerDirective(Operator):

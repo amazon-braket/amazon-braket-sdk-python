@@ -11,4 +11,4 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.qubits import Qubit, QubitInput  # noqa: F401
+from braket.registers import Qubit, QubitInput  # noqa: F401

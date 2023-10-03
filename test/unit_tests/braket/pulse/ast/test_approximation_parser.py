@@ -24,7 +24,7 @@ from braket.pulse.ast.approximation_parser import _ApproximationParser
 from braket.pulse.frame import Frame
 from braket.pulse.port import Port
 from braket.pulse.pulse_sequence import PulseSequence
-from braket.qubits.qubit_set import QubitSet
+from braket.registers.qubit_set import QubitSet
 from braket.timings.time_series import TimeSeries, _all_close
 
 

@@ -31,8 +31,8 @@ from typing import (
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
-from braket.qubits.qubit import Qubit
-from braket.qubits.qubit_set import QubitSet
+from braket.registers.qubit import Qubit
+from braket.registers.qubit_set import QubitSet
 
 
 class MomentType(str, Enum):
