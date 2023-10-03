@@ -23,7 +23,7 @@ setup(
     name="amazon-braket-sdk",
     version=version,
     license="Apache License 2.0",
-    python_requires=">= 3.8.2",
+    python_requires=">= 3.9",
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
@@ -76,7 +76,6 @@ setup(
         "Natural Language :: English",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
