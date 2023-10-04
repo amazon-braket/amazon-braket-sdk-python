@@ -53,6 +53,7 @@ def get_results_dir() -> str:
 def get_checkpoint_dir() -> str:
     """
     Get the job checkpoint directory.
+
     Returns:
         str: The checkpoint directory, defaulting to current working directory.
     """
@@ -61,9 +62,10 @@ def get_checkpoint_dir() -> str:
 
 def get_hyperparameters() -> Dict[str, str]:
     """
-    Get the job checkpoint directory.
+    Get the job hyperparameters as strings.
+
     Returns:
-        str: The checkpoint directory, defaulting to current working directory.
+        Dict[str, str]: The hyperparameters of the job.
     """
     if "AMZN_BRAKET_HP_FILE" in os.environ:
         with open(os.getenv("AMZN_BRAKET_HP_FILE"), "r") as f:
