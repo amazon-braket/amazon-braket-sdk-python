@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
+import openpulse.ast as ast
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
 from oqpy.base import OQPyExpression
 
@@ -31,7 +32,7 @@ from braket.parametric.parameterizable import Parameterizable
 
 
 class WaveformDict(dict):
-    def __init__(self, wf_dict: dict, pulse_sequence):
+    def __init__(self, wf_dict: Dict, pulse_sequence):
         for wf in wf_dict.values():
             wf._pulse_sequence = pulse_sequence
         super().__init__(wf_dict)
@@ -55,7 +56,9 @@ class Waveform(ABC):
     def __init__(self) -> None:
         self._pulse_sequence = None
 
-    def _modify_oqpy_waveform_var(self, key, value, type_=float64):
+    def _modify_oqpy_waveform_var(
+        self, key: str, value: Any, type_: ast.ClassicalType = float64
+    ) -> None:
         if self._pulse_sequence is not None:
             self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
                 key
@@ -109,11 +112,20 @@ class ArbitraryWaveform(Waveform):
         super().__init__()
 
     @property
-    def amplitudes(self):
+    def amplitudes(self) -> List[complex]:
         return self._amplitudes
 
     @amplitudes.setter
-    def amplitudes(self, value):
+    def amplitudes(self, value: List[complex]) -> None:
+        """
+        Sets the list of amplitudes.
+
+        Args:
+            value (List[complex]): Array of complex values specifying the
+                waveform amplitude at each timestep. The timestep is determined by the sampling rate
+                of the frame to which waveform is applied to.
+
+        """
         self._amplitudes = value
         if self._pulse_sequence is not None:
             self._pulse_sequence._program.undeclared_vars[self.id].init_expression = value
@@ -179,20 +191,33 @@ class ConstantWaveform(Waveform, Parameterizable):
         super().__init__()
 
     @property
-    def iq(self):
+    def iq(self) -> complex:
         return self._iq
 
     @iq.setter
-    def iq(self, value):
+    def iq(self, value: complex) -> None:
+        """
+        Sets the IQ value.
+
+        Args:
+            value (complex): complex value specifying the amplitude of the waveform.
+        """
         self._iq = value
         self._modify_oqpy_waveform_var("iq", value)
 
     @property
-    def length(self):
+    def length(self) -> Union[float, FreeParameterExpression]:
         return self._length
 
     @length.setter
-    def length(self, value):
+    def length(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the length.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): Value (in seconds)
+                specifying the duration of the waveform.
+        """
         self._length = value
         self._modify_oqpy_waveform_var("length", value, duration)
 
@@ -317,47 +342,81 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         super().__init__()
 
     @property
-    def length(self):
+    def length(self) -> Union[float, FreeParameterExpression]:
         return self._length
 
     @length.setter
-    def length(self, value):
+    def length(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the length.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): Value (in seconds)
+                specifying the duration of the waveform.
+        """
         self._length = value
         self._modify_oqpy_waveform_var("length", value, duration)
 
     @property
-    def sigma(self):
+    def sigma(self) -> Union[float, FreeParameterExpression]:
         return self._sigma
 
     @sigma.setter
-    def sigma(self, value):
+    def sigma(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the DRAG gaussian width.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): A measure (in seconds) of
+                how wide or narrow the Gaussian peak is.
+        """
         self._sigma = value
         self._modify_oqpy_waveform_var("sigma", value, duration)
 
     @property
-    def beta(self):
+    def beta(self) -> Union[float, FreeParameterExpression]:
         return self._beta
 
     @beta.setter
-    def beta(self, value):
+    def beta(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the beta value.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): The correction amplitude.
+        """
         self._beta = value
         self._modify_oqpy_waveform_var("beta", value)
 
     @property
-    def amplitude(self):
+    def amplitude(self) -> Union[float, FreeParameterExpression]:
         return self._amplitude
 
     @amplitude.setter
-    def amplitude(self, value):
+    def amplitude(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the amplitude.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): The amplitude of the
+                waveform envelope.
+        """
         self._amplitude = value
         self._modify_oqpy_waveform_var("amplitude", value)
 
     @property
-    def zero_at_edges(self):
+    def zero_at_edges(self) -> bool:
         return self._zero_at_edges
 
     @zero_at_edges.setter
-    def zero_at_edges(self, value):
+    def zero_at_edges(self, value: bool) -> None:
+        """
+        Sets if the DRAG gaussian waveform should start and end at zero.
+
+        Args:
+            value (bool): bool specifying whether the waveform amplitude is clipped to
+                zero at the edges.
+        """
         self._zero_at_edges = value
         self._modify_oqpy_waveform_var("zero_at_edges", value)
 
@@ -502,38 +561,66 @@ class GaussianWaveform(Waveform, Parameterizable):
         super().__init__()
 
     @property
-    def length(self):
+    def length(self) -> Union[float, FreeParameterExpression]:
         return self._length
 
     @length.setter
-    def length(self, value):
+    def length(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the length.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): Value (in seconds) specifying the
+                duration of the waveform.
+        """
         self._length = value
         self._modify_oqpy_waveform_var("length", value, duration)
 
     @property
-    def sigma(self):
+    def sigma(self) -> Union[float, FreeParameterExpression]:
         return self._sigma
 
     @sigma.setter
-    def sigma(self, value):
+    def sigma(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the gaussian waveform width.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): A measure (in seconds) of how wide
+                or narrow the Gaussian peak is.
+        """
         self._sigma = value
         self._modify_oqpy_waveform_var("sigma", value, duration)
 
     @property
-    def amplitude(self):
+    def amplitude(self) -> Union[float, FreeParameterExpression]:
         return self._amplitude
 
     @amplitude.setter
-    def amplitude(self, value):
+    def amplitude(self, value: Union[float, FreeParameterExpression]) -> None:
+        """
+        Sets the amplitude.
+
+        Args:
+            value (Union[float, FreeParameterExpression]): The amplitude of the waveform
+                envelope.
+        """
         self._amplitude = value
         self._modify_oqpy_waveform_var("amplitude", value)
 
     @property
-    def zero_at_edges(self):
+    def zero_at_edges(self) -> bool:
         return self._zero_at_edges
 
     @zero_at_edges.setter
-    def zero_at_edges(self, value):
+    def zero_at_edges(self, value: bool) -> None:
+        """
+        Sets if the DRAG gaussian waveform should start and end at zero.
+
+        Args:
+            value (bool): bool specifying whether the waveform amplitude is clipped to
+                zero at the edges.
+        """
         self._zero_at_edges = value
         if self._pulse_sequence is not None:
             self._pulse_sequence._program.undeclared_vars[self.id].init_expression.args[
