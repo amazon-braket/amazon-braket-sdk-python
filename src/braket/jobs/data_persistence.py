@@ -13,8 +13,6 @@
 from pathlib import Path
 from typing import Any, Dict, Union
 
-from typing import Any, Dict
-
 from braket.jobs.environment_variables import get_checkpoint_dir, get_job_name, get_results_dir
 from braket.jobs.serialization import deserialize_values, serialize_values
 from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
