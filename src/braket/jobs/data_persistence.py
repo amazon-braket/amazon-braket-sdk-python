@@ -10,8 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, Union
 
 from braket.jobs.environment_variables import get_checkpoint_dir, get_job_name, get_results_dir
 from braket.jobs.serialization import deserialize_values, serialize_values
@@ -104,33 +104,83 @@ def load_job_checkpoint(job_name: str, checkpoint_file_suffix: str = "") -> Dict
         return deserialized_data
 
 
+def _load_persisted_data(filename: Union[str, Path] = None) -> PersistedJobData:
+    filename = filename or Path(get_results_dir()) / "results.json"
+    try:
+        with open(filename, mode="r") as f:
+            return PersistedJobData.parse_raw(f.read())
+    except FileNotFoundError:
+        return PersistedJobData(
+            dataDictionary={},
+            dataFormat=PersistedJobDataFormat.PLAINTEXT,
+        )
+
+
+def load_job_result(filename: Union[str, Path] = None) -> Dict[str, Any]:
+    """
+    Loads job result of currently running job.
+
+    Args:
+        filename (Union[str, Path]): Location of job results. Default `results.json` in job
+            results directory in a job instance or in working directory locally. This file
+            must be in the format used by `save_job_result`.
+
+    Returns:
+         Dict[str, Any]: Job result data of current job
+    """
+    persisted_data = _load_persisted_data(filename)
+    deserialized_data = deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
+    return deserialized_data
+
+
 def save_job_result(
-    result_data: Dict[str, Any],
-    data_format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
+    result_data: Union[Dict[str, Any], Any],
+    data_format: PersistedJobDataFormat = None,
 ) -> None:
     """
     Saves the `result_data` to the local output directory that is specified by the container
     environment variable `AMZN_BRAKET_JOB_RESULTS_DIR`, with the filename 'results.json'.
     The `result_data` values are serialized to the specified `data_format`.
 
-    Note: This function for storing the results is only for use inside the hybrid job container
+    Note: This function for storing the results is only for use inside the job container
           as it writes data to directories and references env variables set in the containers.
 
 
     Args:
-        result_data (Dict[str, Any]): Dict that specifies the result data to be persisted.
+        result_data (Union[Dict[str, Any], Any]): Dict that specifies the result data to be
+            persisted. If result data is not a dict, then it will be wrapped as
+            `{"result": result_data}`.
         data_format (PersistedJobDataFormat): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization. Default: PersistedJobDataFormat.PLAINTEXT.
-
-    Raises:
-        ValueError: If the supplied `result_data` is `None` or empty.
     """
-    if not result_data:
-        raise ValueError("The result_data argument cannot be empty.")
-    result_directory = get_results_dir()
-    result_path = f"{result_directory}/results.json"
-    with open(result_path, "w") as f:
-        serialized_data = serialize_values(result_data or {}, data_format)
+    if not isinstance(result_data, dict):
+        result_data = {"result": result_data}
+
+    current_persisted_data = _load_persisted_data()
+
+    if current_persisted_data.dataFormat == PersistedJobDataFormat.PICKLED_V4:
+        # if results are already pickled, maintain pickled format
+        # if user explicitly specifies plaintext, raise error
+        if data_format == PersistedJobDataFormat.PLAINTEXT:
+            raise TypeError(
+                "Cannot update results object serialized with "
+                f"{current_persisted_data.dataFormat.value} using data format "
+                f"{data_format.value}."
+            )
+
+        data_format = PersistedJobDataFormat.PICKLED_V4
+
+    # if not specified or already pickled, default to plaintext
+    data_format = data_format or PersistedJobDataFormat.PLAINTEXT
+
+    current_results = deserialize_values(
+        current_persisted_data.dataDictionary,
+        current_persisted_data.dataFormat,
+    )
+    updated_results = {**current_results, **result_data}
+
+    with open(Path(get_results_dir()) / "results.json", "w") as f:
+        serialized_data = serialize_values(updated_results or {}, data_format)
         persisted_data = PersistedJobData(dataDictionary=serialized_data, dataFormat=data_format)
         f.write(persisted_data.json())
