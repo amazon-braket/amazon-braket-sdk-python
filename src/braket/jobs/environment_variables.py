@@ -53,7 +53,7 @@ def get_results_dir() -> str:
 def get_checkpoint_dir() -> str:
     """
     Get the job checkpoint directory.
-    
+
     Returns:
         str: The checkpoint directory, defaulting to current working directory.
     """
@@ -63,7 +63,7 @@ def get_checkpoint_dir() -> str:
 def get_hyperparameters() -> Dict[str, str]:
     """
     Get the job hyperparameters as strings.
-    
+
     Returns:
         Dict[str, str]: The hyperparameters of the job.
     """
