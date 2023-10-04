@@ -70,6 +70,7 @@ class FreeParameterExpression:
             self._expression = self._parse_string_expression(expression).expression
         else:
             raise NotImplementedError
+        self._validate_type()
 
     @property
     def expression(self) -> Union[Number, sympy.Expr]:
@@ -107,6 +108,13 @@ class FreeParameterExpression:
             return subbed_expr
         else:
             return FreeParameterExpression(subbed_expr)
+
+    def _validate_type(self) -> None:
+        if not isinstance(self._type, (FloatType, DurationType)):
+            raise TypeError(
+                "FreeParameterExpression must be of type openqasm3.ast.FloatType "
+                "or openqasm3.ast.DurationType"
+            )
 
     def _parse_string_expression(self, expression: str) -> FreeParameterExpression:
         return self._eval_operation(ast.parse(expression, mode="eval").body)
