@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.57.1 (2023-10-05)
+
+### Bug Fixes and Other Changes
+
+ * docs: fix helper docstring
+
 ## v1.57.0 (2023-10-04)
 
 ### Features
