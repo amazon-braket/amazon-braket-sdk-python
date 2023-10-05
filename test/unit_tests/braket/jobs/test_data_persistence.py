@@ -20,7 +20,12 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from braket.jobs.data_persistence import load_job_checkpoint, save_job_checkpoint, save_job_result
+from braket.jobs.data_persistence import (
+    load_job_checkpoint,
+    load_job_result,
+    save_job_checkpoint,
+    save_job_result,
+)
 from braket.jobs_data import PersistedJobDataFormat
 
 
@@ -266,9 +271,68 @@ def test_save_job_result(data_format, result_data, expected_saved_data):
             assert expected_file.read() == expected_saved_data
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("result_data", [{}, None])
-def test_save_job_result_raises_error_empty_data(result_data):
+def test_save_job_result_does_not_raise_error_empty_data(result_data):
     with tempfile.TemporaryDirectory() as tmp_dir:
-        with patch.dict(os.environ, {"AMZN_BRAKET_CHECKPOINT_DIR": tmp_dir}):
+        with patch.dict(os.environ, {"AMZN_BRAKET_JOB_RESULTS_DIR": tmp_dir}):
             save_job_result(result_data)
+
+
+@pytest.mark.parametrize(
+    "first_result_data,"
+    "first_data_format,"
+    "second_result_data,"
+    "second_data_format,"
+    "expected_result_data",
+    (
+        (
+            "hello",
+            PersistedJobDataFormat.PLAINTEXT,
+            "goodbye",
+            PersistedJobDataFormat.PLAINTEXT,
+            {"result": "goodbye"},
+        ),
+        (
+            "hello",
+            PersistedJobDataFormat.PLAINTEXT,
+            "goodbye",
+            PersistedJobDataFormat.PICKLED_V4,
+            {"result": "goodbye"},
+        ),
+        ("hello", PersistedJobDataFormat.PICKLED_V4, "goodbye", None, {"result": "goodbye"}),
+        (
+            # not json serializable
+            PersistedJobDataFormat,
+            PersistedJobDataFormat.PICKLED_V4,
+            {"other_field": "value"},
+            None,
+            {"result": PersistedJobDataFormat, "other_field": "value"},
+        ),
+    ),
+)
+def test_update_result_data(
+    first_result_data,
+    first_data_format,
+    second_result_data,
+    second_data_format,
+    expected_result_data,
+):
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        with patch.dict(os.environ, {"AMZN_BRAKET_JOB_RESULTS_DIR": tmp_dir}):
+            save_job_result(first_result_data, first_data_format)
+            save_job_result(second_result_data, second_data_format)
+
+            assert load_job_result() == expected_result_data
+
+
+def test_update_pickled_results_as_plaintext_error():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        with patch.dict(os.environ, {"AMZN_BRAKET_JOB_RESULTS_DIR": tmp_dir}):
+            save_job_result(np.arange(5), PersistedJobDataFormat.PICKLED_V4)
+
+            cannot_convert_pickled_to_plaintext = (
+                "Cannot update results object serialized with "
+                "pickled_v4 using data format plaintext."
+            )
+            with pytest.raises(TypeError, match=cannot_convert_pickled_to_plaintext):
+                save_job_result("hello", PersistedJobDataFormat.PLAINTEXT)

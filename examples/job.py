@@ -16,11 +16,11 @@ import os
 from braket.aws import AwsDevice, AwsQuantumJob
 from braket.circuits import Circuit
 from braket.devices import Devices
-from braket.jobs import save_job_result
+from braket.jobs import get_job_device_arn, save_job_result
 
 
 def run_job():
-    device = AwsDevice(os.environ.get("AMZN_BRAKET_DEVICE_ARN"))
+    device = AwsDevice(get_job_device_arn())
 
     bell = Circuit().h(0).cnot(0, 1)
     num_tasks = 10

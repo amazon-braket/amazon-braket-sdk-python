@@ -17,13 +17,13 @@ from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple
 
 from braket.circuits.gate import Gate
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
 )
 from braket.pulse.pulse_sequence import PulseSequence
+from braket.registers.qubit_set import QubitSet
 
 
 class GateCalibrations:

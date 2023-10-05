@@ -39,8 +39,6 @@ from braket.circuits.noise_helpers import (
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.parameterizable import Parameterizable
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import (
     ObservableParameterResultType,
     ObservableResultType,
@@ -61,6 +59,8 @@ from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
 from braket.pulse.waveforms import Waveform
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]

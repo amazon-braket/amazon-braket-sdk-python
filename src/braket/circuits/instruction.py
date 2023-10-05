@@ -20,9 +20,9 @@ from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.operator import Operator
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import IRType, SerializationProperties
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
 InstructionOperator = Operator
