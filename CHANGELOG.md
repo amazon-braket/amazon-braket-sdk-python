@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.57.1 (2023-10-05)
+
+### Bug Fixes and Other Changes
+
+ * docs: fix helper docstring
+
+## v1.57.0 (2023-10-04)
+
+### Features
+
+ * wrap non-dict results and update results on subsequent calls
+ * job helper functions
+
+### Bug Fixes and Other Changes
+
+ * revert integ test changes
+
 ## v1.56.2 (2023-10-03)
 
 ### Bug Fixes and Other Changes
