@@ -67,6 +67,11 @@ def test_unsupported_node_str():
     FreeParameterExpression("theta , 1")
 
 
+@pytest.mark.xfail(raises=TypeError)
+def test_unsupported_type():
+    FreeParameterExpression("theta", _type=float)
+
+
 def test_commutativity():
     add_1 = 1 + FreeParameterExpression(FreeParameter("theta"))
     add_2 = FreeParameterExpression(FreeParameter("theta")) + 1
