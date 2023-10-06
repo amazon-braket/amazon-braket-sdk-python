@@ -22,7 +22,7 @@ def log_metric(
     iteration_number: Optional[int] = None,
 ) -> None:
     """
-    Records Braket Job metrics.
+    Records Braket Hybrid Job metrics.
 
     Args:
         metric_name (str) : The name of the metric.

@@ -23,22 +23,22 @@ class QuantumJob(ABC):
     @property
     @abstractmethod
     def arn(self) -> str:
-        """The ARN (Amazon Resource Name) of the quantum job.
+        """The ARN (Amazon Resource Name) of the hybrid job.
         Returns:
-            str: The ARN (Amazon Resource Name) of the quantum job.
+            str: The ARN (Amazon Resource Name) of the hybrid job.
         """
 
     @property
     @abstractmethod
     def name(self) -> str:
-        """The name of the quantum job.
+        """The name of the hybrid job.
         Returns:
-            str: The name of the quantum job.
+            str: The name of the hybrid job.
         """
 
     @abstractmethod
     def state(self, use_cached_value: bool = False) -> str:
-        """The state of the quantum job.
+        """The state of the hybrid job.
 
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
@@ -55,28 +55,29 @@ class QuantumJob(ABC):
 
     @abstractmethod
     def logs(self, wait: bool = False, poll_interval_seconds: int = 5) -> None:
-        """Display logs for a given job, optionally tailing them until job is complete.
+        """Display logs for a given hybrid job, optionally tailing them until hybrid job is
+        complete.
 
         If the output is a tty or a Jupyter cell, it will be color-coded
         based on which instance the log entry is from.
 
         Args:
-            wait (bool): `True` to keep looking for new log entries until the job completes;
+            wait (bool): `True` to keep looking for new log entries until the hybrid job completes;
                 otherwise `False`. Default: `False`.
 
             poll_interval_seconds (int): The interval of time, in seconds, between polling for
-                new log entries and job completion (default: 5).
+                new log entries and hybrid job completion (default: 5).
 
         Raises:
-            RuntimeError: If waiting and the job fails.
+            RuntimeError: If waiting and the hybrid job fails.
         """
-        # The loop below implements a state machine that alternates between checking the job status
-        # and reading whatever is available in the logs at this point. Note, that if we were
-        # called with wait == False, we never check the job status.
+        # The loop below implements a state machine that alternates between checking the hybrid job
+        # status and reading whatever is available in the logs at this point. Note, that if we were
+        # called with wait == False, we never check the hybrid job status.
         #
-        # If wait == TRUE and job is not completed, the initial state is TAILING
-        # If wait == FALSE, the initial state is COMPLETE (doesn't matter if the job really is
-        # complete).
+        # If wait == TRUE and hybrid job is not completed, the initial state is TAILING
+        # If wait == FALSE, the initial state is COMPLETE (doesn't matter if the hybrid job really
+        # is complete).
         #
         # The state table:
         #
@@ -101,7 +102,7 @@ class QuantumJob(ABC):
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
         Returns:
-            Dict[str, Any]: Dict that specifies the job metadata defined in Amazon Braket.
+            Dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
 
     @abstractmethod
@@ -133,10 +134,10 @@ class QuantumJob(ABC):
 
     @abstractmethod
     def cancel(self) -> str:
-        """Cancels the job.
+        """Cancels the hybrid job.
 
         Returns:
-            str: Indicates the status of the job.
+            str: Indicates the status of the hybrid job.
 
         Raises:
             ClientError: If there are errors invoking the CancelJob API.
@@ -148,7 +149,7 @@ class QuantumJob(ABC):
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> Dict[str, Any]:
-        """Retrieves the job result persisted using save_job_result() function.
+        """Retrieves the hybrid job result persisted using save_job_result() function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
@@ -159,11 +160,11 @@ class QuantumJob(ABC):
 
 
         Returns:
-            Dict[str, Any]: Dict specifying the job results.
+            Dict[str, Any]: Dict specifying the hybrid job results.
 
         Raises:
-            RuntimeError: if job is in a FAILED or CANCELLED state.
-            TimeoutError: if job execution exceeds the polling timeout period.
+            RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
+            TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
 
     @abstractmethod
@@ -173,13 +174,13 @@ class QuantumJob(ABC):
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
-        """Downloads the results from the job output S3 bucket and extracts the tar.gz
+        """Downloads the results from the hybrid job output S3 bucket and extracts the tar.gz
         bundle to the location specified by `extract_to`. If no location is specified,
         the results are extracted to the current directory.
 
         Args:
             extract_to (str): The directory to which the results are extracted. The results
-                are extracted to a folder titled with the job name within this directory.
+                are extracted to a folder titled with the hybrid job name within this directory.
                 Default= `Current working directory`.
 
             poll_timeout_seconds (float): The polling timeout, in seconds, for `download_result()`.
@@ -189,6 +190,6 @@ class QuantumJob(ABC):
                 `download_result()`.Default: 5 seconds.
 
         Raises:
-            RuntimeError: if job is in a FAILED or CANCELLED state.
-            TimeoutError: if job execution exceeds the polling timeout period.
+            RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
+            TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """

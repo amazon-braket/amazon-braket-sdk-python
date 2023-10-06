@@ -24,6 +24,7 @@ import boto3
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueueType
 from braket.circuits import Instruction
 from braket.circuits.circuit import Circuit, Gate, QubitSet
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
@@ -73,8 +74,8 @@ from braket.tracking.tracking_events import _TaskCompletionEvent
 
 
 class AwsQuantumTask(QuantumTask):
-    """Amazon Braket implementation of a quantum task. A task can be a circuit or an annealing
-    problem."""
+    """Amazon Braket implementation of a quantum task. A quantum task can be a circuit,
+    an OpenQASM program or an AHS program."""
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
@@ -116,17 +117,17 @@ class AwsQuantumTask(QuantumTask):
 
             device_arn (str): The ARN of the quantum device.
 
-            task_specification (Union[Circuit, Problem, OpenQASMProgram, BlackbirdProgram,PulseSequence, AnalogHamiltonianSimulation]): # noqa
-                The specification of the task to run on device.
+            task_specification (Union[Circuit, Problem, OpenQASMProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
+                The specification of the quantum task to run on device.
 
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
-                to store task results in.
+                to store quantum task results in.
 
-            shots (int): The number of times to run the task on the device. If the device is a
-                simulator, this implies the state is sampled N times, where N = `shots`.
+            shots (int): The number of times to run the quantum task on the device. If the device is
+                a simulator, this implies the state is sampled N times, where N = `shots`.
                 `shots=0` is only available on simulators and means that the simulator
-                will compute the exact results based on the task specification.
+                will compute the exact results based on the quantum task specification.
 
             device_parameters (Dict[str, Any]): Additional parameters to send to the device.
 
@@ -151,7 +152,7 @@ class AwsQuantumTask(QuantumTask):
                 Default: None.
 
         Returns:
-            AwsQuantumTask: AwsQuantumTask tracking the task execution on the device.
+            AwsQuantumTask: AwsQuantumTask tracking the quantum task execution on the device.
 
         Note:
             The following arguments are typically defined via clients of Device.
@@ -209,14 +210,15 @@ class AwsQuantumTask(QuantumTask):
     ):
         """
         Args:
-            arn (str): The ARN of the task.
+            arn (str): The ARN of the quantum task.
             aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
-                region of the task.
+                region of the quantum task.
             poll_timeout_seconds (float): The polling timeout for `result()`. Default: 5 days.
             poll_interval_seconds (float): The polling interval for `result()`. Default: 1 second.
-            logger (Logger): Logger object with which to write logs, such as task statuses
-                while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
+            logger (Logger): Logger object with which to write logs, such as quantum task statuses
+                while waiting for quantum task to be in a terminal state. Default is
+                `getLogger(__name__)`
 
         Examples:
             >>> task = AwsQuantumTask(arn='task_arn')
@@ -247,10 +249,11 @@ class AwsQuantumTask(QuantumTask):
     @staticmethod
     def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
         """
-        Get an AwsSession for the Task ARN. The AWS session should be in the region of the task.
+        Get an AwsSession for the Quantum Task ARN. The AWS session should be in the region of the
+        quantum task.
 
         Returns:
-            AwsSession: `AwsSession` object with default `boto_session` in task's region.
+            AwsSession: `AwsSession` object with default `boto_session` in quantum task's region.
         """
         task_region = task_arn.split(":")[3]
         boto_session = boto3.Session(region_name=task_region)
@@ -270,13 +273,14 @@ class AwsQuantumTask(QuantumTask):
             self._future.cancel()
 
     def cancel(self) -> None:
-        """Cancel the quantum task. This cancels the future and the task in Amazon Braket."""
+        """Cancel the quantum task. This cancels the future and the quantum task in Amazon
+        Braket."""
         self._cancel_future()
         self._aws_session.cancel_quantum_task(self._arn)
 
     def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
         """
-        Get task metadata defined in Amazon Braket.
+        Get quantum task metadata defined in Amazon Braket.
 
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
@@ -311,6 +315,40 @@ class AwsQuantumTask(QuantumTask):
         """
         return self._status(use_cached_value)
 
+    def queue_position(self) -> QuantumTaskQueueInfo:
+        """
+        The queue position details for the quantum task.
+
+        Returns:
+            QuantumTaskQueueInfo: Instance of QuantumTaskQueueInfo class
+            representing the queue position information for the quantum task.
+            The queue_position is only returned when quantum task is not in
+            RUNNING/CANCELLING/TERMINAL states, else queue_position is returned as None.
+            The normal tasks refers to the quantum tasks not submitted via Hybrid Jobs.
+            Whereas, the priority tasks refers to the total number of quantum tasks waiting to run
+            submitted through Amazon Braket Hybrid Jobs. These tasks run before the normal tasks.
+            If the queue position for normal or priority quantum tasks is greater than 2000,
+            we display their respective queue position as '>2000'.
+
+        Examples:
+            task status = QUEUED and queue position is 2050
+            >>> task.queue_position()
+            QuantumTaskQueueInfo(queue_type=<QueueType.NORMAL: 'Normal'>,
+            queue_position='>2000', message=None)
+
+            task status = COMPLETED
+            >>> task.queue_position()
+            QuantumTaskQueueInfo(queue_type=<QueueType.NORMAL: 'Normal'>,
+            queue_position=None, message='Task is in COMPLETED status. AmazonBraket does
+            not show queue position for this status.')
+        """
+        response = self.metadata()["queueInfo"]
+        queue_type = QueueType(response["queuePriority"])
+        queue_position = None if response.get("position") == "None" else response.get("position")
+        message = response.get("message")
+
+        return QuantumTaskQueueInfo(queue_type, queue_position, message)
+
     def _status(self, use_cached_value: bool = False) -> str:
         metadata = self.metadata(use_cached_value)
         status = metadata.get("status")
@@ -335,7 +373,7 @@ class AwsQuantumTask(QuantumTask):
     ]:
         """
         Get the quantum task result by polling Amazon Braket to see if the task is completed.
-        Once the task is completed, the result is retrieved from S3 and returned as a
+        Once the quantum task is completed, the result is retrieved from S3 and returned as a
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
         This method is a blocking thread call and synchronously returns a result.
@@ -344,8 +382,8 @@ class AwsQuantumTask(QuantumTask):
 
         Returns:
             Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: # noqa
-            The result of the task, if the task completed successfully; returns `None` if the task
-            did not complete successfully or the future timed out.
+            The result of the quantum task, if the quantum task completed successfully; returns
+            `None` if the quantum task did not complete successfully or the future timed out.
         """
         if self._result or (
             self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES

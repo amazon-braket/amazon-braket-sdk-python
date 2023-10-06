@@ -1,5 +1,77 @@
 # Changelog
 
+## v1.57.1 (2023-10-05)
+
+### Bug Fixes and Other Changes
+
+ * docs: fix helper docstring
+
+## v1.57.0 (2023-10-04)
+
+### Features
+
+ * wrap non-dict results and update results on subsequent calls
+ * job helper functions
+
+### Bug Fixes and Other Changes
+
+ * revert integ test changes
+
+## v1.56.2 (2023-10-03)
+
+### Bug Fixes and Other Changes
+
+ * Refactor Qubit and QubitSet to a separate module
+
+## v1.56.1 (2023-09-27)
+
+### Bug Fixes and Other Changes
+
+ * fixing search device when don't have access to a region.
+
+## v1.56.0 (2023-09-26)
+
+### Features
+
+ * add queue visibility information
+
+## v1.55.1.post0 (2023-09-18)
+
+### Documentation Changes
+
+ * Remove trailing backquotes
+ * add code contributors to the readme
+ * change the sphinx requirement to be greater than 7.0.0
+
+## v1.55.1 (2023-09-14)
+
+### Bug Fixes and Other Changes
+
+ * Revert "update: restricting parameter names to not collide with ones we use for OpenQASM generation. (#675)"
+
+### Documentation Changes
+
+ * Replace aws org with amazon-braket
+
+## v1.55.0 (2023-09-09)
+
+### Features
+
+ * add Aria2 enum
+
+## v1.54.3.post0 (2023-09-04)
+
+### Documentation Changes
+
+ * standardize task and job naming to quantum task and hybrid job
+
+## v1.54.3 (2023-08-30)
+
+### Bug Fixes and Other Changes
+
+ * Move inline `_flatten` to top of `qubit_set.py`
+ * build(deps): bump actions/setup-python from 4.6.1 to 4.7.0
+
 ## v1.54.2 (2023-08-28)
 
 ### Bug Fixes and Other Changes

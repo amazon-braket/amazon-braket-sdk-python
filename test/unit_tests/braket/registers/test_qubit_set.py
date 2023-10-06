@@ -13,7 +13,7 @@
 
 import pytest
 
-from braket.circuits import Qubit, QubitSet
+from braket.registers import Qubit, QubitSet
 
 
 @pytest.fixture

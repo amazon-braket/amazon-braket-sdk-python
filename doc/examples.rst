@@ -3,7 +3,7 @@ Examples
 ########
    
 There are several examples available in the Amazon Braket repo:
-https://github.com/aws/amazon-braket-examples.
+https://github.com/amazon-braket/amazon-braket-examples.
 
 .. toctree::
     :maxdepth: 2

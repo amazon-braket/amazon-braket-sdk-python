@@ -17,6 +17,7 @@ import importlib
 import json
 import os
 import urllib.request
+import warnings
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
@@ -29,6 +30,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
@@ -123,15 +125,16 @@ class AwsDevice(Device):
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
         """
-        Run a quantum task specification on this device. A task can be a circuit or an
+        Run a quantum task specification on this device. A quantum task can be a circuit or an
         annealing problem.
 
         Args:
             task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
-                Specification of task (circuit or annealing problem or program) to run on device.
+                Specification of quantum task (circuit, OpenQASM program or AHS program)
+                to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the task's results to. Default is `<default_bucket>/tasks` if evoked outside a
-                Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
+                save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
+                Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
@@ -233,20 +236,20 @@ class AwsDevice(Device):
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
-        """Executes a batch of tasks in parallel
+        """Executes a batch of quantum tasks in parallel
 
         Args:
             task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], List[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing problems, pulse sequences,
                 or photonics program to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
-                save the tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
+                save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
                 Default is 1000 for QPUs and 0 for simulators.
-            max_parallel (Optional[int]): The maximum number of tasks to run on AWS in parallel.
+            max_parallel (Optional[int]): The maximum number of quantum tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
-                concurrent tasks on the device. Default: 10
+                concurrent quantum tasks on the device. Default: 10
             max_connections (int): The maximum number of connections in the Boto3 connection pool.
                 Also the maximum number of thread pool workers for the batch. Default: 100
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
@@ -264,7 +267,7 @@ class AwsDevice(Device):
                 Default: None.
 
         Returns:
-            AwsQuantumTaskBatch: A batch containing all of the tasks run
+            AwsQuantumTaskBatch: A batch containing all of the quantum tasks run
 
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
@@ -600,23 +603,32 @@ class AwsDevice(Device):
             types_for_region = sorted(
                 types if region == session_region else types - {AwsDeviceType.SIMULATOR}
             )
-            region_device_arns = [
-                result["deviceArn"]
-                for result in session_for_region.search_devices(
-                    arns=arns,
-                    names=names,
-                    types=types_for_region,
-                    statuses=statuses,
-                    provider_names=provider_names,
+            try:
+                region_device_arns = [
+                    result["deviceArn"]
+                    for result in session_for_region.search_devices(
+                        arns=arns,
+                        names=names,
+                        types=types_for_region,
+                        statuses=statuses,
+                        provider_names=provider_names,
+                    )
+                ]
+                device_map.update(
+                    {
+                        arn: AwsDevice(arn, session_for_region)
+                        for arn in region_device_arns
+                        if arn not in device_map
+                    }
                 )
-            ]
-            device_map.update(
-                {
-                    arn: AwsDevice(arn, session_for_region)
-                    for arn in region_device_arns
-                    if arn not in device_map
-                }
-            )
+            except ClientError as e:
+                error_code = e.response["Error"]["Code"]
+                warnings.warn(
+                    f"{error_code}: Unable to search region '{region}' for devices."
+                    " Please check your settings or try again later."
+                    f" Continuing without devices in '{region}'."
+                )
+
         devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
@@ -665,6 +677,54 @@ class AwsDevice(Device):
                 f"Device ARN is not a valid format: {device_arn}. For valid Braket ARNs, "
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
+
+    def queue_depth(self) -> QueueDepthInfo:
+        """
+        Task queue depth refers to the total number of quantum tasks currently waiting
+        to run on a particular device.
+
+        Returns:
+            QueueDepthInfo: Instance of the QueueDepth class representing queue depth
+            information for quantum tasks and hybrid jobs.
+            Queue depth refers to the number of quantum tasks and hybrid jobs queued on a particular
+            device. The normal tasks refers to the quantum tasks not submitted via Hybrid Jobs.
+            Whereas, the priority tasks refers to the total number of quantum tasks waiting to run
+            submitted through Amazon Braket Hybrid Jobs. These tasks run before the normal tasks.
+            If the queue depth for normal or priority quantum tasks is greater than 4000, we display
+            their respective queue depth as '>4000'. Similarly, for hybrid jobs if there are more
+            than 1000 jobs queued on a device, display the hybrid jobs queue depth as '>1000'.
+            Additionally, for QPUs if hybrid jobs queue depth is 0, we display information about
+            priority and count of the running hybrid job.
+
+        Example:
+            Queue depth information for a running job.
+            >>> device = AwsDevice(Device.Amazon.SV1)
+            >>> print(device.queue_depth())
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '0',
+            <QueueType.PRIORITY: 'Priority'>: '1'}, jobs='0 (1 prioritized job(s) running)')
+
+            If more than 4000 quantum tasks queued on a device.
+            >>> device = AwsDevice(Device.Amazon.DM1)
+            >>> print(device.queue_depth())
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '>4000',
+            <QueueType.PRIORITY: 'Priority'>: '2000'}, jobs='100')
+        """
+        metadata = self.aws_session.get_device(arn=self.arn)
+        queue_metadata = metadata.get("deviceQueueInfo")
+        queue_info = {}
+
+        for response in queue_metadata:
+            queue_name = response.get("queue")
+            queue_priority = response.get("queuePriority")
+            queue_size = response.get("queueSize")
+
+            if queue_name == "QUANTUM_TASKS_QUEUE":
+                priority_enum = QueueType(queue_priority)
+                queue_info.setdefault("quantum_tasks", {})[priority_enum] = queue_size
+            else:
+                queue_info["jobs"] = queue_size
+
+        return QueueDepthInfo(**queue_info)
 
     def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
         """

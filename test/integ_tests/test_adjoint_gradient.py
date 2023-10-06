@@ -42,10 +42,10 @@ def test_adjoint_gradient_quantum_task_with_nested_targets(
     expected_openqasm = (
         "OPENQASM 3.0;\n"
         "input float theta;\n"
-        "qubit[4] __qubits__;\n"
-        "rx(theta) __qubits__[0];\n"
-        "#pragma braket result adjoint_gradient expectation(-6 * "
-        "y(__qubits__[0]) @ i(__qubits__[1]) + 0.75 * y(__qubits__[2]) @ z(__qubits__[3])) theta"
+        "qubit[4] q;\n"
+        "rx(theta) q[0];\n"
+        "#pragma braket result adjoint_gradient expectation(-6 * y(q[0]) @ i(q[1]) + 0.75 * "
+        "y(q[2]) @ z(q[3])) theta"
     )
 
     gradient_task = AwsQuantumTask.create(
@@ -83,10 +83,10 @@ def test_adjoint_gradient_with_standard_observable_terms(
     expected_openqasm = (
         "OPENQASM 3.0;\n"
         "input float theta;\n"
-        "qubit[3] __qubits__;\n"
-        "rx(theta) __qubits__[0];\n"
-        "#pragma braket result adjoint_gradient expectation(2 * "
-        "x(__qubits__[0]) + 3 * y(__qubits__[1]) - 1 * z(__qubits__[2])) theta"
+        "qubit[3] q;\n"
+        "rx(theta) q[0];\n"
+        "#pragma braket result adjoint_gradient expectation(2 * x(q[0]) + 3 * y(q[1]) "
+        "- 1 * z(q[2])) theta"
     )
 
     gradient_task = AwsQuantumTask.create(
@@ -132,19 +132,17 @@ def test_adjoint_gradient_with_batch_circuits(aws_session, s3_destination_folder
         (
             "OPENQASM 3.0;\n"
             "input float theta;\n"
-            "qubit[2] __qubits__;\n"
-            "rx(theta) __qubits__[0];\n"
-            "#pragma braket result adjoint_gradient expectation(6 *"
-            " y(__qubits__[0]) @ i(__qubits__[1])) theta"
+            "qubit[2] q;\n"
+            "rx(theta) q[0];\n"
+            "#pragma braket result adjoint_gradient expectation(6 * y(q[0]) @ i(q[1])) theta"
         ),
         (
             "OPENQASM 3.0;\n"
             "input float theta;\n"
-            "qubit[2] __qubits__;\n"
-            "rx(theta) __qubits__[0];\n"
-            "#pragma braket result adjoint_gradient expectation(-6 *"
-            " y(__qubits__[0]) @ i(__qubits__[1]) + 0.75 *"
-            " y(__qubits__[0]) @ z(__qubits__[1])) theta"
+            "qubit[2] q;\n"
+            "rx(theta) q[0];\n"
+            "#pragma braket result adjoint_gradient expectation(-6 * y(q[0]) @ i(q[1]) + 0.75 * "
+            "y(q[0]) @ z(q[1])) theta"
         ),
     ]
 

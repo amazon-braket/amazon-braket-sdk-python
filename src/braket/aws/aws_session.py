@@ -240,13 +240,13 @@ class AwsSession(object):
 
     def create_job(self, **boto3_kwargs) -> str:
         """
-        Create a quantum job.
+        Create a quantum hybrid job.
 
         Args:
             ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateJob` operation.
 
         Returns:
-            str: The ARN of the job.
+            str: The ARN of the hybrid job.
         """
         response = self.braket_client.create_job(**boto3_kwargs)
         return response["jobArn"]
@@ -279,13 +279,15 @@ class AwsSession(object):
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
-        response = self.braket_client.get_quantum_task(quantumTaskArn=arn)
+        response = self.braket_client.get_quantum_task(
+            quantumTaskArn=arn, additionalAttributeNames=["QueueInfo"]
+        )
         broadcast_event(_TaskStatusEvent(arn=response["quantumTaskArn"], status=response["status"]))
         return response
 
     def get_default_jobs_role(self) -> str:
         """
-        Returns the role ARN for the default jobs role created in the Amazon Braket Console.
+        Returns the role ARN for the default hybrid jobs role created in the Amazon Braket Console.
         It will pick the first role it finds with the `RoleName` prefix
         `AmazonBraketJobsExecutionRole` with a `PathPrefix` of `/service-role/`.
 
@@ -316,22 +318,22 @@ class AwsSession(object):
     )
     def get_job(self, arn: str) -> Dict[str, Any]:
         """
-        Gets the quantum job.
+        Gets the hybrid job.
 
         Args:
-            arn (str): The ARN of the quantum job to get.
+            arn (str): The ARN of the hybrid job to get.
 
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
         """
-        return self.braket_client.get_job(jobArn=arn)
+        return self.braket_client.get_job(jobArn=arn, additionalAttributeNames=["QueueInfo"])
 
     def cancel_job(self, arn: str) -> Dict[str, Any]:
         """
-        Cancel the quantum job.
+        Cancel the hybrid job.
 
         Args:
-            arn (str): The ARN of the quantum job to cancel.
+            arn (str): The ARN of the hybrid job to cancel.
 
         Returns:
             Dict[str, Any]: The response from the Amazon Braket `CancelJob` operation.
@@ -502,8 +504,8 @@ class AwsSession(object):
         Returns the name of the default bucket of the AWS Session. In the following order
         of priority, it will return either the parameter `default_bucket` set during
         initialization of the AwsSession (if not None), the bucket being used by the
-        currently running Braket Job (if evoked inside of a Braket Job), or a default value of
-        "amazon-braket-<aws account id>-<aws session region>. Except in the case of a user-
+        currently running Braket Hybrid Job (if evoked inside of a Braket Hybrid Job), or a default
+        value of "amazon-braket-<aws account id>-<aws session region>. Except in the case of a user-
         specified bucket name, this method will create the default bucket if it does not
         exist.
 

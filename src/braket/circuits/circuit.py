@@ -39,8 +39,6 @@ from braket.circuits.noise_helpers import (
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.parameterizable import Parameterizable
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import (
     ObservableParameterResultType,
     ObservableResultType,
@@ -60,6 +58,8 @@ from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1212,7 +1212,7 @@ class Circuit:
             )
             for idx, qubit in enumerate(qubits):
                 qubit_target = serialization_properties.format_target(int(qubit))
-                ir_instructions.append(f"__bits__[{idx}] = measure {qubit_target};")
+                ir_instructions.append(f"b[{idx}] = measure {qubit_target};")
 
         return OpenQasmProgram.construct(source="\n".join(ir_instructions), inputs={})
 
@@ -1225,11 +1225,11 @@ class Circuit:
         for parameter in self.parameters:
             ir_instructions.append(f"input float {parameter};")
         if not self.result_types:
-            ir_instructions.append(f"bit[{self.qubit_count}] __bits__;")
+            ir_instructions.append(f"bit[{self.qubit_count}] b;")
 
         if serialization_properties.qubit_reference_type == QubitReferenceType.VIRTUAL:
             total_qubits = max(self.qubits).real + 1
-            ir_instructions.append(f"qubit[{total_qubits}] __qubits__;")
+            ir_instructions.append(f"qubit[{total_qubits}] q;")
         elif serialization_properties.qubit_reference_type != QubitReferenceType.PHYSICAL:
             raise ValueError(
                 f"Invalid qubit_reference_type "

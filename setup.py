@@ -33,7 +33,7 @@ setup(
         "setuptools",
         "backoff",
         "boltons",
-        "boto3>=1.22.3",
+        "boto3>=1.28.53",
         "nest-asyncio",
         "networkx",
         "numpy",
@@ -62,7 +62,7 @@ setup(
         ]
     },
     include_package_data=True,
-    url="https://github.com/aws/amazon-braket-sdk-python",
+    url="https://github.com/amazon-braket/amazon-braket-sdk-python",
     author="Amazon Web Services",
     description=(
         "An open source library for interacting with quantum computing devices on Amazon Braket"

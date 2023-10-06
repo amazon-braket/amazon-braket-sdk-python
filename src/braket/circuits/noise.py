@@ -21,12 +21,12 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.registers.qubit_set import QubitSet
 
 
 class Noise(QuantumOperator):
