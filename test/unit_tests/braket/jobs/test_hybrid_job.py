@@ -1,4 +1,6 @@
+import ast
 import importlib
+import re
 import tempfile
 from logging import getLogger
 from pathlib import Path
@@ -7,11 +9,13 @@ from unittest.mock import MagicMock, patch
 
 import job_module
 import pytest
+from cloudpickle import cloudpickle
 
 from braket.aws import AwsQuantumJob
 from braket.devices import Devices
 from braket.jobs import hybrid_job
 from braket.jobs.config import CheckpointConfig, InstanceConfig, OutputDataConfig, StoppingCondition
+from braket.jobs.hybrid_job import _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
 
@@ -156,6 +160,41 @@ def test_decorator_non_defaults(
     )
     assert mock_tempdir.__exit__.called
     mock_stdout.write.assert_any_call(s3_not_linked)
+
+
+@patch("time.time", return_value=123.0)
+@patch("builtins.open")
+@patch("tempfile.TemporaryDirectory")
+@patch.object(AwsQuantumJob, "create")
+def test_decorator_non_dict_input(mock_create, mock_tempdir, _mock_open, mock_time):
+    input_prefix = "my_input"
+
+    @hybrid_job(device=None, input_data=input_prefix)
+    def my_entry():
+        return "my entry return value"
+
+    mock_tempdir_name = "job_temp_dir_00000"
+    mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+
+    source_module = mock_tempdir_name
+    entry_point = f"{mock_tempdir_name}.entry_point:my_entry"
+    wait_until_complete = False
+
+    device = "local:none/none"
+
+    my_entry()
+
+    mock_create.assert_called_with(
+        device=device,
+        source_module=source_module,
+        entry_point=entry_point,
+        wait_until_complete=wait_until_complete,
+        job_name="my-entry-123000",
+        hyperparameters={},
+        logger=getLogger("braket.jobs.hybrid_job"),
+        input_data=input_prefix,
+    )
+    assert mock_tempdir.return_value.__exit__.called
 
 
 @patch("time.time", return_value=123.0)
@@ -340,3 +379,16 @@ def test_serialization_error():
     )
     with pytest.raises(RuntimeError, match=serialization_failed):
         fails_serialization()
+
+
+def test_serialization_wrapping():
+    def my_entry(*args, **kwargs):
+        return args, kwargs
+
+    args, kwargs = (1, "two"), {"three": 3}
+    template = _serialize_entry_point(my_entry, args, kwargs)
+    pickled_str = re.search(r"cloudpickle\.loads\((b'[^']+')\)", template).group(1)
+    byte_str = ast.literal_eval(pickled_str)
+
+    recovered = cloudpickle.loads(byte_str)
+    assert recovered() == (args, kwargs)
