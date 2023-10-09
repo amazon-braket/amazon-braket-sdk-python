@@ -62,11 +62,11 @@ def hybrid_job(
 
         include_modules (Union[Union[str, ModuleType], Iterable[Union[str, ModuleType]]]): Either a
             single module or module name or a list of module or module names referring to local
-            modules to be included. Default value `[]`
-            todo: confirm docs
+            modules to be included. Any references to members of these modules in the hybrid job
+            algorithm code will be serialized as part of the algorithm code. Default value `[]`
 
         dependencies (Optional[Union[str, Path]]): Path (absolute or relative) to a requirements.txt
-            file to be used. todo: confirm docs
+            file to be used for the hybrid job.
 
         local (bool): Whether to use local mode for the hybrid job. Default `False`
 
@@ -213,7 +213,6 @@ class _IncludeModules:
 def _serialize_entry_point(entry_point: Callable, args, kwargs) -> str:
     """Create an entry point from a function"""
 
-    # todo: catch serialization errors
     def wrapped_entry_point():
         """Partial function wrapping entry point with given parameters"""
         return entry_point(*args, **kwargs)
