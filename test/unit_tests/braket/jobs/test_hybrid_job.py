@@ -383,11 +383,12 @@ def test_serialization_error():
 
 def test_serialization_wrapping():
     def my_entry(*args, **kwargs):
+        print("something with \" and ' and \n")
         return args, kwargs
 
     args, kwargs = (1, "two"), {"three": 3}
     template = _serialize_entry_point(my_entry, args, kwargs)
-    pickled_str = re.search(r"cloudpickle\.loads\((b'[^']+')\)", template).group(1)
+    pickled_str = re.search(r"(?s)cloudpickle.loads\((.*?)\)\ndef my_entry", template).group(1)
     byte_str = ast.literal_eval(pickled_str)
 
     recovered = cloudpickle.loads(byte_str)
