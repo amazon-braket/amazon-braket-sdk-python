@@ -267,8 +267,6 @@ def _process_input_data(input_data):
         else (multiple matches, possibly including exact):
             cwd/prefix_match -> channel/prefix_match, for each match
     """
-    from braket.aws import AwsSession
-
     input_data = input_data or {}
     if not isinstance(input_data, dict):
         input_data = {"input": input_data}
