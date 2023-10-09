@@ -62,7 +62,7 @@ def get_checkpoint_dir() -> str:
 
 def get_hyperparameters() -> Dict[str, str]:
     """
-    Get the job hyperparameters as strings.
+    Get the job hyperparameters as a dict, with the values stringified.
 
     Returns:
         Dict[str, str]: The hyperparameters of the job.

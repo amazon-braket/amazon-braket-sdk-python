@@ -20,6 +20,8 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
+# todo: remove once circular import is fixed
+import braket.aws  # noqa: F401
 from braket.jobs.data_persistence import (
     load_job_checkpoint,
     load_job_result,

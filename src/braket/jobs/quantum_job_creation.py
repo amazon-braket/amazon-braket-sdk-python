@@ -19,12 +19,12 @@ import sys
 import tarfile
 import tempfile
 import time
+import warnings
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from braket.aws.aws_session import AwsSession
-from braket.jobs import Framework, image_uris
 from braket.jobs.config import (
     CheckpointConfig,
     DeviceConfig,
@@ -33,6 +33,7 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
+from braket.jobs.image_uris import Framework, retrieve_image
 
 
 def prepare_quantum_job(
@@ -57,8 +58,12 @@ def prepare_quantum_job(
     """Creates a hybrid job by invoking the Braket CreateJob API.
 
     Args:
-        device (str): ARN for the AWS device which is primarily
-            accessed for the execution of this hybrid job.
+        device (str): Device ARN of the QPU device that receives priority quantum
+            task queueing once the hybrid job begins running. Each QPU has a separate hybrid jobs
+            queue so that only one hybrid job is running at a time. The device string is accessible
+            in the hybrid job instance as the environment variable "AMZN_BRAKET_DEVICE_ARN".
+            When using embedded simulators, you may provide the device argument as string of the
+            form: "local:<provider>/<simulator_name>".
 
         source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
             tarred and uploaded. If `source_module` is an S3 URI, it must point to a
@@ -99,9 +104,9 @@ def prepare_quantum_job(
             channel name "input".
             Default: {}.
 
-        instance_config (InstanceConfig): Configuration of the instances to be used
-            to execute the hybrid job. Default: InstanceConfig(instanceType='ml.m5.large',
-            instanceCount=1, volumeSizeInGB=30, volumeKmsKey=None).
+        instance_config (InstanceConfig): Configuration of the instance(s) for running the
+            classical code for the hybrid job. Defaults to
+            `InstanceConfig(instanceType='ml.m5.large', instanceCount=1, volumeSizeInGB=30)`.
 
         distribution (str): A str that specifies how the hybrid job should be distributed. If set to
             "data_parallel", the hyperparameters for the hybrid job will be set to use data
@@ -149,7 +154,7 @@ def prepare_quantum_job(
     _validate_params(param_datatype_map)
     aws_session = aws_session or AwsSession()
     device_config = DeviceConfig(device)
-    job_name = job_name or _generate_default_job_name(image_uri)
+    job_name = job_name or _generate_default_job_name(image_uri=image_uri)
     role_arn = role_arn or os.getenv("BRAKET_JOBS_ROLE_ARN", aws_session.get_default_jobs_role())
     hyperparameters = hyperparameters or {}
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
@@ -181,7 +186,7 @@ def prepare_quantum_job(
             "compressionType": "GZIP",
         }
     }
-    image_uri = image_uri or image_uris.retrieve_image(Framework.BASE, aws_session.region)
+    image_uri = image_uri or retrieve_image(Framework.BASE, aws_session.region)
     algorithm_specification["containerImage"] = {"uri": image_uri}
     if not output_data_config.s3Path:
         output_data_config.s3Path = AwsSession.construct_s3_uri(
@@ -226,24 +231,39 @@ def prepare_quantum_job(
     return create_job_kwargs
 
 
-def _generate_default_job_name(image_uri: Optional[str]) -> str:
+def _generate_default_job_name(
+    image_uri: Optional[str] = None, func: Optional[Callable] = None
+) -> str:
     """
-    Generate default hybrid job name using the image uri and a timestamp
+    Generate default job name using the image uri and entrypoint function.
+
     Args:
         image_uri (Optional[str]): URI for the image container.
+        func (Optional[Callable]): The entry point function.
 
     Returns:
         str: Hybrid job name.
     """
-    if not image_uri:
-        job_type = "-default"
-    else:
-        job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
-            "/amazon-braket-([^:/]*)", image_uri
-        )
-        job_type = f"-{job_type_match.groups()[0]}" if job_type_match else ""
+    max_length = 50
+    timestamp = str(int(time.time() * 1000))
 
-    return f"braket-job{job_type}-{time.time() * 1000:.0f}"
+    if func:
+        name = func.__name__.replace("_", "-")
+        if len(name) + len(timestamp) > max_length:
+            name = name[: max_length - len(timestamp) - 1]
+            warnings.warn(
+                f"Job name exceeded {max_length} characters. Truncating name to {name}-{timestamp}."
+            )
+    else:
+        if not image_uri:
+            name = "braket-job-default"
+        else:
+            job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
+                "/amazon-braket-([^:/]*)", image_uri
+            )
+            container = f"-{job_type_match.groups()[0]}" if job_type_match else ""
+            name = f"braket-job{container}"
+    return f"{name}-{timestamp}"
 
 
 def _process_s3_source_module(

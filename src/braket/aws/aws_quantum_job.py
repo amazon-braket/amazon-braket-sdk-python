@@ -85,11 +85,12 @@ class AwsQuantumJob(QuantumJob):
         """Creates a hybrid job by invoking the Braket CreateJob API.
 
         Args:
-            device (str): ARN for the AWS device which is primarily accessed for the execution
-                of this hybrid job. Alternatively, a string of the format
-                "local:<provider>/<simulator>" for using a local simulator for the hybrid job.
-                This string will be available as the environment variable `AMZN_BRAKET_DEVICE_ARN`
-                inside the hybrid job container when using a Braket container.
+            device (str): Device ARN of the QPU device that receives priority quantum
+                task queueing once the hybrid job begins running. Each QPU has a separate hybrid
+                jobs queue so that only one hybrid job is running at a time. The device string is
+                accessible in the hybrid job instance as the environment variable
+                "AMZN_BRAKET_DEVICE_ARN". When using embedded simulators, you may provide the device
+                argument as a string of the form: "local:<provider>/<simulator_name>".
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
@@ -133,9 +134,9 @@ class AwsQuantumJob(QuantumJob):
                 channel name "input".
                 Default: {}.
 
-            instance_config (InstanceConfig): Configuration of the instances to be used
-                to execute the hybrid job. Default: InstanceConfig(instanceType='ml.m5.large',
-                instanceCount=1, volumeSizeInGB=30).
+            instance_config (InstanceConfig): Configuration of the instance(s) for running the
+                classical code for the hybrid job. Default:
+                `InstanceConfig(instanceType='ml.m5.large', instanceCount=1, volumeSizeInGB=30)`.
 
             distribution (str): A str that specifies how the hybrid job should be distributed.
                 If set to "data_parallel", the hyperparameters for the hybrid job will be set

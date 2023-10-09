@@ -25,7 +25,7 @@ class CheckpointConfig:
 
 @dataclass
 class InstanceConfig:
-    """Configuration of the instances used to execute the hybrid job."""
+    """Configuration of the instance(s) used to run the hybrid job."""
 
     instanceType: str = "ml.m5.large"
     volumeSizeInGb: int = 30

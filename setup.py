@@ -34,6 +34,7 @@ setup(
         "backoff",
         "boltons",
         "boto3>=1.28.53",
+        "cloudpickle",
         "nest-asyncio",
         "networkx",
         "numpy",
