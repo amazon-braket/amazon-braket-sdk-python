@@ -19,12 +19,12 @@ import pytest
 from openpulse import ast
 from oqpy import IntVar
 
-from braket.circuits.qubit_set import QubitSet
 from braket.pulse import ArbitraryWaveform, ConstantWaveform, DragGaussianWaveform, GaussianWaveform
 from braket.pulse.ast.approximation_parser import _ApproximationParser
 from braket.pulse.frame import Frame
 from braket.pulse.port import Port
 from braket.pulse.pulse_sequence import PulseSequence
+from braket.registers.qubit_set import QubitSet
 from braket.timings.time_series import TimeSeries, _all_close
 
 
@@ -289,7 +289,7 @@ def test_predefined_frame(port):
     expected_phases["frame1"].put(0, 0).put(2e-9, 0)
 
     for statement in pulse_seq._program._state.body:
-        assert type(statement) != ast.FrameType
+        assert not isinstance(statement, ast.FrameType)
 
     parser = _ApproximationParser(program=pulse_seq._program, frames=to_dict(frame))
 

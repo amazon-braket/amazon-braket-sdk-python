@@ -2,8 +2,8 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
-[![Build status](https://github.com/aws/amazon-braket-sdk-python/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/aws/amazon-braket-sdk-python/actions/workflows/python-package.yml)
-[![codecov](https://codecov.io/gh/aws/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/aws/amazon-braket-sdk-python)
+[![Build status](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml)
+[![codecov](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python)
 [![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-sdk-python.svg?logo=read-the-docs)](https://amazon-braket-sdk-python.readthedocs.io/en/latest/?badge=latest)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/aws/amazon-braket-sdk-python/badge)](https://api.securityscorecards.dev/projects/github.com/aws/amazon-braket-sdk-python)
 
@@ -12,8 +12,8 @@ The Amazon Braket Python SDK is an open source library that provides a framework
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
-### Python 3.8 or greater
-Download and install Python 3.8 or greater from [Python.org](https://www.python.org/downloads/).
+### Python 3.9 or greater
+Download and install Python 3.9 or greater from [Python.org](https://www.python.org/downloads/).
 
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
@@ -45,7 +45,7 @@ pip install amazon-braket-sdk
 You can also install from source by cloning this repository and running a pip install command in the root directory of the repository:
 
 ```bash
-git clone https://github.com/aws/amazon-braket-sdk-python.git
+git clone https://github.com/amazon-braket/amazon-braket-sdk-python.git
 cd amazon-braket-sdk-python
 pip install .
 ```
@@ -85,16 +85,16 @@ task = device.run(bell, shots=100)
 print(task.result().measurement_counts)
 ```
 
-The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the job. This example can be found in `../examples/bell.py`.
+The code sample imports the Amazon Braket framework, then defines the device to use (the SV1 AWS simulator). It then creates a Bell Pair circuit, executes the circuit on the simulator and prints the results of the hybrid job. This example can be found in `../examples/bell.py`.
 
-### Running multiple tasks at once
+### Running multiple quantum tasks at once
 
-Many quantum algorithms need to run multiple independent circuits, and submitting the circuits in parallel can be faster than submitting them one at a time. In particular, parallel task processing provides a significant speed up when using simulator devices. The following example shows how to run a batch of tasks on SV1:
+Many quantum algorithms need to run multiple independent circuits, and submitting the circuits in parallel can be faster than submitting them one at a time. In particular, parallel quantum task processing provides a significant speed up when using simulator devices. The following example shows how to run a batch of quantum tasks on SV1:
 
 ```python
 circuits = [bell for _ in range(5)]
 batch = device.run_batch(circuits, shots=100)
-print(batch.results()[0].measurement_counts)  # The result of the first task in the batch
+print(batch.results()[0].measurement_counts)  # The result of the first quantum task in the batch
 ```
 
 ### Running a hybrid job
@@ -113,19 +113,19 @@ print(job.result())
 where `run_job` is a function in the file `job.py`.
 
 
-The code sample imports the Amazon Braket framework, then creates a hybrid job with the entry point being the `run_job` function. The hybrid job creates quantum tasks against the SV1 AWS Simulator. The job runs synchronously, and prints logs until it completes. The complete example can be found in `../examples/job.py`.
+The code sample imports the Amazon Braket framework, then creates a hybrid job with the entry point being the `run_job` function. The hybrid job creates quantum tasks against the SV1 AWS Simulator. The hybrid job runs synchronously, and prints logs until it completes. The complete example can be found in `../examples/job.py`.
 
 ### Available Simulators
 Amazon Braket provides access to two types of simulators: fully managed simulators, available through the Amazon Braket service, and the local simulators that are part of the Amazon Braket SDK.
 
 - Fully managed simulators offer high-performance circuit simulations. These simulators can handle circuits larger than circuits that run on quantum hardware. For example, the SV1 state vector simulator shown in the previous examples requires approximately 1 or 2 hours to complete a 34-qubit, dense, and square circuit (circuit depth = 34), depending on the type of gates used and other factors.
-- The Amazon Braket Python SDK includes an implementation of quantum simulators that can run circuits on your local, classic hardware. For example the braket_sv local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the task locally is included in the repository  `../examples/local_bell.py`.
+- The Amazon Braket Python SDK includes an implementation of quantum simulators that can run circuits on your local, classic hardware. For example the braket_sv local simulator is well suited for rapid prototyping on small circuits up to 25 qubits, depending on the hardware specifications of your Braket notebook instance or your local environment. An example of how to execute the quantum task locally is included in the repository  `../examples/local_bell.py`.
 
 For a list of available simulators and their features, consult the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
 ### Debugging logs
 
-Tasks sent to QPUs don't always run right away. To view task status, you can enable debugging logs. An example of how to enable these logs is included in repo: `../examples/debug_bell.py`. This example enables task logging so that status updates are continuously printed to the terminal after a quantum task is executed. The logs can also be configured to save to a file or output to another stream. You can use the debugging example to get information on the tasks you submit, such as the current status, so that you know when your task completes.
+Quantum tasks sent to QPUs don't always run right away. To view quantum task status, you can enable debugging logs. An example of how to enable these logs is included in repo: `../examples/debug_bell.py`. This example enables quantum task logging so that status updates are continuously printed to the terminal after a quantum task is executed. The logs can also be configured to save to a file or output to another stream. You can use the debugging example to get information on the quantum tasks you submit, such as the current status, so that you know when your quantum task completes.
 
 ### Running a Quantum Algorithm on a Quantum Computer
 With Amazon Braket, you can run your quantum circuit on a physical quantum computer.
@@ -153,10 +153,10 @@ print(task.result().measurement_counts)
 
 To select a quantum hardware device, specify its ARN as the value of the `device_arn` argument. A list of available quantum devices and their features can be found in the [Amazon Braket Developer Guide](https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html).
 
-**Important** Tasks may not run immediately on the QPU. The QPUs only execute tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
+**Important** Quantum tasks may not run immediately on the QPU. The QPUs only execute quantum tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
 
 ## Sample Notebooks
-Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/aws/amazon-braket-examples/) repo.
+Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/amazon-braket/amazon-braket-examples/) repo.
 
 ## Braket Python SDK API Reference Documentation
 
@@ -215,7 +215,7 @@ After you create a profile, use the following command to set the `AWS_PROFILE` s
 ```bash
 export AWS_PROFILE=YOUR_PROFILE_NAME
 ```
-To run the integration tests for local jobs, you need to have Docker installed and running. To install Docker follow these instructions: [Install Docker](https://docs.docker.com/get-docker/)
+To run the integration tests for local hybrid jobs, you need to have Docker installed and running. To install Docker follow these instructions: [Install Docker](https://docs.docker.com/get-docker/)
 
 Run the tests:
 
@@ -234,14 +234,18 @@ tox -e integ-tests -- your-arguments
 ### Issues and Bug Reports
 
 If you encounter bugs or face issues while using the SDK, please let us know by posting 
-the issue on our [Github issue tracker](https://github.com/aws/amazon-braket-sdk-python/issues/).  
+the issue on our [Github issue tracker](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/).  
 For other issues or general questions, please ask on the [Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/questions/ask) and add the tag amazon-braket.
 
 ### Feedback and Feature Requests
 
 If you have feedback or features that you would like to see on Amazon Braket, we would love to hear from you!  
-[Github issues](https://github.com/aws/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
+[Github issues](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
 to engage in the conversation, and +1 issues to help drive priority. 
+
+### Code contributors
+
+[![Contributors](https://contrib.rocks/image?repo=amazon-braket/amazon-braket-sdk-python)](https://github.com/amazon-braket/amazon-braket-sdk-python/graphs/contributors)
 
 ## License
 This project is licensed under the Apache-2.0 License.

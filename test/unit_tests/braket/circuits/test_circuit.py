@@ -396,9 +396,9 @@ def test_add_result_type_same_observable_wrong_target_order_hermitian():
     assert not circ.basis_rotation_instructions
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_add_result_type_with_target_and_mapping(prob):
-    Circuit().add_result_type(prob, target=[10], target_mapping={0: 10})
+    with pytest.raises(TypeError):
+        Circuit().add_result_type(prob, target=[10], target_mapping={0: 10})
 
 
 def test_add_instruction_default(cnot_instr):
@@ -424,9 +424,9 @@ def test_add_multiple_single_qubit_instruction(h_instr):
     assert circ == expected
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_add_instruction_with_target_and_mapping(h):
-    Circuit().add_instruction(h, target=[10], target_mapping={0: 10})
+    with pytest.raises(TypeError):
+        Circuit().add_instruction(h, target=[10], target_mapping={0: 10})
 
 
 def test_add_circuit_default(bell_pair):
@@ -468,9 +468,9 @@ def test_add_circuit_with_target_and_non_continuous_qubits():
     assert circ == expected
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_add_circuit_with_target_and_mapping(h):
-    Circuit().add_circuit(h, target=[10], target_mapping={0: 10})
+    with pytest.raises(TypeError):
+        Circuit().add_circuit(h, target=[10], target_mapping={0: 10})
 
 
 def test_add_verbatim_box():
@@ -538,16 +538,16 @@ def test_add_verbatim_box_with_target(cnot):
     assert circ == expected
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_add_verbatim_box_with_target_and_mapping(h):
-    Circuit().add_verbatim_box(h, target=[10], target_mapping={0: 10})
+    with pytest.raises(TypeError):
+        Circuit().add_verbatim_box(h, target=[10], target_mapping={0: 10})
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_add_verbatim_box_result_types():
-    Circuit().h(0).add_verbatim_box(
-        Circuit().cnot(0, 1).expectation(observable=Observable.X(), target=0)
-    )
+    with pytest.raises(ValueError):
+        Circuit().h(0).add_verbatim_box(
+            Circuit().cnot(0, 1).expectation(observable=Observable.X(), target=0)
+        )
 
 
 def test_add_with_instruction_with_default(cnot_instr):
@@ -638,9 +638,9 @@ def test_add_operator(h, bell_pair):
     assert addition != (h + h + bell_pair + h)
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_iadd_with_unknown_type(h):
-    h += 100
+    with pytest.raises(TypeError):
+        h += 100
 
 
 def test_subroutine_register():
@@ -1702,12 +1702,47 @@ def test_circuit_user_gate(pulse_sequence_2):
                 inputs={},
             ),
         ),
+        (
+            Circuit().rx(0, FreeParameter("theta")),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "input float theta;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "rx(theta) q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
-def test_circuit_from_ir(expected_circuit, ir):
-    circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
+def test_from_ir(expected_circuit, ir):
+    assert Circuit.from_ir(source=ir.source, inputs=ir.inputs) == expected_circuit
+    assert Circuit.from_ir(source=ir) == expected_circuit
 
-    assert circuit_from_ir == expected_circuit
+
+def test_from_ir_inputs_updated():
+    circuit = Circuit().rx(0, 0.2).ry(0, 0.1)
+    openqasm = OpenQasmProgram(
+        source="\n".join(
+            [
+                "OPENQASM 3.0;",
+                "input float theta;",
+                "input float phi;",
+                "bit[1] b;",
+                "qubit[1] q;",
+                "rx(theta) q[0];",
+                "ry(phi) q[0];",
+                "b[0] = measure q[0];",
+            ]
+        ),
+        inputs={"theta": 0.2, "phi": 0.3},
+    )
+    assert Circuit.from_ir(source=openqasm, inputs={"phi": 0.1}) == circuit
 
 
 @pytest.mark.parametrize(
@@ -1809,9 +1844,25 @@ def test_circuit_from_ir(expected_circuit, ir):
                 inputs={},
             ),
         ),
+        (
+            Circuit().rx(0, FreeParameter("theta")).rx(0, 2 * FreeParameter("theta")),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "input float theta;" "bit[1] b;",
+                        "qubit[1] q;",
+                        "rx(theta) q[0];",
+                        "rx(2*theta) q[0];",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
-def test_circuit_from_ir_greater_functionality(expected_circuit, ir):
+def test_from_ir_advanced_openqasm(expected_circuit, ir):
     circuit_from_ir = Circuit.from_ir(source=ir.source, inputs=ir.inputs)
 
     assert circuit_from_ir == expected_circuit
@@ -1909,16 +1960,16 @@ def test_as_unitary_empty_instructions_returns_empty_array():
         ),
     ],
 )
-@pytest.mark.xfail(raises=TypeError)
 def test_as_unitary_noise_raises_error(circuit):
-    circuit.as_unitary()
+    with pytest.raises(TypeError):
+        circuit.as_unitary()
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_as_unitary_parameterized():
     theta = FreeParameter("theta")
     circ = Circuit().rx(angle=theta, target=0)
-    assert np.allclose(circ.as_unitary())
+    with pytest.raises(TypeError):
+        assert np.allclose(circ.as_unitary())
 
 
 def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
@@ -2322,16 +2373,16 @@ def test_to_unitary_empty_instructions_returns_empty_array():
         ),
     ],
 )
-@pytest.mark.xfail(raises=TypeError)
 def test_to_unitary_noise_raises_error(circuit):
-    circuit.to_unitary()
+    with pytest.raises(TypeError):
+        circuit.to_unitary()
 
 
-@pytest.mark.xfail(raises=TypeError)
 def test_to_unitary_parameterized():
     theta = FreeParameter("theta")
     circ = Circuit().rx(angle=theta, target=0)
-    assert np.allclose(circ.to_unitary())
+    with pytest.raises(TypeError):
+        np.allclose(circ.to_unitary())
 
 
 def test_to_unitary_noise_not_apply_returns_expected_unitary(recwarn):
@@ -2958,36 +3009,36 @@ def test_depth_getter(h):
     assert h.depth is h._moments.depth
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_depth_setter(h):
-    h.depth = 1
+    with pytest.raises(AttributeError):
+        h.depth = 1
 
 
 def test_instructions_getter(h):
     assert h.instructions == list(h._moments.values())
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_instructions_setter(h, h_instr):
-    h.instructions = [h_instr]
+    with pytest.raises(AttributeError):
+        h.instructions = [h_instr]
 
 
 def test_moments_getter(h):
     assert h.moments is h._moments
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_moments_setter(h):
-    h.moments = Moments()
+    with pytest.raises(AttributeError):
+        h.moments = Moments()
 
 
 def test_qubit_count_getter(h):
     assert h.qubit_count is h._moments.qubit_count
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_qubit_count_setter(h):
-    h.qubit_count = 1
+    with pytest.raises(AttributeError):
+        h.qubit_count = 1
 
 
 @pytest.mark.parametrize(
@@ -3053,9 +3104,9 @@ def test_qubits_getter(h):
     assert h.qubits is not h._moments.qubits
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_qubits_setter(h):
-    h.qubits = QubitSet(1)
+    with pytest.raises(AttributeError):
+        h.qubits = QubitSet(1)
 
 
 def test_diagram(h):
@@ -3208,20 +3259,20 @@ def test_make_bound_circuit_partial_bind():
     assert circ_new == expected_circ and circ_new.parameters == expected_parameters
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_make_bound_circuit_non_existent_param():
     theta = FreeParameter("theta")
     input_val = np.pi
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.make_bound_circuit({"alpha": input_val}, strict=True)
+    with pytest.raises(ValueError):
+        circ.make_bound_circuit({"alpha": input_val}, strict=True)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_make_bound_circuit_bad_value():
     theta = FreeParameter("theta")
     input_val = "invalid"
     circ = Circuit().ry(angle=theta, target=0).ry(angle=theta, target=1).ry(angle=theta, target=2)
-    circ.make_bound_circuit({"theta": input_val})
+    with pytest.raises(ValueError):
+        circ.make_bound_circuit({"theta": input_val})
 
 
 def test_circuit_with_expr():

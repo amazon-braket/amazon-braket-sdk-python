@@ -30,7 +30,7 @@ information to effectively respond to your bug report or contribution.
 
 We welcome you to use the GitHub issue tracker to report bugs or suggest features.
 
-When filing an issue, please check [existing open](https://github.com/aws/amazon-braket-sdk-python/issues) and [recently closed](https://github.com/aws/amazon-braket-sdk-python/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20) issues to make sure somebody else hasn't already
+When filing an issue, please check [existing open](https://github.com/amazon-braket/amazon-braket-sdk-python/issues) and [recently closed](https://github.com/amazon-braket/amazon-braket-sdk-python/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20) issues to make sure somebody else hasn't already
 reported the issue. Please try to include as much information as you can. Details like these are incredibly useful:
 
 * A reproducible test case or series of steps.
@@ -132,6 +132,34 @@ Please remember to:
 * Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 
+```mermaid
+timeline
+    title Code integration journey (CI)
+    Project setup <br> (make dev)   : Code checkout
+                                    : Virtual environment
+                                    : Dependencies
+                                    : Local branch
+                                    : Local changes
+                                    : Local tests
+
+    Pre-Pull Request <br> (make PR)     : Code linting (tox -e linters)
+                                        : Docs linting (tox -e docs)
+                                        : Static typing analysis (covered by the linters)
+                                        : Tests (tox -e unit-tests|tox -e integ-tests)
+
+    Pull Request <br> (CI checks)   : Semantic PR title check
+                                    : Related issue check
+                                    : Acknowledgment check
+                                    : Code coverage diff
+                                    : Dependencies check
+
+    After merge <br> (CI checks)    : End-to-end tests
+                                    : GitHub Actions check
+                                    : Rebuild Changelog
+                                    : Deploy staging docs
+                                    : Prepare release
+```
+
 ## Documentation Guidelines
 
 We use reStructuredText (RST) for most of our documentation. For a quick primer on the syntax,
@@ -171,7 +199,7 @@ If a parameter of a function has a default value, please note what the default i
 If that default value is `None`, it can also be helpful to explain what happens when the parameter is `None`.
 If `**kwargs` is part of the function signature, link to the parent class(es) or method(s) so that the reader knows where to find the available parameters.
 
-For an example file with docstrings, see [the `circuit` module](https://github.com/aws/amazon-braket-sdk-python/blob/main/src/braket/circuits/circuit.py).
+For an example file with docstrings, see [the `circuit` module](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/src/braket/circuits/circuit.py).
 
 
 ### Build and Test Documentation
@@ -187,12 +215,12 @@ You can then find the generated HTML files in `build/documentation/html`.
 
 ## Find Contributions to Work On
 
-Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels ((enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'](https://github.com/aws/amazon-braket-sdk-python/labels/help%20wanted) issues is a great place to start.
+Looking at the existing issues is a great way to find something to contribute on. As our projects, by default, use the default GitHub issue labels ((enhancement/bug/duplicate/help wanted/invalid/question/wontfix), looking at any ['help wanted'](https://github.com/amazon-braket/amazon-braket-sdk-python/labels/help%20wanted) issues is a great place to start.
 
 ## Building Integrations
-The Amazon Braket SDK supports integrations with popular quantum computing frameworks such as [PennyLane](https://github.com/aws/amazon-braket-pennylane-plugin-python), [Strawberryfields](https://github.com/aws/amazon-braket-strawberryfields-plugin-python) and [DWave's Ocean library](https://github.com/aws/amazon-braket-ocean-plugin-python). These serve as a good reference for a new integration you wish to develop. 
+The Amazon Braket SDK supports integrations with popular quantum computing frameworks such as [PennyLane](https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python), [Strawberryfields](https://github.com/amazon-braket/amazon-braket-strawberryfields-plugin-python) and [DWave's Ocean library](https://github.com/amazon-braket/amazon-braket-ocean-plugin-python). These serve as a good reference for a new integration you wish to develop. 
 
-When developing a new integration with the Amazon Braket SDK, please remember to update the [user agent header](https://datatracker.ietf.org/doc/html/rfc7231#section-5.5.3) to include version information for your integration. An example can be found [here](https://github.com/aws/amazon-braket-pennylane-plugin-python/commit/ccee35604afc2b04d83ee9103eccb2821a4256cb). 
+When developing a new integration with the Amazon Braket SDK, please remember to update the [user agent header](https://datatracker.ietf.org/doc/html/rfc7231#section-5.5.3) to include version information for your integration. An example can be found [here](https://github.com/amazon-braket/amazon-braket-pennylane-plugin-python/commit/ccee35604afc2b04d83ee9103eccb2821a4256cb). 
 
 ## Code of Conduct
 
@@ -208,6 +236,6 @@ If you discover a potential security issue in this project we ask that you notif
 
 ## Licensing
 
-See the [LICENSE](https://github.com/aws/amazon-braket-sdk-python/blob/main/LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
+See the [LICENSE](https://github.com/amazon-braket/amazon-braket-sdk-python/blob/main/LICENSE) file for our project's licensing. We will ask you to confirm the licensing of your contribution.
 
 We may ask you to sign a [Contributor License Agreement (CLA)](http://en.wikipedia.org/wiki/Contributor_License_Agreement) for larger changes.

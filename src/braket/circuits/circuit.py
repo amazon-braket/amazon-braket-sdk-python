@@ -39,8 +39,6 @@ from braket.circuits.noise_helpers import (
 from braket.circuits.observable import Observable
 from braket.circuits.observables import TensorProduct
 from braket.circuits.parameterizable import Parameterizable
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import (
     ObservableParameterResultType,
     ObservableResultType,
@@ -60,6 +58,8 @@ from braket.ir.openqasm.program_v1 import io_type
 from braket.pulse import ArbitraryWaveform, Frame
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence, _validate_uniqueness
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 SubroutineReturn = TypeVar(
     "SubroutineReturn", Iterable[Instruction], Instruction, ResultType, Iterable[ResultType]
@@ -1139,17 +1139,25 @@ class Circuit:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     @staticmethod
-    def from_ir(source: str, inputs: Optional[Dict[str, io_type]] = None) -> Circuit:
+    def from_ir(
+        source: Union[str, OpenQasmProgram], inputs: Optional[Dict[str, io_type]] = None
+    ) -> Circuit:
         """
         Converts an OpenQASM program to a Braket Circuit object.
 
         Args:
-            source (str): OpenQASM string.
+            source (Union[str, OpenQasmProgram]): OpenQASM string.
             inputs (Optional[Dict[str, io_type]]): Inputs to the circuit.
 
         Returns:
             Circuit: Braket Circuit implementing the OpenQASM program.
         """
+        if isinstance(source, OpenQasmProgram):
+            if inputs:
+                inputs_copy = source.inputs.copy() if source.inputs is not None else {}
+                inputs_copy.update(inputs)
+                inputs = inputs_copy
+            source = source.source
         from braket.circuits.braket_program_context import BraketProgramContext
 
         return Interpreter(BraketProgramContext()).build_circuit(

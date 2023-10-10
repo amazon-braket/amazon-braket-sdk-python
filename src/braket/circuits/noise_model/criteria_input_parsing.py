@@ -14,7 +14,7 @@
 from typing import Iterable, Optional, Set, Tuple, Union
 
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit_set import QubitSetInput
+from braket.registers.qubit_set import QubitSetInput
 
 
 def parse_operator_input(

@@ -1,5 +1,165 @@
 # Changelog
 
+## v1.57.1 (2023-10-05)
+
+### Bug Fixes and Other Changes
+
+ * docs: fix helper docstring
+
+## v1.57.0 (2023-10-04)
+
+### Features
+
+ * wrap non-dict results and update results on subsequent calls
+ * job helper functions
+
+### Bug Fixes and Other Changes
+
+ * revert integ test changes
+
+## v1.56.2 (2023-10-03)
+
+### Bug Fixes and Other Changes
+
+ * Refactor Qubit and QubitSet to a separate module
+
+## v1.56.1 (2023-09-27)
+
+### Bug Fixes and Other Changes
+
+ * fixing search device when don't have access to a region.
+
+## v1.56.0 (2023-09-26)
+
+### Features
+
+ * add queue visibility information
+
+## v1.55.1.post0 (2023-09-18)
+
+### Documentation Changes
+
+ * Remove trailing backquotes
+ * add code contributors to the readme
+ * change the sphinx requirement to be greater than 7.0.0
+
+## v1.55.1 (2023-09-14)
+
+### Bug Fixes and Other Changes
+
+ * Revert "update: restricting parameter names to not collide with ones we use for OpenQASM generation. (#675)"
+
+### Documentation Changes
+
+ * Replace aws org with amazon-braket
+
+## v1.55.0 (2023-09-09)
+
+### Features
+
+ * add Aria2 enum
+
+## v1.54.3.post0 (2023-09-04)
+
+### Documentation Changes
+
+ * standardize task and job naming to quantum task and hybrid job
+
+## v1.54.3 (2023-08-30)
+
+### Bug Fixes and Other Changes
+
+ * Move inline `_flatten` to top of `qubit_set.py`
+ * build(deps): bump actions/setup-python from 4.6.1 to 4.7.0
+
+## v1.54.2 (2023-08-28)
+
+### Bug Fixes and Other Changes
+
+ * readthedocs integration
+ * build(deps): bump pypa/gh-action-pypi-publish from 1.8.8 to 1.8.10
+
+## v1.54.1 (2023-08-22)
+
+### Bug Fixes and Other Changes
+
+ * update: restricting parameter names to not collide with ones we use for OpenQASM generation.
+
+## v1.54.0 (2023-08-16)
+
+### Features
+
+ * enable gate calibrations on supported devices
+
+## v1.53.4 (2023-08-15)
+
+### Bug Fixes and Other Changes
+
+ * docs: add mermaid diagram to describe the CI flow
+
+## v1.53.3 (2023-08-08)
+
+### Bug Fixes and Other Changes
+
+ * fix a bug in time series and add trapezoidal time series
+
+## v1.53.2 (2023-08-07)
+
+### Bug Fixes and Other Changes
+
+ * don't wrap FreeParameterExpression input as string
+
+## v1.53.1 (2023-08-03)
+
+### Bug Fixes and Other Changes
+
+ * Support OpenQASM `Program`s in `from_ir`
+
+## v1.53.0.post0 (2023-08-02)
+
+### Documentation Changes
+
+ * fix flake8 issues in tests
+
+## v1.53.0 (2023-07-31)
+
+### Features
+
+ * point image uri to latest tag
+
+### Bug Fixes and Other Changes
+
+ * Update quantum job tests for latest containers
+ * build(deps): bump pypa/gh-action-pypi-publish from 1.8.7 to 1.8.8
+ * move import back to top level in job example
+ * update doc string for handle_parameter_value
+ * change all tests in the circuit test path to use with pytest.raises
+ * pull latest container image by default
+
+## v1.52.0 (2023-07-25)
+
+### Features
+
+ * Support symbolic expressions in `from_ir`
+
+### Bug Fixes and Other Changes
+
+ * local import in job example
+ * Add parameter support
+
+## v1.51.0 (2023-07-21)
+
+### Features
+
+ * add gate calibration data for supported quantum devices
+
+### Bug Fixes and Other Changes
+
+ * revert adding gate calibration data
+ * making additional meta available in AHS results
+ * handle the optional calibration URL returning None
+ * copy calibrations in to_ir
+
 ## v1.50.0 (2023-07-19)
 
 ### Features

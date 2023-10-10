@@ -23,7 +23,7 @@ from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments
 from braket.circuits.noise import Noise
 from braket.circuits.quantum_operator_helpers import is_unitary
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 if TYPE_CHECKING:  # pragma: no cover
     from braket.circuits.circuit import Circuit

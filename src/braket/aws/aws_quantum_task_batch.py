@@ -31,7 +31,7 @@ from braket.tasks.quantum_task_batch import QuantumTaskBatch
 class AwsQuantumTaskBatch(QuantumTaskBatch):
     """Executes a batch of quantum tasks in parallel.
 
-    Using this class can yield vast speedups over executing tasks sequentially,
+    Using this class can yield vast speedups over executing quantum tasks sequentially,
     and is particularly useful for computations that can be parallelized,
     such as calculating quantum gradients or statistics of terms in a Hamiltonian.
 
@@ -71,18 +71,18 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             device_arn (str): The ARN of the quantum device.
             task_specifications (Union[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation],List[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing
-                problems, pulse sequences, or photonics program as specification of task
+                problems, pulse sequences, or photonics program as specification of quantum task
                 to run on device.
             s3_destination_folder (AwsSession.S3DestinationFolder): NamedTuple, with bucket
                 for index 0 and key for index 1, that specifies the Amazon S3 bucket and folder
-                to store task results in.
-            shots (int): The number of times to run the task on the device. If the device is a
-                simulator, this implies the state is sampled N times, where N = `shots`.
+                to store quantum task results in.
+            shots (int): The number of times to run the quantum task on the device. If the device is
+                a simulator, this implies the state is sampled N times, where N = `shots`.
                 `shots=0` is only available on simulators and means that the simulator
-                will compute the exact results based on the task specification.
-            max_parallel (int): The maximum number of tasks to run on AWS in parallel.
+                will compute the exact results based on the quantum task specification.
+            max_parallel (int): The maximum number of quantum tasks to run on AWS in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
-                concurrent tasks on the device.
+                concurrent quantum tasks on the device.
             max_workers (int): The maximum number of thread pool workers. Default: 100
             poll_timeout_seconds (float): The polling timeout for `AwsQuantumTask.result()`,
                 in seconds. Default: 5 days.
@@ -224,7 +224,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 ]
         except KeyboardInterrupt:
             # If an exception is thrown before the thread pool has finished,
-            # clean up the tasks which have not yet been created before reraising it.
+            # clean up the quantum tasks which have not yet been created before reraising it.
             if "task_futures" in locals():
                 for future in task_futures:
                     future.cancel()
@@ -265,7 +265,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
         remaining.pop()
 
-        # If the task hits a terminal state before all tasks have been created,
+        # If the quantum task hits a terminal state before all quantum tasks have been created,
         # it can be returned immediately
         while remaining:
             if task.state() in AwsQuantumTask.TERMINAL_STATES:
@@ -279,24 +279,24 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_retries: int = MAX_RETRIES,
         use_cached_value: bool = True,
     ) -> List[AwsQuantumTask]:
-        """Retrieves the result of every task in the batch.
+        """Retrieves the result of every quantum task in the batch.
 
-        Polling for results happens in parallel; this method returns when all tasks
+        Polling for results happens in parallel; this method returns when all quantum tasks
         have reached a terminal state. The result of this method is cached.
 
         Args:
             fail_unsuccessful (bool): If set to `True`, this method will fail
-                if any task in the batch fails to return a result even after
+                if any quantum task in the batch fails to return a result even after
                 `max_retries` retries.
-            max_retries (int): Maximum number of times to retry any failed tasks,
-                i.e. any tasks in the `FAILED` or `CANCELLED` state or that didn't
+            max_retries (int): Maximum number of times to retry any failed quantum tasks,
+                i.e. any quantum tasks in the `FAILED` or `CANCELLED` state or that didn't
                 complete within the timeout. Default: 3.
             use_cached_value (bool): If `False`, will refetch the results from S3,
                 even when results have already been cached. Default: `True`.
 
         Returns:
-            List[AwsQuantumTask]: The results of all of the tasks in the batch.
-            `FAILED`, `CANCELLED`, or timed out tasks will have a result of None
+            List[AwsQuantumTask]: The results of all of the quantum tasks in the batch.
+            `FAILED`, `CANCELLED`, or timed out quantum tasks will have a result of None
         """
         if not self._results or not use_cached_value:
             self._results = AwsQuantumTaskBatch._retrieve_results(self._tasks, self._max_workers)
@@ -322,14 +322,14 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         return [future.result() for future in result_futures]
 
     def retry_unsuccessful_tasks(self) -> bool:
-        """Retries any tasks in the batch without valid results.
+        """Retries any quantum tasks in the batch without valid results.
 
         This method should only be called after `results()` has been called at least once.
-        The method will generate new tasks for any failed tasks, so `self.task` and
+        The method will generate new quantum tasks for any failed quantum tasks, so `self.task` and
         `self.results()` may return different values after a call to this method.
 
         Returns:
-            bool: Whether or not all retried tasks completed successfully.
+            bool: Whether or not all retried quantum tasks completed successfully.
         """
         if not self._results:
             raise RuntimeError("results() should be called before attempting to retry")
@@ -363,19 +363,20 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
     @property
     def tasks(self) -> List[AwsQuantumTask]:
-        """List[AwsQuantumTask]: The tasks in this batch, as a list of AwsQuantumTask objects"""
+        """List[AwsQuantumTask]: The quantum tasks in this batch, as a list of AwsQuantumTask
+        objects"""
         return list(self._tasks)
 
     @property
     def size(self) -> int:
-        """int: The number of tasks in the batch"""
+        """int: The number of quantum tasks in the batch"""
         return len(self._tasks)
 
     @property
     def unfinished(self) -> Set[str]:
-        """Gets all the IDs of all the tasks in teh batch that have yet to complete.
+        """Gets all the IDs of all the quantum tasks in teh batch that have yet to complete.
         Returns:
-            Set[str]: The IDs of all the tasks in the batch that have yet to complete.
+            Set[str]: The IDs of all the quantum tasks in the batch that have yet to complete.
         """
         with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
             status_futures = {task.id: executor.submit(task.state) for task in self._tasks}
@@ -390,5 +391,6 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
     @property
     def unsuccessful(self) -> Set[str]:
-        """Set[str]: The IDs of all the FAILED, CANCELLED, or timed out tasks in the batch."""
+        """Set[str]: The IDs of all the FAILED, CANCELLED, or timed out quantum tasks in the
+        batch."""
         return set(self._unsuccessful)

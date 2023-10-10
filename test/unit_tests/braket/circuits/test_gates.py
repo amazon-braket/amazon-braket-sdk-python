@@ -933,12 +933,12 @@ def test_bind_values(gate):
     new_gate = param_gate.bind_values(**mapping)
     expected = gate(*range(num_params))
 
-    assert type(new_gate) == type(param_gate) and new_gate == expected
+    assert type(new_gate) is type(param_gate) and new_gate == expected
     if triple_angled:
         for angle in new_gate.angle_1, new_gate.angle_2, new_gate.angle_3:
-            assert type(angle) == float
+            assert isinstance(angle, float)
     else:
-        assert type(new_gate.angle) == float
+        assert isinstance(new_gate.angle, float)
 
 
 def test_bind_values_pulse_gate():
@@ -981,35 +981,35 @@ def test_bind_values_pulse_gate():
     assert ac_bound_ir != a_bound_ir
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_pulse_gate_capture_throws():
-    Circuit().pulse_gate(
-        0, PulseSequence().capture_v0(Frame("user_frame", Port("device_port_x", dt=1e-9), 1e9))
-    )
+    with pytest.raises(ValueError):
+        Circuit().pulse_gate(
+            0, PulseSequence().capture_v0(Frame("user_frame", Port("device_port_x", dt=1e-9), 1e9))
+        )
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize("matrix", invalid_unitary_matrices)
 def test_unitary_invalid_matrix(matrix):
-    Gate.Unitary(matrix=matrix)
+    with pytest.raises(ValueError):
+        Gate.Unitary(matrix=matrix)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_unitary_matrix_target_size_mismatch():
-    Circuit().unitary(
-        matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
-    )
+    with pytest.raises(ValueError):
+        Circuit().unitary(
+            matrix=np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]), targets=[0]
+        )
 
 
-@pytest.mark.xfail(raises=NotImplementedError)
 def test_pulse_gate_to_matrix():
-    Gate.PulseGate(
-        PulseSequence().play(
-            Frame("user_frame", Port("device_port_x", 1e-9), 1e9),
-            ArbitraryWaveform([1, 2], "arb_wf"),
-        ),
-        1,
-    ).to_matrix()
+    with pytest.raises(NotImplementedError):
+        Gate.PulseGate(
+            PulseSequence().play(
+                Frame("user_frame", Port("device_port_x", 1e-9), 1e9),
+                ArbitraryWaveform([1, 2], "arb_wf"),
+            ),
+            1,
+        ).to_matrix()
 
 
 @pytest.mark.parametrize(

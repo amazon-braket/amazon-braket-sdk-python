@@ -14,7 +14,7 @@
 import numpy as np
 import pytest
 
-from braket.circuits import Qubit
+from braket.registers import Qubit
 
 
 @pytest.fixture
@@ -22,15 +22,15 @@ def qubit():
     return Qubit(5)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_index_lt_zero():
-    Qubit(-1)
+    with pytest.raises(ValueError):
+        Qubit(-1)
 
 
 @pytest.mark.parametrize("qubit_arg", ("not a number", 0.5))
-@pytest.mark.xfail(raises=TypeError)
 def test_index_non_int(qubit_arg):
-    Qubit(qubit_arg)
+    with pytest.raises(TypeError):
+        Qubit(qubit_arg)
 
 
 @pytest.mark.parametrize("qubit_index", (0, 5, np.int64(5)))

@@ -40,8 +40,8 @@ class GateModelQuantumTaskResult:
     to be initialized by a QuantumTask class.
 
     Args:
-        task_metadata (TaskMetadata): Task metadata.
-        additional_metadata (AdditionalMetadata): Additional metadata about the task
+        task_metadata (TaskMetadata): Quantum task metadata.
+        additional_metadata (AdditionalMetadata): Additional metadata about the quantum task
         result_types (List[Dict[str, Any]]): List of dictionaries where each dictionary
             has two keys: 'Type' (the result type in IR JSON form) and
             'Value' (the result value for this result type).
@@ -105,7 +105,7 @@ class GateModelQuantumTaskResult:
     def get_value_by_result_type(self, result_type: ResultType) -> Any:
         """
         Get value by result type. The result type must have already been
-        requested in the circuit sent to the device for this task result.
+        requested in the circuit sent to the device for this quantum task result.
 
         Args:
             result_type (ResultType): result type requested

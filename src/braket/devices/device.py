@@ -41,13 +41,13 @@ class Device(ABC):
         *args,
         **kwargs
     ) -> QuantumTask:
-        """Run a quantum task specification on this quantum device. A task can be a circuit
+        """Run a quantum task specification on this quantum device. A quantum task can be a circuit
         or an annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem]): Specification of a task
+            task_specification (Union[Circuit, Problem]): Specification of a quantum task
                 to run on device.
-            shots (Optional[int]): The number of times to run the task on the device.
+            shots (Optional[int]): The number of times to run the quantum task on the device.
                 Default is `None`.
             inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
                 IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
@@ -70,21 +70,21 @@ class Device(ABC):
         *args,
         **kwargs
     ) -> QuantumTaskBatch:
-        """Executes a batch of tasks in parallel
+        """Executes a batch of quantum tasks in parallel
 
         Args:
             task_specifications (Union[Union[Circuit, Problem], List[Union[Circuit, Problem]]]):
                 Single instance or list of circuits or problems to run on device.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
-            max_parallel (Optional[int]): The maximum number of tasks to run  in parallel.
+            max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
-                concurrent tasks on the device.
+                concurrent quantum tasks on the device.
             inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value.
 
         Returns:
-            QuantumTaskBatch: A batch containing all of the tasks run
+            QuantumTaskBatch: A batch containing all of the qauntum tasks run
         """
 
     @property
