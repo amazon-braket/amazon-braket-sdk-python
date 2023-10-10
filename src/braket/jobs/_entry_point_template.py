@@ -1,6 +1,6 @@
 run_entry_point = """
 import cloudpickle
-# from braket.jobs import save_job_result
+from braket.jobs import save_job_result
 from braket.jobs_data import PersistedJobDataFormat
 
 # load and run serialized entry point function
