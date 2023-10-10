@@ -14,6 +14,7 @@ def {function_name}():
 
 symlink_input_data = '''
 from pathlib import Path
+from braket.jobs import get_input_data_dir
 
 # map of data sources to lists of matched local files
 prefix_matches = {prefix_matches}
