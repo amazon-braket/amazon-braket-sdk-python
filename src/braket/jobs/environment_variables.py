@@ -1,6 +1,18 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"). You
+# may not use this file except in compliance with the License. A copy of
+# the License is located at
+#
+#     http://aws.amazon.com/apache2.0/
+#
+# or in the "license" file accompanying this file. This file is
+# distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
+# ANY KIND, either express or implied. See the License for the specific
+# language governing permissions and limitations under the License.
+
 import json
 import os
-from typing import Dict
 
 
 def get_job_name() -> str:
@@ -60,12 +72,12 @@ def get_checkpoint_dir() -> str:
     return os.getenv("AMZN_BRAKET_CHECKPOINT_DIR", ".")
 
 
-def get_hyperparameters() -> Dict[str, str]:
+def get_hyperparameters() -> dict[str, str]:
     """
     Get the job hyperparameters as a dict, with the values stringified.
 
     Returns:
-        Dict[str, str]: The hyperparameters of the job.
+        dict[str, str]: The hyperparameters of the job.
     """
     if "AMZN_BRAKET_HP_FILE" in os.environ:
         with open(os.getenv("AMZN_BRAKET_HP_FILE"), "r") as f:

@@ -20,9 +20,10 @@ import tarfile
 import tempfile
 import time
 import warnings
+from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
@@ -44,8 +45,8 @@ def prepare_quantum_job(
     job_name: str = None,
     code_location: str = None,
     role_arn: str = None,
-    hyperparameters: Dict[str, Any] = None,
-    input_data: Union[str, Dict, S3DataSourceConfig] = None,
+    hyperparameters: dict[str, Any] = None,
+    input_data: str | dict | S3DataSourceConfig = None,
     instance_config: InstanceConfig = None,
     distribution: str = None,
     stopping_condition: StoppingCondition = None,
@@ -53,8 +54,8 @@ def prepare_quantum_job(
     copy_checkpoints_from_job: str = None,
     checkpoint_config: CheckpointConfig = None,
     aws_session: AwsSession = None,
-    tags: Dict[str, str] = None,
-) -> Dict:
+    tags: dict[str, str] = None,
+) -> dict:
     """Creates a hybrid job by invoking the Braket CreateJob API.
 
     Args:
@@ -91,12 +92,12 @@ def prepare_quantum_job(
         role_arn (str): A str providing the IAM role ARN used to execute the
             script. Default: IAM role returned by AwsSession's `get_default_jobs_role()`.
 
-        hyperparameters (Dict[str, Any]): Hyperparameters accessible to the hybrid job.
+        hyperparameters (dict[str, Any]): Hyperparameters accessible to the hybrid job.
             The hyperparameters are made accessible as a Dict[str, str] to the hybrid job.
             For convenience, this accepts other types for keys and values, but `str()`
             is called to convert them before being passed on. Default: None.
 
-        input_data (Union[str, Dict, S3DataSourceConfig]): Information about the training
+        input_data (str | dict | S3DataSourceConfig): Information about the training
             data. Dictionary maps channel names to local paths or S3 URIs. Contents found
             at any local paths will be uploaded to S3 at
             f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -135,11 +136,11 @@ def prepare_quantum_job(
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
             Default: AwsSession()
 
-        tags (Dict[str, str]): Dict specifying the key-value pairs for tagging this hybrid job.
+        tags (dict[str, str]): Dict specifying the key-value pairs for tagging this hybrid job.
             Default: {}.
 
     Returns:
-        Dict: Hybrid job tracking the execution on Amazon Braket.
+        dict: Hybrid job tracking the execution on Amazon Braket.
 
     Raises:
         ValueError: Raises ValueError if the parameters are not valid.
@@ -231,15 +232,13 @@ def prepare_quantum_job(
     return create_job_kwargs
 
 
-def _generate_default_job_name(
-    image_uri: Optional[str] = None, func: Optional[Callable] = None
-) -> str:
+def _generate_default_job_name(image_uri: str | None = None, func: Callable | None = None) -> str:
     """
     Generate default job name using the image uri and entrypoint function.
 
     Args:
-        image_uri (Optional[str]): URI for the image container.
-        func (Optional[Callable]): The entry point function.
+        image_uri (str | None): URI for the image container.
+        func (Callable | None): The entry point function.
 
     Returns:
         str: Hybrid job name.
@@ -357,7 +356,7 @@ def _tar_and_upload_to_code_location(
         aws_session.upload_to_s3(f"{temp_dir}/source.tar.gz", f"{code_location}/source.tar.gz")
 
 
-def _validate_params(dict_arr: Dict[str, Tuple[any, any]]) -> None:
+def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
     """
     Validate that config parameters are of the right type.
 
@@ -376,19 +375,19 @@ def _validate_params(dict_arr: Dict[str, Tuple[any, any]]) -> None:
 
 
 def _process_input_data(
-    input_data: Union[str, Dict, S3DataSourceConfig], job_name: str, aws_session: AwsSession
-) -> List[Dict[str, Any]]:
+    input_data: str | dict | S3DataSourceConfig, job_name: str, aws_session: AwsSession
+) -> list[dict[str, Any]]:
     """
     Convert input data into a list of dicts compatible with the Braket API.
     Args:
-        input_data (Union[str, Dict, S3DataSourceConfig]): Either a channel definition or a
+        input_data (str | dict | S3DataSourceConfig): Either a channel definition or a
             dictionary mapping channel names to channel definitions, where a channel definition
             can be an S3DataSourceConfig or a str corresponding to a local prefix or S3 prefix.
         job_name (str): Hybrid job name.
         aws_session (AwsSession): AwsSession for possibly uploading local data.
 
     Returns:
-        List[Dict[str, Any]]: A list of channel configs.
+        list[dict[str, Any]]: A list of channel configs.
     """
     if not isinstance(input_data, dict):
         input_data = {"input": input_data}
@@ -425,17 +424,17 @@ def _process_channel(
         return S3DataSourceConfig(s3_prefix)
 
 
-def _convert_input_to_config(input_data: Dict[str, S3DataSourceConfig]) -> List[Dict[str, Any]]:
+def _convert_input_to_config(input_data: dict[str, S3DataSourceConfig]) -> list[dict[str, Any]]:
     """
     Convert a dictionary mapping channel names to S3DataSourceConfigs into a list of channel
     configs compatible with the Braket API.
 
     Args:
-        input_data (Dict[str, S3DataSourceConfig]): A dictionary mapping channel names to
+        input_data (dict[str, S3DataSourceConfig]): A dictionary mapping channel names to
             S3DataSourceConfig objects.
 
     Returns:
-        List[Dict[str, Any]]: A list of channel configs.
+        list[dict[str, Any]]: A list of channel configs.
     """
     return [
         {
@@ -446,5 +445,5 @@ def _convert_input_to_config(input_data: Dict[str, S3DataSourceConfig]) -> List[
     ]
 
 
-def _exclude_nones_factory(items: List[Tuple]) -> Dict:
+def _exclude_nones_factory(items: list[tuple]) -> dict:
     return {k: v for k, v in items if v is not None}

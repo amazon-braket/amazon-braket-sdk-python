@@ -10,8 +10,11 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from braket.jobs.environment_variables import get_checkpoint_dir, get_job_name, get_results_dir
 from braket.jobs.serialization import deserialize_values, serialize_values
@@ -19,7 +22,7 @@ from braket.jobs_data import PersistedJobData, PersistedJobDataFormat
 
 
 def save_job_checkpoint(
-    checkpoint_data: Dict[str, Any],
+    checkpoint_data: dict[str, Any],
     checkpoint_file_suffix: str = "",
     data_format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ) -> None:
@@ -35,7 +38,7 @@ def save_job_checkpoint(
 
 
     Args:
-        checkpoint_data (Dict[str, Any]): Dict that specifies the checkpoint data to be persisted.
+        checkpoint_data (dict[str, Any]): Dict that specifies the checkpoint data to be persisted.
         checkpoint_file_suffix (str): str that specifies the file suffix to be used for
             the checkpoint filename. The resulting filename
             `f"{job_name}(_{checkpoint_file_suffix}).json"` is used to save the checkpoints.
@@ -63,8 +66,8 @@ def save_job_checkpoint(
 
 
 def load_job_checkpoint(
-    job_name: Optional[str] = None, checkpoint_file_suffix: str = ""
-) -> Dict[str, Any]:
+    job_name: str | None = None, checkpoint_file_suffix: str = ""
+) -> dict[str, Any]:
     """
     Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
     file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
@@ -77,7 +80,7 @@ def load_job_checkpoint(
 
 
     Args:
-        job_name (Optional[str]): str that specifies the name of the job whose checkpoints
+        job_name (str | None): str that specifies the name of the job whose checkpoints
             are to be loaded. Default: current job name.
 
         checkpoint_file_suffix (str): str specifying the file suffix that is used to
@@ -86,7 +89,7 @@ def load_job_checkpoint(
             checkpoint file. Default: ""
 
     Returns:
-        Dict[str, Any]: Dict that contains the checkpoint data persisted in the checkpoint file.
+        dict[str, Any]: Dict that contains the checkpoint data persisted in the checkpoint file.
 
     Raises:
         FileNotFoundError: If the file `f"{job_name}(_{checkpoint_file_suffix})"` could not be found
@@ -109,7 +112,7 @@ def load_job_checkpoint(
         return deserialized_data
 
 
-def _load_persisted_data(filename: Union[str, Path] = None) -> PersistedJobData:
+def _load_persisted_data(filename: str | Path = None) -> PersistedJobData:
     filename = filename or Path(get_results_dir()) / "results.json"
     try:
         with open(filename, mode="r") as f:
@@ -121,17 +124,17 @@ def _load_persisted_data(filename: Union[str, Path] = None) -> PersistedJobData:
         )
 
 
-def load_job_result(filename: Union[str, Path] = None) -> Dict[str, Any]:
+def load_job_result(filename: str | Path = None) -> dict[str, Any]:
     """
     Loads job result of currently running job.
 
     Args:
-        filename (Union[str, Path]): Location of job results. Default `results.json` in job
+        filename (str | Path): Location of job results. Default `results.json` in job
             results directory in a job instance or in working directory locally. This file
             must be in the format used by `save_job_result`.
 
     Returns:
-         Dict[str, Any]: Job result data of current job
+        dict[str, Any]: Job result data of current job
     """
     persisted_data = _load_persisted_data(filename)
     deserialized_data = deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
@@ -139,7 +142,7 @@ def load_job_result(filename: Union[str, Path] = None) -> Dict[str, Any]:
 
 
 def save_job_result(
-    result_data: Union[Dict[str, Any], Any],
+    result_data: dict[str, Any] | Any,
     data_format: PersistedJobDataFormat = None,
 ) -> None:
     """
@@ -152,7 +155,7 @@ def save_job_result(
 
 
     Args:
-        result_data (Union[Dict[str, Any], Any]): Dict that specifies the result data to be
+        result_data (dict[str, Any] | Any): Dict that specifies the result data to be
             persisted. If result data is not a dict, then it will be wrapped as
             `{"result": result_data}`.
         data_format (PersistedJobDataFormat): The data format used to serialize the
@@ -183,7 +186,7 @@ def save_job_result(
         current_persisted_data.dataDictionary,
         current_persisted_data.dataFormat,
     )
-    updated_results = {**current_results, **result_data}
+    updated_results = current_results | result_data
 
     with open(Path(get_results_dir()) / "results.json", "w") as f:
         serialized_data = serialize_values(updated_results or {}, data_format)
