@@ -16,7 +16,9 @@ from __future__ import annotations
 import functools
 import importlib.util
 import inspect
+import re
 import shutil
+import sys
 import tempfile
 import warnings
 from collections.abc import Callable, Iterable
@@ -36,6 +38,7 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
+from braket.jobs.image_uris import Framework, retrieve_image
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
 
@@ -146,6 +149,8 @@ def hybrid_job(
         logger (Logger): Logger object with which to write logs, such as task statuses
             while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
     """
+    aws_session = aws_session or AwsSession()
+    _validate_python_version(aws_session, image_uri)
 
     def _hybrid_job(entry_point):
         @functools.wraps(entry_point)
@@ -203,6 +208,27 @@ def hybrid_job(
     return _hybrid_job
 
 
+def _validate_python_version(aws_session: AwsSession, image_uri: str | None):
+    if image_uri:
+        print(
+            "Skipping python version validation, make sure versions match "
+            "between local environment and container."
+        )
+    else:
+        image_uri = retrieve_image(Framework.BASE, aws_session.region)
+        tag = aws_session.get_full_image_tag(image_uri)
+        major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
+        if not (
+            sys.version_info.major == int(major_version)
+            and sys.version_info.minor == int(minor_version)
+        ):
+            raise RuntimeError(
+                "Python version must match between local environment and container. "
+                f"Client is running Python {sys.version_info.major}.{sys.version_info.minor} "
+                f"locally, but container uses Python {major_version}.{minor_version}."
+            )
+
+
 class _IncludeModules:
     def __init__(self, modules: str | ModuleType | Iterable[str | ModuleType] = None):
         modules = modules or []
@@ -224,7 +250,7 @@ class _IncludeModules:
             cloudpickle.unregister_pickle_by_value(module)
 
 
-def _serialize_entry_point(entry_point: Callable, args: list, kwargs: dict) -> str:
+def _serialize_entry_point(entry_point: Callable, args: tuple, kwargs: dict) -> str:
     """Create an entry point from a function"""
 
     def wrapped_entry_point():
@@ -249,7 +275,7 @@ def _serialize_entry_point(entry_point: Callable, args: list, kwargs: dict) -> s
     )
 
 
-def _log_hyperparameters(entry_point: Callable, args: list, kwargs: dict):
+def _log_hyperparameters(entry_point: Callable, args: tuple, kwargs: dict):
     """Capture function arguments as hyperparameters"""
     signature = inspect.signature(entry_point)
     bound_args = signature.bind(*args, **kwargs)

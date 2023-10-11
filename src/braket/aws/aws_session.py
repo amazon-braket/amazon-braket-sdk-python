@@ -825,3 +825,27 @@ class AwsSession(object):
         # Preserve user_agent information
         copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
+
+    def get_full_image_tag(self, image_uri: str) -> str:
+        """
+        Get verbose image tag from image uri.
+
+        Args:
+            image_uri (str): Image uri to get tag for.
+
+        Returns:
+            str: Verbose image tag for given image.
+        """
+        registry = image_uri.split(".")[0]
+        repository, tag = image_uri.split("/")[-1].split(":")
+        digest = self.ecr_client.batch_get_image(
+            registryId=registry,
+            repositoryName=repository,
+            imageIds=[{"imageTag": tag}],
+        )["images"][0]["imageId"]["imageDigest"]
+        tag = self.ecr_client.batch_get_image(
+            registryId=registry,
+            repositoryName=repository,
+            imageIds=[{"imageDigest": digest}],
+        )["images"][0]["imageId"]["imageTag"]
+        return tag
