@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from functools import reduce
-from typing import List, Tuple, Union
+from typing import Union
 
 import braket.circuits.circuit as cir
 from braket.circuits.circuit_diagram import CircuitDiagram
@@ -100,17 +100,17 @@ class AsciiCircuitDiagram(CircuitDiagram):
     @staticmethod
     def _ascii_group_items(
         circuit_qubits: QubitSet,
-        items: List[Union[Instruction, ResultType]],
-    ) -> List[Tuple[QubitSet, List[Instruction]]]:
+        items: list[Union[Instruction, ResultType]],
+    ) -> list[tuple[QubitSet, list[Instruction]]]:
         """
         Group instructions in a moment for ASCII diagram
 
         Args:
             circuit_qubits (QubitSet): set of qubits in circuit
-            items (List[Union[Instruction, ResultType]]): list of instructions or result types
+            items (list[Union[Instruction, ResultType]]): list of instructions or result types
 
         Returns:
-            List[Tuple[QubitSet, List[Instruction]]]: list of grouped instructions or result types.
+            list[tuple[QubitSet, list[Instruction]]]: list of grouped instructions or result types.
         """
         groupings = []
         for item in items:
@@ -151,16 +151,16 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
     @staticmethod
     def _categorize_result_types(
-        result_types: List[ResultType],
-    ) -> Tuple[List[str], List[ResultType]]:
+        result_types: list[ResultType],
+    ) -> tuple[list[str], list[ResultType]]:
         """
         Categorize result types into result types with target and those without.
 
         Args:
-            result_types (List[ResultType]): list of result types
+            result_types (list[ResultType]): list of result types
 
         Returns:
-            Tuple[List[str], List[ResultType]]: first element is a list of result types
+            tuple[list[str], list[ResultType]]: first element is a list of result types
             without `target` attribute; second element is a list of result types with
             `target` attribute
         """
@@ -175,7 +175,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
     @staticmethod
     def _ascii_diagram_column_set(
-        col_title: str, circuit_qubits: QubitSet, items: List[Union[Instruction, ResultType]]
+        col_title: str, circuit_qubits: QubitSet, items: list[Union[Instruction, ResultType]]
     ) -> str:
         """
         Return a set of columns in the ASCII string diagram of the circuit for a list of items.
@@ -183,7 +183,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Args:
             col_title (str): title of column set
             circuit_qubits (QubitSet): qubits in circuit
-            items (List[Union[Instruction, ResultType]]): list of instructions or result types
+            items (list[Union[Instruction, ResultType]]): list of instructions or result types
 
         Returns:
             str: An ASCII string diagram for the column set.
@@ -220,14 +220,14 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
     @staticmethod
     def _ascii_diagram_column(
-        circuit_qubits: QubitSet, items: List[Union[Instruction, ResultType]]
+        circuit_qubits: QubitSet, items: list[Union[Instruction, ResultType]]
     ) -> str:
         """
         Return a column in the ASCII string diagram of the circuit for a given list of items.
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
-            items (List[Union[Instruction, ResultType]]): list of instructions or result types
+            items (list[Union[Instruction, ResultType]]): list of instructions or result types
 
         Returns:
             str: An ASCII string diagram for the specified moment in time for a column.

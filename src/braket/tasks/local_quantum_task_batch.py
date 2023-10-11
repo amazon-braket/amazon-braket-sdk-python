@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import List, Union
+from typing import Union
 
 from braket.tasks import (
     AnnealingQuantumTaskResult,
@@ -29,7 +29,7 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
 
     def __init__(
         self,
-        results: List[
+        results: list[
             Union[
                 GateModelQuantumTaskResult,
                 AnnealingQuantumTaskResult,
@@ -41,7 +41,7 @@ class LocalQuantumTaskBatch(QuantumTaskBatch):
 
     def results(
         self,
-    ) -> List[
+    ) -> list[
         Union[
             GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
         ]

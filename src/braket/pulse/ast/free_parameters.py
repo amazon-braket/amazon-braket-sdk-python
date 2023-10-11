@@ -10,7 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from typing import Dict, Union
+
+from typing import Union
 
 from openpulse import ast
 from openqasm3.ast import DurationLiteral
@@ -34,7 +35,7 @@ class _FreeParameterExpressionIdentifier(ast.Identifier):
 class _FreeParameterTransformer(QASMTransformer):
     """Walk the AST and evaluate FreeParameterExpressions."""
 
-    def __init__(self, param_values: Dict[str, float]):
+    def __init__(self, param_values: dict[str, float]):
         self.param_values = param_values
         super().__init__()
 

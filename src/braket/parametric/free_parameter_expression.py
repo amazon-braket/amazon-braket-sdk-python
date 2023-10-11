@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import ast
 from numbers import Number
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from sympy import Expr, Float, Symbol, sympify
 
@@ -69,14 +69,14 @@ class FreeParameterExpression:
         return self._expression
 
     def subs(
-        self, parameter_values: Dict[str, Number]
+        self, parameter_values: dict[str, Number]
     ) -> Union[FreeParameterExpression, Number, Expr]:
         """
         Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
 
         Args:
-            parameter_values (Dict[str, Number]): A mapping of parameters to their corresponding
+            parameter_values (dict[str, Number]): A mapping of parameters to their corresponding
                 values to be assigned.
 
         Returns:

@@ -1,5 +1,5 @@
 from functools import singledispatch
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -34,7 +34,7 @@ class BasisState:
         return self.state == other.state
 
 
-BasisStateInput = Union[int, List[int], str, BasisState]
+BasisStateInput = Union[int, list[int], str, BasisState]
 
 
 @singledispatch

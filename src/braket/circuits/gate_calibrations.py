@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from braket.circuits.gate import Gate
 from braket.circuits.serialization import (
@@ -35,23 +35,23 @@ class GateCalibrations:
 
     def __init__(
         self,
-        pulse_sequences: Dict[Tuple[Gate, QubitSet], PulseSequence],
+        pulse_sequences: dict[tuple[Gate, QubitSet], PulseSequence],
     ):
         """
         Args:
-            pulse_sequences (Dict[Tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
+            pulse_sequences (dict[tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
                 `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
 
         """  # noqa: E501
-        self.pulse_sequences: Dict[Tuple[Gate, QubitSet], PulseSequence] = pulse_sequences
+        self.pulse_sequences: dict[tuple[Gate, QubitSet], PulseSequence] = pulse_sequences
 
     @property
-    def pulse_sequences(self) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
+    def pulse_sequences(self) -> dict[tuple[Gate, QubitSet], PulseSequence]:
         """
         Gets the mapping of (Gate, Qubit) to the corresponding `PulseSequence`.
 
         Returns:
-            Dict[Tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
+            dict[tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
         """
         return self._pulse_sequences
 
@@ -64,7 +64,7 @@ class GateCalibrations:
             value(Any): The value for the pulse_sequences property to be set to.
 
         Raises:
-            TypeError: Raised if the type is not Dict[Tuple[Gate, QubitSet], PulseSequence]
+            TypeError: Raised if the type is not dict[tuple[Gate, QubitSet], PulseSequence]
 
         """
         if isinstance(value, dict) and all(
@@ -75,7 +75,7 @@ class GateCalibrations:
         else:
             raise TypeError(
                 "The value for pulse_sequence must be of type: "
-                "Dict[Tuple[Gate, QubitSet], PulseSequence]"
+                "dict[tuple[Gate, QubitSet], PulseSequence]"
             )
 
     def copy(self) -> GateCalibrations:
@@ -91,13 +91,13 @@ class GateCalibrations:
         return len(self._pulse_sequences)
 
     def filter(
-        self, gates: Optional[List[Gate]] = None, qubits: Optional[QubitSet] = None
+        self, gates: Optional[list[Gate]] = None, qubits: Optional[QubitSet] = None
     ) -> Optional[GateCalibrations]:
         """
         Filters the data based on optional lists of gates and QubitSets.
 
         Args:
-            gates (Optional[List[Gate]]): An optional list of gates to filter on.
+            gates (Optional[list[Gate]]): An optional list of gates to filter on.
             qubits (Optional[QubitSet]): An optional `QubitSet` to filter on.
 
         Returns:
@@ -114,12 +114,12 @@ class GateCalibrations:
             {k: v for (k, v) in self.pulse_sequences.items() if k in filtered_calibration_keys},
         )
 
-    def to_ir(self, calibration_key: Optional[Tuple[Gate, QubitSet]] = None) -> str:
+    def to_ir(self, calibration_key: Optional[tuple[Gate, QubitSet]] = None) -> str:
         """
         Returns the defcal representation for the `GateCalibrations` object.
 
         Args:
-            calibration_key (Optional[Tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
+            calibration_key (Optional[tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
                 Default: None
 
         Returns:
@@ -143,7 +143,7 @@ class GateCalibrations:
             )
             return defcal
 
-    def _def_cal_gate(self, gate_key: Tuple[Gate, QubitSet]) -> str:
+    def _def_cal_gate(self, gate_key: tuple[Gate, QubitSet]) -> str:
         return " ".join(
             [
                 "defcal",

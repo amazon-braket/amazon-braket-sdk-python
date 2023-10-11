@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from abc import abstractmethod
-from typing import Optional, Set, Tuple, Union
+from typing import Optional, Union
 
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise_model.criteria import Criteria
@@ -36,13 +36,13 @@ class CircuitInstructionCriteria(Criteria):
 
     @staticmethod
     def _check_target_in_qubits(
-        qubits: Optional[Set[Union[int, Tuple[int]]]], target: QubitSetInput
+        qubits: Optional[set[Union[int, tuple[int]]]], target: QubitSetInput
     ) -> bool:
         """
         Returns true if the given targets of an instruction match the given qubit input set.
 
         Args:
-            qubits (Optional[Set[Union[int, Tuple[int]]]]): The qubits provided to the criteria.
+            qubits (Optional[set[Union[int, tuple[int]]]]): The qubits provided to the criteria.
             target (QubitSetInput): Targets of an instruction.
 
         Returns:
