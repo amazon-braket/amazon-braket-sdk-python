@@ -13,7 +13,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any, Optional
 
 import numpy as np
 
@@ -96,8 +97,8 @@ class QuantumOperator(Operator):
         return self._qubit_count
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        """Tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
+    def ascii_symbols(self) -> tuple[str, ...]:
+        """tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
         return self._ascii_symbols
 
     @property

@@ -13,8 +13,6 @@
 
 from __future__ import annotations
 
-from typing import List
-
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
 from braket.ahs.hamiltonian import Hamiltonian
@@ -51,7 +49,7 @@ class ShiftingField(Hamiltonian):
         self._magnitude = magnitude
 
     @property
-    def terms(self) -> List[Hamiltonian]:
+    def terms(self) -> list[Hamiltonian]:
         return [self]
 
     @property
@@ -62,13 +60,13 @@ class ShiftingField(Hamiltonian):
         return self._magnitude
 
     @staticmethod
-    def from_lists(times: List[float], values: List[float], pattern: List[float]) -> ShiftingField:
+    def from_lists(times: list[float], values: list[float], pattern: list[float]) -> ShiftingField:
         """Get the shifting field from a set of time points, values and pattern
 
         Args:
-            times (List[float]): The time points of the shifting field
-            values (List[float]): The values of the shifting field
-            pattern (List[float]): The pattern of the shifting field
+            times (list[float]): The time points of the shifting field
+            values (list[float]): The values of the shifting field
+            pattern (list[float]): The pattern of the shifting field
 
         Returns:
             ShiftingField: The shifting field obtained

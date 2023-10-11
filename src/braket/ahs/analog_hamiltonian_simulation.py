@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import singledispatch
-from typing import Tuple
 
 import braket.ir.ahs as ir
 from braket.ahs.atom_arrangement import AtomArrangement, SiteType
@@ -113,12 +112,12 @@ class AnalogHamiltonianSimulation:
 @singledispatch
 def _get_term_ir(
     term: Hamiltonian,
-) -> Tuple[str, dict]:
+) -> tuple[str, dict]:
     raise TypeError(f"Unable to convert Hamiltonian term type {type(term)}.")
 
 
 @_get_term_ir.register
-def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
+def _(term: ShiftingField) -> tuple[str, ir.ShiftingField]:
     return AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY, ir.ShiftingField(
         magnitude=ir.PhysicalField(
             time_series=ir.TimeSeries(
@@ -131,7 +130,7 @@ def _(term: ShiftingField) -> Tuple[str, ir.ShiftingField]:
 
 
 @_get_term_ir.register
-def _(term: DrivingField) -> Tuple[str, ir.DrivingField]:
+def _(term: DrivingField) -> tuple[str, ir.DrivingField]:
     return AnalogHamiltonianSimulation.DRIVING_FIELDS_PROPERTY, ir.DrivingField(
         amplitude=ir.PhysicalField(
             time_series=ir.TimeSeries(

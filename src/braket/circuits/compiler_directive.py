@@ -13,7 +13,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any
 
 from braket.circuits.operator import Operator
 from braket.circuits.serialization import IRType, SerializationProperties
@@ -41,8 +42,8 @@ class CompilerDirective(Operator):
         return self.__class__.__name__
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        """Tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
+    def ascii_symbols(self) -> tuple[str, ...]:
+        """tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
         return self._ascii_symbols
 
     def to_ir(
