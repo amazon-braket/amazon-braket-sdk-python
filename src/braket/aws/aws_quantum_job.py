@@ -20,7 +20,7 @@ import time
 from enum import Enum
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
@@ -70,8 +70,8 @@ class AwsQuantumJob(QuantumJob):
         code_location: str = None,
         role_arn: str = None,
         wait_until_complete: bool = False,
-        hyperparameters: Dict[str, Any] = None,
-        input_data: Union[str, Dict, S3DataSourceConfig] = None,
+        hyperparameters: dict[str, Any] = None,
+        input_data: str | dict | S3DataSourceConfig = None,
         instance_config: InstanceConfig = None,
         distribution: str = None,
         stopping_condition: StoppingCondition = None,
@@ -79,7 +79,7 @@ class AwsQuantumJob(QuantumJob):
         copy_checkpoints_from_job: str = None,
         checkpoint_config: CheckpointConfig = None,
         aws_session: AwsSession = None,
-        tags: Dict[str, str] = None,
+        tags: dict[str, str] = None,
         logger: Logger = getLogger(__name__),
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
@@ -121,12 +121,12 @@ class AwsQuantumJob(QuantumJob):
                 This would tail the hybrid job logs as it waits. Otherwise `False`.
                 Default: `False`.
 
-            hyperparameters (Dict[str, Any]): Hyperparameters accessible to the hybrid job.
-                The hyperparameters are made accessible as a Dict[str, str] to the hybrid job.
+            hyperparameters (dict[str, Any]): Hyperparameters accessible to the hybrid job.
+                The hyperparameters are made accessible as a dict[str, str] to the hybrid job.
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data (Union[str, Dict, S3DataSourceConfig]): Information about the training
+            input_data (str | dict | S3DataSourceConfig): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
                 f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -166,7 +166,7 @@ class AwsQuantumJob(QuantumJob):
             aws_session (AwsSession): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
 
-            tags (Dict[str, str]): Dict specifying the key-value pairs for tagging this hybrid job.
+            tags (dict[str, str]): Dict specifying the key-value pairs for tagging this hybrid job.
                 Default: {}.
 
             logger (Logger): Logger object with which to write logs, such as quantum task statuses
@@ -386,7 +386,7 @@ class AwsQuantumJob(QuantumJob):
             elif self.state() in AwsQuantumJob.TERMINAL_STATES:
                 log_state = AwsQuantumJob.LogState.JOB_COMPLETE
 
-    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """Gets the hybrid job metadata defined in Amazon Braket.
 
         Args:
@@ -395,7 +395,7 @@ class AwsQuantumJob(QuantumJob):
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
         Returns:
-            Dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
+            dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
         if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_job(self._arn)
@@ -405,7 +405,7 @@ class AwsQuantumJob(QuantumJob):
         self,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         """Gets all the metrics data, where the keys are the column names, and the values are a list
         containing the values in each row. For example, the table:
             timestamp energy
@@ -422,7 +422,7 @@ class AwsQuantumJob(QuantumJob):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Any]] : The metrics data.
+            dict[str, list[Any]] : The metrics data.
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
@@ -451,7 +451,7 @@ class AwsQuantumJob(QuantumJob):
         self,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Retrieves the hybrid job result persisted using save_job_result() function.
 
         Args:
@@ -461,7 +461,7 @@ class AwsQuantumJob(QuantumJob):
                 Default: 5 seconds.
 
         Returns:
-            Dict[str, Any]: Dict specifying the job results.
+            dict[str, Any]: Dict specifying the job results.
 
         Raises:
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
@@ -481,7 +481,7 @@ class AwsQuantumJob(QuantumJob):
             return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name)
 
     @staticmethod
-    def _read_and_deserialize_results(temp_dir: str, job_name: str) -> Dict[str, Any]:
+    def _read_and_deserialize_results(temp_dir: str, job_name: str) -> dict[str, Any]:
         return load_job_result(Path(temp_dir, job_name, AwsQuantumJob.RESULTS_FILENAME))
 
     def download_result(
@@ -566,9 +566,7 @@ class AwsQuantumJob(QuantumJob):
         return hash(self.arn)
 
     @staticmethod
-    def _initialize_session(
-        session_value: AwsSession, device: AwsDevice, logger: Logger
-    ) -> AwsSession:
+    def _initialize_session(session_value: AwsSession, device: str, logger: Logger) -> AwsSession:
         aws_session = session_value or AwsSession()
         if device.startswith("local:"):
             return aws_session
