@@ -13,13 +13,13 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Optional
 
 from braket.ahs.discretization_types import DiscretizationProperties
 
 
 class Hamiltonian:
-    def __init__(self, terms: Optional[List[Hamiltonian]] = None):
+    def __init__(self, terms: Optional[list[Hamiltonian]] = None):
         r"""A Hamiltonian representing a system to be simulated.
 
         A Hamiltonian :math:`H` may be expressed as a sum of multiple terms
@@ -30,8 +30,8 @@ class Hamiltonian:
         self._terms = terms or []
 
     @property
-    def terms(self) -> List[Hamiltonian]:
-        """List[Hamiltonian]: The list of terms in this Hamiltonian."""
+    def terms(self) -> list[Hamiltonian]:
+        """list[Hamiltonian]: The list of terms in this Hamiltonian."""
         return self._terms
 
     def discretize(self, properties: DiscretizationProperties) -> Hamiltonian:

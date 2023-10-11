@@ -13,11 +13,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import Iterator, List, Tuple, Union
+from typing import Union
 
 import numpy as np
 
@@ -33,7 +34,7 @@ class SiteType(Enum):
 class AtomArrangementItem:
     """Represents an item (coordinate and metadata) in an atom arrangement."""
 
-    coordinate: Tuple[Number, Number]
+    coordinate: tuple[Number, Number]
     site_type: SiteType
 
     def _validate_coordinate(self) -> None:
@@ -62,13 +63,13 @@ class AtomArrangement:
 
     def add(
         self,
-        coordinate: Union[Tuple[Number, Number], np.ndarray],
+        coordinate: Union[tuple[Number, Number], np.ndarray],
         site_type: SiteType = SiteType.FILLED,
     ) -> AtomArrangement:
         """Add a coordinate to the atom arrangement.
 
         Args:
-            coordinate (Union[Tuple[Number, Number], ndarray]): The coordinate of the
+            coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the
                 atom (in meters). The coordinates can be a numpy array of shape (2,)
                 or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
@@ -78,14 +79,14 @@ class AtomArrangement:
         self._sites.append(AtomArrangementItem(tuple(coordinate), site_type))
         return self
 
-    def coordinate_list(self, coordinate_index: Number) -> List[Number]:
+    def coordinate_list(self, coordinate_index: Number) -> list[Number]:
         """Returns all the coordinates at the given index.
 
         Args:
             coordinate_index (Number): The index to get for each coordinate.
 
         Returns:
-            List[Number]:The list of coordinates at the given index.
+            list[Number]:The list of coordinates at the given index.
 
         Example:
             To get a list of all x-coordinates: coordinate_list(0)

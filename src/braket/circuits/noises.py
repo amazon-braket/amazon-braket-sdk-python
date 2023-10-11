@@ -12,7 +12,8 @@
 # language governing permissions and limitations under the License.
 
 import itertools
-from typing import Any, Dict, Iterable, List, Union
+from collections.abc import Iterable
+from typing import Any, Union
 
 import numpy as np
 
@@ -357,7 +358,7 @@ class PauliChannel(PauliNoise):
 
         Args:
             target (QubitSetInput): Target qubit(s)
-                probability List[float]: Probabilities for the Pauli X, Y and Z noise
+                probability list[float]: Probabilities for the Pauli X, Y and Z noise
                 happening in the Kraus channel.
             probX (float): X rotation probability.
             probY (float): Y rotation probability.
@@ -863,7 +864,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
     _tensor_products_strings = itertools.product(_paulis.keys(), repeat=2)
     _names_list = ["".join(x) for x in _tensor_products_strings]
 
-    def __init__(self, probabilities: Dict[str, float]):
+    def __init__(self, probabilities: dict[str, float]):
         super().__init__(
             probabilities=probabilities,
             qubit_count=None,
@@ -906,14 +907,14 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
     @staticmethod
     @circuit.subroutine(register=True)
     def two_qubit_pauli_channel(
-        target1: QubitInput, target2: QubitInput, probabilities: Dict[str, float]
+        target1: QubitInput, target2: QubitInput, probabilities: dict[str, float]
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1.
             target2 (QubitInput): Target qubit 2.
-            probabilities (Dict[str, float]): Probability of two-qubit Pauli channel.
+            probabilities (dict[str, float]): Probability of two-qubit Pauli channel.
 
         Returns:
             Iterable[Instruction]: `Iterable` of Depolarizing instructions.
@@ -1374,7 +1375,7 @@ class Kraus(Noise):
         return f"#pragma braket noise kraus({matrix_list}) {qubit_list}"
 
     @staticmethod
-    def _transform_matrix_to_ir(matrices: Iterable[np.ndarray]) -> List:
+    def _transform_matrix_to_ir(matrices: Iterable[np.ndarray]) -> list:
         serializable = []
         for matrix in matrices:
             matrix_as_list = [
@@ -1439,14 +1440,14 @@ Noise.register_noise(Kraus)
 
 
 def _ascii_representation(
-    noise: str, parameters: List[Union[FreeParameterExpression, float]]
+    noise: str, parameters: list[Union[FreeParameterExpression, float]]
 ) -> str:
     """
     Generates a formatted ascii representation of a noise.
 
     Args:
         noise (str): The name of the noise.
-        parameters (List[Union[FreeParameterExpression, float]]): The parameters to the noise.
+        parameters (list[Union[FreeParameterExpression, float]]): The parameters to the noise.
 
     Returns:
         str: The ascii representation of the noise.

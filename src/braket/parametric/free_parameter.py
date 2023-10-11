@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Dict, Union
+from typing import Union
 
 from sympy import Symbol
 
@@ -59,12 +59,12 @@ class FreeParameter(FreeParameterExpression):
         """
         return self._name.name
 
-    def subs(self, parameter_values: Dict[str, Number]) -> Union[FreeParameter, Number]:
+    def subs(self, parameter_values: dict[str, Number]) -> Union[FreeParameter, Number]:
         """
         Substitutes a value in if the parameter exists within the mapping.
 
         Args:
-            parameter_values (Dict[str, Number]): A mapping of parameter to its
+            parameter_values (dict[str, Number]): A mapping of parameter to its
                 corresponding value.
 
         Returns:

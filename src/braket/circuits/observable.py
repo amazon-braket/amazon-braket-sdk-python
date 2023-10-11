@@ -14,8 +14,9 @@
 from __future__ import annotations
 
 import numbers
+from collections.abc import Sequence
 from copy import deepcopy
-from typing import List, Sequence, Tuple, Union
+from typing import Union
 
 import numpy as np
 
@@ -49,7 +50,7 @@ class Observable(QuantumOperator):
         target: QubitSet = None,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
-    ) -> Union[str, List[Union[str, List[List[List[float]]]]]]:
+    ) -> Union[str, list[Union[str, list[list[list[float]]]]]]:
         """Returns the IR representation for the observable
 
         Args:
@@ -61,7 +62,7 @@ class Observable(QuantumOperator):
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
-            Union[str, List[Union[str, List[List[List[float]]]]]]: The IR representation for
+            Union[str, list[Union[str, list[list[list[float]]]]]]: The IR representation for
             the observable.
 
         Raises:
@@ -84,7 +85,7 @@ class Observable(QuantumOperator):
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
-    def _to_jaqcd(self) -> List[Union[str, List[List[List[float]]]]]:
+    def _to_jaqcd(self) -> list[Union[str, list[list[list[float]]]]]:
         """Returns the JAQCD representation of the observable."""
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
@@ -113,10 +114,10 @@ class Observable(QuantumOperator):
         return self._coef
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
         Returns:
-            Tuple[Gate, ...]: The basis rotation gates for this observable.
+            tuple[Gate, ...]: The basis rotation gates for this observable.
         """
         raise NotImplementedError
 
@@ -210,7 +211,7 @@ class StandardObservable(Observable):
         return self.coefficient * self._eigenvalues[index]
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
+    def ascii_symbols(self) -> tuple[str, ...]:
         return tuple(
             f"{self.coefficient if self.coefficient != 1 else ''}{ascii_symbol}"
             for ascii_symbol in self._ascii_symbols

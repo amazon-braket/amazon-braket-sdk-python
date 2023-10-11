@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
-
 from braket.aws import AwsDevice, AwsQuantumJob
 from braket.circuits import Circuit
 from braket.devices import Devices
