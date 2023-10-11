@@ -1391,51 +1391,6 @@ class Circuit:
                 )
         return additional_calibrations
 
-    def as_unitary(self) -> np.ndarray:
-        r"""
-        Returns the unitary matrix representation, in little endian format, of the entire circuit.
-        *Note*: The performance of this method degrades with qubit count. It might be slow for
-        qubit count > 10.
-
-        Returns:
-            ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-            circuit as a unitary. *Note*: For an empty circuit, an empty numpy array is
-            returned (`array([], dtype=complex128)`)
-
-        Warnings:
-            This method has been deprecated, please use to_unitary() instead.
-            The unitary returned by this method is *little-endian*; the first qubit in the circuit
-            is the _least_ significant. For example, a circuit `Circuit().h(0).x(1)` will yield the
-            unitary :math:`X(1) \otimes H(0)`.
-
-        Raises:
-            TypeError: If circuit is not composed only of `Gate` instances,
-                i.e. a circuit with `Noise` operators will raise this error.
-
-        Examples:
-            >>> circ = Circuit().h(0).cnot(0, 1)
-            >>> circ.as_unitary()
-            array([[ 0.70710678+0.j,  0.70710678+0.j,  0.        +0.j,
-                     0.        +0.j],
-                   [ 0.        +0.j,  0.        +0.j,  0.70710678+0.j,
-                    -0.70710678+0.j],
-                   [ 0.        +0.j,  0.        +0.j,  0.70710678+0.j,
-                     0.70710678+0.j],
-                   [ 0.70710678+0.j, -0.70710678+0.j,  0.        +0.j,
-                     0.        +0.j]])
-        """
-        warnings.warn(
-            "Matrix returned will have qubits in little-endian order; "
-            "This method has been deprecated. Please use to_unitary() instead.",
-            category=DeprecationWarning,
-        )
-
-        qubits = self.qubits
-        if not qubits:
-            return np.zeros(0, dtype=complex)
-        qubit_count = max(qubits) + 1
-
-        return calculate_unitary(qubit_count, self.instructions)
 
     def to_unitary(self) -> np.ndarray:
         """
