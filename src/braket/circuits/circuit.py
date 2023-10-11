@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable, Iterable
 from numbers import Number
 from typing import Any, Optional, TypeVar, Union
@@ -51,7 +50,7 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
-from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
+from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
@@ -1390,7 +1389,6 @@ class Circuit:
                     }
                 )
         return additional_calibrations
-
 
     def to_unitary(self) -> np.ndarray:
         """
