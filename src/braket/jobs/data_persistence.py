@@ -134,7 +134,7 @@ def load_job_result(filename: str | Path = None) -> dict[str, Any]:
             must be in the format used by `save_job_result`.
 
     Returns:
-         dict[str, Any]: Job result data of current job
+        dict[str, Any]: Job result data of current job
     """
     persisted_data = _load_persisted_data(filename)
     deserialized_data = deserialize_values(persisted_data.dataDictionary, persisted_data.dataFormat)
