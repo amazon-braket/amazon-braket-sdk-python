@@ -17,6 +17,7 @@ import itertools
 import os
 import os.path
 import re
+from functools import cache
 from pathlib import Path
 from typing import Any, NamedTuple, Optional
 
@@ -826,6 +827,7 @@ class AwsSession(object):
         copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
 
+    @cache
     def get_full_image_tag(self, image_uri: str) -> str:
         """
         Get verbose image tag from image uri.

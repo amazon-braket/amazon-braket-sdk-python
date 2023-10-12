@@ -38,7 +38,7 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
-from braket.jobs.image_uris import Framework, retrieve_image
+from braket.jobs.image_uris import Framework, built_in_images, retrieve_image
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import _generate_default_job_name
 
@@ -179,7 +179,8 @@ def hybrid_job(
                         f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
                     "wait_until_complete": wait_until_complete,
-                    "job_name": job_name or _generate_default_job_name(func=entry_point),
+                    "job_name": job_name
+                    or _generate_default_job_name(func=entry_point, decorator=True),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
                     "logger": logger,
                 }
@@ -209,18 +210,20 @@ def hybrid_job(
 
 
 def _validate_python_version(aws_session: AwsSession, image_uri: str | None):
-    if image_uri:
+    # user provides a custom image_uri
+    if image_uri and image_uri not in built_in_images(aws_session.region):
         print(
             "Skipping python version validation, make sure versions match "
             "between local environment and container."
         )
     else:
-        image_uri = retrieve_image(Framework.BASE, aws_session.region)
+        # set default image_uri to base
+        image_uri = image_uri or retrieve_image(Framework.BASE, aws_session.region)
         tag = aws_session.get_full_image_tag(image_uri)
         major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
-        if not (
-            sys.version_info.major == int(major_version)
-            and sys.version_info.minor == int(minor_version)
+        if not (sys.version_info.major, sys.version_info.minor) == (
+            int(major_version),
+            int(minor_version),
         ):
             raise RuntimeError(
                 "Python version must match between local environment and container. "

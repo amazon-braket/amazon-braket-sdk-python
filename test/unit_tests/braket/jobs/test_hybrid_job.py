@@ -19,12 +19,25 @@ from braket.jobs.hybrid_job import _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
 
+@pytest.fixture
+def aws_session():
+    aws_session = MagicMock()
+    aws_session.get_full_image_tag.return_value = "1.0-cpu-py310-ubuntu22.04"
+    aws_session.region = "us-west-2"
+    return aws_session
+
+
+@patch("braket.jobs.image_uris.retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
-def test_decorator_defaults(mock_create, mock_tempdir, _mock_open, mock_time):
-    @hybrid_job(device=None)
+def test_decorator_defaults(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(device=None, aws_session=aws_session)
     def my_entry(c=0, d: float = 1.0, **extras):
         return "my entry return value"
 
@@ -47,6 +60,7 @@ def test_decorator_defaults(mock_create, mock_tempdir, _mock_open, mock_time):
         job_name="my-entry-123000",
         hyperparameters={"c": 0, "d": 1.0},
         logger=getLogger("braket.jobs.hybrid_job"),
+        aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 

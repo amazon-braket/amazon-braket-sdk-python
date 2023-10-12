@@ -14,6 +14,7 @@
 import json
 import os
 from enum import Enum
+from functools import cache
 from typing import Dict
 
 
@@ -23,6 +24,11 @@ class Framework(str, Enum):
     BASE = "BASE"
     PL_TENSORFLOW = "PL_TENSORFLOW"
     PL_PYTORCH = "PL_PYTORCH"
+
+
+@cache
+def built_in_images(region):
+    return {retrieve_image(framework, region) for framework in Framework}
 
 
 def retrieve_image(framework: Framework, region: str) -> str:
