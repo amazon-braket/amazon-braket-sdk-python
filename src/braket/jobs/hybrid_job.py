@@ -174,8 +174,7 @@ def hybrid_job(
                         f"{temp_dir}.{entry_point_file_path.stem}:{entry_point.__name__}"
                     ),
                     "wait_until_complete": wait_until_complete,
-                    "job_name": job_name
-                    or _generate_default_job_name(func=entry_point, decorator=True),
+                    "job_name": job_name or _generate_default_job_name(func=entry_point),
                     "hyperparameters": _log_hyperparameters(entry_point, args, kwargs),
                     "logger": logger,
                 }
