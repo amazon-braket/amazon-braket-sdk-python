@@ -1,6 +1,7 @@
 import ast
 import importlib
 import re
+import sys
 import tempfile
 from logging import getLogger
 from pathlib import Path
@@ -19,12 +20,26 @@ from braket.jobs.hybrid_job import _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
 
+@pytest.fixture
+def aws_session():
+    aws_session = MagicMock()
+    python_version_str = f"py{sys.version_info.major}{sys.version_info.minor}"
+    aws_session.get_full_image_tag.return_value = f"1.0-cpu-{python_version_str}-ubuntu22.04"
+    aws_session.region = "us-west-2"
+    return aws_session
+
+
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
-def test_decorator_defaults(mock_create, mock_tempdir, _mock_open, mock_time):
-    @hybrid_job(device=None)
+def test_decorator_defaults(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(device=None, aws_session=aws_session)
     def my_entry(c=0, d: float = 1.0, **extras):
         return "my entry return value"
 
@@ -47,11 +62,13 @@ def test_decorator_defaults(mock_create, mock_tempdir, _mock_open, mock_time):
         job_name="my-entry-123000",
         hyperparameters={"c": 0, "d": 1.0},
         logger=getLogger("braket.jobs.hybrid_job"),
+        aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
 @pytest.mark.parametrize("include_modules", (job_module, ["job_module"]))
+@patch("braket.jobs.image_uris.retrieve_image")
 @patch("sys.stdout")
 @patch("time.time", return_value=123.0)
 @patch("cloudpickle.register_pickle_by_value")
@@ -67,8 +84,10 @@ def test_decorator_non_defaults(
     mock_unregister,
     mock_time,
     mock_stdout,
+    mock_retrieve,
     include_modules,
 ):
+    mock_retrieve.return_value = "should-not-be-used"
     dependencies = "my_requirements.txt"
     image_uri = "my_image.uri"
     default_instance = InstanceConfig()
@@ -162,14 +181,18 @@ def test_decorator_non_defaults(
     mock_stdout.write.assert_any_call(s3_not_linked)
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
-def test_decorator_non_dict_input(mock_create, mock_tempdir, _mock_open, mock_time):
+def test_decorator_non_dict_input(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
     input_prefix = "my_input"
 
-    @hybrid_job(device=None, input_data=input_prefix)
+    @hybrid_job(device=None, input_data=input_prefix, aws_session=aws_session)
     def my_entry():
         return "my entry return value"
 
@@ -193,16 +216,22 @@ def test_decorator_non_dict_input(mock_create, mock_tempdir, _mock_open, mock_ti
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
         input_data=input_prefix,
+        aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(LocalQuantumJob, "create")
-def test_decorator_local(mock_create, mock_tempdir, _mock_open, mock_time):
-    @hybrid_job(device=Devices.Amazon.SV1, local=True)
+def test_decorator_local(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(device=Devices.Amazon.SV1, local=True, aws_session=aws_session)
     def my_entry():
         return "my entry return value"
 
@@ -221,15 +250,21 @@ def test_decorator_local(mock_create, mock_tempdir, _mock_open, mock_time):
         entry_point=entry_point,
         job_name="my-entry-123000",
         hyperparameters={},
+        aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(LocalQuantumJob, "create")
-def test_decorator_local_unsupported_args(mock_create, mock_tempdir, _mock_open, mock_time):
+def test_decorator_local_unsupported_args(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
     @hybrid_job(
         device=Devices.Amazon.SV1,
         local=True,
@@ -240,6 +275,7 @@ def test_decorator_local_unsupported_args(mock_create, mock_tempdir, _mock_open,
         stopping_condition=StoppingCondition(),
         tags={"my_tag": "my_value"},
         logger=getLogger(__name__),
+        aws_session=aws_session,
     )
     def my_entry():
         return "my entry return value"
@@ -259,16 +295,22 @@ def test_decorator_local_unsupported_args(mock_create, mock_tempdir, _mock_open,
         entry_point=entry_point,
         job_name="my-entry-123000",
         hyperparameters={},
+        aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
-def test_job_name_too_long(mock_create, mock_tempdir, _mock_open, mock_time):
-    @hybrid_job(device="local:braket/default")
+def test_job_name_too_long(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(device="local:braket/default", aws_session=aws_session)
     def this_is_a_50_character_func_name_for_testing_names():
         return "my entry return value"
 
@@ -295,17 +337,23 @@ def test_job_name_too_long(mock_create, mock_tempdir, _mock_open, mock_time):
             job_name=expected_job_name,
             hyperparameters={},
             logger=getLogger("braket.jobs.hybrid_job"),
+            aws_session=aws_session,
         )
         assert len(expected_job_name) == 50
         assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
-def test_decorator_pos_only_slash(mock_create, mock_tempdir, _mock_open, mock_time):
-    @hybrid_job(device="local:braket/default")
+def test_decorator_pos_only_slash(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(device="local:braket/default", aws_session=aws_session)
     def my_entry(pos_only, /):
         return "my entry return value"
 
@@ -329,16 +377,22 @@ def test_decorator_pos_only_slash(mock_create, mock_tempdir, _mock_open, mock_ti
         job_name="my-entry-123000",
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
+        aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
 @patch("builtins.open")
 @patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
-def test_decorator_pos_only_args(mock_create, mock_tempdir, _mock_open, mock_time):
-    @hybrid_job(device="local:braket/default")
+def test_decorator_pos_only_args(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+
+    @hybrid_job(device="local:braket/default", aws_session=aws_session)
     def my_entry(*args):
         return "my entry return value"
 
@@ -362,14 +416,15 @@ def test_decorator_pos_only_args(mock_create, mock_tempdir, _mock_open, mock_tim
         job_name="my-entry-123000",
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
+        aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
 
 
-def test_serialization_error():
+def test_serialization_error(aws_session):
     ssl_context = SSLContext()
 
-    @hybrid_job(device=None)
+    @hybrid_job(device=None, aws_session=aws_session)
     def fails_serialization():
         print(ssl_context)
 
@@ -393,3 +448,18 @@ def test_serialization_wrapping():
 
     recovered = cloudpickle.loads(byte_str)
     assert recovered() == (args, kwargs)
+
+
+def test_python_validation(aws_session):
+    aws_session.get_full_image_tag.return_value = "1.0-cpu-py38-ubuntu22.04"
+
+    bad_version = (
+        "Python version must match between local environment and container. "
+        f"Client is running Python {sys.version_info.major}.{sys.version_info.minor} "
+        "locally, but container uses Python 3.8."
+    )
+    with pytest.raises(RuntimeError, match=bad_version):
+
+        @hybrid_job(device=None, aws_session=aws_session)
+        def my_job():
+            pass
