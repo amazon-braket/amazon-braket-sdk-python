@@ -846,7 +846,7 @@ class AwsSession(object):
             registryId=registry,
             repositoryName=repository,
             imageIds=[{"imageTag": tag}],
-        )["images"][0]["imageId"]["imageDigest"]
+        )  # ["images"][0]["imageId"]["imageDigest"]
 
         # get all images matching digest (same image, different tags)
         images = self.ecr_client.batch_get_image(

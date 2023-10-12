@@ -23,7 +23,8 @@ from braket.jobs.local import LocalQuantumJob
 @pytest.fixture
 def aws_session():
     aws_session = MagicMock()
-    aws_session.get_full_image_tag.return_value = "1.0-cpu-py310-ubuntu22.04"
+    python_version_str = f"{sys.version_info.major}{sys.version_info.minor}"
+    aws_session.get_full_image_tag.return_value = f"1.0-cpu-{python_version_str}-ubuntu22.04"
     aws_session.region = "us-west-2"
     return aws_session
 
