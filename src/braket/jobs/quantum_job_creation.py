@@ -232,16 +232,13 @@ def prepare_quantum_job(
     return create_job_kwargs
 
 
-def _generate_default_job_name(
-    image_uri: str | None = None, func: Callable | None = None, decorator: bool = False
-) -> str:
+def _generate_default_job_name(image_uri: str | None = None, func: Callable | None = None) -> str:
     """
     Generate default job name using the image uri and entrypoint function.
 
     Args:
         image_uri (str | None): URI for the image container.
         func (Callable | None): The entry point function.
-        decorator (bool): Whether the job is a decorator job. Default: False.
 
     Returns:
         str: Hybrid job name.
@@ -251,8 +248,6 @@ def _generate_default_job_name(
 
     if func:
         name = func.__name__.replace("_", "-")
-        if decorator:
-            name = f"dec-{name}"
         if len(name) + len(timestamp) > max_length:
             name = name[: max_length - len(timestamp) - 1]
             warnings.warn(

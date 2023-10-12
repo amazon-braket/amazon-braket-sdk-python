@@ -44,7 +44,7 @@ def test_decorator_defaults(mock_create, mock_tempdir, _mock_open, mock_time):
         source_module=source_module,
         entry_point=entry_point,
         wait_until_complete=wait_until_complete,
-        job_name="dec-my-entry-123000",
+        job_name="my-entry-123000",
         hyperparameters={"c": 0, "d": 1.0},
         logger=getLogger("braket.jobs.hybrid_job"),
     )
@@ -139,7 +139,7 @@ def test_decorator_non_defaults(
         image_uri=image_uri,
         input_data=input_data,
         wait_until_complete=wait_until_complete,
-        job_name="dec-my-entry-123000",
+        job_name="my-entry-123000",
         instance_config=default_instance,
         distribution=distribution,
         hyperparameters={"a": "a", "b": 2, "c": 3, "d": 4, "extra_param": "value", "another": 6},
@@ -189,7 +189,7 @@ def test_decorator_non_dict_input(mock_create, mock_tempdir, _mock_open, mock_ti
         source_module=source_module,
         entry_point=entry_point,
         wait_until_complete=wait_until_complete,
-        job_name="dec-my-entry-123000",
+        job_name="my-entry-123000",
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
         input_data=input_prefix,
@@ -219,7 +219,7 @@ def test_decorator_local(mock_create, mock_tempdir, _mock_open, mock_time):
         device=device,
         source_module=source_module,
         entry_point=entry_point,
-        job_name="dec-my-entry-123000",
+        job_name="my-entry-123000",
         hyperparameters={},
     )
     assert mock_tempdir.return_value.__exit__.called
@@ -257,7 +257,7 @@ def test_decorator_local_unsupported_args(mock_create, mock_tempdir, _mock_open,
         device=device,
         source_module=source_module,
         entry_point=entry_point,
-        job_name="dec-my-entry-123000",
+        job_name="my-entry-123000",
         hyperparameters={},
     )
     assert mock_tempdir.return_value.__exit__.called
@@ -285,7 +285,7 @@ def test_job_name_too_long(mock_create, mock_tempdir, _mock_open, mock_time):
     with pytest.warns(UserWarning):
         this_is_a_50_character_func_name_for_testing_names()
 
-        expected_job_name = "dec-this-is-a-50-character-func-name-for-te-123000"
+        expected_job_name = "this-is-a-50-character-func-name-for-testin-123000"
 
         mock_create.assert_called_with(
             device=device,
@@ -326,7 +326,7 @@ def test_decorator_pos_only_slash(mock_create, mock_tempdir, _mock_open, mock_ti
         source_module=source_module,
         entry_point=entry_point,
         wait_until_complete=wait_until_complete,
-        job_name="dec-my-entry-123000",
+        job_name="my-entry-123000",
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
     )
@@ -359,7 +359,7 @@ def test_decorator_pos_only_args(mock_create, mock_tempdir, _mock_open, mock_tim
         source_module=source_module,
         entry_point=entry_point,
         wait_until_complete=wait_until_complete,
-        job_name="dec-my-entry-123000",
+        job_name="my-entry-123000",
         hyperparameters={},
         logger=getLogger("braket.jobs.hybrid_job"),
     )
