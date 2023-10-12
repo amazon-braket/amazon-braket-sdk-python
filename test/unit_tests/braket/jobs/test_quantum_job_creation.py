@@ -385,6 +385,20 @@ def test_generate_default_job_name(mock_time, image_uri):
     assert _generate_default_job_name(image_uri) == f"braket-job{job_type}-{timestamp}"
 
 
+@patch("time.time")
+def test_generate_default_job_name_func(mock_time):
+    mock_time.return_value = 123.45678
+
+    def my_func():
+        pass
+
+    assert _generate_default_job_name("image_uri", func=my_func) == "my-func-123456"
+    assert (
+        _generate_default_job_name("image_uri", func=my_func, decorator=True)
+        == "dec-my-func-123456"
+    )
+
+
 @pytest.mark.parametrize(
     "source_module",
     (
