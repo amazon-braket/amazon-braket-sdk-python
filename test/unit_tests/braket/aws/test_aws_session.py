@@ -1364,3 +1364,20 @@ def test_get_full_image_tag(aws_session):
     image_uri = "123456.image_uri/repo-name:my-tag"
     assert aws_session.get_full_image_tag(image_uri) == "my-tag-py310"
     assert aws_session.get_full_image_tag(image_uri) == "my-tag-py310"
+
+
+def test_get_full_image_tag_no_py_info(aws_session):
+    aws_session.ecr_client.batch_get_image.side_effect = (
+        {"images": [{"imageId": {"imageDigest": "my-digest"}}]},
+        {
+            "images": [
+                {"imageId": {"imageTag": "my-tag"}},
+                {"imageId": {"imageTag": "latest"}},
+            ]
+        },
+    )
+    image_uri = "123456.image_uri/repo-name:my-tag"
+
+    no_py_info = "Full image tag missing."
+    with pytest.raises(ValueError, match=no_py_info):
+        aws_session.get_full_image_tag(image_uri)

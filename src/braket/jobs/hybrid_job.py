@@ -209,6 +209,7 @@ def hybrid_job(
 
 
 def _validate_python_version(aws_session: AwsSession, image_uri: str | None):
+    """Validate python version at job definition time"""
     # user provides a custom image_uri
     if image_uri and image_uri not in built_in_images(aws_session.region):
         print(

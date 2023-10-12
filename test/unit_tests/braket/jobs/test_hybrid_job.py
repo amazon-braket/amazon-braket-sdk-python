@@ -448,3 +448,18 @@ def test_serialization_wrapping():
 
     recovered = cloudpickle.loads(byte_str)
     assert recovered() == (args, kwargs)
+
+
+def test_python_validation(aws_session):
+    aws_session.get_full_image_tag.return_value = "1.0-cpu-py38-ubuntu22.04"
+
+    bad_version = (
+        "Python version must match between local environment and container. "
+        f"Client is running Python {sys.version_info.major}.{sys.version_info.minor} "
+        "locally, but container uses Python 3.8."
+    )
+    with pytest.raises(RuntimeError, match=bad_version):
+
+        @hybrid_job(device=None, aws_session=aws_session)
+        def my_job():
+            pass
