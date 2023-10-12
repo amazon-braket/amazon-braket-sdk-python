@@ -840,14 +840,24 @@ class AwsSession(object):
         """
         registry = image_uri.split(".")[0]
         repository, tag = image_uri.split("/")[-1].split(":")
+
+        # get image digest of latest image
         digest = self.ecr_client.batch_get_image(
             registryId=registry,
             repositoryName=repository,
             imageIds=[{"imageTag": tag}],
         )["images"][0]["imageId"]["imageDigest"]
-        tag = self.ecr_client.batch_get_image(
+
+        # get all images matching digest (same image, different tags)
+        images = self.ecr_client.batch_get_image(
             registryId=registry,
             repositoryName=repository,
             imageIds=[{"imageDigest": digest}],
-        )["images"][0]["imageId"]["imageTag"]
-        return tag
+        )["images"]
+
+        # find the tag with the python version info
+        for image in images:
+            if re.search(r"py\d\d+", tag := image["imageId"]["imageTag"]):
+                return tag
+
+        raise ValueError("Full image tag missing.")

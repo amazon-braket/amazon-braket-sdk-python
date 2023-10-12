@@ -1351,9 +1351,16 @@ def test_add_braket_user_agent(aws_session):
 def test_get_full_image_tag(aws_session):
     aws_session.ecr_client.batch_get_image.side_effect = (
         {"images": [{"imageId": {"imageDigest": "my-digest"}}]},
-        {"images": [{"imageId": {"imageTag": "my-tag"}}]},
+        {
+            "images": [
+                {"imageId": {"imageTag": "my-tag"}},
+                {"imageId": {"imageTag": "my-tag-py3"}},
+                {"imageId": {"imageTag": "my-tag-py310"}},
+                {"imageId": {"imageTag": "latest"}},
+            ]
+        },
         AssertionError("Image tag not cached"),
     )
     image_uri = "123456.image_uri/repo-name:my-tag"
-    assert aws_session.get_full_image_tag(image_uri) == "my-tag"
-    assert aws_session.get_full_image_tag(image_uri) == "my-tag"
+    assert aws_session.get_full_image_tag(image_uri) == "my-tag-py310"
+    assert aws_session.get_full_image_tag(image_uri) == "my-tag-py310"
