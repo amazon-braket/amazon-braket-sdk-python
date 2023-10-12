@@ -420,10 +420,10 @@ def test_decorator_pos_only_args(
     assert mock_tempdir.return_value.__exit__.called
 
 
-def test_serialization_error():
+def test_serialization_error(aws_session):
     ssl_context = SSLContext()
 
-    @hybrid_job(device=None)
+    @hybrid_job(device=None, aws_session=aws_session)
     def fails_serialization():
         print(ssl_context)
 
