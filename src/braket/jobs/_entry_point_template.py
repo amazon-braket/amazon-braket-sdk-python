@@ -17,7 +17,7 @@ def {function_name}():
     result = recovered()
     if result is not None:
         save_job_result(result, data_format=PersistedJobDataFormat.PICKLED_V4)
-    clean_links(links)
+    # clean_links(links)
     return result
 """
 
@@ -57,7 +57,7 @@ def link_input():
                 # link file source to file within input channel directory
                 input_data_path = Path(get_input_data_dir(channel), Path(data).name)
             make_link(input_link_path, input_data_path, links)
-    
+
     return links
 
 
