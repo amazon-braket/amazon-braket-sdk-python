@@ -202,6 +202,7 @@ def test_decorator_job():
         ],
         dependencies=str(Path("test", "integ_tests", "requirements.txt")),
         input_data=str(Path("test", "integ_tests", "requirements")),
+        # local=True
     )
     def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
         save_job_result(job_test_script.job_helper())
@@ -227,8 +228,23 @@ def test_decorator_job():
             "extra_arg": "extra_value",
         }
 
-    job = decorator_job(MyClass, 2, d=5, extra_arg="extra_value")
+        with open("output_file.txt", "w") as f:
+            f.write("hello")
+
+    job = decorator_job(MyClass(), 2, d=5, extra_arg="extra_value")
     assert job.result()["status"] == "SUCCESS"
+
+    current_dir = Path.cwd()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+        job.download_result()
+        assert (
+            Path(job.name, "results.json").exists()
+            and not Path(job.name, "test", "integ_tests", "requirements.txt").exists()
+        )
+        with open(Path(job.name, "output_file.txt"), "r") as f:
+            assert f.read() == "hello"
+        os.chdir(current_dir)
 
 
 def test_decorator_job_submodule():
@@ -246,8 +262,9 @@ def test_decorator_job_submodule():
             "my_input": str(Path("test", "integ_tests", "requirements.txt")),
             "my_dir": str(Path("test", "integ_tests", "job_test_module")),
         },
+        local=True,
     )
-    def decorator_job():
+    def decorator_job_submodule():
         save_job_result(submodule_helper())
         with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
             assert f.readlines() == ["pytest\n"]
@@ -266,5 +283,5 @@ def test_decorator_job_submodule():
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)
 
-    job = decorator_job()
+    job = decorator_job_submodule()
     assert job.result()["status"] == "SUCCESS"
