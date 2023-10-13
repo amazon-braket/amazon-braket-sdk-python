@@ -15,7 +15,7 @@ from typing import Any, Dict, Optional
 from unittest.mock import Mock
 
 import pytest
-from pydantic import create_model  # This is temporary for defining properties below
+from pydantic.v1 import create_model  # This is temporary for defining properties below
 
 import braket.ir as ir
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
