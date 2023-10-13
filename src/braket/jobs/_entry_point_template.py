@@ -1,7 +1,15 @@
 run_entry_point = """
 import cloudpickle
-from braket.jobs import save_job_result
+import os
+from braket.jobs import get_results_dir, save_job_result
 from braket.jobs_data import PersistedJobDataFormat
+
+
+# set working directory to results dir
+os.chdir(get_results_dir())
+
+# create symlinks to input data
+link_input()
 
 # load and run serialized entry point function
 recovered = cloudpickle.loads({serialized})
@@ -16,8 +24,6 @@ symlink_input_data = '''
 from pathlib import Path
 from braket.jobs import get_input_data_dir
 
-# map of data sources to lists of matched local files
-prefix_matches = {prefix_matches}
 
 def make_link(input_link_path, input_data_path):
     """ Create symlink from input_link_path to input_data_path. """
@@ -25,22 +31,27 @@ def make_link(input_link_path, input_data_path):
     input_link_path.symlink_to(input_data_path)
     print(input_link_path, '->', input_data_path)
 
-for channel, data in {input_data_items}:
 
-    if channel in {prefix_channels}:
-        # link all matched files
-        for input_link_name in prefix_matches[channel]:
-            input_link_path = Path(input_link_name)
-            input_data_path = Path(get_input_data_dir(channel)) / input_link_path.name
-            make_link(input_link_path, input_data_path)
+def link_input():
+    # map of data sources to lists of matched local files
+    prefix_matches = {prefix_matches}
 
-    else:
-        input_link_path = Path(data)
-        if channel in {directory_channels}:
-            # link directory source directly to input channel directory
-            input_data_path = Path(get_input_data_dir(channel))
+    for channel, data in {input_data_items}:
+
+        if channel in {prefix_channels}:
+            # link all matched files
+            for input_link_name in prefix_matches[channel]:
+                input_link_path = Path(input_link_name)
+                input_data_path = Path(get_input_data_dir(channel)) / input_link_path.name
+                make_link(input_link_path, input_data_path)
+
         else:
-            # link file source to file within input channel directory
-            input_data_path = Path(get_input_data_dir(channel), Path(data).name)
-        make_link(input_link_path, input_data_path)
+            input_link_path = Path(data)
+            if channel in {directory_channels}:
+                # link directory source directly to input channel directory
+                input_data_path = Path(get_input_data_dir(channel))
+            else:
+                # link file source to file within input channel directory
+                input_data_path = Path(get_input_data_dir(channel), Path(data).name)
+            make_link(input_link_path, input_data_path)
 '''
