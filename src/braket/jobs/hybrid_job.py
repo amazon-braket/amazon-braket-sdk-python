@@ -297,7 +297,31 @@ def _log_hyperparameters(entry_point: Callable, args: tuple, kwargs: dict):
             warnings.warn(
                 "Positional only arguments will not be logged to the hyperparameters file."
             )
-    return hyperparameters
+    return {name: _sanitize(value) for name, value in hyperparameters.items()}
+
+
+def _sanitize(hyperparameter: Any) -> str:
+    """Sanitize forbidden characters from hp strings"""
+    string_hp = str(hyperparameter)
+
+    sanitized = (
+        string_hp
+        # replace newlines with spaces
+        .replace("\n", " ")
+        # replace forbidden characters with "?"
+        .replace("$", "?")
+        .replace("(", "?")
+        .replace("&", "?")
+        .replace("`", "?")
+        # not technically forbidden, but to avoid mismatched parens
+        .replace(")", "?")
+    )
+
+    # max allowed length for a hyperparameter is 2500
+    if len(sanitized) > 2500:
+        # show as much as possible, including the final 20 characters
+        return f"{sanitized[:2500-23]}...{sanitized[-20:]}"
+    return sanitized
 
 
 def _process_input_data(input_data):
