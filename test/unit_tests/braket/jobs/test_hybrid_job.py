@@ -481,7 +481,7 @@ def test_python_validation(aws_session):
         ),
         (
             "with weird chars: (&$`)",
-            "with weird chars: ?????",
+            "with weird chars: {+?'}",
         ),
         (
             "?" * 2600,

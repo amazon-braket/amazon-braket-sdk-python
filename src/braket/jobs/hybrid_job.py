@@ -306,15 +306,14 @@ def _sanitize(hyperparameter: Any) -> str:
 
     sanitized = (
         string_hp
-        # replace newlines with spaces
+        # replace forbidden characters with close matches
         .replace("\n", " ")
-        # replace forbidden characters with "?"
         .replace("$", "?")
-        .replace("(", "?")
-        .replace("&", "?")
-        .replace("`", "?")
+        .replace("(", "{")
+        .replace("&", "+")
+        .replace("`", "'")
         # not technically forbidden, but to avoid mismatched parens
-        .replace(")", "?")
+        .replace(")", "}")
     )
 
     # max allowed length for a hyperparameter is 2500
