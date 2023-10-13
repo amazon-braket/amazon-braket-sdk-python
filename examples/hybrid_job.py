@@ -14,15 +14,14 @@
 from braket.aws import AwsDevice
 from braket.circuits import Circuit, FreeParameter, Observable
 from braket.devices import Devices
-from braket.jobs import hybrid_job
+from braket.jobs import get_job_device_arn, hybrid_job
 from braket.jobs.metrics import log_metric
 
-device_arn = Devices.Amazon.SV1
 
-
-@hybrid_job(device=device_arn, wait_until_complete=True)  # choose priority device
+@hybrid_job(device=Devices.Amazon.SV1, wait_until_complete=True)
 def run_hybrid_job(num_tasks=1):
-    device = AwsDevice(device_arn)  # declare AwsDevice within the hybrid job
+    # declare AwsDevice within the hybrid job
+    device = AwsDevice(get_job_device_arn())
 
     # create a parametric circuit
     circ = Circuit()
@@ -44,5 +43,4 @@ def run_hybrid_job(num_tasks=1):
 
 
 job = run_hybrid_job(num_tasks=5)
-
 print(job.result())
