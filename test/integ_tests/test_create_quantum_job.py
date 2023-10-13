@@ -220,7 +220,7 @@ def test_decorator_job():
         with open(hp_file, "r") as f:
             hyperparameters = json.load(f)
         assert hyperparameters == {
-            "a": "MyClass(value)",
+            "a": "MyClass{value}",
             "b": "2",
             "c": "0",
             "d": "5",

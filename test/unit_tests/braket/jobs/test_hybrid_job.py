@@ -16,7 +16,7 @@ from braket.aws import AwsQuantumJob
 from braket.devices import Devices
 from braket.jobs import hybrid_job
 from braket.jobs.config import CheckpointConfig, InstanceConfig, OutputDataConfig, StoppingCondition
-from braket.jobs.hybrid_job import _serialize_entry_point
+from braket.jobs.hybrid_job import _sanitize, _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
 
@@ -60,7 +60,7 @@ def test_decorator_defaults(
         entry_point=entry_point,
         wait_until_complete=wait_until_complete,
         job_name="my-entry-123000",
-        hyperparameters={"c": 0, "d": 1.0},
+        hyperparameters={"c": "0", "d": "1.0"},
         logger=getLogger("braket.jobs.hybrid_job"),
         aws_session=aws_session,
     )
@@ -161,7 +161,14 @@ def test_decorator_non_defaults(
         job_name="my-entry-123000",
         instance_config=default_instance,
         distribution=distribution,
-        hyperparameters={"a": "a", "b": 2, "c": 3, "d": 4, "extra_param": "value", "another": 6},
+        hyperparameters={
+            "a": "a",
+            "b": "2",
+            "c": "3",
+            "d": "4",
+            "extra_param": "value",
+            "another": "6",
+        },
         checkpoint_config=checkpoint_config,
         copy_checkpoints_from_job=copy_checkpoints_from_job,
         role_arn=role_arn,
@@ -463,3 +470,24 @@ def test_python_validation(aws_session):
         @hybrid_job(device=None, aws_session=aws_session)
         def my_job():
             pass
+
+
+@pytest.mark.parametrize(
+    "hyperparameter, expected",
+    (
+        (
+            "with\nnewline",
+            "with newline",
+        ),
+        (
+            "with weird chars: (&$`)",
+            "with weird chars: {+?'}",
+        ),
+        (
+            "?" * 2600,
+            f"{'?'*2477}...{'?'*20}",
+        ),
+    ),
+)
+def test_sanitize_hyperparameters(hyperparameter, expected):
+    assert _sanitize(hyperparameter) == expected
