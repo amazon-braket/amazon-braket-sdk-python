@@ -29,13 +29,16 @@ def run_hybrid_job(num_tasks: int):
     circ.cnot(0, 1)
     circ.expectation(observable=Observable.X(), target=0)
 
-    theta = 0.0  # initial parameter
+    # initial parameter
+    theta = 0.0
 
     for i in range(num_tasks):
-        task = device.run(circ, shots=100, inputs={"theta": theta})  # input parameters
+        # run task, specifying input parameter
+        task = device.run(circ, shots=100, inputs={"theta": theta})
         exp_val = task.result().values[0]
 
-        theta += exp_val  # modify the parameter (possibly gradient descent)
+        # modify the parameter (e.g. gradient descent)
+        theta += exp_val
 
         log_metric(metric_name="exp_val", value=exp_val, iteration_number=i)
 
