@@ -20,7 +20,7 @@ from braket.jobs.metrics import log_metric
 device_arn = Devices.Amazon.SV1
 
 
-@hybrid_job(device=device_arn)  # choose priority device
+@hybrid_job(device=device_arn, wait_until_complete=True)  # choose priority device
 def run_hybrid_job(num_tasks=1):
     device = AwsDevice(device_arn)  # declare AwsDevice within the hybrid job
 
@@ -44,7 +44,5 @@ def run_hybrid_job(num_tasks=1):
 
 
 job = run_hybrid_job(num_tasks=5)
-print(job)
 
-result = job.result()
-print(result)
+print(job.result())

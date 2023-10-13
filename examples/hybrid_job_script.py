@@ -11,18 +11,17 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import os
 
 from braket.aws import AwsDevice, AwsQuantumJob
 from braket.circuits import Circuit, FreeParameter, Observable
 from braket.devices import Devices
-from braket.jobs import save_job_result
+from braket.jobs import get_job_device_arn, save_job_result
 from braket.jobs.metrics import log_metric
 
 
 def run_hybrid_job(num_tasks: int):
     # use the device specified in the hybrid job
-    device = AwsDevice(os.environ.get("AMZN_BRAKET_DEVICE_ARN"))
+    device = AwsDevice(get_job_device_arn())
 
     # create a parametric circuit
     circ = Circuit()
@@ -49,6 +48,6 @@ if __name__ == "__main__":
         source_module="hybrid_job_script.py",  # specify file or directory with code to run
         entry_point="hybrid_job_script:run_hybrid_job",  # specify function to run
         hyperparameters={"num_tasks": 5},
+        wait_until_complete=True,
     )
-    print(job)
     print(job.result())
