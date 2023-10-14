@@ -158,14 +158,17 @@ def test_completed_quantum_job(aws_session, capsys):
 
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
-        job.download_result()
-        assert (
-            Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists() and Path(downloaded_result).exists()
-        )
+        try:
+            job.download_result()
+            assert (
+                Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists()
+                and Path(downloaded_result).exists()
+            )
 
-        # Check results match the expectations.
-        assert job.result() == {"converged": True, "energy": -0.2}
-        os.chdir(current_dir)
+            # Check results match the expectations.
+            assert job.result() == {"converged": True, "energy": -0.2}
+        finally:
+            os.chdir(current_dir)
 
     # Check the logs and validate it contains required output.
     job.logs(wait=True)
@@ -227,8 +230,26 @@ def test_decorator_job():
             "extra_arg": "extra_value",
         }
 
-    job = decorator_job(MyClass, 2, d=5, extra_arg="extra_value")
+        with open("test/output_file.txt", "w") as f:
+            f.write("hello")
+
+    job = decorator_job(MyClass(), 2, d=5, extra_arg="extra_value")
     assert job.result()["status"] == "SUCCESS"
+
+    current_dir = Path.cwd()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+        try:
+            job.download_result()
+            with open(Path(job.name, "test", "output_file.txt"), "r") as f:
+                assert f.read() == "hello"
+            assert (
+                Path(job.name, "results.json").exists()
+                and Path(job.name, "test").exists()
+                and not Path(job.name, "test", "integ_tests").exists()
+            )
+        finally:
+            os.chdir(current_dir)
 
 
 def test_decorator_job_submodule():
@@ -247,7 +268,7 @@ def test_decorator_job_submodule():
             "my_dir": str(Path("test", "integ_tests", "job_test_module")),
         },
     )
-    def decorator_job():
+    def decorator_job_submodule():
         save_job_result(submodule_helper())
         with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
             assert f.readlines() == ["pytest\n"]
@@ -266,5 +287,5 @@ def test_decorator_job_submodule():
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)
 
-    job = decorator_job()
+    job = decorator_job_submodule()
     assert job.result()["status"] == "SUCCESS"
