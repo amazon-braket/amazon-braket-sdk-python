@@ -202,7 +202,6 @@ def test_decorator_job():
         ],
         dependencies=str(Path("test", "integ_tests", "requirements.txt")),
         input_data=str(Path("test", "integ_tests", "requirements")),
-        # local=True
     )
     def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
         save_job_result(job_test_script.job_helper())
@@ -262,7 +261,6 @@ def test_decorator_job_submodule():
             "my_input": str(Path("test", "integ_tests", "requirements.txt")),
             "my_dir": str(Path("test", "integ_tests", "job_test_module")),
         },
-        local=True,
     )
     def decorator_job_submodule():
         save_job_result(submodule_helper())
