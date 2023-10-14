@@ -161,7 +161,8 @@ def test_completed_quantum_job(aws_session, capsys):
         try:
             job.download_result()
             assert (
-                Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists() and Path(downloaded_result).exists()
+                Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists()
+                and Path(downloaded_result).exists()
             )
 
             # Check results match the expectations.
