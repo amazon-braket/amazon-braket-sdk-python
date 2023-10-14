@@ -14,10 +14,12 @@ links = link_input()
 # load and run serialized entry point function
 recovered = cloudpickle.loads({serialized})
 def {function_name}():
-    result = recovered()
+    try:
+        result = recovered()
+    finally:
+        clean_links(links)
     if result is not None:
         save_job_result(result, data_format=PersistedJobDataFormat.PICKLED_V4)
-    clean_links(links)
     return result
 """
 
