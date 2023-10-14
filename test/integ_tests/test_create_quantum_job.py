@@ -227,7 +227,7 @@ def test_decorator_job():
             "extra_arg": "extra_value",
         }
 
-        with open("output_file.txt", "w") as f:
+        with open("test/output_file.txt", "w") as f:
             f.write("hello")
 
     job = decorator_job(MyClass(), 2, d=5, extra_arg="extra_value")
@@ -237,12 +237,13 @@ def test_decorator_job():
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
         job.download_result()
+        with open(Path(job.name, "test", "output_file.txt"), "r") as f:
+            assert f.read() == "hello"
         assert (
             Path(job.name, "results.json").exists()
-            and not Path(job.name, "test", "integ_tests", "requirements.txt").exists()
+            and Path(job.name, "test").exists()
+            and not Path(job.name, "test", "integ_tests").exists()
         )
-        with open(Path(job.name, "output_file.txt"), "r") as f:
-            assert f.read() == "hello"
         os.chdir(current_dir)
 
 
