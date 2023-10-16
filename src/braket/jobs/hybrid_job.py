@@ -64,7 +64,8 @@ def hybrid_job(
     tags: dict[str, str] = None,
     logger: Logger = getLogger(__name__),
 ) -> Callable:
-    """Creates a job by invoking the Braket CreateJob API.
+    """Defines a hybrid job by decorating the entry point function. The job will be created
+    when the decorated function is called.
 
     The job created will be a `LocalQuantumJob` when `local` is set to `True`, otherwise an
     `AwsQuantumJob. The following parameters will be ignored when running a job with
