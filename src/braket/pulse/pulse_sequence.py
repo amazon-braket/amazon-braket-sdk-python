@@ -183,10 +183,7 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-        if isinstance(duration, FreeParameterExpression):
-            for p in duration.expression.free_symbols:
-                self._free_parameters.add(FreeParameter(p.name))
-            duration = OQDurationLiteral(duration)
+        duration = self._format_parameter_ast(duration, _type=ast.DurationType())
         if not isinstance(qubits_or_frames, QubitSet):
             if not isinstance(qubits_or_frames, list):
                 qubits_or_frames = [qubits_or_frames]
@@ -276,7 +273,7 @@ class PulseSequence:
         """
         program = deepcopy(self._program)
         tree: ast.Program = program.to_ast(include_externs=False, ignore_needs_declaration=True)
-        new_tree: ast.Program = _FreeParameterTransformer(param_values).visit(tree)
+        new_tree: ast.Program = _FreeParameterTransformer(param_values, program).visit(tree)
 
         new_program = Program(simplify_constants=False)
         new_program.declared_vars = program.declared_vars
@@ -325,13 +322,19 @@ class PulseSequence:
         return ast_to_qasm(tree)
 
     def _format_parameter_ast(
-        self, parameter: Union[float, FreeParameterExpression]
+        self,
+        parameter: Union[float, FreeParameterExpression],
+        _type: ast.ClassicalType = ast.FloatType(),
     ) -> Union[float, _FreeParameterExpressionIdentifier]:
         if isinstance(parameter, FreeParameterExpression):
             for p in parameter.expression.free_symbols:
                 self._free_parameters.add(FreeParameter(p.name))
-            return _FreeParameterExpressionIdentifier(parameter)
-        return parameter
+            return (
+                FreeParameterExpression(parameter, _type)
+                if isinstance(_type, ast.DurationType)
+                else parameter
+            )
+        return OQDurationLiteral(parameter) if isinstance(_type, ast.DurationType) else parameter
 
     def _parse_arg_from_calibration_schema(
         self, argument: dict, waveforms: dict[Waveform], frames: dict[Frame]

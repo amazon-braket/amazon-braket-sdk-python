@@ -59,9 +59,9 @@ def _get_physical_qubit_indices(qids: List[str]) -> List[int]:
 
 
 def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> str:
-    # TODO: We should index into a oqpy.QubitArray rather
+    # TODO: We should index into a oqpy.Qubit register rather
     # than manually generating the string to index into
-    # a hard-coded global qubit array.
+    # a hard-coded global qubit register.
     return f"{constants.QUBIT_REGISTER}[{qubit_idx_expr}]"
 
 
@@ -120,7 +120,7 @@ def _(qid: str) -> oqpy.Qubit:
     if qid.startswith("$"):
         qubit_idx = qid[1:]
         try:
-            int(qubit_idx)
+            qubit_idx = int(qubit_idx)
         except ValueError:
             raise ValueError(f"invalid physical qubit label: '{qid}'")
         return oqpy.PhysicalQubits[qubit_idx]

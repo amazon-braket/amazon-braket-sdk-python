@@ -52,6 +52,7 @@ def map_type(python_type: type) -> type:
             raise errors.ParameterTypeError(
                 f"Unsupported array type: {item_type}. AutoQASM arrays only support ints."
             )
+
         # TODO: Update array length to match the input rather than hardcoding
         # OQPY and QASM require arrays have a set length. python doesn't require this,
         # so the length of the array is indeterminate.

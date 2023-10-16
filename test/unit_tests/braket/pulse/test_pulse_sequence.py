@@ -125,11 +125,10 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         [
             "OPENQASM 3.0;",
             "cal {",
-            "    waveform gauss_wf = gaussian((1000000000.0*length_g)ns, (1000000000.0*sigma_g)ns, "
-            "1, false);",
-            "    waveform drag_gauss_wf = "
-            "drag_gaussian((1000000000.0*length_dg)ns, (1000000000.0*sigma_dg)ns, 0.2, 1, false);",
-            "    waveform constant_wf = constant((1000000000.0*length_c)ns, 2.0 + 0.3im);",
+            "    waveform gauss_wf = gaussian((length_g) * 1s, (sigma_g) * 1s, 1, false);",
+            "    waveform drag_gauss_wf = drag_gaussian((length_dg) * 1s,"
+            " (sigma_dg) * 1s, 0.2, 1, false);",
+            "    waveform constant_wf = constant((length_c) * 1s, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
             "    set_frequency(predefined_frame_1, a + 2*b);",
@@ -138,11 +137,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    shift_phase(predefined_frame_1, a + 2*b);",
             "    set_scale(predefined_frame_1, a + 2*b);",
             "    psb[0] = capture_v0(predefined_frame_1);",
-            (
-                "    delay[(1000000000.0*a + 2000000000.0*b)ns]"
-                " predefined_frame_1, predefined_frame_2;"
-            ),
-            "    delay[(1000000000.0*a + 2000000000.0*b)ns] predefined_frame_1;",
+            "    delay[(a + 2*b) * 1s] predefined_frame_1, predefined_frame_2;",
+            "    delay[(a + 2*b) * 1s] predefined_frame_1;",
             "    delay[1.0ms] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
@@ -173,7 +169,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
         [
             "OPENQASM 3.0;",
             "cal {",
-            "    waveform gauss_wf = gaussian(1.0ms, (1000000000.0*sigma_g)ns, 1, false);",
+            "    waveform gauss_wf = gaussian(1.0ms, (sigma_g) * 1s, 1, false);",
             "    waveform drag_gauss_wf = drag_gaussian(3.0ms, 400.0ms, 0.2, 1, false);",
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
@@ -184,8 +180,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    shift_phase(predefined_frame_1, a + 4);",
             "    set_scale(predefined_frame_1, a + 4);",
             "    psb[0] = capture_v0(predefined_frame_1);",
-            "    delay[(1000000000.0*a + 4000000000.0)ns] predefined_frame_1, predefined_frame_2;",
-            "    delay[(1000000000.0*a + 4000000000.0)ns] predefined_frame_1;",
+            "    delay[(a + 4) * 1s] predefined_frame_1, predefined_frame_2;",
+            "    delay[(a + 4) * 1s] predefined_frame_1;",
             "    delay[1.0ms] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",
@@ -216,8 +212,8 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    shift_phase(predefined_frame_1, 5);",
             "    set_scale(predefined_frame_1, 5);",
             "    psb[0] = capture_v0(predefined_frame_1);",
-            "    delay[5000000000.00000ns] predefined_frame_1, predefined_frame_2;",
-            "    delay[5000000000.00000ns] predefined_frame_1;",
+            "    delay[5s] predefined_frame_1, predefined_frame_2;",
+            "    delay[5s] predefined_frame_1;",
             "    delay[1.0ms] predefined_frame_1;",
             "    barrier predefined_frame_1, predefined_frame_2;",
             "    play(predefined_frame_1, gauss_wf);",

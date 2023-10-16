@@ -32,6 +32,7 @@ from braket.experimental.autoqasm.program.serialization_properties import (
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.pulse.ast.qasm_parser import ast_to_qasm
 
 # Create the thread-local object for the program conversion context.
 _local = threading.local()
@@ -139,10 +140,11 @@ class Program(SerializableProgram):
             str: A representation of the program in the `ir_type` format.
         """
         if ir_type == IRType.OPENQASM:
-            openqasm_ir = self._oqpy_program.to_qasm(
+            openqasm_ast = self._oqpy_program.to_ast(
                 encal_declarations=self._has_pulse_control,
                 include_externs=serialization_properties.include_externs,
             )
+            openqasm_ir = ast_to_qasm(openqasm_ast)
             if self._has_pulse_control and not serialization_properties.auto_defcalgrammar:
                 openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
             return openqasm_ir

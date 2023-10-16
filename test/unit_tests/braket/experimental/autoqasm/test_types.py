@@ -207,7 +207,7 @@ def test_return_python_array():
     """Test returning a python array of ints."""
 
     @aq.subroutine
-    def tester(arr: List[int]) -> List[int]:
+    def tester() -> List[int]:
         return [1, 2, 3]
 
     @aq.main(num_qubits=4)
@@ -215,7 +215,7 @@ def test_return_python_array():
         tester()
 
     expected = """OPENQASM 3.0;
-def tester(array[int[32], 10] arr) -> array[int[32], 10] {
+def tester() -> array[int[32], 10] {
     array[int[32], 10] retval_;
     retval_ = {1, 2, 3};
     return retval_;
