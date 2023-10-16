@@ -16,6 +16,7 @@ import os.path
 import re
 import tempfile
 from pathlib import Path
+from warnings import warn
 
 import job_test_script
 import pytest
@@ -196,42 +197,46 @@ def test_decorator_job():
         def __str__(self):
             return f"MyClass({self.attribute})"
 
-    @hybrid_job(
-        device=Devices.Amazon.SV1,
-        include_modules=[
-            "job_test_script",
-            # this can be removed once the container bdk version is updated
-            "braket.jobs",
-        ],
-        dependencies=str(Path("test", "integ_tests", "requirements.txt")),
-        input_data=str(Path("test", "integ_tests", "requirements")),
-    )
-    def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
-        save_job_result(job_test_script.job_helper())
-        with open(Path(get_input_data_dir()) / "requirements.txt", "r") as f:
-            assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
-            assert f.readlines() == ["pytest\n"]
-        assert dir(pytest)
-        assert a.attribute == "value"
-        assert b == 2
-        assert c == 0
-        assert d == 5
-        assert extras["extra_arg"] == "extra_value"
+    try:
 
-        hp_file = os.environ["AMZN_BRAKET_HP_FILE"]
-        with open(hp_file, "r") as f:
-            hyperparameters = json.load(f)
-        assert hyperparameters == {
-            "a": "MyClass{value}",
-            "b": "2",
-            "c": "0",
-            "d": "5",
-            "extra_arg": "extra_value",
-        }
+        @hybrid_job(
+            device=Devices.Amazon.SV1,
+            include_modules="job_test_script",
+            dependencies=str(Path("test", "integ_tests", "requirements.txt")),
+            input_data=str(Path("test", "integ_tests", "requirements")),
+        )
+        def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
+            save_job_result(job_test_script.job_helper())
+            with open(Path(get_input_data_dir()) / "requirements.txt", "r") as f:
+                assert f.readlines() == ["pytest\n"]
+            with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+                assert f.readlines() == ["pytest\n"]
+            assert dir(pytest)
+            assert a.attribute == "value"
+            assert b == 2
+            assert c == 0
+            assert d == 5
+            assert extras["extra_arg"] == "extra_value"
 
-        with open("test/output_file.txt", "w") as f:
-            f.write("hello")
+            hp_file = os.environ["AMZN_BRAKET_HP_FILE"]
+            with open(hp_file, "r") as f:
+                hyperparameters = json.load(f)
+            assert hyperparameters == {
+                "a": "MyClass{value}",
+                "b": "2",
+                "c": "0",
+                "d": "5",
+                "extra_arg": "extra_value",
+            }
+
+            with open("test/output_file.txt", "w") as f:
+                f.write("hello")
+
+    except RuntimeError as e:
+        if str(e).startswith("Python version must match between local environment and container."):
+            warn("skipping test due to python version mismatch")
+            return
+        raise e
 
     job = decorator_job(MyClass(), 2, d=5, extra_arg="extra_value")
     assert job.result()["status"] == "SUCCESS"
@@ -253,39 +258,49 @@ def test_decorator_job():
 
 
 def test_decorator_job_submodule():
-    @hybrid_job(
-        device=Devices.Amazon.SV1,
-        include_modules=[
-            "job_test_module",
-            # this can be removed once the container bdk version is updated
-            "braket.jobs",
-        ],
-        dependencies=Path(
-            "test", "integ_tests", "job_test_module", "job_test_submodule", "requirements.txt"
-        ),
-        input_data={
-            "my_input": str(Path("test", "integ_tests", "requirements.txt")),
-            "my_dir": str(Path("test", "integ_tests", "job_test_module")),
-        },
-    )
-    def decorator_job_submodule():
-        save_job_result(submodule_helper())
-        with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
-            assert f.readlines() == ["pytest\n"]
-        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
-            assert f.readlines() == ["pytest\n"]
-        with open(
-            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt", "r"
-        ) as f:
-            assert f.readlines() == ["pytest\n"]
-        with open(
-            Path(
+    try:
+
+        @hybrid_job(
+            device=Devices.Amazon.SV1,
+            include_modules=[
+                "job_test_module",
+            ],
+            dependencies=Path(
                 "test", "integ_tests", "job_test_module", "job_test_submodule", "requirements.txt"
             ),
-            "r",
-        ) as f:
-            assert f.readlines() == ["pytest\n"]
-        assert dir(pytest)
+            input_data={
+                "my_input": str(Path("test", "integ_tests", "requirements.txt")),
+                "my_dir": str(Path("test", "integ_tests", "job_test_module")),
+            },
+        )
+        def decorator_job_submodule():
+            save_job_result(submodule_helper())
+            with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
+                assert f.readlines() == ["pytest\n"]
+            with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+                assert f.readlines() == ["pytest\n"]
+            with open(
+                Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt", "r"
+            ) as f:
+                assert f.readlines() == ["pytest\n"]
+            with open(
+                Path(
+                    "test",
+                    "integ_tests",
+                    "job_test_module",
+                    "job_test_submodule",
+                    "requirements.txt",
+                ),
+                "r",
+            ) as f:
+                assert f.readlines() == ["pytest\n"]
+            assert dir(pytest)
+
+    except RuntimeError as e:
+        if str(e).startswith("Python version must match between local environment and container."):
+            warn("skipping test due to python version mismatch")
+            return
+        raise e
 
     job = decorator_job_submodule()
     assert job.result()["status"] == "SUCCESS"
