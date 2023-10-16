@@ -1246,8 +1246,8 @@ class Circuit:
     def _validate_gate_calbrations_uniqueness(
         self,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
-        frames: dict[Frame],
-        waveforms: dict[Waveform],
+        frames: dict[str, Frame],
+        waveforms: dict[str, Waveform],
     ) -> None:
         for key, calibration in gate_definitions.items():
             for frame in calibration._frames.values():
@@ -1305,7 +1305,7 @@ class Circuit:
 
     def _get_frames_waveforms_from_instrs(
         self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
-    ) -> tuple[dict[Frame], dict[Waveform]]:
+    ) -> tuple[dict[str, Frame], dict[str, Waveform]]:
         from braket.circuits.gates import PulseGate
 
         frames = {}
