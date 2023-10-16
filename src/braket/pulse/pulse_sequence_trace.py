@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict
 
 from braket.timings.time_series import TimeSeries
 
@@ -34,6 +33,6 @@ class PulseSequenceTrace:
             the waveform phase.
     """
 
-    amplitudes: Dict[str, TimeSeries]
-    frequencies: Dict[str, TimeSeries]
-    phases: Dict[str, TimeSeries]
+    amplitudes: dict[str, TimeSeries]
+    frequencies: dict[str, TimeSeries]
+    phases: dict[str, TimeSeries]

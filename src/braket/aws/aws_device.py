@@ -17,9 +17,10 @@ import importlib
 import json
 import os
 import urllib.request
+import warnings
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
@@ -29,6 +30,7 @@ from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
@@ -117,8 +119,8 @@ class AwsDevice(Device):
         shots: Optional[int] = None,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: Optional[float] = None,
-        inputs: Optional[Dict[str, float]] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
+        inputs: Optional[dict[str, float]] = None,
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -140,11 +142,11 @@ class AwsDevice(Device):
             poll_interval_seconds (Optional[float]): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
                 ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
+            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): A
+                `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
@@ -212,7 +214,7 @@ class AwsDevice(Device):
                 PulseSequence,
                 AnalogHamiltonianSimulation,
             ],
-            List[
+            list[
                 Union[
                     Circuit,
                     Problem,
@@ -229,15 +231,15 @@ class AwsDevice(Device):
         max_connections: int = AwsQuantumTaskBatch.MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
+        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], List[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
+            task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], list[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing problems, pulse sequences,
                 or photonics program to run on device.
             s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
@@ -255,11 +257,11 @@ class AwsDevice(Device):
             poll_interval_seconds (float): The polling interval for `AwsQuantumTask.result()`,
                 in seconds. Defaults to the ``getTaskPollIntervalMillis`` value specified in
                 ``self.properties.service`` (divided by 1000) if provided, otherwise 1 second.
-            inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
+            inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]): A
-                `Dict[Tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
+            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): A
+                `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
@@ -529,29 +531,29 @@ class AwsDevice(Device):
         return NotImplemented
 
     @property
-    def frames(self) -> Dict[str, Frame]:
-        """Returns a Dict mapping frame ids to the frame objects for predefined frames
+    def frames(self) -> dict[str, Frame]:
+        """Returns a dict mapping frame ids to the frame objects for predefined frames
         for this device."""
         self._update_pulse_properties()
         return self._frames or dict()
 
     @property
-    def ports(self) -> Dict[str, Port]:
-        """Returns a Dict mapping port ids to the port objects for predefined ports
+    def ports(self) -> dict[str, Port]:
+        """Returns a dict mapping port ids to the port objects for predefined ports
         for this device."""
         self._update_pulse_properties()
         return self._ports or dict()
 
     @staticmethod
     def get_devices(
-        arns: Optional[List[str]] = None,
-        names: Optional[List[str]] = None,
-        types: Optional[List[AwsDeviceType]] = None,
-        statuses: Optional[List[str]] = None,
-        provider_names: Optional[List[str]] = None,
+        arns: Optional[list[str]] = None,
+        names: Optional[list[str]] = None,
+        types: Optional[list[AwsDeviceType]] = None,
+        statuses: Optional[list[str]] = None,
+        provider_names: Optional[list[str]] = None,
         order_by: str = "name",
         aws_session: Optional[AwsSession] = None,
-    ) -> List[AwsDevice]:
+    ) -> list[AwsDevice]:
         """
         Get devices based on filters and desired ordering. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
@@ -562,20 +564,20 @@ class AwsDevice(Device):
             >>> AwsDevice.get_devices(types=['SIMULATOR'])
 
         Args:
-            arns (Optional[List[str]]): device ARN list, default is `None`
-            names (Optional[List[str]]): device name list, default is `None`
-            types (Optional[List[AwsDeviceType]]): device type list, default is `None`
+            arns (Optional[list[str]]): device ARN list, default is `None`
+            names (Optional[list[str]]): device name list, default is `None`
+            types (Optional[list[AwsDeviceType]]): device type list, default is `None`
                 QPUs will be searched for all regions and simulators will only be
                 searched for the region of the current session.
-            statuses (Optional[List[str]]): device status list, default is `None`
-            provider_names (Optional[List[str]]): provider name list, default is `None`
+            statuses (Optional[list[str]]): device status list, default is `None`
+            provider_names (Optional[list[str]]): provider name list, default is `None`
             order_by (str): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
             aws_session (Optional[AwsSession]): An AWS session object.
                 Default is `None`.
 
         Returns:
-            List[AwsDevice]: list of AWS devices
+            list[AwsDevice]: list of AWS devices
         """
 
         if order_by not in AwsDevice._GET_DEVICES_ORDER_BY_KEYS:
@@ -601,23 +603,32 @@ class AwsDevice(Device):
             types_for_region = sorted(
                 types if region == session_region else types - {AwsDeviceType.SIMULATOR}
             )
-            region_device_arns = [
-                result["deviceArn"]
-                for result in session_for_region.search_devices(
-                    arns=arns,
-                    names=names,
-                    types=types_for_region,
-                    statuses=statuses,
-                    provider_names=provider_names,
+            try:
+                region_device_arns = [
+                    result["deviceArn"]
+                    for result in session_for_region.search_devices(
+                        arns=arns,
+                        names=names,
+                        types=types_for_region,
+                        statuses=statuses,
+                        provider_names=provider_names,
+                    )
+                ]
+                device_map.update(
+                    {
+                        arn: AwsDevice(arn, session_for_region)
+                        for arn in region_device_arns
+                        if arn not in device_map
+                    }
                 )
-            ]
-            device_map.update(
-                {
-                    arn: AwsDevice(arn, session_for_region)
-                    for arn in region_device_arns
-                    if arn not in device_map
-                }
-            )
+            except ClientError as e:
+                error_code = e.response["Error"]["Code"]
+                warnings.warn(
+                    f"{error_code}: Unable to search region '{region}' for devices."
+                    " Please check your settings or try again later."
+                    f" Continuing without devices in '{region}'."
+                )
+
         devices = list(device_map.values())
         devices.sort(key=lambda x: getattr(x, order_by))
         return devices
@@ -667,6 +678,54 @@ class AwsDevice(Device):
                 "see 'https://docs.aws.amazon.com/braket/latest/developerguide/braket-devices.html'"
             )
 
+    def queue_depth(self) -> QueueDepthInfo:
+        """
+        Task queue depth refers to the total number of quantum tasks currently waiting
+        to run on a particular device.
+
+        Returns:
+            QueueDepthInfo: Instance of the QueueDepth class representing queue depth
+            information for quantum tasks and hybrid jobs.
+            Queue depth refers to the number of quantum tasks and hybrid jobs queued on a particular
+            device. The normal tasks refers to the quantum tasks not submitted via Hybrid Jobs.
+            Whereas, the priority tasks refers to the total number of quantum tasks waiting to run
+            submitted through Amazon Braket Hybrid Jobs. These tasks run before the normal tasks.
+            If the queue depth for normal or priority quantum tasks is greater than 4000, we display
+            their respective queue depth as '>4000'. Similarly, for hybrid jobs if there are more
+            than 1000 jobs queued on a device, display the hybrid jobs queue depth as '>1000'.
+            Additionally, for QPUs if hybrid jobs queue depth is 0, we display information about
+            priority and count of the running hybrid job.
+
+        Example:
+            Queue depth information for a running job.
+            >>> device = AwsDevice(Device.Amazon.SV1)
+            >>> print(device.queue_depth())
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '0',
+            <QueueType.PRIORITY: 'Priority'>: '1'}, jobs='0 (1 prioritized job(s) running)')
+
+            If more than 4000 quantum tasks queued on a device.
+            >>> device = AwsDevice(Device.Amazon.DM1)
+            >>> print(device.queue_depth())
+            QueueDepthInfo(quantum_tasks={<QueueType.NORMAL: 'Normal'>: '>4000',
+            <QueueType.PRIORITY: 'Priority'>: '2000'}, jobs='100')
+        """
+        metadata = self.aws_session.get_device(arn=self.arn)
+        queue_metadata = metadata.get("deviceQueueInfo")
+        queue_info = {}
+
+        for response in queue_metadata:
+            queue_name = response.get("queue")
+            queue_priority = response.get("queuePriority")
+            queue_size = response.get("queueSize")
+
+            if queue_name == "QUANTUM_TASKS_QUEUE":
+                priority_enum = QueueType(queue_priority)
+                queue_info.setdefault("quantum_tasks", {})[priority_enum] = queue_size
+            else:
+                queue_info["jobs"] = queue_size
+
+        return QueueDepthInfo(**queue_info)
+
     def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
         """
         Refreshes the gate calibration data upon request.
@@ -700,7 +759,7 @@ class AwsDevice(Device):
         else:
             return None
 
-    def _parse_waveforms(self, waveforms_json: Dict) -> Dict:
+    def _parse_waveforms(self, waveforms_json: dict) -> dict:
         waveforms = dict()
         for waveform in waveforms_json:
             parsed_waveform = _parse_waveform_from_calibration_schema(waveforms_json[waveform])
@@ -708,24 +767,24 @@ class AwsDevice(Device):
         return waveforms
 
     def _parse_pulse_sequence(
-        self, calibration: Dict, waveforms: Dict[ArbitraryWaveform]
+        self, calibration: dict, waveforms: dict[ArbitraryWaveform]
     ) -> PulseSequence:
         return PulseSequence._parse_from_calibration_schema(calibration, waveforms, self.frames)
 
     def _parse_calibration_json(
-        self, calibration_data: Dict
-    ) -> Dict[Tuple[Gate, QubitSet], PulseSequence]:
+        self, calibration_data: dict
+    ) -> dict[tuple[Gate, QubitSet], PulseSequence]:
         """
         Takes the json string from the device calibration URL and returns a structured dictionary of
-        corresponding `Dict[Tuple[Gate, QubitSet], PulseSequence]` to represent the calibration data.
+        corresponding `dict[tuple[Gate, QubitSet], PulseSequence]` to represent the calibration data.
 
         Args:
-            calibration_data (Dict): The data to be parsed. Based on
+            calibration_data (dict): The data to be parsed. Based on
                 https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py.
 
         Returns:
-            Dict[Tuple[Gate, QubitSet], PulseSequence]: The
-            structured data based on a mapping of `Tuple[Gate, Qubit]` to its calibration repesented as a
+            dict[tuple[Gate, QubitSet], PulseSequence]: The
+            structured data based on a mapping of `tuple[Gate, Qubit]` to its calibration repesented as a
             `PulseSequence`.
 
         """  # noqa: E501

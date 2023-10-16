@@ -10,10 +10,12 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+
 import re
 from collections import defaultdict
+from collections.abc import KeysView
 from dataclasses import dataclass
-from typing import Any, Dict, KeysView, List, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from openpulse import ast
@@ -43,7 +45,7 @@ class _FrameState:
 @dataclass
 class _ParseState:
     variables: dict
-    frame_data: Dict[str, _FrameState]
+    frame_data: dict[str, _FrameState]
 
 
 class _ApproximationParser(QASMVisitor[_ParseState]):
@@ -52,12 +54,12 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     TIME_UNIT_TO_EXP = {"dt": 4, "ns": 3, "us": 2, "ms": 1, "s": 0}
 
-    def __init__(self, program: Program, frames: Dict[str, Frame]):
+    def __init__(self, program: Program, frames: dict[str, Frame]):
         self.amplitudes = defaultdict(TimeSeries)
         self.frequencies = defaultdict(TimeSeries)
         self.phases = defaultdict(TimeSeries)
         context = _ParseState(variables={"pi": np.pi}, frame_data=_init_frame_data(frames))
-        self._qubit_frames_mapping: Dict[str, List[str]] = _init_qubit_frame_mapping(frames)
+        self._qubit_frames_mapping: dict[str, list[str]] = _init_qubit_frame_mapping(frames)
         self.visit(program.to_ast(include_externs=False), context)
 
     def visit(
@@ -73,8 +75,8 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         return super().visit(node, context)
 
     def _get_frame_parameters(
-        self, parameters: List[ast.Expression], context: _ParseState
-    ) -> Union[KeysView, List[str]]:
+        self, parameters: list[ast.Expression], context: _ParseState
+    ) -> Union[KeysView, list[str]]:
         frame_ids = set()
         for expression in parameters:
             identifier_name = self.visit(expression, context)
@@ -466,7 +468,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         return DragGaussianWaveform(*args)
 
 
-def _init_frame_data(frames: Dict[str, Frame]) -> Dict[str, _FrameState]:
+def _init_frame_data(frames: dict[str, Frame]) -> dict[str, _FrameState]:
     frame_states = dict()
     for frameId, frame in frames.items():
         frame_states[frameId] = _FrameState(
@@ -475,7 +477,7 @@ def _init_frame_data(frames: Dict[str, Frame]) -> Dict[str, _FrameState]:
     return frame_states
 
 
-def _init_qubit_frame_mapping(frames: Dict[str, Frame]) -> Dict[str, List[str]]:
+def _init_qubit_frame_mapping(frames: dict[str, Frame]) -> dict[str, list[str]]:
     mapping = {}
     for frameId in frames.keys():
         if m := (
@@ -489,7 +491,7 @@ def _init_qubit_frame_mapping(frames: Dict[str, Frame]) -> Dict[str, List[str]]:
     return mapping
 
 
-def _lcm_floats(*dts: List[float]) -> float:
+def _lcm_floats(*dts: list[float]) -> float:
     """Return the least common multiple of time increments of a list of frames
         A time increment is the inverse of the corresponding sample rate which is considered
         an integer.
@@ -497,7 +499,7 @@ def _lcm_floats(*dts: List[float]) -> float:
         Hence the LCM of dts is 1/gcd([sample rates])
 
     Args:
-        *dts (List[float]): list of time resolutions
+        *dts (list[float]): list of time resolutions
     """
 
     sample_rates = [round(1 / dt) for dt in dts]

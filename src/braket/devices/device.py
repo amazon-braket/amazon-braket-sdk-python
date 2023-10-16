@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
@@ -37,7 +37,7 @@ class Device(ABC):
         self,
         task_specification: Union[Circuit, Problem],
         shots: Optional[int],
-        inputs: Optional[Dict[str, float]],
+        inputs: Optional[dict[str, float]],
         *args,
         **kwargs
     ) -> QuantumTask:
@@ -49,7 +49,7 @@ class Device(ABC):
                 to run on device.
             shots (Optional[int]): The number of times to run the quantum task on the device.
                 Default is `None`.
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
                 IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
                 Not all devices and IR formats support inputs. Default: {}.
 
@@ -62,24 +62,24 @@ class Device(ABC):
         self,
         task_specifications: Union[
             Union[Circuit, Problem],
-            List[Union[Circuit, Problem]],
+            list[Union[Circuit, Problem]],
         ],
         shots: Optional[int],
         max_parallel: Optional[int],
-        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]],
+        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]],
         *args,
         **kwargs
     ) -> QuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem], List[Union[Circuit, Problem]]]):
+            task_specifications (Union[Union[Circuit, Problem], list[Union[Circuit, Problem]]]):
                 Single instance or list of circuits or problems to run on device.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
             max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel.
                 Batch creation will fail if this value is greater than the maximum allowed
                 concurrent quantum tasks on the device.
-            inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be
+            inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value.
 

@@ -23,7 +23,7 @@ setup(
     name="amazon-braket-sdk",
     version=version,
     license="Apache License 2.0",
-    python_requires=">= 3.8.2",
+    python_requires=">= 3.9",
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
@@ -32,12 +32,12 @@ setup(
         # to get the version of the simulator that supports the mcm=True argument for Monte Carlo
         # simulation of mid-circuit measurement, which AutoQASM requires.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
-        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@31d6c95f3ac250a0ccd04e1433ad61c8bfa4bde4#egg=amazon-braket-default-simulator",  # noqa E501
+        "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@46aea776976ad7f958d847c06f29f3a7976f5cf5#egg=amazon-braket-default-simulator",  # noqa E501
         "oqpy~=0.3.2",
         "setuptools",
         "backoff",
         "boltons",
-        "boto3>=1.22.3",
+        "boto3>=1.28.53",
         "nest-asyncio",
         "networkx",
         "numpy",
@@ -83,7 +83,6 @@ setup(
         "Natural Language :: English",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

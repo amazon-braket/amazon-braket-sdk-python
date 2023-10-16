@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import List, Union
+from typing import Union
 
 from braket.ahs.discretization_types import DiscretizationProperties
 from braket.ahs.field import Field
@@ -65,7 +65,7 @@ class DrivingField(Hamiltonian):
         self._detuning = detuning if isinstance(detuning, Field) else Field(detuning)
 
     @property
-    def terms(self) -> List[Hamiltonian]:
+    def terms(self) -> list[Hamiltonian]:
         return [self]
 
     @property
@@ -141,7 +141,7 @@ class DrivingField(Hamiltonian):
 
     @staticmethod
     def from_lists(
-        times: List[float], amplitudes: List[float], detunings: List[float], phases: List[float]
+        times: list[float], amplitudes: list[float], detunings: list[float], phases: list[float]
     ) -> DrivingField:
         """
         Builds DrivingField Hamiltonian from lists defining time evolution
@@ -149,10 +149,10 @@ class DrivingField(Hamiltonian):
         The values of the parameters at each time points are global for all atoms.
 
         Args:
-            times (List[float]): The time points of the driving field
-            amplitudes (List[float]): The values of the amplitude
-            detunings (List[float]): The values of the detuning
-            phases (List[float]): The values of the phase
+            times (list[float]): The time points of the driving field
+            amplitudes (list[float]): The values of the amplitude
+            detunings (list[float]): The values of the detuning
+            phases (list[float]): The values of the phase
 
         Returns:
             DrivingField: DrivingField Hamiltonian.

@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Iterable, Optional, Set, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
@@ -21,7 +22,7 @@ from braket.circuits.noise_model.criteria_input_parsing import (
     parse_operator_input,
     parse_qubit_input,
 )
-from braket.circuits.qubit_set import QubitSetInput
+from braket.registers.qubit_set import QubitSetInput
 
 
 class GateCriteria(CircuitInstructionCriteria):
@@ -65,14 +66,14 @@ class GateCriteria(CircuitInstructionCriteria):
         """
         return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, Set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
+            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
             GATE will return a set of Gate classes that are relevant to this Criteria.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.

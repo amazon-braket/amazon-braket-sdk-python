@@ -16,7 +16,7 @@ from __future__ import annotations
 import random
 import string
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
@@ -55,12 +55,12 @@ class Waveform(ABC):
 
     @staticmethod
     @abstractmethod
-    def _from_calibration_schema(waveform_json: Dict) -> Waveform:
+    def _from_calibration_schema(waveform_json: dict) -> Waveform:
         """
         Parses a JSON input and returns the BDK waveform. See https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L104
 
         Args:
-            waveform_json (Dict): A JSON object with the needed parameters for making the Waveform.
+            waveform_json (dict): A JSON object with the needed parameters for making the Waveform.
 
         Returns:
             Waveform: A Waveform object parsed from the supplied JSON.
@@ -71,10 +71,10 @@ class ArbitraryWaveform(Waveform):
     """An arbitrary waveform with amplitudes at each timestep explicitly specified using
     an array."""
 
-    def __init__(self, amplitudes: List[complex], id: Optional[str] = None):
+    def __init__(self, amplitudes: list[complex], id: Optional[str] = None):
         """
         Args:
-            amplitudes (List[complex]): Array of complex values specifying the
+            amplitudes (list[complex]): Array of complex values specifying the
                 waveform amplitude at each timestep. The timestep is determined by the sampling rate
                 of the frame to which waveform is applied to.
             id (Optional[str]): The identifier used for declaring this waveform. A random string of
@@ -106,7 +106,7 @@ class ArbitraryWaveform(Waveform):
         raise NotImplementedError
 
     @staticmethod
-    def _from_calibration_schema(waveform_json: Dict) -> ArbitraryWaveform:
+    def _from_calibration_schema(waveform_json: dict) -> ArbitraryWaveform:
         wave_id = waveform_json["waveformId"]
         complex_amplitudes = [complex(i[0], i[1]) for i in waveform_json["amplitudes"]]
         return ArbitraryWaveform(complex_amplitudes, wave_id)
@@ -132,7 +132,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         self.id = id or _make_identifier_name()
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values."""
         return [self.length]
@@ -184,7 +184,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         return samples
 
     @staticmethod
-    def _from_calibration_schema(waveform_json: Dict) -> ConstantWaveform:
+    def _from_calibration_schema(waveform_json: dict) -> ConstantWaveform:
         wave_id = waveform_json["waveformId"]
         length = iq = None
         for val in waveform_json["arguments"]:
@@ -237,7 +237,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         self.id = id or _make_identifier_name()
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values."""
         return [self.length, self.sigma, self.beta, self.amplitude]
@@ -319,7 +319,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         return samples
 
     @staticmethod
-    def _from_calibration_schema(waveform_json: Dict) -> DragGaussianWaveform:
+    def _from_calibration_schema(waveform_json: dict) -> DragGaussianWaveform:
         waveform_parameters = {"id": waveform_json["waveformId"]}
         for val in waveform_json["arguments"]:
             waveform_parameters[val["name"]] = (
@@ -361,7 +361,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         self.id = id or _make_identifier_name()
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, FreeParameter, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
         expressions or bound values."""
         return [self.length, self.sigma, self.amplitude]
@@ -435,7 +435,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         return samples
 
     @staticmethod
-    def _from_calibration_schema(waveform_json: Dict) -> GaussianWaveform:
+    def _from_calibration_schema(waveform_json: dict) -> GaussianWaveform:
         waveform_parameters = {"id": waveform_json["waveformId"]}
         for val in waveform_json["arguments"]:
             waveform_parameters[val["name"]] = (
@@ -460,7 +460,7 @@ def _map_to_oqpy_type(
     )
 
 
-def _parse_waveform_from_calibration_schema(waveform: Dict) -> Waveform:
+def _parse_waveform_from_calibration_schema(waveform: dict) -> Waveform:
     waveform_names = {
         "arbitrary": ArbitraryWaveform._from_calibration_schema,
         "drag_gaussian": DragGaussianWaveform._from_calibration_schema,

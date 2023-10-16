@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Iterable, Optional, Set, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import (
@@ -20,8 +21,8 @@ from braket.circuits.noise_model.criteria_input_parsing import (
 )
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
 from braket.circuits.observable import Observable
-from braket.circuits.qubit_set import QubitSetInput
 from braket.circuits.result_type import ObservableResultType, ResultType
+from braket.registers.qubit_set import QubitSetInput
 
 
 class ObservableCriteria(ResultTypeCriteria):
@@ -71,14 +72,14 @@ class ObservableCriteria(ResultTypeCriteria):
         """
         return [CriteriaKey.OBSERVABLE, CriteriaKey.QUBIT]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, Set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
+            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
             OBSERVABLE will return a set of Observable classes that are relevant to this Criteria,
             or CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) observables.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or

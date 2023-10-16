@@ -18,7 +18,7 @@ import itertools
 import math
 import numbers
 from copy import deepcopy
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 import numpy as np
 
@@ -29,8 +29,8 @@ from braket.circuits.quantum_operator_helpers import (
     is_hermitian,
     verify_quantum_operator_matrix_dimensions,
 )
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.registers.qubit_set import QubitSet
 
 
 class H(StandardObservable):
@@ -46,7 +46,7 @@ class H(StandardObservable):
     def _unscaled(self) -> StandardObservable:
         return H()
 
-    def _to_jaqcd(self) -> List[str]:
+    def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
             raise ValueError("Observable coefficients not supported with Jaqcd")
         return ["h"]
@@ -67,7 +67,7 @@ class H(StandardObservable):
         )
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return tuple([Gate.Ry(-math.pi / 4)])
 
 
@@ -87,7 +87,7 @@ class I(Observable):  # noqa: E742, E261
     def _unscaled(self) -> Observable:
         return I()
 
-    def _to_jaqcd(self) -> List[str]:
+    def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
             raise ValueError("Observable coefficients not supported with Jaqcd")
         return ["i"]
@@ -106,7 +106,7 @@ class I(Observable):  # noqa: E742, E261
         return self.coefficient * np.eye(2, dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return ()
 
     @property
@@ -137,7 +137,7 @@ class X(StandardObservable):
     def _unscaled(self) -> StandardObservable:
         return X()
 
-    def _to_jaqcd(self) -> List[str]:
+    def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
             raise ValueError("Observable coefficients not supported with Jaqcd")
         return ["x"]
@@ -156,7 +156,7 @@ class X(StandardObservable):
         return self.coefficient * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return tuple([Gate.H()])
 
 
@@ -176,7 +176,7 @@ class Y(StandardObservable):
     def _unscaled(self) -> StandardObservable:
         return Y()
 
-    def _to_jaqcd(self) -> List[str]:
+    def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
             raise ValueError("Observable coefficients not supported with Jaqcd")
         return ["y"]
@@ -195,7 +195,7 @@ class Y(StandardObservable):
         return self.coefficient * np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return tuple([Gate.Z(), Gate.S(), Gate.H()])
 
 
@@ -215,7 +215,7 @@ class Z(StandardObservable):
     def _unscaled(self) -> StandardObservable:
         return Z()
 
-    def _to_jaqcd(self) -> List[str]:
+    def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
             raise ValueError("Observable coefficients not supported with Jaqcd")
         return ["z"]
@@ -234,7 +234,7 @@ class Z(StandardObservable):
         return self.coefficient * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return ()
 
 
@@ -244,10 +244,10 @@ Observable.register_observable(Z)
 class TensorProduct(Observable):
     """Tensor product of observables"""
 
-    def __init__(self, observables: List[Observable]):
+    def __init__(self, observables: list[Observable]):
         """
         Args:
-            observables (List[Observable]): List of observables for tensor product
+            observables (list[Observable]): List of observables for tensor product
 
         Examples:
             >>> t1 = Observable.Y() @ Observable.X()
@@ -295,7 +295,7 @@ class TensorProduct(Observable):
         self._all_eigenvalues = None
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
+    def ascii_symbols(self) -> tuple[str, ...]:
         return tuple(
             f"{self.coefficient if self.coefficient != 1 else ''}"
             f"{'@'.join([obs.ascii_symbols[0] for obs in self.factors])}"
@@ -307,7 +307,7 @@ class TensorProduct(Observable):
         copied._coef = 1
         return copied
 
-    def _to_jaqcd(self) -> List[str]:
+    def _to_jaqcd(self) -> list[str]:
         if self.coefficient != 1:
             raise ValueError("Observable coefficients not supported with Jaqcd")
         ir = []
@@ -336,8 +336,8 @@ class TensorProduct(Observable):
         return f"{coef_prefix}{' @ '.join(factors)}"
 
     @property
-    def factors(self) -> Tuple[Observable, ...]:
-        """Tuple[Observable]: The observables that comprise this tensor product."""
+    def factors(self) -> tuple[Observable, ...]:
+        """tuple[Observable]: The observables that comprise this tensor product."""
         return self._factors
 
     def to_matrix(self) -> np.ndarray:
@@ -346,10 +346,10 @@ class TensorProduct(Observable):
         )
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
         Returns:
-            Tuple[Gate, ...]: The basis rotation gates for this observable.
+            tuple[Gate, ...]: The basis rotation gates for this observable.
         """
         gates = []
         for obs in self.factors:
@@ -404,7 +404,7 @@ class TensorProduct(Observable):
         return self.matrix_equivalence(other)
 
     @staticmethod
-    def _compute_eigenvalues(observables: Tuple[Observable], num_qubits: int) -> np.ndarray:
+    def _compute_eigenvalues(observables: tuple[Observable], num_qubits: int) -> np.ndarray:
         if False in [isinstance(observable, StandardObservable) for observable in observables]:
             # Tensor product of observables contains a mixture
             # of standard and non-standard observables
@@ -431,10 +431,10 @@ Observable.register_observable(TensorProduct)
 class Sum(Observable):
     """Sum of observables"""
 
-    def __init__(self, observables: List[Observable], display_name: str = "Hamiltonian"):
+    def __init__(self, observables: list[Observable], display_name: str = "Hamiltonian"):
         """
         Args:
-            observables (List[Observable]): List of observables for Sum
+            observables (list[Observable]): List of observables for Sum
             display_name (str): Name to use for an instance of this Sum
                 observable for circuit diagrams. Defaults to `Hamiltonian`.
 
@@ -465,13 +465,13 @@ class Sum(Observable):
             return sum_copy
         raise TypeError("Observable coefficients must be numbers.")
 
-    def _to_jaqcd(self) -> List[str]:
+    def _to_jaqcd(self) -> list[str]:
         raise NotImplementedError("Sum Observable is not supported in Jaqcd")
 
     def _to_openqasm(
         self,
         serialization_properties: OpenQASMSerializationProperties,
-        target: List[QubitSet] = None,
+        target: list[QubitSet] = None,
     ) -> str:
         if len(self.summands) != len(target):
             raise ValueError(
@@ -493,15 +493,15 @@ class Sum(Observable):
         ).replace("+ -", "- ")
 
     @property
-    def summands(self) -> Tuple[Observable, ...]:
-        """Tuple[Observable]: The observables that comprise this sum."""
+    def summands(self) -> tuple[Observable, ...]:
+        """tuple[Observable]: The observables that comprise this sum."""
         return self._summands
 
     def to_matrix(self) -> np.ndarray:
         raise NotImplementedError("Matrix operation is not supported for Sum")
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         raise NotImplementedError("Basis rotation calculation not supported for Sum")
 
     @property
@@ -518,7 +518,7 @@ class Sum(Observable):
         return repr(self) == repr(other)
 
     @staticmethod
-    def _compute_eigenvalues(observables: Tuple[Observable], num_qubits: int) -> np.ndarray:
+    def _compute_eigenvalues(observables: tuple[Observable], num_qubits: int) -> np.ndarray:
         raise NotImplementedError("Eigenvalue calculation not supported for Sum")
 
 
@@ -563,7 +563,7 @@ class Hermitian(Observable):
     def _unscaled(self) -> Observable:
         return Hermitian(matrix=self._matrix, display_name=self.ascii_symbols[0])
 
-    def _to_jaqcd(self) -> List[List[List[List[float]]]]:
+    def _to_jaqcd(self) -> list[list[list[list[float]]]]:
         if self.coefficient != 1:
             raise ValueError("Observable coefficients not supported with Jaqcd")
         return [
@@ -598,7 +598,7 @@ class Hermitian(Observable):
         return self.matrix_equivalence(other)
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         return self._diagonalizing_gates
 
     @property
@@ -613,7 +613,7 @@ class Hermitian(Observable):
         return self._eigenvalues[index]
 
     @staticmethod
-    def _get_eigendecomposition(matrix: np.ndarray) -> Dict[str, np.ndarray]:
+    def _get_eigendecomposition(matrix: np.ndarray) -> dict[str, np.ndarray]:
         """
         Decomposes the Hermitian matrix into its eigenvectors and associated eigenvalues.
         The eigendecomposition is cached so that if another Hermitian observable
@@ -624,7 +624,7 @@ class Hermitian(Observable):
             matrix (ndarray): The Hermitian matrix.
 
         Returns:
-            Dict[str, ndarray]: The keys are "eigenvectors_conj_t", mapping to the
+            dict[str, ndarray]: The keys are "eigenvectors_conj_t", mapping to the
             conjugate transpose of a matrix whose columns are the eigenvectors of the matrix,
             and "eigenvalues", a list of associated eigenvalues in the order of their
             corresponding eigenvectors in the "eigenvectors" matrix. These cached values
@@ -648,13 +648,13 @@ class Hermitian(Observable):
 Observable.register_observable(Hermitian)
 
 
-def observable_from_ir(ir_observable: List[Union[str, List[List[List[float]]]]]) -> Observable:
+def observable_from_ir(ir_observable: list[Union[str, list[list[list[float]]]]]) -> Observable:
     """
     Create an observable from the IR observable list. This can be a tensor product of
     observables or a single observable.
 
     Args:
-        ir_observable (List[Union[str, List[List[List[float]]]]]): observable as defined in IR
+        ir_observable (list[Union[str, list[list[list[float]]]]]): observable as defined in IR
 
     Returns:
         Observable: observable object
@@ -666,7 +666,7 @@ def observable_from_ir(ir_observable: List[Union[str, List[List[List[float]]]]])
         return observable
 
 
-def _observable_from_ir_list_item(observable: Union[str, List[List[List[float]]]]) -> Observable:
+def _observable_from_ir_list_item(observable: Union[str, list[list[list[float]]]]) -> Observable:
     if observable == "i":
         return I()
     elif observable == "h":

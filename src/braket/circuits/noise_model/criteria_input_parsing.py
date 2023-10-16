@@ -11,15 +11,16 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Iterable, Optional, Set, Tuple, Union
+from collections.abc import Iterable
+from typing import Optional, Union
 
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit_set import QubitSetInput
+from braket.registers.qubit_set import QubitSetInput
 
 
 def parse_operator_input(
     operators: Union[QuantumOperator, Iterable[QuantumOperator]]
-) -> Optional[Set[QuantumOperator]]:
+) -> Optional[set[QuantumOperator]]:
     """
     Processes the quantum operator input to __init__ to validate and return a set of
     QuantumOperators.
@@ -28,7 +29,7 @@ def parse_operator_input(
         operators (Union[QuantumOperator, Iterable[QuantumOperator]]): QuantumOperator input.
 
     Returns:
-        Optional[Set[QuantumOperator]]: The set of relevant QuantumOperators or None if none
+        Optional[set[QuantumOperator]]: The set of relevant QuantumOperators or None if none
         is specified.
 
     Throws:
@@ -47,7 +48,7 @@ def parse_operator_input(
 
 def parse_qubit_input(
     qubits: Optional[QubitSetInput], expected_qubit_count: Optional[int] = 0
-) -> Optional[Set[Union[int, Tuple[int]]]]:
+) -> Optional[set[Union[int, tuple[int]]]]:
     """
     Processes the qubit input to __init__ to validate and return a set of qubit targets.
 
@@ -58,7 +59,7 @@ def parse_qubit_input(
             expected qubit count matches the actual qubit count. Default is 0.
 
     Returns:
-        Optional[Set[Union[int, Tuple[int]]]]: The set of qubit targets, or None if no qubits
+        Optional[set[Union[int, tuple[int]]]]: The set of qubit targets, or None if no qubits
         are specified.
     """
     if qubits is None:

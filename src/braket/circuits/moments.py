@@ -13,26 +13,16 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
+from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from enum import Enum
-from typing import (
-    Any,
-    Dict,
-    ItemsView,
-    Iterable,
-    KeysView,
-    List,
-    Mapping,
-    NamedTuple,
-    OrderedDict,
-    Union,
-    ValuesView,
-)
+from typing import Any, NamedTuple, Union
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
-from braket.circuits.qubit import Qubit
-from braket.circuits.qubit_set import QubitSet
+from braket.registers.qubit import Qubit
+from braket.registers.qubit_set import QubitSet
 
 
 class MomentType(str, Enum):
@@ -112,7 +102,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
 
     def __init__(self, instructions: Iterable[Instruction] = None):
         self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
-        self._max_times: Dict[Qubit, int] = {}
+        self._max_times: dict[Qubit, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
         self._time_all_qubits = -1
@@ -141,12 +131,12 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """
         return self._qubits
 
-    def time_slices(self) -> Dict[int, List[Instruction]]:
+    def time_slices(self) -> dict[int, list[Instruction]]:
         """
         Get instructions keyed by time.
 
         Returns:
-            Dict[int, List[Instruction]]: Key is the time and value is a list of instructions that
+            dict[int, list[Instruction]]: Key is the time and value is a list of instructions that
             occur at that moment in time. The order of instructions is in no particular order.
 
         Note:

@@ -17,13 +17,14 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import boto3
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import QuantumTaskQueueInfo, QueueType
 from braket.circuits import Instruction
 from braket.circuits.circuit import Circuit, Gate, QubitSet
 from braket.circuits.circuit_helpers import validate_circuit_and_shots
@@ -99,11 +100,11 @@ class AwsQuantumTask(QuantumTask):
         ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
-        device_parameters: Dict[str, Any] = None,
+        device_parameters: dict[str, Any] = None,
         disable_qubit_rewiring: bool = False,
-        tags: Dict[str, str] = None,
-        inputs: Dict[str, float] = None,
-        gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]] = None,
+        tags: dict[str, str] = None,
+        inputs: dict[str, float] = None,
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -128,7 +129,7 @@ class AwsQuantumTask(QuantumTask):
                 `shots=0` is only available on simulators and means that the simulator
                 will compute the exact results based on the quantum task specification.
 
-            device_parameters (Dict[str, Any]): Additional parameters to send to the device.
+            device_parameters (dict[str, Any]): Additional parameters to send to the device.
 
             disable_qubit_rewiring (bool): Whether to run the circuit with the exact qubits chosen,
                 without any rewiring downstream, if this is supported by the device.
@@ -136,15 +137,15 @@ class AwsQuantumTask(QuantumTask):
                 If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
                 Default: False
 
-            tags (Dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
+            tags (dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
                 An example would be:
                 `{"state": "washington"}`
 
-            inputs (Dict[str, float]): Inputs to be passed along with the
+            inputs (dict[str, float]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            gate_definitions (Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]]):
+            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]):
                 A `Dict` for user defined gate calibration. The calibration is defined for
                 for a particular `Gate` on a particular `QubitSet` and is represented by
                 a `PulseSequence`.
@@ -240,7 +241,7 @@ class AwsQuantumTask(QuantumTask):
 
         self._logger = logger
 
-        self._metadata: Dict[str, Any] = {}
+        self._metadata: dict[str, Any] = {}
         self._result: Union[
             GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
         ] = None
@@ -277,7 +278,7 @@ class AwsQuantumTask(QuantumTask):
         self._cancel_future()
         self._aws_session.cancel_quantum_task(self._arn)
 
-    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """
         Get quantum task metadata defined in Amazon Braket.
 
@@ -287,7 +288,7 @@ class AwsQuantumTask(QuantumTask):
                 `GetQuantumTask` will be called to retrieve the metadata. If `False`, always calls
                 `GetQuantumTask`, which also updates the cached value. Default: `False`.
         Returns:
-            Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
+            dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
             retrieved value is used, unless `GetQuantumTask` was never called, in which case
             it wil still be called to populate the metadata for the first time.
@@ -313,6 +314,40 @@ class AwsQuantumTask(QuantumTask):
             `metadata()`
         """
         return self._status(use_cached_value)
+
+    def queue_position(self) -> QuantumTaskQueueInfo:
+        """
+        The queue position details for the quantum task.
+
+        Returns:
+            QuantumTaskQueueInfo: Instance of QuantumTaskQueueInfo class
+            representing the queue position information for the quantum task.
+            The queue_position is only returned when quantum task is not in
+            RUNNING/CANCELLING/TERMINAL states, else queue_position is returned as None.
+            The normal tasks refers to the quantum tasks not submitted via Hybrid Jobs.
+            Whereas, the priority tasks refers to the total number of quantum tasks waiting to run
+            submitted through Amazon Braket Hybrid Jobs. These tasks run before the normal tasks.
+            If the queue position for normal or priority quantum tasks is greater than 2000,
+            we display their respective queue position as '>2000'.
+
+        Examples:
+            task status = QUEUED and queue position is 2050
+            >>> task.queue_position()
+            QuantumTaskQueueInfo(queue_type=<QueueType.NORMAL: 'Normal'>,
+            queue_position='>2000', message=None)
+
+            task status = COMPLETED
+            >>> task.queue_position()
+            QuantumTaskQueueInfo(queue_type=<QueueType.NORMAL: 'Normal'>,
+            queue_position=None, message='Task is in COMPLETED status. AmazonBraket does
+            not show queue position for this status.')
+        """
+        response = self.metadata()["queueInfo"]
+        queue_type = QueueType(response["queuePriority"])
+        queue_position = None if response.get("position") == "None" else response.get("position")
+        message = response.get("message")
+
+        return QuantumTaskQueueInfo(queue_type, queue_position, message)
 
     def _status(self, use_cached_value: bool = False) -> str:
         metadata = self.metadata(use_cached_value)
@@ -479,12 +514,12 @@ class AwsQuantumTask(QuantumTask):
 def _create_internal(
     task_specification: Union[Circuit, Problem, BlackbirdProgram],
     aws_session: AwsSession,
-    create_task_kwargs: Dict[str, Any],
+    create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
-    inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -495,12 +530,12 @@ def _create_internal(
 def _(
     pulse_sequence: PulseSequence,
     aws_session: AwsSession,
-    create_task_kwargs: Dict[str, Any],
+    create_task_kwargs: dict[str, Any],
     device_arn: str,
     _device_parameters: Union[dict, BraketSchemaBase],  # Not currently used for OpenQasmProgram
     _disable_qubit_rewiring: bool,
-    inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -513,12 +548,12 @@ def _(
 def _(
     openqasm_program: OpenQASMProgram,
     aws_session: AwsSession,
-    create_task_kwargs: Dict[str, Any],
+    create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
-    inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -552,12 +587,12 @@ def _(
 def _(
     blackbird_program: BlackbirdProgram,
     aws_session: AwsSession,
-    create_task_kwargs: Dict[str, any],
+    create_task_kwargs: dict[str, any],
     device_arn: str,
     _device_parameters: Union[dict, BraketSchemaBase],
     _disable_qubit_rewiring: bool,
-    inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -570,12 +605,12 @@ def _(
 def _(
     circuit: Circuit,
     aws_session: AwsSession,
-    create_task_kwargs: Dict[str, Any],
+    create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: Union[dict, BraketSchemaBase],
     disable_qubit_rewiring: bool,
-    inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -633,7 +668,7 @@ def _(
 def _(
     problem: Problem,
     aws_session: AwsSession,
-    create_task_kwargs: Dict[str, Any],
+    create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: Union[
         dict,
@@ -642,8 +677,8 @@ def _(
         Dwave2000QDeviceParameters,
     ],
     _,
-    inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -663,12 +698,12 @@ def _(
 def _(
     analog_hamiltonian_simulation: AnalogHamiltonianSimulation,
     aws_session: AwsSession,
-    create_task_kwargs: Dict[str, Any],
+    create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: dict,
     _,
-    inputs: Dict[str, float],
-    gate_definitions: Optional[Dict[Tuple[Gate, QubitSet], PulseSequence]],
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
@@ -697,12 +732,12 @@ def _circuit_device_params_from_dict(
 
 
 def _create_annealing_device_params(
-    device_params: Dict[str, Any], device_arn: str
+    device_params: dict[str, Any], device_arn: str
 ) -> Union[DwaveAdvantageDeviceParameters, Dwave2000QDeviceParameters]:
     """Gets Annealing Device Parameters.
 
     Args:
-        device_params (Dict[str, Any]): Additional parameters for the device.
+        device_params (dict[str, Any]): Additional parameters for the device.
         device_arn (str): The ARN of the quantum device.
 
     Returns:
@@ -739,7 +774,7 @@ def _create_annealing_device_params(
 
 def _create_common_params(
     device_arn: str, s3_destination_folder: AwsSession.S3DestinationFolder, shots: int
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     return {
         "deviceArn": device_arn,
         "outputS3Bucket": s3_destination_folder[0],

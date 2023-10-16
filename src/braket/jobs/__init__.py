@@ -23,4 +23,12 @@ from braket.jobs.data_persistence import (  # noqa: F401
     save_job_checkpoint,
     save_job_result,
 )
+from braket.jobs.environment_variables import (  # noqa: F401
+    get_checkpoint_dir,
+    get_hyperparameters,
+    get_input_data_dir,
+    get_job_device_arn,
+    get_job_name,
+    get_results_dir,
+)
 from braket.jobs.image_uris import Framework, retrieve_image  # noqa: F401

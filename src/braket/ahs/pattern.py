@@ -15,22 +15,21 @@ from __future__ import annotations
 
 from decimal import Decimal
 from numbers import Number
-from typing import List
 
 
 class Pattern:
-    def __init__(self, series: List[Number]):
+    def __init__(self, series: list[Number]):
         """Represents the spatial dependence of a Field.
 
         Args:
-            series (List[Number]): A series of numbers representing the the local
+            series (list[Number]): A series of numbers representing the the local
                 pattern of real numbers.
         """
         self._series = series
 
     @property
-    def series(self) -> List[Number]:
-        """List[Number]: A series of numbers representing the local
+    def series(self) -> list[Number]:
+        """list[Number]: A series of numbers representing the local
         pattern of real numbers."""
         return self._series
 

@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import math
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from oqpy import FrameVar as OQFrame
 from oqpy.base import OQPyExpression
@@ -33,7 +33,7 @@ class Frame:
         frequency: float,
         phase: float = 0,
         is_predefined: bool = False,
-        properties: Optional[Dict[str, Any]] = None,
+        properties: Optional[dict[str, Any]] = None,
     ):
         """
         Args:
@@ -43,7 +43,7 @@ class Frame:
             phase (float): phase to which this frame should be initialized. Defaults to 0.
             is_predefined (bool): bool indicating whether this is a predefined frame on
                 the device. Defaults to False.
-            properties (Optional[Dict[str, Any]]): Dict containing properties of this frame.
+            properties (Optional[dict[str, Any]]): Dict containing properties of this frame.
                 Defaults to None.
         """
         self._frame_id = frame_id
