@@ -264,12 +264,10 @@ def _serialize_entry_point(entry_point: Callable, args: tuple, kwargs: dict) -> 
         serialized = cloudpickle.dumps(wrapped_entry_point)
     except Exception as e:
         raise RuntimeError(
-            "Serialization failed for decorator hybrid job. For troubleshooting, "
-            "see the developer guide: #todo: link to docs with info as below"
-            # "Serialization failed for decorator hybrid job. If you are referencing "
-            # "an object from outside the function scope, either directly or through "
-            # "function parameters, try instantiating the object inside the decorated "
-            # "function instead."
+            "Serialization failed for decorator hybrid job. If you are referencing "
+            "an object from outside the function scope, either directly or through "
+            "function parameters, try instantiating the object inside the decorated "
+            "function instead."
         ) from e
 
     return run_entry_point.format(

@@ -436,8 +436,10 @@ def test_serialization_error(aws_session):
         print(ssl_context)
 
     serialization_failed = (
-        "Serialization failed for decorator hybrid job. For troubleshooting, "
-        "see the developer guide: #todo: link to docs with info as below"
+        "Serialization failed for decorator hybrid job. If you are referencing "
+        "an object from outside the function scope, either directly or through "
+        "function parameters, try instantiating the object inside the decorated "
+        "function instead."
     )
     with pytest.raises(RuntimeError, match=serialization_failed):
         fails_serialization()
