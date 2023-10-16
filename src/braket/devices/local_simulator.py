@@ -108,7 +108,9 @@ class LocalSimulator(Device):
         self,
         task_specifications: Union[
             Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram],
-            list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]],
+            list[
+                Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]
+            ],
         ],
         shots: Optional[int] = 0,
         max_parallel: Optional[int] = None,
@@ -307,7 +309,7 @@ class LocalSimulator(Device):
         self,
         program: SerializableProgram,
         shots: Optional[int] = None,
-        inputs: Optional[Dict[str, float]] = None,
+        inputs: Optional[dict[str, float]] = None,
         *args,
         **kwargs,
     ):
