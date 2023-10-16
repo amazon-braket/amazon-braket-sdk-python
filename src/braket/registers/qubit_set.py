@@ -13,7 +13,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, Union
+from collections.abc import Iterable
+from typing import Any, Union
 
 from boltons.setutils import IndexedSet
 
@@ -65,13 +66,13 @@ class QubitSet(IndexedSet):
         _qubits = [Qubit.new(qubit) for qubit in _flatten(qubits)] if qubits is not None else None
         super().__init__(_qubits)
 
-    def map(self, mapping: Dict[QubitInput, QubitInput]) -> QubitSet:
+    def map(self, mapping: dict[QubitInput, QubitInput]) -> QubitSet:
         """
         Creates a new `QubitSet` where this instance's qubits are mapped to the values in `mapping`.
         If this instance contains a qubit that is not in the `mapping` that qubit is not modified.
 
         Args:
-            mapping (Dict[QubitInput, QubitInput]): A dictionary of qubit mappings to
+            mapping (dict[QubitInput, QubitInput]): A dictionary of qubit mappings to
                 apply. Key is the qubit in this instance to target, and the value is what
                 the key will be changed to.
 

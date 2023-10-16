@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import numpy as np
 from sympy import Expr
@@ -56,18 +56,18 @@ class BraketProgramContext(AbstractProgramContext):
         user_defined_gate = self.is_user_defined_gate(name)
         return name in BRAKET_GATES and not user_defined_gate
 
-    def add_phase_instruction(self, target: Tuple[int], phase_value: int) -> None:
+    def add_phase_instruction(self, target: tuple[int], phase_value: int) -> None:
         raise NotImplementedError
 
     def add_gate_instruction(
-        self, gate_name: str, target: Tuple[int], *params, ctrl_modifiers: List[int], power: float
+        self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
     ) -> None:
         """Add Braket gate to the circuit.
 
         Args:
             gate_name (str): name of the built-in Braket gate.
-            target (Tuple[int]): control_qubits + target_qubits.
-            ctrl_modifiers (List[int]): Quantum state on which to control the
+            target (tuple[int]): control_qubits + target_qubits.
+            ctrl_modifiers (list[int]): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control-qubits` in target. For example "0101", [0, 1, 0, 1], 5 all represent
                 controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
@@ -88,26 +88,26 @@ class BraketProgramContext(AbstractProgramContext):
     def add_custom_unitary(
         self,
         unitary: np.ndarray,
-        target: Tuple[int],
+        target: tuple[int],
     ) -> None:
         """Add a custom Unitary instruction to the circuit
 
         Args:
             unitary (np.ndarray): unitary matrix
-            target (Tuple[int]): control_qubits + target_qubits
+            target (tuple[int]): control_qubits + target_qubits
         """
         instruction = Instruction(Unitary(unitary), target)
         self._circuit.add_instruction(instruction)
 
     def add_noise_instruction(
-        self, noise_instruction: str, target: List[int], probabilities: List[float]
+        self, noise_instruction: str, target: list[int], probabilities: list[float]
     ) -> None:
         """Method to add a noise instruction to the circuit
 
         Args:
             noise_instruction (str): The name of the noise operation
-            target (List[int]): The target qubit or qubits to which the noise operation is applied.
-            probabilities (List[float]): The probabilities associated with each possible outcome
+            target (list[int]): The target qubit or qubits to which the noise operation is applied.
+            probabilities (list[float]): The probabilities associated with each possible outcome
                 of the noise operation.
         """
         instruction = Instruction(
@@ -115,12 +115,12 @@ class BraketProgramContext(AbstractProgramContext):
         )
         self._circuit.add_instruction(instruction)
 
-    def add_kraus_instruction(self, matrices: List[np.ndarray], target: List[int]) -> None:
+    def add_kraus_instruction(self, matrices: list[np.ndarray], target: list[int]) -> None:
         """Method to add a Kraus instruction to the circuit
 
         Args:
-            matrices (List[ndarray]): The matrices defining the Kraus operation
-            target (List[int]): The target qubit or qubits to which the Kraus operation is applied.
+            matrices (list[ndarray]): The matrices defining the Kraus operation
+            target (list[int]): The target qubit or qubits to which the Kraus operation is applied.
         """
         instruction = Instruction(Kraus(matrices), target)
         self._circuit.add_instruction(instruction)

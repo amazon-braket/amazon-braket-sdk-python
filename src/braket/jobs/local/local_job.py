@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import CheckpointConfig, OutputDataConfig, S3DataSourceConfig
@@ -43,8 +43,8 @@ class LocalQuantumJob(QuantumJob):
         job_name: str = None,
         code_location: str = None,
         role_arn: str = None,
-        hyperparameters: Dict[str, Any] = None,
-        input_data: Union[str, Dict, S3DataSourceConfig] = None,
+        hyperparameters: dict[str, Any] = None,
+        input_data: str | dict | S3DataSourceConfig = None,
         output_data_config: OutputDataConfig = None,
         checkpoint_config: CheckpointConfig = None,
         aws_session: AwsSession = None,
@@ -54,11 +54,12 @@ class LocalQuantumJob(QuantumJob):
         docker container.
 
         Args:
-            device (str): ARN for the AWS device which is primarily accessed for the execution
-                of this hybrid job. Alternatively, a string of the format
-                "local:<provider>/<simulator>" for using a local simulator for the hybrid job. This
-                string will be available as the environment variable `AMZN_BRAKET_DEVICE_ARN` inside
-                the hybrid job container when using a Braket container.
+            device (str): Device ARN of the QPU device that receives priority quantum
+                task queueing once the hybrid job begins running. Each QPU has a separate hybrid
+                jobs queue so that only one hybrid job is running at a time. The device string is
+                accessible in the hybrid job instance as the environment variable
+                "AMZN_BRAKET_DEVICE_ARN". When using embedded simulators, you may provide the device
+                argument as a string of the form: "local:<provider>/<simulator_name>".
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
@@ -84,12 +85,12 @@ class LocalQuantumJob(QuantumJob):
             role_arn (str): This field is currently not used for local hybrid jobs. Local hybrid
                 jobs will use the current role's credentials. This may be subject to change.
 
-            hyperparameters (Dict[str, Any]): Hyperparameters accessible to the hybrid job.
+            hyperparameters (dict[str, Any]): Hyperparameters accessible to the hybrid job.
                 The hyperparameters are made accessible as a Dict[str, str] to the hybrid job.
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data (Union[str, Dict, S3DataSourceConfig]): Information about the training
+            input_data (str | dict | S3DataSourceConfig): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
                 f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -213,7 +214,7 @@ class LocalQuantumJob(QuantumJob):
         """
         return "COMPLETED"
 
-    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """When running the hybrid job in local mode, the metadata is not available.
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
@@ -221,7 +222,7 @@ class LocalQuantumJob(QuantumJob):
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
         Returns:
-            Dict[str, Any]: None
+            dict[str, Any]: None
         """
         pass
 
@@ -255,7 +256,7 @@ class LocalQuantumJob(QuantumJob):
         self,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Retrieves the hybrid job result persisted using save_job_result() function.
 
         Args:
@@ -265,7 +266,7 @@ class LocalQuantumJob(QuantumJob):
                 Default: 5 seconds.
 
         Returns:
-            Dict[str, Any]: Dict specifying the hybrid job results.
+            dict[str, Any]: Dict specifying the hybrid job results.
         """
         try:
             with open(os.path.join(self.name, "results.json"), "r") as f:
@@ -281,7 +282,7 @@ class LocalQuantumJob(QuantumJob):
         self,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         """Gets all the metrics data, where the keys are the column names, and the values are a list
         containing the values in each row.
 
@@ -299,7 +300,7 @@ class LocalQuantumJob(QuantumJob):
             values may be integers, floats, strings or None.
 
         Returns:
-            Dict[str, List[Any]]: The metrics data.
+            dict[str, list[Any]]: The metrics data.
         """
         parser = LogMetricsParser()
         current_time = str(time.time())

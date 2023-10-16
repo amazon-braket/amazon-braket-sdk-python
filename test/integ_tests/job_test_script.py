@@ -51,3 +51,8 @@ def completed_job_script():
         save_job_checkpoint({"some_data": "abc"}, data_format=PersistedJobDataFormat.PICKLED_V4)
 
     print("Test job completed!!!!!")
+
+
+def job_helper():
+    print("import successful!")
+    return {"status": "SUCCESS"}

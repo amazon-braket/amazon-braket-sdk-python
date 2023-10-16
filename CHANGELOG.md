@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.58.0 (2023-10-16)
+
+### Features
+
+ * job decorator
+
+### Bug Fixes and Other Changes
+
+ * update integ test for non-py310
+
+## v1.57.2 (2023-10-11)
+
+### Bug Fixes and Other Changes
+
+ * Use builtins for type hints
+
+## v1.57.1 (2023-10-05)
+
+### Bug Fixes and Other Changes
+
+ * docs: fix helper docstring
+
 ## v1.57.0 (2023-10-04)
 
 ### Features

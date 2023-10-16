@@ -14,11 +14,12 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Iterator
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import Iterator, List, Union
+from typing import Union
 
 
 @dataclass
@@ -64,20 +65,20 @@ class TimeSeries:
             self._sorted = False
         return self
 
-    def times(self) -> List[Number]:
+    def times(self) -> list[Number]:
         """Returns the times in the time series.
 
         Returns:
-            List[Number]: The times in the time series.
+            list[Number]: The times in the time series.
         """
         self._ensure_sorted()
         return [item.time for item in self._series.values()]
 
-    def values(self) -> List[Number]:
+    def values(self) -> list[Number]:
         """Returns the values in the time series.
 
         Returns:
-            List[Number]: The values in the time series.
+            list[Number]: The values in the time series.
         """
         self._ensure_sorted()
         return [item.value for item in self._series.values()]
@@ -95,12 +96,12 @@ class TimeSeries:
             self._sorted = True
 
     @staticmethod
-    def from_lists(times: List[float], values: List[float]) -> TimeSeries:
+    def from_lists(times: list[float], values: list[float]) -> TimeSeries:
         """Create a time series from the list of time and value points
 
         Args:
-            times (List[float]): list of time points
-            values (List[float]): list of value points
+            times (list[float]): list of time points
+            values (list[float]): list of value points
 
         Returns:
             TimeSeries: time series constructed from lists
@@ -117,18 +118,18 @@ class TimeSeries:
         return ts
 
     @staticmethod
-    def constant_like(times: Union[List[float], TimeSeries], constant: float = 0.0) -> TimeSeries:
+    def constant_like(times: Union[list[float], TimeSeries], constant: float = 0.0) -> TimeSeries:
         """Obtain a constant time series given another time series or the list of time points,
         and the constant values
 
         Args:
-            times (Union[List[float], TimeSeries]): list of time points or a time series
+            times (Union[list[float], TimeSeries]): list of time points or a time series
             constant (float): constant value
 
         Returns:
             TimeSeries: A constant time series
         """
-        if not isinstance(times, List):
+        if not isinstance(times, list):
             times = times.times()
 
         ts = TimeSeries()
@@ -280,12 +281,12 @@ class TimeSeries:
         return discretized_ts
 
     @staticmethod
-    def periodic_signal(times: List[float], values: List[float], num_repeat: int = 1) -> TimeSeries:
+    def periodic_signal(times: list[float], values: list[float], num_repeat: int = 1) -> TimeSeries:
         """Create a periodic time series by repeating the same block multiple times.
 
         Args:
-            times (List[float]): List of time points in a single block
-            values (List[float]): Values for the time series in a single block
+            times (list[float]): List of time points in a single block
+            values (list[float]): Values for the time series in a single block
             num_repeat (int): Number of block repeatitions
 
         Returns:

@@ -13,8 +13,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from oqpy import Program
@@ -68,7 +69,7 @@ class H(Gate):
     def _qasm_name(self) -> str:
         return "h"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [H()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -133,7 +134,7 @@ class I(Gate):  # noqa: E742, E261
     def _qasm_name(self) -> str:
         return "i"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [I()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -198,7 +199,7 @@ class X(Gate):
     def _qasm_name(self) -> str:
         return "x"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [X()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -263,7 +264,7 @@ class Y(Gate):
     def _qasm_name(self) -> str:
         return "y"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Y()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -328,7 +329,7 @@ class Z(Gate):
     def _qasm_name(self) -> str:
         return "z"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Z()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -393,7 +394,7 @@ class S(Gate):
     def _qasm_name(self) -> str:
         return "s"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Si()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -458,7 +459,7 @@ class Si(Gate):
     def _qasm_name(self) -> str:
         return "si"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [S()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -523,7 +524,7 @@ class T(Gate):
     def _qasm_name(self) -> str:
         return "t"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Ti()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -588,7 +589,7 @@ class Ti(Gate):
     def _qasm_name(self) -> str:
         return "ti"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [T()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -653,7 +654,7 @@ class V(Gate):
     def _qasm_name(self) -> str:
         return "v"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Vi()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -718,7 +719,7 @@ class Vi(Gate):
     def _qasm_name(self) -> str:
         return "vi"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [V()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1103,7 +1104,7 @@ class CNot(Gate):
     def _qasm_name(self) -> str:
         return "cnot"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CNot()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1163,7 +1164,7 @@ class Swap(Gate):
     def _qasm_name(self) -> str:
         return "swap"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Swap()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1238,7 +1239,7 @@ class ISwap(Gate):
     def _qasm_name(self) -> str:
         return "iswap"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [self, self, self]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1773,7 +1774,7 @@ class CV(Gate):
     def _qasm_name(self) -> str:
         return "cv"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [self, self, self]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1833,7 +1834,7 @@ class CY(Gate):
     def _qasm_name(self) -> str:
         return "cy"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CY()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1893,7 +1894,7 @@ class CZ(Gate):
     def _qasm_name(self) -> str:
         return "cz"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CZ()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1945,7 +1946,7 @@ class ECR(Gate):
     def _qasm_name(self) -> str:
         return "ecr"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [ECR()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2304,7 +2305,7 @@ class CCNot(Gate):
     def _qasm_name(self) -> str:
         return "ccnot"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CCNot()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2387,7 +2388,7 @@ class CSwap(Gate):
     def _qasm_name(self) -> str:
         return "cswap"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CSwap()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2476,7 +2477,7 @@ class GPi(AngledGate):
             ]
         )
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [GPi(self.angle)]
 
     @staticmethod
@@ -2555,7 +2556,7 @@ class GPi2(AngledGate):
             ]
         ) / np.sqrt(2)
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [GPi2(self.angle + np.pi)]
 
     @staticmethod
@@ -2665,7 +2666,7 @@ class MS(TripleAngledGate):
             ]
         )
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [MS(self.angle_1 + np.pi, self.angle_2, self.angle_3)]
 
     @staticmethod
@@ -2754,7 +2755,7 @@ class Unitary(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array(self._matrix)
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Unitary(self._matrix.conj().T, display_name=f"({self.ascii_symbols})^†")]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2785,7 +2786,7 @@ class Unitary(Gate):
         return hash((self.name, str(self._matrix), self.qubit_count))
 
     @staticmethod
-    def _transform_matrix_to_ir(matrix: np.ndarray) -> List:
+    def _transform_matrix_to_ir(matrix: np.ndarray) -> list:
         return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]
 
     @staticmethod
@@ -2847,7 +2848,7 @@ class PulseGate(Gate, Parameterizable):
         return self._pulse_sequence
 
     @property
-    def parameters(self) -> List[FreeParameter]:
+    def parameters(self) -> list[FreeParameter]:
         """Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 

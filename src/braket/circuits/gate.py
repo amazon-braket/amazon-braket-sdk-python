@@ -13,8 +13,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from itertools import groupby
-from typing import Any, List, Optional, Sequence, Tuple, Type
+from typing import Any, Optional
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.quantum_operator import QuantumOperator
@@ -55,13 +56,13 @@ class Gate(QuantumOperator):
     def _qasm_name(self) -> NotImplementedError:
         raise NotImplementedError()
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         """Returns a list of gates that implement the adjoint of this gate.
 
         This is a list because some gates do not have an inverse defined by a single existing gate.
 
         Returns:
-            List[Gate]: The gates comprising the adjoint of this gate.
+            list[Gate]: The gates comprising the adjoint of this gate.
         """
         raise NotImplementedError(f"Gate {self.name} does not have adjoint implemented")
 
@@ -200,8 +201,8 @@ class Gate(QuantumOperator):
         )
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        """Tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
+    def ascii_symbols(self) -> tuple[str, ...]:
+        """tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
         return self._ascii_symbols
 
     def __eq__(self, other):
@@ -214,10 +215,10 @@ class Gate(QuantumOperator):
         return hash((self.name, self.qubit_count))
 
     @classmethod
-    def register_gate(cls, gate: Type[Gate]) -> None:
+    def register_gate(cls, gate: type[Gate]) -> None:
         """Register a gate implementation by adding it into the Gate class.
 
         Args:
-            gate (Type[Gate]): Gate class to register.
+            gate (type[Gate]): Gate class to register.
         """
         setattr(cls, gate.__name__, gate)

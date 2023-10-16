@@ -15,8 +15,9 @@ from __future__ import annotations
 
 import copy
 import math
+from collections.abc import Sequence
 from functools import singledispatch
-from typing import List, Optional, Sequence, Union
+from typing import Optional, Union
 
 from sympy import Float
 
@@ -61,13 +62,13 @@ class AngledGate(Gate, Parameterizable):
             self._parameters = [float(angle)]  # explicit casting in case angle is e.g. np.float32
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameters or
         bound values.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
+            list[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return self._parameters
@@ -93,11 +94,11 @@ class AngledGate(Gate, Parameterizable):
         """
         raise NotImplementedError
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         """Returns the adjoint of this gate as a singleton list.
 
         Returns:
-            List[Gate]: A list containing the gate with negated angle.
+            list[Gate]: A list containing the gate with negated angle.
         """
         gate_ascii_name_index = self.ascii_symbols[0].find("(")
         gate_ascii_name = self.ascii_symbols[0][:gate_ascii_name_index]
@@ -166,13 +167,13 @@ class DoubleAngledGate(Gate, Parameterizable):
         ]
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameters or
         bound values.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
+            list[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return self._parameters
@@ -212,11 +213,11 @@ class DoubleAngledGate(Gate, Parameterizable):
         """
         raise NotImplementedError
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         """Returns the adjoint of this gate as a singleton list.
 
         Returns:
-            List[Gate]: A list containing the gate with negated angle.
+            list[Gate]: A list containing the gate with negated angle.
         """
         raise NotImplementedError
 
@@ -285,13 +286,13 @@ class TripleAngledGate(Gate, Parameterizable):
         ]
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameters or
         bound values.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameters or fixed value
+            list[Union[FreeParameterExpression, float]]: The free parameters or fixed value
             associated with the object.
         """
         return self._parameters
@@ -341,11 +342,11 @@ class TripleAngledGate(Gate, Parameterizable):
         """
         raise NotImplementedError
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         """Returns the adjoint of this gate as a singleton list.
 
         Returns:
-            List[Gate]: A list containing the gate with negated angle.
+            list[Gate]: A list containing the gate with negated angle.
         """
         raise NotImplementedError
 
