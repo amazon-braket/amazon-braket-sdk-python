@@ -27,7 +27,7 @@ from braket.parametric.free_parameter_expression import (
 class _FreeParameterTransformer(QASMTransformer):
     """Walk the AST and evaluate FreeParameterExpressions."""
 
-    def __init__(self, param_values: dict[str, float]):
+    def __init__(self, param_values: dict[str, float], program: Program):
         self.param_values = param_values
         self.program = program
         super().__init__()

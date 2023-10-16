@@ -43,7 +43,7 @@ class FreeParameterExpression:
     def __init__(
         self,
         expression: Union[FreeParameterExpression, Number, Expr, str],
-        _type: Optional[ClassicalType] = None,
+        _type: ClassicalType | None = None,
     ):
         """
         Initializes a FreeParameterExpression. Best practice is to initialize using
@@ -53,7 +53,7 @@ class FreeParameterExpression:
 
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
-            _type (Optional[ClassicalType]): The OpenQASM3 type associated with the expression.
+            _type (ClassicalType | None): The OpenQASM3 type associated with the expression.
                 Subtypes of openqasm3.ast.ClassicalType are used to specify how to express the
                 expression in the OpenQASM3 IR. Any type other than DurationType is considered
                 as FloatType.

@@ -1247,7 +1247,7 @@ class Circuit:
         self,
         gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence],
         frames: dict[Frame],
-        waveforms: dict[ArbitraryWaveform],
+        waveforms: dict[Waveform],
     ) -> None:
         for key, calibration in gate_definitions.items():
             for frame in calibration._frames.values():
@@ -1305,7 +1305,7 @@ class Circuit:
 
     def _get_frames_waveforms_from_instrs(
         self, gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]]
-    ) -> tuple[dict[Frame], dict[ArbitraryWaveform]]:
+    ) -> tuple[dict[Frame], dict[Waveform]]:
         from braket.circuits.gates import PulseGate
 
         frames = {}
