@@ -17,7 +17,6 @@ import csv
 import io
 import os
 from functools import lru_cache
-from typing import Dict, List
 
 import urllib3
 
@@ -55,10 +54,10 @@ class Pricing:
         self._price_list = list(csv.DictReader(text_response))
 
     @lru_cache()
-    def price_search(self, **kwargs) -> List[Dict[str, str]]:
+    def price_search(self, **kwargs) -> list[dict[str, str]]:
         """Searches the price list for a given set of parameters.
         Returns:
-            List[Dict[str, str]]: The price list.
+            list[dict[str, str]]: The price list.
         """
         if not self._price_list:
             self.get_prices()

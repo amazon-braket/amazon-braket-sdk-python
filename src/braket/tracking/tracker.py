@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import timedelta
 from decimal import Decimal
 from functools import singledispatchmethod
-from typing import Any, Dict, List
+from typing import Any
 
 from braket.tracking.pricing import price_search
 from braket.tracking.tracking_context import deregister_tracker, register_tracker
@@ -66,12 +66,12 @@ class Tracker:
         """
         self._recieve_internal(event)
 
-    def tracked_resources(self) -> List[str]:
+    def tracked_resources(self) -> list[str]:
         """
         Resources tracked by this tracker.
 
         Returns:
-            List[str]: The list of quantum task ids for quantum tasks tracked by this tracker.
+            list[str]: The list of quantum task ids for quantum tasks tracked by this tracker.
         """
         return list(self._resources.keys())
 
@@ -117,12 +117,12 @@ class Tracker:
                 total_cost = total_cost + _get_simulator_task_cost(task_arn, details)
         return total_cost
 
-    def quantum_tasks_statistics(self) -> Dict[str, Dict[str, Any]]:
+    def quantum_tasks_statistics(self) -> dict[str, dict[str, Any]]:
         """
         Get a summary of quantum tasks grouped by device.
 
         Returns:
-            Dict[str,Dict[str,Any]] : A dictionary where each key is a device arn, and maps to
+            dict[str,dict[str,Any]] : A dictionary where each key is a device arn, and maps to
             a dictionary sumarizing the quantum tasks run on the device. The summary includes the
             total shots sent to the device and the most recent status of the quantum tasks
             created on this device. For finished quantum tasks on simulator devices, the summary

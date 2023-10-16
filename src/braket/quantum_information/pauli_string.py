@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from braket.circuits.circuit import Circuit
 from braket.circuits.observables import TensorProduct, X, Y, Z
@@ -86,7 +86,7 @@ class PauliString:
             [_PAULI_OBSERVABLES[self._nontrivial[qubit]] for qubit in sorted(self._nontrivial)]
         )
 
-    def weight_n_substrings(self, weight: int) -> Tuple[PauliString, ...]:
+    def weight_n_substrings(self, weight: int) -> tuple[PauliString, ...]:
         r"""Returns every substring of this Pauli string with exactly `weight` nontrivial factors.
 
         The number of substrings is equal to :math:`\binom{n}{w}`, where :math`n` is the number of
@@ -96,7 +96,7 @@ class PauliString:
             weight (int): The number of non-identity factors in the substrings.
 
         Returns:
-            Tuple[PauliString, ...]: A tuple of weight-n Pauli substrings.
+            tuple[PauliString, ...]: A tuple of weight-n Pauli substrings.
         """
         substrings = []
         for indices in itertools.combinations(self._nontrivial, weight):
@@ -111,7 +111,7 @@ class PauliString:
             )
         return tuple(substrings)
 
-    def eigenstate(self, signs: Optional[Union[str, List[int], Tuple[int, ...]]] = None) -> Circuit:
+    def eigenstate(self, signs: Optional[Union[str, list[int], tuple[int, ...]]] = None) -> Circuit:
         """Returns the eigenstate of this Pauli string with the given factor signs.
 
         The resulting eigenstate has each qubit in the +1 eigenstate of its corresponding signed
@@ -120,7 +120,7 @@ class PauliString:
         phase of the Pauli string is ignored).
 
         Args:
-            signs (Optional[Union[str, List[int], Tuple[int, ...]]]): The sign of each factor of the
+            signs (Optional[Union[str, list[int], tuple[int, ...]]]): The sign of each factor of the
                 eigenstate, specified either as a string of "+" and "_", or as a list or tuple of
                 +/-1. The length of signs must be equal to the length of the Pauli string. If not
                 specified, it is assumed to be all +. Default: None.
@@ -350,7 +350,7 @@ class PauliString:
         return f"{PauliString._phase_to_str(self._phase)}{''.join(factors)}"
 
     @staticmethod
-    def _split(pauli_word: str) -> Tuple[int, str]:
+    def _split(pauli_word: str) -> tuple[int, str]:
         index = 0
         phase = 1
         if pauli_word[index] in {"+", "-"}:
@@ -367,7 +367,7 @@ class PauliString:
     def _phase_to_str(phase: int) -> str:
         return "+" if phase > 0 else "-"
 
-    def _generate_eigenstate_circuit(self, signs: Tuple[int, ...]) -> Circuit:
+    def _generate_eigenstate_circuit(self, signs: tuple[int, ...]) -> Circuit:
         circ = Circuit()
         for qubit in range(len(signs)):
             state = signs[qubit] * self[qubit]

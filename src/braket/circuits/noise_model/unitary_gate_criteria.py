@@ -11,7 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Iterable, Optional, Set, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 from braket.circuits.gates import Unitary
 from braket.circuits.instruction import Instruction
@@ -53,14 +54,14 @@ class UnitaryGateCriteria(CircuitInstructionCriteria):
         """
         return [CriteriaKey.QUBIT, CriteriaKey.UNITARY_GATE]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, Set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
+            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
             UNITARY_GATE will return a set containing the bytes of the unitary matrix representing
             the unitary gate.
             QUBIT will return a set of qubit targets that are relevant to this Criteria, or

@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 from scipy.linalg import fractional_matrix_power

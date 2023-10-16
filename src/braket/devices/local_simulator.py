@@ -17,7 +17,7 @@ from functools import singledispatchmethod
 from itertools import repeat
 from multiprocessing import Pool
 from os import cpu_count
-from typing import Dict, List, Optional, Set, Union
+from typing import Optional, Union
 
 import pkg_resources
 
@@ -71,7 +71,7 @@ class LocalSimulator(Device):
             Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: int = 0,
-        inputs: Optional[Dict[str, float]] = None,
+        inputs: Optional[dict[str, float]] = None,
         *args,
         **kwargs,
     ) -> LocalQuantumTask:
@@ -84,7 +84,7 @@ class LocalSimulator(Device):
                 Default is 0, which means that the simulator will compute the exact
                 results based on the quantum task specification.
                 Sampling is not supported for shots=0.
-            inputs (Optional[Dict[str, float]]): Inputs to be passed along with the
+            inputs (Optional[dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this
                 value. Default: {}.
 
@@ -108,26 +108,24 @@ class LocalSimulator(Device):
         self,
         task_specifications: Union[
             Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram],
-            List[
-                Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]
-            ],
+            list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]],
         ],
         shots: Optional[int] = 0,
         max_parallel: Optional[int] = None,
-        inputs: Optional[Union[Dict[str, float], List[Dict[str, float]]]] = None,
+        inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
         *args,
         **kwargs,
     ) -> LocalQuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram], List[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa E501
-                Single instance or list of task specification.
-            shots (Optional[int]): The number of times to run the task.
+            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram], list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram]]]): # noqa
+                Single instance or list of quantum task specification.
+            shots (Optional[int]): The number of times to run the quantum task.
                 Default: 0.
             max_parallel (Optional[int]): The maximum number of quantum tasks to run  in parallel. Default
                 is the number of CPU.
-            inputs (Optional[Union[Dict[str, float], List[Dict[str, float]]]]): Inputs to be passed
+            inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated with
                 this value. Default: {}.
 
@@ -193,11 +191,11 @@ class LocalSimulator(Device):
         return self._delegate.properties
 
     @staticmethod
-    def registered_backends() -> Set[str]:
+    def registered_backends() -> set[str]:
         """Gets the backends that have been registered as entry points
 
         Returns:
-            Set[str]: The names of the available backends that can be passed
+            set[str]: The names of the available backends that can be passed
             into LocalSimulator's constructor
         """
         return set(_simulator_devices.keys())
@@ -208,7 +206,7 @@ class LocalSimulator(Device):
             Circuit, Problem, Program, AnalogHamiltonianSimulation, SerializableProgram
         ],
         shots: Optional[int] = None,
-        inputs: Optional[Dict[str, float]] = None,
+        inputs: Optional[dict[str, float]] = None,
         *args,
         **kwargs,
     ) -> Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]:
@@ -252,7 +250,7 @@ class LocalSimulator(Device):
         self,
         circuit: Circuit,
         shots: Optional[int] = None,
-        inputs: Optional[Dict[str, float]] = None,
+        inputs: Optional[dict[str, float]] = None,
         *args,
         **kwargs,
     ):
@@ -287,7 +285,7 @@ class LocalSimulator(Device):
         self,
         program: Program,
         shots: Optional[int] = None,
-        inputs: Optional[Dict[str, float]] = None,
+        inputs: Optional[dict[str, float]] = None,
         *args,
         **kwargs,
     ):

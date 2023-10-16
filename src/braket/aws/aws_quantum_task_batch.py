@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Dict, List, Set, Tuple, Union
+from typing import Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -48,7 +48,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         device_arn: str,
         task_specifications: Union[
             Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
-            List[
+            list[
                 Union[
                     Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
                 ]
@@ -60,7 +60,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
+        inputs: Union[dict[str, float], list[dict[str, float]]] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ):
@@ -69,7 +69,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             device_arn (str): The ARN of the quantum device.
-            task_specifications (Union[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation],List[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation]]]): # noqa
+            task_specifications (Union[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation],list[Union[Circuit,Problem,OpenQasmProgram,BlackbirdProgram,AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing
                 problems, pulse sequences, or photonics program as specification of quantum task
                 to run on device.
@@ -88,7 +88,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
-            inputs (Union[Dict[str, float], List[Dict[str, float]]]): Inputs to be passed
+            inputs (Union[dict[str, float], list[dict[str, float]]]): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
         """
@@ -127,17 +127,17 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     def _tasks_and_inputs(
         task_specifications: Union[
             Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
-            List[
+            list[
                 Union[
                     Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
                 ]
             ],
         ],
-        inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
-    ) -> List[
-        Tuple[
+        inputs: Union[dict[str, float], list[dict[str, float]]] = None,
+    ) -> list[
+        tuple[
             Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
-            Dict[str, float],
+            dict[str, float],
         ]
     ]:
         inputs = inputs or {}
@@ -184,7 +184,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         device_arn: str,
         task_specifications: Union[
             Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation],
-            List[
+            list[
                 Union[
                     Circuit, Problem, OpenQasmProgram, BlackbirdProgram, AnalogHamiltonianSimulation
                 ]
@@ -196,10 +196,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Union[Dict[str, float], List[Dict[str, float]]] = None,
+        inputs: Union[dict[str, float], list[dict[str, float]]] = None,
         *args,
         **kwargs,
-    ) -> List[AwsQuantumTask]:
+    ) -> list[AwsQuantumTask]:
         tasks_and_inputs = AwsQuantumTaskBatch._tasks_and_inputs(task_specifications, inputs)
         max_threads = min(max_parallel, max_workers)
         remaining = [0 for _ in tasks_and_inputs]
@@ -238,7 +238,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
     @staticmethod
     def _create_task(
-        remaining: List[int],
+        remaining: list[int],
         aws_session: AwsSession,
         device_arn: str,
         task_specification: Union[
@@ -247,7 +247,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Dict[str, float] = None,
+        inputs: dict[str, float] = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -278,7 +278,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         fail_unsuccessful: bool = False,
         max_retries: int = MAX_RETRIES,
         use_cached_value: bool = True,
-    ) -> List[AwsQuantumTask]:
+    ) -> list[AwsQuantumTask]:
         """Retrieves the result of every quantum task in the batch.
 
         Polling for results happens in parallel; this method returns when all quantum tasks
@@ -295,7 +295,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 even when results have already been cached. Default: `True`.
 
         Returns:
-            List[AwsQuantumTask]: The results of all of the quantum tasks in the batch.
+            list[AwsQuantumTask]: The results of all of the quantum tasks in the batch.
             `FAILED`, `CANCELLED`, or timed out quantum tasks will have a result of None
         """
         if not self._results or not use_cached_value:
@@ -316,7 +316,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         return self._results
 
     @staticmethod
-    def _retrieve_results(tasks: List[AwsQuantumTask], max_workers: int) -> List[AwsQuantumTask]:
+    def _retrieve_results(tasks: list[AwsQuantumTask], max_workers: int) -> list[AwsQuantumTask]:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             result_futures = [executor.submit(task.result) for task in tasks]
         return [future.result() for future in result_futures]
@@ -362,8 +362,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         return not self._unsuccessful
 
     @property
-    def tasks(self) -> List[AwsQuantumTask]:
-        """List[AwsQuantumTask]: The quantum tasks in this batch, as a list of AwsQuantumTask
+    def tasks(self) -> list[AwsQuantumTask]:
+        """list[AwsQuantumTask]: The quantum tasks in this batch, as a list of AwsQuantumTask
         objects"""
         return list(self._tasks)
 
@@ -373,10 +373,10 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         return len(self._tasks)
 
     @property
-    def unfinished(self) -> Set[str]:
+    def unfinished(self) -> set[str]:
         """Gets all the IDs of all the quantum tasks in teh batch that have yet to complete.
         Returns:
-            Set[str]: The IDs of all the quantum tasks in the batch that have yet to complete.
+            set[str]: The IDs of all the quantum tasks in the batch that have yet to complete.
         """
         with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
             status_futures = {task.id: executor.submit(task.state) for task in self._tasks}
@@ -390,7 +390,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         return unfinished
 
     @property
-    def unsuccessful(self) -> Set[str]:
-        """Set[str]: The IDs of all the FAILED, CANCELLED, or timed out quantum tasks in the
+    def unsuccessful(self) -> set[str]:
+        """set[str]: The IDs of all the FAILED, CANCELLED, or timed out quantum tasks in the
         batch."""
         return set(self._unsuccessful)

@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.compiler_directive import CompilerDirective
@@ -135,13 +135,13 @@ class Instruction:
         """
         return self._power
 
-    def adjoint(self) -> List[Instruction]:
+    def adjoint(self) -> list[Instruction]:
         """Returns a list of Instructions implementing adjoint of this instruction's own operator
 
         This operation only works on Gate operators and compiler directives.
 
         Returns:
-            List[Instruction]: A list of new instructions that comprise the adjoint of this operator
+            list[Instruction]: A list of new instructions that comprise the adjoint of this operator
 
         Raises:
             NotImplementedError: If `operator` is not of type `Gate` or `CompilerDirective`
@@ -195,15 +195,15 @@ class Instruction:
         )
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        """Tuple[str, ...]: Returns the ascii symbols for the instruction's operator."""
+    def ascii_symbols(self) -> tuple[str, ...]:
+        """tuple[str, ...]: Returns the ascii symbols for the instruction's operator."""
         return self._operator.ascii_symbols
 
     def copy(
         self,
-        target_mapping: Dict[QubitInput, QubitInput] = None,
+        target_mapping: dict[QubitInput, QubitInput] = None,
         target: QubitSetInput = None,
-        control_mapping: Dict[QubitInput, QubitInput] = None,
+        control_mapping: dict[QubitInput, QubitInput] = None,
         control: QubitSetInput = None,
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
@@ -217,11 +217,11 @@ class Instruction:
             Same relationship holds for `control_mapping`.
 
         Args:
-            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
             target (QubitSetInput): Target qubits for the new instruction. Default is None.
-            control_mapping (Dict[QubitInput, QubitInput]): A dictionary of
+            control_mapping (dict[QubitInput, QubitInput]): A dictionary of
                 qubit mappings to apply to the control. Key is the qubit in this `control` and the
                 value is what the key is changed to. Default = `None`.
             control (QubitSetInput): Control qubits for the new instruction. Default is None.
