@@ -33,7 +33,7 @@ setup(
         # simulation of mid-circuit measurement, which AutoQASM requires.
         # NOTE: This change should remain in the feature/autoqasm branch; do not merge to main.
         "amazon-braket-default-simulator @ git+https://github.com/aws/amazon-braket-default-simulator-python.git@46aea776976ad7f958d847c06f29f3a7976f5cf5#egg=amazon-braket-default-simulator",  # noqa E501
-        "oqpy~=0.3.2",
+        "oqpy~=0.3.3",
         "setuptools",
         "backoff",
         "boltons",
