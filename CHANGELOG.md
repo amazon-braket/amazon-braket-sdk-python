@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.58.1 (2023-10-16)
+
+### Bug Fixes and Other Changes
+
+ * use separate aws session for python validation
+
 ## v1.58.0 (2023-10-16)
 
 ### Features
