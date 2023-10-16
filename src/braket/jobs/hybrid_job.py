@@ -150,8 +150,7 @@ def hybrid_job(
         logger (Logger): Logger object with which to write logs, such as task statuses
             while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
     """
-    aws_session = aws_session or AwsSession()
-    _validate_python_version(aws_session, image_uri)
+    _validate_python_version(image_uri, aws_session)
 
     def _hybrid_job(entry_point):
         @functools.wraps(entry_point)
@@ -209,8 +208,9 @@ def hybrid_job(
     return _hybrid_job
 
 
-def _validate_python_version(aws_session: AwsSession, image_uri: str | None):
+def _validate_python_version(image_uri: str | None, aws_session: AwsSession | None = None):
     """Validate python version at job definition time"""
+    aws_session = aws_session or AwsSession()
     # user provides a custom image_uri
     if image_uri and image_uri not in built_in_images(aws_session.region):
         print(
