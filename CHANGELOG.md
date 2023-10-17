@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.59.0 (2023-10-17)
+
+### Features
+
+ * use region property
+
+## v1.58.1 (2023-10-16)
+
+### Bug Fixes and Other Changes
+
+ * use separate aws session for python validation
+
 ## v1.58.0 (2023-10-16)
 
 ### Features
