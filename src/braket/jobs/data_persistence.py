@@ -65,9 +65,7 @@ def save_job_checkpoint(
         f.write(persisted_data.json())
 
 
-def load_job_checkpoint(
-    job_name: str | None = None, checkpoint_file_suffix: str = ""
-) -> dict[str, Any]:
+def load_job_checkpoint(job_name: str = None, checkpoint_file_suffix: str = "") -> dict[str, Any]:
     """
     Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
     file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
@@ -80,7 +78,7 @@ def load_job_checkpoint(
 
 
     Args:
-        job_name (str | None): str that specifies the name of the job whose checkpoints
+        job_name (str): str that specifies the name of the job whose checkpoints
             are to be loaded. Default: current job name.
 
         checkpoint_file_suffix (str): str specifying the file suffix that is used to

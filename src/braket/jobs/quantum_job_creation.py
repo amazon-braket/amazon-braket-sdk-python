@@ -232,13 +232,13 @@ def prepare_quantum_job(
     return create_job_kwargs
 
 
-def _generate_default_job_name(image_uri: str | None = None, func: Callable | None = None) -> str:
+def _generate_default_job_name(image_uri: str = None, func: Callable = None) -> str:
     """
     Generate default job name using the image uri and entrypoint function.
 
     Args:
-        image_uri (str | None): URI for the image container.
-        func (Callable | None): The entry point function.
+        image_uri (str): URI for the image container.
+        func (Callable): The entry point function.
 
     Returns:
         str: Hybrid job name.
@@ -361,7 +361,7 @@ def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
     Validate that config parameters are of the right type.
 
     Args:
-        dict_arr (Dict[str, Tuple[any, any]]): dict mapping parameter names to
+        dict_arr (dict[str, tuple[any, any]]): dict mapping parameter names to
             a tuple containing the provided value and expected type.
     """
     for parameter_name, value_tuple in dict_arr.items():
