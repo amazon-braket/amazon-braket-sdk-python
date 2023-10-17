@@ -235,7 +235,7 @@ class AwsQuantumJob(QuantumJob):
         bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
         """
         job_region = job_arn.split(":")[3]
-        return job_region == aws_session.braket_client.meta.region_name
+        return job_region == aws_session.region
 
     @staticmethod
     def _default_session_for_job_arn(job_arn: str) -> AwsSession:
