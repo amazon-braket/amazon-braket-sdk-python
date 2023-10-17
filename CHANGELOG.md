@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.59.0 (2023-10-17)
+
+### Features
+
+ * use region property
+
 ## v1.58.1 (2023-10-16)
 
 ### Bug Fixes and Other Changes
