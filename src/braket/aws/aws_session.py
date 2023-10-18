@@ -17,6 +17,7 @@ import itertools
 import os
 import os.path
 import re
+from functools import cache
 from pathlib import Path
 from typing import Any, NamedTuple, Optional
 
@@ -825,3 +826,38 @@ class AwsSession(object):
         # Preserve user_agent information
         copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
+
+    @cache
+    def get_full_image_tag(self, image_uri: str) -> str:
+        """
+        Get verbose image tag from image uri.
+
+        Args:
+            image_uri (str): Image uri to get tag for.
+
+        Returns:
+            str: Verbose image tag for given image.
+        """
+        registry = image_uri.split(".")[0]
+        repository, tag = image_uri.split("/")[-1].split(":")
+
+        # get image digest of latest image
+        digest = self.ecr_client.batch_get_image(
+            registryId=registry,
+            repositoryName=repository,
+            imageIds=[{"imageTag": tag}],
+        )["images"][0]["imageId"]["imageDigest"]
+
+        # get all images matching digest (same image, different tags)
+        images = self.ecr_client.batch_get_image(
+            registryId=registry,
+            repositoryName=repository,
+            imageIds=[{"imageDigest": digest}],
+        )["images"]
+
+        # find the tag with the python version info
+        for image in images:
+            if re.search(r"py\d\d+", tag := image["imageId"]["imageTag"]):
+                return tag
+
+        raise ValueError("Full image tag missing.")

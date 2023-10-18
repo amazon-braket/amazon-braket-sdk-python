@@ -11,8 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -20,12 +21,12 @@ class CheckpointConfig:
     """Configuration that specifies the location where checkpoint data is stored."""
 
     localPath: str = "/opt/jobs/checkpoints"
-    s3Uri: Optional[str] = None
+    s3Uri: str | None = None
 
 
 @dataclass
 class InstanceConfig:
-    """Configuration of the instances used to execute the hybrid job."""
+    """Configuration of the instance(s) used to run the hybrid job."""
 
     instanceType: str = "ml.m5.large"
     volumeSizeInGb: int = 30
@@ -36,8 +37,8 @@ class InstanceConfig:
 class OutputDataConfig:
     """Configuration that specifies the location for the output of the hybrid job."""
 
-    s3Path: Optional[str] = None
-    kmsKeyId: Optional[str] = None
+    s3Path: str | None = None
+    kmsKeyId: str | None = None
 
 
 @dataclass
@@ -61,8 +62,8 @@ class S3DataSourceConfig:
 
     def __init__(
         self,
-        s3_data,
-        content_type=None,
+        s3_data: str,
+        content_type: str = None,
     ):
         """Create a definition for input data used by a Braket Hybrid job.
 

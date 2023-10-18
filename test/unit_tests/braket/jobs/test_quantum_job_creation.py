@@ -22,7 +22,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from braket.aws import AwsSession
-from braket.jobs import Framework, image_uris
+from braket.jobs import Framework, retrieve_image
 from braket.jobs.config import (
     CheckpointConfig,
     InstanceConfig,
@@ -349,7 +349,7 @@ def _translate_creation_args(create_job_args):
             "compressionType": "GZIP",
         }
     }
-    image_uri = image_uri or image_uris.retrieve_image(Framework.BASE, aws_session.region)
+    image_uri = image_uri or retrieve_image(Framework.BASE, aws_session.region)
     algorithm_specification["containerImage"] = {"uri": image_uri}
     tags = create_job_args.get("tags", {})
 
@@ -381,7 +381,8 @@ def test_generate_default_job_name(mock_time, image_uri):
     }
     job_type = job_type_mapping[image_uri]
     mock_time.return_value = datetime.datetime.now().timestamp()
-    assert _generate_default_job_name(image_uri) == f"braket-job{job_type}-{time.time() * 1000:.0f}"
+    timestamp = str(int(time.time() * 1000))
+    assert _generate_default_job_name(image_uri) == f"braket-job{job_type}-{timestamp}"
 
 
 @pytest.mark.parametrize(
