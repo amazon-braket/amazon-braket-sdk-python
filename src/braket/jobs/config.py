@@ -63,7 +63,7 @@ class S3DataSourceConfig:
     def __init__(
         self,
         s3_data: str,
-        content_type: str | None = None,
+        content_type: str = None,
     ):
         """Create a definition for input data used by a Braket Hybrid job.
 
