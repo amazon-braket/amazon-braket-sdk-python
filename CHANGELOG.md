@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.59.1 (2023-10-18)
+
+### Bug Fixes and Other Changes
+
+ * doc fixes
+
 ## v1.59.0 (2023-10-17)
 
 ### Features
