@@ -235,7 +235,7 @@ def test_decorator_job():
     except RuntimeError as e:
         if str(e).startswith("Python version must match between local environment and container."):
             warn("skipping test due to python version mismatch")
-            return
+            pytest.skip("Skipping decorator tests due to Python version mismatch")
         raise e
 
     job = decorator_job(MyClass(), 2, d=5, extra_arg="extra_value")
@@ -299,7 +299,7 @@ def test_decorator_job_submodule():
     except RuntimeError as e:
         if str(e).startswith("Python version must match between local environment and container."):
             warn("skipping test due to python version mismatch")
-            return
+            pytest.skip("Skipping decorator tests due to Python version mismatch")
         raise e
 
     job = decorator_job_submodule()
