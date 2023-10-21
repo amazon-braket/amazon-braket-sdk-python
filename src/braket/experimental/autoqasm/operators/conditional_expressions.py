@@ -14,7 +14,8 @@
 
 """Operators for conditional expressions (e.g. the ternary if statement)."""
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any, Optional
 
 import oqpy.base
 

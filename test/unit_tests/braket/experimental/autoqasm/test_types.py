@@ -13,8 +13,6 @@
 
 """Tests for the types module."""
 
-from typing import List, Tuple
-
 import oqpy
 import pytest
 
@@ -30,13 +28,13 @@ from braket.experimental.autoqasm.types.types import qasm_range
     ],
 )
 def test_qasm_range(
-    range_params: Tuple[int, int, int], expected_range_params: Tuple[int, int, int]
+    range_params: tuple[int, int, int], expected_range_params: tuple[int, int, int]
 ) -> None:
     """Test `qasm_range()` returning correct `Range` object.
 
     Args:
-        range_params (Tuple[int, int, int]): Range parameters to instantiate `oqpy.Range`
-        expected_range_params (Tuple[int, int, int]): Expected range parameters
+        range_params (tuple[int, int, int]): Range parameters to instantiate `oqpy.Range`
+        expected_range_params (tuple[int, int, int]): Expected range parameters
     """
     start, stop, step = range_params
     qrange = qasm_range(start, stop, step)
@@ -183,12 +181,12 @@ def test_return_array_int():
     """Test return type discovery of array values."""
 
     @aq.subroutine
-    def ret_test() -> List[int]:
+    def ret_test() -> list[int]:
         res = aq.ArrayVar([1, 2, 3], dimensions=[3])
         return res
 
     @aq.main
-    def main() -> List[int]:
+    def main() -> list[int]:
         return ret_test()
 
     expected = """OPENQASM 3.0;
@@ -207,7 +205,7 @@ def test_return_python_array():
     """Test returning a python array of ints."""
 
     @aq.subroutine
-    def tester() -> List[int]:
+    def tester() -> list[int]:
         return [1, 2, 3]
 
     @aq.main(num_qubits=4)
@@ -230,7 +228,7 @@ def test_return_array_unsupported():
     """Test unsupported array type."""
 
     @aq.subroutine
-    def tester(arr: List[float]) -> List[float]:
+    def tester(arr: list[float]) -> list[float]:
         return [1.2, 2.1]
 
     @aq.main(num_qubits=4)
@@ -326,7 +324,7 @@ def test_map_array():
     """Test array input parameter type."""
 
     @aq.subroutine
-    def annotation_test(input: List[int]):
+    def annotation_test(input: list[int]):
         pass
 
     @aq.main
@@ -551,7 +549,7 @@ def test_recursive_list() -> None:
     """Tests recursive subroutines which return a list."""
 
     @aq.subroutine
-    def retval_recursive() -> List[int]:
+    def retval_recursive() -> list[int]:
         retval_recursive()
         return [1]
 
@@ -581,7 +579,7 @@ def test_error_for_tuple_param() -> None:
     """Tuples are not supported as parameters."""
 
     @aq.subroutine
-    def param_test(input: Tuple):
+    def param_test(input: tuple):
         pass
 
     @aq.main
@@ -611,7 +609,7 @@ def test_ignore_ret_typehint_bool():
     """Test type discovery of boolean return values."""
 
     @aq.subroutine
-    def ret_test() -> List[int]:
+    def ret_test() -> list[int]:
         return True
 
     @aq.main
@@ -706,7 +704,7 @@ def test_param_array_list_missing_arg():
     """Test list parameter with missing type arg (list rather than list[int])."""
 
     @aq.subroutine
-    def param_test(arr: List) -> int:
+    def param_test(arr: list) -> int:
         return 1
 
     @aq.main(num_qubits=4)

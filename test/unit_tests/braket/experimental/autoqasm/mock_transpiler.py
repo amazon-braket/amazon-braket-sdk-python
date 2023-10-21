@@ -13,7 +13,7 @@
 
 """Mock transpiler for testing converters."""
 
-from typing import List, Union
+from typing import Union
 
 import gast
 
@@ -24,11 +24,11 @@ from braket.experimental.autoqasm.transpiler import PyToOqpy
 
 
 class MockTranspiler(PyToOqpy):
-    def __init__(self, converters: List):
+    def __init__(self, converters: list):
         """A custom transpiler based on `transpiler.PyToOqpy` for unit testing
         converters.
         Args:
-            converters (List): List of converters to test.
+            converters (list): List of converters to test.
         """
         super(MockTranspiler, self).__init__()
         if isinstance(converters, (list, tuple)):

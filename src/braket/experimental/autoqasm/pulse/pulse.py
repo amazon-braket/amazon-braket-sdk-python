@@ -15,7 +15,7 @@
 """Pulse instructions that apply to frames or qubits.
 """
 
-from typing import List, Union
+from typing import Union
 
 import oqpy
 
@@ -127,17 +127,17 @@ def capture_v0(frame: Frame) -> None:
 
 
 def delay(
-    qubits_or_frames: Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]],
+    qubits_or_frames: Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]],
     duration: Union[float, oqpy.FloatVar],
 ) -> None:
     """Adds an instruction to advance the frame clock by the specified `duration` value.
 
     Args:
-        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]):
+        qubits_or_frames (Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]]):
             Qubits or frame(s) on which the delay needs to be introduced.
         duration (Union[float, FloatVar]): Value (in seconds) defining the duration of the delay.
     """  # noqa: E501
-    if not isinstance(qubits_or_frames, List):
+    if not isinstance(qubits_or_frames, list):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))
@@ -147,17 +147,17 @@ def delay(
 
 
 def barrier(
-    qubits_or_frames: Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]
+    qubits_or_frames: Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]]
 ) -> None:
     """Adds an instruction to align the frame clocks to the latest time across all the specified
     frames. When applied on qubits, it prevents compilations across the barrier, if the compiler
     supports barrier.
 
     Args:
-        qubits_or_frames (Union[Frame, List[Frame], QubitIdentifierType, List[QubitIdentifierType]]):
+        qubits_or_frames (Union[Frame, list[Frame], QubitIdentifierType, list[QubitIdentifierType]]):
             Qubits or frame(s) on which the barrier needs to be introduced.
     """  # noqa: E501
-    if not isinstance(qubits_or_frames, List):
+    if not isinstance(qubits_or_frames, list):
         qubits_or_frames = [qubits_or_frames]
     if all(is_qubit_identifier_type(q) for q in qubits_or_frames):
         qubits_or_frames = QubitSet(_get_physical_qubit_indices(qubits_or_frames))

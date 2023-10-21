@@ -21,7 +21,8 @@ to reduce duplication if possible.
 import functools
 import importlib
 import inspect
-from typing import Any, Callable, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any, Optional, Union
 
 import gast
 
@@ -261,7 +262,7 @@ def _converted_partial(
     )
 
 
-def _inspect_callable(f: Callable, args: tuple) -> Tuple[Callable, tuple]:
+def _inspect_callable(f: Callable, args: tuple) -> tuple[Callable, tuple]:
     target_entity = None
     effective_args = None
 
@@ -281,7 +282,7 @@ def _try_convert_actual(
     effective_args: tuple,
     kwargs: dict,
     options: converter.ConversionOptions,
-) -> Tuple[Callable, Optional[Exception]]:
+) -> tuple[Callable, Optional[Exception]]:
     converted_f = None
     exc = None
     try:
