@@ -60,7 +60,13 @@ To add a new gate:
 
 
 class H(Gate):
-    """Hadamard gate."""
+    r"""Hadamard gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{h} = \frac{1}{\sqrt{2}} \begin{bmatrix}
+                1 & 1 \\
+                1 & -1 \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["H"])
@@ -91,7 +97,7 @@ class H(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -109,12 +115,6 @@ class H(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of H instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{h} = \frac{1}{\sqrt{2}}\begin{bmatrix}
-                1 & 1 \\
-                1 & -1
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().h(0)
             >>> circ = Circuit().h([0, 1, 2])
@@ -131,7 +131,13 @@ Gate.register_gate(H)
 
 
 class I(Gate):  # noqa: E742, E261
-    """Identity gate."""
+    r"""Identity gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{I} = \begin{bmatrix}
+                1 & 0 \\
+                0 & 1 \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["I"])
@@ -162,7 +168,7 @@ class I(Gate):  # noqa: E742, E261
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -180,12 +186,6 @@ class I(Gate):  # noqa: E742, E261
         Returns:
             Iterable[Instruction]: `Iterable` of I instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{I} = \begin{bmatrix}
-                1 & 0 \\
-                0 & 1
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().i(0)
             >>> circ = Circuit().i([0, 1, 2])
@@ -202,7 +202,14 @@ Gate.register_gate(I)
 
 
 class X(Gate):
-    """Pauli-X gate."""
+    r"""Pauli-X gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{X} = \begin{bmatrix}
+                0 & 1 \\
+                1 & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["X"])
@@ -251,12 +258,6 @@ class X(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of X instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{X} = \begin{bmatrix}
-                0 & 1 \\
-                1 & 0
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().x(0)
             >>> circ = Circuit().x([0, 1, 2])
@@ -273,7 +274,14 @@ Gate.register_gate(X)
 
 
 class Y(Gate):
-    """Pauli-Y gate."""
+    r"""Pauli-Y gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{Y} = \begin{bmatrix}
+                0 & -i \\
+                i & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Y"])
@@ -322,12 +330,6 @@ class Y(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of Y instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{Y} = \begin{bmatrix}
-                0 & -i \\
-                i & 0
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().y(0)
             >>> circ = Circuit().y([0, 1, 2])
@@ -344,7 +346,14 @@ Gate.register_gate(Y)
 
 
 class Z(Gate):
-    """Pauli-Z gate."""
+    r"""Pauli-Z gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{Z} = \begin{bmatrix}
+                1 & 0 \\
+                0 & -1
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Z"])
@@ -393,12 +402,6 @@ class Z(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of Z instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{X} = \begin{bmatrix}
-                1 & 0 \\
-                0 & -1
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().z(0)
             >>> circ = Circuit().z([0, 1, 2])
@@ -415,7 +418,14 @@ Gate.register_gate(Z)
 
 
 class S(Gate):
-    """S gate."""
+    r"""S gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{S} = \begin{bmatrix}
+                1 & 0 \\
+                0 & i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["S"])
@@ -464,12 +474,6 @@ class S(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of S instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{S} = \begin{bmatrix}
-                1 & 0 \\
-                0 & i
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().s(0)
             >>> circ = Circuit().s([0, 1, 2])
@@ -486,7 +490,14 @@ Gate.register_gate(S)
 
 
 class Si(Gate):
-    """Conjugate transpose of S gate."""
+    r"""Conjugate transpose of S gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{S}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & -i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Si"])
@@ -535,12 +546,6 @@ class Si(Gate):
         Returns:
             Iterable[Instruction]: Iterable of Si instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{S}^\dag = \begin{bmatrix}
-                1 & 0 \\
-                0 & -i
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().si(0)
             >>> circ = Circuit().si([0, 1, 2])
@@ -557,7 +562,14 @@ Gate.register_gate(Si)
 
 
 class T(Gate):
-    """T gate."""
+    r"""T gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{T} = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \pi/4}
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["T"])
@@ -606,12 +618,6 @@ class T(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of T instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{T} = \begin{bmatrix}
-                1 & 0 \\
-                0 & e^{i \pi/4}
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().t(0)
             >>> circ = Circuit().t([0, 1, 2])
@@ -628,7 +634,14 @@ Gate.register_gate(T)
 
 
 class Ti(Gate):
-    """Conjugate transpose of T gate."""
+    r"""Conjugate transpose of T gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{T}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{-i \pi/4}
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Ti"])
@@ -677,12 +690,6 @@ class Ti(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of Ti instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{T}^\dag = \begin{bmatrix}
-                1 & 0 \\
-                0 & e^{-i \pi/4}
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().ti(0)
             >>> circ = Circuit().ti([0, 1, 2])
@@ -699,7 +706,14 @@ Gate.register_gate(Ti)
 
 
 class V(Gate):
-    """Square root of not gate."""
+    r"""Square root of not gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
+                1+i & 1-i \\
+                1-i & 1+i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["V"])
@@ -748,12 +762,6 @@ class V(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of V instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
-                1+i & 1-i \\
-                1-i & 1+i
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().v(0)
             >>> circ = Circuit().v([0, 1, 2])
@@ -770,7 +778,14 @@ Gate.register_gate(V)
 
 
 class Vi(Gate):
-    """Conjugate transpose of square root of not gate."""
+    r"""Conjugate transpose of square root of not gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{V}^\dagger = \frac{1}{2}\begin{bmatrix}
+                1-i & 1+i \\
+                1+i & 1-i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Vi"])
@@ -819,12 +834,6 @@ class Vi(Gate):
         Returns:
             Iterable[Instruction]: `Iterable` of Vi instructions.
 
-        Unitary matrix:
-        .. math:: \mathtt{V}^\dag = \frac{1}{2}\begin{bmatrix}
-                1-i & 1+i \\
-                1+i & 1-i
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().vi(0)
             >>> circ = Circuit().vi([0, 1, 2])
@@ -844,7 +853,13 @@ Gate.register_gate(Vi)
 
 
 class Rx(AngledGate):
-    """X-axis rotation gate.
+    r"""X-axis rotation gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{R_x}(\theta) = \begin{bmatrix}
+                \cos{(\theta/2)} & -i \sin{(\theta/2)} \\
+                -i \sin{(\theta/2)} & \cos{(\theta/2)}
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -909,12 +924,6 @@ class Rx(AngledGate):
         Returns:
             Iterable[Instruction]: Rx instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{R_x}(\theta) = \begin{bmatrix}
-                \cos{\theta/2} & -i \sin{\theta/2} \\
-                -i \sin{\theta/2} & \cos{\theta/2}
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().rx(0, 0.15)
         """
@@ -930,7 +939,13 @@ Gate.register_gate(Rx)
 
 
 class Ry(AngledGate):
-    """Y-axis rotation gate.
+    r"""Y-axis rotation gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{R_y}(\theta) = \begin{bmatrix}
+                \cos{(\theta/2)} & -\sin{(\theta/2)} \\
+                \sin{(\theta/2)} & \cos{(\theta/2)}
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -995,11 +1010,6 @@ class Ry(AngledGate):
         Returns:
             Iterable[Instruction]: Rx instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{R_y}(\theta) = \begin{bmatrix}
-                \cos{\theta/2} & -\sin{\theta/2} \\
-                \sin{\theta/2} & \cos{\theta/2}
-            \end{bmatrix}.
 
         Examples:
             >>> circ = Circuit().ry(0, 0.15)
@@ -1016,7 +1026,13 @@ Gate.register_gate(Ry)
 
 
 class Rz(AngledGate):
-    """Z-axis rotation gate.
+    r"""Z-axis rotation gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
+                e^{-i \phi/2} & 0 \\
+                0 & e^{i \phi/2}
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1077,12 +1093,6 @@ class Rz(AngledGate):
         Returns:
             Iterable[Instruction]: Rx instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
-                e^{-i \phi/2} & 0 \\
-                0 & e^{i \phi/2}
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().rz(0, 0.15)
         """
@@ -1098,7 +1108,13 @@ Gate.register_gate(Rz)
 
 
 class PhaseShift(AngledGate):
-    """Phase shift gate.
+    r"""Phase shift gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{PhaseShift}(\phi) = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \phi}
+                \end{bmatrix}
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1157,12 +1173,6 @@ class PhaseShift(AngledGate):
         Returns:
             Iterable[Instruction]: PhaseShift instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{phaseshift}(\phi) = \begin{bmatrix}
-                1 & 0 \\
-                0 & e^{i \phi}
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().phaseshift(0, 0.15)
         """
@@ -1185,7 +1195,16 @@ Gate.register_gate(PhaseShift)
 
 
 class CNot(Gate):
-    """Controlled NOT gate."""
+    r"""Controlled NOT gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{CNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
@@ -1231,14 +1250,6 @@ class CNot(Gate):
         Returns:
             Instruction: CNot instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CNOT} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-                0 & 0 & 1 & 0 \\
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().cnot(0, 1)
         """
@@ -1253,7 +1264,16 @@ Gate.register_gate(CNot)
 
 
 class Swap(Gate):
-    """Swap gate."""
+    r"""Swap gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{SWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["SWAP", "SWAP"])
@@ -1312,14 +1332,6 @@ class Swap(Gate):
         Returns:
             Instruction: Swap instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{SWAP} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().swap(0, 1)
         """
@@ -1336,7 +1348,16 @@ Gate.register_gate(Swap)
 
 
 class ISwap(Gate):
-    """ISwap gate."""
+    r"""ISwap gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{iSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & i & 0 \\
+                0 & i & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
@@ -1395,14 +1416,6 @@ class ISwap(Gate):
         Returns:
             Instruction: ISwap instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{iSWAP} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 0 & i & 0 \\
-                0 & i & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().iswap(0, 1)
         """
@@ -1419,7 +1432,15 @@ Gate.register_gate(ISwap)
 
 
 class PSwap(AngledGate):
-    """PSwap gate.
+    r"""PSwap gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1491,14 +1512,6 @@ class PSwap(AngledGate):
         Returns:
             Instruction: PSwap instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 0 & e^{i \phi} & 0 \\
-                0 & e^{i \phi} & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().pswap(0, 1, 0.15)
         """
@@ -1515,9 +1528,18 @@ Gate.register_gate(PSwap)
 
 
 class XY(AngledGate):
-    """XY gate.
+    r"""XY gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & \cos{(\phi/2)} & i\sin{(\phi/2)} & 0 \\
+                0 & i\sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                0 & 0 & 0 & 1 \\
+            \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1912.04424v1
+
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1595,14 +1617,6 @@ class XY(AngledGate):
         Returns:
             Instruction: XY instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & \cos{\phi/2} & i\sin{\phi/2} & 0 \\
-                0 & i\sin{\phi/2} & \cos{\phi/2} & 0 \\
-                0 & 0 & 0 & 1 \\
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().xy(0, 1, 0.15)
         """
@@ -1619,7 +1633,15 @@ Gate.register_gate(XY)
 
 
 class CPhaseShift(AngledGate):
-    """Controlled phase shift gate.
+    r"""Controlled phase shift gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & e^{i \phi}
+            \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1671,14 +1693,6 @@ class CPhaseShift(AngledGate):
         Returns:
             Instruction: CPhaseShift instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & e^{i \phi}
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().cphaseshift(0, 1, 0.15)
         """
@@ -1696,7 +1710,15 @@ Gate.register_gate(CPhaseShift)
 
 
 class CPhaseShift00(AngledGate):
-    """Controlled phase shift gate for phasing the \\|00> state.
+    r"""Controlled phase shift gate for phasing the \|00> state.
+
+    Unitary matrix:
+        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
+                e^{i \phi} & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1748,14 +1770,6 @@ class CPhaseShift00(AngledGate):
         Returns:
             Instruction: CPhaseShift00 instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
-                e^{i \phi} & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & 1
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().cphaseshift00(0, 1, 0.15)
         """
@@ -1773,7 +1787,15 @@ Gate.register_gate(CPhaseShift00)
 
 
 class CPhaseShift01(AngledGate):
-    """Controlled phase shift gate for phasing the \\|01> state.
+    r"""Controlled phase shift gate for phasing the \|01> state.
+
+    Unitary matrix:
+        .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
+                e^{i \phi} & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+            \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1825,14 +1847,6 @@ class CPhaseShift01(AngledGate):
         Returns:
             Instruction: CPhaseShift01 instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
-                e^{i \phi} & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & 1
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().cphaseshift01(0, 1, 0.15)
         """
@@ -1850,7 +1864,15 @@ Gate.register_gate(CPhaseShift01)
 
 
 class CPhaseShift10(AngledGate):
-    """Controlled phase shift gate for phasing the \\|10> state.
+    r"""Controlled phase shift gate for phasing the \\|10> state.
+
+    Unitary matrix:
+        .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1902,14 +1924,6 @@ class CPhaseShift10(AngledGate):
         Returns:
             Instruction: CPhaseShift10 instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & e^{i \phi} & 0 \\
-                0 & 0 & 0 & 1
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().cphaseshift10(0, 1, 0.15)
         """
@@ -1927,7 +1941,16 @@ Gate.register_gate(CPhaseShift10)
 
 
 class CV(Gate):
-    """Controlled Sqrt of NOT gate."""
+    r"""Controlled Sqrt of NOT gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{CV} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0.5+0.5i & 0.5-0.5i \\
+                0 & 0 & 0.5-0.5i & 0.5+0.5i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
@@ -1973,14 +1996,6 @@ class CV(Gate):
         Returns:
             Instruction: CV instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CV}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0.5+0.5i & 0.5-0.5i \\
-                0 & 0 & 0.5-0.5i & 0.5+0.5i
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().cv(0, 1)
         """
@@ -1995,7 +2010,16 @@ Gate.register_gate(CV)
 
 
 class CY(Gate):
-    """Controlled Pauli-Y gate."""
+    r"""Controlled Pauli-Y gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{CY} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & -i \\
+                0 & 0 & i & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
@@ -2041,14 +2065,6 @@ class CY(Gate):
         Returns:
             Instruction: CY instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CY} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & -i \\
-                0 & 0 & i & 0
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().cy(0, 1)
         """
@@ -2063,7 +2079,16 @@ Gate.register_gate(CY)
 
 
 class CZ(Gate):
-    """Controlled Pauli-Z gate."""
+    r"""Controlled Pauli-Z gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{CZ} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & -1
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
@@ -2101,14 +2126,6 @@ class CZ(Gate):
         Returns:
             Instruction: CZ instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CY} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & -1
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().cz(0, 1)
         """
@@ -2123,7 +2140,16 @@ Gate.register_gate(CZ)
 
 
 class ECR(Gate):
-    """An echoed RZX(pi/2) gate."""
+    r"""An echoed RZX(pi/2) gate (ECR gate).
+
+    Unitary matrix:
+        .. math:: \mathtt{ECR} = \begin{bmatrix}
+                0 & 0 & 1 & i \\
+                0 & 0 & i & 1 \\
+                1 & -i & 0 & 0 \\
+                -i & 1 & 0 & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
@@ -2181,14 +2207,6 @@ class ECR(Gate):
         Returns:
             Instruction: ECR instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{ECR} = \begin{bmatrix}
-                0 & 0 & 1 & i \\
-                0 & 0 & i & 1 \\
-                1 & -i & 0 & 0 \\
-                -i & 1 & 0 & 0
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().ecr(0, 1)
         """
@@ -2205,7 +2223,15 @@ Gate.register_gate(ECR)
 
 
 class XX(AngledGate):
-    """Ising XX coupling gate.
+    r"""Ising XX coupling gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & -i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                -i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1707.06356
 
@@ -2285,14 +2311,6 @@ class XX(AngledGate):
         Returns:
             Instruction: XX instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
-                \cos{\phi/2} & 0 & 0 & -i \sin{\phi/2} \\
-                0 & \cos{\phi/2} & -i \sin{\phi/2} & 0 \\
-                0 & -i \sin{\phi/2} & \cos{\phi/2} & 0 \\
-                -i \sin{\phi/2} & 0 & 0 & \cos{\phi/2}
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().xx(0, 1, 0.15)
         """
@@ -2309,7 +2327,15 @@ Gate.register_gate(XX)
 
 
 class YY(AngledGate):
-    """Ising YY coupling gate.
+    r"""Ising YY coupling gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1707.06356
 
@@ -2389,14 +2415,6 @@ class YY(AngledGate):
         Returns:
             Instruction: YY instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
-                \cos{\phi/2} & 0 & 0 & i \sin{\phi/2} \\
-                0 & \cos{\phi/2} & -i \sin{\phi/2} & 0 \\
-                0 & -i \sin{\phi/2} & \cos{\phi/2} & 0 \\
-                i \sin{\phi/2} & 0 & 0 & \cos{\phi/2}
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().yy(0, 1, 0.15)
         """
@@ -2413,7 +2431,15 @@ Gate.register_gate(YY)
 
 
 class ZZ(AngledGate):
-    """Ising ZZ coupling gate.
+    r"""Ising ZZ coupling gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
+                e^{-i\phi/2} & 0 & 0 & 0 \\
+                0 & e^{i\phi/2} & 0 & 0 \\
+                0 & 0 & e^{i\phi/2} & 0 \\
+                0 & 0 & 0 & e^{-i\phi/2}
+            \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1707.06356
 
@@ -2487,14 +2513,6 @@ class ZZ(AngledGate):
         Returns:
             Instruction: ZZ instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
-                e^{-i\phi/2} & 0 & 0 & 0 \\
-                0 & e^{i\phi/2} & 0 & 0 \\
-                0 & 0 & e^{i\phi/2} & 0 \\
-                0 & 0 & 0 & e^{-i\phi/2}
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().zz(0, 1, 0.15)
         """
@@ -2514,7 +2532,20 @@ Gate.register_gate(ZZ)
 
 
 class CCNot(Gate):
-    """CCNOT gate or Toffoli gate."""
+    r"""CCNOT gate or Toffoli gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{CCNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
@@ -2581,18 +2612,6 @@ class CCNot(Gate):
         Returns:
             Instruction: CCNot instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CCNOT} = \begin{bmatrix}
-                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
-                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().ccnot(0, 1, 2)
         """
@@ -2609,7 +2628,20 @@ Gate.register_gate(CCNot)
 
 
 class CSwap(Gate):
-    """Controlled Swap gate."""
+    r"""Controlled Swap gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{CSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
@@ -2665,18 +2697,6 @@ class CSwap(Gate):
         Returns:
             Instruction: CSwap instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{CCNOT} = \begin{bmatrix}
-                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
-                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().cswap(0, 1, 2)
         """
@@ -2694,7 +2714,13 @@ Gate.register_gate(CSwap)
 
 
 class GPi(AngledGate):
-    """IonQ GPi gate.
+    r"""IonQ GPi gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
+                0 & e^{-i \phi} \\
+                e^{i \phi} & 0
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -2758,12 +2784,6 @@ class GPi(AngledGate):
         Returns:
             Iterable[Instruction]: GPi instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
-                0 & e^{-i \phi} \\
-                e^{i \phi} & 0
-            \end{bmatrix}.
-
         Examples:
             >>> circ = Circuit().gpi(0, 0.15)
         """
@@ -2779,7 +2799,13 @@ Gate.register_gate(GPi)
 
 
 class GPi2(AngledGate):
-    """IonQ GPi2 gate.
+    r"""IonQ GPi2 gate.
+
+    Unitary matrix:
+        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+                1 & -i e^{-i \phi} \\
+                -i e^{i \phi} & 1
+            \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -2843,12 +2869,6 @@ class GPi2(AngledGate):
         Returns:
             Iterable[Instruction]: GPi2 instruction.
 
-        Unitary matrix:
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
-                1 & -i e^{-i \phi} \\
-                -i e^{i \phi} & 1
-            \end{bmatrix}.
-            
         Examples:
             >>> circ = Circuit().gpi2(0, 0.15)
         """
@@ -2864,12 +2884,25 @@ Gate.register_gate(GPi2)
 
 
 class MS(TripleAngledGate):
-    """IonQ Mølmer-Sørenson gate.
+    r"""IonQ Mølmer-Sørenson gate.
+
+        Unitary matrix:
+            .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
+                    \cos{\frac{\theta}{2}} & 0 &
+                    0 & -ie^{-i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} \\
+                    0 & \cos{\frac{\theta}{2}} &
+                    -ie^{-i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} & 0 \\
+                    0 & -ie^{i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} &
+                    \cos{\frac{\theta}{2}} & 0 \\
+                    -ie^{i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} & 0
+                    & 0 & \cos{\frac{\theta}{2}}
+                    \end{bmatrix}.
 
     Args:
         angle_1 (Union[FreeParameterExpression, float]): angle in radians.
         angle_2 (Union[FreeParameterExpression, float]): angle in radians.
         angle_3 (Union[FreeParameterExpression, float]): angle in radians.
+        Default value is angle_3=pi/2.
     """
 
     def __init__(
@@ -2964,14 +2997,6 @@ class MS(TripleAngledGate):
 
         Returns:
             Iterable[Instruction]: MS instruction.
-
-        Unitary matrix:
-        .. math:: \mathtt{MS}(\phi_0, \phi_1) = \frac{1}{\sqrt{2}}\begin{bmatrix}
-                1 & 0 & 0 & -ie^{-i (\phi_0 + \phi_1)} \\
-                0 & 1 & -ie^{-i (\phi_0 - \phi_1)} & 0 \\
-                0 & -ie^{i (\phi_0 - \phi_1)} & 1 & 0 \\
-                -ie^{i (\phi_0 + \phi_1)} & 0 & 0 & 1
-            \end{bmatrix}.
 
         Examples:
             >>> circ = Circuit().ms(0, 1, 0.15, 0.34)
