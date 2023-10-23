@@ -97,7 +97,7 @@ class H(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -168,7 +168,7 @@ class I(Gate):  # noqa: E742, E261
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        """Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
