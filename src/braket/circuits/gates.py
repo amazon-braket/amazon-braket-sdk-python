@@ -63,7 +63,7 @@ class H(Gate):
     r"""Hadamard gate.
 
     Unitary matrix:
-        .. math:: \mathtt{h} = \frac{1}{\sqrt{2}} \begin{bmatrix}
+        .. math:: \mathtt{H} = \frac{1}{\sqrt{2}} \begin{bmatrix}
                 1 & 1 \\
                 1 & -1 \end{bmatrix}.
     """
