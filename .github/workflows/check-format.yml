@@ -27,5 +27,4 @@ jobs:
         pip install -e .[test]
     - name: Run code format checks
       run: |
-        black --check . --extend-exclude=src/braket/experimental/autoqasm/autograph
-        flake8 --enable-extensions=BCS src
+        tox -e linters_check
