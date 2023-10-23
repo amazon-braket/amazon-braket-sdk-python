@@ -856,9 +856,9 @@ class Rx(AngledGate):
     r"""X-axis rotation gate.
 
     Unitary matrix:
-        .. math:: \mathtt{R_x}(\theta) = \begin{bmatrix}
-                \cos{(\theta/2)} & -i \sin{(\theta/2)} \\
-                -i \sin{(\theta/2)} & \cos{(\theta/2)}
+        .. math:: \mathtt{R_x}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -i \sin{(\phi/2)} \\
+                -i \sin{(\phi/2)} & \cos{(\phi/2)}
                 \end{bmatrix}.
 
     Args:
@@ -942,9 +942,9 @@ class Ry(AngledGate):
     r"""Y-axis rotation gate.
 
     Unitary matrix:
-        .. math:: \mathtt{R_y}(\theta) = \begin{bmatrix}
-                \cos{(\theta/2)} & -\sin{(\theta/2)} \\
-                \sin{(\theta/2)} & \cos{(\theta/2)}
+        .. math:: \mathtt{R_y}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -\sin{(\phi/2)} \\
+                \sin{(\phi/2)} & \cos{(\phi/2)}
                 \end{bmatrix}.
 
     Args:
