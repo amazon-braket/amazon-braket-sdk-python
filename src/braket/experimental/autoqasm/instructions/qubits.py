@@ -16,7 +16,7 @@
 
 import re
 from functools import singledispatch
-from typing import Any, List, Union
+from typing import Any, Union
 
 import oqpy.base
 from openpulse.printer import dumps
@@ -38,14 +38,14 @@ def is_qubit_identifier_type(qubit: Any) -> bool:
     return isinstance(qubit, QubitIdentifierType.__args__)
 
 
-def _get_physical_qubit_indices(qids: List[str]) -> List[int]:
+def _get_physical_qubit_indices(qids: list[str]) -> list[int]:
     """Convert physical qubit labels to the corresponding qubit indices.
 
     Args:
-        qids (List[str]): Physical qubit labels.
+        qids (list[str]): Physical qubit labels.
 
     Returns:
-        List[int]: Qubit indices corresponding to the input physical qubits.
+        list[int]: Qubit indices corresponding to the input physical qubits.
     """
     braket_qubits = []
     for qid in qids:

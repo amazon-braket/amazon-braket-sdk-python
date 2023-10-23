@@ -16,9 +16,10 @@ from __future__ import annotations
 
 import contextlib
 import threading
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Iterable, List, Optional, Union
+from typing import Any, Optional, Union
 
 import oqpy.base
 
@@ -99,12 +100,12 @@ class Program(SerializableProgram):
         self._oqpy_program = oqpy_program
         self._has_pulse_control = has_pulse_control
 
-    def with_calibrations(self, gate_calibrations: Union[Callable, List[Callable]]) -> Program:
+    def with_calibrations(self, gate_calibrations: Union[Callable, list[Callable]]) -> Program:
         """Add the gate calibrations to the program. The calibration added program is returned
         as a new object. The original program is not modified.
 
         Args:
-            gate_calibrations (Union[Callable, List[Callable]]): The gate calibrations to add to
+            gate_calibrations (Union[Callable, list[Callable]]): The gate calibrations to add to
                 the main program. Calibration are passed as callable without evaluation.
 
         Returns:
@@ -156,7 +157,7 @@ class GateArgs:
     """Represents a list of qubit and angle arguments for a gate definition."""
 
     def __init__(self):
-        self._args: List[Union[oqpy.Qubit, oqpy.AngleVar]] = []
+        self._args: list[Union[oqpy.Qubit, oqpy.AngleVar]] = []
 
     def __len__(self):
         return len(self._args)
@@ -174,19 +175,19 @@ class GateArgs:
             self._args.append(oqpy.AngleVar(name=name))
 
     @property
-    def qubits(self) -> List[oqpy.Qubit]:
+    def qubits(self) -> list[oqpy.Qubit]:
         return [self._args[i] for i in self.qubit_indices]
 
     @property
-    def angles(self) -> List[oqpy.AngleVar]:
+    def angles(self) -> list[oqpy.AngleVar]:
         return [self._args[i] for i in self.angle_indices]
 
     @property
-    def qubit_indices(self) -> List[int]:
+    def qubit_indices(self) -> list[int]:
         return [i for i, arg in enumerate(self._args) if isinstance(arg, oqpy.Qubit)]
 
     @property
-    def angle_indices(self) -> List[int]:
+    def angle_indices(self) -> list[int]:
         return [i for i, arg in enumerate(self._args) if isinstance(arg, oqpy.AngleVar)]
 
 
@@ -229,11 +230,11 @@ class ProgramConversionContext:
         return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property
-    def qubits(self) -> List[int]:
+    def qubits(self) -> list[int]:
         """Return a sorted list of virtual qubits used in this program.
 
         Returns:
-            List[int]: The list of virtual qubits, e.g. [0, 1, 2]
+            list[int]: The list of virtual qubits, e.g. [0, 1, 2]
         """
         # Can be memoized or otherwise made more performant
         return sorted(list(self._virtual_qubits_used))
@@ -323,12 +324,12 @@ class ProgramConversionContext:
             or var_name in oqpy_program.undeclared_vars.keys()
         )
 
-    def validate_gate_targets(self, qubits: List[Any], angles: List[Any]) -> None:
+    def validate_gate_targets(self, qubits: list[Any], angles: list[Any]) -> None:
         """Validate that the specified gate targets are valid at this point in the program.
 
         Args:
-            qubits (List[Any]): The list of target qubits to validate.
-            angles (List[Any]): The list of target angles to validate.
+            qubits (list[Any]): The list of target qubits to validate.
+            angles (list[Any]): The list of target angles to validate.
 
         Raises:
             errors.InvalidTargetQubit: Target qubits are invalid in the current context.
@@ -359,10 +360,10 @@ class ProgramConversionContext:
                     )
 
     @staticmethod
-    def _normalize_gate_names(gate_names: Iterable[str]) -> List[str]:
+    def _normalize_gate_names(gate_names: Iterable[str]) -> list[str]:
         return [gate_name.lower() for gate_name in gate_names]
 
-    def _validate_verbatim_target_qubits(self, qubits: List[Any]) -> None:
+    def _validate_verbatim_target_qubits(self, qubits: list[Any]) -> None:
         # Only physical target qubits are allowed in a verbatim block:
         for qubit in qubits:
             if not isinstance(qubit, str):

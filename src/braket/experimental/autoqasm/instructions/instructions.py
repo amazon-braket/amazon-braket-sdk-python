@@ -15,7 +15,7 @@
 """Non-unitary instructions that apply to qubits.
 """
 
-from typing import Any, List
+from typing import Any
 
 from braket.experimental.autoqasm import program as aq_program
 
@@ -23,7 +23,7 @@ from .qubits import QubitIdentifierType, _qubit
 
 
 def _qubit_instruction(
-    name: str, qubits: List[QubitIdentifierType], *args: Any, is_unitary: bool = True
+    name: str, qubits: list[QubitIdentifierType], *args: Any, is_unitary: bool = True
 ) -> None:
     program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context.validate_gate_targets(qubits, args)

@@ -14,7 +14,8 @@
 
 """Operators for control flow constructs (e.g. if, for, while)."""
 
-from typing import Any, Callable, Iterable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any, Optional, Union
 
 import oqpy.base
 

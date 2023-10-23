@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
 
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.program import Program
