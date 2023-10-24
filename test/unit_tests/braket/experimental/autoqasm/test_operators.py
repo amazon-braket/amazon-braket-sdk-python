@@ -16,6 +16,7 @@
 from collections.abc import Callable
 from typing import Any
 
+import numpy as np
 import oqpy.base
 import pytest
 
@@ -363,6 +364,96 @@ def test_logical_eq_qasm_cond() -> None:
     assert "==" in qasm
 
 
+def test_logical_ops_qasm() -> None:
+    """Tests the logical aq.operators for QASM expressions."""
+
+    @aq.subroutine
+    def do_and(a: bool, b: bool):
+        return a and b
+
+    @aq.subroutine
+    def do_or(a: bool, b: bool):
+        return a or b
+
+    @aq.subroutine
+    def do_not(a: bool):
+        return not a
+
+    @aq.subroutine
+    def do_eq(a: int, b: int):
+        return a == b
+
+    @aq.subroutine
+    def do_not_eq(a: int, b: int):
+        return a != b
+
+    @aq.main
+    def prog():
+        do_and(True, False)
+        do_or(True, False)
+        do_not(True)
+        do_eq(1, 2)
+        do_not_eq(1, 2)
+
+    expected = """OPENQASM 3.0;
+def do_and(bool a, bool b) -> bool {
+    bool __bool_0__;
+    __bool_0__ = a && b;
+    return __bool_0__;
+}
+def do_or(bool a, bool b) -> bool {
+    bool __bool_2__;
+    __bool_2__ = a || b;
+    return __bool_2__;
+}
+def do_not(bool a) -> bool {
+    bool __bool_4__;
+    __bool_4__ = !a;
+    return __bool_4__;
+}
+def do_eq(int[32] a, int[32] b) -> bool {
+    bool __bool_6__;
+    __bool_6__ = a == b;
+    return __bool_6__;
+}
+def do_not_eq(int[32] a, int[32] b) -> bool {
+    bool __bool_8__;
+    __bool_8__ = a != b;
+    return __bool_8__;
+}
+bool __bool_1__;
+__bool_1__ = do_and(true, false);
+bool __bool_3__;
+__bool_3__ = do_or(true, false);
+bool __bool_5__;
+__bool_5__ = do_not(true);
+bool __bool_7__;
+__bool_7__ = do_eq(1, 2);
+bool __bool_9__;
+__bool_9__ = do_not_eq(1, 2);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_ops_py() -> None:
+    """Tests the logical aq.operators for Python expressions."""
+
+    @aq.main
+    def prog():
+        a = True
+        b = False
+        c = a and b
+        d = a or c
+        e = not c
+        f = a == e
+        g = d != f
+        assert all([a, not b, not c, d, e, f, not g])
+
+    expected = """OPENQASM 3.0;"""
+
+    assert prog().to_ir() == expected
+
+
 @pytest.mark.parametrize(
     "target", [oqpy.ArrayVar(dimensions=[3], name="arr"), oqpy.BitVar(size=3, name="arr")]
 )
@@ -640,3 +731,30 @@ h __qubits__[0];
 h __qubits__[0];"""
 
     assert test_control_flow().to_ir() == expected
+
+
+def test_py_assert() -> None:
+    """Test Python assertions inside an AutoQASM program."""
+
+    @aq.main
+    def test_assert(value: bool):
+        assert value
+
+    test_assert(True)
+    with pytest.raises(AssertionError):
+        test_assert(False)
+
+
+def test_py_list_ops() -> None:
+    """Test Python list operations inside an AutoQASM program."""
+
+    @aq.main
+    def test_list_ops():
+        a = [1, 2, 3]
+        a.append(4)
+        b = a.pop(0)
+        assert b == 1
+        c = np.stack([a, a])
+        assert np.array_equal(c, [[2, 3, 4], [2, 3, 4]])
+
+    test_list_ops()
