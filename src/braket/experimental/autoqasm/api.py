@@ -311,13 +311,7 @@ def _convert_subroutine(
         ret_type = subroutine_function_call.subroutine_decl.return_type
         return_instance = _make_return_instance_from_oqpy_return_type(ret_type)
         return_variable = None
-        if isinstance(return_instance, list):
-            return_variable = aq_types.ArrayVar(
-                return_instance,
-                dimensions=[d.value for d in ret_type.dimensions],
-            )
-            oqpy_program.set(return_variable, subroutine_function_call)
-        elif return_instance is not None:
+        if return_instance is not None:
             return_variable = aq_types.wrap_value(return_instance)
             oqpy_program.declare(return_variable)
             oqpy_program.set(return_variable, subroutine_function_call)
@@ -386,7 +380,9 @@ def _wrap_for_oqpy_subroutine(f: Callable, options: converter.ConversionOptions)
             )
 
         new_param = inspect.Parameter(
-            name=param.name, kind=param.kind, annotation=aq_types.map_type(param.annotation)
+            name=param.name,
+            kind=param.kind,
+            annotation=aq_types.map_parameter_type(param.annotation),
         )
         new_params.append(new_param)
         _func.__annotations__[new_param.name] = new_param.annotation
@@ -435,8 +431,6 @@ def _make_return_instance_from_oqpy_return_type(return_type: Any) -> Any:
         return None
 
     var_type = aq_types.conversions.var_type_from_ast_type(return_type)
-    if var_type == aq_types.ArrayVar:
-        return []
     if var_type == aq_types.BitVar:
         return var_type(size=_get_bitvar_size(return_type))
     return var_type()

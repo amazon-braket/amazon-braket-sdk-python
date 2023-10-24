@@ -20,7 +20,7 @@ from typing import Any
 import oqpy
 import oqpy.base
 
-from braket.experimental.autoqasm import constants, program, types
+from braket.experimental.autoqasm import constants, errors, program, types
 from braket.experimental.autoqasm.autograph.operators.variables import UndefinedReturnValue
 from braket.experimental.autoqasm.types.conversions import var_type_from_oqpy
 
@@ -44,10 +44,11 @@ def assign_stmt(target_name: str, value: Any) -> Any:
     if isinstance(value, UndefinedReturnValue):
         return value
 
-    is_target_name_used = program.get_program_conversion_context().is_var_name_used(target_name)
+    program_conversion_context = program.get_program_conversion_context()
+    is_target_name_used = program_conversion_context.is_var_name_used(target_name)
     is_value_name_used = isinstance(
         value, oqpy.base.Var
-    ) and program.get_program_conversion_context().is_var_name_used(value.name)
+    ) and program_conversion_context.is_var_name_used(value.name)
 
     if target_name == constants.RETVAL_VARIABLE_NAME:
         # AutoGraph transpiles return statements like
@@ -63,6 +64,11 @@ def assign_stmt(target_name: str, value: Any) -> Any:
             # Return it directly without wrapping it or declaring a new variable.
             return value
 
+        if program_conversion_context.subroutines_processing and isinstance(value, list):
+            raise errors.UnsupportedSubroutineReturnType(
+                "Subroutine returns an array or list, which is not allowed."
+            )
+
         value = types.wrap_value(value)
 
     if not isinstance(value, oqpy.base.Var):
@@ -76,7 +82,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
         target.init_expression = None
         target.name = target_name
 
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
         oqpy_program.set(target, value)
     else:

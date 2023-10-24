@@ -25,8 +25,9 @@ from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm import types as aq_types
 
 
-def map_type(python_type: type) -> type:
-    """Maps a given Python type to the corresponding oqpy type.
+def map_parameter_type(python_type: type) -> type:
+    """Maps a given Python function parameter type to the corresponding oqpy
+    subroutine parameter type.
 
     Args:
         python_type (type): The Python type to be mapped.
@@ -35,7 +36,6 @@ def map_type(python_type: type) -> type:
         type: The corresponding oqpy type.
     """
     origin_type = typing.get_origin(python_type) or python_type
-    type_args = typing.get_args(python_type)
 
     if issubclass(origin_type, bool):
         return oqpy.BoolVar
@@ -43,32 +43,12 @@ def map_type(python_type: type) -> type:
         return oqpy.IntVar
     if issubclass(origin_type, (float, np.floating)):
         return oqpy.FloatVar
-    if issubclass(origin_type, list):
-        if not type_args:
-            raise errors.ParameterTypeError("Please supply a type argument to list.")
-
-        item_type = map_type(type_args[0])
-        if not item_type == oqpy.IntVar:
-            raise errors.ParameterTypeError(
-                f"Unsupported array type: {item_type}. AutoQASM arrays only support ints."
-            )
-
-        # TODO: Update array length to match the input rather than hardcoding
-        # OQPY and QASM require arrays have a set length. python doesn't require this,
-        # so the length of the array is indeterminate.
-        # At this point we only have access to the _parameter_ (type hint), not the
-        # _argument_ (concrete value), which is the only place length information is stored
-        # Here's where the info is stored for oqpy variables:
-        # ctx = program.get_program_conversion_context()
-        # dims = ctx.get_oqpy_program().declared_vars[name_of_var].dimensions
-        return oqpy.ArrayVar[oqpy.IntVar, 10]
-    if issubclass(origin_type, tuple):
-        raise TypeError(
-            "Tuples are not supported as parameters to AutoQASM functions; "
-            "please separate the tuple into multiple parameters or use a list instead."
+    if issubclass(origin_type, tuple) or issubclass(origin_type, list):
+        raise errors.ParameterTypeError(
+            "Lists and tuples are not supported as parameters to AutoQASM functions; "
+            "consider passing the values as multiple separate parameters."
         )
 
-    # TODO add all supported types
     return python_type
 
 
@@ -145,12 +125,6 @@ def _(node: Union[int, np.integer]):
 @wrap_value.register(np.floating)
 def _(node: Union[float, np.floating]):
     return aq_types.FloatVar(node)
-
-
-@wrap_value.register(list)
-def _(node: list):
-    # TODO: Update array length to match the input rather than hardcoding
-    return aq_types.ArrayVar(node, dimensions=[10])
 
 
 @wrap_value.register

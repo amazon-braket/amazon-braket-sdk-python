@@ -19,7 +19,7 @@ import oqpy
 import oqpy.base
 from openpulse import ast
 
-from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import errors, program
 
 
 def is_qasm_type(val: Any) -> bool:
@@ -58,6 +58,8 @@ def qasm_range(start: int, stop: Optional[int] = None, step: Optional[int] = 1) 
 
 class ArrayVar(oqpy.ArrayVar):
     def __init__(self, *args, **kwargs):
+        if program.get_program_conversion_context().subroutines_processing:
+            raise errors.InvalidArrayDeclaration("ArrayVar cannot be declared inside a subroutine.")
         super(ArrayVar, self).__init__(*args, **kwargs)
         self.name = program.get_program_conversion_context().next_var_name(oqpy.ArrayVar)
 

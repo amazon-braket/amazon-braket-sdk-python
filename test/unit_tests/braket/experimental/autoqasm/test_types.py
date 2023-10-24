@@ -177,28 +177,19 @@ def test_return_none():
     assert ret_test().to_ir() == expected
 
 
-def test_return_array_int():
-    """Test return type discovery of array values."""
+def test_declare_array_in_subroutine():
+    """Test declaring an array inside a subroutine."""
 
     @aq.subroutine
-    def ret_test() -> list[int]:
-        res = aq.ArrayVar([1, 2, 3], dimensions=[3])
-        return res
+    def declare_array():
+        _ = aq.ArrayVar([1, 2, 3], dimensions=[3])
 
     @aq.main
     def main() -> list[int]:
-        return ret_test()
+        return declare_array()
 
-    expected = """OPENQASM 3.0;
-def ret_test() -> array[int[32], 3] {
-    array[int[32], 3] res;
-    res = {1, 2, 3};
-    return res;
-}
-array[int[32], 3] __arr_1__ = {};
-__arr_1__ = ret_test();"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.InvalidArrayDeclaration):
+        main()
 
 
 def test_return_python_array():
@@ -212,16 +203,8 @@ def test_return_python_array():
     def main():
         tester()
 
-    expected = """OPENQASM 3.0;
-def tester() -> array[int[32], 10] {
-    array[int[32], 10] retval_;
-    retval_ = {1, 2, 3};
-    return retval_;
-}
-array[int[32], 10] __arr_1__ = {};
-qubit[4] __qubits__;
-__arr_1__ = tester();"""
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main()
 
 
 def test_return_array_unsupported():
@@ -332,14 +315,8 @@ def test_map_array():
         a = aq.ArrayVar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dimensions=[10])
         annotation_test(a)
 
-    expected = """OPENQASM 3.0;
-def annotation_test(array[int[32], 10] input) {
-}
-array[int[32], 10] a;
-a = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-annotation_test(a);"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.ParameterTypeError):
+        main()
 
 
 def test_map_other():
@@ -545,21 +522,6 @@ __float_4__ = retval_recursive();"""
     assert caller().to_ir() == expected_qasm
 
 
-def test_recursive_list() -> None:
-    """Tests recursive subroutines which return a list."""
-
-    @aq.subroutine
-    def retval_recursive() -> list[int]:
-        retval_recursive()
-        return [1]
-
-    @aq.main
-    def main():
-        retval_recursive()
-
-    assert "-> array[int[32], 10]" in main().to_ir()
-
-
 def test_recursive_oqpy_type() -> None:
     """Tests recursive subroutines which returns an oqpy type."""
 
@@ -586,7 +548,7 @@ def test_error_for_tuple_param() -> None:
     def main():
         param_test(aq.BitVar(1))
 
-    with pytest.raises(TypeError):
+    with pytest.raises(aq.errors.ParameterTypeError):
         main()
 
 
@@ -639,17 +601,8 @@ def test_ignore_ret_typehint_list():
     def main() -> float:
         ret_test()
 
-    expected = """OPENQASM 3.0;
-def ret_test() -> array[int[32], 10] {
-    array[int[32], 10] retval_;
-    retval_ = {1, 2, 3};
-    return retval_;
-}
-array[int[32], 10] __arr_1__ = {};
-qubit[4] __qubits__;
-__arr_1__ = ret_test();"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main()
 
 
 def test_ignore_missing_ret_typehint_list():
@@ -663,17 +616,8 @@ def test_ignore_missing_ret_typehint_list():
     def main():
         ret_test()
 
-    expected = """OPENQASM 3.0;
-def ret_test() -> array[int[32], 10] {
-    array[int[32], 10] retval_;
-    retval_ = {1, 2, 3};
-    return retval_;
-}
-array[int[32], 10] __arr_1__ = {};
-qubit[4] __qubits__;
-__arr_1__ = ret_test();"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main()
 
 
 def test_ignore_missing_ret_typehint_float():
