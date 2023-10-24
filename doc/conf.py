@@ -19,18 +19,23 @@ extensions = [
 ]
 
 source_suffix = ".rst"
-master_doc = "index"
+root_doc = "index"
 
 autoclass_content = "both"
 autodoc_member_order = "bysource"
 default_role = "py:obj"
 
 html_theme = "sphinx_rtd_theme"
+html_theme_options = {
+    "prev_next_buttons_location": "both",
+}
 htmlhelp_basename = "{}doc".format(project)
 
 language = "en"
 
 napoleon_use_rtype = False
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
 
 apidoc_module_dir = "../src/braket"
 apidoc_output_dir = "_apidoc"
