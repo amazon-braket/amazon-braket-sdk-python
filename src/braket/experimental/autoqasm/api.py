@@ -206,10 +206,21 @@ def _convert_main(
         # Process the program
         aq_transpiler.converted_call(f, args, kwargs, options=options)
 
-        # Modify program to add qubit declaration if necessary
+        # Modify program to add global declarations if necessary
         _add_qubit_declaration(program_conversion_context)
+        _add_io_declarations(program_conversion_context)
 
     return program_conversion_context.make_program()
+
+
+def _add_io_declarations(program_conversion_context: aq_program.ProgramConversionContext) -> None:
+    root_oqpy_program = program_conversion_context.get_oqpy_program(
+        scope=aq_program.ProgramScope.MAIN
+    )
+    root_oqpy_program.declare(
+        program_conversion_context.get_free_parameters(),
+        to_beginning=True,
+    )
 
 
 def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConversionContext) -> None:

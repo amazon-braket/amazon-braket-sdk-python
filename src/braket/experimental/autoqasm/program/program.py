@@ -207,6 +207,7 @@ class ProgramConversionContext:
         self._virtual_qubits_used = set()
         self._var_idx = 0
         self._has_pulse_control = False
+        self._free_parameters = {}
 
     def make_program(self) -> Program:
         """Makes a Program object using the oqpy program from this conversion context.
@@ -275,6 +276,17 @@ class ProgramConversionContext:
                     f'device "{device.name}". Only native gates may be used inside a verbatim '
                     f"block. The native gates of the device are: {native_gates}"
                 )
+
+    def register_parameter(self, name: str) -> None:
+        """Register an input parameter with the given name, if it has not already been
+        registered. Only floats are currently supported.
+        """
+        if name not in self._free_parameters:
+            self._free_parameters[name] = oqpy.FloatVar("input", name=name)
+
+    def get_free_parameters(self) -> list[oqpy.FloatVar]:
+        """Return a list of named oqpy.Vars that are used as free parameters in the program."""
+        return list(self._free_parameters.values())
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.

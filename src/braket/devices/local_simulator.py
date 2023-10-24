@@ -317,7 +317,13 @@ class LocalSimulator(Device):
         if DeviceActionType.OPENQASM not in simulator.properties.action:
             raise NotImplementedError(f"{type(simulator)} does not support OpenQASM programs")
         program = Program(source=program.to_ir(ir_type=IRType.OPENQASM))
-
+        if inputs:
+            inputs_copy = program.inputs.copy() if program.inputs is not None else {}
+            inputs_copy.update(inputs)
+            program = Program(
+                source=program.source,
+                inputs=inputs_copy,
+            )
         # Pass mcm=True to the simulator to enable mid-circuit measurement simulation.
         # When setting mcm=True, the simulator returns only the measurement results,
         # which we then wrap into a GateModelQuantumTaskResult object to return.
