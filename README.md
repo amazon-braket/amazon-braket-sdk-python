@@ -205,6 +205,12 @@ To run linters and doc generators and unit tests:
 tox
 ```
 
+or if your machine can handle higher workloads, run them in parallel with:
+
+```bash
+tox -p auto
+```
+
 ### Integration Tests
 
 First, configure a profile to use your account to interact with AWS. To learn more, see [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html).
