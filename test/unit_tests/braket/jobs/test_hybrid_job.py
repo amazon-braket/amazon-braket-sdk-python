@@ -498,8 +498,7 @@ def test_sanitize_hyperparameters(hyperparameter, expected):
 
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
-@patch.object(AwsQuantumJob, "create")
-def test_decorator_in_loop(mock_create, mock_time, mock_retrieve, aws_session):
+def test_decorator_in_loop(mock_time, mock_retrieve, aws_session):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
     def train_circuit(n_qubits, n_layers, n_iterations=10):
@@ -551,6 +550,8 @@ def test_decorator_in_loop(mock_create, mock_time, mock_retrieve, aws_session):
 
     # Running in a loop
     jobs = []
+
+    aws_session.create_job.return_value = "arn:aws:braket:us-west-2:00000000:job/testname"
 
     for n_layers in range(1, 7):
         print(f"Creating job with {n_layers} layers")
