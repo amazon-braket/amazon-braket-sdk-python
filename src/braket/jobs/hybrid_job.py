@@ -336,7 +336,7 @@ def _sanitize(hyperparameter: Any) -> str:
     # max allowed length for a hyperparameter is 2500
     if len(sanitized) > 2500:
         # show as much as possible, including the final 20 characters
-        return f"{sanitized[:2500-23]}...{sanitized[-20:]}"
+        return f"{sanitized[:2500 - 23]}...{sanitized[-20:]}"
     return sanitized
 
 
