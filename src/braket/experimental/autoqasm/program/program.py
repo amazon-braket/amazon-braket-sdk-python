@@ -162,17 +162,21 @@ class GateArgs:
     def __len__(self):
         return len(self._args)
 
-    def append(self, name: str, is_qubit: bool) -> None:
-        """Appends an argument to the list of gate arguments.
+    def append_qubit(self, name: str) -> None:
+        """Appends a qubit argument to the list of gate arguments.
 
         Args:
             name (str): The name of the argument.
-            is_qubit (bool): Whether the argument represents a qubit.
         """
-        if is_qubit:
-            self._args.append(oqpy.Qubit(name, needs_declaration=False))
-        else:
-            self._args.append(oqpy.AngleVar(name=name))
+        self._args.append(oqpy.Qubit(name, needs_declaration=False))
+
+    def append_angle(self, name: str) -> None:
+        """Appends a parameter argument to the list of gate arguments.
+
+        Args:
+            name (str): The name of the argument.
+        """
+        self._args.append(oqpy.AngleVar(name=name))
 
     @property
     def qubits(self) -> list[oqpy.Qubit]:
