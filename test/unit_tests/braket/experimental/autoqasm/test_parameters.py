@@ -19,7 +19,17 @@ import braket.experimental.autoqasm as aq
 from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
-from braket.experimental.autoqasm.instructions import cnot, cphaseshift, gpi, h, measure, ms, rx, rz
+from braket.experimental.autoqasm.instructions import (
+    cnot,
+    cphaseshift,
+    gpi,
+    h,
+    measure,
+    ms,
+    rx,
+    rz,
+    x,
+)
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
@@ -214,7 +224,6 @@ cphaseshift(my_phi) __qubits__[0], __qubits__[1];"""
 
 def test_parameters_passed_as_subroutine_arg():
     """Test that parameters work when passed as input values."""
-    # FIXME
 
     @aq.subroutine
     def silly_ms(qubit_0: int, phi: float, theta: float):
@@ -246,45 +255,49 @@ def test_sim_subroutine_arg():
     def parametric():
         rx_theta(FreeParameter("theta"))
 
-    # TODO
     measurements = _test_parametric_on_local_sim(parametric(), {"theta": 3.14})
     assert 0 not in measurements["__bit_0__"]
 
 
-def test_parameter_expressions():
-    """Test expressions of free parameters with numeric literals."""
+def test_parameter_as_condition():
+    """Test parameters used in conditional statements."""
 
     @aq.main
-    def parametric():
-        expr = 2 * FreeParameter("theta")
-        gpi(0, expr)
-
-    # TODO
-    expected = """OPENQASM 3.0;"""
-    assert parametric().to_ir() == expected
-
-
-def test_sim_expressions():
-    @aq.main
-    def parametric():
-        rx(0, 2 * FreeParameter("phi"))
+    def parametric(val: float):
+        threshold = 0.9
+        if val > threshold:
+            x(0)
         measure(0)
 
-    measurements = _test_parametric_on_local_sim(parametric(), {"phi": 3.14 / 2})
-    assert 0 not in measurements["__bit_0__"]
+    expected = """OPENQASM 3.0;
+input float[64] val;
+float[64] threshold;
+qubit[1] __qubits__;
+threshold = 0.9;
+if (val > threshold) {
+    x __qubits__[0];
+}
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
 
 
-def test_multi_parameter_expressions():
-    """Test expresssions of multiple free parameters."""
+def test_parametric_gate_args():
+    """Test that gates can be used with parameters."""
 
-    @aq.main
+    @aq.gate
+    def rx_theta(q: aq.Qubit, theta: float):
+        rx(q, theta)
+
+    @aq.main(num_qubits=3)
     def parametric():
-        expr = FreeParameter("alpha") * FreeParameter("theta")
-        gpi(0, expr)
+        rx_theta(2, FreeParameter("θ"))
 
-    # TODO
-    expected = """OPENQASM 3.0;"""
+    expected = """OPENQASM 3.0;
+gate rx_theta(theta) q {
+    rx(theta) q;
+}
+input float[64] θ;
+qubit[3] __qubits__;
+rx_theta(θ) __qubits__[2];"""
     assert parametric().to_ir() == expected
-
-
-# TODO: test gate args
