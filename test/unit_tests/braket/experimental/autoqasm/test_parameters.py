@@ -289,3 +289,74 @@ input float[64] theta;
 rx(theta) $1;"""
     qasm = my_program().with_calibrations(cal_1).to_ir()
     assert qasm == expected
+
+
+def test_bind_parameters():
+    """Test binding FreeParameters to concrete values."""
+
+    @aq.main
+    def parametric(theta: float):
+        rx(0, theta)
+        measure(0)
+
+    prog = parametric(FreeParameter("alpha"))
+    assert prog.to_ir() == """"""
+
+    prog.bind_parameters({"alpha": 0.5})
+    assert prog.to_ir() == """"""
+
+
+def test_multi_bind_parameters():
+    """Test binding FreeParameters to concrete values."""
+
+    @aq.main
+    def sub(alpha: float, theta: float):
+        rx(0, alpha)
+        rx(1, theta)
+        cnot(0, 1)
+        rx(0, theta)
+        rx(1, alpha)
+
+    @aq.subroutine
+    def rx_alpha(qubit: int):
+        rx(qubit, FreeParameter("alpha"))
+
+    @aq.main(num_qubits=3)
+    def parametric(alpha: float, theta: float):
+        sub(alpha, theta)
+        rx_alpha(2)
+
+    prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
+    prog.bind_parameters({"alpha": 0.5, "beta": 1.5})
+
+
+def test_partial_bind():
+    """Test binding some but not all FreeParameters."""
+
+    @aq.subroutine
+    def rx_alpha(qubit: int, theta: float):
+        rx(qubit, theta)
+
+    @aq.main(num_qubits=3)
+    def parametric(alpha: float, beta: float):
+        rx_alpha(2, alpha)
+        rx_alpha(2, beta)
+
+    prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
+    prog.bind_parameters({"beta": np.pi})
+
+
+def test_bind_param_instance():
+    """TODO"""
+
+    @aq.subroutine
+    def rx_alpha(qubit: int, theta: float):
+        rx(qubit, theta)
+
+    @aq.main(num_qubits=3)
+    def parametric(alpha: float):
+        rx_alpha(2, alpha)
+
+    param = FreeParameter("alpha")
+    prog = parametric(param)
+    prog.bind_parameters({param: np.pi / 2})

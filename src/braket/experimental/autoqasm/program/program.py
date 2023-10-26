@@ -90,6 +90,7 @@ class Program(SerializableProgram):
         self,
         oqpy_program: oqpy.Program,
         has_pulse_control: bool = False,
+        parameters = None, ## TODO
     ):
         """Initializes an AutoQASM Program object.
 
@@ -101,6 +102,7 @@ class Program(SerializableProgram):
         """
         self._oqpy_program = oqpy_program
         self._has_pulse_control = has_pulse_control
+        self._parameters = parameters
 
     def with_calibrations(self, gate_calibrations: Union[Callable, list[Callable]]) -> Program:
         """Add the gate calibrations to the program. The calibration added program is returned
@@ -122,6 +124,11 @@ class Program(SerializableProgram):
             combined_oqpy_program += gc().program._oqpy_program
         combined_oqpy_program += self._oqpy_program
         return Program(combined_oqpy_program, has_pulse_control=True)
+
+    def bind_parameters(self, key_vals):
+        for type, param in self._parameters:
+            if param.name in key_vals:
+                param.subs(key_vals)
 
     def to_ir(
         self,
@@ -235,7 +242,7 @@ class ProgramConversionContext:
                     f'The target device "{device.name}" does not support '
                     f"the following gates used in the program: {invalid_gates_used}"
                 )
-        return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
+        return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control, parameters=self._free_parameters)
 
     @property
     def qubits(self) -> list[int]:
@@ -307,11 +314,11 @@ class ProgramConversionContext:
             name (str): The identifier for the parameter.
         """
         if name not in self._free_parameters:
-            self._free_parameters[name] = oqpy.FloatVar("input", name=name)
+            self._free_parameters[name] = (oqpy.FloatVar("input", name=name), FreeParameter(name))
 
     def get_free_parameters(self) -> list[oqpy.FloatVar]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
-        return list(self._free_parameters.values())
+        return list(val[0] for val in self._free_parameters.values())
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
