@@ -25,7 +25,7 @@ from collections.abc import Callable, Iterable
 from logging import Logger, getLogger
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Dict, List
+from typing import Any
 
 import cloudpickle
 
@@ -47,7 +47,7 @@ def hybrid_job(
     *,
     device: str,
     include_modules: str | ModuleType | Iterable[str | ModuleType] = None,
-    dependencies: str | Path = None,
+    dependencies: str | Path | list[str] = None,
     local: bool = False,
     job_name: str = None,
     image_uri: str = None,
@@ -85,7 +85,7 @@ def hybrid_job(
             modules to be included. Any references to members of these modules in the hybrid job
             algorithm code will be serialized as part of the algorithm code. Default value `[]`
 
-        dependencies (str | Path): Path (absolute or relative) to a requirements.txt
+        dependencies (str | Path | list[str]): Path (absolute or relative) to a requirements.txt
             file to be used for the hybrid job.
 
         local (bool): Whether to use local mode for the hybrid job. Default `False`
@@ -178,7 +178,7 @@ def hybrid_job(
                     entry_point_file.write(template)
 
                 if dependencies:
-                    shutil.copy(Path(dependencies).resolve(), temp_dir_path / "requirements.txt")
+                    _process_dependencies(dependencies, temp_dir_path)
 
                 job_args = {
                     "device": device or "local:none/none",
@@ -241,6 +241,16 @@ def _validate_python_version(image_uri: str | None, aws_session: AwsSession | No
             )
 
 
+def _process_dependencies(dependencies: str | Path | list[str], temp_dir: Path) -> None:
+    if isinstance(dependencies, (str, Path)):
+        # requirements file
+        shutil.copy(Path(dependencies).resolve(), temp_dir / "requirements.txt")
+    else:
+        # list of packages
+        with open(temp_dir / "requirements.txt", "w") as f:
+            f.write("\n".join(dependencies))
+
+
 class _IncludeModules:
     def __init__(self, modules: str | ModuleType | Iterable[str | ModuleType] = None):
         modules = modules or []
@@ -285,7 +295,7 @@ def _serialize_entry_point(entry_point: Callable, args: tuple, kwargs: dict) -> 
     )
 
 
-def _log_hyperparameters(entry_point: Callable, args: tuple, kwargs: dict) -> Dict:
+def _log_hyperparameters(entry_point: Callable, args: tuple, kwargs: dict) -> dict:
     """Capture function arguments as hyperparameters"""
     signature = inspect.signature(entry_point)
     bound_args = signature.bind(*args, **kwargs)
@@ -330,7 +340,7 @@ def _sanitize(hyperparameter: Any) -> str:
     return sanitized
 
 
-def _process_input_data(input_data: Dict) -> List[str]:
+def _process_input_data(input_data: dict) -> list[str]:
     """
     Create symlinks to data
 
@@ -344,7 +354,7 @@ def _process_input_data(input_data: Dict) -> List[str]:
     if not isinstance(input_data, dict):
         input_data = {"input": input_data}
 
-    def matches(prefix: str) -> List[str]:
+    def matches(prefix: str) -> list[str]:
         return [
             str(path) for path in Path(prefix).parent.iterdir() if str(path).startswith(str(prefix))
         ]
