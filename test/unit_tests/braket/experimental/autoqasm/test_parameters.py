@@ -11,7 +11,9 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""AutoQASM tests for FreeParameter support."""
+"""AutoQASM tests for parameter support."""
+
+import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.circuits import FreeParameter
@@ -21,20 +23,22 @@ from braket.experimental.autoqasm.instructions import cnot, cphaseshift, gpi, h,
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
-def _test_on_local_sim(program: aq.Program) -> None:
+def _test_parametric_on_local_sim(program: aq.Program, inputs: dict[str, float]) -> None:
     device = LocalSimulator(backend=StateVectorSimulator())
-    task = device.run(program, shots=10)
+    task = device.run(program, shots=10, inputs=inputs)
     assert isinstance(task, LocalQuantumTask)
     assert isinstance(task.result().measurements, dict)
+    return task.result().measurements
+
+
+@aq.main
+def simple_parametric():
+    rx(0, FreeParameter("theta"))
+    measure(0)
 
 
 def test_simple_parametric():
     """Test a program with a parameter can be serialized."""
-
-    @aq.main
-    def parametric():
-        rx(0, FreeParameter("theta"))
-        measure(0)
 
     expected = """OPENQASM 3.0;
 input float[64] theta;
@@ -42,14 +46,45 @@ qubit[1] __qubits__;
 rx(theta) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
-    assert parametric().to_ir() == expected
+    assert simple_parametric().to_ir() == expected
+
+
+def test_sim_simple():
+    measurements = _test_parametric_on_local_sim(simple_parametric(), {"theta": 0})
+    assert 1 not in measurements["__bit_0__"]
+    measurements = _test_parametric_on_local_sim(simple_parametric(), {"theta": 3.14})
+    assert 0 not in measurements["__bit_0__"]
+
+
+@aq.main
+def multi_parametric():
+    rx(0, FreeParameter("alpha"))
+    rx(1, FreeParameter("theta"))
+    c = measure([0, 1])  # noqa: F841
 
 
 def test_multiple_parameters():
     """Test that multiple free parameters all appear in the processed program."""
 
+    expected = """OPENQASM 3.0;
+bit[2] c;
+input float[64] alpha;
+input float[64] theta;
+qubit[2] __qubits__;
+rx(alpha) __qubits__[0];
+rx(theta) __qubits__[1];
+bit[2] __bit_0__ = "00";
+__bit_0__[0] = measure __qubits__[0];
+__bit_0__[1] = measure __qubits__[1];
+c = __bit_0__;"""
+    assert multi_parametric().to_ir() == expected
+
+
+def test_typed_parameters():
+    """Test that multiple free parameters all appear in the processed program."""
+
     @aq.main
-    def parametric():
+    def multi_parametric():
         rx(0, FreeParameter("alpha"))
         rx(1, FreeParameter("theta"))
         c = measure([0, 1])  # noqa: F841
@@ -65,7 +100,14 @@ bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
 c = __bit_0__;"""
-    assert parametric().to_ir() == expected
+    assert multi_parametric().to_ir() == expected
+
+
+def test_sim_multi_param():
+    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": 3.14, "theta": 0})
+    assert all(val == "10" for val in measurements["c"])
+    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": 0, "theta": 3.14})
+    assert all(val == "01" for val in measurements["c"])
 
 
 def test_repeat_parameter():
@@ -148,6 +190,14 @@ ms(phi, phi, 0.5) __qubits__[0], __qubits__[2];"""
     assert parametric(2, FreeParameter("phi"), 0.5).to_ir() == expected
 
 
+def test_sim_multi_angle():
+    @aq.main
+    def parametric(phi: float, theta: float):
+        ms(0, 1, phi, phi, theta)
+
+    _test_parametric_on_local_sim(parametric(FreeParameter("phi"), 0.0), {"phi": 3.14})
+
+
 def test_parameters_passed_as_main_arg():
     """Test that parameters work when passed as input values."""
 
@@ -187,17 +237,41 @@ silly_ms(3, 0.5, beta);"""
     assert parametric().to_ir() == expected
 
 
+def test_sim_subroutine_arg():
+    @aq.subroutine
+    def rx_theta(theta: float):
+        rx(0, theta)
+
+    @aq.main
+    def parametric():
+        rx_theta(FreeParameter("theta"))
+
+    # TODO
+    measurements = _test_parametric_on_local_sim(parametric(), {"theta": 3.14})
+    assert 0 not in measurements["__bit_0__"]
+
+
 def test_parameter_expressions():
     """Test expressions of free parameters with numeric literals."""
 
     @aq.main
     def parametric():
-        expr = (2 * FreeParameter("theta")) + 1.5
-        rx(0, expr)
+        expr = 2 * FreeParameter("theta")
+        gpi(0, expr)
 
     # TODO
     expected = """OPENQASM 3.0;"""
     assert parametric().to_ir() == expected
+
+
+def test_sim_expressions():
+    @aq.main
+    def parametric():
+        rx(0, 2 * FreeParameter("phi"))
+        measure(0)
+
+    measurements = _test_parametric_on_local_sim(parametric(), {"phi": 3.14 / 2})
+    assert 0 not in measurements["__bit_0__"]
 
 
 def test_multi_parameter_expressions():
@@ -213,41 +287,4 @@ def test_multi_parameter_expressions():
     assert parametric().to_ir() == expected
 
 
-def test_integer_parameters():
-    """Test integer input parameter type."""
-
-    @aq.main
-    def parametric(qubit: int):
-        basis = FreeParameter("basis")
-        if basis == 0:
-            h(qubit)
-        elif basis == 1:
-            rx(qubit, 0.5)
-        else:
-            pass
-        result = measure(qubit)  # noqa: F841
-
-    # TODO
-    expected = """OPENQASM 3.0;
-bit result;
-input int[32] basis;
-qubit[2] __qubits__;
-if (basis == 0) {
-    h __qubits__[1];
-} else if (basis == 1) {
-    rx(0.5) __qubits__[1];
-}
-bit __bit_0__;
-__bit_0__ = measure __qubits__[1];
-result = __bit_0__;"""
-    assert parametric(1).to_ir() == expected
-
-
-def test_execution():
-    """TODO"""
-    # tests on local simulator
-
-
-# TODO
-# - local sim doesn't seem to support angle input types
-# TODO: gate args?
+# TODO: test gate args

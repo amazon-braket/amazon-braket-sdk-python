@@ -284,6 +284,9 @@ class ProgramConversionContext:
     def register_parameter(self, name: str) -> None:
         """Register an input parameter with the given name, if it has not already been
         registered. Only floats are currently supported.
+
+        Args:
+            name (str): The identifier for the parameter.
         """
         if name not in self._free_parameters:
             self._free_parameters[name] = oqpy.FloatVar("input", name=name)
