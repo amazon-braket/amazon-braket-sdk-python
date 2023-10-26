@@ -33,7 +33,7 @@ def _qubit_instruction(
     program_conversion_context.register_gate(name)
     for arg in args:
         if isinstance(arg, FreeParameterExpression):
-            # TODO laurecap: Support for other types
+            # TODO laurecap: Support for integers
             # TODO laurecap: Support for expressions
             program_conversion_context.register_parameter(arg.name)
     program_mode = aq_program.ProgramMode.UNITARY if is_unitary else aq_program.ProgramMode.NONE

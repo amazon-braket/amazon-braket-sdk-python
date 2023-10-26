@@ -18,7 +18,7 @@ import functools
 import inspect
 from collections.abc import Callable
 from types import FunctionType
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, get_args
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -545,9 +545,12 @@ def _get_gate_args(f: Callable) -> aq_program.GateArgs:
             )
 
         if param.annotation == aq_instructions.QubitIdentifierType:
-            gate_args.append(param.name, True)
-        elif param.annotation in [float, aq_types.FloatVar]:
-            gate_args.append(param.name, False)
+            gate_args.append_qubit(param.name)
+        elif param.annotation in [float, aq_types.FloatVar] or (
+            get_args(param.annotation)
+            and any(type_ in [float, aq_types.FloatVar] for type_ in get_args(param.annotation))
+        ):
+            gate_args.append_angle(param.name)
         else:
             raise errors.ParameterTypeError(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
