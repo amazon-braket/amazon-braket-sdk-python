@@ -3,13 +3,13 @@ import importlib
 import re
 import sys
 import tempfile
-import numpy as np
 from logging import getLogger
 from pathlib import Path
 from ssl import SSLContext
 from unittest.mock import MagicMock, patch
 
 import job_module
+import numpy as np
 import pytest
 from cloudpickle import cloudpickle
 
@@ -496,27 +496,48 @@ def test_sanitize_hyperparameters(hyperparameter, expected):
     assert _sanitize(hyperparameter) == expected
 
 
-
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
 @patch("time.time", return_value=123.0)
-@patch("builtins.open")
-@patch("tempfile.TemporaryDirectory")
 @patch.object(AwsQuantumJob, "create")
-def test_decorator_in_loop(
-    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
-):
+def test_decorator_in_loop(mock_create, mock_time, mock_retrieve, aws_session):
     mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
 
     def train_circuit(n_qubits, n_layers, n_iterations=10):
         return {
             "params": np.array(
-                [0.68900666, 0.03283901, 0.81187867, 1.26268392, 0.02617915,
-                 0.64396775, -0.11640445, 0.09168079, 0.38625248, 0.51137178,
-                 0.6702684, 0.7341986, 0.67538873, 0.11565373, 0.05984109,
-                 -0.46864439, 1.20187778, -1.76293762, -0.27392566, 0.24333289,
-                 -0.34868898, 0.20794765, 0.35201935, 0.84986321, 1.67362384,
-                 0.71571067, 0.50030453, 1.14005808, -0.76029752, 1.31453205]
-                ),
+                [
+                    0.68900666,
+                    0.03283901,
+                    0.81187867,
+                    1.26268392,
+                    0.02617915,
+                    0.64396775,
+                    -0.11640445,
+                    0.09168079,
+                    0.38625248,
+                    0.51137178,
+                    0.6702684,
+                    0.7341986,
+                    0.67538873,
+                    0.11565373,
+                    0.05984109,
+                    -0.46864439,
+                    1.20187778,
+                    -1.76293762,
+                    -0.27392566,
+                    0.24333289,
+                    -0.34868898,
+                    0.20794765,
+                    0.35201935,
+                    0.84986321,
+                    1.67362384,
+                    0.71571067,
+                    0.50030453,
+                    1.14005808,
+                    -0.76029752,
+                    1.31453205,
+                ]
+            ),
             "task summary": {},
             "estimated cost": 0.0,
         }
@@ -527,9 +548,6 @@ def test_decorator_in_loop(
     @hybrid_job(device=None, include_modules="qcbm", aws_session=aws_session)
     def train_circuit_hybrid_job(n_qubits, n_layers, n_iterations):
         return train_circuit(n_qubits, n_layers, n_iterations)
-
-    mock_tempdir_name = "job_temp_dir_00000"
-    mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
 
     # Running in a loop
     jobs = []
