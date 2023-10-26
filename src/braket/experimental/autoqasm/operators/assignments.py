@@ -85,8 +85,13 @@ def assign_stmt(target_name: str, value: Any) -> Any:
     oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
         oqpy_program.set(target, value)
+    elif target.name not in oqpy_program.declared_vars and program_conversion_context.at_root_scope:
+        # Explicitly declare and initialize the variable at the root scope.
+        target.init_expression = value.init_expression
+        oqpy_program.declare(target)
     else:
         # Set to `value.init_expression` to avoid declaring an unnecessary variable.
+        # The variable will be set in the current scope and auto-declared at the root scope.
         oqpy_program.set(target, value.init_expression)
 
     return target
@@ -113,10 +118,20 @@ def _validate_variables_type_size(var1: oqpy.base.Var, var2: oqpy.base.Var) -> N
         var1 (oqpy.base.Var): Variable to validate.
         var2 (oqpy.base.Var): Variable to validate.
     """
-    var1_size = var1.size or 1
-    var2_size = var2.size or 1
-
     if var_type_from_oqpy(var1) != var_type_from_oqpy(var2):
-        raise ValueError("Variables in assignment statements must have the same type")
-    if var1_size != var2_size:
-        raise ValueError("Variables in assignment statements must have the same size")
+        raise errors.InvalidAssignmentStatement(
+            "Variables in assignment statements must have the same type"
+        )
+
+    if isinstance(var1, oqpy.ArrayVar):
+        if var1.dimensions != var2.dimensions:
+            raise errors.InvalidAssignmentStatement(
+                "Arrays in assignment statements must have the same dimensions"
+            )
+    else:
+        var1_size = var1.size or 1
+        var2_size = var2.size or 1
+        if var1_size != var2_size:
+            raise errors.InvalidAssignmentStatement(
+                "Variables in assignment statements must have the same size"
+            )

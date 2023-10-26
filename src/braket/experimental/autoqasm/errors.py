@@ -100,6 +100,10 @@ must resolve to the same type.""".format(
         return self.message
 
 
+class InvalidAssignmentStatement(AutoQasmError):
+    """Invalid assignment statement for an AutoQASM variable."""
+
+
 class InvalidArrayDeclaration(AutoQasmError):
     """Invalid declaration of an AutoQASM array variable."""
 

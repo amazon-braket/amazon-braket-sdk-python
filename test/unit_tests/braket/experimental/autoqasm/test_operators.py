@@ -21,6 +21,7 @@ import oqpy.base
 import pytest
 
 import braket.experimental.autoqasm as aq
+from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
 from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 
@@ -114,7 +115,6 @@ a = __int_3__;"""
         lambda: aq.FloatVar(2),
         lambda: aq.BoolVar(False),
         lambda: aq.BitVar(0),
-        lambda: aq.ArrayVar(dimensions=[3]),
     ],
 )
 def test_unsupported_inline_conditional_assignment(else_value) -> None:
@@ -162,9 +162,8 @@ def test_branch_assignment_declared() -> None:
             a = aq.IntVar(7)  # noqa: F841
 
     expected = """OPENQASM 3.0;
-int[32] a;
 bool __bool_1__ = true;
-a = 5;
+int[32] a = 5;
 if (__bool_1__) {
     a = 6;
 } else {
@@ -540,10 +539,8 @@ def test_slice_bits() -> None:
         a[3] = b
 
     expected = """OPENQASM 3.0;
-bit[6] a;
-bit b;
-a = "000000";
-b = 1;
+bit[6] a = "000000";
+bit b = 1;
 a[3] = b;"""
 
     assert slice().to_ir() == expected
@@ -559,10 +556,9 @@ def test_slice_bits_w_measure() -> None:
         b0[3] = c
 
     expected = """OPENQASM 3.0;
-bit[10] b0;
 bit c;
 qubit[1] __qubits__;
-b0 = "0000000000";
+bit[10] b0 = "0000000000";
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];
 c = __bit_1__;
@@ -574,9 +570,9 @@ b0[3] = c;"""
 @pytest.mark.parametrize(
     "target_name,value,expected_qasm",
     [
-        ("foo", oqpy.IntVar(5), "\nint[32] foo;\nfoo = 5;"),
-        ("bar", oqpy.FloatVar(1.2), "\nfloat[64] bar;\nbar = 1.2;"),
-        ("baz", oqpy.BitVar(0), "\nbit baz;\nbaz = 0;"),
+        ("foo", oqpy.IntVar(5), "\nint[32] foo = 5;"),
+        ("bar", oqpy.FloatVar(1.2), "\nfloat[64] bar = 1.2;"),
+        ("baz", oqpy.BitVar(0), "\nbit baz = 0;"),
     ],
 )
 def test_assignment_qasm_undeclared_target(
@@ -658,7 +654,7 @@ def test_assignment_qasm_invalid_size_type(
         oqpy_program = program_conversion_context.get_oqpy_program()
         oqpy_program.declare(declared_var)
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
             _ = aq.operators.assign_stmt(
                 target_name=target_name,
                 value=value,
