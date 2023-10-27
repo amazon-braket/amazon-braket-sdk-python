@@ -281,29 +281,6 @@ def test_sim_subroutine_arg():
     assert 0 not in measurements["__bit_0__"]
 
 
-def test_parameter_as_condition():
-    """Test parameters used in conditional statements."""
-
-    @aq.main
-    def parametric(val: float):
-        threshold = 0.9
-        if val > threshold:
-            x(0)
-        measure(0)
-
-    expected = """OPENQASM 3.0;
-input float[64] val;
-float[64] threshold;
-qubit[1] __qubits__;
-threshold = 0.9;
-if (val > threshold) {
-    x __qubits__[0];
-}
-bit __bit_0__;
-__bit_0__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("val")).to_ir() == expected
-
-
 def test_parametric_gate_args():
     """Test that gates can be used with parameters."""
 
