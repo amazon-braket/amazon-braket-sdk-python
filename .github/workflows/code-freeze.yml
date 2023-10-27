@@ -5,6 +5,8 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
 env:
   FROZEN: "false"  # Set to "true" to freeze branches, "false" otherwise
   FEATURE_NAME: ""  # Set your feature prefix here (leave empty to allow all feature branches)
