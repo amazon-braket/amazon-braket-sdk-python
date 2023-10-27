@@ -86,7 +86,9 @@ def hybrid_job(
             algorithm code will be serialized as part of the algorithm code. Default value `[]`
 
         dependencies (str | Path | list[str]): Path (absolute or relative) to a requirements.txt
-            file to be used for the hybrid job.
+            file, or alternatively a list of strings, with each string being a `requirement
+            specifier <https://pip.pypa.io/en/stable/reference/requirement-specifiers/
+            #requirement-specifiers>`_, to be used for the hybrid job.
 
         local (bool): Whether to use local mode for the hybrid job. Default `False`
 
@@ -336,7 +338,7 @@ def _sanitize(hyperparameter: Any) -> str:
     # max allowed length for a hyperparameter is 2500
     if len(sanitized) > 2500:
         # show as much as possible, including the final 20 characters
-        return f"{sanitized[:2500 - 23]}...{sanitized[-20:]}"
+        return f"{sanitized[:2500-23]}...{sanitized[-20:]}"
     return sanitized
 
 
