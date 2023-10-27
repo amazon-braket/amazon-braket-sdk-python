@@ -23,6 +23,8 @@ from typing import Any, Optional, Union
 
 import oqpy.base
 
+from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
@@ -279,6 +281,21 @@ class ProgramConversionContext:
                     f'The gate "{gate_name}" is not a native gate of the target '
                     f'device "{device.name}". Only native gates may be used inside a verbatim '
                     f"block. The native gates of the device are: {native_gates}"
+                )
+
+    def register_args(self, args: list[Any]) -> None:
+        """Register any FreeParameters in the list of arguments.
+
+        Args:
+            args (list[Any]): Arguments passed to the main program or a subroutine.
+        """
+        for arg in args:
+            if isinstance(arg, FreeParameter):
+                self.register_parameter(arg.name)
+            elif isinstance(arg, FreeParameterExpression):
+                # TODO laurecap: Support for expressions
+                raise NotImplementedError(
+                    "Expressions of FreeParameters will be supported shortly!"
                 )
 
     def register_parameter(self, name: str) -> None:

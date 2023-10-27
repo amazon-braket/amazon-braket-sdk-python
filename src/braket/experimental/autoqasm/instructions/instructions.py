@@ -16,8 +16,6 @@
 
 from typing import Any
 
-from braket.circuits.free_parameter import FreeParameter
-from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.experimental.autoqasm import program as aq_program
 
 from .qubits import QubitIdentifierType, _qubit
@@ -31,12 +29,7 @@ def _qubit_instruction(
 
     # Add the instruction to the program.
     program_conversion_context.register_gate(name)
-    for arg in args:
-        if isinstance(arg, FreeParameter):
-            program_conversion_context.register_parameter(arg.name)
-        elif isinstance(arg, FreeParameterExpression):
-            # TODO laurecap: Support for expressions
-            raise NotImplementedError("Expressions of FreeParameters will be supported shortly!")
+    program_conversion_context.register_args(args)
     program_mode = aq_program.ProgramMode.UNITARY if is_unitary else aq_program.ProgramMode.NONE
     oqpy_program = program_conversion_context.get_oqpy_program(mode=program_mode)
     oqpy_program.gate([_qubit(q) for q in qubits], name, *args)

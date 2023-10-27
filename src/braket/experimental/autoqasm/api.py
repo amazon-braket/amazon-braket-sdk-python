@@ -307,6 +307,7 @@ def _convert_subroutine(
 
             # Process the program
             subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
+            program_conversion_context.register_args(args)
 
             # Mark that we are finished processing this function
             program_conversion_context.subroutines_processing.remove(f)

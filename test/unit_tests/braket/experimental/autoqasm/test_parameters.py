@@ -222,6 +222,27 @@ cphaseshift(my_phi) __qubits__[0], __qubits__[1];"""
     assert parametric(FreeParameter("my_phi")).to_ir() == expected
 
 
+def test_simple_subroutine_arg():
+    """Test that parameters work when passed as input values."""
+
+    @aq.subroutine
+    def silly_rz(theta: float):
+        rz(0, theta)
+
+    @aq.main(num_qubits=1)
+    def parametric():
+        silly_rz(FreeParameter("alpha"))
+
+    expected = """OPENQASM 3.0;
+def silly_rz(float[64] theta) {
+    rz(theta) __qubits__[0];
+}
+input float[64] alpha;
+qubit[1] __qubits__;
+silly_rz(alpha);"""
+    assert parametric().to_ir() == expected
+
+
 def test_parameters_passed_as_subroutine_arg():
     """Test that parameters work when passed as input values."""
 
@@ -254,6 +275,7 @@ def test_sim_subroutine_arg():
     @aq.main
     def parametric():
         rx_theta(FreeParameter("theta"))
+        measure(0)
 
     measurements = _test_parametric_on_local_sim(parametric(), {"theta": 3.14})
     assert 0 not in measurements["__bit_0__"]
