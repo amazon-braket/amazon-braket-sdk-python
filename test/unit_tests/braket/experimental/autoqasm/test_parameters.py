@@ -13,23 +13,11 @@
 
 """AutoQASM tests for parameter support."""
 
-import pytest
-
 import braket.experimental.autoqasm as aq
 from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
-from braket.experimental.autoqasm.instructions import (
-    cnot,
-    cphaseshift,
-    gpi,
-    h,
-    measure,
-    ms,
-    rx,
-    rz,
-    x,
-)
+from braket.experimental.autoqasm.instructions import cnot, cphaseshift, measure, ms, rx, rz
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
