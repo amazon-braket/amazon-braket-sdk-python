@@ -13,10 +13,10 @@ env:
   UNFROZEN_PREFIX: ${{ vars.UNFROZEN_PREFIX }}
 
 jobs:
-  check-branch-name-and-title:
+  check-pr-frozen-status:
     runs-on: ubuntu-latest
     steps:
-    - name: Fetch PR title and check conditions
+    - name: Fetch PR data and check if merge allowed
       if: env.FROZEN == 'true'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
