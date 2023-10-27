@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.59.2 (2023-10-25)
+
+### Bug Fixes and Other Changes
+
+ * remove deprecated as_unitary method
+
 ## v1.59.1.post0 (2023-10-24)
 
 ### Documentation Changes
