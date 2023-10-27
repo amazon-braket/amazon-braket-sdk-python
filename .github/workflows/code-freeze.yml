@@ -7,9 +7,10 @@ on:
 
 permissions:
   contents: read
+
 env:
-  FROZEN: "false"  # Set to "true" to freeze branches, "false" otherwise
-  FEATURE_NAME: ""  # Set your feature prefix here (leave empty to allow all feature branches)
+  FROZEN: ${{ vars.FROZEN }}
+  UNFROZEN_PREFIX: ${{ vars.UNFROZEN_PREFIX }}
 
 jobs:
   check-branch-name-and-title:
@@ -30,8 +31,8 @@ jobs:
         echo $BRANCH_NAME
         echo $PR_TITLE
 
-        if [[ "$BRANCH_NAME" != feature/$FEATURE_NAME* ]] && 
+        if [[ "$BRANCH_NAME" != $UNFROZEN_PREFIX* ]] && 
            [[ "$PR_TITLE" != fix:* && "$PR_TITLE" != *"[critical]"* ]]; then
-          echo "Error: You can only merge from branches that start with 'feature/$FEATURE_NAME', or PRs titled with 'fix: ' and containing '[critical]'."
+          echo "Error: You can only merge from branches that start with '$UNFROZEN_PREFIX', or PRs titled with 'fix: ' and containing '[critical]'."
           exit 1
         fi
