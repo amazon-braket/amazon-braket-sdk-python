@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.59.2 (2023-10-25)
+
+### Bug Fixes and Other Changes
+
+ * remove deprecated as_unitary method
+
+## v1.59.1.post0 (2023-10-24)
+
+### Documentation Changes
+
+ * add the amazon braket tag in the stack exchange URL
+
 ## v1.59.1 (2023-10-18)
 
 ### Bug Fixes and Other Changes
