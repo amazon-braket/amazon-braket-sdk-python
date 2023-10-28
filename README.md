@@ -234,7 +234,7 @@ tox -e integ-tests -- your-arguments
 
 If you encounter bugs or face issues while using the SDK, please let us know by posting 
 the issue on our [Github issue tracker](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/).  
-For other issues or general questions, please ask on the [Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/questions/ask) and add the tag amazon-braket.
+For other issues or general questions, please ask on the [Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/questions/ask?Tags=amazon-braket).
 
 ### Feedback and Feature Requests
 
