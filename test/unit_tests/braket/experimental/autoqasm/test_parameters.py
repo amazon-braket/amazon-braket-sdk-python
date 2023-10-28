@@ -78,29 +78,6 @@ c = __bit_0__;"""
     assert multi_parametric().to_ir() == expected
 
 
-def test_typed_parameters():
-    """Test that multiple free parameters all appear in the processed program."""
-
-    @aq.main
-    def multi_parametric():
-        rx(0, FreeParameter("alpha"))
-        rx(1, FreeParameter("theta"))
-        c = measure([0, 1])  # noqa: F841
-
-    expected = """OPENQASM 3.0;
-bit[2] c;
-input float[64] alpha;
-input float[64] theta;
-qubit[2] __qubits__;
-rx(alpha) __qubits__[0];
-rx(theta) __qubits__[1];
-bit[2] __bit_0__ = "00";
-__bit_0__[0] = measure __qubits__[0];
-__bit_0__[1] = measure __qubits__[1];
-c = __bit_0__;"""
-    assert multi_parametric().to_ir() == expected
-
-
 def test_sim_multi_param():
     measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": 3.14, "theta": 0})
     assert all(val == "10" for val in measurements["c"])
