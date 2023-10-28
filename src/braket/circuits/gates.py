@@ -63,6 +63,7 @@ class H(Gate):
     r"""Hadamard gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{H} = \frac{1}{\sqrt{2}} \begin{bmatrix}
                 1 & 1 \\
                 1 & -1 \end{bmatrix}.
@@ -134,6 +135,7 @@ class I(Gate):  # noqa: E742, E261
     r"""Identity gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{I} = \begin{bmatrix}
                 1 & 0 \\
                 0 & 1 \end{bmatrix}.
@@ -205,6 +207,7 @@ class X(Gate):
     r"""Pauli-X gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{X} = \begin{bmatrix}
                 0 & 1 \\
                 1 & 0
@@ -277,6 +280,7 @@ class Y(Gate):
     r"""Pauli-Y gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{Y} = \begin{bmatrix}
                 0 & -i \\
                 i & 0
@@ -349,6 +353,7 @@ class Z(Gate):
     r"""Pauli-Z gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{Z} = \begin{bmatrix}
                 1 & 0 \\
                 0 & -1
@@ -421,6 +426,7 @@ class S(Gate):
     r"""S gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{S} = \begin{bmatrix}
                 1 & 0 \\
                 0 & i
@@ -493,6 +499,7 @@ class Si(Gate):
     r"""Conjugate transpose of S gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{S}^\dagger = \begin{bmatrix}
                 1 & 0 \\
                 0 & -i
@@ -565,6 +572,7 @@ class T(Gate):
     r"""T gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{T} = \begin{bmatrix}
                 1 & 0 \\
                 0 & e^{i \pi/4}
@@ -637,6 +645,7 @@ class Ti(Gate):
     r"""Conjugate transpose of T gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{T}^\dagger = \begin{bmatrix}
                 1 & 0 \\
                 0 & e^{-i \pi/4}
@@ -709,6 +718,7 @@ class V(Gate):
     r"""Square root of not gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
                 1+i & 1-i \\
                 1-i & 1+i
@@ -781,6 +791,7 @@ class Vi(Gate):
     r"""Conjugate transpose of square root of not gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{V}^\dagger = \frac{1}{2}\begin{bmatrix}
                 1-i & 1+i \\
                 1+i & 1-i
@@ -856,6 +867,7 @@ class Rx(AngledGate):
     r"""X-axis rotation gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{R_x}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & -i \sin{(\phi/2)} \\
                 -i \sin{(\phi/2)} & \cos{(\phi/2)}
@@ -942,6 +954,7 @@ class Ry(AngledGate):
     r"""Y-axis rotation gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{R_y}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & -\sin{(\phi/2)} \\
                 \sin{(\phi/2)} & \cos{(\phi/2)}
@@ -1029,6 +1042,7 @@ class Rz(AngledGate):
     r"""Z-axis rotation gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
                 e^{-i \phi/2} & 0 \\
                 0 & e^{i \phi/2}
@@ -1111,6 +1125,7 @@ class PhaseShift(AngledGate):
     r"""Phase shift gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{PhaseShift}(\phi) = \begin{bmatrix}
                 1 & 0 \\
                 0 & e^{i \phi}
@@ -1198,6 +1213,7 @@ class CNot(Gate):
     r"""Controlled NOT gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{CNOT} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 \\
@@ -1267,6 +1283,7 @@ class Swap(Gate):
     r"""Swap gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{SWAP} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 0 & 1 & 0 \\
@@ -1351,6 +1368,7 @@ class ISwap(Gate):
     r"""ISwap gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{iSWAP} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 0 & i & 0 \\
@@ -1435,6 +1453,7 @@ class PSwap(AngledGate):
     r"""PSwap gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 0 & e^{i \phi} & 0 \\
@@ -1531,6 +1550,7 @@ class XY(AngledGate):
     r"""XY gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & \cos{(\phi/2)} & i\sin{(\phi/2)} & 0 \\
@@ -1636,7 +1656,8 @@ class CPhaseShift(AngledGate):
     r"""Controlled phase shift gate.
 
     Unitary matrix:
-        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
+
+        .. math:: \mathtt{CPhaseShift}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 \\
                 0 & 0 & 1 & 0 \\
@@ -1713,6 +1734,7 @@ class CPhaseShift00(AngledGate):
     r"""Controlled phase shift gate for phasing the \|00> state.
 
     Unitary matrix:
+
         .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
                 e^{i \phi} & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 \\
@@ -1790,9 +1812,10 @@ class CPhaseShift01(AngledGate):
     r"""Controlled phase shift gate for phasing the \|01> state.
 
     Unitary matrix:
+
         .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
-                e^{i \phi} & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
+                1 & 0 & 0 & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
                 0 & 0 & 1 & 0 \\
                 0 & 0 & 0 & 1
             \end{bmatrix}.
@@ -1867,6 +1890,7 @@ class CPhaseShift10(AngledGate):
     r"""Controlled phase shift gate for phasing the \\|10> state.
 
     Unitary matrix:
+
         .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 \\
@@ -1944,6 +1968,7 @@ class CV(Gate):
     r"""Controlled Sqrt of NOT gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{CV} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 \\
@@ -2013,6 +2038,7 @@ class CY(Gate):
     r"""Controlled Pauli-Y gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{CY} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 \\
@@ -2082,6 +2108,7 @@ class CZ(Gate):
     r"""Controlled Pauli-Z gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{CZ} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 \\
@@ -2143,6 +2170,7 @@ class ECR(Gate):
     r"""An echoed RZX(pi/2) gate (ECR gate).
 
     Unitary matrix:
+
         .. math:: \mathtt{ECR} = \begin{bmatrix}
                 0 & 0 & 1 & i \\
                 0 & 0 & i & 1 \\
@@ -2226,6 +2254,7 @@ class XX(AngledGate):
     r"""Ising XX coupling gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & 0 & 0 & -i \sin{(\phi/2)} \\
                 0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
@@ -2330,6 +2359,7 @@ class YY(AngledGate):
     r"""Ising YY coupling gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & 0 & 0 & i \sin{(\phi/2)} \\
                 0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
@@ -2434,6 +2464,7 @@ class ZZ(AngledGate):
     r"""Ising ZZ coupling gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
                 e^{-i\phi/2} & 0 & 0 & 0 \\
                 0 & e^{i\phi/2} & 0 & 0 \\
@@ -2535,6 +2566,7 @@ class CCNot(Gate):
     r"""CCNOT gate or Toffoli gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{CCNOT} = \begin{bmatrix}
                 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
@@ -2631,6 +2663,7 @@ class CSwap(Gate):
     r"""Controlled Swap gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{CSWAP} = \begin{bmatrix}
                 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
                 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
@@ -2717,6 +2750,7 @@ class GPi(AngledGate):
     r"""IonQ GPi gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
                 0 & e^{-i \phi} \\
                 e^{i \phi} & 0
@@ -2802,6 +2836,7 @@ class GPi2(AngledGate):
     r"""IonQ GPi2 gate.
 
     Unitary matrix:
+
         .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
                 -i e^{i \phi} & 1
@@ -2884,9 +2919,10 @@ Gate.register_gate(GPi2)
 
 
 class MS(TripleAngledGate):
-    r"""IonQ Mølmer-Sørenson gate.
+    r"""IonQ Mølmer-Sørensen gate.
 
         Unitary matrix:
+
             .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
                     \cos{\frac{\theta}{2}} & 0 &
                     0 & -ie^{-i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} \\
