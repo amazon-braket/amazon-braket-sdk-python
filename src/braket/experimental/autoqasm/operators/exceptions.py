@@ -14,7 +14,9 @@
 
 """Operators for exception handling."""
 
-from typing import Callable
+from collections.abc import Callable
+
+from braket.experimental.autoqasm.types import is_qasm_type
 
 
 def assert_stmt(test: bool, message: Callable) -> None:
@@ -25,4 +27,10 @@ def assert_stmt(test: bool, message: Callable) -> None:
         message (Callable): A function which returns the message to be used
             if the assertion fails.
     """
+    if is_qasm_type(test):
+        raise NotImplementedError(
+            "Assertions are not supported for values that depend on "
+            "measurement results or AutoQASM variables."
+        )
+
     assert test, message()

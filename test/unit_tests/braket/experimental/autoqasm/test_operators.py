@@ -363,36 +363,14 @@ def test_logical_eq_qasm_cond() -> None:
     assert "==" in qasm
 
 
-def test_logical_ops_qasm() -> None:
-    """Tests the logical aq.operators for QASM expressions."""
-
+def test_logical_op_and() -> None:
     @aq.subroutine
     def do_and(a: bool, b: bool):
         return a and b
 
-    @aq.subroutine
-    def do_or(a: bool, b: bool):
-        return a or b
-
-    @aq.subroutine
-    def do_not(a: bool):
-        return not a
-
-    @aq.subroutine
-    def do_eq(a: int, b: int):
-        return a == b
-
-    @aq.subroutine
-    def do_not_eq(a: int, b: int):
-        return a != b
-
     @aq.main
     def prog():
         do_and(True, False)
-        do_or(True, False)
-        do_not(True)
-        do_eq(1, 2)
-        do_not_eq(1, 2)
 
     expected = """OPENQASM 3.0;
 def do_and(bool a, bool b) -> bool {
@@ -400,36 +378,92 @@ def do_and(bool a, bool b) -> bool {
     __bool_0__ = a && b;
     return __bool_0__;
 }
+bool __bool_1__;
+__bool_1__ = do_and(true, false);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_or() -> None:
+    @aq.subroutine
+    def do_or(a: bool, b: bool):
+        return a or b
+
+    @aq.main
+    def prog():
+        do_or(True, False)
+
+    expected = """OPENQASM 3.0;
 def do_or(bool a, bool b) -> bool {
-    bool __bool_2__;
-    __bool_2__ = a || b;
-    return __bool_2__;
-}
-def do_not(bool a) -> bool {
-    bool __bool_4__;
-    __bool_4__ = !a;
-    return __bool_4__;
-}
-def do_eq(int[32] a, int[32] b) -> bool {
-    bool __bool_6__;
-    __bool_6__ = a == b;
-    return __bool_6__;
-}
-def do_not_eq(int[32] a, int[32] b) -> bool {
-    bool __bool_8__;
-    __bool_8__ = a != b;
-    return __bool_8__;
+    bool __bool_0__;
+    __bool_0__ = a || b;
+    return __bool_0__;
 }
 bool __bool_1__;
-__bool_1__ = do_and(true, false);
-bool __bool_3__;
-__bool_3__ = do_or(true, false);
-bool __bool_5__;
-__bool_5__ = do_not(true);
-bool __bool_7__;
-__bool_7__ = do_eq(1, 2);
-bool __bool_9__;
-__bool_9__ = do_not_eq(1, 2);"""
+__bool_1__ = do_or(true, false);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_not() -> None:
+    @aq.subroutine
+    def do_not(a: bool):
+        return not a
+
+    @aq.main
+    def prog():
+        do_not(True)
+
+    expected = """OPENQASM 3.0;
+def do_not(bool a) -> bool {
+    bool __bool_0__;
+    __bool_0__ = !a;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_not(true);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_eq() -> None:
+    @aq.subroutine
+    def do_eq(a: int, b: int):
+        return a == b
+
+    @aq.main
+    def prog():
+        do_eq(1, 2)
+
+    expected = """OPENQASM 3.0;
+def do_eq(int[32] a, int[32] b) -> bool {
+    bool __bool_0__;
+    __bool_0__ = a == b;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_eq(1, 2);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_not_eq() -> None:
+    @aq.subroutine
+    def do_not_eq(a: int, b: int):
+        return a != b
+
+    @aq.main
+    def prog():
+        do_not_eq(1, 2)
+
+    expected = """OPENQASM 3.0;
+def do_not_eq(int[32] a, int[32] b) -> bool {
+    bool __bool_0__;
+    __bool_0__ = a != b;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_not_eq(1, 2);"""
 
     assert prog().to_ir() == expected
 
@@ -739,6 +773,17 @@ def test_py_assert() -> None:
     test_assert(True)
     with pytest.raises(AssertionError):
         test_assert(False)
+
+
+def test_measurement_assert() -> None:
+    """Test assertions on measurement results inside an AutoQASM program."""
+
+    @aq.main
+    def test_assert():
+        assert measure(0)
+
+    with pytest.raises(NotImplementedError):
+        test_assert()
 
 
 def test_py_list_ops() -> None:

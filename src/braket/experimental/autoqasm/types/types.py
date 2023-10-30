@@ -60,7 +60,7 @@ class ArrayVar(oqpy.ArrayVar):
     def __init__(self, *args, **kwargs):
         if (
             program.get_program_conversion_context().subroutines_processing
-            or not program.get_program_conversion_context().at_root_scope
+            or not program.get_program_conversion_context().at_function_root_scope
         ):
             raise errors.InvalidArrayDeclaration(
                 "Arrays may only be declared at the root scope of an AutoQASM main function."

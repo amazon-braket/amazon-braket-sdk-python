@@ -76,7 +76,7 @@ def assign_stmt(target_name: str, value: Any) -> Any:
 
     if is_target_name_used:
         target = _get_oqpy_program_variable(target_name)
-        _validate_variables_type_size(target, value)
+        _validate_assignment_types(target, value)
     else:
         target = copy.copy(value)
         target.init_expression = None
@@ -84,14 +84,29 @@ def assign_stmt(target_name: str, value: Any) -> Any:
 
     oqpy_program = program_conversion_context.get_oqpy_program()
     if is_value_name_used or value.init_expression is None:
+        # Directly assign the value to the target.
+        # For example:
+        #   a = b;
+        # where `b` is previously declared.
         oqpy_program.set(target, value)
-    elif target.name not in oqpy_program.declared_vars and program_conversion_context.at_root_scope:
+    elif (
+        target.name not in oqpy_program.declared_vars
+        and program_conversion_context.at_function_root_scope
+    ):
         # Explicitly declare and initialize the variable at the root scope.
+        # For example:
+        #   int[32] a = 10;
+        # where `a` is at the root scope of the function (not inside any if/for/while block).
         target.init_expression = value.init_expression
         oqpy_program.declare(target)
     else:
         # Set to `value.init_expression` to avoid declaring an unnecessary variable.
         # The variable will be set in the current scope and auto-declared at the root scope.
+        # For example, the `a = 1` and `a = 0` statements in the following:
+        #   int[32] a;
+        #   if (b == True) { a = 1; }
+        #   else { a = 0; }
+        # where `b` is previously declared.
         oqpy_program.set(target, value.init_expression)
 
     return target
@@ -111,8 +126,8 @@ def _get_oqpy_program_variable(var_name: str) -> oqpy.base.Var:
     return variables[var_name]
 
 
-def _validate_variables_type_size(var1: oqpy.base.Var, var2: oqpy.base.Var) -> None:
-    """Raise error when the size or type of the two variables do not match.
+def _validate_assignment_types(var1: oqpy.base.Var, var2: oqpy.base.Var) -> None:
+    """Validates that the size and type of the variables are compatible for assignment.
 
     Args:
         var1 (oqpy.base.Var): Variable to validate.

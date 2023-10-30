@@ -15,7 +15,8 @@
 """Operators for other data structures (e.g. list)."""
 
 import collections
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any, Optional
 
 
 class ListPopOpts(collections.namedtuple("ListPopOpts", ("element_dtype", "element_shape"))):
