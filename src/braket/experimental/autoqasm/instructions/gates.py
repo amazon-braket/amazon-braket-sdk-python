@@ -12,8 +12,11 @@
 # language governing permissions and limitations under the License.
 
 
-"""Quantum gates, unitary instructions, that apply to qubits.
-"""
+"""Quantum gates, unitary instructions, that apply to qubits."""
+
+from typing import Union
+
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 
 from .instructions import _qubit_instruction
 from .qubits import QubitIdentifierType
@@ -52,14 +55,14 @@ def cnot(
 def cphaseshift(
     control: QubitIdentifierType,
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Controlled phase shift gate.
 
     Args:
         control (QubitIdentifierType): Control qubit.
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("cphaseshift", [control, target], angle)
@@ -68,14 +71,14 @@ def cphaseshift(
 def cphaseshift00(
     control: QubitIdentifierType,
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Controlled phase shift gate for phasing the \\|00> state.
 
     Args:
         control (QubitIdentifierType): Control qubit.
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("cphaseshift00", [control, target], angle)
@@ -84,14 +87,14 @@ def cphaseshift00(
 def cphaseshift01(
     control: QubitIdentifierType,
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Controlled phase shift gate for phasing the \\|01> state.
 
     Args:
         control (QubitIdentifierType): Control qubit.
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("cphaseshift01", [control, target], angle)
@@ -100,14 +103,14 @@ def cphaseshift01(
 def cphaseshift10(
     control: QubitIdentifierType,
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Controlled phase shift gate for phasing the \\|10> state.
 
     Args:
         control (QubitIdentifierType): Control qubit.
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("cphaseshift10", [control, target], angle)
@@ -187,13 +190,13 @@ def ecr(
 
 def gpi(
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """IonQ GPi gate.
 
     Args:
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("gpi", [target], angle)
@@ -201,13 +204,13 @@ def gpi(
 
 def gpi2(
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """IonQ GPi2 gate.
 
     Args:
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("gpi2", [target], angle)
@@ -254,18 +257,18 @@ def iswap(
 def ms(
     target_0: QubitIdentifierType,
     target_1: QubitIdentifierType,
-    angle_0: float,
-    angle_1: float,
-    angle_2: float,
+    angle_0: Union[float, FreeParameterExpression],
+    angle_1: Union[float, FreeParameterExpression],
+    angle_2: Union[float, FreeParameterExpression],
 ) -> None:
     """IonQ Mølmer-Sørenson gate.
 
     Args:
         target_0 (QubitIdentifierType): Target qubit 0.
         target_1 (QubitIdentifierType): Target qubit 1.
-        angle_0 (float): Rotation angle 0 in radians.
-        angle_1 (float): Rotation angle 1 in radians.
-        angle_2 (float): Rotation angle 2 in radians.
+        angle_0 (Union[float, FreeParameterExpression]): Rotation angle 0 in radians.
+        angle_1 (Union[float, FreeParameterExpression]): Rotation angle 1 in radians.
+        angle_2 (Union[float, FreeParameterExpression]): Rotation angle 2 in radians.
 
     """
     _qubit_instruction("ms", [target_0, target_1], angle_0, angle_1, angle_2)
@@ -273,13 +276,13 @@ def ms(
 
 def phaseshift(
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Phase shift gate.
 
     Args:
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("phaseshift", [target], angle)
@@ -288,14 +291,14 @@ def phaseshift(
 def pswap(
     target_0: QubitIdentifierType,
     target_1: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """PSwap gate.
 
     Args:
         target_0 (QubitIdentifierType): Target qubit 0.
         target_1 (QubitIdentifierType): Target qubit 1.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("pswap", [target_0, target_1], angle)
@@ -303,13 +306,13 @@ def pswap(
 
 def rx(
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """X-axis rotation gate.
 
     Args:
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("rx", [target], angle)
@@ -317,13 +320,13 @@ def rx(
 
 def ry(
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Y-axis rotation gate.
 
     Args:
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("ry", [target], angle)
@@ -331,13 +334,13 @@ def ry(
 
 def rz(
     target: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Z-axis rotation gate.
 
     Args:
         target (QubitIdentifierType): Target qubit.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("rz", [target], angle)
@@ -444,14 +447,14 @@ def x(
 def xx(
     target_0: QubitIdentifierType,
     target_1: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Ising XX coupling gate.
 
     Args:
         target_0 (QubitIdentifierType): Target qubit 0.
         target_1 (QubitIdentifierType): Target qubit 1.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("xx", [target_0, target_1], angle)
@@ -460,14 +463,14 @@ def xx(
 def xy(
     target_0: QubitIdentifierType,
     target_1: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """XY gates
 
     Args:
         target_0 (QubitIdentifierType): Target qubit 0.
         target_1 (QubitIdentifierType): Target qubit 1.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("xy", [target_0, target_1], angle)
@@ -488,14 +491,14 @@ def y(
 def yy(
     target_0: QubitIdentifierType,
     target_1: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Ising YY coupling gate.
 
     Args:
         target_0 (QubitIdentifierType): Target qubit 0.
         target_1 (QubitIdentifierType): Target qubit 1.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("yy", [target_0, target_1], angle)
@@ -516,14 +519,14 @@ def z(
 def zz(
     target_0: QubitIdentifierType,
     target_1: QubitIdentifierType,
-    angle: float,
+    angle: Union[float, FreeParameterExpression],
 ) -> None:
     """Ising ZZ coupling gate.
 
     Args:
         target_0 (QubitIdentifierType): Target qubit 0.
         target_1 (QubitIdentifierType): Target qubit 1.
-        angle (float): Rotation angle in radians.
+        angle (Union[float, FreeParameterExpression]): Rotation angle in radians.
 
     """
     _qubit_instruction("zz", [target_0, target_1], angle)
