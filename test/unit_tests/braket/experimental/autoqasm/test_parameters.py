@@ -13,6 +13,8 @@
 
 """AutoQASM tests for parameter support."""
 
+import numpy as np
+
 import braket.experimental.autoqasm as aq
 from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
@@ -51,7 +53,7 @@ __bit_0__ = measure __qubits__[0];"""
 def test_sim_simple():
     measurements = _test_parametric_on_local_sim(simple_parametric(), {"theta": 0})
     assert 1 not in measurements["__bit_0__"]
-    measurements = _test_parametric_on_local_sim(simple_parametric(), {"theta": 3.14})
+    measurements = _test_parametric_on_local_sim(simple_parametric(), {"theta": np.pi})
     assert 0 not in measurements["__bit_0__"]
 
 
@@ -80,9 +82,9 @@ c = __bit_0__;"""
 
 
 def test_sim_multi_param():
-    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": 3.14, "theta": 0})
+    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": np.pi, "theta": 0})
     assert all(val == "10" for val in measurements["c"])
-    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": 0, "theta": 3.14})
+    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": 0, "theta": np.pi})
     assert all(val == "01" for val in measurements["c"])
 
 
@@ -171,7 +173,7 @@ def test_sim_multi_angle():
     def parametric(phi: float, theta: float):
         ms(0, 1, phi, phi, theta)
 
-    _test_parametric_on_local_sim(parametric(FreeParameter("phi"), 0.0), {"phi": 3.14})
+    _test_parametric_on_local_sim(parametric(FreeParameter("phi"), 0.0), {"phi": np.pi})
 
 
 def test_parameters_passed_as_main_arg():
@@ -243,7 +245,7 @@ def test_sim_subroutine_arg():
         rx_theta(FreeParameter("theta"))
         measure(0)
 
-    measurements = _test_parametric_on_local_sim(parametric(), {"theta": 3.14})
+    measurements = _test_parametric_on_local_sim(parametric(), {"theta": np.pi})
     assert 0 not in measurements["__bit_0__"]
 
 
