@@ -23,6 +23,8 @@ from typing import Any, Optional, Union
 
 import oqpy.base
 
+from braket.circuits.free_parameter import FreeParameter
+from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.serialization import IRType, SerializableProgram
 from braket.device_schema import DeviceActionType
 from braket.devices.device import Device
@@ -162,17 +164,21 @@ class GateArgs:
     def __len__(self):
         return len(self._args)
 
-    def append(self, name: str, is_qubit: bool) -> None:
-        """Appends an argument to the list of gate arguments.
+    def append_qubit(self, name: str) -> None:
+        """Appends a qubit argument to the list of gate arguments.
 
         Args:
             name (str): The name of the argument.
-            is_qubit (bool): Whether the argument represents a qubit.
         """
-        if is_qubit:
-            self._args.append(oqpy.Qubit(name, needs_declaration=False))
-        else:
-            self._args.append(oqpy.AngleVar(name=name))
+        self._args.append(oqpy.Qubit(name, needs_declaration=False))
+
+    def append_angle(self, name: str) -> None:
+        """Appends a parameter argument to the list of gate arguments.
+
+        Args:
+            name (str): The name of the argument.
+        """
+        self._args.append(oqpy.AngleVar(name=name))
 
     @property
     def qubits(self) -> list[oqpy.Qubit]:
@@ -207,6 +213,7 @@ class ProgramConversionContext:
         self._virtual_qubits_used = set()
         self._var_idx = 0
         self._has_pulse_control = False
+        self._free_parameters = {}
 
     def make_program(self) -> Program:
         """Makes a Program object using the oqpy program from this conversion context.
@@ -275,6 +282,35 @@ class ProgramConversionContext:
                     f'device "{device.name}". Only native gates may be used inside a verbatim '
                     f"block. The native gates of the device are: {native_gates}"
                 )
+
+    def register_args(self, args: list[Any]) -> None:
+        """Register any FreeParameters in the list of arguments.
+
+        Args:
+            args (list[Any]): Arguments passed to the main program or a subroutine.
+        """
+        for arg in args:
+            if isinstance(arg, FreeParameter):
+                self.register_parameter(arg.name)
+            elif isinstance(arg, FreeParameterExpression):
+                # TODO laurecap: Support for expressions
+                raise NotImplementedError(
+                    "Expressions of FreeParameters will be supported shortly!"
+                )
+
+    def register_parameter(self, name: str) -> None:
+        """Register an input parameter with the given name, if it has not already been
+        registered. Only floats are currently supported.
+
+        Args:
+            name (str): The identifier for the parameter.
+        """
+        if name not in self._free_parameters:
+            self._free_parameters[name] = oqpy.FloatVar("input", name=name)
+
+    def get_free_parameters(self) -> list[oqpy.FloatVar]:
+        """Return a list of named oqpy.Vars that are used as free parameters in the program."""
+        return list(self._free_parameters.values())
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.

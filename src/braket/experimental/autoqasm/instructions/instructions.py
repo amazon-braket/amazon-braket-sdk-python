@@ -12,8 +12,7 @@
 # language governing permissions and limitations under the License.
 
 
-"""Non-unitary instructions that apply to qubits.
-"""
+"""Non-unitary instructions that apply to qubits."""
 
 from typing import Any
 
@@ -30,6 +29,7 @@ def _qubit_instruction(
 
     # Add the instruction to the program.
     program_conversion_context.register_gate(name)
+    program_conversion_context.register_args(args)
     program_mode = aq_program.ProgramMode.UNITARY if is_unitary else aq_program.ProgramMode.NONE
     oqpy_program = program_conversion_context.get_oqpy_program(mode=program_mode)
     oqpy_program.gate([_qubit(q) for q in qubits], name, *args)

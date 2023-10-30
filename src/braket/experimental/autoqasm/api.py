@@ -18,7 +18,7 @@ import functools
 import inspect
 from collections.abc import Callable
 from types import FunctionType
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, get_args
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
@@ -206,10 +206,21 @@ def _convert_main(
         # Process the program
         aq_transpiler.converted_call(f, args, kwargs, options=options)
 
-        # Modify program to add qubit declaration if necessary
+        # Modify program to add global declarations if necessary
         _add_qubit_declaration(program_conversion_context)
+        _add_io_declarations(program_conversion_context)
 
     return program_conversion_context.make_program()
+
+
+def _add_io_declarations(program_conversion_context: aq_program.ProgramConversionContext) -> None:
+    root_oqpy_program = program_conversion_context.get_oqpy_program(
+        scope=aq_program.ProgramScope.MAIN
+    )
+    root_oqpy_program.declare(
+        program_conversion_context.get_free_parameters(),
+        to_beginning=True,
+    )
 
 
 def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConversionContext) -> None:
@@ -296,6 +307,7 @@ def _convert_subroutine(
 
             # Process the program
             subroutine_function_call = oqpy_sub(oqpy_program, *args, **kwargs)
+            program_conversion_context.register_args(args)
 
             # Mark that we are finished processing this function
             program_conversion_context.subroutines_processing.remove(f)
@@ -534,9 +546,11 @@ def _get_gate_args(f: Callable) -> aq_program.GateArgs:
             )
 
         if param.annotation == aq_instructions.QubitIdentifierType:
-            gate_args.append(param.name, True)
-        elif param.annotation in [float, aq_types.FloatVar]:
-            gate_args.append(param.name, False)
+            gate_args.append_qubit(param.name)
+        elif param.annotation == float or any(
+            type_ == float for type_ in get_args(param.annotation)
+        ):
+            gate_args.append_angle(param.name)
         else:
             raise errors.ParameterTypeError(
                 f'Parameter "{param.name}" for gate "{f.__name__}" '
