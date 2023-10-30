@@ -229,9 +229,8 @@ def bell_measurement_declared() -> None:
 
 def test_bell_measurement_declared() -> None:
     expected = """OPENQASM 3.0;
-bit[2] c;
 qubit[2] __qubits__;
-c = "00";
+bit[2] c = "00";
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];
 bit[2] __bit_1__ = "00";
@@ -279,7 +278,7 @@ def bell_measurement_invalid_declared_type() -> None:
 def test_bell_measurement_invalid_declared_type() -> None:
     """Test measurement with reuslt stored in an variable with invalid type."""
     expected_error_message = "Variables in assignment statements must have the same type"
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
         bell_measurement_invalid_declared_type()
     assert expected_error_message in str(exc_info.value)
 
@@ -298,7 +297,7 @@ def bell_measurement_invalid_declared_size() -> None:
 def test_bell_measurement_invalid_declared_size() -> None:
     """Test measurement with reuslt stored in an variable with invalid size."""
     expected_error_message = "Variables in assignment statements must have the same size"
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
         bell_measurement_invalid_declared_size()
     assert expected_error_message in str(exc_info.value)
 
@@ -755,20 +754,15 @@ def classical_variables_types() -> None:
 
 def test_classical_variables_types():
     expected = """OPENQASM 3.0;
-bit a;
-int[32] i;
-bit[2] a_array;
-int[32] b;
-float[64] c;
-a = 0;
+bit a = 0;
 a = 1;
-i = 1;
-a_array = "00";
+int[32] i = 1;
+bit[2] a_array = "00";
 a_array[0] = 0;
 a_array[i] = 1;
-b = 10;
+int[32] b = 10;
 b = 15;
-c = 1.2;
+float[64] c = 1.2;
 c = 3.4;"""
     assert classical_variables_types().to_ir() == expected
 
@@ -786,9 +780,8 @@ def test_classical_variables_assignment():
         a = b  # declared target, declared value # noqa: F841
 
     expected = """OPENQASM 3.0;
-int[32] a;
 int[32] b;
-a = 1;
+int[32] a = 1;
 a = 2;
 b = a;
 a = b;"""

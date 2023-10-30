@@ -205,6 +205,7 @@ class ProgramConversionContext:
         self.user_config = user_config or UserConfig()
         self.return_variable = None
         self.in_verbatim_block = False
+        self.at_function_root_scope = True  # whether we are at the root scope of main or subroutine
         self._oqpy_program_stack = [oqpy.Program(simplify_constants=False)]
         self._gate_definitions_processing = []
         self._calibration_definitions_processing = []
@@ -482,6 +483,67 @@ class ProgramConversionContext:
             yield
         finally:
             self._oqpy_program_stack.pop()
+
+    @contextlib.contextmanager
+    def _control_flow_block(
+        self, _context_manager: contextlib._GeneratorContextManager
+    ) -> contextlib._GeneratorContextManager:
+        original = self.at_function_root_scope
+        try:
+            self.at_function_root_scope = False
+            with _context_manager as _cm:
+                yield _cm
+        finally:
+            self.at_function_root_scope = original
+
+    def if_block(self, condition: Any) -> contextlib._GeneratorContextManager:
+        """Sets the program conversion context into an if block context.
+
+        Args:
+            condition (Any): The condition of the if block.
+
+        Yields:
+            _GeneratorContextManager: The context manager of the oqpy.If block.
+        """
+        oqpy_program = self.get_oqpy_program()
+        return self._control_flow_block(oqpy.If(oqpy_program, condition))
+
+    def else_block(self) -> contextlib._GeneratorContextManager:
+        """Sets the program conversion context into an else block context.
+        Must be immediately preceded by an if block.
+
+        Yields:
+            _GeneratorContextManager: The context manager of the oqpy.Else block.
+        """
+        oqpy_program = self.get_oqpy_program()
+        return self._control_flow_block(oqpy.Else(oqpy_program))
+
+    def for_in(
+        self, iterator: oqpy.Range, iterator_name: Optional[str]
+    ) -> contextlib._GeneratorContextManager:
+        """Sets the program conversion context into a for loop context.
+
+        Args:
+            iterator (oqpy.Range): The iterator of the for loop.
+            iterator_name (Optional[str]): The symbol to use as the name of the iterator.
+
+        Yields:
+            _GeneratorContextManager: The context manager of the oqpy.ForIn block.
+        """
+        oqpy_program = self.get_oqpy_program()
+        return self._control_flow_block(oqpy.ForIn(oqpy_program, iterator, iterator_name))
+
+    def while_loop(self, condition: Any) -> contextlib._GeneratorContextManager:
+        """Sets the program conversion context into a while loop context.
+
+        Args:
+            condition (Any): The condition of the while loop.
+
+        Yields:
+            _GeneratorContextManager: The context manager of the oqpy.While block.
+        """
+        oqpy_program = self.get_oqpy_program()
+        return self._control_flow_block(oqpy.While(oqpy_program, condition))
 
     @contextlib.contextmanager
     def gate_definition(self, gate_name: str, gate_args: GateArgs) -> None:

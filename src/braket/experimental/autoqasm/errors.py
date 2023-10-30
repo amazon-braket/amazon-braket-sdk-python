@@ -98,3 +98,15 @@ must resolve to the same type.""".format(
 
     def __str__(self):
         return self.message
+
+
+class InvalidAssignmentStatement(AutoQasmError):
+    """Invalid assignment statement for an AutoQASM variable."""
+
+
+class InvalidArrayDeclaration(AutoQasmError):
+    """Invalid declaration of an AutoQASM array variable."""
+
+
+class UnsupportedSubroutineReturnType(AutoQasmError):
+    """Unsupported return type for an AutoQASM subroutine."""

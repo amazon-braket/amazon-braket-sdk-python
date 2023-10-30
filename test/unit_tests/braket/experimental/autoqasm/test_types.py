@@ -56,8 +56,7 @@ def test_return_bit():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> bit {
-    bit res;
-    res = 1;
+    bit res = 1;
     return res;
 }
 bit __bit_1__;
@@ -80,8 +79,7 @@ def test_return_int():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> int[32] {
-    int[32] res;
-    res = 1;
+    int[32] res = 1;
     return res;
 }
 int[32] __int_1__;
@@ -104,8 +102,7 @@ def test_return_float():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> float[64] {
-    float[64] res;
-    res = 1.0;
+    float[64] res = 1.0;
     return res;
 }
 float[64] __float_1__;
@@ -128,8 +125,7 @@ def test_return_bool():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> bool {
-    bool res;
-    res = true;
+    bool res = true;
     return res;
 }
 bool __bool_1__;
@@ -155,10 +151,8 @@ def test_return_bin_expr():
 def add(int[32] a, int[32] b) -> int[32] {
     return a + b;
 }
-int[32] a;
-int[32] b;
-a = 5;
-b = 6;
+int[32] a = 5;
+int[32] b = 6;
 int[32] __int_2__;
 __int_2__ = add(a, b);"""
 
@@ -177,28 +171,65 @@ def test_return_none():
     assert ret_test().to_ir() == expected
 
 
-def test_return_array_int():
-    """Test return type discovery of array values."""
+def test_declare_array():
+    """Test declaring and assigning an array."""
+
+    @aq.main
+    def declare_array():
+        a = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
+        a[0] = 11
+        b = aq.ArrayVar([4, 5, 6], base_type=aq.IntVar, dimensions=[3])
+        b[2] = 14
+        b = a
+
+    expected = """OPENQASM 3.0;
+array[int[32], 3] a = {1, 2, 3};
+a[0] = 11;
+array[int[32], 3] b = {4, 5, 6};
+b[2] = 14;
+b = a;"""
+
+    assert declare_array().to_ir() == expected
+
+
+def test_invalid_array_assignment():
+    """Test invalid array assignment."""
+
+    @aq.main
+    def invalid():
+        a = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
+        b = aq.ArrayVar([4, 5], base_type=aq.IntVar, dimensions=[2])
+        a = b  # noqa: F841
+
+    with pytest.raises(aq.errors.InvalidAssignmentStatement):
+        invalid()
+
+
+def test_declare_array_in_local_scope():
+    """Test declaring an array inside a local scope."""
+
+    @aq.main
+    def declare_array():
+        if aq.BoolVar(True):
+            _ = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
+
+    with pytest.raises(aq.errors.InvalidArrayDeclaration):
+        declare_array()
+
+
+def test_declare_array_in_subroutine():
+    """Test declaring an array inside a subroutine."""
 
     @aq.subroutine
-    def ret_test() -> list[int]:
-        res = aq.ArrayVar([1, 2, 3], dimensions=[3])
-        return res
+    def declare_array():
+        _ = aq.ArrayVar([1, 2, 3], dimensions=[3])
 
     @aq.main
     def main() -> list[int]:
-        return ret_test()
+        return declare_array()
 
-    expected = """OPENQASM 3.0;
-def ret_test() -> array[int[32], 3] {
-    array[int[32], 3] res;
-    res = {1, 2, 3};
-    return res;
-}
-array[int[32], 3] __arr_1__ = {};
-__arr_1__ = ret_test();"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.InvalidArrayDeclaration):
+        main()
 
 
 def test_return_python_array():
@@ -212,16 +243,8 @@ def test_return_python_array():
     def main():
         tester()
 
-    expected = """OPENQASM 3.0;
-def tester() -> array[int[32], 10] {
-    array[int[32], 10] retval_;
-    retval_ = {1, 2, 3};
-    return retval_;
-}
-array[int[32], 10] __arr_1__ = {};
-qubit[4] __qubits__;
-__arr_1__ = tester();"""
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main()
 
 
 def test_return_array_unsupported():
@@ -253,8 +276,7 @@ def test_return_func_call():
 
     expected = """OPENQASM 3.0;
 def helper() -> int[32] {
-    int[32] res;
-    res = 1;
+    int[32] res = 1;
     return res;
 }
 int[32] __int_1__;
@@ -332,14 +354,8 @@ def test_map_array():
         a = aq.ArrayVar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dimensions=[10])
         annotation_test(a)
 
-    expected = """OPENQASM 3.0;
-def annotation_test(array[int[32], 10] input) {
-}
-array[int[32], 10] a;
-a = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-annotation_test(a);"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.ParameterTypeError):
+        main()
 
 
 def test_map_other():
@@ -357,8 +373,7 @@ def test_map_other():
     expected = """OPENQASM 3.0;
 def annotation_test(bit input) {
 }
-bit a;
-a = 1;
+bit a = 1;
 annotation_test(a);"""
 
     assert main().to_ir() == expected
@@ -399,12 +414,10 @@ def test_map_and_assign_arg():
 
     expected = """OPENQASM 3.0;
 def assign_param(int[32] c) {
-    int[32] d;
-    d = 4;
+    int[32] d = 4;
     c = d;
 }
-int[32] c;
-c = 0;
+int[32] c = 0;
 assign_param(c);"""
 
     assert main().to_ir() == expected
@@ -423,8 +436,7 @@ def test_unnamed_retval_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_test() -> int[32] {
-    int[32] retval_;
-    retval_ = 1;
+    int[32] retval_ = 1;
     return retval_;
 }
 int[32] __int_1__;
@@ -446,8 +458,7 @@ def test_unnamed_retval_qasm_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_test() -> bit {
-    bit retval_;
-    retval_ = 1;
+    bit retval_ = 1;
     return retval_;
 }
 bit __bit_1__;
@@ -470,10 +481,9 @@ def test_recursive_unassigned_retval_python_type() -> None:
 
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
-    int[32] retval_;
     int[32] __int_1__;
     __int_1__ = retval_recursive();
-    retval_ = 1;
+    int[32] retval_ = 1;
     return retval_;
 }
 int[32] __int_3__;
@@ -497,11 +507,10 @@ def test_recursive_assigned_retval_python_type() -> None:
     expected_qasm = """OPENQASM 3.0;
 def retval_recursive() -> int[32] {
     int[32] a;
-    int[32] retval_;
     int[32] __int_1__;
     __int_1__ = retval_recursive();
     a = __int_1__;
-    retval_ = 1;
+    int[32] retval_ = 1;
     return retval_;
 }
 int[32] __int_3__;
@@ -535,29 +544,13 @@ def retval_recursive() -> float[64] {
     return 2 * __float_1__ + (__int_3__ + 2) / 3;
 }
 def retval_constant() -> int[32] {
-    int[32] retval_;
-    retval_ = 3;
+    int[32] retval_ = 3;
     return retval_;
 }
 float[64] __float_4__;
 __float_4__ = retval_recursive();"""
 
     assert caller().to_ir() == expected_qasm
-
-
-def test_recursive_list() -> None:
-    """Tests recursive subroutines which return a list."""
-
-    @aq.subroutine
-    def retval_recursive() -> list[int]:
-        retval_recursive()
-        return [1]
-
-    @aq.main
-    def main():
-        retval_recursive()
-
-    assert "-> array[int[32], 10]" in main().to_ir()
 
 
 def test_recursive_oqpy_type() -> None:
@@ -586,7 +579,7 @@ def test_error_for_tuple_param() -> None:
     def main():
         param_test(aq.BitVar(1))
 
-    with pytest.raises(TypeError):
+    with pytest.raises(aq.errors.ParameterTypeError):
         main()
 
 
@@ -618,8 +611,7 @@ def test_ignore_ret_typehint_bool():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> bool {
-    bool retval_;
-    retval_ = true;
+    bool retval_ = true;
     return retval_;
 }
 bool __bool_1__;
@@ -639,17 +631,8 @@ def test_ignore_ret_typehint_list():
     def main() -> float:
         ret_test()
 
-    expected = """OPENQASM 3.0;
-def ret_test() -> array[int[32], 10] {
-    array[int[32], 10] retval_;
-    retval_ = {1, 2, 3};
-    return retval_;
-}
-array[int[32], 10] __arr_1__ = {};
-qubit[4] __qubits__;
-__arr_1__ = ret_test();"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main()
 
 
 def test_ignore_missing_ret_typehint_list():
@@ -663,17 +646,8 @@ def test_ignore_missing_ret_typehint_list():
     def main():
         ret_test()
 
-    expected = """OPENQASM 3.0;
-def ret_test() -> array[int[32], 10] {
-    array[int[32], 10] retval_;
-    retval_ = {1, 2, 3};
-    return retval_;
-}
-array[int[32], 10] __arr_1__ = {};
-qubit[4] __qubits__;
-__arr_1__ = ret_test();"""
-
-    assert main().to_ir() == expected
+    with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
+        main()
 
 
 def test_ignore_missing_ret_typehint_float():
@@ -689,8 +663,7 @@ def test_ignore_missing_ret_typehint_float():
 
     expected = """OPENQASM 3.0;
 def ret_test() -> float[64] {
-    float[64] retval_;
-    retval_ = 1.2;
+    float[64] retval_ = 1.2;
     return retval_;
 }
 qubit[4] __qubits__;

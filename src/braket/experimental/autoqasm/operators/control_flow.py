@@ -44,37 +44,33 @@ def for_stmt(
         opts (dict): Options of the for loop.
     """
     del get_state, set_state, symbol_names
+    if extra_test is not None:
+        raise NotImplementedError("break and return statements are not supported in for loops.")
+
     if is_qasm_type(iter):
-        _oqpy_for_stmt(iter, extra_test, body, opts)
+        _oqpy_for_stmt(iter, body, opts)
     else:
-        _py_for_stmt(iter, extra_test, body)
+        _py_for_stmt(iter, body)
 
 
 def _oqpy_for_stmt(
     iter: oqpy.Range,
-    extra_test: Callable[[], Any],
     body: Callable[[Any], None],
     opts: dict,
 ) -> None:
     """Overload of for_stmt that produces an oqpy for loop."""
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    # TODO: Should check extra_test() on each iteration and break if False,
-    # but oqpy doesn't currently support break statements at the moment.
-    with oqpy.ForIn(oqpy_program, iter, opts["iterate_names"]) as f:
+    program_conversion_context = program.get_program_conversion_context()
+    with program_conversion_context.for_in(iter, opts["iterate_names"]) as f:
         body(f)
 
 
 def _py_for_stmt(
     iter: Iterable,
-    extra_test: Callable[[], Any],
     body: Callable[[Any], None],
 ) -> None:
     """Overload of for_stmt that executes a Python for loop."""
-    if extra_test is not None:
-        raise NotImplementedError("break and return statements are not supported in for loops.")
-    else:
-        for target in iter:
-            body(target)
+    for target in iter:
+        body(target)
 
 
 def while_stmt(
@@ -107,8 +103,8 @@ def _oqpy_while_stmt(
     body: Callable[[], None],
 ) -> None:
     """Overload of while_stmt that produces an oqpy while loop."""
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    with oqpy.While(oqpy_program, test()):
+    program_conversion_context = program.get_program_conversion_context()
+    with program_conversion_context.while_loop(test()):
         body()
 
 
@@ -154,10 +150,10 @@ def _oqpy_if_stmt(
     orelse: Callable[[], Any],
 ) -> None:
     """Overload of if_stmt that stages an oqpy cond."""
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
-    with oqpy.If(oqpy_program, cond):
+    program_conversion_context = program.get_program_conversion_context()
+    with program_conversion_context.if_block(cond):
         body()
-    with oqpy.Else(oqpy_program):
+    with program_conversion_context.else_block():
         orelse()
 
 

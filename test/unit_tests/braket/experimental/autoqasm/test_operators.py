@@ -16,10 +16,12 @@
 from collections.abc import Callable
 from typing import Any
 
+import numpy as np
 import oqpy.base
 import pytest
 
 import braket.experimental.autoqasm as aq
+from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.errors import UnsupportedConditionalExpressionError
 from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 
@@ -113,7 +115,6 @@ a = __int_3__;"""
         lambda: aq.FloatVar(2),
         lambda: aq.BoolVar(False),
         lambda: aq.BitVar(0),
-        lambda: aq.ArrayVar(dimensions=[3]),
     ],
 )
 def test_unsupported_inline_conditional_assignment(else_value) -> None:
@@ -161,9 +162,8 @@ def test_branch_assignment_declared() -> None:
             a = aq.IntVar(7)  # noqa: F841
 
     expected = """OPENQASM 3.0;
-int[32] a;
 bool __bool_1__ = true;
-a = 5;
+int[32] a = 5;
 if (__bool_1__) {
     a = 6;
 } else {
@@ -363,6 +363,130 @@ def test_logical_eq_qasm_cond() -> None:
     assert "==" in qasm
 
 
+def test_logical_op_and() -> None:
+    @aq.subroutine
+    def do_and(a: bool, b: bool):
+        return a and b
+
+    @aq.main
+    def prog():
+        do_and(True, False)
+
+    expected = """OPENQASM 3.0;
+def do_and(bool a, bool b) -> bool {
+    bool __bool_0__;
+    __bool_0__ = a && b;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_and(true, false);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_or() -> None:
+    @aq.subroutine
+    def do_or(a: bool, b: bool):
+        return a or b
+
+    @aq.main
+    def prog():
+        do_or(True, False)
+
+    expected = """OPENQASM 3.0;
+def do_or(bool a, bool b) -> bool {
+    bool __bool_0__;
+    __bool_0__ = a || b;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_or(true, false);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_not() -> None:
+    @aq.subroutine
+    def do_not(a: bool):
+        return not a
+
+    @aq.main
+    def prog():
+        do_not(True)
+
+    expected = """OPENQASM 3.0;
+def do_not(bool a) -> bool {
+    bool __bool_0__;
+    __bool_0__ = !a;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_not(true);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_eq() -> None:
+    @aq.subroutine
+    def do_eq(a: int, b: int):
+        return a == b
+
+    @aq.main
+    def prog():
+        do_eq(1, 2)
+
+    expected = """OPENQASM 3.0;
+def do_eq(int[32] a, int[32] b) -> bool {
+    bool __bool_0__;
+    __bool_0__ = a == b;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_eq(1, 2);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_op_not_eq() -> None:
+    @aq.subroutine
+    def do_not_eq(a: int, b: int):
+        return a != b
+
+    @aq.main
+    def prog():
+        do_not_eq(1, 2)
+
+    expected = """OPENQASM 3.0;
+def do_not_eq(int[32] a, int[32] b) -> bool {
+    bool __bool_0__;
+    __bool_0__ = a != b;
+    return __bool_0__;
+}
+bool __bool_1__;
+__bool_1__ = do_not_eq(1, 2);"""
+
+    assert prog().to_ir() == expected
+
+
+def test_logical_ops_py() -> None:
+    """Tests the logical aq.operators for Python expressions."""
+
+    @aq.main
+    def prog():
+        a = True
+        b = False
+        c = a and b
+        d = a or c
+        e = not c
+        f = a == e
+        g = d != f
+        assert all([a, not b, not c, d, e, f, not g])
+
+    expected = """OPENQASM 3.0;"""
+
+    assert prog().to_ir() == expected
+
+
 @pytest.mark.parametrize(
     "target", [oqpy.ArrayVar(dimensions=[3], name="arr"), oqpy.BitVar(size=3, name="arr")]
 )
@@ -449,10 +573,8 @@ def test_slice_bits() -> None:
         a[3] = b
 
     expected = """OPENQASM 3.0;
-bit[6] a;
-bit b;
-a = "000000";
-b = 1;
+bit[6] a = "000000";
+bit b = 1;
 a[3] = b;"""
 
     assert slice().to_ir() == expected
@@ -468,10 +590,9 @@ def test_slice_bits_w_measure() -> None:
         b0[3] = c
 
     expected = """OPENQASM 3.0;
-bit[10] b0;
 bit c;
 qubit[1] __qubits__;
-b0 = "0000000000";
+bit[10] b0 = "0000000000";
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];
 c = __bit_1__;
@@ -483,9 +604,9 @@ b0[3] = c;"""
 @pytest.mark.parametrize(
     "target_name,value,expected_qasm",
     [
-        ("foo", oqpy.IntVar(5), "\nint[32] foo;\nfoo = 5;"),
-        ("bar", oqpy.FloatVar(1.2), "\nfloat[64] bar;\nbar = 1.2;"),
-        ("baz", oqpy.BitVar(0), "\nbit baz;\nbaz = 0;"),
+        ("foo", oqpy.IntVar(5), "\nint[32] foo = 5;"),
+        ("bar", oqpy.FloatVar(1.2), "\nfloat[64] bar = 1.2;"),
+        ("baz", oqpy.BitVar(0), "\nbit baz = 0;"),
     ],
 )
 def test_assignment_qasm_undeclared_target(
@@ -567,7 +688,7 @@ def test_assignment_qasm_invalid_size_type(
         oqpy_program = program_conversion_context.get_oqpy_program()
         oqpy_program.declare(declared_var)
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
             _ = aq.operators.assign_stmt(
                 target_name=target_name,
                 value=value,
@@ -640,3 +761,41 @@ h __qubits__[0];
 h __qubits__[0];"""
 
     assert test_control_flow().to_ir() == expected
+
+
+def test_py_assert() -> None:
+    """Test Python assertions inside an AutoQASM program."""
+
+    @aq.main
+    def test_assert(value: bool):
+        assert value
+
+    test_assert(True)
+    with pytest.raises(AssertionError):
+        test_assert(False)
+
+
+def test_measurement_assert() -> None:
+    """Test assertions on measurement results inside an AutoQASM program."""
+
+    @aq.main
+    def test_assert():
+        assert measure(0)
+
+    with pytest.raises(NotImplementedError):
+        test_assert()
+
+
+def test_py_list_ops() -> None:
+    """Test Python list operations inside an AutoQASM program."""
+
+    @aq.main
+    def test_list_ops():
+        a = [1, 2, 3]
+        a.append(4)
+        b = a.pop(0)
+        assert b == 1
+        c = np.stack([a, a])
+        assert np.array_equal(c, [[2, 3, 4], [2, 3, 4]])
+
+    test_list_ops()

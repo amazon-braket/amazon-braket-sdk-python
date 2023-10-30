@@ -19,7 +19,7 @@ import oqpy
 import oqpy.base
 from openpulse import ast
 
-from braket.experimental.autoqasm import program
+from braket.experimental.autoqasm import errors, program
 
 
 def is_qasm_type(val: Any) -> bool:
@@ -58,6 +58,13 @@ def qasm_range(start: int, stop: Optional[int] = None, step: Optional[int] = 1) 
 
 class ArrayVar(oqpy.ArrayVar):
     def __init__(self, *args, **kwargs):
+        if (
+            program.get_program_conversion_context().subroutines_processing
+            or not program.get_program_conversion_context().at_function_root_scope
+        ):
+            raise errors.InvalidArrayDeclaration(
+                "Arrays may only be declared at the root scope of an AutoQASM main function."
+            )
         super(ArrayVar, self).__init__(*args, **kwargs)
         self.name = program.get_program_conversion_context().next_var_name(oqpy.ArrayVar)
 

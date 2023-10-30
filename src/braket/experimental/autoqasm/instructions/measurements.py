@@ -23,6 +23,7 @@ Example of measuring qubit 0:
 """
 
 
+from collections.abc import Iterable
 from typing import Union
 
 from braket.experimental.autoqasm import program
@@ -30,18 +31,18 @@ from braket.experimental.autoqasm import types as aq_types
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType, _qubit
 
 
-def measure(qubits: Union[QubitIdentifierType, list[QubitIdentifierType]]) -> aq_types.BitVar:
+def measure(qubits: Union[QubitIdentifierType, Iterable[QubitIdentifierType]]) -> aq_types.BitVar:
     """Add qubit measurement statements to the program and assign the measurement
     results to bit variables.
 
     Args:
-        qubits (Union[QubitIdentifierType, list[QubitIdentifierType]]): The target qubits
+        qubits (Union[QubitIdentifierType, Iterable[QubitIdentifierType]]): The target qubits
             to measure.
 
     Returns:
         BitVar: Bit variable the measurement results are assigned to.
     """
-    if not isinstance(qubits, list):
+    if not isinstance(qubits, Iterable):
         qubits = [qubits]
 
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()

@@ -17,9 +17,6 @@ to AutoQASM types. Generally, operators are only used in the code template in Au
 This module implements operators that AutoQASM overloads or adds on top of AutoGraph.
 """
 
-# TODO: Commented out operators below are not yet implemented.
-# We need to either implement these, or determine they are not needed and remove them.
-
 # Operators below are imported directly from core autograph implementation
 from braket.experimental.autoqasm.autograph.impl.api_core import autograph_artifact  # noqa: F401
 from braket.experimental.autoqasm.autograph.operators.variables import (  # noqa: F401
@@ -32,24 +29,16 @@ from braket.experimental.autoqasm.autograph.operators.variables import (  # noqa
 from .assignments import assign_stmt  # noqa: F401
 from .conditional_expressions import if_exp  # noqa: F401
 from .control_flow import for_stmt, if_stmt, while_stmt  # noqa: F401
-
-# from .data_structures import list_append
-# from .data_structures import list_pop
-# from .data_structures import list_stack
-# from .data_structures import ListPopOpts
-# from .data_structures import ListStackOpts
+from .data_structures import ListPopOpts  # noqa: F401
+from .data_structures import ListStackOpts  # noqa: F401
+from .data_structures import list_append  # noqa: F401
+from .data_structures import list_pop  # noqa: F401
+from .data_structures import list_stack  # noqa: F401
 from .data_structures import new_list  # noqa: F401
-
-# from .exceptions import assert_stmt
-# from .logical import and_
+from .exceptions import assert_stmt  # noqa: F401
+from .logical import and_  # noqa: F401
 from .logical import eq  # noqa: F401
-
-# from .logical import not_
-# from .logical import not_eq
-# from .logical import or_
-# from .py_builtins import float_
-# from .py_builtins import int_
-# from .py_builtins import len_
-# from .py_builtins import print_
-# from .py_builtins import range_
+from .logical import not_  # noqa: F401
+from .logical import not_eq  # noqa: F401
+from .logical import or_  # noqa: F401
 from .slices import GetItemOpts, get_item, set_item  # noqa: F401

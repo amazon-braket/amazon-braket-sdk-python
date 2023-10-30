@@ -52,20 +52,20 @@ def _oqpy_if_exp(
 ) -> Optional[oqpy.base.Var]:
     """Overload of if_exp that stages an oqpy conditional."""
     result_var = None
-    oqpy_program = aq_program.get_program_conversion_context().get_oqpy_program()
-    with oqpy.If(oqpy_program, cond):
+    program_conversion_context = aq_program.get_program_conversion_context()
+    with program_conversion_context.if_block(cond):
         true_result = aq_types.wrap_value(if_true())
         true_result_type = aq_types.var_type_from_oqpy(true_result)
         if true_result is not None:
             result_var = true_result_type()
-            oqpy_program.set(result_var, true_result)
-    with oqpy.Else(oqpy_program):
+            program_conversion_context.get_oqpy_program().set(result_var, true_result)
+    with program_conversion_context.else_block():
         false_result = aq_types.wrap_value(if_false())
         false_result_type = aq_types.var_type_from_oqpy(false_result)
         if false_result_type != true_result_type:
             raise UnsupportedConditionalExpressionError(true_result_type, false_result_type)
         if false_result is not None:
-            oqpy_program.set(result_var, false_result)
+            program_conversion_context.get_oqpy_program().set(result_var, false_result)
 
     return result_var
 

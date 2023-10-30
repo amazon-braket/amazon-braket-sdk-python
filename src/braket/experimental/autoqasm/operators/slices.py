@@ -20,7 +20,7 @@ from typing import Any
 import oqpy.base
 
 from braket.experimental.autoqasm import program
-from braket.experimental.autoqasm.types import is_qasm_type
+from braket.experimental.autoqasm.types import is_qasm_type, wrap_value
 
 
 class GetItemOpts(collections.namedtuple("GetItemOpts", ("element_dtype",))):
@@ -86,9 +86,10 @@ def set_item(target: Any, i: Any, x: Any) -> Any:
 
 def _oqpy_set_item(target: Any, i: Any, x: Any) -> Any:
     """Overload of set_item that produces an oqpy list modification."""
-    if not isinstance(target, oqpy.BitVar):
-        raise NotImplementedError("Slice assignment is not supported.")
+    if not isinstance(target, (oqpy.BitVar, oqpy.ArrayVar)):
+        raise NotImplementedError("Only BitVar and ArrayVar types support slice assignment.")
 
+    x = wrap_value(x)
     is_var_name_used = program.get_program_conversion_context().is_var_name_used(x.name)
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     if is_var_name_used or x.init_expression is None:
