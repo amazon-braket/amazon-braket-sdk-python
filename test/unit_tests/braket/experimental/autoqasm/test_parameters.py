@@ -17,6 +17,7 @@ import braket.experimental.autoqasm as aq
 from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
+from braket.experimental.autoqasm import pulse
 from braket.experimental.autoqasm.instructions import cnot, cphaseshift, measure, ms, rx, rz
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
@@ -265,3 +266,24 @@ input float[64] θ;
 qubit[3] __qubits__;
 rx_theta(θ) __qubits__[2];"""
     assert parametric().to_ir() == expected
+
+
+def test_parametric_pulse_cals():
+    """Test that pulse calibrations work with free parameters."""
+
+    @aq.gate_calibration(implements=rx, target="$1")
+    def cal_1(angle: float):
+        pulse.delay("$1", angle)
+
+    @aq.main
+    def my_program():
+        rx("$1", FreeParameter("theta"))
+
+    expected = """OPENQASM 3.0;
+defcal rx(angle[32] angle) $1 {
+    delay[(angle) * 1s] $1;
+}
+input float[64] theta;
+rx(theta) $1;"""
+    qasm = my_program().with_calibrations(cal_1).to_ir()
+    assert qasm == expected
