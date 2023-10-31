@@ -210,6 +210,8 @@ def cz_pulse(
 
 
 def test_pulse_bell(arbitrary_waveform, device):
+    if device.status == "OFFLINE":
+        return
     (
         a,
         b,
@@ -258,6 +260,8 @@ def test_pulse_bell(arbitrary_waveform, device):
 
 
 def test_pulse_sequence(arbitrary_waveform, device):
+    if device.status == "OFFLINE":
+        return
     (
         a,
         b,
@@ -310,6 +314,8 @@ def test_pulse_sequence(arbitrary_waveform, device):
 
 
 def test_gate_calibration_run(device, pulse_sequence):
+    if device.status == "OFFLINE":
+        return
     user_gate_calibrations = GateCalibrations({(Gate.Rx(math.pi / 2), QubitSet(0)): pulse_sequence})
     num_shots = 50
     bell_circuit = Circuit().rx(0, math.pi / 2).rx(1, math.pi / 2).cz(0, 1).rx(1, -math.pi / 2)
