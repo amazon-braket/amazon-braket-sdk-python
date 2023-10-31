@@ -121,7 +121,7 @@ class QuantumJob(ABC):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Any]] : The metrics data.
+            Dict[str, List[Any]]: The metrics data.
 
         Example:
             timestamp energy

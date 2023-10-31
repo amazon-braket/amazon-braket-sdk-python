@@ -22,6 +22,7 @@ from braket.ahs.discretization_types import DiscretizationError, DiscretizationP
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.shifting_field import ShiftingField
+from braket.aws import AwsDevice
 from braket.device_schema import DeviceActionType
 
 
@@ -54,7 +55,7 @@ class AnalogHamiltonianSimulation:
         representation.
 
         Returns:
-            Program: A representation of the circuit in the IR format.
+            ir.Program: A representation of the circuit in the IR format.
         """
         return ir.Program(
             setup=ir.Setup(ahs_register=self._register_to_ir()),
@@ -77,7 +78,7 @@ class AnalogHamiltonianSimulation:
             shiftingFields=terms[AnalogHamiltonianSimulation.SHIFTING_FIELDS_PROPERTY],
         )
 
-    def discretize(self, device) -> AnalogHamiltonianSimulation:  # noqa
+    def discretize(self, device: AwsDevice) -> AnalogHamiltonianSimulation:  # noqa
         """Creates a new AnalogHamiltonianSimulation with all numerical values represented
         as Decimal objects with fixed precision based on the capabilities of the device.
 
@@ -88,7 +89,7 @@ class AnalogHamiltonianSimulation:
             AnalogHamiltonianSimulation: A discretized version of this program.
 
         Raises:
-            DiscretizeError: If unable to discretize the program.
+            DiscretizationError: If unable to discretize the program.
         """
 
         required_action_schema = DeviceActionType.AHS

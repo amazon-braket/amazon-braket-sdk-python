@@ -40,6 +40,10 @@ class FreeParameterExpression:
         Args:
             expression (Union[FreeParameterExpression, Number, Expr, str]): The expression to use.
 
+        Raises:
+            NotImplementedError: Raised if the expression is not of type
+                [FreeParameterExpression, Number, Expr, str]
+
         Examples:
             >>> expression_1 = FreeParameter("theta") * FreeParameter("alpha")
             >>> expression_2 = 1 + FreeParameter("beta") + 2 * FreeParameter("alpha")
@@ -171,11 +175,11 @@ class FreeParameterExpression:
         return repr(self.expression)
 
 
-def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:
+def subs_if_free_parameter(parameter: Any, **kwargs: Union[FreeParameterExpression, str]) -> Any:
     """Substitute a free parameter with the given kwargs, if any.
     Args:
         parameter (Any): The parameter.
-        ``**kwargs``: The kwargs to use to substitute.
+        **kwargs (Union[FreeParameterExpression, str]): The kwargs to use to substitute.
 
     Returns:
         Any: The substituted parameters.

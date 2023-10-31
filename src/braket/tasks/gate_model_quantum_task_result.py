@@ -140,7 +140,7 @@ class GateModelQuantumTaskResult:
         Creates measurement counts from measurements
 
         Args:
-            measurements (ndarray): 2d array - row is shot and column is qubit.
+            measurements (np.ndarray): 2d array - row is shot and column is qubit.
 
         Returns:
             Counter: A Counter of measurements. Key is the measurements in a big endian binary
@@ -188,7 +188,7 @@ class GateModelQuantumTaskResult:
             shots (int): number of iterations on device.
 
         Returns:
-            ndarray: A dictionary of probabilistic results.
+            np.ndarray: A dictionary of probabilistic results.
             Key is the measurements in a big endian binary string.
             Value is the probability the measurement occurred.
         """

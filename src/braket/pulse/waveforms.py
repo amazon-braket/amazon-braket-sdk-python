@@ -52,7 +52,7 @@ class Waveform(ABC):
         Args:
             dt (float): The time resolution.
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
 
     @staticmethod
@@ -75,6 +75,8 @@ class ArbitraryWaveform(Waveform):
 
     def __init__(self, amplitudes: list[complex], id: Optional[str] = None):
         """
+        Inits an ArbitraryWaveform.
+
         Args:
             amplitudes (list[complex]): Array of complex values specifying the
                 waveform amplitude at each timestep. The timestep is determined by the sampling rate
@@ -102,8 +104,10 @@ class ArbitraryWaveform(Waveform):
         """Generates a sample of amplitudes for this Waveform based on the given time resolution.
         Args:
             dt (float): The time resolution.
+        Raises:
+            NotImplementedError: This class does not implement sample.
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         raise NotImplementedError
 
@@ -122,6 +126,8 @@ class ConstantWaveform(Waveform, Parameterizable):
         self, length: Union[float, FreeParameterExpression], iq: complex, id: Optional[str] = None
     ):
         """
+        Inits a ConstantWaveform.
+
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds)
                 specifying the duration of the waveform.
@@ -136,12 +142,19 @@ class ConstantWaveform(Waveform, Parameterizable):
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, FreeParameter, float]]:
         """Returns the parameters associated with the object, either unbound free parameter
-        expressions or bound values."""
+        expressions or bound values.
+
+        Returns:
+            list[Union[FreeParameterExpression, FreeParameter, float]]: a list of parameters.
+        """
         return [self.length]
 
-    def bind_values(self, **kwargs) -> ConstantWaveform:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> ConstantWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             ConstantWaveform: A copy of this waveform with the requested parameters bound.
@@ -178,7 +191,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         Args:
             dt (float): The time resolution.
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         # Amplitudes should be gated by [0:self.length]
         sample_range = np.arange(0, self.length, dt)
@@ -218,6 +231,8 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         id: Optional[str] = None,
     ):
         """
+        Inits a DragGaussianWaveform
+
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds)
                 specifying the duration of the waveform.
@@ -244,9 +259,12 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         expressions or bound values."""
         return [self.length, self.sigma, self.beta, self.amplitude]
 
-    def bind_values(self, **kwargs) -> DragGaussianWaveform:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> DragGaussianWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             DragGaussianWaveform: A copy of this waveform with the requested parameters bound.
@@ -302,7 +320,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         Args:
             dt (float): The time resolution.
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         sample_range = np.arange(0, self.length, dt)
         t0 = self.length / 2
@@ -344,6 +362,8 @@ class GaussianWaveform(Waveform, Parameterizable):
         id: Optional[str] = None,
     ):
         """
+        Inits a GaussianWaveform.
+
         Args:
             length (Union[float, FreeParameterExpression]): Value (in seconds) specifying the
                 duration of the waveform.
@@ -368,9 +388,12 @@ class GaussianWaveform(Waveform, Parameterizable):
         expressions or bound values."""
         return [self.length, self.sigma, self.amplitude]
 
-    def bind_values(self, **kwargs) -> GaussianWaveform:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> GaussianWaveform:
         """Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             GaussianWaveform: A copy of this waveform with the requested parameters bound.
@@ -422,7 +445,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         Args:
             dt (float): The time resolution.
         Returns:
-            ndarray: The sample amplitudes for this waveform.
+            np.ndarray: The sample amplitudes for this waveform.
         """
         sample_range = np.arange(0, self.length, dt)
         t0 = self.length / 2

@@ -69,7 +69,7 @@ class AtomArrangement:
         """Add a coordinate to the atom arrangement.
 
         Args:
-            coordinate (Union[tuple[Number, Number], ndarray]): The coordinate of the
+            coordinate (Union[tuple[Number, Number], np.ndarray]): The coordinate of the
                 atom (in meters). The coordinates can be a numpy array of shape (2,)
                 or a tuple of int, float, Decimal
             site_type (SiteType): The type of site. Optional. Default is FILLED.
@@ -108,6 +108,9 @@ class AtomArrangement:
         Args:
             properties (DiscretizationProperties): Capabilities of a device that represent the
                 resolution with which the device can implement the parameters.
+
+        Raises:
+            DiscretizationError: If unable to discretize the program.
 
         Returns:
             AtomArrangement: A new discretized atom arrangement.

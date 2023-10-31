@@ -42,8 +42,6 @@ class PhotonicModelQuantumTaskResult:
         Returns:
             PhotonicModelQuantumTaskResult: A PhotonicModelQuantumTaskResult based on the given dict
 
-        Raises:
-            ValueError: If "measurements" is not a key in the result dict
         """
         return PhotonicModelQuantumTaskResult._from_object_internal(result)
 

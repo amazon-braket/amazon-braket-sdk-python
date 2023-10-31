@@ -59,7 +59,7 @@ class QuantumTask(ABC):
     def async_result(self) -> asyncio.Task:
         """Get the quantum task result asynchronously.
         Returns:
-            Task: Get the quantum task result asynchronously.
+            asyncio.Task: Get the quantum task result asynchronously.
         """
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:

@@ -68,6 +68,9 @@ class ShiftingField(Hamiltonian):
             values (list[float]): The values of the shifting field
             pattern (list[float]): The pattern of the shifting field
 
+        Raises:
+            ValueError: If the length of times and values differs.
+
         Returns:
             ShiftingField: The shifting field obtained
         """
@@ -98,6 +101,9 @@ class ShiftingField(Hamiltonian):
                 and the second time series.
               - "left" - use the last value from the left time series as the boundary point.
               - "right" - use the first value from the right time series as the boundary point.
+
+        Raises:
+            ValueError: The ShiftingField patterns differ.
 
         Returns:
             ShiftingField: The stitched ShiftingField object.

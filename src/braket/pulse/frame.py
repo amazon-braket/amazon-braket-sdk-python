@@ -36,6 +36,8 @@ class Frame:
         properties: Optional[dict[str, Any]] = None,
     ):
         """
+        Inits a Frame.
+
         Args:
             frame_id (str): str identifying a unique frame.
             port (Port): port that this frame is attached to.

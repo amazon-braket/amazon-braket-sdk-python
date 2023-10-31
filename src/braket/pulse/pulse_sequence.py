@@ -358,6 +358,9 @@ class PulseSequence:
             waveforms (dict[Waveform]): The waveforms supplied for the pulse sequences.
             frames (dict[Frame]): A dictionary of frame objects to use.
 
+        Raises:
+            ValueError: If the requested instruction has not been implemented for pulses.
+
         Returns:
             PulseSequence: The parse sequence obtain from parsing a pulse instruction.
         """  # noqa: E501
@@ -399,13 +402,14 @@ class PulseSequence:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
 
-    def __call__(self, arg: Any = None, **kwargs) -> PulseSequence:
+    def __call__(self, arg: Any = None, **kwargs: Union[FreeParameter, str]) -> PulseSequence:
         """
         Implements the call function to easily make a bound PulseSequence.
 
         Args:
             arg (Any): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             PulseSequence: A pulse sequence with the specified parameters bound.

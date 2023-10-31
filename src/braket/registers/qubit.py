@@ -25,13 +25,16 @@ class Qubit(int):
     circuit. This may not be the exact qubit index on the quantum device.
     """
 
-    def __new__(cls, index: int):
+    def __new__(cls, index: int) -> Qubit:
         """
         Args:
             index (int): Index of the qubit.
 
         Raises:
             ValueError: If `index` is less than zero.
+
+        Returns:
+            Qubit: Returns a new Qubit object.
 
         Examples:
             >>> Qubit(0)

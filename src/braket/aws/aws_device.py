@@ -20,7 +20,7 @@ import urllib.request
 import warnings
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from botocore.errorfactory import ClientError
 from networkx import DiGraph, complete_graph, from_edgelist
@@ -121,8 +121,8 @@ class AwsDevice(Device):
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[dict[str, float]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        *aws_quantum_task_args,
-        **aws_quantum_task_kwargs,
+        *aws_quantum_task_args: Any,
+        **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
         """
         Run a quantum task specification on this device. A quantum task can be a circuit or an
@@ -150,6 +150,8 @@ class AwsDevice(Device):
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
+            *aws_quantum_task_args (Any): Arbitrary arguments.
+            **aws_quantum_task_kwargs (Any): Arbitrary keyword arguments.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.

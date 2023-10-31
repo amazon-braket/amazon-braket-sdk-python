@@ -122,7 +122,7 @@ class Tracker:
         Get a summary of quantum tasks grouped by device.
 
         Returns:
-            dict[str,dict[str,Any]] : A dictionary where each key is a device arn, and maps to
+            dict[str, dict[str, Any]]: A dictionary where each key is a device arn, and maps to
             a dictionary sumarizing the quantum tasks run on the device. The summary includes the
             total shots sent to the device and the most recent status of the quantum tasks
             created on this device. For finished quantum tasks on simulator devices, the summary

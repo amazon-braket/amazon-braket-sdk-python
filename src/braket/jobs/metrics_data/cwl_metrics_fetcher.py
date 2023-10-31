@@ -30,6 +30,8 @@ class CwlMetricsFetcher(object):
         logger: Logger = getLogger(__name__),
     ):
         """
+        Inits a `CwlMetricsFetcher`.
+
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             poll_timeout_seconds (float): The polling timeout for retrieving the metrics,
@@ -102,7 +104,7 @@ class CwlMetricsFetcher(object):
             timeout_time (float) : Metrics cease getting streamed if the current time exceeds
                 the timeout time.
         Returns:
-            List[str] : A list of log stream names for the given hybrid job.
+            List[str]: A list of log stream names for the given hybrid job.
         """
         kwargs = {
             "logGroupName": self.LOG_GROUP_NAME,
@@ -141,7 +143,7 @@ class CwlMetricsFetcher(object):
                 when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
+            Dict[str, List[Union[str, float, int]]]: The metrics data, where the keys
             are the column names and the values are a list containing the values in each row.
 
         Example:

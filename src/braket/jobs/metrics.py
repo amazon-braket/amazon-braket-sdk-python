@@ -25,15 +25,15 @@ def log_metric(
     Records Braket Hybrid Job metrics.
 
     Args:
-        metric_name (str) : The name of the metric.
+        metric_name (str): The name of the metric.
 
-        value (Union[float, int]) : The value of the metric.
+        value (Union[float, int]): The value of the metric.
 
-        timestamp (Optional[float]) : The time the metric data was received, expressed
+        timestamp (Optional[float]): The time the metric data was received, expressed
             as the number of seconds
             since the epoch. Default: Current system time.
 
-        iteration_number (Optional[int]) : The iteration number of the metric.
+        iteration_number (Optional[int]): The iteration number of the metric.
     """
     logged_timestamp = timestamp or time.time()
     metric_list = [f"Metrics - timestamp={logged_timestamp}; {metric_name}={value};"]

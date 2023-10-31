@@ -123,7 +123,7 @@ class QuantumOperator(Operator):
         """Returns a matrix representation of the quantum operator
 
         Returns:
-            ndarray: A matrix representation of the quantum operator
+            np.ndarray: A matrix representation of the quantum operator
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 

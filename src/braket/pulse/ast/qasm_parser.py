@@ -15,7 +15,6 @@ import io
 
 from openpulse import ast
 from openpulse.printer import Printer
-from openqasm3.ast import DurationLiteral
 from openqasm3.printer import PrinterState
 
 from braket.parametric.free_parameter_expression import FreeParameterExpression
@@ -37,7 +36,7 @@ class _PulsePrinter(Printer):
         """
         self.stream.write(str(node.expression.expression))
 
-    def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState) -> None:
+    def visit_DurationLiteral(self, node: ast.DurationLiteral, context: PrinterState) -> None:
         """Visit Duration Literal.
             node.value, node.unit (node.unit.name, node.unit.value)
             1
@@ -72,7 +71,7 @@ def ast_to_qasm(ast: ast.Program) -> str:
     """Converts an AST program to OpenQASM
 
     Args:
-        ast (Program): The AST program.
+        ast (ast.Program): The AST program.
 
     Returns:
         str: a str representing the OpenPulse program encoding the program.

@@ -169,7 +169,7 @@ class LogMetricsParser(object):
             statistic (MetricStatistic): The statistic to determine which value to use.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            Dict[str, List[Union[str, float, int]]]: The metrics data.
         """
         table, pivot_indices = self.get_columns_and_pivot_indices(pivot)
         for metric in self.all_metrics:
@@ -196,7 +196,7 @@ class LogMetricsParser(object):
                 when there is a conflict.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            Dict[str, List[Union[str, float, int]]]: The metrics data.
 
         Example:
             timestamp energy

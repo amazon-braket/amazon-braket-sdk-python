@@ -36,8 +36,9 @@ class ColorWrap(object):
     # https://misc.flogisoft.com/bash/tip_colors_and_formatting#colors
     _stream_colors = [34, 35, 32, 36, 33]
 
-    def __init__(self, force=False):
-        """Initialize the class.
+    def __init__(self, force: bool = False):
+        """
+        Initialize a `ColorWrap`.
 
         Args:
             force (bool): If True, the render output is colorized wherever the
@@ -45,7 +46,7 @@ class ColorWrap(object):
         """
         self.colorize = force or sys.stdout.isatty() or os.environ.get("JPY_PARENT_PID", None)
 
-    def __call__(self, index, s):
+    def __call__(self, index: int, s: str):
         """Prints the string, colorized or not, depending on the environment.
 
         Args:

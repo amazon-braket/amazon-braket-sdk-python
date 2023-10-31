@@ -138,7 +138,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         """Get the average Rydberg state densities from the result
 
         Returns:
-            ndarray: The average densities from the result
+            np.ndarray: The average densities from the result
         """
 
         counts = self.get_counts()

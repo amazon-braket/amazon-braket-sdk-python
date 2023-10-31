@@ -141,9 +141,6 @@ def prepare_quantum_job(
 
     Returns:
         dict: Hybrid job tracking the execution on Amazon Braket.
-
-    Raises:
-        ValueError: Raises ValueError if the parameters are not valid.
     """
     param_datatype_map = {
         "instance_config": (instance_config, InstanceConfig),
@@ -278,6 +275,8 @@ def _process_s3_source_module(
         aws_session (AwsSession): AwsSession to copy source module to code location.
         code_location (str): S3 URI pointing to the location where the code will be
             copied to.
+    Raises:
+        ValueError: The entry point is None or does not end with .tar.gz
     """
     if entry_point is None:
         raise ValueError("If source_module is an S3 URI, entry_point must be provided.")
@@ -301,6 +300,8 @@ def _process_local_source_module(
         aws_session (AwsSession): AwsSession for uploading tarred source module.
         code_location (str): S3 URI pointing to the location where the code will
             be uploaded to.
+    Raises:
+        ValueError: Raised if the source module file is not found.
 
     Returns:
         str: Entry point.
@@ -324,6 +325,8 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
     Args:
         source_module_path (Path): Path to source module.
         entry_point (str): Entry point relative to source module.
+    Raises:
+        ValueError: Raised if the module was not found.
     """
     importable, _, _method = entry_point.partition(":")
     sys.path.append(str(source_module_path.parent))
@@ -363,6 +366,8 @@ def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
     Args:
         dict_arr (dict[str, tuple[any, any]]): dict mapping parameter names to
             a tuple containing the provided value and expected type.
+    Raises:
+        ValueError: If the user_input is not the same as the expected data type.
     """
     for parameter_name, value_tuple in dict_arr.items():
         user_input, expected_datatype = value_tuple

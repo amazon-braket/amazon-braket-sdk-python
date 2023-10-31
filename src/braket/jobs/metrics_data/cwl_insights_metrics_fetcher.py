@@ -33,6 +33,8 @@ class CwlInsightsMetricsFetcher(object):
         logger: Logger = getLogger(__name__),
     ):
         """
+        Inits a `CwlInsightsMetricsFetcher`.
+
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
             poll_timeout_seconds (float): The polling timeout for retrieving the metrics,
@@ -60,7 +62,7 @@ class CwlInsightsMetricsFetcher(object):
             log_line (List[Dict[str, Any]]): An iterator for RegEx matches on a log line.
 
         Returns:
-            Optional[str] : The value of the element with the element name, or None if no such
+            Optional[str]: The value of the element with the element name, or None if no such
             element is found.
         """
         return next(
@@ -73,6 +75,9 @@ class CwlInsightsMetricsFetcher(object):
 
         Args:
             query_id (str): CloudWatch Insights query ID.
+
+        Raises:
+            MetricsRetrievalError: Raised if the query is Failed or Cancelled.
 
         Returns:
             List[Any]: The results from CloudWatch insights 'GetQueryResults' operation.
@@ -121,7 +126,7 @@ class CwlInsightsMetricsFetcher(object):
                 when there is a conflict.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data.
+            Dict[str, List[Union[str, float, int]]]: The metrics data.
         """
         parser = LogMetricsParser()
         for result in results:
@@ -151,7 +156,7 @@ class CwlInsightsMetricsFetcher(object):
                 hybrid job finished. Default: current time.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
+            Dict[str, List[Union[str, float, int]]]: The metrics data, where the keys
             are the column names and the values are a list containing the values in each row.
 
         Example:

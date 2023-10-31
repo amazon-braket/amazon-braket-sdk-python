@@ -44,10 +44,10 @@ class _FreeParameterTransformer(QASMTransformer):
     ) -> Union[_FreeParameterExpressionIdentifier, ast.FloatLiteral]:
         """Visit a FreeParameterExpressionIdentifier.
         Args:
-            identifier (Identifier): The identifier.
+            identifier (ast.Identifier): The identifier.
 
         Returns:
-            Union[_FreeParameterExpressionIdentifier, FloatLiteral]: The transformed expression.
+            Union[_FreeParameterExpressionIdentifier, ast.FloatLiteral]: The transformed expression.
         """
         new_value = identifier.expression.subs(self.param_values)
         if isinstance(new_value, FreeParameterExpression):

@@ -154,6 +154,9 @@ class DrivingField(Hamiltonian):
             detunings (list[float]): The values of the detuning
             phases (list[float]): The values of the phase
 
+        Raises:
+            ValueError: If any of the input args length is different from the rest.
+
         Returns:
             DrivingField: DrivingField Hamiltonian.
         """

@@ -572,7 +572,7 @@ def _(
                 device_arn,
                 GateModelParameters(qubitCount=0),  # qubitCount unused
             )
-            if type(device_parameters) is dict
+            if isinstance(device_parameters, dict)
             else device_parameters
         )
         create_task_kwargs.update(
@@ -622,7 +622,7 @@ def _(
     )
     final_device_parameters = (
         _circuit_device_params_from_dict(device_parameters or {}, device_arn, paradigm_parameters)
-        if type(device_parameters) is dict
+        if isinstance(device_parameters, dict)
         else device_parameters
     )
 
@@ -744,7 +744,7 @@ def _create_annealing_device_params(
         Union[DwaveAdvantageDeviceParameters, Dwave2000QDeviceParameters]: The device parameters.
 
     """
-    if type(device_params) is not dict:
+    if not isinstance(device_params, dict):
         device_params = device_params.dict()
 
     # check for device level or provider level parameters

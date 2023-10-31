@@ -125,7 +125,7 @@ class Observable(QuantumOperator):
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
         Returns:
-            ndarray: The eigenvalues of this observable.
+            np.ndarray: The eigenvalues of this observable.
         """
         raise NotImplementedError
 

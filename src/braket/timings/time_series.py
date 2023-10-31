@@ -105,6 +105,9 @@ class TimeSeries:
 
         Returns:
             TimeSeries: time series constructed from lists
+
+        Raises:
+            ValueError: If the len of `times` does not equal len of `values`.
         """
         if len(times) != len(values):
             raise ValueError(
@@ -154,6 +157,10 @@ class TimeSeries:
         Returns:
             TimeSeries: The concatenated time series.
 
+        Raises:
+            ValueError: If the timeseries is not empty and time points in the first
+                TimeSeries are not strictly smaller than in the second.
+
         Example:
         ::
             time_series_1 = TimeSeries.from_lists(times=[0, 0.1], values=[1, 2])
@@ -201,6 +208,9 @@ class TimeSeries:
 
         Returns:
             TimeSeries: The stitched time series.
+
+        Raises:
+            ValueError: If boundary is not one of {"mean", "left", "right"}.
 
         Example (StitchBoundaryCondition.MEAN):
         ::
@@ -287,14 +297,17 @@ class TimeSeries:
         Args:
             times (list[float]): List of time points in a single block
             values (list[float]): Values for the time series in a single block
-            num_repeat (int): Number of block repeatitions
+            num_repeat (int): Number of block repetitions
+
+        Raises:
+            ValueError: If the first and last values are not the same
 
         Returns:
             TimeSeries: A new periodic time series.
         """
 
         if not (values[0] == values[-1]):
-            raise ValueError("The first and last values must coinscide to guarantee periodicity")
+            raise ValueError("The first and last values must coincide to guarantee periodicity")
         new_time_series = TimeSeries()
 
         repeating_block = TimeSeries.from_lists(times=times, values=values)
@@ -315,6 +328,9 @@ class TimeSeries:
             value_max (float): The maximum value of the time series
             slew_rate_max (float): The maximum slew rate
             time_separation_min (float): The minimum separation of time points
+
+        Raises:
+            ValueError: If the time separation is negative
 
         Returns:
             TimeSeries: A trapezoidal time series

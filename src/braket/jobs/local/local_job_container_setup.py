@@ -22,7 +22,7 @@ from braket.jobs.local.local_job_container import _LocalJobContainer
 
 
 def setup_container(
-    container: _LocalJobContainer, aws_session: AwsSession, **creation_kwargs
+    container: _LocalJobContainer, aws_session: AwsSession, **creation_kwargs: str
 ) -> Dict[str, str]:
     """Sets up a container with prerequisites for running a Braket Hybrid Job. The prerequisites are
     based on the options the customer has chosen for the hybrid job. Similarly, any environment
@@ -31,6 +31,7 @@ def setup_container(
     Args:
         container(_LocalJobContainer): The container that will run the braket hybrid job.
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
+        **creation_kwargs (str): Arbitrary keyword arguments.
 
     Returns:
         Dict[str, str]: A dictionary of environment variables that reflect Braket Hybrid Jobs
@@ -51,11 +52,12 @@ def setup_container(
     return run_environment_variables
 
 
-def _create_expected_paths(container: _LocalJobContainer, **creation_kwargs) -> None:
+def _create_expected_paths(container: _LocalJobContainer, **creation_kwargs: str) -> None:
     """Creates the basic paths required for Braket Hybrid Jobs to run.
 
     Args:
         container(_LocalJobContainer): The container that will run the braket hybrid job.
+        **creation_kwargs (str): Arbitrary keyword arguments.
     """
     container.makedir("/opt/ml/model")
     container.makedir(creation_kwargs["checkpointConfig"]["localPath"])
@@ -110,12 +112,13 @@ def _get_env_script_mode_config(script_mode_config: Dict[str, str]) -> Dict[str,
     return result
 
 
-def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs) -> Dict[str, str]:
+def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs: str) -> Dict[str, str]:
     """This function gets the remaining 'simple' env variables, that don't require any
      additional logic to determine what they are or when they should be added as env variables.
 
     Args:
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
+        **creation_kwargs (str): Arbitrary keyword arguments.
 
     Returns:
         Dict[str, str]: The set of key/value pairs that should be added as environment variables
@@ -161,12 +164,13 @@ def _get_env_input_data() -> Dict[str, str]:
     }
 
 
-def _copy_hyperparameters(container: _LocalJobContainer, **creation_kwargs) -> bool:
+def _copy_hyperparameters(container: _LocalJobContainer, **creation_kwargs: str) -> bool:
     """If hyperpameters are present, this function will store them as a JSON object in the
      container in the appropriate location on disk.
 
     Args:
         container(_LocalJobContainer): The container to save hyperparameters to.
+        **creation_kwargs (str): Arbitrary keyword arguments.
 
     Returns:
         bool: True if any hyperparameters were copied to the container.
@@ -194,6 +198,11 @@ def _download_input_data(
         download_dir (str): The directory path to download to.
         input_data (Dict[str, Any]): One of the input data in the boto3 input parameters for
             running a Braket Hybrid Job.
+
+    Raises:
+        ValueError: File already exists.
+        RuntimeError: The item is not found.
+
     """
     # If s3 prefix is the full name of a directory and all keys are inside
     # that directory, the contents of said directory will be copied into a
@@ -243,7 +252,7 @@ def _is_dir(prefix: str, keys: Iterable[str]) -> bool:
 
 
 def _copy_input_data_list(
-    container: _LocalJobContainer, aws_session: AwsSession, **creation_kwargs
+    container: _LocalJobContainer, aws_session: AwsSession, **creation_kwargs: str
 ) -> bool:
     """If the input data list is not empty, this function will download the input files and
     store them in the container.
@@ -251,6 +260,7 @@ def _copy_input_data_list(
     Args:
         container (_LocalJobContainer): The container to save input data to.
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
+        **creation_kwargs (str): Arbitrary keyword arguments.
 
     Returns:
         bool: True if any input data was copied to the container.

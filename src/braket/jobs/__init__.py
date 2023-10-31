@@ -11,19 +11,15 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.jobs.config import (  # noqa: F401
+from braket.jobs.config import InstanceConfig  # noqa: F401
+from braket.jobs.config import (
     CheckpointConfig,
-    InstanceConfig,
     OutputDataConfig,
     S3DataSourceConfig,
     StoppingCondition,
 )
-from braket.jobs.data_persistence import (  # noqa: F401
-    load_job_checkpoint,
-    load_job_result,
-    save_job_checkpoint,
-    save_job_result,
-)
+from braket.jobs.data_persistence import load_job_checkpoint  # noqa: F401
+from braket.jobs.data_persistence import load_job_result, save_job_checkpoint, save_job_result
 from braket.jobs.environment_variables import (  # noqa: F401
     get_checkpoint_dir,
     get_hyperparameters,

@@ -97,7 +97,7 @@ class BitFlip(SingleProbabilisticNoise):
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -127,9 +127,12 @@ class BitFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs) -> Noise:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
         """
         Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -230,9 +233,12 @@ class PhaseFlip(SingleProbabilisticNoise):
             for qubit in QubitSet(target)
         ]
 
-    def bind_values(self, **kwargs) -> Noise:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
         """
         Takes in parameters and attempts to assign them to values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             Noise: A new Noise object of the same type with the requested

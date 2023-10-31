@@ -801,7 +801,7 @@ class Rx(AngledGate):
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -881,7 +881,7 @@ class Ry(AngledGate):
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -1421,7 +1421,7 @@ class XY(AngledGate):
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         sin = np.sin(self.angle / 2)
@@ -2039,7 +2039,7 @@ class XX(AngledGate):
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)
@@ -2135,7 +2135,7 @@ class YY(AngledGate):
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
         Returns:
-            ndarray: The matrix representation of this gate.
+            np.ndarray: The matrix representation of this gate.
         """
         cos = np.cos(self.angle / 2)
         isin = 1.0j * np.sin(self.angle / 2)

@@ -38,10 +38,13 @@ class Parameterizable(ABC):
         """
 
     @abstractmethod
-    def bind_values(self, **kwargs) -> Any:
+    def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Any:
         """
         Takes in parameters and returns an object with specified parameters
         replaced with their values.
+
+        Args:
+            **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 
         Returns:
             Any: The result object will depend on the implementation of the object being bound.
