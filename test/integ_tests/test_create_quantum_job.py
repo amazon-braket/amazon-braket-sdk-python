@@ -77,7 +77,7 @@ def test_failed_quantum_job(aws_session, capsys):
         "braket_container.py",
         "Running Code As Process",
         "Test job started!!!!!",
-        "AssertionError",
+        "FileNotFoundError: [Errno 2] No such file or directory: 'fake_file'",
         "Code Run Finished",
         '"user_entry_point": "braket_container.py"',
     ]
@@ -85,8 +85,9 @@ def test_failed_quantum_job(aws_session, capsys):
     for data in logs_to_validate:
         assert data in log_data
 
-    assert job.metadata()["failureReason"].startswith(
-        "AlgorithmError: Job at job_test_script:start_here"
+    assert job.metadata()["failureReason"] == (
+        "AlgorithmError: FileNotFoundError: [Errno 2] "
+        "No such file or directory: 'fake_file', exit code: 1"
     )
 
 
