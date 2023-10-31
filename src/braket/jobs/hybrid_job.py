@@ -369,7 +369,7 @@ def _process_input_data(input_data: dict) -> list[str]:
     file_channels = set()
 
     for channel, data in input_data.items():
-        if AwsSession.is_s3_uri(str(data)):
+        if AwsSession.is_s3_uri(str(data)) or isinstance(data, S3DataSourceConfig):
             channel_arg = f'channel="{channel}"' if channel != "input" else ""
             print(
                 "Input data channels mapped to an S3 source will not be available in "
