@@ -22,8 +22,11 @@ import oqpy.base
 from openpulse.printer import dumps
 
 from braket.experimental.autoqasm import constants, errors, program
+from braket.registers.qubit import Qubit
 
-QubitIdentifierType = Union[int, oqpy._ClassicalVar, oqpy.base.OQPyExpression, str, oqpy.Qubit]
+QubitIdentifierType = Union[
+    int, str, Qubit, oqpy._ClassicalVar, oqpy.base.OQPyExpression, oqpy.Qubit
+]
 
 
 def is_qubit_identifier_type(qubit: Any) -> bool:
@@ -58,11 +61,8 @@ def _get_physical_qubit_indices(qids: list[str]) -> list[int]:
     return braket_qubits
 
 
-def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> str:
-    # TODO: We should index into a oqpy.Qubit register rather
-    # than manually generating the string to index into
-    # a hard-coded global qubit register.
-    return f"{constants.QUBIT_REGISTER}[{qubit_idx_expr}]"
+def _global_qubit_register(qubit_idx_expr: Union[int, str]) -> oqpy.Qubit:
+    return oqpy.Qubit(f"{constants.QUBIT_REGISTER}[{qubit_idx_expr}]", needs_declaration=False)
 
 
 @singledispatch
@@ -92,7 +92,7 @@ def _(qid: float) -> oqpy.Qubit:
 def _(qid: int) -> oqpy.Qubit:
     # Integer virtual qubit, like `h(0)`
     program.get_program_conversion_context().register_qubit(qid)
-    return oqpy.Qubit(_global_qubit_register(qid), needs_declaration=False)
+    return _global_qubit_register(qid)
 
 
 @_qubit.register
@@ -100,7 +100,7 @@ def _(qid: oqpy._ClassicalVar) -> oqpy.Qubit:
     # Indexed by variable, such as i in range(n); h(i)
     if program.get_program_conversion_context().get_declared_qubits() is None:
         raise errors.UnknownQubitCountError()
-    return oqpy.Qubit(_global_qubit_register(qid.name), needs_declaration=False)
+    return _global_qubit_register(qid.name)
 
 
 @_qubit.register
@@ -111,7 +111,7 @@ def _(qid: oqpy.base.OQPyExpression) -> oqpy.Qubit:
 
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     qubit_idx_expr = dumps(qid.to_ast(oqpy_program))
-    return oqpy.Qubit(_global_qubit_register(qubit_idx_expr), needs_declaration=False)
+    return _global_qubit_register(qubit_idx_expr)
 
 
 @_qubit.register

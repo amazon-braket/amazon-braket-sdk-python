@@ -19,7 +19,6 @@ from typing import Union
 
 import oqpy
 
-from braket.circuits.qubit_set import QubitSet
 from braket.experimental.autoqasm import program as aq_program
 from braket.experimental.autoqasm.instructions.qubits import (
     QubitIdentifierType,
@@ -32,6 +31,7 @@ from braket.pulse import PulseSequence
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence import _validate_uniqueness
 from braket.pulse.waveforms import Waveform
+from braket.registers.qubit_set import QubitSet
 
 
 def _pulse_instruction(name: str, frame: Frame, *args) -> None:
