@@ -125,10 +125,12 @@ class Program(SerializableProgram):
         combined_oqpy_program += self._oqpy_program
         return Program(combined_oqpy_program, has_pulse_control=True)
 
-    def bind_parameters(self, key_vals):
-        for type, param in self._parameters:
-            if param.name in key_vals:
-                param.subs(key_vals)
+    def bind_parameters(self, param_values: dict[str, float]):  # Number
+        # TODO: remove IO declaration
+        oqpy_program = self._oqpy_program
+        for param_name, value in param_values.items():
+            # todo
+            pass
 
     def to_ir(
         self,
@@ -319,6 +321,15 @@ class ProgramConversionContext:
     def get_free_parameters(self) -> list[oqpy.FloatVar]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
         return list(val[0] for val in self._free_parameters.values())
+
+    def add_io_declarations(self) -> None:
+        free_parameters = self.get_free_parameters().reverse()  # TODO comment
+        root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
+        for parameter in free_parameters:
+            root_oqpy_program.declare(
+                parameter,
+                to_beginning=True,
+            )
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.

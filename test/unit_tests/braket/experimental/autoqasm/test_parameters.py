@@ -300,7 +300,12 @@ def test_bind_parameters():
         measure(0)
 
     prog = parametric(FreeParameter("alpha"))
-    assert prog.to_ir() == """"""
+    assert prog.to_ir() == """OPENQASM 3.0;
+input float[64] alpha;
+qubit[1] __qubits__;
+rx(alpha) __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
 
     prog.bind_parameters({"alpha": 0.5})
     assert prog.to_ir() == """"""
