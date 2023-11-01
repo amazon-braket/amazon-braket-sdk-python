@@ -98,7 +98,13 @@ class H(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{H} = \frac{1}{\sqrt{2}} \begin{bmatrix}
+                    1 & 1 \\
+                    1 & -1 \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -170,7 +176,13 @@ class I(Gate):  # noqa: E742, E261
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{I} = \begin{bmatrix}
+                    1 & 0 \\
+                    0 & 1 \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -243,7 +255,14 @@ class X(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{X} = \begin{bmatrix}
+                    0 & 1 \\
+                    1 & 0
+                    \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -316,7 +335,14 @@ class Y(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{Y} = \begin{bmatrix}
+                    0 & -i \\
+                    i & 0
+                    \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -389,7 +415,12 @@ class Z(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{Z} = \begin{bmatrix}
+                1 & 0 \\
+                0 & -1
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -462,7 +493,12 @@ class S(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{S} = \begin{bmatrix}
+                1 & 0 \\
+                0 & i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -535,7 +571,12 @@ class Si(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{S}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & -i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -608,7 +649,12 @@ class T(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{T} = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \pi/4}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -681,7 +727,12 @@ class Ti(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{T}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{-i \pi/4}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -754,7 +805,12 @@ class V(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
+                1+i & 1-i \\
+                1-i & 1+i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -827,7 +883,12 @@ class Vi(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{V}^\dagger = \frac{1}{2}\begin{bmatrix}
+                1-i & 1+i \\
+                1+i & 1-i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -892,7 +953,7 @@ class Rx(AngledGate):
         return ir.Rx.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -917,7 +978,12 @@ class Rx(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{R_x}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -i \sin{(\phi/2)} \\
+                -i \sin{(\phi/2)} & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -979,7 +1045,7 @@ class Ry(AngledGate):
         return ir.Ry.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -1004,7 +1070,12 @@ class Ry(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{R_y}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -\sin{(\phi/2)} \\
+                \sin{(\phi/2)} & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1088,7 +1159,12 @@ class Rz(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
+                e^{-i \phi/2} & 0 \\
+                0 & e^{i \phi/2}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1169,7 +1245,12 @@ class PhaseShift(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{PhaseShift}(\phi) = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \phi}
+                \end{bmatrix}
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1253,7 +1334,14 @@ class CNot(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cnot(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1330,7 +1418,14 @@ class Swap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{SWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1415,7 +1510,14 @@ class ISwap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{iSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & i & 0 \\
+                0 & i & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1511,7 +1613,14 @@ class PSwap(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1583,7 +1692,7 @@ class XY(AngledGate):
         return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -1617,7 +1726,14 @@ class XY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & \cos{(\phi/2)} & i\sin{(\phi/2)} & 0 \\
+                0 & i\sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                0 & 0 & 0 & 1 \\
+            \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1700,7 +1816,14 @@ class CPhaseShift(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CPhaseShift}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & e^{i \phi}
+            \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1778,7 +1901,14 @@ class CPhaseShift00(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
+                e^{i \phi} & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1856,7 +1986,14 @@ class CPhaseShift01(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+            \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1934,7 +2071,14 @@ class CPhaseShift10(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2008,7 +2152,14 @@ class CV(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cv(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CV} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0.5+0.5i & 0.5-0.5i \\
+                0 & 0 & 0.5-0.5i & 0.5+0.5i
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2078,7 +2229,14 @@ class CY(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cy(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CY} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & -i \\
+                0 & 0 & i & 0
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2140,7 +2298,14 @@ class CZ(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cz(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CZ} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & -1
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2216,7 +2381,14 @@ class ECR(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{ECR} = \begin{bmatrix}
+                0 & 0 & 1 & i \\
+                0 & 0 & i & 1 \\
+                1 & -i & 0 & 0 \\
+                -i & 1 & 0 & 0
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2286,7 +2458,7 @@ class XX(AngledGate):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -2320,7 +2492,14 @@ class XX(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & -i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                -i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2391,7 +2570,7 @@ class YY(AngledGate):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -2425,7 +2604,14 @@ class YY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2524,7 +2710,14 @@ class ZZ(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
+                e^{-i\phi/2} & 0 & 0 & 0 \\
+                0 & e^{i\phi/2} & 0 & 0 \\
+                0 & 0 & e^{i\phi/2} & 0 \\
+                0 & 0 & 0 & e^{-i\phi/2}
+            \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2622,7 +2815,18 @@ class CCNot(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CCNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
 
         Args:
             control1 (QubitInput): Control qubit 1 index.
@@ -2716,7 +2920,18 @@ class CSwap(Gate):
         target2: QubitInput,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{CSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2799,7 +3014,12 @@ class GPi(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
+                0 & e^{-i \phi} \\
+                e^{i \phi} & 0
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -2885,7 +3105,12 @@ class GPi2(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+                1 & -i e^{-i \phi} \\
+                -i e^{i \phi} & 1
+            \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -3012,7 +3237,18 @@ class MS(TripleAngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
+                    \cos{\frac{\theta}{2}} & 0 &
+                    0 & -ie^{-i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} \\
+                    0 & \cos{\frac{\theta}{2}} &
+                    -ie^{-i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} & 0 \\
+                    0 & -ie^{i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} &
+                    \cos{\frac{\theta}{2}} & 0 \\
+                    -ie^{i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} & 0
+                    & 0 & \cos{\frac{\theta}{2}}
+                    \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -3115,7 +3351,7 @@ class Unitary(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def unitary(targets: QubitSet, matrix: np.ndarray, display_name: str = "U") -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             targets (QubitSet): Target qubits.
@@ -3172,7 +3408,7 @@ class PulseGate(Gate, Parameterizable):
 
     @property
     def parameters(self) -> list[FreeParameter]:
-        """Returns the list of `FreeParameter` s associated with the gate."""
+        r"""Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:
