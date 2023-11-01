@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install -e .[test]
+        pip install tox
     - name: Run code format checks
       run: |
         tox -e linters_check
