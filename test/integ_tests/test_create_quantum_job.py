@@ -24,16 +24,7 @@ from job_test_module.job_test_submodule.job_test_submodule_file import submodule
 
 from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.devices import Devices
-from braket.jobs import Framework, get_input_data_dir, hybrid_job, retrieve_image, save_job_result
-
-
-# todo: capture python version from container
-# @pytest.fixture
-# def decorator_python_version(aws_session):
-#     image_uri = retrieve_image(Framework.BASE, aws_session.region)
-#     tag = aws_session.get_full_image_tag(image_uri)
-#     major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
-#     return major_version, minor_version
+from braket.jobs import get_input_data_dir, hybrid_job, save_job_result
 
 
 def test_failed_quantum_job(aws_session, capsys):
