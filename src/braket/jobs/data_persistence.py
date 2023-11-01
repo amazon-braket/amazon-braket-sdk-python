@@ -26,8 +26,7 @@ def save_job_checkpoint(
     checkpoint_file_suffix: str = "",
     data_format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ) -> None:
-    """
-    Saves the specified `checkpoint_data` to the local output directory, specified by the container
+    """Saves the specified `checkpoint_data` to the local output directory, specified by the container
     environment variable `CHECKPOINT_DIR`, with the filename
     `f"{job_name}(_{checkpoint_file_suffix}).json"`. The `job_name` refers to the name of the
     current job and is retrieved from the container environment variable `JOB_NAME`. The
@@ -66,8 +65,7 @@ def save_job_checkpoint(
 
 
 def load_job_checkpoint(job_name: str = None, checkpoint_file_suffix: str = "") -> dict[str, Any]:
-    """
-    Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
+    """Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
     file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
     checkpoint data you expect to be available in the file path specified by the `CHECKPOINT_DIR`
     container environment variable. If not provided, this function will use the currently running
@@ -117,8 +115,7 @@ def _load_persisted_data(filename: str | Path = None) -> PersistedJobData:
 
 
 def load_job_result(filename: str | Path = None) -> dict[str, Any]:
-    """
-    Loads job result of currently running job.
+    """Loads job result of currently running job.
 
     Args:
         filename (str | Path): Location of job results. Default `results.json` in job
@@ -137,8 +134,7 @@ def save_job_result(
     result_data: dict[str, Any] | Any,
     data_format: PersistedJobDataFormat = None,
 ) -> None:
-    """
-    Saves the `result_data` to the local output directory that is specified by the container
+    """Saves the `result_data` to the local output directory that is specified by the container
     environment variable `AMZN_BRAKET_JOB_RESULTS_DIR`, with the filename 'results.json'.
     The `result_data` values are serialized to the specified `data_format`.
 

@@ -15,8 +15,7 @@ import sys
 
 
 def running_in_jupyter() -> bool:
-    """
-    Determine if running within Jupyter.
+    """Determine if running within Jupyter.
 
     Inspired by https://github.com/ipython/ipython/issues/11694
 

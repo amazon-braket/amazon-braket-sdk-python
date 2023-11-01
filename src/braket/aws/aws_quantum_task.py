@@ -74,7 +74,8 @@ from braket.tracking.tracking_events import _TaskCompletionEvent
 
 class AwsQuantumTask(QuantumTask):
     """Amazon Braket implementation of a quantum task. A quantum task can be a circuit,
-    an OpenQASM program or an AHS program."""
+    an OpenQASM program or an AHS program.
+    """
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
     NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
@@ -207,8 +208,7 @@ class AwsQuantumTask(QuantumTask):
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
     ):
-        """
-        Args:
+        """Args:
             arn (str): The ARN of the quantum task.
             aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
@@ -230,7 +230,6 @@ class AwsQuantumTask(QuantumTask):
             >>> result = task.result()
             GateModelQuantumTaskResult(...)
         """
-
         self._arn: str = arn
         self._aws_session: AwsSession = aws_session or AwsQuantumTask._aws_session_for_task_arn(
             task_arn=arn
@@ -247,8 +246,7 @@ class AwsQuantumTask(QuantumTask):
 
     @staticmethod
     def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
-        """
-        Get an AwsSession for the Quantum Task ARN. The AWS session should be in the region of the
+        """Get an AwsSession for the Quantum Task ARN. The AWS session should be in the region of the
         quantum task.
 
         Returns:
@@ -273,19 +271,20 @@ class AwsQuantumTask(QuantumTask):
 
     def cancel(self) -> None:
         """Cancel the quantum task. This cancels the future and the quantum task in Amazon
-        Braket."""
+        Braket.
+        """
         self._cancel_future()
         self._aws_session.cancel_quantum_task(self._arn)
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
-        """
-        Get quantum task metadata defined in Amazon Braket.
+        """Get quantum task metadata defined in Amazon Braket.
 
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetQuantumTask` operation, if it exists; if not,
                 `GetQuantumTask` will be called to retrieve the metadata. If `False`, always calls
                 `GetQuantumTask`, which also updates the cached value. Default: `False`.
+
         Returns:
             dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
             If `use_cached_value` is `True`, Amazon Braket is not called and the most recently
@@ -297,26 +296,26 @@ class AwsQuantumTask(QuantumTask):
         return self._metadata
 
     def state(self, use_cached_value: bool = False) -> str:
-        """
-        The state of the quantum task.
+        """The state of the quantum task.
 
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetQuantumTask` operation. If `False`, calls the
                 `GetQuantumTask` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetQuantumTask` operation. If `use_cached_value` is `True`,
             the value most recently returned from the `GetQuantumTask` operation is used.
+
         See Also:
             `metadata()`
         """
         return self._status(use_cached_value)
 
     def queue_position(self) -> QuantumTaskQueueInfo:
-        """
-        The queue position details for the quantum task.
+        """The queue position details for the quantum task.
 
         Returns:
             QuantumTaskQueueInfo: Instance of QuantumTaskQueueInfo class
@@ -370,8 +369,7 @@ class AwsQuantumTask(QuantumTask):
     ) -> Union[
         GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
-        """
-        Get the quantum task result by polling Amazon Braket to see if the task is completed.
+        """Get the quantum task result by polling Amazon Braket to see if the task is completed.
         Once the quantum task is completed, the result is retrieved from S3 and returned as a
         `GateModelQuantumTaskResult` or `AnnealingQuantumTaskResult`
 
@@ -416,15 +414,13 @@ class AwsQuantumTask(QuantumTask):
         return self._future
 
     def async_result(self) -> asyncio.Task:
-        """
-        Get the quantum task result asynchronously. Consecutive calls to this method return
+        """Get the quantum task result asynchronously. Consecutive calls to this method return
         the result cached from the most recent request.
         """
         return self._get_future()
 
     async def _create_future(self) -> asyncio.Task:
-        """
-        Wrap the `_wait_for_completion` coroutine inside a future-like object.
+        """Wrap the `_wait_for_completion` coroutine inside a future-like object.
         Invoking this method starts the coroutine and returns back the future-like object
         that contains it. Note that this does not block on the coroutine to finish.
 
@@ -438,8 +434,7 @@ class AwsQuantumTask(QuantumTask):
     ) -> Union[
         GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
-        """
-        Waits for the quantum task to be completed, then returns the result from the S3 bucket.
+        """Waits for the quantum task to be completed, then returns the result from the S3 bucket.
 
         Returns:
             Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in the
@@ -447,6 +442,7 @@ class AwsQuantumTask(QuantumTask):
                 the result from the S3 bucket is loaded and returned.
                 `None` is returned if a timeout occurs or task state is in
                 `AwsQuantumTask.NO_RESULT_TERMINAL_STATES`.
+
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.

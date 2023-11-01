@@ -49,7 +49,8 @@ class _ParseState:
 
 class _ApproximationParser(QASMVisitor[_ParseState]):
     """Walk the AST and build the output signal amplitude, frequency and phases
-    for each channel."""
+    for each channel.
+    """
 
     TIME_UNIT_TO_EXP = {"dt": 4, "ns": 3, "us": 2, "ms": 1, "s": 0}
 
@@ -65,9 +66,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         self, node: Union[ast.QASMNode, ast.Expression], context: Optional[_ParseState] = None
     ) -> Any:
         """Visit a node.
+
         Args:
             node (Union[ast.QASMNode, ast.Expression]): The node to visit.
             context (Optional[_ParseState]): The parse state context.
+
         Returns:
             Any: The parsed return value.
         """
@@ -102,6 +105,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def visit_Program(self, node: ast.Program, context: _ParseState = None) -> None:
         """Visit a Program.
+
         Args:
             node (ast.Program): The program.
             context (_ParseState): The parse state context.
@@ -111,6 +115,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def visit_ExpressionStatement(self, node: ast.ExpressionStatement, context: _ParseState) -> Any:
         """Visit an Expression.
+
         Args:
             node (ast.ExpressionStatement): The expression.
             context (_ParseState): The parse state context.
@@ -128,12 +133,15 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             angle[20] a = 1+2;
             waveform wf = [];
             port a;
+
         Args:
             node (ast.ClassicalDeclaration): The classical declaration.
             context (_ParseState): The parse state context.
+
         Raises:
             NotImplementedError: Raised if the node is not a PortType, FrameType, or
                 WaveformType.
+
         Returns:
             Union[dict, None]: Returns a dict if WaveformType, None otherwise.
         """
@@ -151,6 +159,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """Visit a Delay Instruction.
             node.duration, node.qubits
             delay[100ns] $0;
+
         Args:
             node (ast.DelayInstruction): The classical declaration.
             context (_ParseState): The parse state context.
@@ -175,9 +184,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             barrier $0;
             barrier;
             barrier frame, frame1;
+
         Args:
             node (ast.QuantumBarrier): The quantum barrier.
             context (_ParseState): The parse state context.
+
         Returns:
             None: No return value.
         """
@@ -199,9 +210,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """Visit a Quantum Barrier.
             node.name, node.arguments
             f(args,arg2)
+
         Args:
             node (ast.FunctionCall): The function call.
             context (_ParseState): The parse state context.
+
         Returns:
             Any: The parsed return value.
         """
@@ -215,6 +228,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.Identifier): The identifier.
             context (_ParseState): The parse state context.
+
         Returns:
             Any: The parsed return value.
         """
@@ -227,11 +241,14 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """Visit Unary Expression.
             node.op, node.expression
             ~ ! -
+
         Args:
             node (ast.UnaryExpression): The unary expression.
             context (_ParseState): The parse state context.
+
         Returns:
             bool: The parsed boolean operator.
+
         Raises:
             NotImplementedError: Raised for unsupported boolean operators.
         """
@@ -251,12 +268,15 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
             1+2
             a.b
             > < >= <= == != && || | ^ & << >> + - * / % ** .
+
         Args:
             node (ast.BinaryExpression): The binary expression.
             context (_ParseState): The parse state context.
+
         Raises:
             NotImplementedError: Raised if the binary operator is not in
                 [> < >= <= == != && || | ^ & << >> + - * / % ** ]
+
         Returns:
             Any: The parsed binary operator.
         """
@@ -310,9 +330,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         """Visit Array Literal.
             node.values
             {1,2,4}
+
         Args:
             node (ast.ArrayLiteral): The array literal.
             context (_ParseState): The parse state context.
+
         Returns:
             list[Any]: The parsed ArrayLiteral.
         """
@@ -325,6 +347,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.IntegerLiteral): The integer literal.
             context (_ParseState): The parse state context.
+
         Returns:
             int: The parsed int value.
         """
@@ -337,6 +360,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.ImaginaryLiteral): The imaginary number literal.
             context (_ParseState): The parse state context.
+
         Returns:
             complex: The parsed complex value.
         """
@@ -349,6 +373,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.FloatLiteral): The float literal.
             context (_ParseState): The parse state context.
+
         Returns:
             float: The parsed float value.
         """
@@ -361,6 +386,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.BooleanLiteral): The boolean literal.
             context (_ParseState): The parse state context.
+
         Returns:
             bool: The parsed boolean value.
         """
@@ -373,8 +399,10 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
         Args:
             node (ast.DurationLiteral): The duration literal.
             context (_ParseState): The parse state context.
+
         Raises:
             ValueError: Raised based on time unit not being in `self.TIME_UNIT_TO_EXP`.
+
         Returns:
             float: The duration represented as a float
         """
@@ -387,6 +415,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def set_frequency(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_frequency' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -397,6 +426,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def shift_frequency(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'shift_frequency' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -407,6 +437,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def set_phase(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_phase' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -417,6 +448,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def shift_phase(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'shift_phase' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -428,6 +460,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def set_scale(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'set_scale' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -438,6 +471,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def capture_v0(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'capture_v0' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
@@ -446,12 +480,15 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def play(self, node: ast.FunctionCall, context: _ParseState) -> None:
         """A 'play' Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+
         Raises:
             NotImplementedError: Raises if not of type
                 [ast.Identifier, ast.FunctionCall, ast.ArrayLiteral]
+
         Returns:
             None: Returns None
         """
@@ -477,9 +514,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def constant(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
         """A 'constant' Waveform Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+
         Returns:
             Waveform: The waveform object representing the function call.
         """
@@ -488,9 +527,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def gaussian(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
         """A 'gaussian' Waveform Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+
         Returns:
             Waveform: The waveform object representing the function call.
         """
@@ -499,9 +540,11 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
     def drag_gaussian(self, node: ast.FunctionCall, context: _ParseState) -> Waveform:
         """A 'drag_gaussian' Waveform Function call.
+
         Args:
             node (ast.FunctionCall): The function call node.
             context (_ParseState): The parse state.
+
         Returns:
             Waveform: The waveform object representing the function call.
         """
@@ -545,7 +588,6 @@ def _lcm_floats(*dts: list[float]) -> float:
     Returns:
         float: The LCM of time increments for a list of frames.
     """
-
     sample_rates = [round(1 / dt) for dt in dts]
     res_gcd = sample_rates[0]
     for sr in sample_rates[1:]:

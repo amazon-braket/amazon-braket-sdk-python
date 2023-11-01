@@ -40,9 +40,7 @@ class Problem:
         linear: dict[int, float] = None,
         quadratic: dict[tuple[int, int], float] = None,
     ):
-        """
-
-        Args:
+        """Args:
             problem_type (ProblemType): The type of annealing problem
             linear (Dict[int, float]): The linear terms of this problem,
                 as a map of variable to coefficient

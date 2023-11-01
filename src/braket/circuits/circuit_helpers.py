@@ -15,8 +15,7 @@ from braket.circuits import Circuit, ResultType
 
 
 def validate_circuit_and_shots(circuit: Circuit, shots: int) -> None:
-    """
-    Validates if circuit and shots are correct before running on a device
+    """Validates if circuit and shots are correct before running on a device
 
     Args:
         circuit (Circuit): circuit to validate

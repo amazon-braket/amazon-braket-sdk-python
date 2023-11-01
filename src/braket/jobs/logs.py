@@ -36,8 +36,7 @@ class ColorWrap:
     _stream_colors = [34, 35, 32, 36, 33]
 
     def __init__(self, force: bool = False):
-        """
-        Initialize a `ColorWrap`.
+        """Initialize a `ColorWrap`.
 
         Args:
             force (bool): If True, the render output is colorized wherever the
@@ -130,7 +129,6 @@ def log_stream(
         'message' (str): The log event data.
         'ingestionTime' (int): The time the event was ingested.
     """
-
     next_token = None
 
     event_count = 1

@@ -95,6 +95,7 @@ class BitFlip(SingleProbabilisticNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
@@ -127,8 +128,7 @@ class BitFlip(SingleProbabilisticNoise):
         ]
 
     def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Args:
             **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
@@ -141,8 +141,7 @@ class BitFlip(SingleProbabilisticNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -201,6 +200,7 @@ class PhaseFlip(SingleProbabilisticNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -233,8 +233,7 @@ class PhaseFlip(SingleProbabilisticNoise):
         ]
 
     def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Args:
             **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
@@ -247,8 +246,7 @@ class PhaseFlip(SingleProbabilisticNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -312,6 +310,7 @@ class PauliChannel(PauliNoise):
         probZ: Union[FreeParameterExpression, float],
     ):
         """Creates PauliChannel noise.
+
         Args:
             probX (Union[FreeParameterExpression, float]): X rotation probability.
             probY (Union[FreeParameterExpression, float]): Y rotation probability.
@@ -341,6 +340,7 @@ class PauliChannel(PauliNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -381,8 +381,7 @@ class PauliChannel(PauliNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -396,8 +395,7 @@ class PauliChannel(PauliNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -478,6 +476,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -512,8 +511,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -523,8 +521,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -610,10 +607,10 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
-
         SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
         SX = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
         SY = np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex)
@@ -657,8 +654,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -668,8 +664,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -737,6 +732,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -776,8 +772,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -787,8 +782,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -882,6 +876,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -935,8 +930,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -950,8 +944,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1011,6 +1004,7 @@ class AmplitudeDamping(DampingNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1043,8 +1037,7 @@ class AmplitudeDamping(DampingNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -1054,8 +1047,7 @@ class AmplitudeDamping(DampingNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1136,6 +1128,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1180,8 +1173,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -1193,8 +1185,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1256,6 +1247,7 @@ class PhaseDamping(DampingNoise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1287,8 +1279,7 @@ class PhaseDamping(DampingNoise):
         ]
 
     def bind_values(self, **kwargs) -> Noise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             Noise: A new Noise object of the same type with the requested
@@ -1298,8 +1289,7 @@ class PhaseDamping(DampingNoise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1352,6 +1342,7 @@ class Kraus(Noise):
 
     def to_matrix(self) -> Iterable[np.ndarray]:
         """Returns a matrix representation of this noise.
+
         Returns:
             Iterable[ndarray]: A list of matrix representations of this noise.
         """
@@ -1419,8 +1410,7 @@ class Kraus(Noise):
         )
 
     def to_dict(self) -> dict:
-        """
-        Converts this object into a dictionary representation. Not implemented at this time.
+        """Converts this object into a dictionary representation. Not implemented at this time.
 
         Returns:
             dict: Not implemented at this time..
@@ -1429,8 +1419,7 @@ class Kraus(Noise):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representation of this class into this class.
+        """Converts a dictionary representation of this class into this class.
 
         Args:
             noise(dict): The dictionary representation of this noise.
@@ -1447,8 +1436,7 @@ Noise.register_noise(Kraus)
 def _ascii_representation(
     noise: str, parameters: list[Union[FreeParameterExpression, float]]
 ) -> str:
-    """
-    Generates a formatted ascii representation of a noise.
+    """Generates a formatted ascii representation of a noise.
 
     Args:
         noise (str): The name of the noise.

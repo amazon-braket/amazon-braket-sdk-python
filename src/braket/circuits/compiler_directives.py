@@ -18,8 +18,7 @@ from braket.circuits.compiler_directive import CompilerDirective
 
 
 class StartVerbatimBox(CompilerDirective):
-    """
-    Prevents the compiler from modifying any ensuing instructions
+    """Prevents the compiler from modifying any ensuing instructions
     until the appearance of a corresponding ``EndVerbatimBox``.
     """
 
@@ -37,8 +36,7 @@ class StartVerbatimBox(CompilerDirective):
 
 
 class EndVerbatimBox(CompilerDirective):
-    """
-    Marks the end of a portion of code following a StartVerbatimBox that prevents the enclosed
+    """Marks the end of a portion of code following a StartVerbatimBox that prevents the enclosed
     instructions from being modified by the compiler.
     """
 

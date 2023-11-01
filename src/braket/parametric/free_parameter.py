@@ -21,8 +21,7 @@ from sympy import Symbol
 
 
 class FreeParameter(FreeParameterExpression):
-    """
-    Class 'FreeParameter'
+    """Class 'FreeParameter'
 
     Free parameters can be used in parameterized circuits. Objects that can take a parameter
     all inherit from :class:'Parameterizable'. The FreeParameter can be swapped in to a circuit
@@ -38,8 +37,7 @@ class FreeParameter(FreeParameterExpression):
     """
 
     def __init__(self, name: str):
-        """
-        Initializes a new :class:'FreeParameter' object.
+        """Initializes a new :class:'FreeParameter' object.
 
         Args:
             name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
@@ -53,14 +51,12 @@ class FreeParameter(FreeParameterExpression):
 
     @property
     def name(self) -> str:
-        """
-        str: Name of this parameter.
+        """str: Name of this parameter.
         """
         return self._name.name
 
     def subs(self, parameter_values: dict[str, Number]) -> Union[FreeParameter, Number]:
-        """
-        Substitutes a value in if the parameter exists within the mapping.
+        """Substitutes a value in if the parameter exists within the mapping.
 
         Args:
             parameter_values (dict[str, Number]): A mapping of parameter to its
@@ -84,8 +80,7 @@ class FreeParameter(FreeParameterExpression):
         return super().__eq__(other)
 
     def __repr__(self) -> str:
-        """
-        The representation of the :class:'FreeParameter'.
+        """The representation of the :class:'FreeParameter'.
 
         Returns:
             str: The name of the class:'FreeParameter' to represent the class.

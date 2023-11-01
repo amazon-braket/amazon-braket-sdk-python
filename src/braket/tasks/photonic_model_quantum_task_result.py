@@ -32,8 +32,7 @@ class PhotonicModelQuantumTaskResult:
 
     @staticmethod
     def from_object(result: PhotonicModelTaskResult) -> PhotonicModelQuantumTaskResult:
-        """
-        Create PhotonicModelQuantumTaskResult from PhotonicModelTaskResult object.
+        """Create PhotonicModelQuantumTaskResult from PhotonicModelTaskResult object.
 
         Args:
             result (PhotonicModelTaskResult): PhotonicModelTaskResult object

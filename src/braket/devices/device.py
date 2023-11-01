@@ -24,8 +24,7 @@ class Device(ABC):
     """An abstraction over quantum devices that includes quantum computers and simulators."""
 
     def __init__(self, name: str, status: str):
-        """
-        Inits a `Device`.
+        """Inits a `Device`.
 
         Args:
             name (str): Name of quantum device

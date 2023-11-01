@@ -23,8 +23,7 @@ from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMeta
 
 @dataclass
 class AnnealingQuantumTaskResult:
-    """
-    Result of an annealing problem quantum task execution. This class is intended
+    """Result of an annealing problem quantum task execution. This class is intended
     to be initialized by a QuantumTask class.
 
     Args:
@@ -50,8 +49,7 @@ class AnnealingQuantumTaskResult:
         sorted_by: str = "value",
         reverse: bool = False,
     ) -> tuple:
-        """
-        Iterate over the data in record_array
+        """Iterate over the data in record_array
 
         Args:
             selected_fields (Optional[List[str]]): selected fields to return.
@@ -99,8 +97,7 @@ class AnnealingQuantumTaskResult:
 
     @staticmethod
     def from_object(result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
-        """
-        Create AnnealingQuantumTaskResult from AnnealingTaskResult object
+        """Create AnnealingQuantumTaskResult from AnnealingTaskResult object
 
         Args:
             result (AnnealingTaskResult): AnnealingTaskResult object
@@ -113,8 +110,7 @@ class AnnealingQuantumTaskResult:
 
     @staticmethod
     def from_string(result: str) -> AnnealingQuantumTaskResult:
-        """
-        Create AnnealingQuantumTaskResult from string
+        """Create AnnealingQuantumTaskResult from string
 
         Args:
             result (str): JSON object string
@@ -151,8 +147,7 @@ class AnnealingQuantumTaskResult:
     def _create_record_array(
         solutions: numpy.ndarray, solution_counts: numpy.ndarray, values: numpy.ndarray
     ) -> numpy.recarray:
-        """
-        Create a solutions record for AnnealingQuantumTaskResult
+        """Create a solutions record for AnnealingQuantumTaskResult
 
         Args:
             solutions (numpy.ndarray): row is solution, column is value of the variable

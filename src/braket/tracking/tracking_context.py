@@ -20,6 +20,7 @@ class TrackingContext:
 
     def register_tracker(self, tracker: Tracker) -> None:  # noqa F821
         """Registers a tracker.
+
         Args:
             tracker (Tracker): The tracker.
         """
@@ -27,6 +28,7 @@ class TrackingContext:
 
     def deregister_tracker(self, tracker: Tracker) -> None:  # noqa F821
         """Deregisters a tracker.
+
         Args:
             tracker (Tracker): The tracker.
         """
@@ -34,6 +36,7 @@ class TrackingContext:
 
     def broadcast_event(self, event: _TrackingEvent) -> None:  # noqa F821
         """Broadcasts an event to all trackers.
+
         Args:
             event (_TrackingEvent): The event to broadcast.
         """

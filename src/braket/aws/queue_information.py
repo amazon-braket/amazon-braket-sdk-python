@@ -17,8 +17,7 @@ from typing import Optional
 
 
 class QueueType(str, Enum):
-    """
-    Enumerates the possible priorities for the queue.
+    """Enumerates the possible priorities for the queue.
 
     Values:
         NORMAL: Represents normal queue for the device.
@@ -31,8 +30,7 @@ class QueueType(str, Enum):
 
 @dataclass()
 class QueueDepthInfo:
-    """
-    Represents quantum tasks and hybrid jobs queue depth information.
+    """Represents quantum tasks and hybrid jobs queue depth information.
 
     Attributes:
         quantum_tasks (dict[QueueType, str]): number of quantum tasks waiting
@@ -49,8 +47,7 @@ class QueueDepthInfo:
 
 @dataclass
 class QuantumTaskQueueInfo:
-    """
-    Represents quantum tasks queue information.
+    """Represents quantum tasks queue information.
 
     Attributes:
         queue_type (QueueType): type of the quantum_task queue either 'Normal'
@@ -68,8 +65,7 @@ class QuantumTaskQueueInfo:
 
 @dataclass
 class HybridJobQueueInfo:
-    """
-    Represents hybrid job queue information.
+    """Represents hybrid job queue information.
 
     Attributes:
         queue_position (Optional[str]): current position of your hybrid job within a respective

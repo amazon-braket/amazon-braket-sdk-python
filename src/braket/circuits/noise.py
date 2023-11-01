@@ -30,8 +30,7 @@ from braket.registers.qubit_set import QubitSet
 
 
 class Noise(QuantumOperator):
-    """
-    Class `Noise` represents a noise channel that operates on one or multiple qubits. Noise
+    """Class `Noise` represents a noise channel that operates on one or multiple qubits. Noise
     are considered as building blocks of quantum circuits that simulate noise. It can be
     used as an operator in an `Instruction` object. It appears in the diagram when user prints
     a circuit with `Noise`. This class is considered the noise channel definition containing
@@ -39,8 +38,7 @@ class Noise(QuantumOperator):
     """
 
     def __init__(self, qubit_count: Optional[int], ascii_symbols: Sequence[str]):
-        """
-        Args:
+        """Args:
             qubit_count (Optional[int]): Number of qubits this noise channel interacts with.
             ascii_symbols (Sequence[str]): ASCII string symbols for this noise channel. These
                 are used when printing a diagram of circuits. Length must be the same as
@@ -55,8 +53,7 @@ class Noise(QuantumOperator):
 
     @property
     def name(self) -> str:
-        """
-        Returns the name of the quantum operator
+        """Returns the name of the quantum operator
 
         Returns:
             str: The name of the quantum operator as a string
@@ -78,6 +75,7 @@ class Noise(QuantumOperator):
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties
                 supplied must correspond to the supplied `ir_type`. Defaults to None.
+
         Returns:
             Any: IR object of the quantum operator and target
 
@@ -102,8 +100,7 @@ class Noise(QuantumOperator):
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
-        """
-        Returns the JAQCD representation of the noise.
+        """Returns the JAQCD representation of the noise.
 
         Args:
             target (QubitSet): target qubit(s).
@@ -116,8 +113,7 @@ class Noise(QuantumOperator):
     def _to_openqasm(
         self, target: QubitSet, serialization_properties: OpenQASMSerializationProperties
     ) -> str:
-        """
-        Returns the openqasm string representation of the noise.
+        """Returns the openqasm string representation of the noise.
 
         Args:
             target (QubitSet): target qubit(s).
@@ -147,8 +143,7 @@ class Noise(QuantumOperator):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this class.
 
         Args:
             noise (dict): A dictionary representation of an object of this class.
@@ -165,6 +160,7 @@ class Noise(QuantumOperator):
     @classmethod
     def register_noise(cls, noise: type[Noise]) -> None:
         """Register a noise implementation by adding it into the Noise class.
+
         Args:
             noise (type[Noise]): Noise class to register.
         """
@@ -172,8 +168,7 @@ class Noise(QuantumOperator):
 
 
 class SingleProbabilisticNoise(Noise, Parameterizable):
-    """
-    Class `SingleProbabilisticNoise` represents the bit/phase flip noise channel on N qubits
+    """Class `SingleProbabilisticNoise` represents the bit/phase flip noise channel on N qubits
     parameterized by a single probability.
     """
 
@@ -184,8 +179,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         ascii_symbols: Sequence[str],
         max_probability: float = 0.5,
     ):
-        """
-        Args:
+        """Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
             qubit_count (Optional[int]): The number of qubits to apply noise.
@@ -208,6 +202,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
     @property
     def probability(self) -> float:
         """The probability that parametrizes the noise channel.
+
         Returns:
             float: The probability that parametrizes the noise channel.
         """
@@ -221,8 +216,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameter expressions
+        """Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
 
         Returns:
@@ -237,8 +231,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         return False
 
     def bind_values(self, **kwargs) -> SingleProbabilisticNoise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             SingleProbabilisticNoise: A new Noise object of the same type with the requested
@@ -250,8 +243,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         raise NotImplementedError
 
     def to_dict(self) -> dict:
-        """
-        Converts this object into a dictionary representation.
+        """Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -266,8 +258,7 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
 
 class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
-    """
-    Class `SingleProbabilisticNoise` represents the Depolarizing and TwoQubitDephasing noise
+    """Class `SingleProbabilisticNoise` represents the Depolarizing and TwoQubitDephasing noise
     channels parameterized by a single probability.
     """
 
@@ -277,8 +268,7 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
             qubit_count (Optional[int]): The number of qubits to apply noise.
@@ -300,8 +290,7 @@ class SingleProbabilisticNoise_34(SingleProbabilisticNoise):
 
 
 class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
-    """
-    Class `SingleProbabilisticNoise` represents the TwoQubitDepolarizing noise channel
+    """Class `SingleProbabilisticNoise` represents the TwoQubitDepolarizing noise channel
     parameterized by a single probability.
     """
 
@@ -311,8 +300,7 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             probability (Union[FreeParameterExpression, float]): The probability that the
                 noise occurs.
             qubit_count (Optional[int]): The number of qubits to apply noise.
@@ -334,8 +322,7 @@ class SingleProbabilisticNoise_1516(SingleProbabilisticNoise):
 
 
 class MultiQubitPauliNoise(Noise, Parameterizable):
-    """
-    Class `MultiQubitPauliNoise` represents a general multi-qubit Pauli channel,
+    """Class `MultiQubitPauliNoise` represents a general multi-qubit Pauli channel,
     parameterized by up to 4**N - 1 probabilities.
     """
 
@@ -371,7 +358,6 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             TypeError: If the type of the dictionary keys are not strings.
                 If the probabilities are not floats.
         """
-
         super().__init__(qubit_count=qubit_count, ascii_symbols=ascii_symbols)
         self._probabilities = probabilities
 
@@ -432,6 +418,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     @property
     def probabilities(self) -> dict[str, float]:
         """A map of a Pauli string to its corresponding probability.
+
         Returns:
             dict[str, float]: A map of a Pauli string to its corresponding probability.
         """
@@ -439,8 +426,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameter expressions
+        """Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
 
         Parameters are in alphabetical order of the Pauli strings in `probabilities`.
@@ -454,8 +440,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         ]
 
     def bind_values(self, **kwargs) -> MultiQubitPauliNoise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             MultiQubitPauliNoise: A new Noise object of the same type with the requested
@@ -467,8 +452,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         raise NotImplementedError
 
     def to_dict(self) -> dict:
-        """
-        Converts this object into a dictionary representation.
+        """Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -486,8 +470,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
 
 class PauliNoise(Noise, Parameterizable):
-    """
-    Class `PauliNoise` represents the a single-qubit Pauli noise channel
+    """Class `PauliNoise` represents the a single-qubit Pauli noise channel
     acting on one qubit. It is parameterized by three probabilities.
     """
 
@@ -499,8 +482,7 @@ class PauliNoise(Noise, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             probX (Union[FreeParameterExpression, float]): The X coefficient of the Kraus operators
                 in the channel.
             probY (Union[FreeParameterExpression, float]): The Y coefficient of the Kraus operators
@@ -549,25 +531,22 @@ class PauliNoise(Noise, Parameterizable):
 
     @property
     def probX(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns:
-            Union[FreeParameterExpression, float]: The probability of a Pauli X error.
+        """Returns:
+        Union[FreeParameterExpression, float]: The probability of a Pauli X error.
         """
         return self._parameters[0]
 
     @property
     def probY(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns:
-            Union[FreeParameterExpression, float]: The probability of a Pauli Y error.
+        """Returns:
+        Union[FreeParameterExpression, float]: The probability of a Pauli Y error.
         """
         return self._parameters[1]
 
     @property
     def probZ(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns:
-            Union[FreeParameterExpression, float]: The probability of a Pauli Z error.
+        """Returns:
+        Union[FreeParameterExpression, float]: The probability of a Pauli Z error.
         """
         return self._parameters[2]
 
@@ -591,8 +570,7 @@ class PauliNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameter expressions
+        """Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
 
         Parameters are in the order [probX, probY, probZ]
@@ -604,8 +582,7 @@ class PauliNoise(Noise, Parameterizable):
         return self._parameters
 
     def bind_values(self, **kwargs) -> PauliNoise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             PauliNoise: A new Noise object of the same type with the requested
@@ -617,8 +594,7 @@ class PauliNoise(Noise, Parameterizable):
         raise NotImplementedError
 
     def to_dict(self) -> dict:
-        """
-        Converts this object into a dictionary representation.
+        """Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -635,8 +611,7 @@ class PauliNoise(Noise, Parameterizable):
 
 
 class DampingNoise(Noise, Parameterizable):
-    """
-    Class `DampingNoise` represents a damping noise channel
+    """Class `DampingNoise` represents a damping noise channel
     on N qubits parameterized by gamma.
     """
 
@@ -646,15 +621,14 @@ class DampingNoise(Noise, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             gamma (Union[FreeParameterExpression, float]): Probability of damping.
             qubit_count (Optional[int]): The number of qubits to apply noise.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
 
-            Raises:
+        Raises:
                 ValueError: If
                     `qubit_count` < 1,
                     `ascii_symbols` is `None`,
@@ -671,6 +645,7 @@ class DampingNoise(Noise, Parameterizable):
     @property
     def gamma(self) -> float:
         """Probability of damping.
+
         Returns:
             float: Probability of damping.
         """
@@ -684,8 +659,7 @@ class DampingNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameter expressions
+        """Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
 
         Returns:
@@ -700,8 +674,7 @@ class DampingNoise(Noise, Parameterizable):
         return False
 
     def bind_values(self, **kwargs) -> DampingNoise:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Returns:
             DampingNoise: A new Noise object of the same type with the requested
@@ -713,8 +686,7 @@ class DampingNoise(Noise, Parameterizable):
         raise NotImplementedError
 
     def to_dict(self) -> dict:
-        """
-        Converts this object into a dictionary representation.
+        """Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back
@@ -729,8 +701,7 @@ class DampingNoise(Noise, Parameterizable):
 
 
 class GeneralizedAmplitudeDampingNoise(DampingNoise):
-    """
-    Class `GeneralizedAmplitudeDampingNoise` represents the generalized amplitude damping
+    """Class `GeneralizedAmplitudeDampingNoise` represents the generalized amplitude damping
     noise channel on N qubits parameterized by gamma and probability.
     """
 
@@ -741,8 +712,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             gamma (Union[FreeParameterExpression, float]): Probability of damping.
             probability (Union[FreeParameterExpression, float]): Probability of the system being
                 excited by the environment.
@@ -751,7 +721,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
                 printing a diagram of a circuit. The length must be the same as `qubit_count`, and
                 index ordering is expected to correlate with the target ordering on the instruction.
 
-            Raises:
+        Raises:
                 ValueError: If
                     `qubit_count` < 1,
                     `ascii_symbols` is `None`,
@@ -769,6 +739,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
     @property
     def probability(self) -> float:
         """Probability of the system being excited by the environment.
+
         Returns:
             float: Probability of the system being excited by the environment.
         """
@@ -786,8 +757,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameter expressions
+        """Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
 
         Parameters are in the order [gamma, probability]
@@ -808,8 +778,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         return False
 
     def to_dict(self) -> dict:
-        """
-        Converts this object into a dictionary representation.
+        """Converts this object into a dictionary representation.
 
         Returns:
             dict: A dictionary object that represents this object. It can be converted back

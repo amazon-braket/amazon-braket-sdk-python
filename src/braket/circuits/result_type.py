@@ -28,22 +28,19 @@ from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class ResultType:
-    """
-    Class `ResultType` represents a requested result type for the circuit.
+    """Class `ResultType` represents a requested result type for the circuit.
     This class is considered the result type definition containing
     the metadata that defines what a requested result type is and what it does.
     """
 
     def __init__(self, ascii_symbols: list[str]):
-        """
-        Args:
+        """Args:
             ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
 
         Raises:
             ValueError: `ascii_symbols` is `None`
         """
-
         if ascii_symbols is None:
             raise ValueError("ascii_symbols must not be None")
 
@@ -56,8 +53,7 @@ class ResultType:
 
     @property
     def name(self) -> str:
-        """
-        Returns the name of the result type
+        """Returns the name of the result type
 
         Returns:
             str: The name of the result type as a string
@@ -104,8 +100,7 @@ class ResultType:
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
     def _to_openqasm(self, serialization_properties: OpenQASMSerializationProperties) -> str:
-        """
-        Returns the openqasm string representation of the result type.
+        """Returns the openqasm string representation of the result type.
 
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
@@ -119,8 +114,7 @@ class ResultType:
     def copy(
         self, target_mapping: dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
     ) -> ResultType:
-        """
-        Return a shallow copy of the result type.
+        """Return a shallow copy of the result type.
 
         Note:
             If `target_mapping` is specified, then `self.target` is mapped to the specified
@@ -177,8 +171,7 @@ class ResultType:
 
 
 class ObservableResultType(ResultType):
-    """
-    Result types with observables and targets.
+    """Result types with observables and targets.
     If no targets are specified, the observable must only operate on 1 qubit and it
     will be applied to all qubits in parallel. Otherwise, the number of specified targets
     must be equivalent to the number of qubits the observable can be applied to.
@@ -189,8 +182,7 @@ class ObservableResultType(ResultType):
     def __init__(
         self, ascii_symbols: list[str], observable: Observable, target: QubitSetInput = None
     ):
-        """
-        Args:
+        """Args:
             ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
             observable (Observable): the observable for the result type
@@ -247,6 +239,7 @@ class ObservableResultType(ResultType):
     @target.setter
     def target(self, target: QubitSetInput) -> None:
         """Sets the target.
+
         Args:
             target (QubitSetInput): The new target.
         """
@@ -272,8 +265,7 @@ class ObservableResultType(ResultType):
 
 
 class ObservableParameterResultType(ObservableResultType):
-    """
-    Result types with observables, targets and parameters.
+    """Result types with observables, targets and parameters.
     If no targets are specified, the observable must only operate on 1 qubit and it
     will be applied to all qubits in parallel. Otherwise, the number of specified targets
     must be equivalent to the number of qubits the observable can be applied to.

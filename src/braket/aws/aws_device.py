@@ -55,8 +55,7 @@ class AwsDeviceType(str, Enum):
 
 
 class AwsDevice(Device):
-    """
-    Amazon Braket implementation of a device.
+    """Amazon Braket implementation of a device.
     Use this class to retrieve the latest metadata about the device and to run a quantum task on the
     device.
     """
@@ -78,8 +77,7 @@ class AwsDevice(Device):
     }
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
-        """
-        Args:
+        """Args:
             arn (str): The ARN of the device
             aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
 
@@ -123,8 +121,7 @@ class AwsDevice(Device):
         *aws_quantum_task_args: Any,
         **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
-        """
-        Run a quantum task specification on this device. A quantum task can be a circuit or an
+        """Run a quantum task specification on this device. A quantum task can be a circuit or an
         annealing problem.
 
         Args:
@@ -296,8 +293,7 @@ class AwsDevice(Device):
         )
 
     def refresh_metadata(self) -> None:
-        """
-        Refresh the `AwsDevice` object with the most recent Device metadata.
+        """Refresh the `AwsDevice` object with the most recent Device metadata.
         """
         self._populate_properties(self._aws_session)
 
@@ -386,8 +382,7 @@ class AwsDevice(Device):
 
     @property
     def gate_calibrations(self) -> Optional[GateCalibrations]:
-        """
-        Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
+        """Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
         If a QPU does not expose these calibrations, None is returned.
 
         Returns:
@@ -401,6 +396,7 @@ class AwsDevice(Device):
     @property
     def is_available(self) -> bool:
         """Returns true if the device is currently available.
+
         Returns:
             bool: Return if the device is currently available.
         """
@@ -462,7 +458,8 @@ class AwsDevice(Device):
 
         Please see `braket.device_schema` in amazon-braket-schemas-python_
 
-        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
+        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python
+        """
         return self._properties
 
     @property
@@ -488,8 +485,7 @@ class AwsDevice(Device):
         return self._topology_graph
 
     def _construct_topology_graph(self) -> DiGraph:
-        """
-        Construct topology graph. If no such metadata is available, return `None`.
+        """Construct topology graph. If no such metadata is available, return `None`.
 
         Returns:
             DiGraph: topology of QPU as a networkx `DiGraph` object.
@@ -536,14 +532,16 @@ class AwsDevice(Device):
     @property
     def frames(self) -> dict[str, Frame]:
         """Returns a dict mapping frame ids to the frame objects for predefined frames
-        for this device."""
+        for this device.
+        """
         self._update_pulse_properties()
         return self._frames or dict()
 
     @property
     def ports(self) -> dict[str, Port]:
         """Returns a dict mapping port ids to the port objects for predefined ports
-        for this device."""
+        for this device.
+        """
         self._update_pulse_properties()
         return self._ports or dict()
 
@@ -557,8 +555,7 @@ class AwsDevice(Device):
         order_by: str = "name",
         aws_session: Optional[AwsSession] = None,
     ) -> list[AwsDevice]:
-        """
-        Get devices based on filters and desired ordering. The result is the AND of
+        """Get devices based on filters and desired ordering. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Examples:
@@ -582,7 +579,6 @@ class AwsDevice(Device):
         Returns:
             list[AwsDevice]: list of AWS devices
         """
-
         if order_by not in AwsDevice._GET_DEVICES_ORDER_BY_KEYS:
             raise ValueError(
                 f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
@@ -664,6 +660,7 @@ class AwsDevice(Device):
     @staticmethod
     def get_device_region(device_arn: str) -> str:
         """Gets the region from a device arn.
+
         Args:
             device_arn (str): The device ARN.
 
@@ -682,8 +679,7 @@ class AwsDevice(Device):
             )
 
     def queue_depth(self) -> QueueDepthInfo:
-        """
-        Task queue depth refers to the total number of quantum tasks currently waiting
+        """Task queue depth refers to the total number of quantum tasks currently waiting
         to run on a particular device.
 
         Returns:
@@ -730,8 +726,7 @@ class AwsDevice(Device):
         return QueueDepthInfo(**queue_info)
 
     def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
-        """
-        Refreshes the gate calibration data upon request.
+        """Refreshes the gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.
 
@@ -777,8 +772,7 @@ class AwsDevice(Device):
     def _parse_calibration_json(
         self, calibration_data: dict
     ) -> dict[tuple[Gate, QubitSet], PulseSequence]:
-        """
-        Takes the json string from the device calibration URL and returns a structured dictionary of
+        """Takes the json string from the device calibration URL and returns a structured dictionary of
         corresponding `dict[tuple[Gate, QubitSet], PulseSequence]` to represent the calibration data.
 
         Args:

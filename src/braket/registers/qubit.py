@@ -20,14 +20,12 @@ QubitInput = Union["Qubit", int]
 
 
 class Qubit(int):
-    """
-    A quantum bit index. The index of this qubit is locally scoped towards the contained
+    """A quantum bit index. The index of this qubit is locally scoped towards the contained
     circuit. This may not be the exact qubit index on the quantum device.
     """
 
     def __new__(cls, index: int) -> Qubit:
-        """
-        Args:
+        """Args:
             index (int): Index of the qubit.
 
         Raises:
@@ -54,8 +52,7 @@ class Qubit(int):
 
     @staticmethod
     def new(qubit: QubitInput) -> Qubit:
-        """
-        Helper constructor - if input is a `Qubit` it returns the same value,
+        """Helper constructor - if input is a `Qubit` it returns the same value,
         else a new `Qubit` is constructed.
 
         Args:
@@ -64,7 +61,6 @@ class Qubit(int):
         Returns:
             Qubit: The qubit.
         """
-
         if isinstance(qubit, Qubit):
             return qubit
         else:

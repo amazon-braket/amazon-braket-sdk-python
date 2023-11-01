@@ -29,8 +29,7 @@ InstructionOperator = Operator
 
 
 class Instruction:
-    """
-    An instruction is a quantum directive that describes the quantum task to perform on a quantum
+    """An instruction is a quantum directive that describes the quantum task to perform on a quantum
     device.
     """
 
@@ -43,8 +42,7 @@ class Instruction:
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """
-        InstructionOperator includes objects of type `Gate` and `Noise` only.
+        """InstructionOperator includes objects of type `Gate` and `Noise` only.
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
@@ -109,29 +107,25 @@ class Instruction:
 
     @property
     def target(self) -> QubitSet:
-        """
-        QubitSet: Target qubits that the operator is applied to.
+        """QubitSet: Target qubits that the operator is applied to.
         """
         return self._target
 
     @property
     def control(self) -> QubitSet:
-        """
-        QubitSet: Target qubits that the operator is controlled on.
+        """QubitSet: Target qubits that the operator is controlled on.
         """
         return self._control
 
     @property
     def control_state(self) -> BasisState:
-        """
-        BasisState: Quantum state that the operator is controlled to.
+        """BasisState: Quantum state that the operator is controlled to.
         """
         return self._control_state
 
     @property
     def power(self) -> float:
-        """
-        float: Power that the operator is raised to.
+        """float: Power that the operator is raised to.
         """
         return self._power
 
@@ -167,8 +161,7 @@ class Instruction:
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
     ) -> Any:
-        """
-        Converts the operator into the canonical intermediate representation.
+        """Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
 
         Args:
@@ -208,8 +201,7 @@ class Instruction:
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """
-        Return a shallow copy of the instruction.
+        """Return a shallow copy of the instruction.
 
         Note:
             If `target_mapping` is specified, then `self.target` is mapped to the specified

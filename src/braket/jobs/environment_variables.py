@@ -16,8 +16,7 @@ import os
 
 
 def get_job_name() -> str:
-    """
-    Get the name of the current job.
+    """Get the name of the current job.
 
     Returns:
         str: The name of the job if in a job, else an empty string.
@@ -26,8 +25,7 @@ def get_job_name() -> str:
 
 
 def get_job_device_arn() -> str:
-    """
-    Get the device ARN of the current job. If not in a job, default to "local:none/none".
+    """Get the device ARN of the current job. If not in a job, default to "local:none/none".
 
     Returns:
         str: The device ARN of the current job or "local:none/none".
@@ -36,8 +34,7 @@ def get_job_device_arn() -> str:
 
 
 def get_input_data_dir(channel: str = "input") -> str:
-    """
-    Get the job input data directory.
+    """Get the job input data directory.
 
     Args:
         channel (str): The name of the input channel. Default value
@@ -53,8 +50,7 @@ def get_input_data_dir(channel: str = "input") -> str:
 
 
 def get_results_dir() -> str:
-    """
-    Get the job result directory.
+    """Get the job result directory.
 
     Returns:
         str: The results directory, defaulting to current working directory.
@@ -63,8 +59,7 @@ def get_results_dir() -> str:
 
 
 def get_checkpoint_dir() -> str:
-    """
-    Get the job checkpoint directory.
+    """Get the job checkpoint directory.
 
     Returns:
         str: The checkpoint directory, defaulting to current working directory.
@@ -73,8 +68,7 @@ def get_checkpoint_dir() -> str:
 
 
 def get_hyperparameters() -> dict[str, str]:
-    """
-    Get the job hyperparameters as a dict, with the values stringified.
+    """Get the job hyperparameters as a dict, with the values stringified.
 
     Returns:
         dict[str, str]: The hyperparameters of the job.

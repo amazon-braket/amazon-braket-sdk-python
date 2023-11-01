@@ -31,6 +31,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 def no_noise_applied_warning(noise_applied: bool) -> None:
     """Helper function to give a warning is noise is not applied.
+
     Args:
         noise_applied (bool): True if the noise has been applied.
     """
@@ -44,6 +45,7 @@ def no_noise_applied_warning(noise_applied: bool) -> None:
 
 def wrap_with_list(an_item: Any) -> list[Any]:
     """Helper function to make the input parameter a list.
+
     Args:
         an_item (Any): The item to wrap.
 
@@ -60,6 +62,7 @@ def check_noise_target_gates(noise: Noise, target_gates: Iterable[type[Gate]]) -
     1. whether all the elements in target_gates are a Gate type;
     2. if `noise` is multi-qubit noise and `target_gates` contain gates
     with the number of qubits is the same as `noise.qubit_count`.
+
     Args:
         noise (Noise): A Noise class object to be applied to the circuit.
         target_gates (Iterable[type[Gate]]): Gate class or
@@ -92,7 +95,6 @@ def check_noise_target_unitary(noise: Noise, target_unitary: np.ndarray) -> None
         noise (Noise): A Noise class object to be applied to the circuit.
         target_unitary (ndarray): matrix of the target unitary gates
     """
-
     if not isinstance(target_unitary, np.ndarray):
         raise TypeError("target_unitary must be a np.ndarray type")
 
@@ -103,11 +105,12 @@ def check_noise_target_unitary(noise: Noise, target_unitary: np.ndarray) -> None
 def check_noise_target_qubits(
     circuit: Circuit, target_qubits: Optional[QubitSetInput] = None
 ) -> QubitSet:
-    """
-    Helper function to check whether all the target_qubits are positive integers.
+    """Helper function to check whether all the target_qubits are positive integers.
+
     Args:
         circuit (Circuit): A ciruit where `noise` is to be checked.
         target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
+
     Returns:
         QubitSet: The target qubits.
     """
@@ -128,8 +131,7 @@ def check_noise_target_qubits(
 def apply_noise_to_moments(
     circuit: Circuit, noise: Iterable[type[Noise]], target_qubits: QubitSet, position: str
 ) -> Circuit:
-    """
-    Apply initialization/readout noise to the circuit.
+    """Apply initialization/readout noise to the circuit.
 
     When `noise.qubit_count` == 1, `noise` is added to all qubits in `target_qubits`.
 
@@ -209,7 +211,6 @@ def _apply_noise_to_gates_helper(
         noise_index: The number of noise channels applied to the gate
         noise_applied: Whether noise is applied or not
     """
-
     for noise_channel in noise:
         if noise_channel.qubit_count == 1:
             for qubit in intersection:
@@ -264,7 +265,6 @@ def apply_noise_to_gates(
             If no `target_gates` exist in `target_qubits` or in the whole circuit
             when `target_qubits` is not given.
     """
-
     new_moments = Moments()
     noise_applied = False
 

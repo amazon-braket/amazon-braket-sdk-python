@@ -18,14 +18,12 @@ from oqpy.base import OQPyExpression
 
 
 class Port:
-    """
-    Ports represent any input or output component meant to manipulate and observe qubits on
+    """Ports represent any input or output component meant to manipulate and observe qubits on
     a device. See https://openqasm.com/language/openpulse.html#ports for more details.
     """
 
     def __init__(self, port_id: str, dt: float, properties: Optional[dict[str, Any]] = None):
-        """
-        Inits a Port.
+        """Inits a Port.
 
         Args:
             port_id (str): str identifying a unique port on the device.

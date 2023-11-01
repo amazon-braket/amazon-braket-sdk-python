@@ -32,8 +32,7 @@ class CwlInsightsMetricsFetcher:
         poll_interval_seconds: float = 1,
         logger: Logger = getLogger(__name__),
     ):
-        """
-        Inits a `CwlInsightsMetricsFetcher`.
+        """Inits a `CwlInsightsMetricsFetcher`.
 
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
@@ -54,8 +53,7 @@ class CwlInsightsMetricsFetcher:
     def _get_element_from_log_line(
         element_name: str, log_line: list[dict[str, Any]]
     ) -> Optional[str]:
-        """
-        Finds and returns an element of a log line from CloudWatch Insights results.
+        """Finds and returns an element of a log line from CloudWatch Insights results.
 
         Args:
             element_name (str): The element to find.
@@ -70,8 +68,7 @@ class CwlInsightsMetricsFetcher:
         )
 
     def _get_metrics_results_sync(self, query_id: str) -> list[Any]:
-        """
-        Waits for the CloudWatch Insights query to complete and then returns all the results.
+        """Waits for the CloudWatch Insights query to complete and then returns all the results.
 
         Args:
             query_id (str): CloudWatch Insights query ID.
@@ -96,8 +93,7 @@ class CwlInsightsMetricsFetcher:
         return []
 
     def _parse_log_line(self, result_entry: list[dict[str, Any]], parser: LogMetricsParser) -> None:
-        """
-        Parses the single entry from CloudWatch Insights results and adds any metrics it finds
+        """Parses the single entry from CloudWatch Insights results and adds any metrics it finds
         to 'all_metrics' along with the timestamp for the entry.
 
         Args:
@@ -115,8 +111,7 @@ class CwlInsightsMetricsFetcher:
     def _parse_log_query_results(
         self, results: list[Any], metric_type: MetricType, statistic: MetricStatistic
     ) -> dict[str, list[Union[str, float, int]]]:
-        """
-        Parses CloudWatch Insights results and returns all found metrics.
+        """Parses CloudWatch Insights results and returns all found metrics.
 
         Args:
             results (List[Any]): A structured result from calling CloudWatch Insights to get
@@ -141,8 +136,7 @@ class CwlInsightsMetricsFetcher:
         job_start_time: int = None,
         job_end_time: int = None,
     ) -> dict[str, list[Union[str, float, int]]]:
-        """
-        Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
+        """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:
             job_name (str): The name of the Hybrid Job. The name must be exact to ensure only the

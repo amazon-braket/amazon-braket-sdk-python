@@ -29,8 +29,7 @@ class CwlMetricsFetcher:
         poll_timeout_seconds: float = 10,
         logger: Logger = getLogger(__name__),
     ):
-        """
-        Inits a `CwlMetricsFetcher`.
+        """Inits a `CwlMetricsFetcher`.
 
         Args:
             aws_session (AwsSession): AwsSession to connect to AWS with.
@@ -46,8 +45,7 @@ class CwlMetricsFetcher:
 
     @staticmethod
     def _is_metrics_message(message: str) -> bool:
-        """
-        Returns true if a given message is designated as containing Metrics.
+        """Returns true if a given message is designated as containing Metrics.
 
         Args:
             message (str): The message to check.
@@ -65,8 +63,7 @@ class CwlMetricsFetcher:
         timeout_time: float,
         parser: LogMetricsParser,
     ) -> None:
-        """
-        Synchronously retrieves the algorithm metrics logged in a given hybrid job log stream.
+        """Synchronously retrieves the algorithm metrics logged in a given hybrid job log stream.
 
         Args:
             stream_name (str): The name of the log stream.
@@ -96,13 +93,13 @@ class CwlMetricsFetcher:
         self._logger.warning("Timed out waiting for all metrics. Data may be incomplete.")
 
     def _get_log_streams_for_job(self, job_name: str, timeout_time: float) -> list[str]:
-        """
-        Retrieves the list of log streams relevant to a hybrid job.
+        """Retrieves the list of log streams relevant to a hybrid job.
 
         Args:
             job_name (str): The name of the hybrid job.
             timeout_time (float) : Metrics cease getting streamed if the current time exceeds
                 the timeout time.
+
         Returns:
             List[str]: A list of log stream names for the given hybrid job.
         """
@@ -132,8 +129,7 @@ class CwlMetricsFetcher:
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
     ) -> dict[str, list[Union[str, float, int]]]:
-        """
-        Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
+        """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 
         Args:
             job_name (str): The name of the Hybrid Job. The name must be exact to ensure only the

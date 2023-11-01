@@ -21,8 +21,7 @@ from sympy import Expr, Float, Symbol, sympify
 
 
 class FreeParameterExpression:
-    """
-    Class 'FreeParameterExpression'
+    """Class 'FreeParameterExpression'
 
     Objects that can take a parameter all inherit from :class:'Parameterizable'.
     FreeParametersExpressions can hold FreeParameters that can later be
@@ -31,8 +30,7 @@ class FreeParameterExpression:
     """
 
     def __init__(self, expression: Union[FreeParameterExpression, Number, Expr, str]):
-        """
-        Initializes a FreeParameterExpression. Best practice is to initialize using
+        """Initializes a FreeParameterExpression. Best practice is to initialize using
         FreeParameters and Numbers. Not meant to be initialized directly.
 
         Below are examples of how FreeParameterExpressions should be made.
@@ -67,6 +65,7 @@ class FreeParameterExpression:
     @property
     def expression(self) -> Union[Number, Expr]:
         """Gets the expression.
+
         Returns:
             Union[Number, Expr]: The expression for the FreeParameterExpression.
         """
@@ -75,8 +74,7 @@ class FreeParameterExpression:
     def subs(
         self, parameter_values: dict[str, Number]
     ) -> Union[FreeParameterExpression, Number, Expr]:
-        """
-        Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
+        """Similar to a substitution in Sympy. Parameters are swapped for corresponding values or
         expressions from the dictionary.
 
         Args:
@@ -166,8 +164,7 @@ class FreeParameterExpression:
         return False
 
     def __repr__(self) -> str:
-        """
-        The representation of the :class:'FreeParameterExpression'.
+        """The representation of the :class:'FreeParameterExpression'.
 
         Returns:
             str: The expression of the class:'FreeParameterExpression' to represent the class.
@@ -177,6 +174,7 @@ class FreeParameterExpression:
 
 def subs_if_free_parameter(parameter: Any, **kwargs: Union[FreeParameterExpression, str]) -> Any:
     """Substitute a free parameter with the given kwargs, if any.
+
     Args:
         parameter (Any): The parameter.
         **kwargs (Union[FreeParameterExpression, str]): The kwargs to use to substitute.
@@ -193,8 +191,7 @@ def subs_if_free_parameter(parameter: Any, **kwargs: Union[FreeParameterExpressi
 
 
 def _is_float(argument: str) -> bool:
-    """
-    Checks if a string can be cast into a float.
+    """Checks if a string can be cast into a float.
 
     Args:
         argument (str): String to check.

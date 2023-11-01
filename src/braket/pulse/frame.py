@@ -20,8 +20,7 @@ from oqpy.base import OQPyExpression
 
 
 class Frame:
-    """
-    Frame tracks the frame of reference, when interacting with the qubits, throughout the execution
+    """Frame tracks the frame of reference, when interacting with the qubits, throughout the execution
     of a program. See https://openqasm.com/language/openpulse.html#frames for more details.
     """
 
@@ -34,8 +33,7 @@ class Frame:
         is_predefined: bool = False,
         properties: Optional[dict[str, Any]] = None,
     ):
-        """
-        Inits a Frame.
+        """Inits a Frame.
 
         Args:
             frame_id (str): str identifying a unique frame.

@@ -18,8 +18,7 @@ from openqasm3.visitor import QASMTransformer
 
 
 class _IRQASMTransformer(QASMTransformer):
-    """
-    QASMTransformer which walks the AST and makes the necessary modifications needed
+    """QASMTransformer which walks the AST and makes the necessary modifications needed
     for IR generation. Currently, it performs the following operations:
       * Replaces capture_v0 function calls with assignment statements, assigning the
         readout value to a bit register element.
@@ -32,8 +31,10 @@ class _IRQASMTransformer(QASMTransformer):
 
     def visit_ExpressionStatement(self, expression_statement: ast.ExpressionStatement) -> Any:
         """Visit an Expression.
+
         Args:
             expression_statement (ast.ExpressionStatement): The expression statement.
+
         Returns:
             Any: The expression statement.
         """

@@ -56,7 +56,8 @@ class ShiftingField(Hamiltonian):
     def magnitude(self) -> Field:
         r"""Field: containing the global magnitude time series :math:`\Delta(t)`,
         where time is measured in seconds (s) and values measured in rad/s)
-        and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1."""
+        and the local pattern :math:`h_k` of dimensionless real numbers between 0 and 1.
+        """
         return self._magnitude
 
     @staticmethod

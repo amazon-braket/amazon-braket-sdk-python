@@ -33,8 +33,7 @@ class ObservableCriteria(ResultTypeCriteria):
         observables: Optional[Union[Observable, Iterable[Observable]]] = None,
         qubits: Optional[QubitSetInput] = None,
     ):
-        """
-        Creates Observable-based Criteria. See instruction_matches() for more details.
+        """Creates Observable-based Criteria. See instruction_matches() for more details.
 
         Args:
             observables (Optional[Union[Observable, Iterable[Observable]]]): A set of relevant
@@ -66,9 +65,8 @@ class ObservableCriteria(ResultTypeCriteria):
         return f"{self.__class__.__name__}(observables={observables_names}, qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """
-        Returns:
-            Iterable[CriteriaKey]: This Criteria operates on Observables and Qubits.
+        """Returns:
+        Iterable[CriteriaKey]: This Criteria operates on Observables and Qubits.
         """
         return [CriteriaKey.OBSERVABLE, CriteriaKey.QUBIT]
 
@@ -93,8 +91,7 @@ class ObservableCriteria(ResultTypeCriteria):
         return set()
 
     def to_dict(self) -> dict:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this class.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.
@@ -116,6 +113,7 @@ class ObservableCriteria(ResultTypeCriteria):
 
         Args:
             result_type (ResultType): A result type or list of result types to match.
+
         Returns:
             bool: Returns true if the result type is one of the Observables provided in the
             constructor and the target is a qubit (or set of qubits)provided in the constructor.

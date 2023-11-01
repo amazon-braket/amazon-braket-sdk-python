@@ -42,6 +42,7 @@ class _FreeParameterTransformer(QASMTransformer):
         self, identifier: ast.Identifier
     ) -> Union[_FreeParameterExpressionIdentifier, ast.FloatLiteral]:
         """Visit a FreeParameterExpressionIdentifier.
+
         Args:
             identifier (ast.Identifier): The identifier.
 
@@ -60,6 +61,7 @@ class _FreeParameterTransformer(QASMTransformer):
             1
         Args:
             duration_literal (DurationLiteral): The duration literal.
+
         Returns:
             DurationLiteral: The transformed duration literal.
         """

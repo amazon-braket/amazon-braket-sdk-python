@@ -167,8 +167,7 @@ class LocalQuantumJob(QuantumJob):
         return LocalQuantumJob(f"local:job/{job_name}", run_log)
 
     def __init__(self, arn: str, run_log: str = None):
-        """
-        Inits a `LocalQuantumJob`.
+        """Inits a `LocalQuantumJob`.
 
         Args:
             arn (str): The ARN of the hybrid job.
@@ -209,11 +208,13 @@ class LocalQuantumJob(QuantumJob):
 
     def state(self, use_cached_value: bool = False) -> str:
         """The state of the hybrid job.
+
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: Returns "COMPLETED".
         """
@@ -221,11 +222,13 @@ class LocalQuantumJob(QuantumJob):
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """When running the hybrid job in local mode, the metadata is not available.
+
         Args:
             use_cached_value (bool): If `True`, uses the value most recently retrieved
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
+
         Returns:
             dict[str, Any]: None
         """
@@ -233,6 +236,7 @@ class LocalQuantumJob(QuantumJob):
 
     def cancel(self) -> str:
         """When running the hybrid job in local mode, the cancelling a running is not possible.
+
         Returns:
             str: None
         """

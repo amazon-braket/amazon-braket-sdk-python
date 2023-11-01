@@ -362,7 +362,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     @property
     def tasks(self) -> list[AwsQuantumTask]:
         """list[AwsQuantumTask]: The quantum tasks in this batch, as a list of AwsQuantumTask
-        objects"""
+        objects
+        """
         return list(self._tasks)
 
     @property
@@ -373,6 +374,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     @property
     def unfinished(self) -> set[str]:
         """Gets all the IDs of all the quantum tasks in teh batch that have yet to complete.
+
         Returns:
             set[str]: The IDs of all the quantum tasks in the batch that have yet to complete.
         """
@@ -390,5 +392,6 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
     @property
     def unsuccessful(self) -> set[str]:
         """set[str]: The IDs of all the FAILED, CANCELLED, or timed out quantum tasks in the
-        batch."""
+        batch.
+        """
         return set(self._unsuccessful)

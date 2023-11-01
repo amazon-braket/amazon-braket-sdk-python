@@ -25,8 +25,7 @@ from scipy.linalg import fractional_matrix_power
 def calculate_unitary_big_endian(
     instructions: Iterable[Instruction], qubits: QubitSet
 ) -> np.ndarray:
-    """
-    Returns the unitary matrix representation for all the `instructions` on qubits `qubits`.
+    """Returns the unitary matrix representation for all the `instructions` on qubits `qubits`.
 
     Note:
         The performance of this method degrades with qubit count. It might be slow for

@@ -21,8 +21,7 @@ from braket.jobs_data import PersistedJobDataFormat
 def serialize_values(
     data_dictionary: dict[str, Any], data_format: PersistedJobDataFormat
 ) -> dict[str, Any]:
-    """
-    Serializes the `data_dictionary` values to the format specified by `data_format`.
+    """Serializes the `data_dictionary` values to the format specified by `data_format`.
 
     Args:
         data_dictionary (Dict[str, Any]): Dict whose values are to be serialized.
@@ -48,8 +47,7 @@ def serialize_values(
 def deserialize_values(
     data_dictionary: dict[str, Any], data_format: PersistedJobDataFormat
 ) -> dict[str, Any]:
-    """
-    Deserializes the `data_dictionary` values from the format specified by `data_format`.
+    """Deserializes the `data_dictionary` values from the format specified by `data_format`.
 
     Args:
         data_dictionary (Dict[str, Any]): Dict whose values are to be deserialized.

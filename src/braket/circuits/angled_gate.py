@@ -26,8 +26,7 @@ from sympy import Float
 
 
 class AngledGate(Gate, Parameterizable):
-    """
-    Class `AngledGate` represents a quantum gate that operates on N qubits and an angle.
+    """Class `AngledGate` represents a quantum gate that operates on N qubits and an angle.
     """
 
     def __init__(
@@ -36,8 +35,7 @@ class AngledGate(Gate, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             angle (Union[FreeParameterExpression, float]): The angle of the gate in radians
                 or expression representation.
             qubit_count (Optional[int]): The number of qubits that this gate interacts with.
@@ -62,8 +60,7 @@ class AngledGate(Gate, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameters or
+        """Returns the parameters associated with the object, either unbound free parameters or
         bound values.
 
         Returns:
@@ -74,8 +71,7 @@ class AngledGate(Gate, Parameterizable):
 
     @property
     def angle(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns the angle for the gate
+        """Returns the angle for the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The angle of the gate in radians
@@ -124,8 +120,7 @@ class AngledGate(Gate, Parameterizable):
 
 
 class DoubleAngledGate(Gate, Parameterizable):
-    """
-    Class `DoubleAngledGate` represents a quantum gate that operates on N qubits and two angles.
+    """Class `DoubleAngledGate` represents a quantum gate that operates on N qubits and two angles.
     """
 
     def __init__(
@@ -135,8 +130,7 @@ class DoubleAngledGate(Gate, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             angle_1 (Union[FreeParameterExpression, float]): The first angle of the gate in
                 radians or expression representation.
             angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
@@ -167,8 +161,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameters or
+        """Returns the parameters associated with the object, either unbound free parameters or
         bound values.
 
         Returns:
@@ -179,8 +172,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_1(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns the first angle for the gate
+        """Returns the first angle for the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The first angle of the gate in radians
@@ -189,8 +181,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_2(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns the second angle for the gate
+        """Returns the second angle for the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The second angle of the gate in radians
@@ -198,8 +189,7 @@ class DoubleAngledGate(Gate, Parameterizable):
         return self._parameters[1]
 
     def bind_values(self, **kwargs) -> AngledGate:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Args:
             ``**kwargs``: The parameters that are being assigned.
@@ -239,8 +229,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 
 
 class TripleAngledGate(Gate, Parameterizable):
-    """
-    Class `TripleAngledGate` represents a quantum gate that operates on N qubits and three angles.
+    """Class `TripleAngledGate` represents a quantum gate that operates on N qubits and three angles.
     """
 
     def __init__(
@@ -251,8 +240,7 @@ class TripleAngledGate(Gate, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """
-        Args:
+        """Args:
             angle_1 (Union[FreeParameterExpression, float]): The first angle of the gate in
                 radians or expression representation.
             angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
@@ -286,8 +274,7 @@ class TripleAngledGate(Gate, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """
-        Returns the parameters associated with the object, either unbound free parameters or
+        """Returns the parameters associated with the object, either unbound free parameters or
         bound values.
 
         Returns:
@@ -298,8 +285,7 @@ class TripleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_1(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns the first angle for the gate
+        """Returns the first angle for the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The first angle of the gate in radians
@@ -308,8 +294,7 @@ class TripleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_2(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns the second angle for the gate
+        """Returns the second angle for the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The second angle of the gate in radians
@@ -318,8 +303,7 @@ class TripleAngledGate(Gate, Parameterizable):
 
     @property
     def angle_3(self) -> Union[FreeParameterExpression, float]:
-        """
-        Returns the second angle for the gate
+        """Returns the second angle for the gate
 
         Returns:
             Union[FreeParameterExpression, float]: The third angle of the gate in radians
@@ -327,8 +311,7 @@ class TripleAngledGate(Gate, Parameterizable):
         return self._parameters[2]
 
     def bind_values(self, **kwargs) -> AngledGate:
-        """
-        Takes in parameters and attempts to assign them to values.
+        """Takes in parameters and attempts to assign them to values.
 
         Args:
             ``**kwargs``: The parameters that are being assigned.
@@ -381,8 +364,7 @@ def _(angle_1: FreeParameterExpression, angle_2: FreeParameterExpression):
 
 
 def angled_ascii_characters(gate: str, angle: Union[FreeParameterExpression, float]) -> str:
-    """
-    Generates a formatted ascii representation of an angled gate.
+    """Generates a formatted ascii representation of an angled gate.
 
     Args:
         gate (str): The name of the gate.
@@ -399,8 +381,7 @@ def _multi_angled_ascii_characters(
     gate: str,
     *angles: Union[FreeParameterExpression, float],
 ) -> str:
-    """
-    Generates a formatted ascii representation of an angled gate.
+    """Generates a formatted ascii representation of an angled gate.
 
     Args:
         gate (str): The name of the gate.
@@ -412,8 +393,7 @@ def _multi_angled_ascii_characters(
     """
 
     def format_string(angle: Union[FreeParameterExpression, float]) -> str:
-        """
-        Formats an angle for ASCII representation.
+        """Formats an angle for ASCII representation.
 
         Args:
             angle (Union[FreeParameterExpression, float]): The angle to format.
@@ -427,8 +407,7 @@ def _multi_angled_ascii_characters(
 
 
 def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
-    """
-    Gets the angle with all values substituted in that are requested.
+    """Gets the angle with all values substituted in that are requested.
 
     Args:
         gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
@@ -445,8 +424,7 @@ def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
 
 
 def _get_angles(gate: TripleAngledGate, **kwargs) -> TripleAngledGate:
-    """
-    Gets the angle with all values substituted in that are requested.
+    """Gets the angle with all values substituted in that are requested.
 
     Args:
         gate (TripleAngledGate): The subclass of TripleAngledGate for which the angle is being

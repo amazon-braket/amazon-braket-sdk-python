@@ -35,8 +35,7 @@ T = TypeVar("T")
 
 @dataclass
 class GateModelQuantumTaskResult:
-    """
-    Result of a gate model quantum task execution. This class is intended
+    """Result of a gate model quantum task execution. This class is intended
     to be initialized by a QuantumTask class.
 
     Args:
@@ -103,8 +102,7 @@ class GateModelQuantumTaskResult:
             self._result_types_indices = {}
 
     def get_value_by_result_type(self, result_type: ResultType) -> Any:
-        """
-        Get value by result type. The result type must have already been
+        """Get value by result type. The result type must have already been
         requested in the circuit sent to the device for this quantum task result.
 
         Args:
@@ -135,8 +133,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
-        """
-        Creates measurement counts from measurements
+        """Creates measurement counts from measurements
 
         Args:
             measurements (np.ndarray): 2d array - row is shot and column is qubit.
@@ -154,8 +151,7 @@ class GateModelQuantumTaskResult:
     def measurement_probabilities_from_measurement_counts(
         measurement_counts: Counter,
     ) -> dict[str, float]:
-        """
-        Creates measurement probabilities from measurement counts
+        """Creates measurement probabilities from measurement counts
 
         Args:
             measurement_counts (Counter): A Counter of measurements. Key is the measurements
@@ -177,8 +173,7 @@ class GateModelQuantumTaskResult:
     def measurements_from_measurement_probabilities(
         measurement_probabilities: dict[str, float], shots: int
     ) -> np.ndarray:
-        """
-        Creates measurements from measurement probabilities.
+        """Creates measurements from measurement probabilities.
 
         Args:
             measurement_probabilities (dict[str, float]): A dictionary of probabilistic results.
@@ -202,8 +197,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def from_object(result: GateModelTaskResult) -> GateModelQuantumTaskResult:
-        """
-        Create GateModelQuantumTaskResult from GateModelTaskResult object.
+        """Create GateModelQuantumTaskResult from GateModelTaskResult object.
 
         Args:
             result (GateModelTaskResult): GateModelTaskResult object
@@ -219,8 +213,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def from_string(result: str) -> GateModelQuantumTaskResult:
-        """
-        Create GateModelQuantumTaskResult from string.
+        """Create GateModelQuantumTaskResult from string.
 
         Args:
             result (str): JSON object string, with GateModelQuantumTaskResult attributes as keys.
@@ -332,8 +325,7 @@ class GateModelQuantumTaskResult:
 
     @staticmethod
     def cast_result_types(gate_model_task_result: GateModelTaskResult) -> None:
-        """
-        Casts the result types to the types expected by the SDK.
+        """Casts the result types to the types expected by the SDK.
 
         Args:
             gate_model_task_result (GateModelTaskResult): GateModelTaskResult representing the

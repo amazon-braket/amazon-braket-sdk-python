@@ -56,8 +56,7 @@ class NoiseModelInstruction:
 
     @classmethod
     def from_dict(cls, noise_model_item: dict) -> NoiseModelInstruction:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this class.
 
         Args:
             noise_model_item (dict): A dictionary representation of an object of this class.
@@ -82,8 +81,7 @@ class NoiseModelInstructions:
 
 
 class NoiseModel:
-    """
-    A Noise Model can be thought of as a set of Noise objects, and a corresponding set of
+    """A Noise Model can be thought of as a set of Noise objects, and a corresponding set of
     criteria for how each Noise object should be applied to a circuit. For example, a noise model
     may represent that every H gate that acts on qubit 0 has a 10% probability of a bit flip, and
     every X gate that acts on qubit 0 has a 20% probability of a bit flip, and 5% probability of
@@ -110,8 +108,7 @@ class NoiseModel:
 
     @property
     def instructions(self) -> list[NoiseModelInstruction]:
-        """
-        List all the noise in the NoiseModel.
+        """List all the noise in the NoiseModel.
 
         Returns:
             list[NoiseModelInstruction]: The noise model instructions.
@@ -157,8 +154,7 @@ class NoiseModel:
         return self
 
     def remove_noise(self, index: int) -> NoiseModel:
-        """
-        Removes the noise and corresponding criteria from the NoiseModel at the given index.
+        """Removes the noise and corresponding criteria from the NoiseModel at the given index.
 
         Args:
             index (int): The index of the instruction to remove.
@@ -175,6 +171,7 @@ class NoiseModel:
 
     def get_instructions_by_type(self) -> NoiseModelInstructions:
         """Returns the noise in this model by noise type.
+
         Returns:
             NoiseModelInstructions: The noise model instructions.
         """
@@ -200,8 +197,7 @@ class NoiseModel:
         gate: Optional[Gate] = None,
         noise: Optional[type[Noise]] = None,
     ) -> NoiseModel:
-        """
-        Returns a new NoiseModel from this NoiseModel using a given filter. If no filters are
+        """Returns a new NoiseModel from this NoiseModel using a given filter. If no filters are
         specified, the returned NoiseModel will be the same as this one.
 
         Args:
@@ -235,8 +231,7 @@ class NoiseModel:
         return new_model
 
     def apply(self, circuit: Circuit) -> Circuit:
-        """
-        Applies this noise model to a circuit, and returns a new circuit that's the `noisy`
+        """Applies this noise model to a circuit, and returns a new circuit that's the `noisy`
         version of the given circuit. If multiple noise will act on the same instruction,
         they will be applied in the order they are added to the noise model.
 
@@ -261,8 +256,7 @@ class NoiseModel:
         circuit: Circuit,
         gate_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
-        """
-        Applies the gate noise to return a new circuit that's the `noisy` version of the given
+        """Applies the gate noise to return a new circuit that's the `noisy` version of the given
         circuit.
 
         Args:
@@ -295,8 +289,7 @@ class NoiseModel:
         circuit: Circuit,
         init_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
-        """
-        Applies the initialization noise of this noise model to a circuit and returns the circuit.
+        """Applies the initialization noise of this noise model to a circuit and returns the circuit.
 
         Args:
             circuit (Circuit): A circuit to apply `noise` to.
@@ -320,8 +313,7 @@ class NoiseModel:
         circuit: Circuit,
         readout_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
-        """
-        Applies the readout noise of this noise model to a circuit and returns the circuit.
+        """Applies the readout noise of this noise model to a circuit and returns the circuit.
 
         Args:
             circuit (Circuit): A circuit to apply `noise` to.
@@ -339,8 +331,7 @@ class NoiseModel:
     def _items_to_string(
         cls, instructions_title: str, instructions: list[NoiseModelInstruction]
     ) -> list[str]:
-        """
-        Creates a string representation of a list of instructions.
+        """Creates a string representation of a list of instructions.
 
         Args:
             instructions_title (str): The title for this list of instructions.
@@ -358,8 +349,7 @@ class NoiseModel:
 
     @classmethod
     def from_dict(cls, noise_dict: dict) -> NoiseModel:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this class.
 
         Args:
             noise_dict (dict): A dictionary representation of an object of this class.

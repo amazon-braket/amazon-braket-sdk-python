@@ -30,8 +30,7 @@ from braket.registers.qubit_set import QubitSet
 
 
 class Observable(QuantumOperator):
-    """
-    Class `Observable` to represent a quantum observable.
+    """Class `Observable` to represent a quantum observable.
 
     Objects of this type can be used as input to `ResultType.Sample`, `ResultType.Variance`,
     `ResultType.Expectation` to specify the measurement basis.
@@ -91,8 +90,7 @@ class Observable(QuantumOperator):
     def _to_openqasm(
         self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
     ) -> str:
-        """
-        Returns the openqasm string representation of the result type.
+        """Returns the openqasm string representation of the result type.
 
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
@@ -106,15 +104,15 @@ class Observable(QuantumOperator):
 
     @property
     def coefficient(self) -> int:
-        """
-        Returns:
-            int: coefficient value of the observable.
+        """Returns:
+        int: coefficient value of the observable.
         """
         return self._coef
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
+
         Returns:
             tuple[Gate, ...]: The basis rotation gates for this observable.
         """
@@ -123,6 +121,7 @@ class Observable(QuantumOperator):
     @property
     def eigenvalues(self) -> np.ndarray:
         """Returns the eigenvalues of this observable.
+
         Returns:
             np.ndarray: The eigenvalues of this observable.
         """
@@ -190,8 +189,7 @@ class Observable(QuantumOperator):
 
 
 class StandardObservable(Observable):
-    """
-    Class `StandardObservable` to represent a Pauli-like quantum observable with
+    """Class `StandardObservable` to represent a Pauli-like quantum observable with
     eigenvalues of (+1, -1).
     """
 

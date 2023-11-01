@@ -21,8 +21,7 @@ def log_metric(
     timestamp: Optional[float] = None,
     iteration_number: Optional[int] = None,
 ) -> None:
-    """
-    Records Braket Hybrid Job metrics.
+    """Records Braket Hybrid Job metrics.
 
     Args:
         metric_name (str): The name of the metric.

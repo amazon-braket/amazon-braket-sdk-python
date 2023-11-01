@@ -28,10 +28,9 @@ class CompilerDirective(Operator):
     """
 
     def __init__(self, ascii_symbols: Sequence[str]):
-        """
-        Args:
-            ascii_symbols (Sequence[str]): ASCII string symbols for the compiler directiver.
-                These are used when printing a diagram of circuits.
+        """Args:
+        ascii_symbols (Sequence[str]): ASCII string symbols for the compiler directiver.
+        These are used when printing a diagram of circuits.
         """
         if ascii_symbols is None:
             raise ValueError("ascii_symbols must not be None")

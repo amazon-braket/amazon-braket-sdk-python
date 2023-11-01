@@ -30,10 +30,9 @@ from sympy import Expr
 
 class BraketProgramContext(AbstractProgramContext):
     def __init__(self, circuit: Optional[Circuit] = None):
-        """
-        Args:
-            circuit (Optional[Circuit]): A partially-built circuit to continue building with this
-                context. Default: None.
+        """Args:
+        circuit (Optional[Circuit]): A partially-built circuit to continue building with this
+        context. Default: None.
         """
         super().__init__()
         self._circuit = circuit or Circuit()
@@ -125,8 +124,7 @@ class BraketProgramContext(AbstractProgramContext):
         self._circuit.add_instruction(instruction)
 
     def add_result(self, result: Results) -> None:
-        """
-        Abstract method to add result type to the circuit
+        """Abstract method to add result type to the circuit
 
         Args:
             result (Results): The result object representing the measurement results

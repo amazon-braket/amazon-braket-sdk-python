@@ -10,6 +10,7 @@ select = [
   "ARG",
   "B",
   "C",
+  "D",
   "DTZ",
   "E",
   "F",
@@ -45,6 +46,9 @@ ignore = [
   # Uppercase function names are fine in some cases
   "N802",
 ]
+
+[tool.ruff.pydocstyle]
+convention = "google"
 
 [tool.ruff.isort]
 known-first-party = ["amazon_braket_sdk"]

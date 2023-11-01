@@ -171,7 +171,6 @@ class TimeSeries:
                 concat_ts.times() = [0, 0.1, 0.2, 0.3]
                 concat_ts.values() = [1, 2, 4, 5]
         """
-
         not_empty_ts = len(other.times()) * len(self.times()) != 0
         if not_empty_ts and min(other.times()) <= max(self.times()):
             raise ValueError(
@@ -238,7 +237,6 @@ class TimeSeries:
                 stitch_ts.times() = [0, 0.1, 0.3]
                 stitch_ts.values() = [1, 4, 5]
         """
-
         if len(self.times()) == 0:
             return TimeSeries.from_lists(times=other.times(), values=other.values())
         if len(other.times()) == 0:
@@ -304,7 +302,6 @@ class TimeSeries:
         Returns:
             TimeSeries: A new periodic time series.
         """
-
         if not (values[0] == values[-1]):
             raise ValueError("The first and last values must coincide to guarantee periodicity")
         new_time_series = TimeSeries()
@@ -334,12 +331,11 @@ class TimeSeries:
         Returns:
             TimeSeries: A trapezoidal time series
 
-            Notes:
+        Notes:
             The area of a time series f(t) is defined as the time integral of
             f(t) from t=0 to t=T, where T is the duration.
             We also assume the trapezoidal time series starts and ends at zero.
         """
-
         if area <= 0.0:
             raise ValueError("The area of the trapezoidal time series has to be positive.")
         if value_max <= 0.0:
@@ -385,8 +381,7 @@ class TimeSeries:
 
 # TODO: Verify if this belongs here.
 def _all_close(first: TimeSeries, second: TimeSeries, tolerance: Number = 1e-7) -> bool:
-    """
-    Returns True if the times and values in two time series are all within (less than)
+    """Returns True if the times and values in two time series are all within (less than)
     a given tolerance range. The values in the TimeSeries must be numbers that can be
     subtracted from each-other, support getting the absolute value, and can be compared
     against the tolerance.

@@ -27,8 +27,7 @@ from braket.registers.qubit_set import QubitSet
 
 
 class GateCalibrations:
-    """
-    An object containing gate calibration data. The data respresents the mapping on a particular gate
+    """An object containing gate calibration data. The data respresents the mapping on a particular gate
     on a set of qubits to its calibration to be used by a quantum device. This is represented by a dictionary
     with keys of `Tuple(Gate, QubitSet)` mapped to a `PulseSequence`.
     """  # noqa: E501
@@ -37,18 +36,16 @@ class GateCalibrations:
         self,
         pulse_sequences: dict[tuple[Gate, QubitSet], PulseSequence],
     ):
-        """
-        Args:
-            pulse_sequences (dict[tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
-                `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
+        """Args:
+        pulse_sequences (dict[tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
+        `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
 
-        """  # noqa: E501
+        """
         self.pulse_sequences: dict[tuple[Gate, QubitSet], PulseSequence] = pulse_sequences
 
     @property
     def pulse_sequences(self) -> dict[tuple[Gate, QubitSet], PulseSequence]:
-        """
-        Gets the mapping of (Gate, Qubit) to the corresponding `PulseSequence`.
+        """Gets the mapping of (Gate, Qubit) to the corresponding `PulseSequence`.
 
         Returns:
             dict[tuple[Gate, QubitSet], PulseSequence]: The calibration data Dictionary.
@@ -57,8 +54,7 @@ class GateCalibrations:
 
     @pulse_sequences.setter
     def pulse_sequences(self, value: Any) -> None:
-        """
-        Sets the mapping of (Gate, Qubit) to the corresponding `PulseSequence`.
+        """Sets the mapping of (Gate, Qubit) to the corresponding `PulseSequence`.
 
         Args:
             value(Any): The value for the pulse_sequences property to be set to.
@@ -79,8 +75,7 @@ class GateCalibrations:
             )
 
     def copy(self) -> GateCalibrations:
-        """
-        Returns a copy of the object.
+        """Returns a copy of the object.
 
         Returns:
             GateCalibrations: a copy of the calibrations.
@@ -93,8 +88,7 @@ class GateCalibrations:
     def filter(
         self, gates: Optional[list[Gate]] = None, qubits: Optional[QubitSet] = None
     ) -> Optional[GateCalibrations]:
-        """
-        Filters the data based on optional lists of gates and QubitSets.
+        """Filters the data based on optional lists of gates and QubitSets.
 
         Args:
             gates (Optional[list[Gate]]): An optional list of gates to filter on.
@@ -115,8 +109,7 @@ class GateCalibrations:
         )
 
     def to_ir(self, calibration_key: Optional[tuple[Gate, QubitSet]] = None) -> str:
-        """
-        Returns the defcal representation for the `GateCalibrations` object.
+        """Returns the defcal representation for the `GateCalibrations` object.
 
         Args:
             calibration_key (Optional[tuple[Gate, QubitSet]]): An optional key to get a specific defcal.

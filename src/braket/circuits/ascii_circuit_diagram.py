@@ -31,8 +31,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
     @staticmethod
     def build_diagram(circuit: cir.Circuit) -> str:
-        """
-        Build an ASCII string circuit diagram.
+        """Build an ASCII string circuit diagram.
 
         Args:
             circuit (Circuit): Circuit for which to build a diagram.
@@ -40,7 +39,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Returns:
             str: ASCII string circuit diagram.
         """
-
         if not circuit.instructions:
             return ""
 
@@ -102,8 +100,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
     ) -> list[tuple[QubitSet, list[Instruction]]]:
-        """
-        Group instructions in a moment for ASCII diagram
+        """Group instructions in a moment for ASCII diagram
 
         Args:
             circuit_qubits (QubitSet): set of qubits in circuit
@@ -153,8 +150,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _categorize_result_types(
         result_types: list[ResultType],
     ) -> tuple[list[str], list[ResultType]]:
-        """
-        Categorize result types into result types with target and those without.
+        """Categorize result types into result types with target and those without.
 
         Args:
             result_types (list[ResultType]): list of result types
@@ -177,8 +173,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _ascii_diagram_column_set(
         col_title: str, circuit_qubits: QubitSet, items: list[Union[Instruction, ResultType]]
     ) -> str:
-        """
-        Return a set of columns in the ASCII string diagram of the circuit for a list of items.
+        """Return a set of columns in the ASCII string diagram of the circuit for a list of items.
 
         Args:
             col_title (str): title of column set
@@ -188,7 +183,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Returns:
             str: An ASCII string diagram for the column set.
         """
-
         # Group items to separate out overlapping multi-qubit items
         groupings = AsciiCircuitDiagram._ascii_group_items(circuit_qubits, items)
 
@@ -222,8 +216,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
     def _ascii_diagram_column(
         circuit_qubits: QubitSet, items: list[Union[Instruction, ResultType]]
     ) -> str:
-        """
-        Return a column in the ASCII string diagram of the circuit for a given list of items.
+        """Return a column in the ASCII string diagram of the circuit for a given list of items.
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit

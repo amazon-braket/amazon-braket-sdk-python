@@ -27,6 +27,7 @@ class QuantumTask(ABC):
     @abstractmethod
     def id(self) -> str:
         """Get the quantum task ID.
+
         Returns:
             str: The quantum task ID.
         """
@@ -38,6 +39,7 @@ class QuantumTask(ABC):
     @abstractmethod
     def state(self) -> str:
         """Get the state of the quantum task.
+
         Returns:
             str: State of the quantum task.
         """
@@ -49,6 +51,7 @@ class QuantumTask(ABC):
         GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult
     ]:
         """Get the quantum task result.
+
         Returns:
             Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: # noqa
             Get the quantum task result. Call async_result if you want the result in an
@@ -58,13 +61,13 @@ class QuantumTask(ABC):
     @abstractmethod
     def async_result(self) -> asyncio.Task:
         """Get the quantum task result asynchronously.
+
         Returns:
             asyncio.Task: Get the quantum task result asynchronously.
         """
 
     def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
-        """
-        Get task metadata.
+        """Get task metadata.
 
         Args:
             use_cached_value (bool): If True, uses the value retrieved from the previous

@@ -210,12 +210,11 @@ class AwsQuantumJob(QuantumJob):
         return job
 
     def __init__(self, arn: str, aws_session: AwsSession = None):
-        """
-        Args:
-            arn (str): The ARN of the hybrid job.
-            aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
-                Default is `None`, in which case an `AwsSession` object will be created with the
-                region of the hybrid job.
+        """Args:
+        arn (str): The ARN of the hybrid job.
+        aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
+        Default is `None`, in which case an `AwsSession` object will be created with the
+        region of the hybrid job.
         """
         self._arn: str = arn
         if aws_session:
@@ -230,8 +229,7 @@ class AwsQuantumJob(QuantumJob):
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
-        """
-        bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
+        """bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
         """
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.region
@@ -269,6 +267,7 @@ class AwsQuantumJob(QuantumJob):
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetJob` operation.
@@ -279,8 +278,7 @@ class AwsQuantumJob(QuantumJob):
         return self.metadata(use_cached_value).get("status")
 
     def queue_position(self) -> HybridJobQueueInfo:
-        """
-        The queue position details for the hybrid job.
+        """The queue position details for the hybrid job.
 
         Returns:
             HybridJobQueueInfo: Instance of HybridJobQueueInfo class representing
@@ -393,6 +391,7 @@ class AwsQuantumJob(QuantumJob):
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
+
         Returns:
             dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
@@ -466,7 +465,6 @@ class AwsQuantumJob(QuantumJob):
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
-
         with tempfile.TemporaryDirectory() as temp_dir:
             job_name = self.metadata(True)["jobName"]
 
@@ -506,7 +504,6 @@ class AwsQuantumJob(QuantumJob):
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
             TimeoutError: if hybrid job execution exceeds the polling timeout period.
         """
-
         extract_to = extract_to or Path.cwd()
 
         timeout_time = time.time() + poll_timeout_seconds

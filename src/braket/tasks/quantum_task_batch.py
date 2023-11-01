@@ -31,6 +31,7 @@ class QuantumTaskBatch(ABC):
         ]
     ]:
         """Get the quantum task results.
+
         Returns:
             list[Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]]:: # noqa
             Get the quantum task results.

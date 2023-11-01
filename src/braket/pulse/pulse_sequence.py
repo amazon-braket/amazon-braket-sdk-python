@@ -38,8 +38,7 @@ from oqpy.timing import OQDurationLiteral
 
 
 class PulseSequence:
-    """
-    A representation of a collection of instructions to be performed on a quantum device
+    """A representation of a collection of instructions to be performed on a quantum device
     and the requested results.
     """
 
@@ -73,8 +72,7 @@ class PulseSequence:
     def set_frequency(
         self, frame: Frame, frequency: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
-        """
-        Adds an instruction to set the frequency of the frame to the specified `frequency` value.
+        """Adds an instruction to set the frequency of the frame to the specified `frequency` value.
 
         Args:
             frame (Frame): Frame for which the frequency needs to be set.
@@ -84,7 +82,6 @@ class PulseSequence:
         Returns:
             PulseSequence: self, with the instruction added.
         """
-
         _validate_uniqueness(self._frames, frame)
         self._program.set_frequency(frame=frame, freq=self._format_parameter_ast(frequency))
         self._frames[frame.id] = frame
@@ -93,8 +90,7 @@ class PulseSequence:
     def shift_frequency(
         self, frame: Frame, frequency: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
-        """
-        Adds an instruction to shift the frequency of the frame by the specified `frequency` value.
+        """Adds an instruction to shift the frequency of the frame by the specified `frequency` value.
 
         Args:
             frame (Frame): Frame for which the frequency needs to be shifted.
@@ -112,8 +108,7 @@ class PulseSequence:
     def set_phase(
         self, frame: Frame, phase: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
-        """
-        Adds an instruction to set the phase of the frame to the specified `phase` value.
+        """Adds an instruction to set the phase of the frame to the specified `phase` value.
 
         Args:
             frame (Frame): Frame for which the frequency needs to be set.
@@ -131,8 +126,7 @@ class PulseSequence:
     def shift_phase(
         self, frame: Frame, phase: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
-        """
-        Adds an instruction to shift the phase of the frame by the specified `phase` value.
+        """Adds an instruction to shift the phase of the frame by the specified `phase` value.
 
         Args:
             frame (Frame): Frame for which the phase needs to be shifted.
@@ -150,8 +144,7 @@ class PulseSequence:
     def set_scale(
         self, frame: Frame, scale: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
-        """
-        Adds an instruction to set the scale on the frame to the specified `scale` value.
+        """Adds an instruction to set the scale on the frame to the specified `scale` value.
 
         Args:
             frame (Frame): Frame for which the scale needs to be set.
@@ -171,14 +164,14 @@ class PulseSequence:
         qubits_or_frames: Union[Frame, list[Frame], QubitSet],
         duration: Union[float, FreeParameterExpression],
     ) -> PulseSequence:
-        """
-        Adds an instruction to advance the frame clock by the specified `duration` value.
+        """Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
             qubits_or_frames (Union[Frame, list[Frame], QubitSet]): Qubits or frame(s) on which
                 the delay needs to be introduced.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
+
         Returns:
             PulseSequence: self, with the instruction added.
         """
@@ -199,8 +192,7 @@ class PulseSequence:
         return self
 
     def barrier(self, qubits_or_frames: Union[list[Frame], QubitSet]) -> PulseSequence:
-        """
-        Adds an instruction to align the frame clocks to the latest time across all the specified
+        """Adds an instruction to align the frame clocks to the latest time across all the specified
         frames.
 
         Args:
@@ -244,8 +236,7 @@ class PulseSequence:
         return self
 
     def capture_v0(self, frame: Frame) -> PulseSequence:
-        """
-        Adds an instruction to capture the bit output from measuring the specified frame.
+        """Adds an instruction to capture the bit output from measuring the specified frame.
 
         Args:
             frame (Frame): Frame on which the capture operation needs
@@ -261,8 +252,7 @@ class PulseSequence:
         return self
 
     def make_bound_pulse_sequence(self, param_values: dict[str, float]) -> PulseSequence:
-        """
-        Binds FreeParameters based upon their name and values passed in. If parameters
+        """Binds FreeParameters based upon their name and values passed in. If parameters
         share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
@@ -349,8 +339,7 @@ class PulseSequence:
     def _parse_from_calibration_schema(
         cls, calibration: dict, waveforms: dict[Waveform], frames: dict[Frame]
     ) -> PulseSequence:
-        """
-        Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26.
+        """Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26.
 
         Args:
             calibration (dict): The pulse instruction to parse
@@ -402,8 +391,7 @@ class PulseSequence:
         return calibration_sequence
 
     def __call__(self, arg: Any = None, **kwargs: Union[FreeParameter, str]) -> PulseSequence:
-        """
-        Implements the call function to easily make a bound PulseSequence.
+        """Implements the call function to easily make a bound PulseSequence.
 
         Args:
             arg (Any): A value to bind to all parameters. Defaults to None and

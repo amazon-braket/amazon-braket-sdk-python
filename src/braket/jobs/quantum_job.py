@@ -24,6 +24,7 @@ class QuantumJob(ABC):
     @abstractmethod
     def arn(self) -> str:
         """The ARN (Amazon Resource Name) of the hybrid job.
+
         Returns:
             str: The ARN (Amazon Resource Name) of the hybrid job.
         """
@@ -32,6 +33,7 @@ class QuantumJob(ABC):
     @abstractmethod
     def name(self) -> str:
         """The name of the hybrid job.
+
         Returns:
             str: The name of the hybrid job.
         """
@@ -45,6 +47,7 @@ class QuantumJob(ABC):
                 value from the Amazon Braket `GetJob` operation. If `False`, calls the
                 `GetJob` operation to retrieve metadata, which also updates the cached
                 value. Default = `False`.
+
         Returns:
             str: The value of `status` in `metadata()`. This is the value of the `status` key
             in the Amazon Braket `GetJob` operation.
@@ -101,6 +104,7 @@ class QuantumJob(ABC):
                 from the Amazon Braket `GetJob` operation, if it exists; if does not exist,
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
+
         Returns:
             Dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """

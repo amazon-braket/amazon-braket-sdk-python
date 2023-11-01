@@ -50,8 +50,7 @@ class LocalSimulator(Device):
     """
 
     def __init__(self, backend: Union[str, BraketSimulator] = "default"):
-        """
-        Inits a `LocalSimulator`.
+        """Inits a `LocalSimulator`.
 
         Args:
             backend (Union[str, BraketSimulator]): The name of the simulator backend or
@@ -183,7 +182,8 @@ class LocalSimulator(Device):
 
         Please see `braket.device_schema` in amazon-braket-schemas-python_
 
-        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
+        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python
+        """
         return self._delegate.properties
 
     @staticmethod

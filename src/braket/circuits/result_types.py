@@ -41,8 +41,7 @@ To add a new result type:
 
 
 class StateVector(ResultType):
-    """
-    The full state vector as a requested result type.
+    """The full state vector as a requested result type.
     This is available on simulators only when `shots=0`.
     """
 
@@ -86,14 +85,12 @@ ResultType.register_result_type(StateVector)
 
 
 class DensityMatrix(ResultType):
-    """
-    The full density matrix as a requested result type.
+    """The full density matrix as a requested result type.
     This is available on simulators only when `shots=0`.
     """
 
     def __init__(self, target: QubitSetInput = None):
-        """
-        Args:
+        """Args:
             target (QubitSetInput): The target qubits
                 of the reduced density matrix. Default is `None`, and the
                 full density matrix is returned.
@@ -112,6 +109,7 @@ class DensityMatrix(ResultType):
     @target.setter
     def target(self, target: QubitSetInput) -> None:
         """Sets the target qubit set.
+
         Args:
             target (QubitSetInput): The target qubit set.
         """
@@ -136,6 +134,7 @@ class DensityMatrix(ResultType):
     @circuit.subroutine(register=True)
     def density_matrix(target: QubitSetInput = None) -> ResultType:
         """Registers this function into the circuit class.
+
         Args:
             target (QubitSetInput): The target qubits
                 of the reduced density matrix. Default is `None`, and the
@@ -170,8 +169,7 @@ ResultType.register_result_type(DensityMatrix)
 
 
 class AdjointGradient(ObservableParameterResultType):
-    """
-    The gradient of the expectation value of the provided observable, applied to target,
+    """The gradient of the expectation value of the provided observable, applied to target,
     with respect to the given parameter.
     """
 
@@ -181,8 +179,7 @@ class AdjointGradient(ObservableParameterResultType):
         target: list[QubitSetInput] = None,
         parameters: list[Union[str, FreeParameter]] = None,
     ):
-        """
-        Args:
+        """Args:
             observable (Observable): The expectation value of this observable is the function
                 against which parameters in the gradient are differentiated.
             target (list[QubitSetInput]): Target qubits that the result type is requested for.
@@ -209,7 +206,6 @@ class AdjointGradient(ObservableParameterResultType):
             >>>     parameters=["alpha", "beta"],
             >>> )
         """
-
         if isinstance(observable, Sum):
             target_qubits = reduce(QubitSet.union, map(QubitSet, target), QubitSet())
         else:
@@ -274,14 +270,12 @@ ResultType.register_result_type(AdjointGradient)
 
 
 class Amplitude(ResultType):
-    """
-    The amplitude of the specified quantum states as a requested result type.
+    """The amplitude of the specified quantum states as a requested result type.
     This is available on simulators only when `shots=0`.
     """
 
     def __init__(self, state: list[str]):
-        """
-        Args:
+        """Args:
             state (list[str]): list of quantum states as strings with "0" and "1"
 
         Raises:
@@ -362,8 +356,7 @@ class Probability(ResultType):
     """
 
     def __init__(self, target: QubitSetInput = None):
-        """
-        Args:
+        """Args:
             target (QubitSetInput): The target qubits that the
                 result type is requested for. Default is `None`, which means all qubits for the
                 circuit.
@@ -382,6 +375,7 @@ class Probability(ResultType):
     @target.setter
     def target(self, target: QubitSetInput) -> None:
         """Sets the target qubit set.
+
         Args:
             target (QubitSetInput): The target qubit set.
         """
@@ -452,8 +446,7 @@ class Expectation(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput = None):
-        """
-        Args:
+        """Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
@@ -527,8 +520,7 @@ class Sample(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput = None):
-        """
-        Args:
+        """Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
@@ -603,8 +595,7 @@ class Variance(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput = None):
-        """
-        Args:
+        """Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must

@@ -33,8 +33,7 @@ class GateCriteria(CircuitInstructionCriteria):
         gates: Optional[Union[Gate, Iterable[Gate]]] = None,
         qubits: Optional[QubitSetInput] = None,
     ):
-        """
-        Creates Gate-based Criteria. See instruction_matches() for more details.
+        """Creates Gate-based Criteria. See instruction_matches() for more details.
 
         Args:
             gates (Optional[Union[Gate, Iterable[Gate]]]): A set of relevant Gates. All the Gates
@@ -60,9 +59,8 @@ class GateCriteria(CircuitInstructionCriteria):
         return f"{self.__class__.__name__}(gates={gate_names}, qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """
-        Returns:
-            Iterable[CriteriaKey]: This Criteria operates on Gates and Qubits.
+        """Returns:
+        Iterable[CriteriaKey]: This Criteria operates on Gates and Qubits.
         """
         return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 
@@ -86,8 +84,7 @@ class GateCriteria(CircuitInstructionCriteria):
         return set()
 
     def to_dict(self) -> dict:
-        """
-        Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this class.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.

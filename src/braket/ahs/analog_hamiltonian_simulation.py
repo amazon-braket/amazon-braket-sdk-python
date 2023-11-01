@@ -90,7 +90,6 @@ class AnalogHamiltonianSimulation:
         Raises:
             DiscretizationError: If unable to discretize the program.
         """
-
         required_action_schema = DeviceActionType.AHS
         if (required_action_schema not in device.properties.action) or (
             device.properties.action[required_action_schema].actionType != required_action_schema

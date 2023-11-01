@@ -230,8 +230,7 @@ def prepare_quantum_job(
 
 
 def _generate_default_job_name(image_uri: str = None, func: Callable = None) -> str:
-    """
-    Generate default job name using the image uri and entrypoint function.
+    """Generate default job name using the image uri and entrypoint function.
 
     Args:
         image_uri (str): URI for the image container.
@@ -265,8 +264,7 @@ def _generate_default_job_name(image_uri: str = None, func: Callable = None) -> 
 def _process_s3_source_module(
     source_module: str, entry_point: str, aws_session: AwsSession, code_location: str
 ) -> None:
-    """
-    Check that the source module is an S3 URI of the correct type and that entry point is
+    """Check that the source module is an S3 URI of the correct type and that entry point is
     provided.
 
     Args:
@@ -275,6 +273,7 @@ def _process_s3_source_module(
         aws_session (AwsSession): AwsSession to copy source module to code location.
         code_location (str): S3 URI pointing to the location where the code will be
             copied to.
+
     Raises:
         ValueError: The entry point is None or does not end with .tar.gz
     """
@@ -291,15 +290,16 @@ def _process_s3_source_module(
 def _process_local_source_module(
     source_module: str, entry_point: str, aws_session: AwsSession, code_location: str
 ) -> str:
-    """
-    Check that entry point is valid with respect to source module, or provide a default
+    """Check that entry point is valid with respect to source module, or provide a default
     value if entry point is not given. Tar and upload source module to code location in S3.
+
     Args:
         source_module (str): Local path pointing to the source module.
         entry_point (str): Entry point relative to the source module.
         aws_session (AwsSession): AwsSession for uploading tarred source module.
         code_location (str): S3 URI pointing to the location where the code will
             be uploaded to.
+
     Raises:
         ValueError: Raised if the source module file is not found.
 
@@ -319,12 +319,12 @@ def _process_local_source_module(
 
 
 def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
-    """
-    Confirm that a valid entry point relative to source module is given.
+    """Confirm that a valid entry point relative to source module is given.
 
     Args:
         source_module_path (Path): Path to source module.
         entry_point (str): Entry point relative to source module.
+
     Raises:
         ValueError: Raised if the module was not found.
     """
@@ -344,8 +344,7 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
 def _tar_and_upload_to_code_location(
     source_module_path: Path, aws_session: AwsSession, code_location: str
 ) -> None:
-    """
-    Tar and upload source module to code location.
+    """Tar and upload source module to code location.
 
     Args:
         source_module_path (Path): Path to source module.
@@ -360,12 +359,12 @@ def _tar_and_upload_to_code_location(
 
 
 def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
-    """
-    Validate that config parameters are of the right type.
+    """Validate that config parameters are of the right type.
 
     Args:
         dict_arr (dict[str, tuple[any, any]]): dict mapping parameter names to
             a tuple containing the provided value and expected type.
+
     Raises:
         ValueError: If the user_input is not the same as the expected data type.
     """
@@ -382,8 +381,8 @@ def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
 def _process_input_data(
     input_data: str | dict | S3DataSourceConfig, job_name: str, aws_session: AwsSession
 ) -> list[dict[str, Any]]:
-    """
-    Convert input data into a list of dicts compatible with the Braket API.
+    """Convert input data into a list of dicts compatible with the Braket API.
+
     Args:
         input_data (str | dict | S3DataSourceConfig): Either a channel definition or a
             dictionary mapping channel names to channel definitions, where a channel definition
@@ -405,8 +404,8 @@ def _process_input_data(
 def _process_channel(
     location: str, job_name: str, aws_session: AwsSession, channel_name: str
 ) -> S3DataSourceConfig:
-    """
-    Convert a location to an S3DataSourceConfig, uploading local data to S3, if necessary.
+    """Convert a location to an S3DataSourceConfig, uploading local data to S3, if necessary.
+
     Args:
         location (str): Local prefix or S3 prefix.
         job_name (str): Hybrid job name.
@@ -430,8 +429,7 @@ def _process_channel(
 
 
 def _convert_input_to_config(input_data: dict[str, S3DataSourceConfig]) -> list[dict[str, Any]]:
-    """
-    Convert a dictionary mapping channel names to S3DataSourceConfigs into a list of channel
+    """Convert a dictionary mapping channel names to S3DataSourceConfigs into a list of channel
     configs compatible with the Braket API.
 
     Args:

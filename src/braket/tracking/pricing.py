@@ -59,6 +59,7 @@ class Pricing:
 
         Args:
             **kwargs (str): Arbitrary keyword arguments.
+
         Returns:
             list[dict[str, str]]: The price list.
         """

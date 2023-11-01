@@ -30,8 +30,7 @@ MIN_SIMULATOR_DURATION = timedelta(milliseconds=3000)
 
 
 class Tracker:
-    """
-    Amazon Braket cost tracker.
+    """Amazon Braket cost tracker.
     Use this class to track costs incurred from quantum tasks on Amazon Braket.
     """
 
@@ -47,6 +46,7 @@ class Tracker:
 
     def start(self) -> Tracker:
         """Start tracking resources with this tracker.
+
         Returns:
             Tracker: self.
         """
@@ -54,6 +54,7 @@ class Tracker:
 
     def stop(self) -> Tracker:
         """Stop tracking resources with this tracker.
+
         Returns:
             Tracker: self.
         """
@@ -61,14 +62,14 @@ class Tracker:
 
     def receive_event(self, event: _TaskCreationEvent) -> None:
         """Process a Tack Creation Event.
+
         Args:
             event (_TaskCreationEvent): The event to process.
         """
         self._recieve_internal(event)
 
     def tracked_resources(self) -> list[str]:
-        """
-        Resources tracked by this tracker.
+        """Resources tracked by this tracker.
 
         Returns:
             list[str]: The list of quantum task ids for quantum tasks tracked by this tracker.
@@ -76,8 +77,7 @@ class Tracker:
         return list(self._resources.keys())
 
     def qpu_tasks_cost(self) -> Decimal:
-        """
-        Estimate cost of all quantum tasks tracked by this tracker that use Braket qpu devices.
+        """Estimate cost of all quantum tasks tracked by this tracker that use Braket qpu devices.
 
         Note: Charges shown are estimates based on your Amazon Braket simulator and quantum
         processing unit (QPU) task usage. Estimated charges shown may differ from your actual
@@ -95,8 +95,7 @@ class Tracker:
         return total_cost
 
     def simulator_tasks_cost(self) -> Decimal:
-        """
-        Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
+        """Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
 
         Note: The cost of a simulator quantum task is not available until after the results for the
         task have been fetched. Call `result()` on an `AwsQuantumTask` before estimating its cost
@@ -118,8 +117,7 @@ class Tracker:
         return total_cost
 
     def quantum_tasks_statistics(self) -> dict[str, dict[str, Any]]:
-        """
-        Get a summary of quantum tasks grouped by device.
+        """Get a summary of quantum tasks grouped by device.
 
         Returns:
             dict[str, dict[str, Any]]: A dictionary where each key is a device arn, and maps to

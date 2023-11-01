@@ -117,7 +117,6 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             Returns None if none of shot measurements are successful.
             Only succesful shots contribute to the state count.
         """
-
         state_counts = Counter()
         states = ["e", "r", "g"]
         for shot in self.measurements:
@@ -139,7 +138,6 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         Returns:
             np.ndarray: The average densities from the result
         """
-
         counts = self.get_counts()
 
         N_ryd, N_ground = [], []

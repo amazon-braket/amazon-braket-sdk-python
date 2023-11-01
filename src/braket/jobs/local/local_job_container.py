@@ -37,6 +37,7 @@ class _LocalJobContainer:
         container.
 
         The function "end_session" must be called when the container is no longer needed.
+
         Args:
             image_uri (str): The URI of the container image to run.
             aws_session (AwsSession): AwsSession for connecting to AWS Services.
@@ -71,6 +72,7 @@ class _LocalJobContainer:
         Args:
             environment_variables (Dict[str, str]): A dictionary of environment variables and
                 their values.
+
         Returns:
             List[str]: The list of parameters to use when running a hybrid job that will include the
             provided environment variables as part of the runtime.

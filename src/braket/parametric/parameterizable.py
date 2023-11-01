@@ -21,8 +21,7 @@ from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class Parameterizable(ABC):
-    """
-    A parameterized object is the abstract definition of an object
+    """A parameterized object is the abstract definition of an object
     that can take in FreeParameterExpressions.
     """
 
@@ -39,8 +38,7 @@ class Parameterizable(ABC):
 
     @abstractmethod
     def bind_values(self, **kwargs: Union[FreeParameter, str]) -> Any:
-        """
-        Takes in parameters and returns an object with specified parameters
+        """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
         Args:

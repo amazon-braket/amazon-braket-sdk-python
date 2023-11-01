@@ -799,6 +799,7 @@ class Rx(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
+
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
@@ -879,6 +880,7 @@ class Ry(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
+
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
@@ -1419,6 +1421,7 @@ class XY(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
+
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
@@ -2037,6 +2040,7 @@ class XX(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
+
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
@@ -2133,6 +2137,7 @@ class YY(AngledGate):
 
     def to_matrix(self) -> np.ndarray:
         """Returns a matrix representation of this gate.
+
         Returns:
             np.ndarray: The matrix representation of this gate.
         """
@@ -2852,8 +2857,7 @@ class PulseGate(Gate, Parameterizable):
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:
-        """
-        Takes in parameters and returns an object with specified parameters
+        """Takes in parameters and returns an object with specified parameters
         replaced with their values.
 
         Returns:
@@ -2926,8 +2930,7 @@ Gate.register_gate(PulseGate)
 
 
 def format_complex(number: complex) -> str:
-    """
-    Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
+    """Format a complex number into <a> + <b>im to be consumed by the braket unitary pragma
 
     Args:
         number (complex): A complex number.

@@ -54,8 +54,7 @@ class DeviceConfig:
 
 
 class S3DataSourceConfig:
-    """
-    Data source for data that lives on S3
+    """Data source for data that lives on S3
     Attributes:
         config (dict[str, dict]): config passed to the Braket API
     """

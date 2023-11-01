@@ -29,6 +29,7 @@ class _PulsePrinter(Printer):
         self, node: ast.Identifier, context: PrinterState
     ) -> None:
         """Visit a FreeParameterExpressionIdentifier.
+
         Args:
             node (ast.Identifier): The identifier.
             context (PrinterState): The printer state context.
@@ -57,6 +58,7 @@ class _PulsePrinter(Printer):
             angle[20] a = 1+2;
             waveform wf = [];
             port a;
+
         Args:
             node (ast.ClassicalDeclaration): The classical declaration.
             context (PrinterState): The printer state context.
