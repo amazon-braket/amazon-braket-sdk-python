@@ -123,7 +123,7 @@ class Program(SerializableProgram):
         combined_oqpy_program += self._oqpy_program
         return Program(combined_oqpy_program, has_pulse_control=True)
 
-    def create_bound_program(self, param_values: dict[str, float]) -> Program:  # Number
+    def make_bound_program(self, param_values: dict[str, float]) -> Program:  # Number
         # FIXME
         import copy
         from openqasm3 import ast

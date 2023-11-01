@@ -300,26 +300,34 @@ def test_bind_parameters():
         measure(0)
 
     prog = parametric(FreeParameter("alpha"))
-    assert prog.to_ir() == """OPENQASM 3.0;
+    unbound_expected = """OPENQASM 3.0;
 input float[64] alpha;
 qubit[1] __qubits__;
 rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
-    bound_prog = prog.create_bound_program({"alpha": 0.5})
-    assert prog.to_ir() == """OPENQASM 3.0;
-float[64] alpha = 0.5;
+    bound_template = """OPENQASM 3.0;
+float[64] alpha = {};
 qubit[1] __qubits__;
 rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
+    assert prog.to_ir() == unbound_expected
+    bound_prog = prog.make_bound_program({"alpha": 0.5})
+    # Original program unchanged
+    assert prog.to_ir() == unbound_expected
+    assert bound_prog.to_ir() == bound_template.format(0.5)
+    # Can rebind
+    bound_prog = prog.make_bound_program({"alpha": 0.432143})
+    assert bound_prog.to_ir() == bound_template.format(0.432143)
+
 
 def test_multi_bind_parameters():
     """Test binding FreeParameters to concrete values."""
 
-    @aq.main
+    @aq.subroutine
     def sub(alpha: float, theta: float):
         rx(0, alpha)
         rx(1, theta)
@@ -339,6 +347,24 @@ def test_multi_bind_parameters():
     prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
     bound_prog = prog.make_bound_program({"alpha": 0.5, "beta": 1.5})
 
+    expected = """OPENQASM 3.0;
+def sub(float[64] alpha, float[64] theta) {
+    rx(alpha) __qubits__[0];
+    rx(theta) __qubits__[1];
+    cnot __qubits__[0], __qubits__[1];
+    rx(theta) __qubits__[0];
+    rx(alpha) __qubits__[1];
+}
+def rx_alpha(int[32] qubit) {
+    rx(alpha) __qubits__[qubit];
+}
+float[64] alpha = 0.5;
+float[64] beta = 1.5;
+qubit[3] __qubits__;
+sub(alpha, beta);
+rx_alpha(2);"""
+    assert bound_prog.to_ir() == expected
+
 
 def test_partial_bind():
     """Test binding some but not all FreeParameters."""
@@ -355,18 +381,13 @@ def test_partial_bind():
     prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
     bound_prog = prog.make_bound_program({"beta": np.pi})
 
-
-def test_bind_param_instance():
-    """TODO"""
-
-    @aq.subroutine
-    def rx_alpha(qubit: int, theta: float):
-        rx(qubit, theta)
-
-    @aq.main(num_qubits=3)
-    def parametric(alpha: float):
-        rx_alpha(2, alpha)
-
-    param = FreeParameter("alpha")
-    prog = parametric(param)
-    bound_prog = prog.make_bound_program({param: np.pi / 2})
+    expected = """OPENQASM 3.0;
+def rx_alpha(int[32] qubit, float[64] theta) {
+    rx(theta) __qubits__[qubit];
+}
+input float[64] alpha;
+float[64] beta = pi;
+qubit[3] __qubits__;
+rx_alpha(2, alpha);
+rx_alpha(2, beta);"""
+    assert bound_prog.to_ir() == expected
