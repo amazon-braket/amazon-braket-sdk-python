@@ -2921,7 +2921,7 @@ Gate.register_gate(GPi2)
 class MS(TripleAngledGate):
     r"""IonQ Mølmer-Sørensen gate.
 
-        Unitary matrix:
+    Unitary matrix:
 
             .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
                     \cos{\frac{\theta}{2}} & 0 &
