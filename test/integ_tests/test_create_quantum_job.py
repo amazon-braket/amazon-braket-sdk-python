@@ -20,13 +20,12 @@ from pathlib import Path
 
 import job_test_script
 import pytest
-
-from braket.aws import AwsSession
 from job_test_module.job_test_submodule.job_test_submodule_file import submodule_helper
 
+from braket.aws import AwsSession
 from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.devices import Devices
-from braket.jobs import get_input_data_dir, hybrid_job, save_job_result, retrieve_image, Framework
+from braket.jobs import Framework, get_input_data_dir, hybrid_job, retrieve_image, save_job_result
 
 
 def decorator_python_version():
@@ -215,7 +214,7 @@ def test_decorator_job():
 
     @hybrid_job(
         device=Devices.Amazon.SV1,
-        include_modules=["job_test_script", "braket.jobs"],
+        include_modules="job_test_script",
         dependencies=str(Path("test", "integ_tests", "requirements.txt")),
         input_data=str(Path("test", "integ_tests", "requirements")),
     )
@@ -276,7 +275,6 @@ def test_decorator_job_submodule():
         device=Devices.Amazon.SV1,
         include_modules=[
             "job_test_module",
-            "braket.jobs"
         ],
         dependencies=Path(
             "test", "integ_tests", "job_test_module", "job_test_submodule", "requirements.txt"
