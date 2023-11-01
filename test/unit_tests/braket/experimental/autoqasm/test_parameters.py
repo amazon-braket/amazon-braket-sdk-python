@@ -391,3 +391,6 @@ qubit[3] __qubits__;
 rx_alpha(2, alpha);
 rx_alpha(2, beta);"""
     assert bound_prog.to_ir() == expected
+
+
+# TODO: test with pulse and gates

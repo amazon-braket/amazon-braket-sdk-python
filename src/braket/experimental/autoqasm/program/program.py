@@ -16,12 +16,14 @@ from __future__ import annotations
 
 import contextlib
 import threading
+import copy
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional, Union
 
 import oqpy.base
+from openqasm3 import ast
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -123,12 +125,17 @@ class Program(SerializableProgram):
         combined_oqpy_program += self._oqpy_program
         return Program(combined_oqpy_program, has_pulse_control=True)
 
-    def make_bound_program(self, param_values: dict[str, float]) -> Program:  # Number
-        # FIXME
-        import copy
-        from openqasm3 import ast
+    def make_bound_program(self, param_values: dict[str, float]) -> Program:
+        """TODO
 
+        Args:
+            param_values (dict[str, float]): TODO
+        Returns:
+            TODO
+        """
+        # We have to copy the program so that we don't modify the original, unbound program
         oqpy_program_copy = copy.deepcopy(self._oqpy_program)
+        # Let's break early if we've processed all the parameter assignments
         params_to_process = set(param_values.keys())
         for state in oqpy_program_copy.stack:
             for i in range(len(state.body)):
@@ -137,13 +144,16 @@ class Program(SerializableProgram):
                     name = inst.identifier.name
                     target = oqpy_program_copy.declared_vars[name]
                     target.init_expression = param_values[name]
+                    # TODO: how do I create the right statement directly?
                     inst = oqpy.Program().declare(target).stack[0].body[0]
                     state.body[i] = inst
                     params_to_process.remove(name)
-                if params_to_process == set():
-                    break
+                    if params_to_process == set():
+                        break
             else:
                 continue
+            # If we broke out of the inner loop, we should break out of the outer loop, too,
+            # because there's no more work to do
             break
 
         return Program(oqpy_program_copy, self._has_pulse_control)
@@ -332,21 +342,21 @@ class ProgramConversionContext:
             name (str): The identifier for the parameter.
         """
         if name not in self._free_parameters:
-            self._free_parameters[name] = (oqpy.FloatVar("input", name=name), FreeParameter(name))
+            self._free_parameters[name] = oqpy.FloatVar("input", name=name)
 
     def get_free_parameters(self) -> list[oqpy.FloatVar]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
-        return list(val[0] for val in self._free_parameters.values())
+        return list(self._free_parameters.values())
 
     def add_io_declarations(self) -> None:
         free_parameters = self.get_free_parameters()
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
         for parameter in free_parameters[::-1]:
+            # TODO: is it possible to save a pointer to the declaration statement?
             root_oqpy_program.declare(
                 parameter,
                 to_beginning=True,
             )
-            # TODO: is it possible to save a pointer to the declaration?
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
