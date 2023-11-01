@@ -20,11 +20,21 @@ from pathlib import Path
 
 import job_test_script
 import pytest
+
+from braket.aws import AwsSession
 from job_test_module.job_test_submodule.job_test_submodule_file import submodule_helper
 
 from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.devices import Devices
-from braket.jobs import get_input_data_dir, hybrid_job, save_job_result
+from braket.jobs import get_input_data_dir, hybrid_job, save_job_result, retrieve_image, Framework
+
+
+def decorator_python_version():
+    aws_session = AwsSession()
+    image_uri = retrieve_image(Framework.BASE, aws_session.region)
+    tag = aws_session.get_full_image_tag(image_uri)
+    major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
+    return int(major_version), int(minor_version)
 
 
 def test_failed_quantum_job(aws_session, capsys):
@@ -192,7 +202,7 @@ def test_completed_quantum_job(aws_session, capsys):
 
 
 @pytest.mark.xfail(
-    (sys.version_info.major, sys.version_info.minor) != (3, 10),
+    (sys.version_info.major, sys.version_info.minor) != decorator_python_version(),
     raises=RuntimeError,
     reason="Python version mismatch",
 )
@@ -205,12 +215,11 @@ def test_decorator_job():
 
     @hybrid_job(
         device=Devices.Amazon.SV1,
-        include_modules="job_test_script",
+        include_modules=["job_test_script", "braket.jobs"],
         dependencies=str(Path("test", "integ_tests", "requirements.txt")),
         input_data=str(Path("test", "integ_tests", "requirements")),
     )
     def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
-        save_job_result(job_test_script.job_helper())
         with open(Path(get_input_data_dir()) / "requirements.txt", "r") as f:
             assert f.readlines() == ["pytest\n"]
         with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
@@ -236,6 +245,8 @@ def test_decorator_job():
         with open("test/output_file.txt", "w") as f:
             f.write("hello")
 
+        return job_test_script.job_helper()
+
     job = decorator_job(MyClass(), 2, d=5, extra_arg="extra_value")
     assert job.result()["status"] == "SUCCESS"
 
@@ -256,7 +267,7 @@ def test_decorator_job():
 
 
 @pytest.mark.xfail(
-    (sys.version_info.major, sys.version_info.minor) != (3, 10),
+    (sys.version_info.major, sys.version_info.minor) != decorator_python_version(),
     raises=RuntimeError,
     reason="Python version mismatch",
 )
@@ -265,6 +276,7 @@ def test_decorator_job_submodule():
         device=Devices.Amazon.SV1,
         include_modules=[
             "job_test_module",
+            "braket.jobs"
         ],
         dependencies=Path(
             "test", "integ_tests", "job_test_module", "job_test_submodule", "requirements.txt"
@@ -275,7 +287,6 @@ def test_decorator_job_submodule():
         },
     )
     def decorator_job_submodule():
-        save_job_result(submodule_helper())
         with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
             assert f.readlines() == ["pytest\n"]
         with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
@@ -296,6 +307,7 @@ def test_decorator_job_submodule():
         ) as f:
             assert f.readlines() == ["pytest\n"]
         assert dir(pytest)
+        save_job_result(submodule_helper())
 
     job = decorator_job_submodule()
     assert job.result()["status"] == "SUCCESS"
