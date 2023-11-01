@@ -90,7 +90,6 @@ class Program(SerializableProgram):
         self,
         oqpy_program: oqpy.Program,
         has_pulse_control: bool = False,
-        parameters = None, ## TODO
     ):
         """Initializes an AutoQASM Program object.
 
@@ -102,7 +101,6 @@ class Program(SerializableProgram):
         """
         self._oqpy_program = oqpy_program
         self._has_pulse_control = has_pulse_control
-        self._parameters = parameters
 
     def with_calibrations(self, gate_calibrations: Union[Callable, list[Callable]]) -> Program:
         """Add the gate calibrations to the program. The calibration added program is returned
@@ -125,12 +123,30 @@ class Program(SerializableProgram):
         combined_oqpy_program += self._oqpy_program
         return Program(combined_oqpy_program, has_pulse_control=True)
 
-    def bind_parameters(self, param_values: dict[str, float]):  # Number
-        # TODO: remove IO declaration
-        oqpy_program = self._oqpy_program
-        for param_name, value in param_values.items():
-            # todo
-            pass
+    def create_bound_program(self, param_values: dict[str, float]) -> Program:  # Number
+        # FIXME
+        import copy
+        from openqasm3 import ast
+
+        oqpy_program_copy = copy.deepcopy(self._oqpy_program)
+        params_to_process = set(param_values.keys())
+        for state in oqpy_program_copy.stack:
+            for i in range(len(state.body)):
+                inst = state.body[i]
+                if isinstance(inst, ast.IODeclaration) and inst.identifier.name in param_values:
+                    name = inst.identifier.name
+                    target = oqpy_program_copy.declared_vars[name]
+                    target.init_expression = param_values[name]
+                    inst = oqpy.Program().declare(target).stack[0].body[0]
+                    state.body[i] = inst
+                    params_to_process.remove(name)
+                if params_to_process == set():
+                    break
+            else:
+                continue
+            break
+
+        return Program(oqpy_program_copy, self._has_pulse_control)
 
     def to_ir(
         self,
@@ -244,7 +260,7 @@ class ProgramConversionContext:
                     f'The target device "{device.name}" does not support '
                     f"the following gates used in the program: {invalid_gates_used}"
                 )
-        return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control, parameters=self._free_parameters)
+        return Program(self.get_oqpy_program(), has_pulse_control=self._has_pulse_control)
 
     @property
     def qubits(self) -> list[int]:
@@ -323,13 +339,14 @@ class ProgramConversionContext:
         return list(val[0] for val in self._free_parameters.values())
 
     def add_io_declarations(self) -> None:
-        free_parameters = self.get_free_parameters().reverse()  # TODO comment
+        free_parameters = self.get_free_parameters()
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
-        for parameter in free_parameters:
+        for parameter in free_parameters[::-1]:
             root_oqpy_program.declare(
                 parameter,
                 to_beginning=True,
             )
+            # TODO: is it possible to save a pointer to the declaration?
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.

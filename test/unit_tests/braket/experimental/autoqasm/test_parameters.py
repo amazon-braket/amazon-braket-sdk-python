@@ -307,8 +307,13 @@ rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
-    prog.bind_parameters({"alpha": 0.5})
-    assert prog.to_ir() == """"""
+    bound_prog = prog.create_bound_program({"alpha": 0.5})
+    assert prog.to_ir() == """OPENQASM 3.0;
+float[64] alpha = 0.5;
+qubit[1] __qubits__;
+rx(alpha) __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
 
 
 def test_multi_bind_parameters():
@@ -332,7 +337,7 @@ def test_multi_bind_parameters():
         rx_alpha(2)
 
     prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
-    prog.bind_parameters({"alpha": 0.5, "beta": 1.5})
+    bound_prog = prog.make_bound_program({"alpha": 0.5, "beta": 1.5})
 
 
 def test_partial_bind():
@@ -348,7 +353,7 @@ def test_partial_bind():
         rx_alpha(2, beta)
 
     prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
-    prog.bind_parameters({"beta": np.pi})
+    bound_prog = prog.make_bound_program({"beta": np.pi})
 
 
 def test_bind_param_instance():
@@ -364,4 +369,4 @@ def test_bind_param_instance():
 
     param = FreeParameter("alpha")
     prog = parametric(param)
-    prog.bind_parameters({param: np.pi / 2})
+    bound_prog = prog.make_bound_program({param: np.pi / 2})
