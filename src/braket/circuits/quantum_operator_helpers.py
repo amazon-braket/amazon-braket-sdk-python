@@ -108,7 +108,7 @@ def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
     return np.allclose(E, np.eye(*E.shape))
 
 
-@lru_cache()
+@lru_cache
 def get_pauli_eigenvalues(num_qubits: int) -> np.ndarray:
     """
     Get the eigenvalues of Pauli operators and their tensor products as

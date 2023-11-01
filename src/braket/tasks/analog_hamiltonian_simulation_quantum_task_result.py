@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from enum import Enum
 
 import numpy as np
-
 from braket.task_result import (
     AdditionalMetadata,
     AnalogHamiltonianSimulationTaskResult,

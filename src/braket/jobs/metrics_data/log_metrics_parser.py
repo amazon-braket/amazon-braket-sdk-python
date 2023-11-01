@@ -12,13 +12,14 @@
 # language governing permissions and limitations under the License.
 
 import re
+from collections.abc import Iterator
 from logging import Logger, getLogger
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 
 
-class LogMetricsParser(object):
+class LogMetricsParser:
     """
     This class is used to parse metrics from log lines, and return them in a more
     convenient format.
@@ -64,7 +65,7 @@ class LogMetricsParser(object):
 
     def _get_metrics_from_log_line_matches(
         self, all_matches: Iterator
-    ) -> Dict[str, Union[str, float, int]]:
+    ) -> dict[str, Union[str, float, int]]:
         """
         Converts matches from a RegEx to a set of metrics.
 
@@ -111,7 +112,7 @@ class LogMetricsParser(object):
 
     def get_columns_and_pivot_indices(
         self, pivot: str
-    ) -> Tuple[Dict[str, List[Union[str, float, int]]], Dict[Tuple[int, str], int]]:
+    ) -> tuple[dict[str, list[Union[str, float, int]]], dict[tuple[int, str], int]]:
         """
         Parses the metrics to find all the metrics that have the pivot column. The values of the
         pivot column are paired with the node_id and assigned a row index, so that all metrics
@@ -144,7 +145,7 @@ class LogMetricsParser(object):
 
     def get_metric_data_with_pivot(
         self, pivot: str, statistic: MetricStatistic
-    ) -> Dict[str, List[Union[str, float, int]]]:
+    ) -> dict[str, list[Union[str, float, int]]]:
         """
         Gets the metric data for a given pivot column name. Metrics without the pivot column
         are not included in the results. Metrics that have the same value in the pivot column
@@ -184,7 +185,7 @@ class LogMetricsParser(object):
 
     def get_parsed_metrics(
         self, metric_type: MetricType, statistic: MetricStatistic
-    ) -> Dict[str, List[Union[str, float, int]]]:
+    ) -> dict[str, list[Union[str, float, int]]]:
         """
         Gets all the metrics data, where the keys are the column names and the values are a list
         containing the values in each row.

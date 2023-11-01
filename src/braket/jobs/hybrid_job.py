@@ -28,7 +28,6 @@ from types import ModuleType
 from typing import Any
 
 import cloudpickle
-
 from braket.aws.aws_session import AwsSession
 from braket.jobs._entry_point_template import run_entry_point, symlink_input_data
 from braket.jobs.config import (
@@ -159,9 +158,12 @@ def hybrid_job(
 
     def _hybrid_job(entry_point: Callable) -> Callable:
         @functools.wraps(entry_point)
-        def job_wrapper(*args, **kwargs) -> Callable:
+        def job_wrapper(*args: Any, **kwargs: Any) -> Callable:
             """
             The job wrapper.
+            Args:
+                *args (Any):  Arbitrary arguments.
+                **kwargs (Any): Arbitrary keyword arguments.
             Returns:
                 Callable: the callable for creating a Hybrid Job.
             """

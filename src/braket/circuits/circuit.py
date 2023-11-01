@@ -19,7 +19,6 @@ from typing import Any, Optional, TypeVar, Union
 
 import numpy as np
 import oqpy
-
 from braket.circuits import compiler_directives
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram
 from braket.circuits.free_parameter import FreeParameter
@@ -115,7 +114,7 @@ class Circuit:
         setattr(cls, function_name, method_from_subroutine)
 
         function_attr = getattr(cls, function_name)
-        setattr(function_attr, "__doc__", func.__doc__)
+        function_attr.__doc__ = func.__doc__
 
     def __init__(self, addable: AddableTypes = None, *args, **kwargs):
         """
@@ -926,7 +925,7 @@ class Circuit:
         """
         if not isinstance(val, Number):
             raise ValueError(
-                f"Parameters can only be assigned numeric values. " f"Invalid inputs: {val}"
+                f"Parameters can only be assigned numeric values. Invalid inputs: {val}"
             )
 
     def apply_readout_noise(

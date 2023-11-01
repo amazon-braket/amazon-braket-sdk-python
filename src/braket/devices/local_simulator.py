@@ -20,7 +20,6 @@ from os import cpu_count
 from typing import Optional, Union
 
 import pkg_resources
-
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
@@ -52,6 +51,8 @@ class LocalSimulator(Device):
 
     def __init__(self, backend: Union[str, BraketSimulator] = "default"):
         """
+        Inits a `LocalSimulator`.
+
         Args:
             backend (Union[str, BraketSimulator]): The name of the simulator backend or
                 the actual simulator instance to use for simulation. Defaults to the
@@ -146,9 +147,7 @@ class LocalSimulator(Device):
 
         if not single_task and not single_input:
             if len(task_specifications) != len(inputs):
-                raise ValueError(
-                    "Multiple inputs and task specifications must " "be equal in number."
-                )
+                raise ValueError("Multiple inputs and task specifications must be equal in number.")
         if single_task:
             task_specifications = repeat(task_specifications)
 

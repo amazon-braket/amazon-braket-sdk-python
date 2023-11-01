@@ -21,7 +21,6 @@ from copy import deepcopy
 from typing import Union
 
 import numpy as np
-
 from braket.circuits.gate import Gate
 from braket.circuits.observable import Observable, StandardObservable
 from braket.circuits.quantum_operator_helpers import (
@@ -74,7 +73,7 @@ class H(StandardObservable):
 Observable.register_observable(H)
 
 
-class I(Observable):  # noqa: E742, E261
+class I(Observable):  # noqa: E742
     """Identity operation as an observable."""
 
     def __init__(self):

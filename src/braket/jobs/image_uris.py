@@ -26,7 +26,7 @@ class Framework(str, Enum):
     PL_PYTORCH = "PL_PYTORCH"
 
 
-def built_in_images(region: str) -> Set[str]:
+def built_in_images(region: str) -> set[str]:
     return {retrieve_image(framework, region) for framework in Framework}
 
 
@@ -40,10 +40,6 @@ def retrieve_image(framework: Framework, region: str) -> str:
 
     Returns:
         str: The ECR URI for the corresponding Amazon Braket Docker image.
-
-    Raises:
-        ValueError: If any of the supplied values are invalid or the combination of inputs
-            specified is not supported.
     """
     # Validate framework
     framework = Framework(framework)
@@ -53,7 +49,7 @@ def retrieve_image(framework: Framework, region: str) -> str:
     return f"{registry}.dkr.ecr.{region}.amazonaws.com/{tag}"
 
 
-def _config_for_framework(framework: Framework) -> Dict[str, str]:
+def _config_for_framework(framework: Framework) -> dict[str, str]:
     """Loads the JSON config for the given framework.
 
     Args:
@@ -67,7 +63,7 @@ def _config_for_framework(framework: Framework) -> Dict[str, str]:
         return json.load(f)
 
 
-def _registry_for_region(config: Dict[str, str], region: str) -> str:
+def _registry_for_region(config: dict[str, str], region: str) -> str:
     """Retrieves the registry for the specified region from the configuration.
 
     Args:

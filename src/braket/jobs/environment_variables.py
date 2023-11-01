@@ -80,6 +80,6 @@ def get_hyperparameters() -> dict[str, str]:
         dict[str, str]: The hyperparameters of the job.
     """
     if "AMZN_BRAKET_HP_FILE" in os.environ:
-        with open(os.getenv("AMZN_BRAKET_HP_FILE"), "r") as f:
+        with open(os.getenv("AMZN_BRAKET_HP_FILE")) as f:
             return json.load(f)
     return {}

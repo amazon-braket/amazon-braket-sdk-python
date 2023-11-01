@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from numbers import Number
-from typing import Union
 
 
 @dataclass
@@ -121,12 +120,12 @@ class TimeSeries:
         return ts
 
     @staticmethod
-    def constant_like(times: Union[list[float], TimeSeries], constant: float = 0.0) -> TimeSeries:
+    def constant_like(times: list | float | TimeSeries, constant: float = 0.0) -> TimeSeries:
         """Obtain a constant time series given another time series or the list of time points,
         and the constant values
 
         Args:
-            times (Union[list[float], TimeSeries]): list of time points or a time series
+            times (list | float | TimeSeries): list of time points or a time series
             constant (float): constant value
 
         Returns:
@@ -311,7 +310,7 @@ class TimeSeries:
         new_time_series = TimeSeries()
 
         repeating_block = TimeSeries.from_lists(times=times, values=values)
-        for index in range(num_repeat):
+        for _index in range(num_repeat):
             new_time_series = new_time_series.stitch(repeating_block)
 
         return new_time_series

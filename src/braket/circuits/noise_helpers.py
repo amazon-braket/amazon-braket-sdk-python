@@ -18,7 +18,6 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import numpy as np
-
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.moments import Moments

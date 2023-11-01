@@ -103,7 +103,7 @@ class GateCalibrations:
         Returns:
             Optional[GateCalibrations]: A filtered GateCalibrations object. Otherwise, returns
             none if no matches are found.
-        """  # noqa: E501
+        """
         keys = self.pulse_sequences.keys()
         filtered_calibration_keys = [
             tup

@@ -21,7 +21,6 @@ from numbers import Number
 from typing import Union
 
 import numpy as np
-
 from braket.ahs.discretization_types import DiscretizationError, DiscretizationProperties
 
 
@@ -120,7 +119,7 @@ class AtomArrangement:
             discretized_arrangement = AtomArrangement()
             for site in self._sites:
                 new_coordinates = tuple(
-                    (round(Decimal(c) / position_res) * position_res for c in site.coordinate)
+                    round(Decimal(c) / position_res) * position_res for c in site.coordinate
                 )
                 discretized_arrangement.add(new_coordinates, site.site_type)
             return discretized_arrangement

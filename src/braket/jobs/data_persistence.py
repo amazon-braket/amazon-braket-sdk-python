@@ -88,12 +88,6 @@ def load_job_checkpoint(job_name: str = None, checkpoint_file_suffix: str = "") 
 
     Returns:
         dict[str, Any]: Dict that contains the checkpoint data persisted in the checkpoint file.
-
-    Raises:
-        FileNotFoundError: If the file `f"{job_name}(_{checkpoint_file_suffix})"` could not be found
-            in the directory specified by the container environment variable `CHECKPOINT_DIR`.
-        ValueError: If the data stored in the checkpoint file can't be deserialized (possibly due to
-            corruption).
     """
     job_name = job_name or get_job_name()
     checkpoint_directory = get_checkpoint_dir()
@@ -102,7 +96,7 @@ def load_job_checkpoint(job_name: str = None, checkpoint_file_suffix: str = "") 
         if checkpoint_file_suffix
         else f"{checkpoint_directory}/{job_name}.json"
     )
-    with open(checkpoint_file_path, "r") as f:
+    with open(checkpoint_file_path) as f:
         persisted_data = PersistedJobData.parse_raw(f.read())
         deserialized_data = deserialize_values(
             persisted_data.dataDictionary, persisted_data.dataFormat
@@ -113,7 +107,7 @@ def load_job_checkpoint(job_name: str = None, checkpoint_file_suffix: str = "") 
 def _load_persisted_data(filename: str | Path = None) -> PersistedJobData:
     filename = filename or Path(get_results_dir()) / "results.json"
     try:
-        with open(filename, mode="r") as f:
+        with open(filename) as f:
             return PersistedJobData.parse_raw(f.read())
     except FileNotFoundError:
         return PersistedJobData(
@@ -159,6 +153,9 @@ def save_job_result(
         data_format (PersistedJobDataFormat): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization. Default: PersistedJobDataFormat.PLAINTEXT.
+
+    Raises:
+        TypeError: Unsupported data format.
     """
     if not isinstance(result_data, dict):
         result_data = {"result": result_data}

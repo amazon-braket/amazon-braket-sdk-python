@@ -15,10 +15,9 @@ from functools import reduce, singledispatch
 from typing import Union
 
 import braket.circuits.gates as braket_gates
-import braket.circuits.noises as noises
 import braket.circuits.result_types as ResultTypes
 import braket.ir.jaqcd.shared_models as models
-from braket.circuits import Observable, observables
+from braket.circuits import Observable, noises, observables
 from braket.ir.jaqcd import (
     Amplitude,
     DensityMatrix,
@@ -106,7 +105,7 @@ def get_tensor_product(observable: Union[models.Observable, list]) -> Observable
     """Generate an braket circuit observable
 
     Args:
-        observable (Union[Observable, list]): ir observable or a matrix
+        observable (Union[models.Observable, list]): ir observable or a matrix
 
     Returns:
         Observable: braket circuit observable

@@ -17,7 +17,6 @@ from collections.abc import Iterable, Sequence
 from typing import Any, Optional, Union
 
 import numpy as np
-
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.parameterizable import Parameterizable
@@ -395,10 +394,8 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
                 total_prob += prob
         if not (1.0 >= total_prob >= 0.0):
             raise ValueError(
-                (
-                    "Total probability must be a real number in the interval [0, 1]. "
-                    f"Total probability was {total_prob}."
-                )
+                "Total probability must be a real number in the interval [0, 1]. "
+                f"Total probability was {total_prob}."
             )
 
     @classmethod
@@ -409,17 +406,13 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             raise TypeError(f"Type of {pauli_str} was not a string.")
         if len(pauli_str) != qubit_count:
             raise ValueError(
-                (
-                    "Length of each Pauli string must be equal to number of qubits. "
-                    f"{pauli_str} had length {len(pauli_str)} instead of length {qubit_count}."
-                )
+                "Length of each Pauli string must be equal to number of qubits. "
+                f"{pauli_str} had length {len(pauli_str)} instead of length {qubit_count}."
             )
         if not set(pauli_str) <= allowed_substrings:
             raise ValueError(
-                (
-                    "Strings must be Pauli strings consisting of only [I, X, Y, Z]. "
-                    f"Received {pauli_str}."
-                )
+                "Strings must be Pauli strings consisting of only [I, X, Y, Z]. "
+                f"Received {pauli_str}."
             )
 
     def __repr__(self):

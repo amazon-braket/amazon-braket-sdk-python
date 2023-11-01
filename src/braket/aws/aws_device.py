@@ -23,8 +23,6 @@ from enum import Enum
 from typing import Any, Optional, Union
 
 from botocore.errorfactory import ClientError
-from networkx import DiGraph, complete_graph, from_edgelist
-
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -35,7 +33,7 @@ from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
-from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
+from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # TODO: Remove device_action module once this is added to init in the schemas repo
     PulseDeviceActionProperties,
 )
 from braket.devices.device import Device
@@ -46,6 +44,7 @@ from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
+from networkx import DiGraph, complete_graph, from_edgelist
 
 
 class AwsDeviceType(str, Enum):
@@ -321,9 +320,11 @@ class AwsDevice(Device):
             self._populate_properties(region_session)
             return region_session
         except ClientError as e:
-            raise ValueError(f"'{self._arn}' not found") if e.response["Error"][
-                "Code"
-            ] == "ResourceNotFoundException" else e
+            raise (
+                ValueError(f"'{self._arn}' not found")
+                if e.response["Error"]["Code"] == "ResourceNotFoundException"
+                else e
+            )
 
     def _get_non_regional_device_session(self, session: AwsSession) -> AwsSession:
         current_region = session.region
@@ -525,7 +526,7 @@ class AwsDevice(Device):
         return AwsDevice.DEFAULT_MAX_PARALLEL
 
     def __repr__(self):
-        return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
+        return f"Device('name': {self.name}, 'arn': {self.arn})"
 
     def __eq__(self, other):
         if isinstance(other, AwsDevice):

@@ -20,7 +20,7 @@ from typing import Dict, List
 from braket.aws.aws_session import AwsSession
 
 
-class _LocalJobContainer(object):
+class _LocalJobContainer:
     """Uses docker CLI to run Braket Hybrid Jobs on a local docker container."""
 
     ECR_URI_PATTERN = r"^((\d+)\.dkr\.ecr\.([^.]+)\.[^/]*)/([^:]*):(.*)$"
@@ -63,7 +63,7 @@ class _LocalJobContainer(object):
         self._end_session()
 
     @staticmethod
-    def _envs_to_list(environment_variables: Dict[str, str]) -> List[str]:
+    def _envs_to_list(environment_variables: dict[str, str]) -> list[str]:
         """Converts a dictionary environment variables to a list of parameters that can be
         passed to the container exec/run commands to ensure those env variables are available
         in the container.
@@ -82,7 +82,7 @@ class _LocalJobContainer(object):
         return env_list
 
     @staticmethod
-    def _check_output_formatted(command: List[str]) -> str:
+    def _check_output_formatted(command: list[str]) -> str:
         """This is a wrapper around the subprocess.check_output command that decodes the output
         to UTF-8 encoding.
 
@@ -101,6 +101,9 @@ class _LocalJobContainer(object):
         Args:
             account_id(str): The customer account ID.
             ecr_url(str): The URL of the ECR repo to log into.
+
+        Raises:
+            ValueError: Invalid permissions to pull container.
         """
         ecr_client = self._aws_session.ecr_client
         authorization_data_result = ecr_client.get_authorization_token(registryIds=[account_id])
@@ -119,6 +122,9 @@ class _LocalJobContainer(object):
 
         Args:
             image_uri(str): The URI of the ECR image to pull.
+
+        Raises:
+            ValueError: Invalid ECR URL.
         """
         ecr_pattern = re.compile(self.ECR_URI_PATTERN)
         ecr_pattern_match = ecr_pattern.match(image_uri)
@@ -142,6 +148,9 @@ class _LocalJobContainer(object):
         Args:
             image_uri(str): The URI of the ECR image to run.
             force_update(bool): Do a docker pull, even if the image is local, in order to update.
+
+        Raises:
+            ValueError: Invalid local image URI.
 
         Returns:
             str: The name of the running container, which can be used to execute further commands.
@@ -228,13 +237,16 @@ class _LocalJobContainer(object):
 
     def run_local_job(
         self,
-        environment_variables: Dict[str, str],
+        environment_variables: dict[str, str],
     ) -> None:
         """Runs a Braket Hybrid job in a local container.
 
         Args:
             environment_variables (Dict[str, str]): The environment variables to make available
                 as part of running the hybrid job.
+
+        Raises:
+            ValueError: `start_program_name` is not found.
         """
         start_program_name = self._check_output_formatted(
             ["docker", "exec", self._container_name, "printenv", "SAGEMAKER_PROGRAM"]

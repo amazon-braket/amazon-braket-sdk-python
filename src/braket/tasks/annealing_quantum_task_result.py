@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 import numpy
-
 from braket.annealing import ProblemType
 from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 
@@ -47,10 +46,10 @@ class AnnealingQuantumTaskResult:
 
     def data(
         self,
-        selected_fields: Optional[List[str]] = None,
+        selected_fields: Optional[list[str]] = None,
         sorted_by: str = "value",
         reverse: bool = False,
-    ) -> Tuple:
+    ) -> tuple:
         """
         Iterate over the data in record_array
 

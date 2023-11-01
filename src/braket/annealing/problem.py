@@ -37,8 +37,8 @@ class Problem:
     def __init__(
         self,
         problem_type: ProblemType,
-        linear: Dict[int, float] = None,
-        quadratic: Dict[Tuple[int, int], float] = None,
+        linear: dict[int, float] = None,
+        quadratic: dict[tuple[int, int], float] = None,
     ):
         """
 
@@ -71,7 +71,7 @@ class Problem:
         return self._problem_type
 
     @property
-    def linear(self) -> Dict[int, float]:
+    def linear(self) -> dict[int, float]:
         """The linear terms of this problem.
 
         Returns:
@@ -80,7 +80,7 @@ class Problem:
         return self._linear
 
     @property
-    def quadratic(self) -> Dict[Tuple[int, int], float]:
+    def quadratic(self) -> dict[tuple[int, int], float]:
         """The quadratic terms of this problem.
 
         Returns:
@@ -102,7 +102,7 @@ class Problem:
         self._linear[term] = coefficient
         return self
 
-    def add_linear_terms(self, coefficients: Dict[int, float]) -> Problem:
+    def add_linear_terms(self, coefficients: dict[int, float]) -> Problem:
         """Adds linear terms to the problem.
 
         Args:
@@ -114,7 +114,7 @@ class Problem:
         self._linear.update(coefficients)
         return self
 
-    def add_quadratic_term(self, term: Tuple[int, int], coefficient: float) -> Problem:
+    def add_quadratic_term(self, term: tuple[int, int], coefficient: float) -> Problem:
         """Adds a quadratic term to the problem.
 
         Args:
@@ -127,7 +127,7 @@ class Problem:
         self._quadratic[term] = coefficient
         return self
 
-    def add_quadratic_terms(self, coefficients: Dict[Tuple[int, int], float]) -> Problem:
+    def add_quadratic_terms(self, coefficients: dict[tuple[int, int], float]) -> Problem:
         """Adds quadratic terms to the problem.
 
         Args:

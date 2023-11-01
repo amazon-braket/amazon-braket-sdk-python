@@ -21,7 +21,7 @@ from braket.jobs.metrics_data.exceptions import MetricsRetrievalError
 from braket.jobs.metrics_data.log_metrics_parser import LogMetricsParser
 
 
-class CwlInsightsMetricsFetcher(object):
+class CwlInsightsMetricsFetcher:
     LOG_GROUP_NAME = "/aws/braket/jobs"
     QUERY_DEFAULT_JOB_DURATION = 3 * 60 * 60
 
@@ -52,7 +52,7 @@ class CwlInsightsMetricsFetcher(object):
 
     @staticmethod
     def _get_element_from_log_line(
-        element_name: str, log_line: List[Dict[str, Any]]
+        element_name: str, log_line: list[dict[str, Any]]
     ) -> Optional[str]:
         """
         Finds and returns an element of a log line from CloudWatch Insights results.
@@ -69,7 +69,7 @@ class CwlInsightsMetricsFetcher(object):
             (element["value"] for element in log_line if element["field"] == element_name), None
         )
 
-    def _get_metrics_results_sync(self, query_id: str) -> List[Any]:
+    def _get_metrics_results_sync(self, query_id: str) -> list[Any]:
         """
         Waits for the CloudWatch Insights query to complete and then returns all the results.
 
@@ -95,7 +95,7 @@ class CwlInsightsMetricsFetcher(object):
         self._logger.warning(f"Timed out waiting for query {query_id}.")
         return []
 
-    def _parse_log_line(self, result_entry: List[Dict[str, Any]], parser: LogMetricsParser) -> None:
+    def _parse_log_line(self, result_entry: list[dict[str, Any]], parser: LogMetricsParser) -> None:
         """
         Parses the single entry from CloudWatch Insights results and adds any metrics it finds
         to 'all_metrics' along with the timestamp for the entry.
@@ -113,8 +113,8 @@ class CwlInsightsMetricsFetcher(object):
             parser.parse_log_message(timestamp, message)
 
     def _parse_log_query_results(
-        self, results: List[Any], metric_type: MetricType, statistic: MetricStatistic
-    ) -> Dict[str, List[Union[str, float, int]]]:
+        self, results: list[Any], metric_type: MetricType, statistic: MetricStatistic
+    ) -> dict[str, list[Union[str, float, int]]]:
         """
         Parses CloudWatch Insights results and returns all found metrics.
 
@@ -140,7 +140,7 @@ class CwlInsightsMetricsFetcher(object):
         statistic: MetricStatistic = MetricStatistic.MAX,
         job_start_time: int = None,
         job_end_time: int = None,
-    ) -> Dict[str, List[Union[str, float, int]]]:
+    ) -> dict[str, list[Union[str, float, int]]]:
         """
         Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 

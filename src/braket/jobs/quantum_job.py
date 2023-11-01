@@ -93,7 +93,7 @@ class QuantumJob(ABC):
         #   Cloudwatch after the job was marked complete.
 
     @abstractmethod
-    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """Gets the job metadata defined in Amazon Braket.
 
         Args:
@@ -110,7 +110,7 @@ class QuantumJob(ABC):
         self,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         """Gets all the metrics data, where the keys are the column names, and the values are a list
         containing the values in each row.
 
@@ -148,7 +148,7 @@ class QuantumJob(ABC):
         self,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Retrieves the hybrid job result persisted using save_job_result() function.
 
         Args:

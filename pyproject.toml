@@ -2,6 +2,8 @@
 line-length = 100
 
 [tool.ruff]
+# 3.10 introduces standards such as PEP604 which changes lots of typing
+target-version = "py39"
 line-length = 100
 select = [
   "A",
@@ -10,7 +12,6 @@ select = [
   "C",
   "DTZ",
   "E",
-  "EM",
   "F",
   "FBT",
   "I",
@@ -35,8 +36,14 @@ unfixable = [
   "F401",
 ]
 ignore = [
+  # Python 3.10 and later rule
+  "UP007",
+  # Magic vars. Should be enabled later.
+  "PLR2004",
   # Ignore complexity
   "PLR0913",
+  # Uppercase function names are fine in some cases
+  "N802",
 ]
 
 [tool.ruff.isort]

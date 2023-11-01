@@ -18,10 +18,6 @@ from copy import deepcopy
 from inspect import signature
 from typing import Any, Union
 
-from openpulse import ast
-from oqpy import BitVar, PhysicalQubits, Program
-from oqpy.timing import OQDurationLiteral
-
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
@@ -36,6 +32,9 @@ from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
 from braket.pulse.waveforms import Waveform
 from braket.registers.qubit_set import QubitSet
+from openpulse import ast
+from oqpy import BitVar, PhysicalQubits, Program
+from oqpy.timing import OQDurationLiteral
 
 
 class PulseSequence:
@@ -337,8 +336,8 @@ class PulseSequence:
         self, argument: dict, waveforms: dict[Waveform], frames: dict[Frame]
     ) -> Any:
         nonprimitive_arg_type = {
-            "frame": getattr(frames, "get"),
-            "waveform": getattr(waveforms, "get"),
+            "frame": frames.get,
+            "waveform": waveforms.get,
             "expr": FreeParameterExpression,
         }
         if argument["type"] in nonprimitive_arg_type.keys():
@@ -363,7 +362,7 @@ class PulseSequence:
 
         Returns:
             PulseSequence: The parse sequence obtain from parsing a pulse instruction.
-        """  # noqa: E501
+        """
         calibration_sequence = cls()
         for instr in calibration:
             if hasattr(PulseSequence, f"{instr['name']}"):

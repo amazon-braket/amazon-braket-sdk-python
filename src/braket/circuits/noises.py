@@ -15,9 +15,8 @@ import itertools
 from collections.abc import Iterable
 from typing import Any, Union
 
-import numpy as np
-
 import braket.ir.jaqcd as ir
+import numpy as np
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -1461,7 +1460,7 @@ def _ascii_representation(
     param_list = []
     for param in parameters:
         param_list.append(
-            str(param) if isinstance(param, FreeParameterExpression) else "{:.2g}".format(param)
+            str(param) if isinstance(param, FreeParameterExpression) else f"{param:.2g}"
         )
     param_str = ",".join(param_list)
     return f"{noise}({param_str})"

@@ -20,7 +20,7 @@ from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 from braket.jobs.metrics_data.log_metrics_parser import LogMetricsParser
 
 
-class CwlMetricsFetcher(object):
+class CwlMetricsFetcher:
     LOG_GROUP_NAME = "/aws/braket/jobs"
 
     def __init__(
@@ -95,7 +95,7 @@ class CwlMetricsFetcher(object):
             kwargs["nextToken"] = next_token
         self._logger.warning("Timed out waiting for all metrics. Data may be incomplete.")
 
-    def _get_log_streams_for_job(self, job_name: str, timeout_time: float) -> List[str]:
+    def _get_log_streams_for_job(self, job_name: str, timeout_time: float) -> list[str]:
         """
         Retrieves the list of log streams relevant to a hybrid job.
 
@@ -131,7 +131,7 @@ class CwlMetricsFetcher(object):
         job_name: str,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> Dict[str, List[Union[str, float, int]]]:
+    ) -> dict[str, list[Union[str, float, int]]]:
         """
         Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
 

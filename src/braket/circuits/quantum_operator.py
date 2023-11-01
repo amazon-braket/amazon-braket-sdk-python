@@ -17,7 +17,6 @@ from collections.abc import Sequence
 from typing import Any, Optional
 
 import numpy as np
-
 from braket.circuits.operator import Operator
 
 

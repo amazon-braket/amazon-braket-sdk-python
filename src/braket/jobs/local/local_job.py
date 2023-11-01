@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any
+from typing import Any, Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import CheckpointConfig, OutputDataConfig, S3DataSourceConfig
@@ -44,7 +44,7 @@ class LocalQuantumJob(QuantumJob):
         code_location: str = None,
         role_arn: str = None,
         hyperparameters: dict[str, Any] = None,
-        input_data: str | dict | S3DataSourceConfig = None,
+        input_data: Union[str, dict, S3DataSourceConfig] = None,
         output_data_config: OutputDataConfig = None,
         checkpoint_config: CheckpointConfig = None,
         aws_session: AwsSession = None,
@@ -90,7 +90,7 @@ class LocalQuantumJob(QuantumJob):
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data (str | dict | S3DataSourceConfig): Information about the training
+            input_data (Union[str, dict, S3DataSourceConfig]): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
                 f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -114,6 +114,9 @@ class LocalQuantumJob(QuantumJob):
             local_container_update (bool): Perform an update, if available, from ECR to the local
                 container image. Optional.
                 Default: True.
+
+        Raises:
+            ValueError: Local directory with the job name already exists.
 
         Returns:
             LocalQuantumJob: The representation of a local Braket Hybrid Job.
@@ -165,6 +168,8 @@ class LocalQuantumJob(QuantumJob):
 
     def __init__(self, arn: str, run_log: str = None):
         """
+        Inits a `LocalQuantumJob`.
+
         Args:
             arn (str): The ARN of the hybrid job.
             run_log (str): The container output log of running the hybrid job with the given arn.
@@ -196,7 +201,7 @@ class LocalQuantumJob(QuantumJob):
         """
         if not self._run_log:
             try:
-                with open(os.path.join(self.name, "log.txt"), "r") as log_file:
+                with open(os.path.join(self.name, "log.txt")) as log_file:
                     self._run_log = log_file.read()
             except FileNotFoundError:
                 raise ValueError(f"Unable to find logs in the local job directory {self.name}.")
@@ -269,7 +274,7 @@ class LocalQuantumJob(QuantumJob):
             dict[str, Any]: Dict specifying the hybrid job results.
         """
         try:
-            with open(os.path.join(self.name, "results.json"), "r") as f:
+            with open(os.path.join(self.name, "results.json")) as f:
                 persisted_data = PersistedJobData.parse_raw(f.read())
                 deserialized_data = deserialize_values(
                     persisted_data.dataDictionary, persisted_data.dataFormat

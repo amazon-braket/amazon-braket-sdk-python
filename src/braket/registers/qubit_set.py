@@ -17,7 +17,6 @@ from collections.abc import Iterable
 from typing import Any, Union
 
 from boltons.setutils import IndexedSet
-
 from braket.registers.qubit import Qubit, QubitInput
 
 QubitSetInput = Union[QubitInput, Iterable[QubitInput]]

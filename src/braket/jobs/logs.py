@@ -23,11 +23,10 @@ import sys
 from typing import Dict, List, Tuple
 
 from botocore.exceptions import ClientError
-
 from braket.aws.aws_session import AwsSession
 
 
-class ColorWrap(object):
+class ColorWrap:
     """A callable that prints text in a different color depending on the instance.
     Up to 5 if the standard output is a terminal or a Jupyter notebook cell.
     """
@@ -74,8 +73,8 @@ Position = collections.namedtuple("Position", ["timestamp", "skip"])
 
 
 def multi_stream_iter(
-    aws_session: AwsSession, log_group: str, streams: List[str], positions: Dict[str, Position]
-) -> Tuple[int, Dict]:
+    aws_session: AwsSession, log_group: str, streams: list[str], positions: dict[str, Position]
+) -> tuple[int, dict]:
     """Iterates over the available events coming from a set of log streams.
     Log streams are in a single log group interleaving the events from each stream,
     so they yield in timestamp order.
@@ -113,7 +112,7 @@ def multi_stream_iter(
 
 def log_stream(
     aws_session: AwsSession, log_group: str, stream_name: str, start_time: int = 0, skip: int = 0
-) -> Dict:
+) -> dict:
     """A generator for log items in a single stream.
     This yields all the items that are available at the current moment.
 
@@ -160,8 +159,8 @@ def flush_log_streams(
     aws_session: AwsSession,
     log_group: str,
     stream_prefix: str,
-    stream_names: List[str],
-    positions: Dict[str, Position],
+    stream_names: list[str],
+    positions: dict[str, Position],
     stream_count: int,
     has_streams: bool,
     color_wrap: ColorWrap,

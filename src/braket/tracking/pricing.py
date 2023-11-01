@@ -33,7 +33,7 @@ class Pricing:
         http = urllib3.PoolManager()
         price_url = os.environ.get(
             "BRAKET_PRICE_OFFERS_URL",
-            "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv",  # noqa: E501
+            "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBraket/current/index.csv",
         )
         response = http.request(
             "GET",
@@ -53,7 +53,7 @@ class Pricing:
             text_response.readline()
         self._price_list = list(csv.DictReader(text_response))
 
-    @lru_cache()
+    @lru_cache
     def price_search(self, **kwargs: str) -> list[dict[str, str]]:
         """Searches the price list for a given set of parameters.
 

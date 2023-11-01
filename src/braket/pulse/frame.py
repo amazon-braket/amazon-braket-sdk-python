@@ -14,10 +14,9 @@
 import math
 from typing import Any, Optional
 
+from braket.pulse.port import Port
 from oqpy import FrameVar as OQFrame
 from oqpy.base import OQPyExpression
-
-from braket.pulse.port import Port
 
 
 class Frame:

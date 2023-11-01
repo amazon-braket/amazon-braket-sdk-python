@@ -18,10 +18,6 @@ from dataclasses import dataclass
 from typing import Any, Optional, Union
 
 import numpy as np
-from openpulse import ast
-from openqasm3.visitor import QASMVisitor
-from oqpy import Program
-
 from braket.pulse.frame import Frame
 from braket.pulse.waveforms import (
     ConstantWaveform,
@@ -30,6 +26,9 @@ from braket.pulse.waveforms import (
     Waveform,
 )
 from braket.timings.time_series import TimeSeries
+from openpulse import ast
+from openqasm3.visitor import QASMVisitor
+from oqpy import Program
 
 
 @dataclass

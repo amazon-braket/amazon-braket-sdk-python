@@ -113,7 +113,7 @@ class DummyCircuitSimulator(BraketSimulator):
         shots: Optional[int],
         inputs: Optional[Dict[str, float]],
         *args,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         self._shots = shots
         self._qubits = qubits

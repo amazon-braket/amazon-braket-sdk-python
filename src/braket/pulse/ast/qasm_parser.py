@@ -13,11 +13,10 @@
 
 import io
 
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 from openpulse import ast
 from openpulse.printer import Printer
 from openqasm3.printer import PrinterState
-
-from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class _PulsePrinter(Printer):

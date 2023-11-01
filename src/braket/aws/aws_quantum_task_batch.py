@@ -150,9 +150,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
 
         if not single_task and not single_input:
             if len(task_specifications) != len(inputs):
-                raise ValueError(
-                    "Multiple inputs and task specifications must " "be equal in number."
-                )
+                raise ValueError("Multiple inputs and task specifications must be equal in number.")
         if single_task:
             task_specifications = repeat(task_specifications)
 

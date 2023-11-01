@@ -24,7 +24,6 @@ from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
-
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import HybridJobQueueInfo
@@ -590,9 +589,11 @@ class AwsQuantumJob(QuantumJob):
             aws_session.get_device(device)
             return aws_session
         except ClientError as e:
-            raise ValueError(f"'{device}' not found.") if e.response["Error"][
-                "Code"
-            ] == "ResourceNotFoundException" else e
+            raise (
+                ValueError(f"'{device}' not found.")
+                if e.response["Error"]["Code"] == "ResourceNotFoundException"
+                else e
+            )
 
     @staticmethod
     def _initialize_non_regional_device_session(

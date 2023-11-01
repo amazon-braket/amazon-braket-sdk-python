@@ -19,10 +19,6 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import numpy as np
-from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
-from oqpy.base import OQPyExpression
-from oqpy.timing import OQDurationLiteral
-
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import (
     FreeParameterExpression,
@@ -30,6 +26,9 @@ from braket.parametric.free_parameter_expression import (
 )
 from braket.parametric.parameterizable import Parameterizable
 from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
+from oqpy import WaveformVar, bool_, complex128, declare_waveform_generator, duration, float64
+from oqpy.base import OQPyExpression
+from oqpy.timing import OQDurationLiteral
 
 
 class Waveform(ABC):
@@ -66,7 +65,7 @@ class Waveform(ABC):
 
         Returns:
             Waveform: A Waveform object parsed from the supplied JSON.
-        """  # noqa: E501
+        """
 
 
 class ArbitraryWaveform(Waveform):

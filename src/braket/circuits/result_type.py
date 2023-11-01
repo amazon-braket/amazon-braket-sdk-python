@@ -68,12 +68,11 @@ class ResultType:
         self,
         ir_type: IRType = IRType.JAQCD,
         serialization_properties: SerializationProperties = None,
-        **kwargs,
     ) -> Any:
         """Returns IR object of the result type
 
         Args:
-            ir_type(IRType) : The IRType to use for converting the result type object to its
+            ir_type(IRType): The IRType to use for converting the result type object to its
                 IR representation. Defaults to IRType.JAQCD.
             serialization_properties (SerializationProperties): The serialization properties to use
                 while serializing the object to the IR representation. The serialization properties

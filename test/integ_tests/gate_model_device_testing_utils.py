@@ -139,7 +139,7 @@ def result_types_bell_pair_full_probability_testing(device: Device, run_kwargs: 
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability()),
             np.array([0.5, 0, 0, 0.5]),
-            **tol
+            **tol,
         )
 
 
@@ -154,7 +154,7 @@ def result_types_bell_pair_marginal_probability_testing(device: Device, run_kwar
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability(target=0)),
             np.array([0.5, 0.5]),
-            **tol
+            **tol,
         )
 
 
@@ -592,7 +592,7 @@ def noisy_circuit_1qubit_noise_full_probability(device: Device, run_kwargs: Dict
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability()),
             np.array([0.0, 0.1, 0, 0.9]),
-            **tol
+            **tol,
         )
 
 
@@ -611,7 +611,7 @@ def noisy_circuit_2qubit_noise_full_probability(device: Device, run_kwargs: Dict
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability()),
             np.array([0.1, 0.0, 0, 0.9]),
-            **tol
+            **tol,
         )
 
 
@@ -671,7 +671,7 @@ def openqasm_noisy_circuit_1qubit_noise_full_probability(
         assert np.allclose(
             result.get_value_by_result_type(ResultType.Probability(target=[0, 1])),
             np.array([0.0, 0.1, 0, 0.9]),
-            **tol
+            **tol,
         )
 
 

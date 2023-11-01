@@ -14,13 +14,12 @@
 from collections.abc import Iterable
 
 import numpy as np
-from scipy.linalg import fractional_matrix_power
-
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.default_simulator.linalg_utils import multiply_matrix
 from braket.registers.qubit_set import QubitSet
+from scipy.linalg import fractional_matrix_power
 
 
 def calculate_unitary_big_endian(

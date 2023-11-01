@@ -22,7 +22,6 @@ from braket.ahs.discretization_types import DiscretizationError, DiscretizationP
 from braket.ahs.driving_field import DrivingField
 from braket.ahs.hamiltonian import Hamiltonian
 from braket.ahs.shifting_field import ShiftingField
-from braket.aws import AwsDevice
 from braket.device_schema import DeviceActionType
 
 

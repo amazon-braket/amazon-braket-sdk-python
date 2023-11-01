@@ -12,7 +12,7 @@
 # language governing permissions and limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from braket.annealing.problem import Problem
 from braket.circuits import Circuit
@@ -25,6 +25,8 @@ class Device(ABC):
 
     def __init__(self, name: str, status: str):
         """
+        Inits a `Device`.
+
         Args:
             name (str): Name of quantum device
             status (str): Status of quantum device
@@ -38,8 +40,8 @@ class Device(ABC):
         task_specification: Union[Circuit, Problem],
         shots: Optional[int],
         inputs: Optional[dict[str, float]],
-        *args,
-        **kwargs
+        *args: Any,
+        **kwargs: Any,
     ) -> QuantumTask:
         """Run a quantum task specification on this quantum device. A quantum task can be a circuit
         or an annealing problem.
@@ -52,6 +54,8 @@ class Device(ABC):
             inputs (Optional[dict[str, float]]): Inputs to be passed along with the
                 IR. If IR is an OpenQASM Program, the inputs will be updated with this value.
                 Not all devices and IR formats support inputs. Default: {}.
+            *args (Any):  Arbitrary arguments.
+            **kwargs (Any): Arbitrary keyword arguments.
 
         Returns:
             QuantumTask: The QuantumTask tracking task execution on this device
@@ -67,8 +71,8 @@ class Device(ABC):
         shots: Optional[int],
         max_parallel: Optional[int],
         inputs: Optional[Union[dict[str, float], list[dict[str, float]]]],
-        *args,
-        **kwargs
+        *args: Any,
+        **kwargs: Any,
     ) -> QuantumTaskBatch:
         """Executes a batch of quantum tasks in parallel
 
@@ -82,6 +86,8 @@ class Device(ABC):
             inputs (Optional[Union[dict[str, float], list[dict[str, float]]]]): Inputs to be
                 passed along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value.
+            *args (Any):  Arbitrary arguments.
+            **kwargs (Any): Arbitrary keyword arguments.
 
         Returns:
             QuantumTaskBatch: A batch containing all of the qauntum tasks run

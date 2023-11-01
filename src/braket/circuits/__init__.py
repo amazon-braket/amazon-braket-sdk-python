@@ -11,8 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from braket.circuits import gates  # noqa: F401
-from braket.circuits import circuit, compiler_directives, noises, observables, result_types
+from braket.circuits import (  # noqa: F401
+    circuit,
+    compiler_directives,
+    gates,
+    noises,
+    observables,
+    result_types,
+)
 from braket.circuits.angled_gate import AngledGate, DoubleAngledGate  # noqa: F401
 from braket.circuits.ascii_circuit_diagram import AsciiCircuitDiagram  # noqa: F401
 from braket.circuits.circuit import Circuit  # noqa: F401

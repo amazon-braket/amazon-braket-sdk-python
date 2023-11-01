@@ -20,7 +20,6 @@ from logging import Logger, getLogger
 from typing import Any, Optional, Union
 
 import boto3
-
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_session import AwsSession
@@ -184,7 +183,7 @@ class AwsQuantumTask(QuantumTask):
             unbounded_parameters = param_names - set(inputs.keys())
             if unbounded_parameters:
                 raise ValueError(
-                    f"Cannot execute circuit with unbound parameters: " f"{unbounded_parameters}"
+                    f"Cannot execute circuit with unbound parameters: {unbounded_parameters}"
                 )
 
         return _create_internal(
