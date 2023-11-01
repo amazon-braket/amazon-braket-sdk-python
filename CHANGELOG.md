@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.60.2 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * drop task count for batch task tests to 3
+
 ## v1.60.1 (2023-11-01)
 
 ### Bug Fixes and Other Changes
