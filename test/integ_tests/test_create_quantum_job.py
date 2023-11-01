@@ -27,12 +27,13 @@ from braket.devices import Devices
 from braket.jobs import Framework, get_input_data_dir, hybrid_job, retrieve_image, save_job_result
 
 
-@pytest.fixture
-def decorator_python_version(aws_session):
-    image_uri = retrieve_image(Framework.BASE, aws_session.region)
-    tag = aws_session.get_full_image_tag(image_uri)
-    major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
-    return major_version, minor_version
+# todo: capture python version from container
+# @pytest.fixture
+# def decorator_python_version(aws_session):
+#     image_uri = retrieve_image(Framework.BASE, aws_session.region)
+#     tag = aws_session.get_full_image_tag(image_uri)
+#     major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
+#     return major_version, minor_version
 
 
 def test_failed_quantum_job(aws_session, capsys):
@@ -200,7 +201,7 @@ def test_completed_quantum_job(aws_session, capsys):
 
 
 @pytest.mark.xfail(
-    (sys.version_info.major, sys.version_info.minor) != decorator_python_version,
+    (sys.version_info.major, sys.version_info.minor) != (3, 10),
     raises=RuntimeError,
     reason="Python version mismatch",
 )
@@ -264,7 +265,7 @@ def test_decorator_job():
 
 
 @pytest.mark.xfail(
-    (sys.version_info.major, sys.version_info.minor) != decorator_python_version,
+    (sys.version_info.major, sys.version_info.minor) != (3, 10),
     raises=RuntimeError,
     reason="Python version mismatch",
 )
