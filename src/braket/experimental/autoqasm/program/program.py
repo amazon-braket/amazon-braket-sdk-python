@@ -126,12 +126,15 @@ class Program(SerializableProgram):
         return Program(combined_oqpy_program, has_pulse_control=True)
 
     def make_bound_program(self, param_values: dict[str, float]) -> Program:
-        """TODO
+        """Binds FreeParameters based upon their name and values passed in. If parameters
+        share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
-            param_values (dict[str, float]): TODO
+            param_values (dict[str, float]): A mapping of FreeParameter names
+                to a value to assign to them.
         Returns:
-            TODO
+            Program: Returns a program with all present parameters fixed to their respective
+            values.
         """
         # We have to copy the program so that we don't modify the original, unbound program
         oqpy_program_copy = copy.deepcopy(self._oqpy_program)
@@ -142,11 +145,17 @@ class Program(SerializableProgram):
                 inst = state.body[i]
                 if isinstance(inst, ast.IODeclaration) and inst.identifier.name in param_values:
                     name = inst.identifier.name
-                    target = oqpy_program_copy.declared_vars[name]
-                    target.init_expression = param_values[name]
-                    # TODO: how do I create the right statement directly?
-                    inst = oqpy.Program().declare(target).stack[0].body[0]
-                    state.body[i] = inst
+                    # TODO: which is better?
+                    # Option 1
+                    # target = oqpy_program_copy.declared_vars[name]
+                    # target.init_expression = param_values[name]
+                    # inst = oqpy.Program().declare(target).stack[0].body[0]
+                    # Option 2
+                    del oqpy_program_copy.declared_vars[name]
+                    var = oqpy.FloatVar(init_expression=param_values[name], name=name, needs_declaration=False)
+                    state.body[i] = var.make_declaration_statement(oqpy_program_copy)
+                    # Option 3: is there a better way?
+
                     params_to_process.remove(name)
                     if params_to_process == set():
                         break
@@ -349,10 +358,10 @@ class ProgramConversionContext:
         return list(self._free_parameters.values())
 
     def add_io_declarations(self) -> None:
+        """Add input and output declaration statements to the program."""
         free_parameters = self.get_free_parameters()
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
         for parameter in free_parameters[::-1]:
-            # TODO: is it possible to save a pointer to the declaration statement?
             root_oqpy_program.declare(
                 parameter,
                 to_beginning=True,

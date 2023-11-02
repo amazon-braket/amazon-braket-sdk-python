@@ -393,4 +393,25 @@ rx_alpha(2, beta);"""
     assert bound_prog.to_ir() == expected
 
 
-# TODO: test with pulse and gates
+def test_binding_pulse_parameters():
+    """Test binding programs with parametric pulse instructions."""
+
+    @aq.gate_calibration(implements=rx, target="$1")
+    def cal_1(angle: float):
+        pulse.delay("$1", angle)
+
+    @aq.main
+    def my_program():
+        rx("$1", FreeParameter("theta"))
+
+    qasm1 = my_program().with_calibrations(cal_1).make_bound_program({"theta": 0.6}).to_ir()
+    qasm2 = my_program().make_bound_program({"theta": 0.6}).with_calibrations(cal_1).to_ir()
+    assert qasm1 == qasm2
+
+    expected = """OPENQASM 3.0;
+defcal rx(angle[32] angle) $1 {
+    delay[(angle) * 1s] $1;
+}
+float[64] theta = 0.6;
+rx(theta) $1;"""
+    assert expected == qasm1
