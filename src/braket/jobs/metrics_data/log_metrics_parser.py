@@ -70,7 +70,7 @@ class LogMetricsParser:
             all_matches (Iterator): An iterator for RegEx matches on a log line.
 
         Returns:
-            Dict[str, Union[str, float, int]]: The set of metrics found by the RegEx. The result
+            dict[str, Union[str, float, int]]: The set of metrics found by the RegEx. The result
             is in the format {<metric name> : <value>}. This implies that multiple metrics
             with the same name are deduped to the last instance of that metric.
         """
@@ -117,10 +117,10 @@ class LogMetricsParser:
             pivot (str): The name of the pivot column. Must be TIMESTAMP or ITERATION_NUMBER.
 
         Returns:
-            Tuple[Dict[str, List[Union[str, float, int]]], Dict[Tuple[int, str], int]]: Contains:
-            The Dict[str, List[Any]] is the result table with all the metrics values initialized
+            tuple[dict[str, list[Union[str, float, int]]], dict[tuple[int, str], int]]: Contains:
+            The dict[str, list[Any]] is the result table with all the metrics values initialized
             to None.
-            The Dict[Tuple[int, str], int] is the list of pivot indices, where the value of a
+            The dict[tuple[int, str], int] is the list of pivot indices, where the value of a
             pivot column and node_id is mapped to a row index.
         """
         row_count = 0
@@ -165,7 +165,7 @@ class LogMetricsParser:
             statistic (MetricStatistic): The statistic to determine which value to use.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]]: The metrics data.
+            dict[str, list[Union[str, float, int]]]: The metrics data.
         """
         table, pivot_indices = self.get_columns_and_pivot_indices(pivot)
         for metric in self.all_metrics:
@@ -191,7 +191,7 @@ class LogMetricsParser:
                 when there is a conflict.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]]: The metrics data.
+            dict[str, list[Union[str, float, int]]]: The metrics data.
 
         Example:
             timestamp energy

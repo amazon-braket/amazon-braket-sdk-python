@@ -34,7 +34,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         """Build an ASCII string circuit diagram.
 
         Args:
-            circuit (Circuit): Circuit for which to build a diagram.
+            circuit (cir.Circuit): Circuit for which to build a diagram.
 
         Returns:
             str: ASCII string circuit diagram.

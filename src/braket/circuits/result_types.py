@@ -179,7 +179,9 @@ class AdjointGradient(ObservableParameterResultType):
         target: list[QubitSetInput] = None,
         parameters: list[Union[str, FreeParameter]] = None,
     ):
-        """Args:
+        """Inits an `AdjointGradient`.
+
+        Args:
             observable (Observable): The expectation value of this observable is the function
                 against which parameters in the gradient are differentiated.
             target (list[QubitSetInput]): Target qubits that the result type is requested for.
@@ -189,10 +191,6 @@ class AdjointGradient(ObservableParameterResultType):
                 in parallel.
             parameters (list[Union[str, FreeParameter]]): The free parameters in the circuit to
                 differentiate with respect to. Default: `all`.
-
-        Raises:
-            ValueError: If the observable's qubit count does not equal the number of target
-                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.AdjointGradient(observable=Observable.Z(),
@@ -356,7 +354,9 @@ class Probability(ResultType):
     """
 
     def __init__(self, target: QubitSetInput = None):
-        """Args:
+        """Inits a `Probability`.
+
+        Args:
             target (QubitSetInput): The target qubits that the
                 result type is requested for. Default is `None`, which means all qubits for the
                 circuit.
@@ -446,15 +446,14 @@ class Expectation(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput = None):
-        """Args:
+        """Inits an `Expectation`.
+
+        Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
-        Raises:
-            ValueError: If the observable's qubit count does not equal the number of target
-                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Expectation(observable=Observable.Z(), target=0)
@@ -520,15 +519,13 @@ class Sample(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput = None):
-        """Args:
+        """Inits a `Sample`.
+
+        Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
-
-        Raises:
-            ValueError: If the observable's qubit count is not equal to the number of target
-                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Sample(observable=Observable.Z(), target=0)
@@ -595,15 +592,13 @@ class Variance(ObservableResultType):
     """
 
     def __init__(self, observable: Observable, target: QubitSetInput = None):
-        """Args:
+        """Inits a `Variance`.
+
+        Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
-
-        Raises:
-            ValueError: If the observable's qubit count does not equal the number of target
-                qubits, or if `target=None` and the observable's qubit count is not 1.
 
         Examples:
             >>> ResultType.Variance(observable=Observable.Z(), target=0)

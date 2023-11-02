@@ -528,7 +528,7 @@ class Hermitian(Observable):
 
     def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
         """Args:
-            matrix (numpy.ndarray): Hermitian matrix that defines the observable.
+            matrix (np.ndarray): Hermitian matrix that defines the observable.
             display_name (str): Name to use for an instance of this Hermitian matrix
                 observable for circuit diagrams. Defaults to `Hermitian`.
 
@@ -615,7 +615,7 @@ class Hermitian(Observable):
         be recalculated.
 
         Args:
-            matrix (ndarray): The Hermitian matrix.
+            matrix (np.ndarray): The Hermitian matrix.
 
         Returns:
             dict[str, ndarray]: The keys are "eigenvectors_conj_t", mapping to the

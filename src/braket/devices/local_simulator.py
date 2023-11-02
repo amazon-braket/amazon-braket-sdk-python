@@ -116,7 +116,7 @@ class LocalSimulator(Device):
         """Executes a batch of quantum tasks in parallel
 
         Args:
-            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation], list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]]]): # noqa
+            task_specifications (Union[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation], list[Union[Circuit, Problem, Program, AnalogHamiltonianSimulation]]]): 
                 Single instance or list of quantum task specification.
             shots (Optional[int]): The number of times to run the quantum task.
                 Default: 0.
@@ -131,7 +131,7 @@ class LocalSimulator(Device):
 
         See Also:
             `braket.tasks.local_quantum_task_batch.LocalQuantumTaskBatch`
-        """
+        """  # noqa E501
         inputs = inputs or {}
 
         if not max_parallel:

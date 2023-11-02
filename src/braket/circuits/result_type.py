@@ -79,7 +79,7 @@ class ResultType:
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
-            properties don't correspond to the `ir_type`.
+                properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
@@ -105,6 +105,9 @@ class ResultType:
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
+
+        Raises:
+            NotImplementedError: not implemented.
 
         Returns:
             str: Representing the openqasm representation of the result type.

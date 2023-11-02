@@ -61,11 +61,11 @@ class Observable(QuantumOperator):
 
         Returns:
             Union[str, list[Union[str, list[list[list[float]]]]]]: The IR representation for
-            the observable.
+                the observable.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
-            properties don't correspond to the `ir_type`.
+                properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()

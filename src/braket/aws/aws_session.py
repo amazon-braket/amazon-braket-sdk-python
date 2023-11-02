@@ -44,11 +44,16 @@ class AwsSession:
         config: Config = None,
         default_bucket: str = None,
     ):
-        """Args:
-        boto_session (Session): A boto3 session object.
-        braket_client (client): A boto3 Braket client.
-        config (Config): A botocore Config object.
-        default_bucket (str): The name of the default bucket of the AWS Session.
+        """Inits an `AwsSession`.
+
+        Args:
+            boto_session (boto3.Session): A boto3 session object.
+            braket_client (client): A boto3 Braket client.
+            config (Config): A botocore Config object.
+            default_bucket (str): The name of the default bucket of the AWS Session.
+
+        Raises:
+            ValueError: invalid boto_session or braket_client.
         """
         if (
             boto_session
@@ -212,7 +217,7 @@ class AwsSession:
         """Create a quantum task.
 
         Args:
-            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateQuantumTask`
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateQuantumTask`
                 operation.
 
         Returns:
@@ -237,7 +242,7 @@ class AwsSession:
         """Create a quantum hybrid job.
 
         Args:
-            ``**boto3_kwargs``: Keyword arguments for the Amazon Braket `CreateJob` operation.
+            **boto3_kwargs: Keyword arguments for the Amazon Braket `CreateJob` operation.
 
         Returns:
             str: The ARN of the hybrid job.

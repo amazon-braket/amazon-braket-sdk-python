@@ -14,6 +14,7 @@
 import collections
 import os
 import sys
+from collections.abc import Generator
 
 ##############################################################################
 #
@@ -73,7 +74,7 @@ Position = collections.namedtuple("Position", ["timestamp", "skip"])
 
 def multi_stream_iter(
     aws_session: AwsSession, log_group: str, streams: list[str], positions: dict[str, Position]
-) -> tuple[int, dict]:
+) -> Generator[tuple[int, dict]]:
     """Iterates over the available events coming from a set of log streams.
     Log streams are in a single log group interleaving the events from each stream,
     so they yield in timestamp order.
@@ -87,7 +88,7 @@ def multi_stream_iter(
             the last record read from each stream.
 
     Yields:
-        tuple[int, dict]: A tuple of (stream number, cloudwatch log event).
+        Generator[tuple[int, dict]]: A tuple of (stream number, cloudwatch log event).
     """
     event_iters = [
         log_stream(aws_session, log_group, s, positions[s].timestamp, positions[s].skip)
@@ -111,7 +112,7 @@ def multi_stream_iter(
 
 def log_stream(
     aws_session: AwsSession, log_group: str, stream_name: str, start_time: int = 0, skip: int = 0
-) -> dict:
+) -> Generator[dict]:
     """A generator for log items in a single stream.
     This yields all the items that are available at the current moment.
 
@@ -124,7 +125,7 @@ def log_stream(
             when there are multiple entries at the same timestamp.)
 
     Yields:
-        Dict: A CloudWatch log event with the following key-value pairs:
+        Generator[dict]: A CloudWatch log event with the following key-value pairs:
         'timestamp' (int): The time of the event.
         'message' (str): The log event data.
         'ingestionTime' (int): The time the event was ingested.
@@ -180,6 +181,9 @@ def flush_log_streams(
             been found. This value is possibly updated and returned at the end of execution.
         color_wrap (ColorWrap): An instance of ColorWrap to potentially color-wrap print statements
             from different streams.
+
+    Raises:
+        Exception: Any exception found besides a ResourceNotFoundException
 
     Returns:
         bool: Returns 'True' if any streams have been flushed.

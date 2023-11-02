@@ -73,7 +73,7 @@ def _get_env_credentials(aws_session: AwsSession, logger: Logger) -> dict[str, s
         logger (Logger): Logger object with which to write logs. Default is `getLogger(__name__)`
 
     Returns:
-        Dict[str, str]: The set of key/value pairs that should be added as environment variables
+        dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     credentials = aws_session.boto_session.get_credentials()

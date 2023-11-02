@@ -22,7 +22,7 @@ def verify_quantum_operator_matrix_dimensions(matrix: np.ndarray) -> None:
     raising `ValueError` otherwise.
 
     Args:
-        matrix (ndarray): matrix to verify
+        matrix (np.ndarray): matrix to verify
 
     Raises:
         ValueError: If `matrix` is not a two-dimensional square matrix,
@@ -48,7 +48,7 @@ def is_hermitian(matrix: np.ndarray) -> bool:
     where :math:`U^\dagger` is the conjugate transpose of :math:`U`.
 
     Args:
-        matrix (ndarray): matrix to verify
+        matrix (np.ndarray): matrix to verify
 
     Returns:
         bool: If matrix is Hermitian
@@ -60,7 +60,7 @@ def is_square_matrix(matrix: np.ndarray) -> bool:
     """Whether matrix is square, meaning it has exactly two dimensions and the dimensions are equal
 
     Args:
-        matrix (ndarray): matrix to verify
+        matrix (np.ndarray): matrix to verify
 
     Returns:
         bool: If matrix is square
@@ -79,7 +79,7 @@ def is_unitary(matrix: np.ndarray) -> bool:
     and :math:`I` is the identity matrix.
 
     Args:
-        matrix (ndarray): matrix to verify
+        matrix (np.ndarray): matrix to verify
 
     Returns:
         bool: If matrix is unitary
@@ -94,7 +94,7 @@ def is_cptp(matrices: Iterable[np.ndarray]) -> bool:
     Reference: Section 8.2.3 in Nielsen & Chuang (2010) 10th edition.
 
     Args:
-        matrices (Iterable[ndarray]): List of matrices representing Kraus operators.
+        matrices (Iterable[np.ndarray]): List of matrices representing Kraus operators.
 
     Returns:
         bool: If the matrices define a CPTP map.
