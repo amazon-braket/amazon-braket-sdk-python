@@ -15,7 +15,7 @@ import re
 from collections import defaultdict
 from collections.abc import KeysView
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
 from braket.pulse.frame import Frame
@@ -52,13 +52,13 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
     for each channel.
     """
 
-    TIME_UNIT_TO_EXP = {"dt": 4, "ns": 3, "us": 2, "ms": 1, "s": 0}
+    TIME_UNIT_TO_EXP: ClassVar = {"dt": 4, "ns": 3, "us": 2, "ms": 1, "s": 0}
 
     def __init__(self, program: Program, frames: dict[str, Frame]):
         self.amplitudes = defaultdict(TimeSeries)
         self.frequencies = defaultdict(TimeSeries)
         self.phases = defaultdict(TimeSeries)
-        context = _ParseState(variables=dict(), frame_data=_init_frame_data(frames))
+        context = _ParseState(variables={}, frame_data=_init_frame_data(frames))
         self._qubit_frames_mapping: dict[str, list[str]] = _init_qubit_frame_mapping(frames)
         self.visit(program.to_ast(include_externs=False), context)
 
@@ -553,7 +553,7 @@ class _ApproximationParser(QASMVisitor[_ParseState]):
 
 
 def _init_frame_data(frames: dict[str, Frame]) -> dict[str, _FrameState]:
-    frame_states = dict()
+    frame_states = {}
     for frameId, frame in frames.items():
         frame_states[frameId] = _FrameState(
             frame.port.dt, frame.frequency, frame.phase % (2 * np.pi)

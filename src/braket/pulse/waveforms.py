@@ -35,7 +35,7 @@ class Waveform(ABC):
     """A waveform is a time-dependent envelope that can be used to emit signals on an output port
     or receive signals from an input port. As such, when transmitting signals to the qubit, a
     frame determines time at which the waveform envelope is emitted, its carrier frequency, and
-    it’s phase offset. When capturing signals from a qubit, at minimum a frame determines the
+    it's phase offset. When capturing signals from a qubit, at minimum a frame determines the
     time at which the signal is captured. See https://openqasm.com/language/openpulse.html#waveforms
     for more details.
     """
@@ -86,7 +86,7 @@ class ArbitraryWaveform(Waveform):
         self.amplitudes = list(amplitudes)
         self.id = id or _make_identifier_name()
 
-    def __eq__(self, other):
+    def __eq__(self, other: ArbitraryWaveform):
         return isinstance(other, ArbitraryWaveform) and (self.amplitudes, self.id) == (
             other.amplitudes,
             other.id,
@@ -169,7 +169,7 @@ class ConstantWaveform(Waveform, Parameterizable):
         }
         return ConstantWaveform(**constructor_kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: ConstantWaveform):
         return isinstance(other, ConstantWaveform) and (self.length, self.iq, self.id) == (
             other.length,
             other.iq,
@@ -285,7 +285,7 @@ class DragGaussianWaveform(Waveform, Parameterizable):
         }
         return DragGaussianWaveform(**constructor_kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: DragGaussianWaveform):
         return isinstance(other, DragGaussianWaveform) and (
             self.length,
             self.sigma,
@@ -416,7 +416,7 @@ class GaussianWaveform(Waveform, Parameterizable):
         }
         return GaussianWaveform(**constructor_kwargs)
 
-    def __eq__(self, other):
+    def __eq__(self, other: GaussianWaveform):
         return isinstance(other, GaussianWaveform) and (
             self.length,
             self.sigma,

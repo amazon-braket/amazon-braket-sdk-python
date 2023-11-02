@@ -127,7 +127,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
                 state_idx = [
                     0 if pre_i == 0 else 1 if post_i == 0 else 2 for pre_i, post_i in zip(pre, post)
                 ]
-                state = "".join(map(lambda s_idx: states[s_idx], state_idx))
+                state = "".join({lambda s_idx: states[s_idx], state_idx})
                 state_counts.update((state,))
 
         return dict(state_counts)

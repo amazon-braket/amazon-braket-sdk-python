@@ -119,46 +119,46 @@ class FreeParameterExpression:
         else:
             raise ValueError(f"Unsupported string detected: {node}")
 
-    def __add__(self, other):
+    def __add__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression + other.expression)
         else:
             return FreeParameterExpression(self.expression + other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other + self.expression)
 
-    def __sub__(self, other):
+    def __sub__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression - other.expression)
         else:
             return FreeParameterExpression(self.expression - other)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other - self.expression)
 
-    def __mul__(self, other):
+    def __mul__(self, other: FreeParameterExpression):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression * other.expression)
         else:
             return FreeParameterExpression(self.expression * other)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other * self.expression)
 
-    def __pow__(self, other, modulo=None):
+    def __pow__(self, other: FreeParameterExpression, modulo=None):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
         else:
             return FreeParameterExpression(self.expression**other)
 
-    def __rpow__(self, other):
+    def __rpow__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other**self.expression)
 
     def __neg__(self):
         return FreeParameterExpression(-1 * self.expression)
 
-    def __eq__(self, other):
+    def __eq__(self, other: FreeParameterExpression):
         if isinstance(other, FreeParameterExpression):
             return sympify(self.expression).equals(sympify(other.expression))
         return False

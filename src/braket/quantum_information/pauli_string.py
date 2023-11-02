@@ -313,7 +313,7 @@ class PauliString:
                 circ = circ.z(qubit)
         return circ
 
-    def __eq__(self, other):
+    def __eq__(self, other: PauliString):
         if isinstance(other, PauliString):
             return (
                 self._phase == other._phase
@@ -322,7 +322,7 @@ class PauliString:
             )
         return False
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int):
         if item >= self._qubit_count:
             raise IndexError(item)
         return _PAULI_INDICES[self._nontrivial.get(item, "I")]

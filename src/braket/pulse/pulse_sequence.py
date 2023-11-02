@@ -90,7 +90,8 @@ class PulseSequence:
     def shift_frequency(
         self, frame: Frame, frequency: Union[float, FreeParameterExpression]
     ) -> PulseSequence:
-        """Adds an instruction to shift the frequency of the frame by the specified `frequency` value.
+        """Adds an instruction to shift the frequency of the frame by the specified `frequency`
+        value.
 
         Args:
             frame (Frame): Frame for which the frequency needs to be shifted.
@@ -187,7 +188,7 @@ class PulseSequence:
             for frame in qubits_or_frames:
                 self._frames[frame.id] = frame
         else:
-            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits_or_frames)
+            physical_qubits = [PhysicalQubits[int(x)] for x in qubits_or_frames]
             self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
@@ -208,7 +209,7 @@ class PulseSequence:
             for frame in qubits_or_frames:
                 self._frames[frame.id] = frame
         else:
-            physical_qubits = list(PhysicalQubits[int(x)] for x in qubits_or_frames)
+            physical_qubits = [PhysicalQubits[int(x)] for x in qubits_or_frames]
             self._program.barrier(qubits_or_frames=physical_qubits)
         return self
 

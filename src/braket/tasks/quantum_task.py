@@ -53,10 +53,10 @@ class QuantumTask(ABC):
         """Get the quantum task result.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: # noqa
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]:
             Get the quantum task result. Call async_result if you want the result in an
             asynchronous way.
-        """
+        """  # noqa E501
 
     @abstractmethod
     def async_result(self) -> asyncio.Task:

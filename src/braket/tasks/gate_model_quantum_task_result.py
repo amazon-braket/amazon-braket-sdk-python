@@ -123,7 +123,7 @@ class GateModelQuantumTaskResult:
         except KeyError:
             raise ValueError(
                 "Result type not found in result. "
-                + "Result types must be added to circuit before circuit is run on device."
+                "Result types must be added to circuit before circuit is run on device."
             )
 
     def __eq__(self, other: GateModelQuantumTaskResult) -> bool:
