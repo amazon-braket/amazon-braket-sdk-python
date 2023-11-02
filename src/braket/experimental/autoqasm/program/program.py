@@ -15,8 +15,8 @@
 from __future__ import annotations
 
 import contextlib
-import threading
 import copy
+import threading
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum
