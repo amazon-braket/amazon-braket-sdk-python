@@ -170,7 +170,7 @@ class QuantumJob(ABC):
     @abstractmethod
     def download_result(
         self,
-        extract_to: str = None,
+        extract_to: str | None = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
@@ -179,7 +179,7 @@ class QuantumJob(ABC):
         the results are extracted to the current directory.
 
         Args:
-            extract_to (str): The directory to which the results are extracted. The results
+            extract_to (str | None): The directory to which the results are extracted. The results
                 are extracted to a folder titled with the hybrid job name within this directory.
                 Default= `Current working directory`.
 

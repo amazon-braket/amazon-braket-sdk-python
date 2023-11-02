@@ -29,7 +29,7 @@ class _LocalJobContainer(object):
     def __init__(
         self,
         image_uri: str,
-        aws_session: AwsSession = None,
+        aws_session: AwsSession | None = None,
         logger: Logger = getLogger(__name__),
         force_update: bool = False,
     ):
@@ -39,7 +39,7 @@ class _LocalJobContainer(object):
         The function "end_session" must be called when the container is no longer needed.
         Args:
             image_uri (str): The URI of the container image to run.
-            aws_session (AwsSession): AwsSession for connecting to AWS Services.
+            aws_session (AwsSession | None): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`

@@ -133,8 +133,8 @@ class CwlInsightsMetricsFetcher(object):
         job_name: str,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-        job_start_time: int = None,
-        job_end_time: int = None,
+        job_start_time: int | None = None,
+        job_end_time: int | None = None,
     ) -> Dict[str, List[Union[str, float, int]]]:
         """
         Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.
@@ -145,10 +145,10 @@ class CwlInsightsMetricsFetcher(object):
             metric_type (MetricType): The type of metrics to get. Default is MetricType.TIMESTAMP.
             statistic (MetricStatistic): The statistic to determine which metric value to use
                 when there is a conflict. Default is MetricStatistic.MAX.
-            job_start_time (int): The time when the hybrid job started.
+            job_start_time (int | None): The time when the hybrid job started.
                 Default: 3 hours before job_end_time.
-            job_end_time (int): If the hybrid job is complete, this should be the time at which the
-                hybrid job finished. Default: current time.
+            job_end_time (int | None): If the hybrid job is complete, this should be the time at
+                which the hybrid job finished. Default: current time.
 
         Returns:
             Dict[str, List[Union[str, float, int]]] : The metrics data, where the keys
