@@ -33,7 +33,7 @@ def start_here():
 
 def failed_job_script():
     print("Test job started!!!!!")
-    assert 0
+    open("fake_file")
 
 
 def completed_job_script():

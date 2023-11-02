@@ -68,8 +68,8 @@ def hybrid_job(
     when the decorated function is called.
 
     The job created will be a `LocalQuantumJob` when `local` is set to `True`, otherwise an
-    `AwsQuantumJob. The following parameters will be ignored when running a job with
-    `local` set to True: `wait_until_complete`, `instance_config`, `distribution`,
+    `AwsQuantumJob`. The following parameters will be ignored when running a job with
+    `local` set to `True`: `wait_until_complete`, `instance_config`, `distribution`,
     `copy_checkpoints_from_job`, `stopping_condition`, `tags`, and `logger`.
 
     Args:
@@ -83,14 +83,14 @@ def hybrid_job(
         include_modules (str | ModuleType | Iterable[str | ModuleType]): Either a
             single module or module name or a list of module or module names referring to local
             modules to be included. Any references to members of these modules in the hybrid job
-            algorithm code will be serialized as part of the algorithm code. Default value `[]`
+            algorithm code will be serialized as part of the algorithm code. Default: `[]`
 
         dependencies (str | Path | list[str]): Path (absolute or relative) to a requirements.txt
             file, or alternatively a list of strings, with each string being a `requirement
             specifier <https://pip.pypa.io/en/stable/reference/requirement-specifiers/
             #requirement-specifiers>`_, to be used for the hybrid job.
 
-        local (bool): Whether to use local mode for the hybrid job. Default `False`
+        local (bool): Whether to use local mode for the hybrid job. Default: `False`
 
         job_name (str): A string that specifies the name with which the job is created.
             Allowed pattern for job name: `^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,50}$`. Defaults to
@@ -98,12 +98,12 @@ def hybrid_job(
 
         image_uri (str): A str that specifies the ECR image to use for executing the job.
             `retrieve_image()` function may be used for retrieving the ECR image URIs
-            for the containers supported by Braket. Default = `<Braket base image_uri>`.
+            for the containers supported by Braket. Default: `<Braket base image_uri>`.
 
         input_data (str | dict | S3DataSourceConfig): Information about the training
             data. Dictionary maps channel names to local paths or S3 URIs. Contents found
             at any local paths will be uploaded to S3 at
-            f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
+            f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}'. If a local
             path, S3 URI, or S3DataSourceConfig is provided, it will be given a default
             channel name "input".
             Default: {}.
@@ -113,23 +113,23 @@ def hybrid_job(
             local mode. Default: `False`.
 
         instance_config (InstanceConfig): Configuration of the instance(s) for running the
-            classical code for the hybrid job. Defaults to
+            classical code for the hybrid job. Default:
             `InstanceConfig(instanceType='ml.m5.large', instanceCount=1, volumeSizeInGB=30)`.
 
         distribution (str): A str that specifies how the job should be distributed.
             If set to "data_parallel", the hyperparameters for the job will be set to use data
-            parallelism features for PyTorch or TensorFlow. Default: None.
+            parallelism features for PyTorch or TensorFlow. Default: `None`.
 
         copy_checkpoints_from_job (str): A str that specifies the job ARN whose
             checkpoint you want to use in the current job. Specifying this value will copy
             over the checkpoint data from `use_checkpoints_from_job`'s checkpoint_config
             s3Uri to the current job's checkpoint_config s3Uri, making it available at
-            checkpoint_config.localPath during the job execution. Default: None
+            checkpoint_config.localPath during the job execution. Default: `None`
 
         checkpoint_config (CheckpointConfig): Configuration that specifies the
             location where checkpoint data is stored.
-            Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
-            s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints').
+            Default: `CheckpointConfig(localPath='/opt/jobs/checkpoints',
+            s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints')`.
 
         role_arn (str): A str providing the IAM role ARN used to execute the
             script. Default: IAM role returned by AwsSession's `get_default_jobs_role()`.
@@ -140,8 +140,8 @@ def hybrid_job(
 
         output_data_config (OutputDataConfig): Specifies the location for the output of
             the job.
-            Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
-            kmsKeyId=None).
+            Default: `OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
+            kmsKeyId=None)`.
 
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
             Default: AwsSession()
@@ -150,7 +150,7 @@ def hybrid_job(
             Default: {}.
 
         logger (Logger): Logger object with which to write logs, such as task statuses
-            while waiting for task to be in a terminal state. Default is `getLogger(__name__)`
+            while waiting for task to be in a terminal state. Default: `getLogger(__name__)`
 
     Returns:
         Callable: the callable for creating a Hybrid Job.
@@ -276,10 +276,7 @@ class _IncludeModules:
 
 def _serialize_entry_point(entry_point: Callable, args: tuple, kwargs: dict) -> str:
     """Create an entry point from a function"""
-
-    def wrapped_entry_point() -> Any:
-        """Partial function wrapping entry point with given parameters"""
-        return entry_point(*args, **kwargs)
+    wrapped_entry_point = functools.partial(entry_point, *args, **kwargs)
 
     try:
         serialized = cloudpickle.dumps(wrapped_entry_point)
@@ -369,7 +366,7 @@ def _process_input_data(input_data: dict) -> list[str]:
     file_channels = set()
 
     for channel, data in input_data.items():
-        if AwsSession.is_s3_uri(str(data)):
+        if AwsSession.is_s3_uri(str(data)) or isinstance(data, S3DataSourceConfig):
             channel_arg = f'channel="{channel}"' if channel != "input" else ""
             print(
                 "Input data channels mapped to an S3 source will not be available in "
