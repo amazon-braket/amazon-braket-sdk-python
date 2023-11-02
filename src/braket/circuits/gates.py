@@ -90,7 +90,7 @@ class H(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -155,7 +155,7 @@ class I(Gate):  # noqa: E742
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -220,7 +220,7 @@ class X(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -285,7 +285,7 @@ class Y(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -350,7 +350,7 @@ class Z(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -415,7 +415,7 @@ class S(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -480,7 +480,7 @@ class Si(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -545,7 +545,7 @@ class T(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -610,7 +610,7 @@ class Ti(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -675,7 +675,7 @@ class V(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -740,7 +740,7 @@ class Vi(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -798,7 +798,7 @@ class Rx(AngledGate):
         return ir.Rx.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
 
         Returns:
             np.ndarray: The matrix representation of this gate.
@@ -824,7 +824,7 @@ class Rx(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -879,7 +879,7 @@ class Ry(AngledGate):
         return ir.Ry.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
 
         Returns:
             np.ndarray: The matrix representation of this gate.
@@ -905,7 +905,7 @@ class Ry(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -981,7 +981,7 @@ class Rz(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1055,7 +1055,7 @@ class PhaseShift(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1129,7 +1129,7 @@ class CNot(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cnot(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1196,7 +1196,7 @@ class Swap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1271,7 +1271,7 @@ class ISwap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1358,7 +1358,7 @@ class PSwap(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1420,7 +1420,7 @@ class XY(AngledGate):
         return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
 
         Returns:
             np.ndarray: The matrix representation of this gate.
@@ -1455,7 +1455,7 @@ class XY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1529,7 +1529,7 @@ class CPhaseShift(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1598,7 +1598,7 @@ class CPhaseShift00(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1667,7 +1667,7 @@ class CPhaseShift01(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1736,7 +1736,7 @@ class CPhaseShift10(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1800,7 +1800,7 @@ class CV(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cv(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1860,7 +1860,7 @@ class CY(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cy(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1912,7 +1912,7 @@ class CZ(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cz(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1978,7 +1978,7 @@ class ECR(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2039,7 +2039,7 @@ class XX(AngledGate):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
 
         Returns:
             np.ndarray: The matrix representation of this gate.
@@ -2074,7 +2074,7 @@ class XX(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2136,7 +2136,7 @@ class YY(AngledGate):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
 
         Returns:
             np.ndarray: The matrix representation of this gate.
@@ -2171,7 +2171,7 @@ class YY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2261,7 +2261,7 @@ class ZZ(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2345,7 +2345,7 @@ class CCNot(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control1 (QubitInput): Control qubit 1 index.
@@ -2425,7 +2425,7 @@ class CSwap(Gate):
         target2: QubitInput,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2501,7 +2501,7 @@ class GPi(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -2580,7 +2580,7 @@ class GPi2(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -2693,7 +2693,7 @@ class MS(TripleAngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2796,7 +2796,7 @@ class Unitary(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def unitary(targets: QubitSet, matrix: np.ndarray, display_name: str = "U") -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Args:
             targets (QubitSet): Target qubits.
@@ -2853,7 +2853,7 @@ class PulseGate(Gate, Parameterizable):
 
     @property
     def parameters(self) -> list[FreeParameter]:
-        """Returns the list of `FreeParameter` s associated with the gate."""
+        r"""Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:

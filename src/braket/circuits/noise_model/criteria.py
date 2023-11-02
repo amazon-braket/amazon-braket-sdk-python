@@ -20,8 +20,7 @@ from typing import Any, Union
 
 
 class CriteriaKey(str, Enum):
-    """Specifies the types of keys that a criteria may use to match an instruction, observable, etc.
-    """
+    """Specifies the types of keys that a criteria may use to match an instruction, observable, etc."""
 
     QUBIT = "QUBIT"
     GATE = "GATE"

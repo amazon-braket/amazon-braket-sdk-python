@@ -95,7 +95,8 @@ class Tracker:
         return total_cost
 
     def simulator_tasks_cost(self) -> Decimal:
-        """Estimate cost of all quantum tasks tracked by this tracker using Braket simulator devices.
+        """Estimate cost of all quantum tasks tracked by this tracker using Braket simulator
+         devices.
 
         Note: The cost of a simulator quantum task is not available until after the results for the
         task have been fetched. Call `result()` on an `AwsQuantumTask` before estimating its cost

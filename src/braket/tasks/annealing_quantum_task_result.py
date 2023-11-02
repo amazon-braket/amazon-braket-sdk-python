@@ -14,9 +14,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Optional
 
-import numpy
+import numpy as np
 from braket.annealing import ProblemType
 from braket.task_result import AdditionalMetadata, AnnealingTaskResult, TaskMetadata
 
@@ -27,7 +27,7 @@ class AnnealingQuantumTaskResult:
     to be initialized by a QuantumTask class.
 
     Args:
-        record_array (numpy.recarray): numpy array with keys 'solution' (numpy.ndarray)
+        record_array (np.recarray): numpy array with keys 'solution' (np.ndarray)
             where row is solution, column is value of the variable, 'solution_count' (numpy.ndarray)
             the number of times the solutions occurred, and 'value' (numpy.ndarray) the
             output or energy of the solutions.
@@ -37,7 +37,7 @@ class AnnealingQuantumTaskResult:
         additional_metadata (AdditionalMetadata): Additional metadata about the quantum task
     """
 
-    record_array: numpy.recarray
+    record_array: np.recarray
     variable_count: int
     problem_type: ProblemType
     task_metadata: TaskMetadata
@@ -49,7 +49,7 @@ class AnnealingQuantumTaskResult:
         sorted_by: str = "value",
         reverse: bool = False,
     ) -> tuple:
-        """Iterate over the data in record_array
+        """Yields the data in record_array
 
         Args:
             selected_fields (Optional[List[str]]): selected fields to return.
@@ -59,18 +59,18 @@ class AnnealingQuantumTaskResult:
             reverse (bool): If True, returns the data in reverse order. Default is False.
 
         Yields:
-            Tuple: data in record_array
+            tuple: data in record_array
         """
         if selected_fields is None:
             selected_fields = ["solution", "value", "solution_count"]
 
         if sorted_by is None:
-            order = numpy.arange(len(self.record_array))
+            order = np.arange(len(self.record_array))
         else:
-            order = numpy.argsort(self.record_array[sorted_by])
+            order = np.argsort(self.record_array[sorted_by])
 
         if reverse:
-            order = numpy.flip(order)
+            order = np.flip(order)
 
         for i in order:
             yield tuple(self.record_array[field][i] for field in selected_fields)
@@ -122,12 +122,12 @@ class AnnealingQuantumTaskResult:
 
     @classmethod
     def _from_object(cls, result: AnnealingTaskResult) -> AnnealingQuantumTaskResult:
-        solutions = numpy.asarray(result.solutions, dtype=int)
-        values = numpy.asarray(result.values, dtype=float)
+        solutions = np.asarray(result.solutions, dtype=int)
+        values = np.asarray(result.values, dtype=float)
         if not result.solutionCounts:
-            solution_counts = numpy.ones(len(solutions), dtype=int)
+            solution_counts = np.ones(len(solutions), dtype=int)
         else:
-            solution_counts = numpy.asarray(result.solutionCounts, dtype=int)
+            solution_counts = np.asarray(result.solutionCounts, dtype=int)
         record_array = AnnealingQuantumTaskResult._create_record_array(
             solutions, solution_counts, values
         )
@@ -145,14 +145,14 @@ class AnnealingQuantumTaskResult:
 
     @staticmethod
     def _create_record_array(
-        solutions: numpy.ndarray, solution_counts: numpy.ndarray, values: numpy.ndarray
-    ) -> numpy.recarray:
+        solutions: np.ndarray, solution_counts: np.ndarray, values: np.ndarray
+    ) -> np.recarray:
         """Create a solutions record for AnnealingQuantumTaskResult
 
         Args:
-            solutions (numpy.ndarray): row is solution, column is value of the variable
-            solution_counts (numpy.ndarray): list of number of times the solutions occurred
-            values (numpy.ndarray): list of the output or energy of the solutions
+            solutions (np.ndarray): row is solution, column is value of the variable
+            solution_counts (np.ndarray): list of number of times the solutions occurred
+            values (np.ndarray): list of the output or energy of the solutions
         """
         num_solutions, variable_count = solutions.shape
         datatypes = [
@@ -161,7 +161,7 @@ class AnnealingQuantumTaskResult:
             ("solution_count", solution_counts.dtype),
         ]
 
-        record = numpy.rec.array(numpy.zeros(num_solutions, dtype=datatypes))
+        record = np.rec.array(np.zeros(num_solutions, dtype=datatypes))
         record["solution"] = solutions
         record["value"] = values
         record["solution_count"] = solution_counts

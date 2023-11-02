@@ -7,6 +7,7 @@ target-version = "py39"
 line-length = 100
 select = [
   "A",
+  "ANN",
   "ARG",
   "B",
   "C",
@@ -14,7 +15,6 @@ select = [
   "DTZ",
   "E",
   "F",
-  "FBT",
   "I",
   "ICN",
   "ISC",
@@ -37,6 +37,13 @@ unfixable = [
   "F401",
 ]
 ignore = [
+  # Checking the type for self, special methods is not needed
+  # Allow dynamic typing
+  "ANN101", "ANN102", "ANN204", "ANN401",
+  # Docstrings are all written within classes and modules
+  # No needed docstrings for classes/magic methods.
+  # No summary lines
+  "D100", "D101", "D102", "D105", "D107", "D205", "D415",
   # Python 3.10 and later rule
   "UP007",
   # Magic vars. Should be enabled later.
@@ -44,7 +51,9 @@ ignore = [
   # Ignore complexity
   "PLR0913",
   # Uppercase function names are fine in some cases
-  "N802",
+  "N802", "N806",
+  # Allow Optional return types
+  "RUF013",
 ]
 
 [tool.ruff.pydocstyle]

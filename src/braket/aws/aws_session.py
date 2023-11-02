@@ -663,12 +663,16 @@ class AwsSession:
         try:
             # Object URL e.g. https://my-bucket.s3.us-west-2.amazonaws.com/my/key
             # S3 URI e.g. s3://my-bucket/my/key
-            s3_uri_match = re.match("^https://([^./]+).[sS]3.[^/]+/(.*)$", s3_uri) or re.match(
-                "^[sS]3://([^./]+)/(.*)$", s3_uri
+            s3_uri_match = re.match("^https://([^./]+).[sS]3.[^/]+/(.+)$", s3_uri) or re.match(
+                "^[sS]3://([^./]+)/(.+)$", s3_uri
             )
-            assert s3_uri_match
+            print(s3_uri_match)
+            if s3_uri_match is None:
+                print("test")
+                raise AssertionError
             bucket, key = s3_uri_match.groups()
-            assert bucket and key
+            if (bucket or key) is None:
+                raise AssertionError
             return bucket, key
         except (AssertionError, ValueError):
             raise ValueError(f"Not a valid S3 uri: {s3_uri}")

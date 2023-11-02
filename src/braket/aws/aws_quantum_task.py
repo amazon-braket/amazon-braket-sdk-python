@@ -517,7 +517,7 @@ def _create_internal(
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
     **kwargs,
-) -> AwsQuantumTask:
+) -> AwsQuantumTask:  # ARG001
     raise TypeError("Invalid task specification type")
 
 

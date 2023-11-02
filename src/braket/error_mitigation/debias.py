@@ -16,8 +16,7 @@ from braket.error_mitigation.error_mitigation import ErrorMitigation
 
 
 class Debias(ErrorMitigation):
-    """The debias error mitigation scheme. This scheme takes no parameters.
-    """
+    """The debias error mitigation scheme. This scheme takes no parameters."""
 
     def serialize(self) -> list[error_mitigation.Debias]:
         return [error_mitigation.Debias()]

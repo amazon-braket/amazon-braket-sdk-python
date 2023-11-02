@@ -107,26 +107,22 @@ class Instruction:
 
     @property
     def target(self) -> QubitSet:
-        """QubitSet: Target qubits that the operator is applied to.
-        """
+        """QubitSet: Target qubits that the operator is applied to."""
         return self._target
 
     @property
     def control(self) -> QubitSet:
-        """QubitSet: Target qubits that the operator is controlled on.
-        """
+        """QubitSet: Target qubits that the operator is controlled on."""
         return self._control
 
     @property
     def control_state(self) -> BasisState:
-        """BasisState: Quantum state that the operator is controlled to.
-        """
+        """BasisState: Quantum state that the operator is controlled to."""
         return self._control_state
 
     @property
     def power(self) -> float:
-        """float: Power that the operator is raised to.
-        """
+        """float: Power that the operator is raised to."""
         return self._power
 
     def adjoint(self) -> list[Instruction]:

@@ -293,8 +293,7 @@ class AwsDevice(Device):
         )
 
     def refresh_metadata(self) -> None:
-        """Refresh the `AwsDevice` object with the most recent Device metadata.
-        """
+        """Refresh the `AwsDevice` object with the most recent Device metadata."""
         self._populate_properties(self._aws_session)
 
     def _get_session_and_initialize(self, session: AwsSession) -> AwsSession:

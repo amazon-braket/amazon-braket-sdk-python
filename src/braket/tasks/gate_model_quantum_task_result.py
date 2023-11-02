@@ -94,10 +94,10 @@ class GateModelQuantumTaskResult:
 
     def __post_init__(self):
         if self.result_types is not None:
-            self._result_types_indices = dict(
-                (GateModelQuantumTaskResult._result_type_hash(rt.type), i)
+            self._result_types_indices = {
+                GateModelQuantumTaskResult._result_type_hash(rt.type): i
                 for i, rt in enumerate(self.result_types)
-            )
+            }
         else:
             self._result_types_indices = {}
 
@@ -126,7 +126,7 @@ class GateModelQuantumTaskResult:
                 + "Result types must be added to circuit before circuit is run on device."
             )
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: GateModelQuantumTaskResult) -> bool:
         if isinstance(other, GateModelQuantumTaskResult):
             return self.task_metadata.id == other.task_metadata.id
         return NotImplemented

@@ -122,7 +122,7 @@ class TimeSeries:
     @staticmethod
     def constant_like(times: list | float | TimeSeries, constant: float = 0.0) -> TimeSeries:
         """Obtain a constant time series given another time series or the list of time points,
-        and the constant values
+        and the constant values.
 
         Args:
             times (list | float | TimeSeries): list of time points or a time series

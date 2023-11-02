@@ -37,7 +37,7 @@ class ShotResult:
     pre_sequence: np.ndarray = None
     post_sequence: np.ndarray = None
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: ShotResult) -> bool:
         if isinstance(other, ShotResult):
             return (
                 self.status == other.status
@@ -53,7 +53,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
     additional_metadata: AdditionalMetadata
     measurements: list[ShotResult] = None
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AnalogHamiltonianSimulationQuantumTaskResult) -> bool:
         if isinstance(other, AnalogHamiltonianSimulationQuantumTaskResult):
             return (
                 self.task_metadata.id == other.task_metadata.id

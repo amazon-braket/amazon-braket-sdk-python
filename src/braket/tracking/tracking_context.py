@@ -18,7 +18,7 @@ class TrackingContext:
     def __init__(self):
         self._trackers = set()
 
-    def register_tracker(self, tracker: Tracker) -> None:  # noqa F821
+    def register_tracker(self, tracker) -> None:  # noqa F821
         """Registers a tracker.
 
         Args:
@@ -26,7 +26,7 @@ class TrackingContext:
         """
         self._trackers.add(tracker)
 
-    def deregister_tracker(self, tracker: Tracker) -> None:  # noqa F821
+    def deregister_tracker(self, tracker) -> None:  # noqa F821
         """Deregisters a tracker.
 
         Args:
@@ -43,7 +43,12 @@ class TrackingContext:
         for tracker in self._trackers:
             tracker.receive_event(event)
 
-    def active_trackers(self) -> None:
+    def active_trackers(self) -> set:
+        """Gets the active trackers.
+
+        Returns:
+            set: The set of active trackers.
+        """
         return self._trackers
 
 

@@ -26,8 +26,7 @@ from sympy import Float
 
 
 class AngledGate(Gate, Parameterizable):
-    """Class `AngledGate` represents a quantum gate that operates on N qubits and an angle.
-    """
+    """Class `AngledGate` represents a quantum gate that operates on N qubits and an angle."""
 
     def __init__(
         self,
@@ -120,8 +119,7 @@ class AngledGate(Gate, Parameterizable):
 
 
 class DoubleAngledGate(Gate, Parameterizable):
-    """Class `DoubleAngledGate` represents a quantum gate that operates on N qubits and two angles.
-    """
+    """Class `DoubleAngledGate` represents a quantum gate that operates on N qubits and two angles."""
 
     def __init__(
         self,
@@ -229,8 +227,7 @@ class DoubleAngledGate(Gate, Parameterizable):
 
 
 class TripleAngledGate(Gate, Parameterizable):
-    """Class `TripleAngledGate` represents a quantum gate that operates on N qubits and three angles.
-    """
+    """Class `TripleAngledGate` represents a quantum gate that operates on N qubits and three angles."""
 
     def __init__(
         self,

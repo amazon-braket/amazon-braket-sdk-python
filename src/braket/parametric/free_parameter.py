@@ -51,8 +51,7 @@ class FreeParameter(FreeParameterExpression):
 
     @property
     def name(self) -> str:
-        """str: Name of this parameter.
-        """
+        """str: Name of this parameter."""
         return self._name.name
 
     def subs(self, parameter_values: dict[str, Number]) -> Union[FreeParameter, Number]:

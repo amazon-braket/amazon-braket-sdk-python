@@ -18,8 +18,7 @@ from braket.registers.qubit_set import QubitSetInput
 
 
 class InitializationCriteria(Criteria):
-    """Criteria that implement these methods may be used to determine initialization noise.
-    """
+    """Criteria that implement these methods may be used to determine initialization noise."""
 
     @abstractmethod
     def qubit_intersection(self, qubits: QubitSetInput) -> QubitSetInput:

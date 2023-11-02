@@ -39,6 +39,11 @@ class LocalQuantumTask(QuantumTask):
 
     @property
     def id(self) -> str:
+        """Gets the task ID.
+
+        Returns:
+            str: The ID of the task.
+        """
         return str(self._id)
 
     def cancel(self) -> None:
@@ -46,6 +51,11 @@ class LocalQuantumTask(QuantumTask):
         raise NotImplementedError("Cannot cancel completed local task")
 
     def state(self) -> str:
+        """Gets the state of the task.
+
+        Returns:
+            str: Returns COMPLETED
+        """
         return "COMPLETED"
 
     def result(

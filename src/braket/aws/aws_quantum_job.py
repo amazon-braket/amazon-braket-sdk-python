@@ -229,8 +229,7 @@ class AwsQuantumJob(QuantumJob):
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
-        """bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
-        """
+        """bool: `True` when the aws_session region matches the job_arn region; otherwise `False`."""
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.region
 

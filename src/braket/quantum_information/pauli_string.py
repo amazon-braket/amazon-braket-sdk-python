@@ -34,8 +34,7 @@ _SIGN_MAP = {"+": 1, "-": -1}
 
 
 class PauliString:
-    """A lightweight representation of a Pauli string with its phase.
-    """
+    """A lightweight representation of a Pauli string with its phase."""
 
     def __init__(self, pauli_string: Union[str, PauliString]):
         """Args:
