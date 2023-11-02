@@ -276,10 +276,7 @@ class _IncludeModules:
 
 def _serialize_entry_point(entry_point: Callable, args: tuple, kwargs: dict) -> str:
     """Create an entry point from a function"""
-
-    def wrapped_entry_point() -> Any:
-        """Partial function wrapping entry point with given parameters"""
-        return entry_point(*args, **kwargs)
+    wrapped_entry_point = functools.partial(entry_point, *args, **kwargs)
 
     try:
         serialized = cloudpickle.dumps(wrapped_entry_point)
