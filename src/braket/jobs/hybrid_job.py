@@ -45,7 +45,7 @@ from braket.jobs.quantum_job_creation import _generate_default_job_name
 
 def hybrid_job(
     *,
-    device: str,
+    device: str | None,
     include_modules: str | ModuleType | Iterable[str | ModuleType] | None = None,
     dependencies: str | Path | list[str] | None = None,
     local: bool = False,
@@ -73,7 +73,7 @@ def hybrid_job(
     `copy_checkpoints_from_job`, `stopping_condition`, `tags`, and `logger`.
 
     Args:
-        device (str): Device ARN of the QPU device that receives priority quantum
+        device (str | None): Device ARN of the QPU device that receives priority quantum
             task queueing once the hybrid job begins running. Each QPU has a separate hybrid jobs
             queue so that only one hybrid job is running at a time. The device string is accessible
             in the hybrid job instance as the environment variable "AMZN_BRAKET_DEVICE_ARN".
