@@ -20,7 +20,7 @@ import urllib.request
 import warnings
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 from botocore.errorfactory import ClientError
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
@@ -68,7 +68,7 @@ class AwsDevice(Device):
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET = {
+    _RIGETTI_GATES_TO_BRAKET: ClassVar = {
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         "Rx_12": None,
         "Cz": "CZ",
@@ -125,10 +125,10 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): 
                 Specification of quantum task (circuit, OpenQASM program or AHS program)
                 to run on device.
-            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
+            s3_destination_folder (Optional[AwsSession.S3DestinationFolder]): The S3 location to
                 save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
@@ -180,7 +180,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
-        """
+        """  # noqa E501
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -240,7 +240,7 @@ class AwsDevice(Device):
             task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], list[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing problems, pulse sequences,
                 or photonics program to run on device.
-            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
+            s3_destination_folder (Optional[AwsSession.S3DestinationFolder]): The S3 location to
                 save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
@@ -269,7 +269,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
-        """
+        """  # noqa E501
         return AwsQuantumTaskBatch(
             AwsSession.copy_session(self._aws_session, max_connections=max_connections),
             self._arn,
@@ -523,7 +523,7 @@ class AwsDevice(Device):
     def __repr__(self):
         return f"Device('name': {self.name}, 'arn': {self.arn})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: AwsDevice):
         if isinstance(other, AwsDevice):
             return self.arn == other.arn
         return NotImplemented
@@ -534,7 +534,7 @@ class AwsDevice(Device):
         for this device.
         """
         self._update_pulse_properties()
-        return self._frames or dict()
+        return self._frames or {}
 
     @property
     def ports(self) -> dict[str, Port]:
@@ -542,7 +542,7 @@ class AwsDevice(Device):
         for this device.
         """
         self._update_pulse_properties()
-        return self._ports or dict()
+        return self._ports or {}
 
     @staticmethod
     def get_devices(
@@ -574,6 +574,9 @@ class AwsDevice(Device):
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
             aws_session (Optional[AwsSession]): An AWS session object.
                 Default is `None`.
+
+        Raises:
+            ValueError: order_by not in ['arn', 'name', 'type', 'provider_name', 'status']
 
         Returns:
             list[AwsDevice]: list of AWS devices
@@ -624,7 +627,7 @@ class AwsDevice(Device):
                 warnings.warn(
                     f"{error_code}: Unable to search region '{region}' for devices."
                     " Please check your settings or try again later."
-                    f" Continuing without devices in '{region}'."
+                    f" Continuing without devices in '{region}'.", stacklevel=1
                 )
 
         devices = list(device_map.values())
@@ -636,14 +639,14 @@ class AwsDevice(Device):
             self.properties.pulse, PulseDeviceActionProperties
         ):
             if self._ports is None:
-                self._ports = dict()
+                self._ports = {}
                 port_data = self.properties.pulse.ports
                 for port_id, port in port_data.items():
                     self._ports[port_id] = Port(
                         port_id=port_id, dt=port.dt, properties=json.loads(port.json())
                     )
             if self._frames is None:
-                self._frames = dict()
+                self._frames = {}
                 frame_data = self.properties.pulse.frames
                 if frame_data:
                     for frame_id, frame in frame_data.items():
@@ -757,7 +760,7 @@ class AwsDevice(Device):
             return None
 
     def _parse_waveforms(self, waveforms_json: dict) -> dict:
-        waveforms = dict()
+        waveforms = {}
         for waveform in waveforms_json:
             parsed_waveform = _parse_waveform_from_calibration_schema(waveforms_json[waveform])
             waveforms[parsed_waveform.id] = parsed_waveform

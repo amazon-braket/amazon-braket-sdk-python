@@ -106,7 +106,7 @@ class QuantumJob(ABC):
                 `GetJob`, which also updates the cached value. Default: `False`.
 
         Returns:
-            Dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
+            dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
 
     @abstractmethod
@@ -125,7 +125,7 @@ class QuantumJob(ABC):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Any]]: The metrics data.
+            dict[str, list[Any]]: The metrics data.
 
         Example:
             timestamp energy
@@ -164,7 +164,7 @@ class QuantumJob(ABC):
 
 
         Returns:
-            Dict[str, Any]: Dict specifying the hybrid job results.
+            dict[str, Any]: Dict specifying the hybrid job results.
 
         Raises:
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.

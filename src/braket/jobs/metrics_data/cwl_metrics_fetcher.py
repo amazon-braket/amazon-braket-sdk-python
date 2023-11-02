@@ -101,7 +101,7 @@ class CwlMetricsFetcher:
                 the timeout time.
 
         Returns:
-            List[str]: A list of log stream names for the given hybrid job.
+            list[str]: A list of log stream names for the given hybrid job.
         """
         kwargs = {
             "logGroupName": self.LOG_GROUP_NAME,
@@ -139,7 +139,7 @@ class CwlMetricsFetcher:
                 when there is a conflict. Default is MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Union[str, float, int]]]: The metrics data, where the keys
+            dict[str, list[Union[str, float, int]]]: The metrics data, where the keys
             are the column names and the values are a list containing the values in each row.
 
         Example:

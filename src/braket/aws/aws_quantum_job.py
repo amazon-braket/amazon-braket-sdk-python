@@ -210,11 +210,16 @@ class AwsQuantumJob(QuantumJob):
         return job
 
     def __init__(self, arn: str, aws_session: AwsSession = None):
-        """Args:
-        arn (str): The ARN of the hybrid job.
-        aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
-        Default is `None`, in which case an `AwsSession` object will be created with the
-        region of the hybrid job.
+        """Inits an `AwsQuantumJob`.
+
+        Args:
+            arn (str): The ARN of the hybrid job.
+            aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
+                Default is `None`, in which case an `AwsSession` object will be created with the
+                region of the hybrid job.
+
+        Raises:
+            ValueError: Supplied region and session region do not match.
         """
         self._arn: str = arn
         if aws_session:

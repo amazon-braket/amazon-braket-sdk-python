@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, Tuple
 
 import braket.ir.annealing as ir
 
@@ -42,9 +41,9 @@ class Problem:
     ):
         """Args:
             problem_type (ProblemType): The type of annealing problem
-            linear (Dict[int, float]): The linear terms of this problem,
+            linear (dict[int, float]): The linear terms of this problem,
                 as a map of variable to coefficient
-            quadratic (Dict[Tuple[int, int], float]): The quadratic terms of this problem,
+            quadratic (dict[tuple[int, int], float]): The quadratic terms of this problem,
                 as a map of variables to coefficient
 
         Examples:
@@ -73,7 +72,7 @@ class Problem:
         """The linear terms of this problem.
 
         Returns:
-            Dict[int, float]: The linear terms of this problem, as a map of variable to coefficient
+            dict[int, float]: The linear terms of this problem, as a map of variable to coefficient
         """
         return self._linear
 
@@ -82,7 +81,7 @@ class Problem:
         """The quadratic terms of this problem.
 
         Returns:
-            Dict[Tuple[int, int], float]: The quadratic terms of this problem,
+            dict[tuple[int, int], float]: The quadratic terms of this problem,
             as a map of variables to coefficient
         """
         return self._quadratic
@@ -104,7 +103,7 @@ class Problem:
         """Adds linear terms to the problem.
 
         Args:
-            coefficients (Dict[int, float]): A map of variable to coefficient
+            coefficients (dict[int, float]): A map of variable to coefficient
 
         Returns:
             Problem: This problem object
@@ -116,7 +115,7 @@ class Problem:
         """Adds a quadratic term to the problem.
 
         Args:
-            term (Tuple[int, int]): The variables of the quadratic term
+            term (tuple[int, int]): The variables of the quadratic term
             coefficient (float): The coefficient of the quadratic term
 
         Returns:
@@ -129,7 +128,7 @@ class Problem:
         """Adds quadratic terms to the problem.
 
         Args:
-            coefficients (Dict[Tuple[int, int], float]): A map of variables to coefficient
+            coefficients (dict[tuple[int, int], float]): A map of variables to coefficient
 
         Returns:
             Problem: This problem object

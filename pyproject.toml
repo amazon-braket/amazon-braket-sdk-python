@@ -39,9 +39,9 @@ unfixable = [
 ignore = [
   # Checking the type for self, special methods is not needed
   # Allow dynamic typing
-  "ANN101", "ANN102", "ANN204", "ANN401",
+  "ANN101", "ANN102", "ANN202", "ANN204", "ANN401",
   # Probably want to look into this later on
-  "B904",
+  "B026", "B904",
   # Docstrings are all written within classes and modules
   # No needed docstrings for classes/magic methods.
   # No summary lines
@@ -58,8 +58,12 @@ ignore = [
   "RUF013",
   # Use of pickle is known
   "S301",
+  # Subprocesses are acceptable in their current state
+  "S603", "S607",
   # Could cause formatting issues
   "ISC001",
+  # Temporarily removing type annotation for kwargs, args, unused args
+  "ANN002", "ANN003", "ARG002",
 ]
 
 [tool.ruff.pydocstyle]

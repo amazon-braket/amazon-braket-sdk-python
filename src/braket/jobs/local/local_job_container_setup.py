@@ -35,7 +35,7 @@ def setup_container(
         **creation_kwargs (str): Arbitrary keyword arguments.
 
     Returns:
-        Dict[str, str]: A dictionary of environment variables that reflect Braket Hybrid Jobs
+        dict[str, str]: A dictionary of environment variables that reflect Braket Hybrid Jobs
         options requested by the customer.
     """
     logger = getLogger(__name__)
@@ -97,11 +97,11 @@ def _get_env_script_mode_config(script_mode_config: dict[str, str]) -> dict[str,
     """Gets the environment variables related to the customer script mode config.
 
     Args:
-        script_mode_config (Dict[str, str]): The values for scriptModeConfig in the boto3 input
+        script_mode_config (dict[str, str]): The values for scriptModeConfig in the boto3 input
             parameters for running a Braket Hybrid Job.
 
     Returns:
-        Dict[str, str]: The set of key/value pairs that should be added as environment variables
+        dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     result = {
@@ -122,7 +122,7 @@ def _get_env_default_vars(aws_session: AwsSession, **creation_kwargs: str) -> di
         **creation_kwargs (str): Arbitrary keyword arguments.
 
     Returns:
-        Dict[str, str]: The set of key/value pairs that should be added as environment variables
+        dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     job_name = creation_kwargs["jobName"]
@@ -144,7 +144,7 @@ def _get_env_hyperparameters() -> dict[str, str]:
     provided hyperpameters to the hybrid job.
 
     Returns:
-        Dict[str, str]: The set of key/value pairs that should be added as environment variables
+        dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     return {
@@ -157,7 +157,7 @@ def _get_env_input_data() -> dict[str, str]:
     provided input data to the hybrid job.
 
     Returns:
-        Dict[str, str]: The set of key/value pairs that should be added as environment variables
+        dict[str, str]: The set of key/value pairs that should be added as environment variables
         to the running container.
     """
     return {
@@ -197,7 +197,7 @@ def _download_input_data(
     Args:
         aws_session (AwsSession): AwsSession for connecting to AWS Services.
         download_dir (str): The directory path to download to.
-        input_data (Dict[str, Any]): One of the input data in the boto3 input parameters for
+        input_data (dict[str, Any]): One of the input data in the boto3 input parameters for
             running a Braket Hybrid Job.
 
     Raises:

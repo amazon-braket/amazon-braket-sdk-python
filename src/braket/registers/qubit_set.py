@@ -79,7 +79,7 @@ class QubitSet(IndexedSet):
             >>> mapping = {0: 10, Qubit(1): Qubit(11)}
             >>> qubits.map(mapping)
             QubitSet([Qubit(10), Qubit(11)])
-        """
+        """  # noqa E501
         new_qubits = [mapping.get(qubit, qubit) for qubit in self]
 
         return QubitSet(new_qubits)

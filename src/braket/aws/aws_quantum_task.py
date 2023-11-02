@@ -208,7 +208,9 @@ class AwsQuantumTask(QuantumTask):
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
     ):
-        """Args:
+        """Inits an `AwsQuantumTask`.
+
+        Args:
             arn (str): The ARN of the quantum task.
             aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the

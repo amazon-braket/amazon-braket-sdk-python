@@ -671,8 +671,6 @@ class AwsSession:
                 print("test")
                 raise AssertionError
             bucket, key = s3_uri_match.groups()
-            if (bucket or key) is None:
-                raise AssertionError
             return bucket, key
         except (AssertionError, ValueError):
             raise ValueError(f"Not a valid S3 uri: {s3_uri}")

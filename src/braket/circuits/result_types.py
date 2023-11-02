@@ -67,7 +67,7 @@ class StateVector(ResultType):
         """
         return ResultType.StateVector()
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: StateVector) -> bool:
         if isinstance(other, StateVector):
             return True
         return False
@@ -148,7 +148,7 @@ class DensityMatrix(ResultType):
         """
         return ResultType.DensityMatrix(target=target)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: DensityMatrix) -> bool:
         if isinstance(other, DensityMatrix):
             return self.target == other.target
         return False
@@ -326,7 +326,7 @@ class Amplitude(ResultType):
         """
         return ResultType.Amplitude(state=state)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Amplitude):
         if isinstance(other, Amplitude):
             return self.state == other.state
         return False
@@ -414,7 +414,7 @@ class Probability(ResultType):
         """
         return ResultType.Probability(target=target)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Probability) -> bool:
         if isinstance(other, Probability):
             return self.target == other.target
         return False

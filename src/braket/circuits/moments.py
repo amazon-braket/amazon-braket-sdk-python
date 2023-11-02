@@ -62,7 +62,7 @@ class MomentsKey(NamedTuple):
 
 
 class Moments(Mapping[MomentsKey, Instruction]):
-    """An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
+    r"""An ordered mapping of `MomentsKey` or `NoiseMomentsKey` to `Instruction`. The
     core data structure that contains instructions, ordering they are inserted in, and
     time slices when they occur. `Moments` implements `Mapping` and functions the same as
     a read-only dictionary. It is mutable only through the `add()` method.
@@ -126,7 +126,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         Note:
             Don't mutate this object, any changes may impact the behavior of this class and / or
             consumers. If you need to mutate this, then copy it via `QubitSet(moments.qubits())`.
-        """
+        """  # noqa E501
         return self._qubits
 
     def time_slices(self) -> dict[int, list[Instruction]]:
@@ -291,7 +291,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """
         return self._moments.get(key, default)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: MomentsKey):
         return self._moments.__getitem__(key)
 
     def __iter__(self):
@@ -300,15 +300,15 @@ class Moments(Mapping[MomentsKey, Instruction]):
     def __len__(self):
         return self._moments.__len__()
 
-    def __contains__(self, item):
+    def __contains__(self, item: MomentsKey):
         return self._moments.__contains__(item)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Moments):
         if isinstance(other, Moments):
             return self._moments == other._moments
         return NotImplemented
 
-    def __ne__(self, other):
+    def __ne__(self, other: Moments):
         result = self.__eq__(other)
         if result is not NotImplemented:
             return not result

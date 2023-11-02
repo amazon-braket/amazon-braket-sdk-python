@@ -27,7 +27,7 @@ class CircuitDiagram(ABC):
         """Build a diagram for the specified `circuit`.
 
         Args:
-            circuit (Circuit): The circuit to build a diagram for.
+            circuit (cir.Circuit): The circuit to build a diagram for.
 
         Returns:
             str: String representation for the circuit diagram.

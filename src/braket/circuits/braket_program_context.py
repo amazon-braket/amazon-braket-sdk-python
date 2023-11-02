@@ -30,9 +30,11 @@ from sympy import Expr
 
 class BraketProgramContext(AbstractProgramContext):
     def __init__(self, circuit: Optional[Circuit] = None):
-        """Args:
-        circuit (Optional[Circuit]): A partially-built circuit to continue building with this
-        context. Default: None.
+        """Inits a `BraketProgramContext`.
+
+        Args:
+            circuit (Optional[Circuit]): A partially-built circuit to continue building with this
+                context. Default: None.
         """
         super().__init__()
         self._circuit = circuit or Circuit()
@@ -117,7 +119,7 @@ class BraketProgramContext(AbstractProgramContext):
         """Method to add a Kraus instruction to the circuit
 
         Args:
-            matrices (list[ndarray]): The matrices defining the Kraus operation
+            matrices (list[np.ndarray]): The matrices defining the Kraus operation
             target (list[int]): The target qubit or qubits to which the Kraus operation is applied.
         """
         instruction = Instruction(Kraus(matrices), target)

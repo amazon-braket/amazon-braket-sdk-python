@@ -36,9 +36,11 @@ class GateCalibrations:
         self,
         pulse_sequences: dict[tuple[Gate, QubitSet], PulseSequence],
     ):
-        """Args:
-        pulse_sequences (dict[tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
-        `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
+        """Inits a `GateCalibrations`.
+
+        Args:
+            pulse_sequences (dict[tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
+            `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
 
         """
         self.pulse_sequences: dict[tuple[Gate, QubitSet], PulseSequence] = pulse_sequences

@@ -172,6 +172,9 @@ class LocalQuantumJob(QuantumJob):
         Args:
             arn (str): The ARN of the hybrid job.
             run_log (str): The container output log of running the hybrid job with the given arn.
+
+        Raises:
+            ValueError: Local job is not found.
         """
         if not arn.startswith("local:job/"):
             raise ValueError(f"Arn {arn} is not a valid local job arn")
@@ -194,6 +197,9 @@ class LocalQuantumJob(QuantumJob):
     @property
     def run_log(self) -> str:
         """Gets the run output log from running the hybrid job.
+
+        Raises:
+            ValueError: The log file is not found.
 
         Returns:
             str:  The container output log from running the hybrid job.
@@ -273,6 +279,9 @@ class LocalQuantumJob(QuantumJob):
                 Default: 10 days.
             poll_interval_seconds (float): The polling interval, in seconds, for `result()`.
                 Default: 5 seconds.
+
+        Raises:
+            ValueError: The local job directory does not exist.
 
         Returns:
             dict[str, Any]: Dict specifying the hybrid job results.

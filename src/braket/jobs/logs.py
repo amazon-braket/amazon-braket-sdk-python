@@ -81,13 +81,13 @@ def multi_stream_iter(
     Args:
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
         log_group (str): The name of the log group.
-        streams (List[str]): A list of the log stream names. The the stream number is
+        streams (list[str]): A list of the log stream names. The the stream number is
             the position of the stream in this list.
-        positions (Dict[str, Position]): A list of (timestamp, skip) pairs which represent
+        positions (dict[str, Position]): A list of (timestamp, skip) pairs which represent
             the last record read from each stream.
 
     Yields:
-        Tuple[int, Dict]: A tuple of (stream number, cloudwatch log event).
+        tuple[int, dict]: A tuple of (stream number, cloudwatch log event).
     """
     event_iters = [
         log_stream(aws_session, log_group, s, positions[s].timestamp, positions[s].skip)
@@ -168,11 +168,11 @@ def flush_log_streams(
         aws_session (AwsSession): The AwsSession for interfacing with CloudWatch.
         log_group (str): The name of the log group.
         stream_prefix (str): The prefix for log streams to flush.
-        stream_names (List[str]): A list of the log stream names. The position of the stream in
+        stream_names (list[str]): A list of the log stream names. The position of the stream in
             this list is the stream number. If incomplete, the function will check for remaining
             streams and mutate this list to add stream names when available, up to the
             `stream_count` limit.
-        positions (Dict[str, Position]): A dict mapping stream numbers to (timestamp, skip) pairs
+        positions (dict[str, Position]): A dict mapping stream numbers to (timestamp, skip) pairs
             which represent the last record read from each stream. The function will update this
             list after being called to represent the new last record read from each stream.
         stream_count (int): The number of streams expected.

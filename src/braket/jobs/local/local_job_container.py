@@ -29,7 +29,7 @@ class _LocalJobContainer:
         self,
         image_uri: str,
         aws_session: AwsSession = None,
-        logger: Logger = getLogger(__name__),
+        logger: Logger = getLogger(__name__),  # noqa B008
         force_update: bool = False,
     ):
         """Represents and provides functions for interacting with a Braket Hybrid Jobs docker
@@ -69,11 +69,11 @@ class _LocalJobContainer:
         in the container.
 
         Args:
-            environment_variables (Dict[str, str]): A dictionary of environment variables and
+            environment_variables (dict[str, str]): A dictionary of environment variables and
                 their values.
 
         Returns:
-            List[str]: The list of parameters to use when running a hybrid job that will include the
+            list[str]: The list of parameters to use when running a hybrid job that will include the
             provided environment variables as part of the runtime.
         """
         env_list = []
@@ -88,7 +88,7 @@ class _LocalJobContainer:
         to UTF-8 encoding.
 
         Args:
-            command(List[str]): The command to run.
+            command(list[str]): The command to run.
 
         Returns:
             str: The UTF-8 encoded output of running the command.
@@ -243,7 +243,7 @@ class _LocalJobContainer:
         """Runs a Braket Hybrid job in a local container.
 
         Args:
-            environment_variables (Dict[str, str]): The environment variables to make available
+            environment_variables (dict[str, str]): The environment variables to make available
                 as part of running the hybrid job.
 
         Raises:

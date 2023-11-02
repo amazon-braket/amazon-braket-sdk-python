@@ -29,6 +29,9 @@ class CircuitInstructionCriteria(Criteria):
         Args:
             instruction (Instruction): An Instruction to match.
 
+        Raises:
+            NotImplementedError: Not implemented.
+
         Returns:
             bool: True if an Instruction matches the criteria.
         """

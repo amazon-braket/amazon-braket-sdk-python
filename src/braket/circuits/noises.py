@@ -202,7 +202,7 @@ class PhaseFlip(SingleProbabilisticNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability) * np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -342,7 +342,7 @@ class PauliChannel(PauliNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probX - self.probY - self.probZ) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probX) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -478,7 +478,7 @@ class Depolarizing(SingleProbabilisticNoise_34):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(1 - self.probability) * np.eye(2, dtype=complex)
         K1 = np.sqrt(self.probability / 3) * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -609,7 +609,7 @@ class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
         SX = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex)
@@ -734,7 +734,7 @@ class TwoQubitDephasing(SingleProbabilisticNoise_34):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         SI = np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex)
         SZ = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex)
@@ -878,7 +878,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         if self._matrix is not None:
             return self._matrix
@@ -1006,7 +1006,7 @@ class AmplitudeDamping(DampingNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
         K1 = np.array([[0.0, np.sqrt(self.gamma)], [0.0, 0.0]], dtype=complex)
@@ -1130,7 +1130,7 @@ class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.sqrt(self.probability) * np.array(
             [[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex
@@ -1249,7 +1249,7 @@ class PhaseDamping(DampingNoise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         K0 = np.array([[1.0, 0.0], [0.0, np.sqrt(1 - self.gamma)]], dtype=complex)
         K1 = np.array([[0.0, 0.0], [0.0, np.sqrt(self.gamma)]], dtype=complex)
@@ -1344,7 +1344,7 @@ class Kraus(Noise):
         """Returns a matrix representation of this noise.
 
         Returns:
-            Iterable[ndarray]: A list of matrix representations of this noise.
+            Iterable[np.ndarray]: A list of matrix representations of this noise.
         """
         return self._matrices
 
