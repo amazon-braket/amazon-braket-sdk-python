@@ -23,7 +23,6 @@ jobs:
         python-version: '3.x'
     - name: Install dependencies
       run: |
-        pip install --upgrade pip
         pip install tox
     - name: Run code format checks
       run: |
