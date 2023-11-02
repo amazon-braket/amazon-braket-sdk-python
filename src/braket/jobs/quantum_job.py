@@ -11,7 +11,7 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any
 
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 

@@ -51,7 +51,7 @@ To add a new Noise implementation:
 
 
 class BitFlip(SingleProbabilisticNoise):
-    """Bit flip noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Bit flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
 
@@ -156,7 +156,7 @@ Noise.register_noise(BitFlip)
 
 
 class PhaseFlip(SingleProbabilisticNoise):
-    """Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Phase flip noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow (1-p) \\rho + p X \\rho X^{\\dagger}
 
@@ -261,7 +261,7 @@ Noise.register_noise(PhaseFlip)
 
 
 class PauliChannel(PauliNoise):
-    """Pauli noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Pauli noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
         \\rho \\Rightarrow (1-probX-probY-probZ) \\rho
@@ -414,7 +414,7 @@ Noise.register_noise(PauliChannel)
 
 
 class Depolarizing(SingleProbabilisticNoise_34):
-    """Depolarizing noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Depolarizing noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math::
         \\rho \\Rightarrow (1-p) \\rho
@@ -536,7 +536,7 @@ Noise.register_noise(Depolarizing)
 
 
 class TwoQubitDepolarizing(SingleProbabilisticNoise_1516):
-    """Two-Qubit Depolarizing noise channel which transforms a
+    r"""Two-Qubit Depolarizing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math::
@@ -679,7 +679,7 @@ Noise.register_noise(TwoQubitDepolarizing)
 
 
 class TwoQubitDephasing(SingleProbabilisticNoise_34):
-    """Two-Qubit Dephasing noise channel which transforms a
+    r"""Two-Qubit Dephasing noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math::
@@ -797,7 +797,7 @@ Noise.register_noise(TwoQubitDephasing)
 
 
 class TwoQubitPauliChannel(MultiQubitPauliNoise):
-    """Two-Qubit Pauli noise channel which transforms a
+    r"""Two-Qubit Pauli noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math::
@@ -952,7 +952,7 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
         Returns:
             Noise: A Noise object that represents the passed in dictionary.
         """
-        probabilities = dict()
+        probabilities = {}
         for pauli_string, prob in noise["probabilities"].items():
             probabilities[pauli_string] = _parameter_from_dict(prob)
         return TwoQubitPauliChannel(probabilities=probabilities)
@@ -962,7 +962,7 @@ Noise.register_noise(TwoQubitPauliChannel)
 
 
 class AmplitudeDamping(DampingNoise):
-    """AmplitudeDamping noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""AmplitudeDamping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
 
@@ -1062,7 +1062,7 @@ Noise.register_noise(AmplitudeDamping)
 
 
 class GeneralizedAmplitudeDamping(GeneralizedAmplitudeDampingNoise):
-    """Generalized AmplitudeDamping noise channel which transforms a
+    r"""Generalized AmplitudeDamping noise channel which transforms a
         density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
@@ -1203,7 +1203,7 @@ Noise.register_noise(GeneralizedAmplitudeDamping)
 
 
 class PhaseDamping(DampingNoise):
-    """Phase damping noise channel which transforms a density matrix :math:`\\rho` according to:
+    r"""Phase damping noise channel which transforms a density matrix :math:`\\rho` according to:
 
     .. math:: \\rho \\Rightarrow E_0 \\rho E_0^{\\dagger} + E_1 \\rho E_1^{\\dagger}
 
@@ -1350,7 +1350,7 @@ class Kraus(Noise):
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Kraus.construct(
-            targets=[qubit for qubit in target],
+            targets=list(target),
             matrices=Kraus._transform_matrix_to_ir(self._matrices),
         )
 

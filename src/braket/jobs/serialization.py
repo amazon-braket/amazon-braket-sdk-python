@@ -13,7 +13,7 @@
 
 import codecs
 import pickle
-from typing import Any, Dict
+from typing import Any
 
 from braket.jobs_data import PersistedJobDataFormat
 

@@ -14,7 +14,7 @@
 import re
 from collections.abc import Iterator
 from logging import Logger, getLogger
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 

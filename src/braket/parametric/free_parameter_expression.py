@@ -85,7 +85,7 @@ class FreeParameterExpression:
             Union[FreeParameterExpression, Number, Expr]: A numerical value if there are no
             symbols left in the expression otherwise returns a new FreeParameterExpression.
         """
-        new_parameter_values = dict()
+        new_parameter_values = {}
         for key, val in parameter_values.items():
             if issubclass(type(key), FreeParameterExpression):
                 new_parameter_values[key.expression] = val
@@ -146,7 +146,7 @@ class FreeParameterExpression:
     def __rmul__(self, other: FreeParameterExpression):
         return FreeParameterExpression(other * self.expression)
 
-    def __pow__(self, other: FreeParameterExpression, modulo=None):
+    def __pow__(self, other: FreeParameterExpression, modulo: float = None):
         if issubclass(type(other), FreeParameterExpression):
             return FreeParameterExpression(self.expression**other.expression)
         else:

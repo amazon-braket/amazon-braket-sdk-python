@@ -16,7 +16,7 @@ import tempfile
 from collections.abc import Iterable
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.local.local_job_container import _LocalJobContainer

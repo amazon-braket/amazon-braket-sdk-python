@@ -1560,7 +1560,7 @@ Gate.register_gate(CPhaseShift)
 
 
 class CPhaseShift00(AngledGate):
-    """Controlled phase shift gate for phasing the \\|00> state.
+    r"""Controlled phase shift gate for phasing the \\|00> state.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -2764,7 +2764,7 @@ class Unitary(Gate):
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
         return ir.Unitary.construct(
-            targets=[qubit for qubit in target],
+            targets=list(target),
             matrix=Unitary._transform_matrix_to_ir(self._matrix),
         )
 
@@ -2781,7 +2781,7 @@ class Unitary(Gate):
 
         return f"#pragma braket unitary({formatted_matrix}) {', '.join(qubits)}"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Unitary):
         if isinstance(other, Unitary):
             return self.matrix_equivalence(other)
         return False

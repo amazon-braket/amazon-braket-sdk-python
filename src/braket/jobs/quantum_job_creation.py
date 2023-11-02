@@ -249,15 +249,14 @@ def _generate_default_job_name(image_uri: str = None, func: Callable = None) -> 
             warnings.warn(
                 f"Job name exceeded {max_length} characters. Truncating name to {name}-{timestamp}."
             )
+    elif not image_uri:
+        name = "braket-job-default"
     else:
-        if not image_uri:
-            name = "braket-job-default"
-        else:
-            job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
-                "/amazon-braket-([^:/]*)", image_uri
-            )
-            container = f"-{job_type_match.groups()[0]}" if job_type_match else ""
-            name = f"braket-job{container}"
+        job_type_match = re.search("/amazon-braket-(.*)-jobs:", image_uri) or re.search(
+            "/amazon-braket-([^:/]*)", image_uri
+        )
+        container = f"-{job_type_match.groups()[0]}" if job_type_match else ""
+        name = f"braket-job{container}"
     return f"{name}-{timestamp}"
 
 

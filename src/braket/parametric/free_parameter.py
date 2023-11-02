@@ -73,7 +73,7 @@ class FreeParameter(FreeParameterExpression):
     def __hash__(self) -> int:
         return hash(tuple(self.name))
 
-    def __eq__(self, other):
+    def __eq__(self, other: FreeParameter):
         if isinstance(other, FreeParameter):
             return self._name == other._name
         return super().__eq__(other)

@@ -150,13 +150,13 @@ class Observable(QuantumOperator):
         """
         setattr(cls, observable.__name__, observable)
 
-    def __matmul__(self, other) -> Observable.TensorProduct:
+    def __matmul__(self, other: Observable) -> Observable.TensorProduct:
         if isinstance(other, Observable):
             return Observable.TensorProduct([self, other])
 
         raise ValueError("Can only perform tensor products between observables.")
 
-    def __mul__(self, other) -> Observable:
+    def __mul__(self, other: Observable) -> Observable:
         """Scalar multiplication"""
         if isinstance(other, numbers.Number):
             observable_copy = deepcopy(self)
@@ -164,16 +164,16 @@ class Observable(QuantumOperator):
             return observable_copy
         raise TypeError("Observable coefficients must be numbers.")
 
-    def __rmul__(self, other) -> Observable:
+    def __rmul__(self, other: Observable) -> Observable:
         return self * other
 
-    def __add__(self, other):
+    def __add__(self, other: Observable):
         if not isinstance(other, Observable):
             raise ValueError("Can only perform addition between observables.")
 
         return Observable.Sum([self, other])
 
-    def __sub__(self, other):
+    def __sub__(self, other: Observable):
         if not isinstance(other, Observable):
             raise ValueError("Can only perform subtraction between observables.")
 
@@ -182,7 +182,7 @@ class Observable(QuantumOperator):
     def __repr__(self) -> str:
         return f"{self.name}('qubit_count': {self.qubit_count})"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Observable) -> bool:
         if isinstance(other, Observable):
             return self.name == other.name
         return NotImplemented

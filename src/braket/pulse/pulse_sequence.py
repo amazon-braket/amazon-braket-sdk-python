@@ -290,9 +290,9 @@ class PulseSequence:
                 ]._to_oqpy_expression()
 
         new_pulse_sequence._capture_v0_count = self._capture_v0_count
-        new_pulse_sequence._free_parameters = set(
-            [p for p in self._free_parameters if p.name not in param_values]
-        )
+        new_pulse_sequence._free_parameters = {
+            p for p in self._free_parameters if p.name not in param_values
+        }
 
         return new_pulse_sequence
 
@@ -402,7 +402,7 @@ class PulseSequence:
         Returns:
             PulseSequence: A pulse sequence with the specified parameters bound.
         """
-        param_values = dict()
+        param_values = {}
         if arg is not None:
             for param in self.parameters:
                 param_values[str(param)] = arg
@@ -410,7 +410,7 @@ class PulseSequence:
             param_values[str(key)] = val
         return self.make_bound_pulse_sequence(param_values)
 
-    def __eq__(self, other):
+    def __eq__(self, other: PulseSequence):
         return (
             isinstance(other, PulseSequence)
             and self.parameters == other.parameters

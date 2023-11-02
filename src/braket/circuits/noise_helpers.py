@@ -218,17 +218,16 @@ def _apply_noise_to_gates_helper(
                 noise_index += 1
                 new_noise_instruction.append((Instruction(noise_channel, qubit), noise_index))
                 noise_applied = True
-        else:
-            # only apply noise to the gates that have the same qubit_count as the noise.
-            if (
-                instruction.operator.qubit_count == noise_channel.qubit_count
-                and instruction.target.issubset(target_qubits)
-            ):
-                noise_index += 1
-                new_noise_instruction.append(
-                    (Instruction(noise_channel, instruction.target), noise_index)
-                )
-                noise_applied = True
+        # only apply noise to the gates that have the same qubit_count as the noise.
+        elif (
+            instruction.operator.qubit_count == noise_channel.qubit_count
+            and instruction.target.issubset(target_qubits)
+        ):
+            noise_index += 1
+            new_noise_instruction.append(
+                (Instruction(noise_channel, instruction.target), noise_index)
+            )
+            noise_applied = True
 
     return new_noise_instruction, noise_index, noise_applied
 

@@ -20,7 +20,7 @@ import sys
 # Support for reading logs
 #
 ##############################################################################
-from typing import Dict, List, Tuple
+from typing import ClassVar
 
 from botocore.exceptions import ClientError
 from braket.aws.aws_session import AwsSession
@@ -33,7 +33,7 @@ class ColorWrap:
 
     # For what color each number represents, see
     # https://misc.flogisoft.com/bash/tip_colors_and_formatting#colors
-    _stream_colors = [34, 35, 32, 36, 33]
+    _stream_colors: ClassVar = [34, 35, 32, 36, 33]
 
     def __init__(self, force: bool = False):
         """Initialize a `ColorWrap`.
@@ -149,8 +149,7 @@ def log_stream(
         else:
             skip = skip - event_count
             events = []
-        for ev in events:
-            yield ev
+        yield from events
 
 
 def flush_log_streams(

@@ -11,6 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
+from __future__ import annotations
+
 from typing import Any, Optional
 
 from oqpy import PortVar
@@ -45,7 +47,7 @@ class Port:
         """Returns the smallest time step that may be used on the control hardware."""
         return self._dt
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Port) -> bool:
         return self.id == other.id if isinstance(other, Port) else False
 
     def _to_oqpy_expression(self) -> OQPyExpression:

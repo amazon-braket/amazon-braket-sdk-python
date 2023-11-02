@@ -52,9 +52,13 @@ ignore = [
   # Ignore complexity
   "PLR0911", "PLR0912", "PLR0913",
   # Uppercase function names are fine in some cases
-  "N802", "N803", "N806",
+  "N801", "N802", "N803", "N806", "N815",
   # Allow Optional return types
   "RUF013",
+  # Use of pickle is known
+  "S301",
+  # Could cause formatting issues
+  "ISC001",
 ]
 
 [tool.ruff.pydocstyle]

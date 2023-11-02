@@ -13,7 +13,7 @@
 
 import time
 from logging import Logger, getLogger
-from typing import Dict, List, Union
+from typing import Union
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
