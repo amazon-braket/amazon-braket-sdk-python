@@ -56,7 +56,8 @@ class NoiseModelInstruction:
 
     @classmethod
     def from_dict(cls, noise_model_item: dict) -> NoiseModelInstruction:
-        """Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of
+        this class.
 
         Args:
             noise_model_item (dict): A dictionary representation of an object of this class.
@@ -289,7 +290,8 @@ class NoiseModel:
         circuit: Circuit,
         init_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
-        """Applies the initialization noise of this noise model to a circuit and returns the circuit.
+        """Applies the initialization noise of this noise model to a circuit and returns
+        the circuit.
 
         Args:
             circuit (Circuit): A circuit to apply `noise` to.
@@ -349,7 +351,8 @@ class NoiseModel:
 
     @classmethod
     def from_dict(cls, noise_dict: dict) -> NoiseModel:
-        """Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance
+        of this class.
 
         Args:
             noise_dict (dict): A dictionary representation of an object of this class.

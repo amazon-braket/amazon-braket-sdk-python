@@ -39,7 +39,7 @@ def no_noise_applied_warning(noise_applied: bool) -> None:
         warnings.warn(
             "Noise is not applied to any gate, as there is no eligible gate in the circuit"
             " with the input criteria or there is no multi-qubit gate to apply"
-            " the multi-qubit noise."
+            " the multi-qubit noise.", stacklevel=1
         )
 
 

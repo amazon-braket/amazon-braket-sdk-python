@@ -74,7 +74,7 @@ class Gate(QuantumOperator):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Any:
-        """Returns IR object of quantum operator and target
+        r"""Returns IR object of quantum operator and target
 
         Args:
             target (QubitSet): target qubit(s).

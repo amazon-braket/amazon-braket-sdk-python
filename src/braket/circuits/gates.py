@@ -1629,7 +1629,7 @@ Gate.register_gate(CPhaseShift00)
 
 
 class CPhaseShift01(AngledGate):
-    """Controlled phase shift gate for phasing the \\|01> state.
+    r"""Controlled phase shift gate for phasing the \\|01> state.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1698,7 +1698,7 @@ Gate.register_gate(CPhaseShift01)
 
 
 class CPhaseShift10(AngledGate):
-    """Controlled phase shift gate for phasing the \\|10> state.
+    r"""Controlled phase shift gate for phasing the \\|10> state.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -2890,7 +2890,7 @@ class PulseGate(Gate, Parameterizable):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Arbitrary pulse gate which provides the ability to embed custom pulse sequences
+        r"""Arbitrary pulse gate which provides the ability to embed custom pulse sequences
            within circuits.
 
         Args:
@@ -2944,8 +2944,7 @@ def format_complex(number: complex) -> str:
             return f"{number.real} {imag_sign} {abs(number.imag)}im"
         else:
             return f"{number.real}"
+    elif number.imag:
+        return f"{number.imag}im"
     else:
-        if number.imag:
-            return f"{number.imag}im"
-        else:
-            return "0"
+        return "0"

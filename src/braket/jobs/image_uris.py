@@ -26,6 +26,14 @@ class Framework(str, Enum):
 
 
 def built_in_images(region: str) -> set[str]:
+    """Checks a region for built in Braket images.
+
+    Args:
+        region (str): The AWS region to check for images
+
+    Returns:
+        set[str]: returns a set of built images
+    """
     return {retrieve_image(framework, region) for framework in Framework}
 
 

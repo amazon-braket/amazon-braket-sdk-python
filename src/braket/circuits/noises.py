@@ -13,7 +13,7 @@
 
 import itertools
 from collections.abc import Iterable
-from typing import Any, Union
+from typing import Any, ClassVar, Union
 
 import braket.ir.jaqcd as ir
 import numpy as np
@@ -854,14 +854,14 @@ class TwoQubitPauliChannel(MultiQubitPauliNoise):
     This noise channel is shown as `PC_2({"pauli_string": probability})` in circuit diagrams.
     """
 
-    _paulis = {
+    _paulis: ClassVar = {
         "I": np.array([[1.0, 0.0], [0.0, 1.0]], dtype=complex),
         "X": np.array([[0.0, 1.0], [1.0, 0.0]], dtype=complex),
         "Y": np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=complex),
         "Z": np.array([[1.0, 0.0], [0.0, -1.0]], dtype=complex),
     }
     _tensor_products_strings = itertools.product(_paulis.keys(), repeat=2)
-    _names_list = ["".join(x) for x in _tensor_products_strings]
+    _names_list: ClassVar = ["".join(x) for x in _tensor_products_strings]
 
     def __init__(self, probabilities: dict[str, float]):
         super().__init__(

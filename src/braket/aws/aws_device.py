@@ -33,7 +33,9 @@ from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
-from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # TODO: Remove device_action module once this is added to init in the schemas repo
+
+# TODO: Remove device_action module once this is added to init in the schemas repo
+from braket.device_schema.pulse.pulse_device_action_properties_v1 import (
     PulseDeviceActionProperties,
 )
 from braket.devices.device import Device

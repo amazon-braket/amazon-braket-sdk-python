@@ -63,7 +63,8 @@ class QubitInitializationCriteria(InitializationCriteria):
         return set()
 
     def to_dict(self) -> dict:
-        """Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of
+        this class.
 
         Returns:
             dict: A dictionary representing the serialized version of this Criteria.

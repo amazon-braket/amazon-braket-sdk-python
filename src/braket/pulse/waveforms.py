@@ -484,7 +484,7 @@ class GaussianWaveform(Waveform, Parameterizable):
 
 
 def _make_identifier_name() -> str:
-    return "".join([random.choice(string.ascii_letters) for _ in range(10)])
+    return "".join([random.choice(string.ascii_letters) for _ in range(10)])  # noqa S311
 
 
 def _map_to_oqpy_type(

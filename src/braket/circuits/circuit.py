@@ -1231,7 +1231,7 @@ class Circuit:
         frames: dict[Frame],
         waveforms: dict[ArbitraryWaveform],
     ) -> None:
-        for key, calibration in gate_definitions.items():
+        for _key, calibration in gate_definitions.items():
             for frame in calibration._frames.values():
                 _validate_uniqueness(frames, frame)
                 frames[frame.id] = frame
