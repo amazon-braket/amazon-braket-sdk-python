@@ -330,6 +330,7 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
     sys.path.append(str(source_module_path.parent))
     try:
         # second argument allows relative imports
+        importlib.invalidate_caches()
         module = importlib.util.find_spec(importable, source_module_path.stem)
         assert module is not None
     # if entry point is nested (ie contains '.'), parent modules are imported
