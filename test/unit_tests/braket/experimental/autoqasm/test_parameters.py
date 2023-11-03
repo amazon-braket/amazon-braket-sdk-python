@@ -415,3 +415,16 @@ defcal rx(angle[32] angle) $1 {
 float[64] theta = 0.6;
 rx(theta) $1;"""
     assert expected == qasm1
+
+
+def test_bind_empty_program():
+    """Test that binding behaves well on empty programs."""
+
+    @aq.main
+    def empty_program():
+        pass
+
+    qasm = empty_program().to_ir()
+    bound_program1 = empty_program().make_bound_program({}).to_ir()
+    bound_program2 = empty_program().make_bound_program({"alpha": 0.5}).to_ir()
+    assert qasm == bound_program1 == bound_program2
