@@ -37,7 +37,7 @@ def for_stmt(
     Args:
         iter (Union[Iterable, Range]): The iterable to be looped over.
         extra_test (Optional[Callable[[], Any]]): A function to cause the loop to break if true.
-        body (Callable[[Any],]): The body of the for loop.
+        body (Callable[[Any], None]): The body of the for loop.
         get_state (Any): Unused.
         set_state (Any): Unused.
         symbol_names (Any): Unused.
@@ -85,7 +85,7 @@ def while_stmt(
 
     Args:
         test (Callable[[], Any]): The condition of the while loop.
-        body (Callable[[],]): The body of the while loop.
+        body (Callable[[], None]): The body of the while loop.
         get_state (Any): Unused.
         set_state (Any): Unused.
         symbol_names (Any): Unused.

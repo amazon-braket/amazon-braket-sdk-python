@@ -93,7 +93,7 @@ def gate(*args) -> Callable[[Any], None]:
     """Decorator that converts a function into a callable gate definition.
 
     Returns:
-        Callable[[Any],]: A callable which can be used as a custom gate inside an
+        Callable[[Any], None]: A callable which can be used as a custom gate inside an
         aq.function or inside another aq.gate.
     """
     return _function_wrapper(*args, converter_callback=_convert_gate)
@@ -511,7 +511,7 @@ def _wrap_for_oqpy_gate(
         options (converter.ConversionOptions): Converter options.
 
     Returns:
-        Callable[...,]: The modified function for use with oqpy.gate.
+        Callable[..., None]: The modified function for use with oqpy.gate.
     """
 
     def _func(*args: Any) -> None:
