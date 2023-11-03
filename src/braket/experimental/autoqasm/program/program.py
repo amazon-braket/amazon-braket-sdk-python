@@ -145,18 +145,10 @@ class Program(SerializableProgram):
                 inst = state.body[i]
                 if isinstance(inst, ast.IODeclaration) and inst.identifier.name in param_values:
                     name = inst.identifier.name
-                    # TODO: which is better?
-                    # Option 1
-                    # target = oqpy_program_copy.declared_vars[name]
-                    # target.init_expression = param_values[name]
-                    # inst = oqpy.Program().declare(target).stack[0].body[0]
-                    # Option 2
-                    del oqpy_program_copy.declared_vars[name]
-                    var = oqpy.FloatVar(
-                        init_expression=param_values[name], name=name, needs_declaration=False
-                    )
-                    state.body[i] = var.make_declaration_statement(oqpy_program_copy)
-                    # Option 3: is there a better way?
+                    target = oqpy_program_copy.declared_vars[name]
+                    target.init_expression = param_values[name]
+                    inst = oqpy.Program().declare(target).stack[0].body[0]
+                    state.body[i] = inst
 
                     params_to_process.remove(name)
                     if params_to_process == set():
