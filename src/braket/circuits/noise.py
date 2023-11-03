@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from typing import Any, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import numpy as np
 from braket.circuits.free_parameter import FreeParameter
@@ -133,7 +133,7 @@ class Noise(QuantumOperator):
         """
         raise NotImplementedError("to_matrix has not been implemented yet.")
 
-    def __eq__(self, other):
+    def __eq__(self, other: Noise):
         if isinstance(other, Noise):
             return self.name == other.name
         return False
@@ -143,7 +143,8 @@ class Noise(QuantumOperator):
 
     @classmethod
     def from_dict(cls, noise: dict) -> Noise:
-        """Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of
+        this class.
 
         Args:
             noise (dict): A dictionary representation of an object of this class.
@@ -216,8 +217,8 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """Returns the parameters associated with the object, either unbound free parameter expressions
-        or bound values.
+        """Returns the parameters associated with the object, either unbound free parameter
+        expressions or bound values.
 
         Returns:
             list[Union[FreeParameterExpression, float]]: The free parameter expressions
@@ -225,8 +226,8 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         """
         return [self._probability]
 
-    def __eq__(self, other):
-        if isinstance(other, type(self)):
+    def __eq__(self, other: SingleProbabilisticNoise):
+        if isinstance(other, SingleProbabilisticNoise):
             return self.name == other.name and self.probability == other.probability
         return False
 
@@ -326,7 +327,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     parameterized by up to 4**N - 1 probabilities.
     """
 
-    _allowed_substrings = {"I", "X", "Y", "Z"}
+    _allowed_substrings: ClassVar = {"I", "X", "Y", "Z"}
 
     def __init__(
         self,
@@ -410,8 +411,8 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
     def __str__(self):
         return f"{self.name}({self._probabilities})"
 
-    def __eq__(self, other):
-        if isinstance(other, type(self)):
+    def __eq__(self, other: MultiQubitPauliNoise):
+        if isinstance(other, MultiQubitPauliNoise):
             return self.name == other.name and self._probabilities == other._probabilities
         return False
 
@@ -426,8 +427,8 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """Returns the parameters associated with the object, either unbound free parameter expressions
-        or bound values.
+        """Returns the parameters associated with the object, either unbound free parameter
+        expressions or bound values.
 
         Parameters are in alphabetical order of the Pauli strings in `probabilities`.
 
@@ -458,7 +459,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
             dict: A dictionary object that represents this object. It can be converted back
             into this object using the `from_dict()` method.
         """
-        probabilities = dict()
+        probabilities = {}
         for pauli_string, prob in self._probabilities.items():
             probabilities[pauli_string] = _parameter_to_dict(prob)
         return {
@@ -563,8 +564,8 @@ class PauliNoise(Noise, Parameterizable):
     def __str__(self):
         return f"{self.name}({self._parameters[0]}, {self._parameters[1]}, {self._parameters[2]})"
 
-    def __eq__(self, other):
-        if isinstance(other, type(self)):
+    def __eq__(self, other: PauliNoise):
+        if isinstance(other, PauliNoise):
             return self.name == other.name and self._parameters == other._parameters
         return False
 

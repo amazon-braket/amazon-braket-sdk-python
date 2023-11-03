@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Optional
 
@@ -48,7 +49,7 @@ class AnnealingQuantumTaskResult:
         selected_fields: Optional[list[str]] = None,
         sorted_by: str = "value",
         reverse: bool = False,
-    ) -> tuple:
+    ) -> Generator[tuple]:
         """Yields the data in record_array
 
         Args:
@@ -59,7 +60,7 @@ class AnnealingQuantumTaskResult:
             reverse (bool): If True, returns the data in reverse order. Default is False.
 
         Yields:
-            tuple: data in record_array
+            Generator[tuple]: data in record_array
         """
         if selected_fields is None:
             selected_fields = ["solution", "value", "solution_count"]
@@ -75,7 +76,7 @@ class AnnealingQuantumTaskResult:
         for i in order:
             yield tuple(self.record_array[field][i] for field in selected_fields)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AnnealingQuantumTaskResult) -> bool:
         if isinstance(other, AnnealingQuantumTaskResult):
             # __eq__ on numpy arrays results in an array of booleans and therefore can't use
             # the default dataclass __eq__ implementation. Override equals to check if all
@@ -153,6 +154,9 @@ class AnnealingQuantumTaskResult:
             solutions (np.ndarray): row is solution, column is value of the variable
             solution_counts (np.ndarray): list of number of times the solutions occurred
             values (np.ndarray): list of the output or energy of the solutions
+
+        Returns:
+            np.recarray: A record array for solutions, value, and solution_count.
         """
         num_solutions, variable_count = solutions.shape
         datatypes = [

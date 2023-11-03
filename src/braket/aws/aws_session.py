@@ -35,7 +35,10 @@ from braket.tracking.tracking_events import _TaskCreationEvent, _TaskStatusEvent
 class AwsSession:
     """Manage interactions with AWS services."""
 
-    S3DestinationFolder = NamedTuple("S3DestinationFolder", [("bucket", str), ("key", str)])
+    class S3DestinationFolder(NamedTuple):
+        """A `NamedTuple` for an S3 bucket and object key."""
+        bucket: str
+        key: str
 
     def __init__(
         self,
@@ -284,17 +287,17 @@ class AwsSession:
         return response
 
     def get_default_jobs_role(self) -> str:
-        """Returns the role ARN for the default hybrid jobs role created in the Amazon Braket Console.
-        It will pick the first role it finds with the `RoleName` prefix
+        """Returns the role ARN for the default hybrid jobs role created in the Amazon Braket
+        Console. It will pick the first role it finds with the `RoleName` prefix
         `AmazonBraketJobsExecutionRole` with a `PathPrefix` of `/service-role/`.
 
         Returns:
             str: The ARN for the default IAM role for jobs execution created in the Amazon
-            Braket console.
+                Braket console.
 
         Raises:
             RuntimeError: If no roles can be found with the prefix
-            `/service-role/AmazonBraketJobsExecutionRole`.
+                `/service-role/AmazonBraketJobsExecutionRole`.
         """
         roles_paginator = self.iam_client.get_paginator("list_roles")
         for page in roles_paginator.paginate(PathPrefix="/service-role/"):
@@ -686,7 +689,7 @@ class AwsSession:
 
         Args:
             bucket (str): S3 URI.
-            ``*dirs`` (str): directories to be appended in the resulting S3 URI
+            *dirs (str): directories to be appended in the resulting S3 URI
 
         Returns:
             str: S3 URI

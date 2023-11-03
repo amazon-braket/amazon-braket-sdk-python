@@ -396,7 +396,7 @@ class TensorProduct(Observable):
     def __repr__(self):
         return "TensorProduct(" + ", ".join([repr(o) for o in self.factors]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: TensorProduct):
         return self.matrix_equivalence(other)
 
     @staticmethod
@@ -428,7 +428,9 @@ class Sum(Observable):
     """Sum of observables"""
 
     def __init__(self, observables: list[Observable], display_name: str = "Hamiltonian"):
-        """Args:
+        """Inits a `Sum`.
+
+        Args:
             observables (list[Observable]): List of observables for Sum
             display_name (str): Name to use for an instance of this Sum
                 observable for circuit diagrams. Defaults to `Hamiltonian`.
@@ -451,7 +453,7 @@ class Sum(Observable):
         qubit_count = max(flattened_observables, key=lambda obs: obs.qubit_count).qubit_count
         super().__init__(qubit_count=qubit_count, ascii_symbols=[display_name] * qubit_count)
 
-    def __mul__(self, other) -> Observable:
+    def __mul__(self, other: numbers.Number) -> Observable:
         """Scalar multiplication"""
         if isinstance(other, numbers.Number):
             sum_copy = deepcopy(self)
@@ -527,7 +529,9 @@ class Hermitian(Observable):
     _eigenpairs = {}
 
     def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
-        """Args:
+        """Inits a `Hermitian`.
+
+        Args:
             matrix (np.ndarray): Hermitian matrix that defines the observable.
             display_name (str): Name to use for an instance of this Hermitian matrix
                 observable for circuit diagrams. Defaults to `Hermitian`.
@@ -588,7 +592,7 @@ class Hermitian(Observable):
     def to_matrix(self) -> np.ndarray:
         return self.coefficient * self._matrix
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Hermitian) -> bool:
         return self.matrix_equivalence(other)
 
     @property

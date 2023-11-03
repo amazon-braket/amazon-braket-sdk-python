@@ -272,7 +272,7 @@ class LocalQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> dict[str, Any]:
-        """Retrieves the hybrid job result persisted using save_job_result() function.
+        """Retrieves the `LocalQuantumJob` result persisted using `save_job_result()` function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.

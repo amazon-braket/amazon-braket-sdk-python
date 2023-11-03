@@ -61,8 +61,9 @@ ignore = [
   "S603", "S607",
   # Could cause formatting issues
   "ISC001",
+  # TO DO fixes
   # Temporarily removing type annotation for kwargs, args, unused args
-  "ANN002", "ANN003", "ARG002",
+  "ANN002", "ANN003", "ARG002", "ARG001",
 ]
 
 [tool.ruff.pydocstyle]

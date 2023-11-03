@@ -65,8 +65,10 @@ class ObservableCriteria(ResultTypeCriteria):
         return f"{self.__class__.__name__}(observables={observables_names}, qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """Returns:
-        Iterable[CriteriaKey]: This Criteria operates on Observables and Qubits.
+        """Returns an Iterable of criteria keys.
+
+        Returns:
+            Iterable[CriteriaKey]: This Criteria operates on Observables and Qubits.
         """
         return [CriteriaKey.OBSERVABLE, CriteriaKey.QUBIT]
 

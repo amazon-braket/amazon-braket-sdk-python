@@ -267,7 +267,7 @@ class Instruction:
             f"'power': {self.power})"
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: Instruction):
         if isinstance(other, Instruction):
             return (
                 self._operator,
@@ -284,7 +284,7 @@ class Instruction:
             )
         return NotImplemented
 
-    def __pow__(self, power, modulo=None):
+    def __pow__(self, power: float, modulo: float=None):
         new_power = self.power * power
         if modulo is not None:
             new_power %= modulo

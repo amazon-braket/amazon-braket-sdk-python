@@ -44,7 +44,7 @@ class GateCriteria(CircuitInstructionCriteria):
 
         Raises:
             ValueError: If the gates don't all operate on the same number of qubits, or if
-            qubits are not valid targets for the provided gates.
+                qubits are not valid targets for the provided gates.
         """
         self._gates = parse_operator_input(gates)
         expected_qubit_count = next(iter(self._gates)).fixed_qubit_count() if self._gates else 0
@@ -59,8 +59,10 @@ class GateCriteria(CircuitInstructionCriteria):
         return f"{self.__class__.__name__}(gates={gate_names}, qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """Returns:
-        Iterable[CriteriaKey]: This Criteria operates on Gates and Qubits.
+        """Returns an Iterable of criteria keys.
+
+        Returns:
+            Iterable[CriteriaKey]: This Criteria operates on Gates and Qubits.
         """
         return [CriteriaKey.QUBIT, CriteriaKey.GATE]
 

@@ -34,7 +34,9 @@ class AngledGate(Gate, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Inits an `AngledGate`.
+
+        Args:
             angle (Union[FreeParameterExpression, float]): The angle of the gate in radians
                 or expression representation.
             qubit_count (Optional[int]): The number of qubits that this gate interacts with.
@@ -104,7 +106,7 @@ class AngledGate(Gate, Parameterizable):
         new._ascii_symbols = new_ascii_symbols
         return [new]
 
-    def __eq__(self, other):
+    def __eq__(self, other: AngledGate):
         return (
             isinstance(other, AngledGate)
             and self.name == other.name
@@ -119,7 +121,9 @@ class AngledGate(Gate, Parameterizable):
 
 
 class DoubleAngledGate(Gate, Parameterizable):
-    """Class `DoubleAngledGate` represents a quantum gate that operates on N qubits and two angles."""
+    """Class `DoubleAngledGate` represents a quantum gate that operates on N qubits and
+    two angles.
+    """
 
     def __init__(
         self,
@@ -128,7 +132,9 @@ class DoubleAngledGate(Gate, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Inits a `DoubleAngledGate`.
+
+        Args:
             angle_1 (Union[FreeParameterExpression, float]): The first angle of the gate in
                 radians or expression representation.
             angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
@@ -186,11 +192,11 @@ class DoubleAngledGate(Gate, Parameterizable):
         """
         return self._parameters[1]
 
-    def bind_values(self, **kwargs) -> AngledGate:
+    def bind_values(self, **kwargs: FreeParameterExpression | str) -> AngledGate:
         """Takes in parameters and attempts to assign them to values.
 
         Args:
-            ``**kwargs``: The parameters that are being assigned.
+            **kwargs (FreeParameterExpression | str): The parameters that are being assigned.
 
         Returns:
             AngledGate: A new Gate of the same type with the requested parameters bound.
@@ -208,7 +214,7 @@ class DoubleAngledGate(Gate, Parameterizable):
         """
         raise NotImplementedError
 
-    def __eq__(self, other):
+    def __eq__(self, other: DoubleAngledGate):
         return (
             isinstance(other, DoubleAngledGate)
             and self.name == other.name
@@ -227,7 +233,9 @@ class DoubleAngledGate(Gate, Parameterizable):
 
 
 class TripleAngledGate(Gate, Parameterizable):
-    """Class `TripleAngledGate` represents a quantum gate that operates on N qubits and three angles."""
+    """Class `TripleAngledGate` represents a quantum gate that operates on N qubits and
+    three angles.
+    """
 
     def __init__(
         self,
@@ -237,7 +245,9 @@ class TripleAngledGate(Gate, Parameterizable):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Inits a `TripleAngledGate`.
+
+        Args:
             angle_1 (Union[FreeParameterExpression, float]): The first angle of the gate in
                 radians or expression representation.
             angle_2 (Union[FreeParameterExpression, float]): The second angle of the gate in
@@ -307,11 +317,11 @@ class TripleAngledGate(Gate, Parameterizable):
         """
         return self._parameters[2]
 
-    def bind_values(self, **kwargs) -> AngledGate:
+    def bind_values(self, **kwargs: FreeParameterExpression | str) -> AngledGate:
         """Takes in parameters and attempts to assign them to values.
 
         Args:
-            ``**kwargs``: The parameters that are being assigned.
+            **kwargs (FreeParameterExpression | str): The parameters that are being assigned.
 
         Returns:
             AngledGate: A new Gate of the same type with the requested parameters bound.
@@ -329,7 +339,7 @@ class TripleAngledGate(Gate, Parameterizable):
         """
         raise NotImplementedError
 
-    def __eq__(self, other):
+    def __eq__(self, other: TripleAngledGate):
         return (
             isinstance(other, TripleAngledGate)
             and self.name == other.name
@@ -382,18 +392,18 @@ def _multi_angled_ascii_characters(
 
     Args:
         gate (str): The name of the gate.
-        `*angles` (Union[FreeParameterExpression, float]): angles in radians.
+        *angles (Union[FreeParameterExpression, float]): angles in radians.
 
     Returns:
         str: Returns the ascii representation for an angled gate.
 
     """
 
-    def format_string(angle: Union[FreeParameterExpression, float]) -> str:
+    def format_string(angle: FreeParameterExpression | float) -> str:
         """Formats an angle for ASCII representation.
 
         Args:
-            angle (Union[FreeParameterExpression, float]): The angle to format.
+            angle (FreeParameterExpression | float): The angle to format.
 
         Returns:
             str: The ASCII representation of the angle.
@@ -403,12 +413,13 @@ def _multi_angled_ascii_characters(
     return f"{gate}({', '.join(f'{angle:{format_string(angle)}}' for angle in angles)})"
 
 
-def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
+def get_angle(gate: AngledGate, **kwargs: FreeParameterExpression | str) -> AngledGate:
     """Gets the angle with all values substituted in that are requested.
 
     Args:
         gate (AngledGate): The subclass of AngledGate for which the angle is being obtained.
-        ``**kwargs``: The named parameters that are being filled for a particular gate.
+        **kwargs (FreeParameterExpression | str): The named parameters that are being filled
+            for a particular gate.
 
     Returns:
         AngledGate: A new gate of the type of the AngledGate originally used with all
@@ -420,13 +431,15 @@ def get_angle(gate: AngledGate, **kwargs) -> AngledGate:
     return type(gate)(angle=new_angle)
 
 
-def _get_angles(gate: TripleAngledGate, **kwargs) -> TripleAngledGate:
+def _get_angles(gate: TripleAngledGate,
+                **kwargs: FreeParameterExpression | str) -> TripleAngledGate:
     """Gets the angle with all values substituted in that are requested.
 
     Args:
         gate (TripleAngledGate): The subclass of TripleAngledGate for which the angle is being
             obtained.
-        ``**kwargs``: The named parameters that are being filled for a particular gate.
+        **kwargs (FreeParameterExpression | str): The named parameters that are being filled
+            for a particular gate.
 
     Returns:
         TripleAngledGate: A new gate of the type of the AngledGate originally used with all angles

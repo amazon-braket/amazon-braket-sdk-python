@@ -39,8 +39,8 @@ class GateCalibrations:
         """Inits a `GateCalibrations`.
 
         Args:
-            pulse_sequences (dict[tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key of
-            `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
+            pulse_sequences (dict[tuple[Gate, QubitSet], PulseSequence]): A mapping containing a key
+                of `(Gate, QubitSet)` mapped to the corresponding pulse sequence.
 
         """
         self.pulse_sequences: dict[tuple[Gate, QubitSet], PulseSequence] = pulse_sequences
@@ -116,6 +116,9 @@ class GateCalibrations:
         Args:
             calibration_key (Optional[tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
                 Default: None
+
+        Raises:
+            ValueError: Key does not exist in the `GateCalibrations` object.
 
         Returns:
             str: the defcal string for the object.

@@ -314,7 +314,8 @@ def _log_hyperparameters(entry_point: Callable, args: tuple, kwargs: dict) -> di
             hyperparameters.update(**value)
         else:
             warnings.warn(
-                "Positional only arguments will not be logged to the hyperparameters file."
+                "Positional only arguments will not be logged to the hyperparameters file.",
+                stacklevel=1
             )
     return {name: _sanitize(value) for name, value in hyperparameters.items()}
 

@@ -17,7 +17,7 @@ from functools import singledispatchmethod
 from itertools import repeat
 from multiprocessing import Pool
 from os import cpu_count
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import pkg_resources
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
@@ -69,8 +69,8 @@ class LocalSimulator(Device):
         task_specification: Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
         shots: int = 0,
         inputs: Optional[dict[str, float]] = None,
-        *args,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ) -> LocalQuantumTask:
         """Runs the given task with the wrapped local simulator.
 
@@ -84,6 +84,8 @@ class LocalSimulator(Device):
             inputs (Optional[dict[str, float]]): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this
                 value. Default: {}.
+            *args (Any): Arbitrary arguments.
+            **kwargs(Any): Arbitrary keyword arguments.
 
         Returns:
             LocalQuantumTask: A LocalQuantumTask object containing the results

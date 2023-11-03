@@ -39,8 +39,10 @@ class QubitInitializationCriteria(InitializationCriteria):
         return f"{self.__class__.__name__}(qubits={self._qubits})"
 
     def applicable_key_types(self) -> Iterable[CriteriaKey]:
-        """Returns:
-        Iterable[CriteriaKey]: This Criteria operates on Qubits, but is valid for all Gates.
+        """Gets the QUBIT criteria key.
+
+        Returns:
+            Iterable[CriteriaKey]: This Criteria operates on Qubits, but is valid for all Gates.
         """
         return [CriteriaKey.QUBIT]
 
