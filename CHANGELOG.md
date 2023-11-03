@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.60.2 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * drop task count for batch task tests to 3
+
+## v1.60.1 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * set python container version explicitly
+ * set decorator job working directory inside of function
+ * s3 config support for decorator jobs
+
 ## v1.60.0 (2023-10-31)
 
 ### Features
