@@ -413,4 +413,3 @@ def _create_job(job_args: dict[str, Any], local: bool = False) -> QuantumJob:
         from braket.aws import AwsQuantumJob
 
         return AwsQuantumJob.create(**job_args)
-
