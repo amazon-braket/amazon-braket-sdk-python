@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
+
 import base64
 import re
 import subprocess
@@ -28,7 +30,7 @@ class _LocalJobContainer:
     def __init__(
         self,
         image_uri: str,
-        aws_session: AwsSession = None,
+        aws_session: AwsSession | None = None,
         logger: Logger = getLogger(__name__),  # noqa B008
         force_update: bool = False,
     ):
@@ -39,7 +41,7 @@ class _LocalJobContainer:
 
         Args:
             image_uri (str): The URI of the container image to run.
-            aws_session (AwsSession): AwsSession for connecting to AWS Services.
+            aws_session (AwsSession | None): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
             logger (Logger): Logger object with which to write logs.
                 Default: `getLogger(__name__)`

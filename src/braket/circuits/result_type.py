@@ -63,16 +63,17 @@ class ResultType:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
+        **kwargs,
     ) -> Any:
         """Returns IR object of the result type
 
         Args:
             ir_type(IRType): The IRType to use for converting the result type object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             Any: IR object of the result type
@@ -115,7 +116,9 @@ class ResultType:
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
     def copy(
-        self, target_mapping: dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
+        self,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+        target: QubitSetInput | None = None,
     ) -> ResultType:
         """Return a shallow copy of the result type.
 
@@ -124,10 +127,10 @@ class ResultType:
             qubits. This is useful apply an instruction to a circuit and change the target qubits.
 
         Args:
-            target_mapping (dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
-            target (QubitSetInput): Target qubits for the new instruction.
+            target (QubitSetInput | None): Target qubits for the new instruction.
 
         Returns:
             ResultType: A shallow copy of the result type.
@@ -183,13 +186,13 @@ class ObservableResultType(ResultType):
     """
 
     def __init__(
-        self, ascii_symbols: list[str], observable: Observable, target: QubitSetInput = None
+        self, ascii_symbols: list[str], observable: Observable, target: QubitSetInput | None = None
     ):
         """Args:
             ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 only operate on 1 qubit and it will be applied to all qubits in parallel
 
@@ -280,8 +283,8 @@ class ObservableParameterResultType(ObservableResultType):
         self,
         ascii_symbols: list[str],
         observable: Observable,
-        target: QubitSetInput = None,
-        parameters: list[Union[str, FreeParameter]] = None,
+        target: QubitSetInput | None = None,
+        parameters: list[Union[str, FreeParameter]] | None = None,
     ):
         super().__init__(ascii_symbols, observable, target)
 
@@ -296,10 +299,10 @@ class ObservableParameterResultType(ObservableResultType):
             ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
             observable (Observable): the observable for the result type.
-            target (QubitSetInput): Target qubits that the result type is requested for.
+            target (QubitSetInput | None): Target qubits that the result type is requested for.
                 Default is `None`, which means the observable must only operate on 1
                 qubit and it will be applied to all qubits in parallel.
-            parameters (list[Union[str, FreeParameter]]): List of string inputs or
+            parameters (list[Union[str, FreeParameter]] | None): List of string inputs or
                 FreeParameter objects. These inputs will be used as parameters for
                 gradient calculation. Default: `all`.
 

@@ -62,13 +62,13 @@ class S3DataSourceConfig:
     def __init__(
         self,
         s3_data: str,
-        content_type: str = None,
+        content_type: str | None = None,
     ):
         """Create a definition for input data used by a Braket Hybrid job.
 
         Args:
             s3_data (str): Defines the location of s3 data to train on.
-            content_type (str): MIME type of the input data (default: None).
+            content_type (str | None): MIME type of the input data (default: None).
         """
         self.config = {
             "dataSource": {

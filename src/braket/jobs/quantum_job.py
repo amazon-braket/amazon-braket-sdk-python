@@ -10,6 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -174,7 +176,7 @@ class QuantumJob(ABC):
     @abstractmethod
     def download_result(
         self,
-        extract_to: str = None,
+        extract_to: str | None = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
@@ -183,7 +185,7 @@ class QuantumJob(ABC):
         the results are extracted to the current directory.
 
         Args:
-            extract_to (str): The directory to which the results are extracted. The results
+            extract_to (str | None): The directory to which the results are extracted. The results
                 are extracted to a folder titled with the hybrid job name within this directory.
                 Default= `Current working directory`.
 

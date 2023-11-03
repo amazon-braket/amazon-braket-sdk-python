@@ -42,19 +42,19 @@ class AwsSession:
 
     def __init__(
         self,
-        boto_session: boto3.Session = None,
-        braket_client: client = None,
-        config: Config = None,
-        default_bucket: str = None,
+        boto_session: boto3.Session | None = None,
+        braket_client: client | None = None,
+        config: Config | None = None,
+        default_bucket: str | None = None,
     ):
         """Inits an `AwsSession`.
 
         Args:
-            boto_session (boto3.Session): A boto3 session object.
-            braket_client (client): A boto3 Braket client.
-            config (Config): A botocore Config object.
-            default_bucket (str): The name of the default bucket of the AWS Session.
-
+            boto_session (boto3.Session | None): A boto3 session object.
+            braket_client (client | None): A boto3 Braket client.
+            config (Config | None): A botocore Config object.
+            default_bucket (str | None): The name of the default bucket of the AWS Session.
+        
         Raises:
             ValueError: invalid boto_session or braket_client.
         """
@@ -706,7 +706,7 @@ class AwsSession:
         self,
         log_group: str,
         log_stream_prefix: str,
-        limit: int = None,
+        limit: Optional[int] = None,
         next_token: Optional[str] = None,
     ) -> dict[str, Any]:
         """Describes CloudWatch log streams in a log group with a given prefix.
@@ -714,7 +714,7 @@ class AwsSession:
         Args:
             log_group (str): Name of the log group.
             log_stream_prefix (str): Prefix for log streams to include.
-            limit (int): Limit for number of log streams returned.
+            limit (Optional[int]): Limit for number of log streams returned.
                 default is 50.
             next_token (Optional[str]): The token for the next set of items to return.
                 Would have been received in a previous call.

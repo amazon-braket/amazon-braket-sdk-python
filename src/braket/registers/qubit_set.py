@@ -38,9 +38,13 @@ class QubitSet(IndexedSet):
         mutating this object.
     """
 
-    def __init__(self, qubits: QubitSetInput = None):
-        """Args:
-            qubits (QubitSetInput): Qubits to be included in the `QubitSet`. Default is `None`.
+    def __init__(self, qubits: QubitSetInput | None = None):
+        """
+        Inits a `QubitSet`.
+        
+        Args:
+            qubits (QubitSetInput | None): Qubits to be included in the `QubitSet`.
+                Default is `None`.
 
         Examples:
             >>> qubits = QubitSet([0, 1])

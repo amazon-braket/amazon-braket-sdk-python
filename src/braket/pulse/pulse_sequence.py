@@ -391,11 +391,11 @@ class PulseSequence:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
 
-    def __call__(self, arg: Any = None, **kwargs: Union[FreeParameter, str]) -> PulseSequence:
+    def __call__(self, arg: Any | None = None, **kwargs: Union[FreeParameter, str]) -> PulseSequence:
         """Implements the call function to easily make a bound PulseSequence.
 
         Args:
-            arg (Any): A value to bind to all parameters. Defaults to None and
+            arg (Any | None): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
             **kwargs (Union[FreeParameter, str]): Arbitrary keyword arguments.
 

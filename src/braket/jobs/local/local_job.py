@@ -38,16 +38,16 @@ class LocalQuantumJob(QuantumJob):
         cls,
         device: str,
         source_module: str,
-        entry_point: str = None,
-        image_uri: str = None,
-        job_name: str = None,
-        code_location: str = None,
-        role_arn: str = None,
-        hyperparameters: dict[str, Any] = None,
-        input_data: Union[str, dict, S3DataSourceConfig] = None,
-        output_data_config: OutputDataConfig = None,
-        checkpoint_config: CheckpointConfig = None,
-        aws_session: AwsSession = None,
+        entry_point: str | None = None,
+        image_uri: str | None = None,
+        job_name: str | None = None,
+        code_location: str | None = None,
+        role_arn: str | None = None,
+        hyperparameters: dict[str, Any] | None = None,
+        input_data: str | dict | S3DataSourceConfig | None = None,
+        output_data_config: OutputDataConfig | None = None,
+        checkpoint_config: CheckpointConfig | None = None,
+        aws_session: AwsSession | None = None,
         local_container_update: bool = True,
     ) -> LocalQuantumJob:
         """Creates and runs hybrid job by setting up and running the customer script in a local
@@ -65,32 +65,34 @@ class LocalQuantumJob(QuantumJob):
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
                 tar.gz file. Otherwise, source_module may be a file or directory.
 
-            entry_point (str): A str that specifies the entry point of the hybrid job, relative to
-                the source module. The entry point must be in the format
+            entry_point (str | None): A str that specifies the entry point of the hybrid job,
+                relative to the source module. The entry point must be in the format
                 `importable.module` or `importable.module:callable`. For example,
                 `source_module.submodule:start_here` indicates the `start_here` function
                 contained in `source_module.submodule`. If source_module is an S3 URI,
                 entry point must be given. Default: source_module's name
 
-            image_uri (str): A str that specifies the ECR image to use for executing the hybrid job.
-                `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
-                for the containers supported by Braket. Default = `<Braket base image_uri>`.
+            image_uri (str | None): A str that specifies the ECR image to use for executing the
+                hybrid job. `image_uris.retrieve_image()` function may be used for retrieving the
+                ECR image URIs for the containers supported by Braket.
+                Default = `<Braket base image_uri>`.
 
-            job_name (str): A str that specifies the name with which the hybrid job is created.
+            job_name (str | None): A str that specifies the name with which the hybrid job is
+                created.
                 Default: f'{image_uri_type}-{timestamp}'.
 
-            code_location (str): The S3 prefix URI where custom code will be uploaded.
+            code_location (str | None): The S3 prefix URI where custom code will be uploaded.
                 Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
-            role_arn (str): This field is currently not used for local hybrid jobs. Local hybrid
-                jobs will use the current role's credentials. This may be subject to change.
+            role_arn (str | None): This field is currently not used for local hybrid jobs. Local
+                hybrid jobs will use the current role's credentials. This may be subject to change.
 
-            hyperparameters (dict[str, Any]): Hyperparameters accessible to the hybrid job.
+            hyperparameters (dict[str, Any] | None): Hyperparameters accessible to the hybrid job.
                 The hyperparameters are made accessible as a Dict[str, str] to the hybrid job.
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data (Union[str, dict, S3DataSourceConfig]): Information about the training
+            input_data (str | dict | S3DataSourceConfig | None): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
                 f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -98,17 +100,17 @@ class LocalQuantumJob(QuantumJob):
                 channel name "input".
                 Default: {}.
 
-            output_data_config (OutputDataConfig): Specifies the location for the output of the
-                hybrid job.
+            output_data_config (OutputDataConfig | None): Specifies the location for the output of
+                the hybrid job.
                 Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
                 kmsKeyId=None).
 
-            checkpoint_config (CheckpointConfig): Configuration that specifies the location where
-                checkpoint data is stored.
+            checkpoint_config (CheckpointConfig | None): Configuration that specifies the location
+                where checkpoint data is stored.
                 Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
                 s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints').
 
-            aws_session (AwsSession): AwsSession for connecting to AWS Services.
+            aws_session (AwsSession | None): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
 
             local_container_update (bool): Perform an update, if available, from ECR to the local
@@ -166,12 +168,12 @@ class LocalQuantumJob(QuantumJob):
             run_log = container.run_log
         return LocalQuantumJob(f"local:job/{job_name}", run_log)
 
-    def __init__(self, arn: str, run_log: str = None):
+    def __init__(self, arn: str, run_log: str | None = None):
         """Inits a `LocalQuantumJob`.
 
         Args:
             arn (str): The ARN of the hybrid job.
-            run_log (str): The container output log of running the hybrid job with the given arn.
+            run_log (str | None): The container output log of running the hybrid job with the given arn.
 
         Raises:
             ValueError: Local job is not found.
@@ -250,14 +252,14 @@ class LocalQuantumJob(QuantumJob):
 
     def download_result(
         self,
-        extract_to: str = None,
+        extract_to: str | None = None,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
         """When running the hybrid job in local mode, results are automatically stored locally.
 
         Args:
-            extract_to (str): The directory to which the results are extracted. The results
+            extract_to (str | None): The directory to which the results are extracted. The results
                 are extracted to a folder titled with the hybrid job name within this directory.
                 Default= `Current working directory`.
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.

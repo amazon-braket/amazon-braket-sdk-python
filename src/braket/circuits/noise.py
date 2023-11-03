@@ -64,7 +64,7 @@ class Noise(QuantumOperator):
         self,
         target: QubitSet,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
     ) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -72,10 +72,10 @@ class Noise(QuantumOperator):
             target (QubitSet): target qubit(s)
             ir_type(IRType) : The IRType to use for converting the noise object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
-
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
+                
         Returns:
             Any: IR object of the quantum operator and target
 

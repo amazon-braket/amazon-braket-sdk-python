@@ -60,7 +60,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         max_workers: int = MAX_CONNECTIONS_DEFAULT,
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
-        inputs: Union[dict[str, float], list[dict[str, float]]] = None,
+        inputs: Union[dict[str, float], list[dict[str, float]]] | None = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ):
@@ -88,7 +88,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 in seconds. Default: 5 days.
             poll_interval_seconds (float): The polling interval for results in seconds.
                 Default: 1 second.
-            inputs (Union[dict[str, float], list[dict[str, float]]]): Inputs to be passed
+            inputs (Union[dict[str, float], list[dict[str, float]]] | None): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
         """

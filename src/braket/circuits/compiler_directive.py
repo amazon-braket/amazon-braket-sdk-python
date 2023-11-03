@@ -49,20 +49,20 @@ class CompilerDirective(Operator):
 
     def to_ir(
         self,
-        target: QubitSet = None,
+        target: QubitSet | None = None,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
         **kwargs,
     ) -> Any:
         """Returns IR object of the compiler directive.
 
         Args:
-            target (QubitSet): target qubit(s). Defaults to None
+            target (QubitSet | None): target qubit(s). Defaults to None
             ir_type(IRType) : The IRType to use for converting the compiler directive object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             Any: IR object of the compiler directive.

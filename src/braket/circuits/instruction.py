@@ -36,7 +36,7 @@ class Instruction:
     def __init__(
         self,
         operator: InstructionOperator,
-        target: QubitSetInput = None,
+        target: Optional[QubitSetInput] = None,
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
@@ -46,7 +46,8 @@ class Instruction:
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
-            target (QubitSetInput): Target qubits that the operator is applied to. Default is None.
+            target (Optional[QubitSetInput]): Target qubits that the operator is applied to.
+                Default is None.
             control (Optional[QubitSetInput]): Target qubits that the operator is controlled on.
                 Default is None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
@@ -155,7 +156,7 @@ class Instruction:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
     ) -> Any:
         """Converts the operator into the canonical intermediate representation.
         If the operator is passed in a request, this method is called before it is passed.
@@ -163,9 +164,9 @@ class Instruction:
         Args:
             ir_type(IRType) : The IRType to use for converting the instruction object to its
                 IR representation.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             Any: IR object of the instruction.
@@ -190,10 +191,10 @@ class Instruction:
 
     def copy(
         self,
-        target_mapping: dict[QubitInput, QubitInput] = None,
-        target: QubitSetInput = None,
-        control_mapping: dict[QubitInput, QubitInput] = None,
-        control: QubitSetInput = None,
+        target_mapping: Optional[dict[QubitInput, QubitInput]] = None,
+        target: Optional[QubitSetInput] = None,
+        control_mapping: Optional[dict[QubitInput, QubitInput]] = None,
+        control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
@@ -205,14 +206,16 @@ class Instruction:
             Same relationship holds for `control_mapping`.
 
         Args:
-            target_mapping (dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (Optional[dict[QubitInput, QubitInput]]): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
-            target (QubitSetInput): Target qubits for the new instruction. Default is None.
-            control_mapping (dict[QubitInput, QubitInput]): A dictionary of
+            target (Optional[QubitSetInput]): Target qubits for the new instruction.
+                Default is None.
+            control_mapping (Optional[dict[QubitInput, QubitInput]]): A dictionary of
                 qubit mappings to apply to the control. Key is the qubit in this `control` and the
                 value is what the key is changed to. Default = `None`.
-            control (QubitSetInput): Control qubits for the new instruction. Default is None.
+            control (Optional[QubitSetInput]): Control qubits for the new instruction.
+                Default is None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a
