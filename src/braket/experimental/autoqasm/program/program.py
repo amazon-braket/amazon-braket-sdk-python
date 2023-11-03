@@ -137,26 +137,26 @@ class Program(SerializableProgram):
             values.
         """
         # Copy the program so that we don't modify the original program
-        oqpy_program_copy = copy.deepcopy(self._oqpy_program)
-        # Break early if all the parameter assignments have been processed
+        bound_oqpy_program = copy.deepcopy(self._oqpy_program)
         params_to_process = set(param_values.keys())
 
         # Parameter expressions only occur at the top level scope
-        state = oqpy_program_copy.stack[0]
+        state = bound_oqpy_program.stack[0]
         for i in range(len(state.body)):
             inst = state.body[i]
             if isinstance(inst, ast.IODeclaration) and inst.identifier.name in param_values:
                 name = inst.identifier.name
-                target = oqpy_program_copy.declared_vars[name]
+                target = bound_oqpy_program.declared_vars[name]
                 target.init_expression = param_values[name]
                 new_inst = oqpy.Program().declare(target).stack[0].body[0]
                 state.body[i] = new_inst
 
                 params_to_process.remove(name)
-                if params_to_process == set():
+                if not params_to_process:
+                    # Break early if all the parameter assignments have been processed
                     break
 
-        return Program(oqpy_program_copy, self._has_pulse_control)
+        return Program(bound_oqpy_program, self._has_pulse_control)
 
     def to_ir(
         self,
@@ -350,9 +350,8 @@ class ProgramConversionContext:
 
     def add_io_declarations(self) -> None:
         """Add input and output declaration statements to the program."""
-        free_parameters = self.get_free_parameters()
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
-        for parameter in free_parameters[::-1]:
+        for parameter in reversed(self.get_free_parameters()):
             root_oqpy_program.declare(
                 parameter,
                 to_beginning=True,
