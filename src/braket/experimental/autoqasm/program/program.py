@@ -136,28 +136,25 @@ class Program(SerializableProgram):
             Program: Returns a program with all present parameters fixed to their respective
             values.
         """
-        # We have to copy the program so that we don't modify the original, unbound program
+        # Copy the program so that we don't modify the original program
         oqpy_program_copy = copy.deepcopy(self._oqpy_program)
-        # Let's break early if we've processed all the parameter assignments
+        # Break early if all the parameter assignments have been processed
         params_to_process = set(param_values.keys())
-        for state in oqpy_program_copy.stack:
-            for i in range(len(state.body)):
-                inst = state.body[i]
-                if isinstance(inst, ast.IODeclaration) and inst.identifier.name in param_values:
-                    name = inst.identifier.name
-                    target = oqpy_program_copy.declared_vars[name]
-                    target.init_expression = param_values[name]
-                    inst = oqpy.Program().declare(target).stack[0].body[0]
-                    state.body[i] = inst
 
-                    params_to_process.remove(name)
-                    if params_to_process == set():
-                        break
-            else:
-                continue
-            # If we broke out of the inner loop, we should break out of the outer loop, too,
-            # because there's no more work to do
-            break
+        # Parameter expressions only occur at the top level scope
+        state = oqpy_program_copy.stack[0]
+        for i in range(len(state.body)):
+            inst = state.body[i]
+            if isinstance(inst, ast.IODeclaration) and inst.identifier.name in param_values:
+                name = inst.identifier.name
+                target = oqpy_program_copy.declared_vars[name]
+                target.init_expression = param_values[name]
+                new_inst = oqpy.Program().declare(target).stack[0].body[0]
+                state.body[i] = new_inst
+
+                params_to_process.remove(name)
+                if params_to_process == set():
+                    break
 
         return Program(oqpy_program_copy, self._has_pulse_control)
 
