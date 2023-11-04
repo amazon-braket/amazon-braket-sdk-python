@@ -75,7 +75,7 @@ class Noise(QuantumOperator):
             serialization_properties (SerializationProperties | None): The serialization properties
                 to use while serializing the object to the IR representation. The serialization
                 properties supplied must correspond to the supplied `ir_type`. Defaults to None.
-                
+
         Returns:
             Any: IR object of the quantum operator and target
 

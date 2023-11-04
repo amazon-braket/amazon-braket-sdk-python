@@ -59,11 +59,11 @@ ignore = [
   "S301",
   # Subprocesses are acceptable in their current state
   "S603", "S607",
-  # Could cause formatting issues
-  "ISC001",
+  # Could cause formatting issues. Explicit concat is fine.
+  "ISC001", "ISC003",
   # TO DO fixes
   # Temporarily removing type annotation for kwargs, args, unused args
-  "ANN002", "ANN003", "ARG002", "ARG001",
+  "ANN002", "ANN003", "ARG002", "ARG001", "T201",
 ]
 
 [tool.ruff.pydocstyle]

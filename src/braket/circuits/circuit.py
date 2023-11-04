@@ -116,9 +116,8 @@ class Circuit:
 
 
     def __init__(self, addable: AddableTypes | None = None, *args, **kwargs):
-        """
-        Inits a `Circuit`.
-        
+        """Inits a `Circuit`.
+
         Args:
             addable (AddableTypes | None): The item(s) to add to self.
                 Default = None.
@@ -1470,19 +1469,20 @@ class Circuit:
     def __str__(self):
         return self.diagram(AsciiCircuitDiagram)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Circuit):
         if isinstance(other, Circuit):
             return (
                 self.instructions == other.instructions and self.result_types == other.result_types
             )
         return NotImplemented
 
-    def __call__(self, arg: Any | None = None, **kwargs) -> Circuit:
+    def __call__(self, arg: Any | None = None, **kwargs: Any) -> Circuit:
         """Implements the call function to easily make a bound Circuit.
 
         Args:
             arg (Any | None): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
+            **kwargs (Any): The parameter and valued to be bound.
 
         Returns:
             Circuit: A circuit with the specified parameters bound.

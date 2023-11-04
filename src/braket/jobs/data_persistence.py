@@ -67,8 +67,7 @@ def save_job_checkpoint(
 def load_job_checkpoint(
     job_name: str | None = None, checkpoint_file_suffix: str = ""
 ) -> dict[str, Any]:
-    """
-    Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
+    """Loads the job checkpoint data stored for the job named 'job_name', with the checkpoint
     file that ends with the `checkpoint_file_suffix`. The `job_name` can refer to any job whose
     checkpoint data you expect to be available in the file path specified by the `CHECKPOINT_DIR`
     container environment variable. If not provided, this function will use the currently running
@@ -118,8 +117,7 @@ def _load_persisted_data(filename: str | Path | None = None) -> PersistedJobData
 
 
 def load_job_result(filename: str | Path | None = None) -> dict[str, Any]:
-    """
-    Loads job result of currently running job.
+    """Loads job result of currently running job.
 
     Args:
         filename (str | Path | None): Location of job results. Default `results.json` in job

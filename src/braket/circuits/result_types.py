@@ -90,9 +90,8 @@ class DensityMatrix(ResultType):
     """
 
     def __init__(self, target: QubitSetInput | None = None):
-        """
-        Inits a `DensityMatrix`.
-        
+        """Inits a `DensityMatrix`.
+
         Args:
             target (QubitSetInput | None): The target qubits
                 of the reduced density matrix. Default is `None`, and the
@@ -450,6 +449,7 @@ class Expectation(ObservableResultType):
 
     def __init__(self, observable: Observable, target: QubitSetInput | None = None):
         """Inits an `Expectation`.
+
         Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput | None): Target qubits that the
@@ -522,7 +522,7 @@ class Sample(ObservableResultType):
 
     def __init__(self, observable: Observable, target: QubitSetInput | None = None):
         """Inits a `Sample`.
-        
+
         Args:
             observable (Observable): the observable for the result type
             target (QubitSetInput | None): Target qubits that the

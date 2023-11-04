@@ -54,7 +54,7 @@ class AwsSession:
             braket_client (client | None): A boto3 Braket client.
             config (Config | None): A botocore Config object.
             default_bucket (str | None): The name of the default bucket of the AWS Session.
-        
+
         Raises:
             ValueError: invalid boto_session or braket_client.
         """

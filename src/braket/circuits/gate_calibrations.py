@@ -155,5 +155,5 @@ class GateCalibrations:
             ]
         )
 
-    def __eq__(self, other):
+    def __eq__(self, other: GateCalibrations):
         return isinstance(other, GateCalibrations) and other.pulse_sequences == self.pulse_sequences

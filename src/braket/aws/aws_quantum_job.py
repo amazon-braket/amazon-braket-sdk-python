@@ -210,7 +210,7 @@ class AwsQuantumJob(QuantumJob):
             job.logs(wait=True)
 
         return job
-      
+
     def __init__(self, arn: str, aws_session: AwsSession | None = None):
         """Inits an `AwsQuantumJob`.
 

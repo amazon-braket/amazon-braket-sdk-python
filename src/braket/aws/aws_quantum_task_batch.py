@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Union
+from typing import Any, Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -61,8 +61,8 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] | None = None,
-        *aws_quantum_task_args,
-        **aws_quantum_task_kwargs,
+        *aws_quantum_task_args: Any,
+        **aws_quantum_task_kwargs: Any,
     ):
         """Creates a batch of quantum tasks.
 
@@ -91,7 +91,9 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             inputs (Union[dict[str, float], list[dict[str, float]]] | None): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-        """
+            *aws_quantum_task_args (Any): Arbitrary args for `QuantumTask`.
+            **aws_quantum_task_kwargs (Any): Arbitrary kwargs for `QuantumTask`.,
+        """  # noqa E501
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,
             device_arn,

@@ -124,39 +124,39 @@ def braket_result_to_result_type(result: Results) -> None:
 
 
 @_braket_result_to_result_type.register(Amplitude)
-def _(result):
+def _(result: Results) -> Amplitude:
     return ResultTypes.Amplitude(state=result.states)
 
 
 @_braket_result_to_result_type.register(Expectation)
-def _(result):
+def _(result: Results) -> Expectation:
     tensor_product = get_tensor_product(result.observable)
 
     return ResultTypes.Expectation(observable=tensor_product, target=result.targets)
 
 
 @_braket_result_to_result_type.register(Probability)
-def _(result):
+def _(result: Results) -> Probability:
     return ResultTypes.Probability(result.targets)
 
 
 @_braket_result_to_result_type.register(Sample)
-def _(result):
+def _(result: Results) -> Sample:
     tensor_product = get_tensor_product(result.observable)
     return ResultTypes.Sample(observable=tensor_product, target=result.targets)
 
 
 @_braket_result_to_result_type.register(StateVector)
-def _(result):
+def _(result: Results) -> StateVector:
     return ResultTypes.StateVector()
 
 
 @_braket_result_to_result_type.register(DensityMatrix)
-def _(result):
+def _(result: Results):
     return ResultTypes.DensityMatrix(target=result.targets)
 
 
 @_braket_result_to_result_type.register(Variance)
-def _(result):
+def _(result: Results):
     tensor_product = get_tensor_product(result.observable)
     return ResultTypes.Variance(observable=tensor_product, target=result.targets)
