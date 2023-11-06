@@ -138,23 +138,11 @@ class Program(SerializableProgram):
         """
         # Copy the program so that we don't modify the original program
         bound_oqpy_program = copy.deepcopy(self._oqpy_program)
-        params_to_process = set(param_values.keys())
-
-        # Parameter expressions only occur at the top level scope
-        state = bound_oqpy_program.stack[0]
-        for i in range(len(state.body)):
-            inst = state.body[i]
-            if isinstance(inst, ast.IODeclaration) and inst.identifier.name in param_values:
-                name = inst.identifier.name
-                target = bound_oqpy_program.declared_vars[name]
-                target.init_expression = param_values[name]
-                new_inst = oqpy.Program().declare(target).stack[0].body[0]
-                state.body[i] = new_inst
-
-                params_to_process.remove(name)
-                if not params_to_process:
-                    # Break early if all the parameter assignments have been processed
-                    break
+        for name, value in param_values.items():
+            if name in bound_oqpy_program.undeclared_vars:
+                target = bound_oqpy_program.undeclared_vars[name]
+                if target.init_expression == "input":
+                    target.init_expression = value
 
         return Program(bound_oqpy_program, self._has_pulse_control)
 
@@ -351,11 +339,8 @@ class ProgramConversionContext:
     def add_io_declarations(self) -> None:
         """Add input and output declaration statements to the program."""
         root_oqpy_program = self.get_oqpy_program(scope=ProgramScope.MAIN)
-        for parameter in reversed(self.get_free_parameters()):
-            root_oqpy_program.declare(
-                parameter,
-                to_beginning=True,
-            )
+        for parameter in self.get_free_parameters():
+            root_oqpy_program._add_var(parameter)
 
     def get_target_device(self) -> Optional[Device]:
         """Return the target device for the program, as specified by the user.
