@@ -463,3 +463,26 @@ def test_strict_parameter_bind_failure():
     prog = parametric(FreeParameter("alpha"))
     with pytest.raises(ValueError, match="No parameter in the program named: beta"):
         prog.make_bound_program({"beta": 0.5}, strict=True)
+
+
+def test_duplicate_variable_name_fails():
+    """Test using a variable and FreeParameter with the same name."""
+
+    @aq.main
+    def parametric():
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+        rx(0, FreeParameter("alpha"))
+
+    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+        parametric()
+
+
+def test_binding_variable_fails():
+    """Test that trying to bind a variable that isn't declared as a FreeParameter fails."""
+
+    @aq.main
+    def parametric():
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+
+    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+        parametric().make_bound_program({"beta": 0.5}, strict=True)

@@ -145,8 +145,8 @@ class Program(SerializableProgram):
         for name, value in param_values.items():
             if name in bound_oqpy_program.undeclared_vars:
                 target = bound_oqpy_program.undeclared_vars[name]
-                if target.init_expression == "input":
-                    target.init_expression = value
+                assert target.init_expression == "input", "Only free parameters can be bound."
+                target.init_expression = value
             elif strict:
                 raise ValueError(f"No parameter in the program named: {name}")
 
