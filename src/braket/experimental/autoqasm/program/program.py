@@ -23,7 +23,6 @@ from enum import Enum
 from typing import Any, Optional, Union
 
 import oqpy.base
-from openqasm3 import ast
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
