@@ -124,12 +124,18 @@ class Program(SerializableProgram):
         combined_oqpy_program += self._oqpy_program
         return Program(combined_oqpy_program, has_pulse_control=True)
 
-    def make_bound_program(self, param_values: dict[str, float]) -> Program:
+    def make_bound_program(self, param_values: dict[str, float], strict: bool = False) -> Program:
         """Binds FreeParameters based upon their name and values passed in.
 
         Args:
             param_values (dict[str, float]): A mapping of FreeParameter names
                 to a value to assign to them.
+            strict (bool): If True, raises a ValueError if any of the FreeParameters
+                in param_values do not appear in the program. False by default.
+
+        Raises:
+            ValueError: If a parameter name is given which does not appear in the program.
+
         Returns:
             Program: Returns a program with all present parameters fixed to their respective
             values.
@@ -141,6 +147,8 @@ class Program(SerializableProgram):
                 target = bound_oqpy_program.undeclared_vars[name]
                 if target.init_expression == "input":
                     target.init_expression = value
+            elif strict:
+                raise ValueError(f"No parameter in the program named: {name}")
 
         return Program(bound_oqpy_program, self._has_pulse_control)
 

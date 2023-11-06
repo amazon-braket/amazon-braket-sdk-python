@@ -14,6 +14,7 @@
 """AutoQASM tests for parameter support."""
 
 import numpy as np
+import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.circuits import FreeParameter
@@ -428,3 +429,37 @@ def test_bind_empty_program():
     bound_program1 = empty_program().make_bound_program({}).to_ir()
     bound_program2 = empty_program().make_bound_program({"alpha": 0.5}).to_ir()
     assert qasm == bound_program1 == bound_program2
+
+
+def test_strict_parameter_bind():
+    """Test make_bound_program with strict set to True."""
+
+    @aq.main
+    def parametric(theta: float):
+        rx(0, theta)
+        measure(0)
+
+    prog = parametric(FreeParameter("alpha"))
+
+    template = """OPENQASM 3.0;
+float[64] alpha = {};
+qubit[1] __qubits__;
+rx(alpha) __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+
+    bound_prog = prog.make_bound_program({"alpha": 0.5}, strict=True)
+    assert bound_prog.to_ir() == template.format(0.5)
+
+
+def test_strict_parameter_bind_failure():
+    """Test make_bound_program with strict set to True."""
+
+    @aq.main
+    def parametric(theta: float):
+        rx(0, theta)
+        measure(0)
+
+    prog = parametric(FreeParameter("alpha"))
+    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+        prog.make_bound_program({"beta": 0.5}, strict=True)
