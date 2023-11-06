@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Optional, Union
+from typing import Any, Union
 
 from braket.circuits.gate import Gate
 from braket.circuits.serialization import (
@@ -92,20 +92,19 @@ class GateCalibrations:
 
     def filter(
         self,
-        gates: Optional[list[Gate]] = None,
-        qubits: Optional[Union[QubitSet, list[QubitSet]]] = None,
-    ) -> Optional[GateCalibrations]:
+        gates: list[Gate] | None = None,
+        qubits: Union[QubitSet, list[QubitSet]] | None = None,
+    ) -> GateCalibrations:
         """
         Filters the data based on optional lists of gates and QubitSets.
 
         Args:
-            gates (Optional[list[Gate]]): An optional list of gates to filter on.
-            qubits (Optional[Union[QubitSet, list[QubitSet]]]): An optional `QubitSet` or
+            gates (list[Gate] | None): An optional list of gates to filter on.
+            qubits (Union[QubitSet, list[QubitSet]] | None): An optional `QubitSet` or
                 list of `QubitSet` to filter on.
 
         Returns:
-            Optional[GateCalibrations]: A filtered GateCalibrations object. Otherwise, returns
-            none if no matches are found.
+            GateCalibrations: A filtered GateCalibrations object.
         """  # noqa: E501
         keys = self.pulse_sequences.keys()
         if isinstance(qubits, QubitSet):
@@ -120,12 +119,12 @@ class GateCalibrations:
             {k: v for (k, v) in self.pulse_sequences.items() if k in filtered_calibration_keys},
         )
 
-    def to_ir(self, calibration_key: Optional[tuple[Gate, QubitSet]] = None) -> str:
+    def to_ir(self, calibration_key: tuple[Gate, QubitSet] | None = None) -> str:
         """
         Returns the defcal representation for the `GateCalibrations` object.
 
         Args:
-            calibration_key (Optional[tuple[Gate, QubitSet]]): An optional key to get a specific defcal.
+            calibration_key (tuple[Gate, QubitSet] | None): An optional key to get a specific defcal.
                 Default: None
 
         Returns:
