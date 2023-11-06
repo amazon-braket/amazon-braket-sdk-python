@@ -125,8 +125,7 @@ class Program(SerializableProgram):
         return Program(combined_oqpy_program, has_pulse_control=True)
 
     def make_bound_program(self, param_values: dict[str, float]) -> Program:
-        """Binds FreeParameters based upon their name and values passed in. If parameters
-        share the same name, all the parameters of that name will be set to the mapped value.
+        """Binds FreeParameters based upon their name and values passed in.
 
         Args:
             param_values (dict[str, float]): A mapping of FreeParameter names
