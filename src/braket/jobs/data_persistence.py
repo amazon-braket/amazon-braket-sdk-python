@@ -112,7 +112,7 @@ def load_job_checkpoint(
         return deserialized_data
 
 
-def _load_persisted_data(filename: str | Path = None) -> PersistedJobData:
+def _load_persisted_data(filename: str | Path | None = None) -> PersistedJobData:
     filename = filename or Path(get_results_dir()) / "results.json"
     try:
         with open(filename, mode="r") as f:
@@ -124,12 +124,12 @@ def _load_persisted_data(filename: str | Path = None) -> PersistedJobData:
         )
 
 
-def load_job_result(filename: str | Path = None) -> dict[str, Any]:
+def load_job_result(filename: str | Path | None = None) -> dict[str, Any]:
     """
     Loads job result of currently running job.
 
     Args:
-        filename (str | Path): Location of job results. Default `results.json` in job
+        filename (str | Path | None): Location of job results. Default `results.json` in job
             results directory in a job instance or in working directory locally. This file
             must be in the format used by `save_job_result`.
 
@@ -143,7 +143,7 @@ def load_job_result(filename: str | Path = None) -> dict[str, Any]:
 
 def save_job_result(
     result_data: dict[str, Any] | Any,
-    data_format: PersistedJobDataFormat = None,
+    data_format: PersistedJobDataFormat | None = None,
 ) -> None:
     """
     Saves the `result_data` to the local output directory that is specified by the container
@@ -153,12 +153,11 @@ def save_job_result(
     Note: This function for storing the results is only for use inside the job container
           as it writes data to directories and references env variables set in the containers.
 
-
     Args:
         result_data (dict[str, Any] | Any): Dict that specifies the result data to be
             persisted. If result data is not a dict, then it will be wrapped as
             `{"result": result_data}`.
-        data_format (PersistedJobDataFormat): The data format used to serialize the
+        data_format (PersistedJobDataFormat | None): The data format used to serialize the
             values. Note that for `PICKLED` data formats, the values are base64 encoded
             after serialization. Default: PersistedJobDataFormat.PLAINTEXT.
     """

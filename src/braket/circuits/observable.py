@@ -47,19 +47,19 @@ class Observable(QuantumOperator):
 
     def to_ir(
         self,
-        target: QubitSet = None,
+        target: QubitSet | None = None,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
     ) -> Union[str, list[Union[str, list[list[list[float]]]]]]:
         """Returns the IR representation for the observable
 
         Args:
-            target (QubitSet): target qubit(s). Defaults to None.
+            target (QubitSet | None): target qubit(s). Defaults to None.
             ir_type(IRType) : The IRType to use for converting the result type object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             Union[str, list[Union[str, list[list[list[float]]]]]]: The IR representation for
@@ -90,7 +90,9 @@ class Observable(QuantumOperator):
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
     def _to_openqasm(
-        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+        self,
+        serialization_properties: OpenQASMSerializationProperties,
+        target: QubitSet | None = None,
     ) -> str:
         """
         Returns the openqasm string representation of the result type.
@@ -98,7 +100,7 @@ class Observable(QuantumOperator):
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
-            target (QubitSet): target qubit(s). Defaults to None.
+            target (QubitSet | None): target qubit(s). Defaults to None.
 
         Returns:
             str: Representing the openqasm representation of the result type.

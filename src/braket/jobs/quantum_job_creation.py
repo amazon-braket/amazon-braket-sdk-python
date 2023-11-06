@@ -40,21 +40,21 @@ from braket.jobs.image_uris import Framework, retrieve_image
 def prepare_quantum_job(
     device: str,
     source_module: str,
-    entry_point: str = None,
-    image_uri: str = None,
-    job_name: str = None,
-    code_location: str = None,
-    role_arn: str = None,
-    hyperparameters: dict[str, Any] = None,
-    input_data: str | dict | S3DataSourceConfig = None,
-    instance_config: InstanceConfig = None,
-    distribution: str = None,
-    stopping_condition: StoppingCondition = None,
-    output_data_config: OutputDataConfig = None,
-    copy_checkpoints_from_job: str = None,
-    checkpoint_config: CheckpointConfig = None,
-    aws_session: AwsSession = None,
-    tags: dict[str, str] = None,
+    entry_point: str | None = None,
+    image_uri: str | None = None,
+    job_name: str | None = None,
+    code_location: str | None = None,
+    role_arn: str | None = None,
+    hyperparameters: dict[str, Any] | None = None,
+    input_data: str | dict | S3DataSourceConfig | None = None,
+    instance_config: InstanceConfig | None = None,
+    distribution: str | None = None,
+    stopping_condition: StoppingCondition | None = None,
+    output_data_config: OutputDataConfig | None = None,
+    copy_checkpoints_from_job: str | None = None,
+    checkpoint_config: CheckpointConfig | None = None,
+    aws_session: AwsSession | None = None,
+    tags: dict[str, str] | None = None,
 ) -> dict:
     """Creates a hybrid job by invoking the Braket CreateJob API.
 
@@ -70,34 +70,34 @@ def prepare_quantum_job(
             tarred and uploaded. If `source_module` is an S3 URI, it must point to a
             tar.gz file. Otherwise, source_module may be a file or directory.
 
-        entry_point (str): A str that specifies the entry point of the hybrid job, relative to
-            the source module. The entry point must be in the format
+        entry_point (str | None): A str that specifies the entry point of the hybrid job, relative
+            to the source module. The entry point must be in the format
             `importable.module` or `importable.module:callable`. For example,
             `source_module.submodule:start_here` indicates the `start_here` function
             contained in `source_module.submodule`. If source_module is an S3 URI,
             entry point must be given. Default: source_module's name
 
-        image_uri (str): A str that specifies the ECR image to use for executing the hybrid job.
-            `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
+        image_uri (str | None): A str that specifies the ECR image to use for executing the hybrid
+            job.`image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
             for the containers supported by Braket. Default = `<Braket base image_uri>`.
 
-        job_name (str): A str that specifies the name with which the hybrid job is created. The
-            hybrid job
-            name must be between 0 and 50 characters long and cannot contain underscores.
+        job_name (str | None): A str that specifies the name with which the hybrid job is created.
+            The hybrid job name must be between 0 and 50 characters long and cannot contain
+            underscores.
             Default: f'{image_uri_type}-{timestamp}'.
 
-        code_location (str): The S3 prefix URI where custom code will be uploaded.
+        code_location (str | None): The S3 prefix URI where custom code will be uploaded.
             Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
-        role_arn (str): A str providing the IAM role ARN used to execute the
+        role_arn (str | None): A str providing the IAM role ARN used to execute the
             script. Default: IAM role returned by AwsSession's `get_default_jobs_role()`.
 
-        hyperparameters (dict[str, Any]): Hyperparameters accessible to the hybrid job.
+        hyperparameters (dict[str, Any] | None): Hyperparameters accessible to the hybrid job.
             The hyperparameters are made accessible as a Dict[str, str] to the hybrid job.
             For convenience, this accepts other types for keys and values, but `str()`
             is called to convert them before being passed on. Default: None.
 
-        input_data (str | dict | S3DataSourceConfig): Information about the training
+        input_data (str | dict | S3DataSourceConfig | None): Information about the training
             data. Dictionary maps channel names to local paths or S3 URIs. Contents found
             at any local paths will be uploaded to S3 at
             f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -105,38 +105,39 @@ def prepare_quantum_job(
             channel name "input".
             Default: {}.
 
-        instance_config (InstanceConfig): Configuration of the instance(s) for running the
+        instance_config (InstanceConfig | None): Configuration of the instance(s) for running the
             classical code for the hybrid job. Defaults to
             `InstanceConfig(instanceType='ml.m5.large', instanceCount=1, volumeSizeInGB=30)`.
 
-        distribution (str): A str that specifies how the hybrid job should be distributed. If set to
-            "data_parallel", the hyperparameters for the hybrid job will be set to use data
-            parallelism features for PyTorch or TensorFlow. Default: None.
+        distribution (str | None): A str that specifies how the hybrid job should be distributed.
+            If set to "data_parallel", the hyperparameters for the hybrid job will be set to use
+            data parallelism features for PyTorch or TensorFlow. Default: None.
 
-        stopping_condition (StoppingCondition): The maximum length of time, in seconds,
+        stopping_condition (StoppingCondition | None): The maximum length of time, in seconds,
             and the maximum number of quantum tasks that a hybrid job can run before being
             forcefully stopped. Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
 
-        output_data_config (OutputDataConfig): Specifies the location for the output of the hybrid
-            job.
+        output_data_config (OutputDataConfig | None): Specifies the location for the output of the
+            hybrid job.
             Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
             kmsKeyId=None).
 
-        copy_checkpoints_from_job (str): A str that specifies the hybrid job ARN whose checkpoint
-            you want to use in the current hybrid job. Specifying this value will copy over the
-            checkpoint data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to the current
-            hybrid job's checkpoint_config s3Uri, making it available at checkpoint_config.localPath
-            during the hybrid job execution. Default: None
+        copy_checkpoints_from_job (str | None): A str that specifies the hybrid job ARN whose
+            checkpoint you want to use in the current hybrid job. Specifying this value will copy
+            over the checkpoint data from `use_checkpoints_from_job`'s checkpoint_config s3Uri to
+            the current hybrid job's checkpoint_config s3Uri, making it available at
+            checkpoint_config.localPath during the hybrid job execution. Default: None
 
-        checkpoint_config (CheckpointConfig): Configuration that specifies the location where
+        checkpoint_config (CheckpointConfig | None): Configuration that specifies the location where
             checkpoint data is stored.
             Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
             s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints').
 
-        aws_session (AwsSession): AwsSession for connecting to AWS Services.
+        aws_session (AwsSession | None): AwsSession for connecting to AWS Services.
             Default: AwsSession()
 
-        tags (dict[str, str]): Dict specifying the key-value pairs for tagging this hybrid job.
+        tags (dict[str, str] | None): Dict specifying the key-value pairs for tagging this
+            hybrid job.
             Default: {}.
 
     Returns:
@@ -329,6 +330,7 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
     sys.path.append(str(source_module_path.parent))
     try:
         # second argument allows relative imports
+        importlib.invalidate_caches()
         module = importlib.util.find_spec(importable, source_module_path.stem)
         assert module is not None
     # if entry point is nested (ie contains '.'), parent modules are imported
@@ -361,7 +363,7 @@ def _validate_params(dict_arr: dict[str, tuple[any, any]]) -> None:
     Validate that config parameters are of the right type.
 
     Args:
-        dict_arr (Dict[str, Tuple[any, any]]): dict mapping parameter names to
+        dict_arr (dict[str, tuple[any, any]]): dict mapping parameter names to
             a tuple containing the provided value and expected type.
     """
     for parameter_name, value_tuple in dict_arr.items():

@@ -69,7 +69,7 @@ class S3DataSourceConfig:
 
         Args:
             s3_data (str): Defines the location of s3 data to train on.
-            content_type (str): MIME type of the input data (default: None).
+            content_type (str | None): MIME type of the input data (default: None).
         """
         self.config = {
             "dataSource": {

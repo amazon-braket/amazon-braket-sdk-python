@@ -13,7 +13,6 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Callable, Iterable
 from numbers import Number
 from typing import Any, Optional, TypeVar, Union
@@ -51,7 +50,7 @@ from braket.circuits.serialization import (
     QubitReferenceType,
     SerializationProperties,
 )
-from braket.circuits.unitary_calculation import calculate_unitary, calculate_unitary_big_endian
+from braket.circuits.unitary_calculation import calculate_unitary_big_endian
 from braket.default_simulator.openqasm.interpreter import Interpreter
 from braket.ir.jaqcd import Program as JaqcdProgram
 from braket.ir.openqasm import Program as OpenQasmProgram
@@ -119,10 +118,10 @@ class Circuit:
         function_attr = getattr(cls, function_name)
         setattr(function_attr, "__doc__", func.__doc__)
 
-    def __init__(self, addable: AddableTypes = None, *args, **kwargs):
+    def __init__(self, addable: AddableTypes | None = None, *args, **kwargs):
         """
         Args:
-            addable (AddableTypes): The item(s) to add to self.
+            addable (AddableTypes | None): The item(s) to add to self.
                 Default = None.
 
         Raises:
@@ -237,18 +236,18 @@ class Circuit:
     def add_result_type(
         self,
         result_type: ResultType,
-        target: QubitSetInput = None,
-        target_mapping: dict[QubitInput, QubitInput] = None,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
         """
         Add a requested result type to `self`, returns `self` for chaining ability.
 
         Args:
             result_type (ResultType): `ResultType` to add into `self`.
-            target (QubitSetInput): Target qubits for the
+            target (QubitSetInput | None): Target qubits for the
                 `result_type`.
                 Default = `None`.
-            target_mapping (dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the `result_type.target`. Key is the qubit in
                 `result_type.target` and the value is what the key will be changed to.
                 Default = `None`.
@@ -401,19 +400,19 @@ class Circuit:
     def add_instruction(
         self,
         instruction: Instruction,
-        target: QubitSetInput = None,
-        target_mapping: dict[QubitInput, QubitInput] = None,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
         """
         Add an instruction to `self`, returns `self` for chaining ability.
 
         Args:
             instruction (Instruction): `Instruction` to add into `self`.
-            target (QubitSetInput): Target qubits for the
+            target (QubitSetInput | None): Target qubits for the
                 `instruction`. If a single qubit gate, an instruction is created for every index
                 in `target`.
                 Default = `None`.
-            target_mapping (dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the `instruction.target`. Key is the qubit in
                 `instruction.target` and the value is what the key will be changed to.
                 Default = `None`.
@@ -493,19 +492,19 @@ class Circuit:
     def add_circuit(
         self,
         circuit: Circuit,
-        target: QubitSetInput = None,
-        target_mapping: dict[QubitInput, QubitInput] = None,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
         """
         Add a `circuit` to self, returns self for chaining ability.
 
         Args:
             circuit (Circuit): Circuit to add into self.
-            target (QubitSetInput): Target qubits for the
+            target (QubitSetInput | None): Target qubits for the
                 supplied circuit. This is a macro over `target_mapping`; `target` is converted to
                 a `target_mapping` by zipping together a sorted `circuit.qubits` and `target`.
                 Default = `None`.
-            target_mapping (dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
                 to map, and the value is what to change it to. Default = `None`.
 
@@ -569,8 +568,8 @@ class Circuit:
     def add_verbatim_box(
         self,
         verbatim_circuit: Circuit,
-        target: QubitSetInput = None,
-        target_mapping: dict[QubitInput, QubitInput] = None,
+        target: QubitSetInput | None = None,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
         """
         Add a verbatim `circuit` to self, that is, ensures that `circuit` is not modified in any way
@@ -578,11 +577,11 @@ class Circuit:
 
         Args:
             verbatim_circuit (Circuit): Circuit to add into self.
-            target (QubitSetInput): Target qubits for the
+            target (QubitSetInput | None): Target qubits for the
                 supplied circuit. This is a macro over `target_mapping`; `target` is converted to
                 a `target_mapping` by zipping together a sorted `circuit.qubits` and `target`.
                 Default = `None`.
-            target_mapping (dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the qubits of `circuit.instructions`. Key is the qubit
                 to map, and the value is what to change it to. Default = `None`.
 
@@ -640,7 +639,7 @@ class Circuit:
         self,
         noise: Union[type[Noise], Iterable[type[Noise]]],
         target_gates: Optional[Union[type[Gate], Iterable[type[Gate]]]] = None,
-        target_unitary: np.ndarray = None,
+        target_unitary: Optional[np.ndarray] = None,
         target_qubits: Optional[QubitSetInput] = None,
     ) -> Circuit:
         """Apply `noise` to the circuit according to `target_gates`, `target_unitary` and
@@ -669,7 +668,7 @@ class Circuit:
                 to the circuit.
             target_gates (Optional[Union[type[Gate], Iterable[type[Gate]]]]): Gate class or
                 List of Gate classes which `noise` is applied to. Default=None.
-            target_unitary (ndarray): matrix of the target unitary gates. Default=None.
+            target_unitary (Optional[ndarray]): matrix of the target unitary gates. Default=None.
             target_qubits (Optional[QubitSetInput]): Index or indices of qubit(s).
                 Default=None.
 
@@ -1099,7 +1098,7 @@ class Circuit:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: Optional[SerializationProperties] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """
@@ -1109,9 +1108,10 @@ class Circuit:
         Args:
             ir_type (IRType): The IRType to use for converting the circuit object to its
                 IR representation.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (Optional[SerializationProperties]): The serialization
+                properties to use while serializing the object to the IR representation. The
+                serialization properties supplied must correspond to the supplied `ir_type`.
+                Defaults to None.
             gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): The
                 calibration data for the device. default: None.
 
@@ -1392,52 +1392,6 @@ class Circuit:
                 )
         return additional_calibrations
 
-    def as_unitary(self) -> np.ndarray:
-        r"""
-        Returns the unitary matrix representation, in little endian format, of the entire circuit.
-        *Note*: The performance of this method degrades with qubit count. It might be slow for
-        qubit count > 10.
-
-        Returns:
-            ndarray: A numpy array with shape (2^qubit_count, 2^qubit_count) representing the
-            circuit as a unitary. *Note*: For an empty circuit, an empty numpy array is
-            returned (`array([], dtype=complex128)`)
-
-        Warnings:
-            This method has been deprecated, please use to_unitary() instead.
-            The unitary returned by this method is *little-endian*; the first qubit in the circuit
-            is the _least_ significant. For example, a circuit `Circuit().h(0).x(1)` will yield the
-            unitary :math:`X(1) \otimes H(0)`.
-
-        Raises:
-            TypeError: If circuit is not composed only of `Gate` instances,
-                i.e. a circuit with `Noise` operators will raise this error.
-
-        Examples:
-            >>> circ = Circuit().h(0).cnot(0, 1)
-            >>> circ.as_unitary()
-            array([[ 0.70710678+0.j,  0.70710678+0.j,  0.        +0.j,
-                     0.        +0.j],
-                   [ 0.        +0.j,  0.        +0.j,  0.70710678+0.j,
-                    -0.70710678+0.j],
-                   [ 0.        +0.j,  0.        +0.j,  0.70710678+0.j,
-                     0.70710678+0.j],
-                   [ 0.70710678+0.j, -0.70710678+0.j,  0.        +0.j,
-                     0.        +0.j]])
-        """
-        warnings.warn(
-            "Matrix returned will have qubits in little-endian order; "
-            "This method has been deprecated. Please use to_unitary() instead.",
-            category=DeprecationWarning,
-        )
-
-        qubits = self.qubits
-        if not qubits:
-            return np.zeros(0, dtype=complex)
-        qubit_count = max(qubits) + 1
-
-        return calculate_unitary(qubit_count, self.instructions)
-
     def to_unitary(self) -> np.ndarray:
         """
         Returns the unitary matrix representation of the entire circuit.
@@ -1538,12 +1492,12 @@ class Circuit:
             )
         return NotImplemented
 
-    def __call__(self, arg: Any = None, **kwargs) -> Circuit:
+    def __call__(self, arg: Any | None = None, **kwargs) -> Circuit:
         """
         Implements the call function to easily make a bound Circuit.
 
         Args:
-            arg (Any): A value to bind to all parameters. Defaults to None and
+            arg (Any | None): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
 
         Returns:

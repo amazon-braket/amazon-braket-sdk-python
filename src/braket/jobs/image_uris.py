@@ -15,7 +15,7 @@ import json
 import os
 from enum import Enum
 from functools import cache
-from typing import Dict
+from typing import Dict, Set
 
 
 class Framework(str, Enum):
@@ -26,7 +26,7 @@ class Framework(str, Enum):
     PL_PYTORCH = "PL_PYTORCH"
 
 
-def built_in_images(region):
+def built_in_images(region: str) -> Set[str]:
     return {retrieve_image(framework, region) for framework in Framework}
 
 
