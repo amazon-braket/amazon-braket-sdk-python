@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.61.0 (2023-11-06)
+
+### Features
+
+ * simplify entry point wrapper
+
+### Bug Fixes and Other Changes
+
+ * fixing some type hints for optional params
+
 ## v1.60.2 (2023-11-01)
 
 ### Bug Fixes and Other Changes
