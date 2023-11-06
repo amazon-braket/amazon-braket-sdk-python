@@ -244,7 +244,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 marker = "*" * len(ascii_symbol)
                 num_after = len(circuit_qubits) - 1
                 after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
-                ascii_symbols = [ascii_symbol] + after
+                ascii_symbols = [ascii_symbol, *after]
             else:
                 if isinstance(item.target, list):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())

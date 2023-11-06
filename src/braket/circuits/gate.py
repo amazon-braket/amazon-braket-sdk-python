@@ -203,7 +203,7 @@ class Gate(QuantumOperator):
         """tuple[str, ...]: Returns the ascii symbols for the quantum operator."""
         return self._ascii_symbols
 
-    def __eq__(self, other):
+    def __eq__(self, other: Gate):
         return isinstance(other, Gate) and self.name == other.name
 
     def __repr__(self):

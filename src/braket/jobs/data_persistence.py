@@ -26,8 +26,8 @@ def save_job_checkpoint(
     checkpoint_file_suffix: str = "",
     data_format: PersistedJobDataFormat = PersistedJobDataFormat.PLAINTEXT,
 ) -> None:
-    """Saves the specified `checkpoint_data` to the local output directory, specified by the container
-    environment variable `CHECKPOINT_DIR`, with the filename
+    """Saves the specified `checkpoint_data` to the local output directory, specified by
+    the container environment variable `CHECKPOINT_DIR`, with the filename
     `f"{job_name}(_{checkpoint_file_suffix}).json"`. The `job_name` refers to the name of the
     current job and is retrieved from the container environment variable `JOB_NAME`. The
     `checkpoint_data` values are serialized to the specified `data_format`.

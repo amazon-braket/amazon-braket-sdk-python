@@ -352,7 +352,7 @@ class PulseSequence:
 
         Returns:
             PulseSequence: The parse sequence obtain from parsing a pulse instruction.
-        """
+        """  # E501
         calibration_sequence = cls()
         for instr in calibration:
             if hasattr(PulseSequence, f"{instr['name']}"):
@@ -391,7 +391,9 @@ class PulseSequence:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
 
-    def __call__(self, arg: Any | None = None, **kwargs: Union[FreeParameter, str]) -> PulseSequence:
+    def __call__(
+        self, arg: Any | None = None, **kwargs: Union[FreeParameter, str]
+    ) -> PulseSequence:
         """Implements the call function to easily make a bound PulseSequence.
 
         Args:

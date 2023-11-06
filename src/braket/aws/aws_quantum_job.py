@@ -456,7 +456,7 @@ class AwsQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> dict[str, Any]:
-        """Retrieves the hybrid job result persisted using save_job_result() function.
+        """Retrieves the hybrid job result persisted using `save_job_result` function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.
@@ -559,7 +559,7 @@ class AwsQuantumJob(QuantumJob):
     def __repr__(self) -> str:
         return f"AwsQuantumJob('arn':'{self.arn}')"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AwsQuantumJob) -> bool:
         if isinstance(other, AwsQuantumJob):
             return self.arn == other.arn
         return False

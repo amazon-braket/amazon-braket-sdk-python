@@ -17,7 +17,7 @@ import asyncio
 import time
 from functools import singledispatch
 from logging import Logger, getLogger
-from typing import Any, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import boto3
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
@@ -78,8 +78,8 @@ class AwsQuantumTask(QuantumTask):
     """
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
-    NO_RESULT_TERMINAL_STATES = {"FAILED", "CANCELLED"}
-    RESULTS_READY_STATES = {"COMPLETED"}
+    NO_RESULT_TERMINAL_STATES: ClassVar = {"FAILED", "CANCELLED"}
+    RESULTS_READY_STATES: ClassVar = {"COMPLETED"}
     TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
 
     DEFAULT_RESULTS_POLL_TIMEOUT = 432000
@@ -439,7 +439,7 @@ class AwsQuantumTask(QuantumTask):
         """Waits for the quantum task to be completed, then returns the result from the S3 bucket.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult]: If the task is in the
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: If the task is in the
                 `AwsQuantumTask.RESULTS_READY_STATES` state within the specified time limit,
                 the result from the S3 bucket is loaded and returned.
                 `None` is returned if a timeout occurs or task state is in
@@ -448,7 +448,7 @@ class AwsQuantumTask(QuantumTask):
         Note:
             Timeout and sleep intervals are defined in the constructor fields
                 `poll_timeout_seconds` and `poll_interval_seconds` respectively.
-        """
+        """  # noqa E501
         self._logger.debug(f"Task {self._arn}: start polling for completion")
         start_time = time.time()
 

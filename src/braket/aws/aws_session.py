@@ -37,6 +37,7 @@ class AwsSession:
 
     class S3DestinationFolder(NamedTuple):
         """A `NamedTuple` for an S3 bucket and object key."""
+
         bucket: str
         key: str
 

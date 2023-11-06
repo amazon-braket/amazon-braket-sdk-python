@@ -227,7 +227,7 @@ class ObservableResultType(ResultType):
             raise ValueError(
                 f"Observable's qubit count {self._observable.qubit_count} and "
                 f"the size of the target qubit set {self._target} must be equal"
-                )
+            )
         elif self._observable.qubit_count != len(self.ascii_symbols):
             raise ValueError(
                 "Observable's qubit count and the number of ASCII symbols must be equal"

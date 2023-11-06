@@ -135,7 +135,7 @@ class CwlInsightsMetricsFetcher:
         job_name: str,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-        job_start_time: int | None= None,
+        job_start_time: int | None = None,
         job_end_time: int | None = None,
     ) -> dict[str, list[Union[str, float, int]]]:
         """Synchronously retrieves all the algorithm metrics logged by a given Hybrid Job.

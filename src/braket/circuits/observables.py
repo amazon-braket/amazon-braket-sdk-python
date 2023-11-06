@@ -622,7 +622,7 @@ class Hermitian(Observable):
             matrix (np.ndarray): The Hermitian matrix.
 
         Returns:
-            dict[str, ndarray]: The keys are "eigenvectors_conj_t", mapping to the
+            dict[str, np.ndarray]: The keys are "eigenvectors_conj_t", mapping to the
             conjugate transpose of a matrix whose columns are the eigenvectors of the matrix,
             and "eigenvalues", a list of associated eigenvalues in the order of their
             corresponding eigenvectors in the "eigenvectors" matrix. These cached values

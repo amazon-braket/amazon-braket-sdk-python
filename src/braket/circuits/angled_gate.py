@@ -431,8 +431,9 @@ def get_angle(gate: AngledGate, **kwargs: FreeParameterExpression | str) -> Angl
     return type(gate)(angle=new_angle)
 
 
-def _get_angles(gate: TripleAngledGate,
-                **kwargs: FreeParameterExpression | str) -> TripleAngledGate:
+def _get_angles(
+    gate: TripleAngledGate, **kwargs: FreeParameterExpression | str
+) -> TripleAngledGate:
     """Gets the angle with all values substituted in that are requested.
 
     Args:

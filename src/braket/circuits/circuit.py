@@ -114,7 +114,6 @@ class Circuit:
         function_attr = getattr(cls, function_name)
         function_attr.__doc__ = func.__doc__
 
-
     def __init__(self, addable: AddableTypes | None = None, *args, **kwargs):
         """Inits a `Circuit`.
 
@@ -1487,7 +1486,7 @@ class Circuit:
         Returns:
             Circuit: A circuit with the specified parameters bound.
         """
-        param_values = dict()
+        param_values = {}
         if arg is not None:
             for param in self.parameters:
                 param_values[str(param)] = arg

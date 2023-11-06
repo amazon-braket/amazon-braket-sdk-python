@@ -669,8 +669,8 @@ class DampingNoise(Noise, Parameterizable):
         """
         return [self._gamma]
 
-    def __eq__(self, other):
-        if isinstance(other, type(self)):
+    def __eq__(self, other: DampingNoise):
+        if isinstance(other, DampingNoise):
             return self.name == other.name and self.gamma == other.gamma
         return False
 
@@ -713,7 +713,9 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
-        """Args:
+        """Inits a `GeneralizedAmplitudeDampingNoise`.
+
+        Args:
             gamma (Union[FreeParameterExpression, float]): Probability of damping.
             probability (Union[FreeParameterExpression, float]): Probability of the system being
                 excited by the environment.
@@ -758,8 +760,8 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """Returns the parameters associated with the object, either unbound free parameter expressions
-        or bound values.
+        """Returns the parameters associated with the object, either unbound free parameter
+        expressions or bound values.
 
         Parameters are in the order [gamma, probability]
 
@@ -769,8 +771,8 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         """
         return [self.gamma, self.probability]
 
-    def __eq__(self, other):
-        if isinstance(other, type(self)):
+    def __eq__(self, other: GeneralizedAmplitudeDampingNoise):
+        if isinstance(other, GeneralizedAmplitudeDampingNoise):
             return (
                 self.name == other.name
                 and self.gamma == other.gamma

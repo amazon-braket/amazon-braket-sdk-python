@@ -40,7 +40,7 @@ ignore = [
   # Allow dynamic typing
   "ANN101", "ANN102", "ANN202", "ANN204", "ANN401",
   # Probably want to look into this later on
-  "B026", "B904",
+  "B026", "B904", "B019",
   # Docstrings are all written within classes and modules
   # No needed docstrings for classes/magic methods.
   # No summary lines
@@ -64,6 +64,8 @@ ignore = [
   # TO DO fixes
   # Temporarily removing type annotation for kwargs, args, unused args
   "ANN002", "ANN003", "ARG002", "ARG001", "T201",
+  # Doc fixes todo
+  "D301",
 ]
 
 [tool.ruff.pydocstyle]

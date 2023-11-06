@@ -127,7 +127,7 @@ class AwsDevice(Device):
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): 
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]):
                 Specification of quantum task (circuit, OpenQASM program or AHS program)
                 to run on device.
             s3_destination_folder (Optional[AwsSession.S3DestinationFolder]): The S3 location to
@@ -629,7 +629,8 @@ class AwsDevice(Device):
                 warnings.warn(
                     f"{error_code}: Unable to search region '{region}' for devices."
                     " Please check your settings or try again later."
-                    f" Continuing without devices in '{region}'.", stacklevel=1
+                    f" Continuing without devices in '{region}'.",
+                    stacklevel=1,
                 )
 
         devices = list(device_map.values())
@@ -747,7 +748,7 @@ class AwsDevice(Device):
             and self.properties.pulse.nativeGateCalibrationsRef
         ):
             try:
-                with urllib.request.urlopen(
+                with urllib.request.urlopen(  # noqa S310
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
                 ) as f:
                     json_calibration_data = self._parse_calibration_json(

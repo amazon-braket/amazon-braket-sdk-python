@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import singledispatch
 from typing import Optional, Union
 
@@ -5,7 +7,7 @@ import numpy as np
 
 
 class BasisState:
-    def __init__(self, state: "BasisStateInput", size: Optional[int] = None):
+    def __init__(self, state: BasisStateInput, size: Optional[int] = None):
         self.state = _as_tuple(state, size)
 
     @property
@@ -30,7 +32,7 @@ class BasisState:
     def __iter__(self):
         return iter(self.state)
 
-    def __eq__(self, other):
+    def __eq__(self, other: BasisState):
         return self.state == other.state
 
 

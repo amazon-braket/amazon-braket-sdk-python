@@ -73,7 +73,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
     method.
 
     Args:
-        instructions (Iterable[Instruction], optional): Instructions to initialize self.
+        instructions (Iterable[Instruction] | None): Instructions to initialize self.
             Default = None.
 
     Examples:

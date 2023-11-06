@@ -25,7 +25,7 @@ class PhotonicModelQuantumTaskResult:
     additional_metadata: AdditionalMetadata
     measurements: np.ndarray = None
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: PhotonicModelQuantumTaskResult) -> bool:
         if isinstance(other, PhotonicModelQuantumTaskResult):
             return self.task_metadata.id == other.task_metadata.id
         return NotImplemented
