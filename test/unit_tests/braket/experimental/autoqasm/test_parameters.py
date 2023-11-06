@@ -14,6 +14,7 @@
 """AutoQASM tests for parameter support."""
 
 import numpy as np
+import pytest
 
 import braket.experimental.autoqasm as aq
 from braket.circuits import FreeParameter
@@ -282,10 +283,206 @@ def test_parametric_pulse_cals():
         rx("$1", FreeParameter("theta"))
 
     expected = """OPENQASM 3.0;
+input float[64] theta;
 defcal rx(angle[32] angle) $1 {
     delay[(angle) * 1s] $1;
 }
-input float[64] theta;
 rx(theta) $1;"""
     qasm = my_program().with_calibrations(cal_1).to_ir()
     assert qasm == expected
+
+
+def test_bind_parameters():
+    """Test binding FreeParameters to concrete values."""
+
+    @aq.main
+    def parametric(theta: float):
+        rx(0, theta)
+        measure(0)
+
+    prog = parametric(FreeParameter("alpha"))
+    unbound_expected = """OPENQASM 3.0;
+input float[64] alpha;
+qubit[1] __qubits__;
+rx(alpha) __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+
+    bound_template = """OPENQASM 3.0;
+float[64] alpha = {};
+qubit[1] __qubits__;
+rx(alpha) __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+
+    assert prog.to_ir() == unbound_expected
+    bound_prog = prog.make_bound_program({"alpha": 0.5})
+    # Original program unchanged
+    assert prog.to_ir() == unbound_expected
+    assert bound_prog.to_ir() == bound_template.format(0.5)
+    # Can rebind
+    bound_prog = prog.make_bound_program({"alpha": 0.432143})
+    assert bound_prog.to_ir() == bound_template.format(0.432143)
+
+
+def test_multi_bind_parameters():
+    """Test binding FreeParameters to concrete values."""
+
+    @aq.subroutine
+    def sub(alpha: float, theta: float):
+        rx(0, alpha)
+        rx(1, theta)
+        cnot(0, 1)
+        rx(0, theta)
+        rx(1, alpha)
+
+    @aq.subroutine
+    def rx_alpha(qubit: int):
+        rx(qubit, FreeParameter("alpha"))
+
+    @aq.main(num_qubits=3)
+    def parametric(alpha: float, theta: float):
+        sub(alpha, theta)
+        rx_alpha(2)
+
+    prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
+    bound_prog = prog.make_bound_program({"alpha": 0.5, "beta": 1.5})
+
+    expected = """OPENQASM 3.0;
+def sub(float[64] alpha, float[64] theta) {
+    rx(alpha) __qubits__[0];
+    rx(theta) __qubits__[1];
+    cnot __qubits__[0], __qubits__[1];
+    rx(theta) __qubits__[0];
+    rx(alpha) __qubits__[1];
+}
+def rx_alpha(int[32] qubit) {
+    rx(alpha) __qubits__[qubit];
+}
+float[64] alpha = 0.5;
+float[64] beta = 1.5;
+qubit[3] __qubits__;
+sub(alpha, beta);
+rx_alpha(2);"""
+    assert bound_prog.to_ir() == expected
+
+
+def test_partial_bind():
+    """Test binding some but not all FreeParameters."""
+
+    @aq.subroutine
+    def rx_alpha(qubit: int, theta: float):
+        rx(qubit, theta)
+
+    @aq.main(num_qubits=3)
+    def parametric(alpha: float, beta: float):
+        rx_alpha(2, alpha)
+        rx_alpha(2, beta)
+
+    prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
+    bound_prog = prog.make_bound_program({"beta": np.pi})
+
+    expected = """OPENQASM 3.0;
+def rx_alpha(int[32] qubit, float[64] theta) {
+    rx(theta) __qubits__[qubit];
+}
+input float[64] alpha;
+float[64] beta = 3.141592653589793;
+qubit[3] __qubits__;
+rx_alpha(2, alpha);
+rx_alpha(2, beta);"""
+    assert bound_prog.to_ir() == expected
+
+
+def test_binding_pulse_parameters():
+    """Test binding programs with parametric pulse instructions."""
+
+    @aq.gate_calibration(implements=rx, target="$1")
+    def cal_1(angle: float):
+        pulse.delay("$1", angle)
+
+    @aq.main
+    def my_program():
+        rx("$1", FreeParameter("theta"))
+
+    qasm1 = my_program().with_calibrations(cal_1).make_bound_program({"theta": 0.6}).to_ir()
+    qasm2 = my_program().make_bound_program({"theta": 0.6}).with_calibrations(cal_1).to_ir()
+    assert qasm1 == qasm2
+
+    expected = """OPENQASM 3.0;
+float[64] theta = 0.6;
+defcal rx(angle[32] angle) $1 {
+    delay[(angle) * 1s] $1;
+}
+rx(theta) $1;"""
+    assert expected == qasm1
+
+
+def test_bind_empty_program():
+    """Test that binding behaves well on empty programs."""
+
+    @aq.main
+    def empty_program():
+        pass
+
+    qasm = empty_program().to_ir()
+    bound_program1 = empty_program().make_bound_program({}).to_ir()
+    bound_program2 = empty_program().make_bound_program({"alpha": 0.5}).to_ir()
+    assert qasm == bound_program1 == bound_program2
+
+
+def test_strict_parameter_bind():
+    """Test make_bound_program with strict set to True."""
+
+    @aq.main
+    def parametric(theta: float):
+        rx(0, theta)
+        measure(0)
+
+    prog = parametric(FreeParameter("alpha"))
+
+    template = """OPENQASM 3.0;
+float[64] alpha = {};
+qubit[1] __qubits__;
+rx(alpha) __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+
+    bound_prog = prog.make_bound_program({"alpha": 0.5}, strict=True)
+    assert bound_prog.to_ir() == template.format(0.5)
+
+
+def test_strict_parameter_bind_failure():
+    """Test make_bound_program with strict set to True."""
+
+    @aq.main
+    def parametric(theta: float):
+        rx(0, theta)
+        measure(0)
+
+    prog = parametric(FreeParameter("alpha"))
+    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+        prog.make_bound_program({"beta": 0.5}, strict=True)
+
+
+def test_duplicate_variable_name_fails():
+    """Test using a variable and FreeParameter with the same name."""
+
+    @aq.main
+    def parametric():
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+        rx(0, FreeParameter("alpha"))
+
+    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+        parametric()
+
+
+def test_binding_variable_fails():
+    """Test that trying to bind a variable that isn't declared as a FreeParameter fails."""
+
+    @aq.main
+    def parametric():
+        alpha = aq.FloatVar(1.2)  # noqa: F841
+
+    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+        parametric().make_bound_program({"beta": 0.5}, strict=True)
