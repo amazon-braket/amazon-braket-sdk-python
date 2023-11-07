@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.61.0.post0 (2023-11-07)
+
+### Documentation Changes
+
+ * Improve docstring for make_bound_circuit
+
+## v1.61.0 (2023-11-06)
+
+### Features
+
+ * simplify entry point wrapper
+
+### Bug Fixes and Other Changes
+
+ * fixing some type hints for optional params
+
 ## v1.60.2 (2023-11-01)
 
 ### Bug Fixes and Other Changes

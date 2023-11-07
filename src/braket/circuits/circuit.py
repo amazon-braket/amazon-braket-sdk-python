@@ -855,8 +855,8 @@ class Circuit:
         Args:
             param_values (dict[str, Number]):  A mapping of FreeParameter names
                 to a value to assign to them.
-            strict (bool): If True, raises a ValueError if none of the FreeParameters
-                in param_values appear in the circuit. False by default."
+            strict (bool): If True, raises a ValueError if any of the FreeParameters
+                in param_values do not appear in the circuit. False by default.
 
         Returns:
             Circuit: Returns a circuit with all present parameters fixed to their respective
@@ -875,8 +875,8 @@ class Circuit:
                 to a value to assign to them.
 
         Raises:
-            ValueError: If there are no parameters that match the key for the arg
-            param_values.
+            ValueError: If a parameter name is given which does not appear in the circuit.
+
         """
         parameter_strings = set()
         for parameter in self.parameters:
