@@ -20,9 +20,30 @@ import oqpy.base
 from openpulse import ast
 
 from braket.circuits import FreeParameter
-
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
+
+
+def _convert_parameters(*args: list[FreeParameter]) -> list[aq_types.FloatVar]:
+    """Converts FreeParameter objects to FloatVars through the program conversion context
+    parameter registry.
+
+    FloatVars are more compatible with the program conversion operations.
+
+    Args:
+        args (list[FreeParameter]): FreeParameter objects.
+
+    Returns:
+        list[FloatVar]: FloatVars for program conversion.
+    """
+    result = []
+    for arg in args:
+        if isinstance(arg, FreeParameter):
+            var = program.get_program_conversion_context()._free_parameters[arg.name]
+            result.append(var)
+        else:
+            result.append(arg)
+    return result[0] if len(result) == 1 else result
 
 
 def and_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.BoolVar]:
@@ -44,7 +65,11 @@ def and_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.Boo
 
 
 def _oqpy_and(a: Any, b: Any) -> aq_types.BoolVar:
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    program_conversion_context = program.get_program_conversion_context()
+    program_conversion_context.register_args([a, b])
+    a, b = _convert_parameters(a, b)
+
+    oqpy_program = program_conversion_context.get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
     oqpy_program.set(result, oqpy.base.logical_and(a, b))
@@ -74,7 +99,11 @@ def or_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.Bool
 
 
 def _oqpy_or(a: Any, b: Any) -> aq_types.BoolVar:
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    program_conversion_context = program.get_program_conversion_context()
+    program_conversion_context.register_args([a, b])
+    a, b = _convert_parameters(a, b)
+
+    oqpy_program = program_conversion_context.get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
     oqpy_program.set(result, oqpy.base.logical_or(a, b))
@@ -101,7 +130,11 @@ def not_(a: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _oqpy_not(a: Any) -> aq_types.BoolVar:
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    program_conversion_context = program.get_program_conversion_context()
+    program_conversion_context.register_args([a])
+    a = _convert_parameters(a)
+
+    oqpy_program = program_conversion_context.get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
     oqpy_program.set(result, oqpy.base.OQPyUnaryExpression(ast.UnaryOperator["!"], a))
@@ -129,14 +162,13 @@ def eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _oqpy_eq(a: Any, b: Any) -> aq_types.BoolVar:
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    program_conversion_context = program.get_program_conversion_context()
+    program_conversion_context.register_args([a, b])
+    a, b = _convert_parameters(a, b)
+
+    oqpy_program = program_conversion_context.get_oqpy_program()
     is_equal = aq_types.BoolVar()
     oqpy_program.declare(is_equal)
-    program.get_program_conversion_context().register_args([a, b])
-    if isinstance(a, FreeParameter):
-        a = aq_types.FloatVar(name=a.name, needs_declaration=False)
-    if isinstance(b, FreeParameter):
-        b = aq_types.FloatVar(name=b.name, needs_declaration=False)
     oqpy_program.set(is_equal, a == b)
     return is_equal
 
@@ -162,7 +194,11 @@ def not_eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _oqpy_not_eq(a: Any, b: Any) -> aq_types.BoolVar:
-    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
+    program_conversion_context = program.get_program_conversion_context()
+    program_conversion_context.register_args([a, b])
+    a, b = _convert_parameters(a, b)
+
+    oqpy_program = program_conversion_context.get_oqpy_program()
     is_not_equal = aq_types.BoolVar()
     oqpy_program.declare(is_not_equal)
     oqpy_program.set(is_not_equal, a != b)

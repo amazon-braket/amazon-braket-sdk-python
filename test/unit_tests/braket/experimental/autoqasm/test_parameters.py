@@ -603,7 +603,18 @@ def test_param_or():
             rx(0, beta)
         measure(0)
 
-    expected = """OPENQASM 3.0;"""
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+input float[64] beta;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = alpha || beta;
+if (__bool_0__) {
+    rx(alpha) __qubits__[0];
+    rx(beta) __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
 
 
@@ -616,12 +627,66 @@ def test_param_and():
             rx(0, alpha)
         measure(0)
 
-    expected = """OPENQASM 3.0;"""
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+input float[64] beta;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = alpha && beta;
+if (__bool_0__) {
+    rx(alpha) __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
 
 
+def test_param_and_float():
+    """Test parameters used in conditional `and` statements."""
+
+    @aq.main
+    def parametric(alpha: float, beta: float):
+        if alpha and beta:
+            rx(0, alpha)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = alpha && 1.5;
+if (__bool_0__) {
+    rx(alpha) __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("alpha"), 1.5).to_ir() == expected
+
+
+def test_param_not():
+    """Test parameters used in conditional `not` statements."""
+
+    @aq.main
+    def parametric(val: int):
+        if not val:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = !val;
+if (__bool_0__) {
+    h __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
 def test_parameter_binding_conditions():
-    """Test that parameters can be used in conditions and be bound."""
+    """Test that parameters can be used in conditions and then bound."""
 
     @aq.main
     def parametric(val: float):
