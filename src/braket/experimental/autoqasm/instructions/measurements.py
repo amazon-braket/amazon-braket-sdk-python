@@ -28,7 +28,11 @@ from typing import Union
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
-from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType, _qubit
+from braket.experimental.autoqasm.instructions.qubits import (
+    QubitIdentifierType,
+    _qubit,
+    is_qubit_identifier_type,
+)
 
 
 def measure(qubits: Union[QubitIdentifierType, Iterable[QubitIdentifierType]]) -> aq_types.BitVar:
@@ -42,7 +46,7 @@ def measure(qubits: Union[QubitIdentifierType, Iterable[QubitIdentifierType]]) -
     Returns:
         BitVar: Bit variable the measurement results are assigned to.
     """
-    if not isinstance(qubits, Iterable):
+    if is_qubit_identifier_type(qubits):
         qubits = [qubits]
 
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
