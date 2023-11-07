@@ -157,7 +157,6 @@ def result_oqc(task_metadata_shots, additional_metadata_oqc):
     return GateModelQuantumTaskResult.from_object(result)
 
 
-
 @pytest.fixture
 def result_str_1(result_obj_1):
     return result_obj_1.json()
@@ -334,6 +333,13 @@ def test_get_compiled_circuit_oqc(result_oqc, qasm2_program):
 def test_get_compiled_circuit(result_obj_1):
     """Test get_compiled_circuit method."""
     result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    assert result.get_compiled_circuit() == None
+
+
+def test_get_compiled_circuit_no_metadata(result_obj_1):
+    """Test that the method does not raise an error if metadata is missing."""
+    result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    result.additional_metadata = None
     assert result.get_compiled_circuit() == None
 
 
