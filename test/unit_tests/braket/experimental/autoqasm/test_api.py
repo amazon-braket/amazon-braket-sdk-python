@@ -302,6 +302,32 @@ def test_bell_measurement_invalid_declared_size() -> None:
     assert expected_error_message in str(exc_info.value)
 
 
+@aq.main
+def measure_physical_qubits() -> None:
+    """A program that measures physical qubits."""
+    a = measure("$0")  # noqa: F841
+    b = measure("$1")  # noqa: F841
+    c = measure(["$0", "$1"])  # noqa: F841
+
+
+def test_measure_physical_qubits() -> None:
+    expected = """OPENQASM 3.0;
+bit a;
+bit b;
+bit[2] c;
+bit __bit_0__;
+__bit_0__ = measure $0;
+a = __bit_0__;
+bit __bit_1__;
+__bit_1__ = measure $1;
+b = __bit_1__;
+bit[2] __bit_2__ = "00";
+__bit_2__[0] = measure $0;
+__bit_2__[1] = measure $1;
+c = __bit_2__;"""
+    assert measure_physical_qubits().to_ir() == expected
+
+
 @aq.main(num_qubits=5)
 def ghz_qasm_for_loop() -> None:
     """A function that generates a GHZ state using a QASM for loop."""
