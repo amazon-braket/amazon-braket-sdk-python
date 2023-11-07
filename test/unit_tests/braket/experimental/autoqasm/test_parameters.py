@@ -488,8 +488,8 @@ def test_binding_variable_fails():
         parametric().make_bound_program({"beta": 0.5}, strict=True)
 
 
-def test_parameter_as_condition():
-    """Test parameters used in conditional statements."""
+def test_parameter_as_condition_gt():
+    """Test parameters used in greater than conditional statements."""
 
     @aq.main
     def parametric(val: float):
@@ -500,14 +500,14 @@ def test_parameter_as_condition():
 
     expected = """OPENQASM 3.0;
 input float[64] val;
-float[64] threshold;
 qubit[1] __qubits__;
-threshold = 0.9;
-if (val > threshold) {
+bool __bool_0__;
+__bool_0__ = val > 0.9;
+if (__bool_0__) {
     x __qubits__[0];
 }
-bit __bit_0__;
-__bit_0__ = measure __qubits__[0];"""
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("val")).to_ir() == expected
 
 
@@ -527,15 +527,17 @@ def test_parameter_as_condition_in_subroutine():
 
     expected = """OPENQASM 3.0;
 def sub(float[64] val) {
-    if (val > 0.9) {
+    bool __bool_0__;
+    __bool_0__ = val > 0.9;
+    if (__bool_0__) {
         x __qubits__[0];
     }
 }
 input float[64] val;
 qubit[1] __qubits__;
 sub(val);
-bit __bit_0__;
-__bit_0__ = measure __qubits__[0];"""
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("val")).to_ir() == expected
 
 

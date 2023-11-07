@@ -59,7 +59,12 @@ from braket.experimental.autoqasm.autograph.pyct.static_analysis import (
     reaching_definitions,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_stack
-from braket.experimental.autoqasm.converters import assignments, break_statements, return_statements
+from braket.experimental.autoqasm.converters import (
+    assignments,
+    break_statements,
+    comparisons,
+    return_statements,
+)
 
 
 class PyToOqpy(transpiler.PyToPy):
@@ -139,6 +144,7 @@ class PyToOqpy(transpiler.PyToPy):
         # canonicalization creates.
         node = continue_statements.transform(node, ctx)
         node = return_statements.transform(node, ctx)
+        node = comparisons.transform(node, ctx)
         node = assignments.transform(node, ctx)
         node = lists.transform(node, ctx)
         node = slices.transform(node, ctx)

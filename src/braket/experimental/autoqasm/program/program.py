@@ -338,6 +338,22 @@ class ProgramConversionContext:
         if parameter.name not in self._free_parameters:
             self._free_parameters[parameter.name] = oqpy.FloatVar("input", name=parameter.name)
 
+    def get_parameter(self, name: str) -> oqpy.FloatVar:
+        """Return a named oqpy.FloatVar that is used as a free parameter in the program.
+
+        Args:
+            name (str): The name of the parameter.
+
+        Raises:
+            ValueError: If there is no parameter with the given name registered with the program.
+
+        Returns:
+            FloatVar: The associated variable.
+        """
+        if name not in self._free_parameters:
+            raise ValueError(f"Free parameter '{name}' was not found.")
+        return self._free_parameters[name]
+
     def get_free_parameters(self) -> list[oqpy.FloatVar]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
         return list(self._free_parameters.values())

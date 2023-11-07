@@ -27,6 +27,7 @@ from braket.experimental.autoqasm.autograph.operators.variables import (  # noqa
 )
 
 from .assignments import assign_stmt  # noqa: F401
+from .comparisons import gt_, gteq_, lt_, lteq_  # noqa: F401
 from .conditional_expressions import if_exp  # noqa: F401
 from .control_flow import for_stmt, if_stmt, while_stmt  # noqa: F401
 from .data_structures import ListPopOpts  # noqa: F401
