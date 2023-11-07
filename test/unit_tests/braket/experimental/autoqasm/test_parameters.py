@@ -519,25 +519,23 @@ def test_parameter_as_condition_in_subroutine():
         threshold = 0.9
         if val > threshold:
             x(0)
-        measure(0)
 
     @aq.main
     def parametric(val: float):
         sub(val)
+        measure(0)
 
     expected = """OPENQASM 3.0;
-qubit[1] __qubits__;
-float[64] input val;
 def sub(float[64] val) {
-    bool __bool_1__;
-    __bool_1__ = val > 0.9;
-    if (__bool_1__) {
+    if (val > 0.9) {
         x __qubits__[0];
     }
 }
+input float[64] val;
+qubit[1] __qubits__;
 sub(val);
-bit __bit_2__;
-__bit_2__ = measure __qubits__[0];"""
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("val")).to_ir() == expected
 
 
@@ -555,21 +553,71 @@ def test_parameter_in_eq_condition():
         measure(0)
 
     expected = """OPENQASM 3.0;
+input float[64] basis;
 qubit[1] __qubits__;
-float[64] input basis;
-bool __bool_1__;
-__bool_1__ = basis == 1;
-if (__bool_1__) {
+bool __bool_0__;
+__bool_0__ = basis == 1;
+if (__bool_0__) {
+    h __qubits__[0];
+} else {
+    bool __bool_1__;
+    __bool_1__ = basis == 2;
+    if (__bool_1__) {
+        x __qubits__[0];
+    }
+}
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("basis")).to_ir() == expected
+
+
+def test_param_neq():
+    """Test parameters used in conditional not equals statements."""
+
+    @aq.main
+    def parametric(val: int):
+        if val != 1:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = val != 1;
+if (__bool_0__) {
     h __qubits__[0];
 }
-bool __bool_2__;
-__bool_2__ = basis == 2;
-if (__bool_2__) {
-    x __qubits__[0];
-}
-bit __bit_3__;
-__bit_3__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("basis")).to_ir() == expected
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_param_or():
+    """Test parameters used in conditional `or` statements."""
+
+    @aq.main
+    def parametric(alpha: float, beta: float):
+        if alpha or beta:
+            rx(0, alpha)
+            rx(0, beta)
+        measure(0)
+
+    expected = """OPENQASM 3.0;"""
+    assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
+
+
+def test_param_and():
+    """Test parameters used in conditional `and` statements."""
+
+    @aq.main
+    def parametric(alpha: float, beta: float):
+        if alpha and beta:
+            rx(0, alpha)
+        measure(0)
+
+    expected = """OPENQASM 3.0;"""
+    assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
 
 
 def test_parameter_binding_conditions():
@@ -577,14 +625,21 @@ def test_parameter_binding_conditions():
 
     @aq.main
     def parametric(val: float):
-        threshold = 0.9
-        if val > threshold:
+        if val == 1:
             x(0)
         measure(0)
 
-    expected = """OPENQASM 3.0;
+    template = """OPENQASM 3.0;
+float[64] val = {};
 qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = val == 1;
+if (__bool_0__) {{
+    x __qubits__[0];
+}}
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 0.5})
-    assert bound_prog.to_ir() == expected
+    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 0})
+    assert bound_prog.to_ir() == template.format(0)
+    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 1})
+    assert bound_prog.to_ir() == template.format(1)
