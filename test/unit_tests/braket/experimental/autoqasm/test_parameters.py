@@ -21,7 +21,7 @@ from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
 from braket.experimental.autoqasm import pulse
-from braket.experimental.autoqasm.instructions import cnot, cphaseshift, measure, ms, rx, rz
+from braket.experimental.autoqasm.instructions import cnot, cphaseshift, h, measure, ms, rx, rz, x
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
@@ -486,3 +486,61 @@ def test_binding_variable_fails():
 
     with pytest.raises(ValueError, match="No parameter in the program named: beta"):
         parametric().make_bound_program({"beta": 0.5}, strict=True)
+
+
+def test_parameter_as_condition():
+    """Test parameters used in conditional statements."""
+
+    @aq.main
+    def parametric(val: float):
+        threshold = 0.9
+        if val > threshold:
+            x(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+float[64] threshold;
+qubit[1] __qubits__;
+threshold = 0.9;
+if (val > threshold) {
+    x __qubits__[0];
+}
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_parameter_as_condition_in_subroutine():
+    """Test parameters used in conditional statements."""
+
+    @aq.subroutine
+    def sub(val: float):
+        threshold = 0.9
+        if val > threshold:
+            x(0)
+        measure(0)
+
+    @aq.main
+    def parametric(val: float):
+        sub(val)
+
+    expected = """OPENQASM 3.0;"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_parameter_in_eq_condition():
+    """Test parameters used in conditional equals statements."""
+
+    @aq.main
+    def parametric(basis: int):
+        if basis == 1:
+            h(0)
+        elif basis == 2:
+            x(0)
+        else:
+            pass
+        measure(0)
+
+    expected = """OPENQASM 3.0;"""
+    assert parametric(FreeParameter("basis")).to_ir() == expected
