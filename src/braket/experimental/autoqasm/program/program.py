@@ -333,7 +333,7 @@ class ProgramConversionContext:
         Only floats are currently supported.
 
         Args:
-            parameter (Freeparameter): The parameter to register with the program.
+            parameter (FreeParameter): The parameter to register with the program.
         """
         if parameter.name not in self._free_parameters:
             self._free_parameters[parameter.name] = oqpy.FloatVar("input", name=parameter.name)

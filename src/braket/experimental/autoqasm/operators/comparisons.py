@@ -14,10 +14,7 @@
 
 """Operators for comparison operators: <, <=, >, and >=."""
 
-from collections.abc import Callable
 from typing import Any, Union
-
-import oqpy.base
 
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types

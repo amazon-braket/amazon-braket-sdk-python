@@ -25,9 +25,6 @@ def _convert_parameters(*args: list[FreeParameter]) -> list[aq_types.FloatVar]:
 
     FloatVars are more compatible with the program conversion operations.
 
-    Args:
-        args (list[FreeParameter]): FreeParameter objects.
-
     Returns:
         list[FloatVar]: FloatVars for program conversion.
     """
