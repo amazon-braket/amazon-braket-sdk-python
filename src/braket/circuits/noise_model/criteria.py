@@ -20,7 +20,9 @@ from typing import Any, Union
 
 
 class CriteriaKey(str, Enum):
-    """Specifies the types of keys that a criteria may use to match an instruction, observable, etc."""
+    """Specifies the types of keys that a criteria may use to match an instruction,
+    observable, etc.
+    """
 
     QUBIT = "QUBIT"
     GATE = "GATE"
@@ -87,7 +89,8 @@ class Criteria(ABC):
 
     @classmethod
     def from_dict(cls, criteria: dict) -> Criteria:
-        """Converts a dictionary representing an object of this class into an instance of this class.
+        """Converts a dictionary representing an object of this class into an instance of this
+        class.
 
         Args:
             criteria (dict): A dictionary representation of an object of this class.

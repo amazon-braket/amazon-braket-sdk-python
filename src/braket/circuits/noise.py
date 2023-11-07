@@ -571,8 +571,8 @@ class PauliNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """Returns the parameters associated with the object, either unbound free parameter expressions
-        or bound values.
+        """Returns the parameters associated with the object, either unbound free parameter
+        expressions or bound values.
 
         Parameters are in the order [probX, probY, probZ]
 
@@ -660,8 +660,8 @@ class DampingNoise(Noise, Parameterizable):
 
     @property
     def parameters(self) -> list[Union[FreeParameterExpression, float]]:
-        """Returns the parameters associated with the object, either unbound free parameter expressions
-        or bound values.
+        """Returns the parameters associated with the object, either unbound free parameter
+        expressions or bound values.
 
         Returns:
             list[Union[FreeParameterExpression, float]]: The free parameter expressions

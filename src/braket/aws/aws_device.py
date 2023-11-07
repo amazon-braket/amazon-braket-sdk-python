@@ -588,7 +588,7 @@ class AwsDevice(Device):
                 f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
             )
         types = (
-            frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})
+            frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})  # noqa C416
         )
         aws_session = aws_session if aws_session else AwsSession()
         device_map = {}

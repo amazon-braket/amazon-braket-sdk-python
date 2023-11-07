@@ -1306,21 +1306,24 @@ Noise.register_noise(PhaseDamping)
 class Kraus(Noise):
     """User-defined noise channel that uses the provided matrices as Kraus operators
     This noise channel is shown as `NK` in circuit diagrams.
-
-    Args:
-        matrices (Iterable[np.array]): A list of matrices that define a noise
-            channel. These matrices need to satisfy the requirement of CPTP map.
-        display_name (str): Name to be used for an instance of this general noise
-            channel for circuit diagrams. Defaults to `KR`.
-
-    Raises:
-        ValueError: If any matrix in `matrices` is not a two-dimensional square
-            matrix,
-            or has a dimension length which is not a positive exponent of 2,
-            or the `matrices` do not satisfy CPTP condition.
     """
 
     def __init__(self, matrices: Iterable[np.ndarray], display_name: str = "KR"):
+        """Inits `Kraus`.
+
+        Args:
+            matrices (Iterable[np.ndarray]): A list of matrices that define a noise
+                channel. These matrices need to satisfy the requirement of CPTP map.
+            display_name (str): Name to be used for an instance of this general noise
+                channel for circuit diagrams. Defaults to `KR`.
+
+        Raises:
+            ValueError: If any matrix in `matrices` is not a two-dimensional square
+                matrix,
+                or has a dimension length which is not a positive exponent of 2,
+                or the `matrices` do not satisfy CPTP condition.
+
+        """
         for matrix in matrices:
             verify_quantum_operator_matrix_dimensions(matrix)
             if not int(np.log2(matrix.shape[0])) == int(np.log2(matrices[0].shape[0])):
@@ -1389,7 +1392,7 @@ class Kraus(Noise):
 
         Args:
             targets (QubitSetInput): Target qubit(s)
-            matrices (Iterable[array]): Matrices that define a general noise channel.
+            matrices (Iterable[np.array]): Matrices that define a general noise channel.
             display_name (str): The display name.
 
         Returns:

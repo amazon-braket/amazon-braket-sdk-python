@@ -248,7 +248,9 @@ def _generate_default_job_name(image_uri: str | None = None, func: Callable | No
         if len(name) + len(timestamp) > max_length:
             name = name[: max_length - len(timestamp) - 1]
             warnings.warn(
-                f"Job name exceeded {max_length} characters. Truncating name to {name}-{timestamp}."
+                f"Job name exceeded {max_length} characters. "
+                f"Truncating name to {name}-{timestamp}.",
+                stacklevel=1,
             )
     elif not image_uri:
         name = "braket-job-default"
@@ -334,7 +336,8 @@ def _validate_entry_point(source_module_path: Path, entry_point: str) -> None:
         # second argument allows relative imports
         importlib.invalidate_caches()
         module = importlib.util.find_spec(importable, source_module_path.stem)
-        assert module is not None
+        if module is not None:
+            raise AssertionError
     # if entry point is nested (ie contains '.'), parent modules are imported
     except (ModuleNotFoundError, AssertionError):
         raise ValueError(f"Entry point module was not found: {importable}")

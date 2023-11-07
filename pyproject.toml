@@ -40,7 +40,7 @@ ignore = [
   # Allow dynamic typing
   "ANN101", "ANN102", "ANN202", "ANN204", "ANN401",
   # Probably want to look into this later on
-  "B026", "B904", "B019",
+  "B026", "B904", "B019", "B008",
   # Docstrings are all written within classes and modules
   # No needed docstrings for classes/magic methods.
   # No summary lines
@@ -50,7 +50,7 @@ ignore = [
   # Magic vars. Should be enabled later.
   "PLR2004",
   # Ignore complexity
-  "PLR0911", "PLR0912", "PLR0913",
+  "PLR0911", "PLR0912", "PLR0913", "PLW1510",
   # Uppercase function names are fine in some cases
   "N801", "N802", "N803", "N806", "N815",
   # Allow Optional return types
@@ -76,3 +76,12 @@ known-first-party = ["amazon_braket_sdk"]
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+
+[tool.pydoclint]
+style = 'google'
+exclude = '\.git|\.tox|tests'
+allow-init-docstring = true
+require-return-section-when-returning-nothing = false
+
+

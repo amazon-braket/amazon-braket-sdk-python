@@ -163,7 +163,7 @@ class AwsQuantumTask(QuantumTask):
         See Also:
             `braket.aws.aws_quantum_simulator.AwsQuantumSimulator.run()`
             `braket.aws.aws_qpu.AwsQpu.run()`
-        """
+        """  # noqa E501
         if len(s3_destination_folder) != 2:
             raise ValueError(
                 "s3_destination_folder must be of size 2 with a 'bucket' and 'key' respectively."
@@ -206,7 +206,7 @@ class AwsQuantumTask(QuantumTask):
         aws_session: AwsSession | None = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
-        logger: Logger = getLogger(__name__),
+        logger: Logger = getLogger(__name__),  # noqa 
     ):
         """Inits an `AwsQuantumTask`.
 
@@ -248,8 +248,8 @@ class AwsQuantumTask(QuantumTask):
 
     @staticmethod
     def _aws_session_for_task_arn(task_arn: str) -> AwsSession:
-        """Get an AwsSession for the Quantum Task ARN. The AWS session should be in the region of the
-        quantum task.
+        """Get an AwsSession for the Quantum Task ARN. The AWS session should be in the region of
+        the quantum task.
 
         Returns:
             AwsSession: `AwsSession` object with default `boto_session` in quantum task's region.
@@ -380,10 +380,10 @@ class AwsQuantumTask(QuantumTask):
         Consecutive calls to this method return a cached result from the preceding request.
 
         Returns:
-            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]: # noqa
+            Union[GateModelQuantumTaskResult, AnnealingQuantumTaskResult, PhotonicModelQuantumTaskResult]:
             The result of the quantum task, if the quantum task completed successfully; returns
             `None` if the quantum task did not complete successfully or the future timed out.
-        """
+        """  # noqa E501
         if self._result or (
             self._metadata and self._status(True) in self.NO_RESULT_TERMINAL_STATES
         ):
@@ -498,7 +498,7 @@ class AwsQuantumTask(QuantumTask):
     def __repr__(self) -> str:
         return f"AwsQuantumTask('id/taskArn':'{self.id}')"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: AwsQuantumTask) -> bool:
         if isinstance(other, AwsQuantumTask):
             return self.id == other.id
         return False

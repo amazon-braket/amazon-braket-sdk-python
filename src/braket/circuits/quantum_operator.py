@@ -106,16 +106,30 @@ class QuantumOperator(Operator):
         """
         return self.__class__.__name__
 
-    def to_ir(self, *args, **kwargs) -> Any:
+    def to_ir(self, *args: Any, **kwargs: Any) -> Any:
         """Returns IR representation of quantum operator.
+
+        Args:
+            *args (Any): Not Implemented.
+            **kwargs (Any): Not Implemented.
+
+        Raises:
+            NotImplementError: Not Implemented.
 
         Returns:
             Any: The the canonical intermediate representation of the operator.
         """
         raise NotImplementedError("to_ir has not been implemented yet.")
 
-    def to_matrix(self, *args, **kwargs) -> np.ndarray:
-        """Returns a matrix representation of the quantum operator
+    def to_matrix(self, *args: Any, **kwargs: Any) -> np.ndarray:
+        """Returns a matrix representation of the quantum operator.
+
+        Args:
+            *args (Any): Not Implemented.
+            **kwargs (Any): Not Implemented.
+
+        Raises:
+            NotImplementError: Not Implemented.
 
         Returns:
             np.ndarray: A matrix representation of the quantum operator

@@ -18,7 +18,7 @@ import itertools
 import math
 import numbers
 from copy import deepcopy
-from typing import Union
+from typing import ClassVar, Union
 
 import numpy as np
 from braket.circuits.gate import Gate
@@ -457,7 +457,7 @@ class Sum(Observable):
         """Scalar multiplication"""
         if isinstance(other, numbers.Number):
             sum_copy = deepcopy(self)
-            for i, obs in enumerate(sum_copy.summands):
+            for i, _obs in enumerate(sum_copy.summands):
                 sum_copy._summands[i]._coef *= other
             return sum_copy
         raise TypeError("Observable coefficients must be numbers.")
@@ -511,7 +511,7 @@ class Sum(Observable):
     def __repr__(self):
         return "Sum(" + ", ".join([repr(o) for o in self.summands]) + ")"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Sum):
         return repr(self) == repr(other)
 
     @staticmethod
@@ -526,7 +526,7 @@ class Hermitian(Observable):
     """Hermitian matrix as an observable."""
 
     # Cache of eigenpairs
-    _eigenpairs = {}
+    _eigenpairs: ClassVar = {}
 
     def __init__(self, matrix: np.ndarray, display_name: str = "Hermitian"):
         """Inits a `Hermitian`.

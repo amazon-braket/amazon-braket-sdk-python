@@ -32,7 +32,7 @@ class CwlInsightsMetricsFetcher:
         aws_session: AwsSession,
         poll_timeout_seconds: float = 10,
         poll_interval_seconds: float = 1,
-        logger: Logger = getLogger(__name__),  # noqa B008
+        logger: Logger = getLogger(__name__),  # B008
     ):
         """Inits a `CwlInsightsMetricsFetcher`.
 

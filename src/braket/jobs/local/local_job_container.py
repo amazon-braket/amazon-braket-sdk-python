@@ -31,7 +31,7 @@ class _LocalJobContainer:
         self,
         image_uri: str,
         aws_session: AwsSession | None = None,
-        logger: Logger = getLogger(__name__),  # noqa B008
+        logger: Logger = getLogger(__name__),  # B008
         force_update: bool = False,
     ):
         """Represents and provides functions for interacting with a Braket Hybrid Jobs docker

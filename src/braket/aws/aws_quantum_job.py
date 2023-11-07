@@ -20,7 +20,7 @@ import time
 from enum import Enum
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import boto3
 from botocore.exceptions import ClientError
@@ -48,12 +48,14 @@ from braket.jobs.quantum_job_creation import prepare_quantum_job
 class AwsQuantumJob(QuantumJob):
     """Amazon Braket implementation of a quantum job."""
 
-    TERMINAL_STATES = {"CANCELLED", "COMPLETED", "FAILED"}
+    TERMINAL_STATES: ClassVar = {"CANCELLED", "COMPLETED", "FAILED"}
     RESULTS_FILENAME = "results.json"
     RESULTS_TAR_FILENAME = "model.tar.gz"
     LOG_GROUP = "/aws/braket/jobs"
 
     class LogState(Enum):
+        """Log state enum."""
+
         TAILING = "tailing"
         JOB_COMPLETE = "job_complete"
         COMPLETE = "complete"
@@ -236,7 +238,12 @@ class AwsQuantumJob(QuantumJob):
 
     @staticmethod
     def _is_valid_aws_session_region_for_job_arn(aws_session: AwsSession, job_arn: str) -> bool:
-        """bool: `True` when the aws_session region matches the job_arn region; otherwise `False`."""
+        """Checks whether the job region and session region match.
+
+        Returns:
+            bool: `True` when the aws_session region matches the job_arn region; otherwise
+             `False`.
+        """
         job_region = job_arn.split(":")[3]
         return job_region == aws_session.region
 
@@ -426,7 +433,7 @@ class AwsQuantumJob(QuantumJob):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            dict[str, list[Any]] : The metrics data.
+            dict[str, list[Any]]: The metrics data.
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)

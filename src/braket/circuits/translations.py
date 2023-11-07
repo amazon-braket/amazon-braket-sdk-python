@@ -83,6 +83,14 @@ one_prob_noise_map = {
 
 
 def get_observable(obs: Union[models.Observable, list]) -> Observable:
+    """Gets the observable.
+
+    Args:
+        obs (Union[models.Observable, list]): The observable(s) to get translated.
+
+    Returns:
+        Observable: The translated observable.
+    """
     return _get_observable(obs)
 
 

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Union
+from typing import Any
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import CheckpointConfig, OutputDataConfig, S3DataSourceConfig
@@ -173,7 +173,8 @@ class LocalQuantumJob(QuantumJob):
 
         Args:
             arn (str): The ARN of the hybrid job.
-            run_log (str | None): The container output log of running the hybrid job with the given arn.
+            run_log (str | None): The container output log of running the hybrid job with the given
+                arn.
 
         Raises:
             ValueError: Local job is not found.
@@ -274,7 +275,7 @@ class LocalQuantumJob(QuantumJob):
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> dict[str, Any]:
-        """Retrieves the `LocalQuantumJob` result persisted using `save_job_result()` function.
+        """Retrieves the `LocalQuantumJob` result persisted using `save_job_result` function.
 
         Args:
             poll_timeout_seconds (float): The polling timeout, in seconds, for `result()`.

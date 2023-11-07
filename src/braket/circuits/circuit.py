@@ -564,8 +564,8 @@ class Circuit:
         target: QubitSetInput | None = None,
         target_mapping: dict[QubitInput, QubitInput] | None = None,
     ) -> Circuit:
-        """Add a verbatim `circuit` to self, that is, ensures that `circuit` is not modified in any way
-        by the compiler.
+        """Add a verbatim `circuit` to self, that is, ensures that `circuit` is not modified in
+        any way by the compiler.
 
         Args:
             verbatim_circuit (Circuit): Circuit to add into self.
@@ -867,8 +867,13 @@ class Circuit:
                 to a value to assign to them.
 
         Raises:
+<<<<<<< HEAD
             ValueError: If a parameter name is given which does not appear in the circuit.
 
+=======
+            ValueError: If there are no parameters that match the key for the arg
+                param_values.
+>>>>>>> 7601914 (batched)
         """
         parameter_strings = set()
         for parameter in self.parameters:
@@ -1085,8 +1090,8 @@ class Circuit:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: Optional[SerializationProperties] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        serialization_properties: SerializationProperties | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
     ) -> Union[OpenQasmProgram, JaqcdProgram]:
         """Converts the circuit into the canonical intermediate representation.
         If the circuit is sent over the wire, this method is called before it is sent.
@@ -1094,20 +1099,20 @@ class Circuit:
         Args:
             ir_type (IRType): The IRType to use for converting the circuit object to its
                 IR representation.
-            serialization_properties (Optional[SerializationProperties]): The serialization
+            serialization_properties (SerializationProperties | None): The serialization
                 properties to use while serializing the object to the IR representation. The
                 serialization properties supplied must correspond to the supplied `ir_type`.
                 Defaults to None.
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]): The
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None): The
                 calibration data for the device. default: None.
 
         Returns:
             Union[OpenQasmProgram, JaqcdProgram]: A representation of the circuit in the
-            `ir_type` format.
+                `ir_type` format.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported, or if the supplied serialization
-            properties don't correspond to the `ir_type`.
+                properties don't correspond to the `ir_type`.
         """
         if ir_type == IRType.JAQCD:
             return self._to_jaqcd()
