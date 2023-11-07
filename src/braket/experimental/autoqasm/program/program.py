@@ -321,22 +321,22 @@ class ProgramConversionContext:
         """
         for arg in args:
             if isinstance(arg, FreeParameter):
-                self.register_parameter(arg.name)
+                self.register_parameter(arg)
             elif isinstance(arg, FreeParameterExpression):
                 # TODO laurecap: Support for expressions
                 raise NotImplementedError(
                     "Expressions of FreeParameters will be supported shortly!"
                 )
 
-    def register_parameter(self, name: str) -> None:
-        """Register an input parameter with the given name, if it has not already been
-        registered. Only floats are currently supported.
+    def register_parameter(self, parameter: FreeParameter) -> None:
+        """Register an input parameter if it has not already been registered.
+        Only floats are currently supported.
 
         Args:
-            name (str): The identifier for the parameter.
+            parameter (Freeparameter): The parameter to register with the program.
         """
-        if name not in self._free_parameters:
-            self._free_parameters[name] = oqpy.FloatVar("input", name=name)
+        if parameter.name not in self._free_parameters:
+            self._free_parameters[parameter.name] = oqpy.FloatVar("input", name=parameter.name)
 
     def get_free_parameters(self) -> list[oqpy.FloatVar]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""

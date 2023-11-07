@@ -19,6 +19,8 @@ from typing import Any, Callable, Union
 import oqpy.base
 from openpulse import ast
 
+from braket.circuits import FreeParameter
+
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
@@ -130,6 +132,11 @@ def _oqpy_eq(a: Any, b: Any) -> aq_types.BoolVar:
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     is_equal = aq_types.BoolVar()
     oqpy_program.declare(is_equal)
+    program.get_program_conversion_context().register_args([a, b])
+    if isinstance(a, FreeParameter):
+        a = aq_types.FloatVar(name=a.name, needs_declaration=False)
+    if isinstance(b, FreeParameter):
+        b = aq_types.FloatVar(name=b.name, needs_declaration=False)
     oqpy_program.set(is_equal, a == b)
     return is_equal
 
