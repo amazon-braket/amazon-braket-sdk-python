@@ -26,6 +26,8 @@ from braket.task_result import (
     ResultTypeValue,
     TaskMetadata,
 )
+from braket.task_result.oqc_metadata_v1 import OqcMetadata
+from braket.task_result.rigetti_metadata_v1 import RigettiMetadata
 from braket.tasks import GateModelQuantumTaskResult
 
 
@@ -62,6 +64,68 @@ def additional_metadata_openqasm():
 
 
 @pytest.fixture
+def quil_program():
+    return """
+PRAGMA INITIAL_REWIRING "NAIVE"
+RESET
+DECLARE ro BIT[2]
+PRAGMA PRESERVE_BLOCK
+RX(1.5707963267948966) 0
+RX(1.5707963267948966) 7
+RZ(1.5707963267948966) 0
+RZ(1.5707963267948966) 7
+RX(-1.5707963267948966) 7
+CZ 0 7
+RZ(3.141592653589793) 7
+RX(1.5707963267948966) 7
+RZ(1.5707963267948966) 7
+RX(-1.5707963267948966) 7
+PRAGMA END_PRESERVE_BLOCK
+MEASURE 0 ro[0]
+MEASURE 7 ro[1]
+"""
+
+
+@pytest.fixture
+def additional_metadata_rigetti(quil_program):
+    program = openqasm.Program(
+        source="""
+        OPENQASM 3.0;
+        bit[2] b;
+        h $0;
+        cnot $0, $7;
+        b[0] = measure $0;
+        b[1] = measure $7;
+        """
+    )
+    rigetti_metadata = RigettiMetadata(compiledProgram=quil_program)
+
+    return AdditionalMetadata(action=program, rigettiMetadata=rigetti_metadata)
+
+
+@pytest.fixture
+def qasm2_program():
+    return """TODO"""
+
+
+@pytest.fixture
+def additional_metadata_oqc(qasm2_program):
+    program = openqasm.Program(
+        source="""
+        OPENQASM 3.0;
+        bit[2] b;
+        h $0;
+        cnot $0, $7;
+        b[0] = measure $0;
+        b[1] = measure $7;
+        """
+    )
+    oqc_metadata = OqcMetadata(compiledProgram=qasm2_program)
+
+    return AdditionalMetadata(action=program, oqcMetadata=oqc_metadata)
+
+
+@pytest.fixture
 def result_obj_1(task_metadata_shots, additional_metadata):
     return GateModelTaskResult(
         measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
@@ -69,6 +133,29 @@ def result_obj_1(task_metadata_shots, additional_metadata):
         taskMetadata=task_metadata_shots,
         additionalMetadata=additional_metadata,
     )
+
+
+@pytest.fixture
+def result_rigetti(task_metadata_shots, additional_metadata_rigetti):
+    result = GateModelTaskResult(
+        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
+        measuredQubits=[0, 1],
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata_rigetti,
+    )
+    return GateModelQuantumTaskResult.from_object(result)
+
+
+@pytest.fixture
+def result_oqc(task_metadata_shots, additional_metadata_oqc):
+    result = GateModelTaskResult(
+        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
+        measuredQubits=[0, 1],
+        taskMetadata=task_metadata_shots,
+        additionalMetadata=additional_metadata_oqc,
+    )
+    return GateModelQuantumTaskResult.from_object(result)
+
 
 
 @pytest.fixture
@@ -232,6 +319,22 @@ test_ir_results = [
     (jaqcd.Variance(targets=[1, 2], observable=["z", "y"]), 0.64),
     (jaqcd.Variance(observable=["z"]), [0.84, 0.96, 0.96, 0.84]),
 ]
+
+
+def test_get_compiled_circuit_rigetti(result_rigetti, quil_program):
+    """Test get_compiled_circuit method."""
+    assert result_rigetti.get_compiled_circuit() == quil_program
+
+
+def test_get_compiled_circuit_oqc(result_oqc, qasm2_program):
+    """Test get_compiled_circuit method."""
+    assert result_oqc.get_compiled_circuit() == qasm2_program
+
+
+def test_get_compiled_circuit(result_obj_1):
+    """Test get_compiled_circuit method."""
+    result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    assert result.get_compiled_circuit() == None
 
 
 def test_measurement_counts_from_measurements():
