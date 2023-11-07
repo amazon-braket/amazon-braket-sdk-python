@@ -867,13 +867,13 @@ class Circuit:
                 to a value to assign to them.
 
         Raises:
-<<<<<<< HEAD
+        <<<<<<< HEAD
             ValueError: If a parameter name is given which does not appear in the circuit.
 
-=======
+        =======
             ValueError: If there are no parameters that match the key for the arg
                 param_values.
->>>>>>> 7601914 (batched)
+        >>>>>>> 7601914 (batched)
         """
         parameter_strings = set()
         for parameter in self.parameters:
