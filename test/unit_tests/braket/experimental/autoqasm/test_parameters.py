@@ -525,7 +525,19 @@ def test_parameter_as_condition_in_subroutine():
     def parametric(val: float):
         sub(val)
 
-    expected = """OPENQASM 3.0;"""
+    expected = """OPENQASM 3.0;
+qubit[1] __qubits__;
+float[64] input val;
+def sub(float[64] val) {
+    bool __bool_1__;
+    __bool_1__ = val > 0.9;
+    if (__bool_1__) {
+        x __qubits__[0];
+    }
+}
+sub(val);
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("val")).to_ir() == expected
 
 
@@ -542,5 +554,37 @@ def test_parameter_in_eq_condition():
             pass
         measure(0)
 
-    expected = """OPENQASM 3.0;"""
+    expected = """OPENQASM 3.0;
+qubit[1] __qubits__;
+float[64] input basis;
+bool __bool_1__;
+__bool_1__ = basis == 1;
+if (__bool_1__) {
+    h __qubits__[0];
+}
+bool __bool_2__;
+__bool_2__ = basis == 2;
+if (__bool_2__) {
+    x __qubits__[0];
+}
+bit __bit_3__;
+__bit_3__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("basis")).to_ir() == expected
+
+
+def test_parameter_binding_conditions():
+    """Test that parameters can be used in conditions and be bound."""
+
+    @aq.main
+    def parametric(val: float):
+        threshold = 0.9
+        if val > threshold:
+            x(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+qubit[1] __qubits__;
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 0.5})
+    assert bound_prog.to_ir() == expected
