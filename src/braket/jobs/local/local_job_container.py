@@ -114,7 +114,7 @@ class _LocalJobContainer(object):
         authorization_data = authorization_data_result["authorizationData"][0]
         raw_token = base64.b64decode(authorization_data["authorizationToken"])
         token = raw_token.decode("utf-8").strip("AWS:")
-        subprocess.run(["docker", "login", "-u", "AWS", "-p", token, ecr_url], check=False)
+        subprocess.run(["docker", "login", "-u", "AWS", "-p", token, ecr_url], check=True)
 
     def _pull_image(self, image_uri: str) -> None:
         """Pulls an image from ECR.
@@ -135,7 +135,7 @@ class _LocalJobContainer(object):
         account_id = ecr_pattern_match.group(2)
         self._login_to_ecr(account_id, ecr_url)
         self._logger.warning("Pulling docker container image. This may take a while.")
-        subprocess.run(["docker", "pull", image_uri], check=False)
+        subprocess.run(["docker", "pull", image_uri], check=True)
 
     def _start_container(self, image_uri: str, force_update: bool) -> str:
         """Runs a docker container in a busy loop so that it will accept further commands. The
@@ -263,7 +263,7 @@ class _LocalJobContainer(object):
 
     def _end_session(self) -> None:
         """Stops and removes the local container."""
-        subprocess.run(["docker", "stop", self._container_name], check=False)
+        subprocess.run(["docker", "stop", self._container_name], check=True)
 
 
 def _stream_output(process: subprocess.Popen) -> str:
