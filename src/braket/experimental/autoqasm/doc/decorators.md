@@ -15,7 +15,7 @@ You can include gates, pulse control, classical control and subroutine calls. Wh
 def ghz_state(max_qubits):
     """Create a GHZ state from a variable number of qubits."""
     h(0)
-    for i in aq.range(max_qubits):
+    for i in aq.range(1, max_qubits):
         cnot(0, i)
     measure(list(range(max_qubits))) 
     
