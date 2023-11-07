@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.61.0.post0 (2023-11-07)
+
+### Documentation Changes
+
+ * Improve docstring for make_bound_circuit
+
 ## v1.61.0 (2023-11-06)
 
 ### Features
