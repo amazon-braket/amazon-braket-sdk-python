@@ -27,7 +27,7 @@ from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
-from braket.aws.aws_quantum_task import AwsQuantumTask
+from braket.aws.aws_quantum_task import AwsQuantumTask, is_invalid_reservation_arn
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import QueueDepthInfo, QueueType
@@ -121,6 +121,7 @@ class AwsDevice(Device):
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[dict[str, float]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        reservation_arn: Optional[str] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -150,6 +151,8 @@ class AwsDevice(Device):
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
+            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
+                exclusive usage for the device to run the quantum task on
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -183,6 +186,8 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
+        if reservation_arn:
+            is_invalid_reservation_arn(reservation_arn)
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -199,6 +204,7 @@ class AwsDevice(Device):
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
             gate_definitions=gate_definitions,
+            reservation_arn=reservation_arn,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )
@@ -233,6 +239,7 @@ class AwsDevice(Device):
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Optional[Union[dict[str, float], list[dict[str, float]]]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        reservation_arn: Optional[str] = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTaskBatch:
@@ -265,6 +272,8 @@ class AwsDevice(Device):
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
+            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
+                exclusive usage for the device to run the quantum task on
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the quantum tasks run
@@ -272,6 +281,8 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
+        if reservation_arn:
+            is_invalid_reservation_arn(reservation_arn)
         return AwsQuantumTaskBatch(
             AwsSession.copy_session(self._aws_session, max_connections=max_connections),
             self._arn,
@@ -290,6 +301,7 @@ class AwsDevice(Device):
             poll_interval_seconds=poll_interval_seconds or self._poll_interval_seconds,
             inputs=inputs,
             gate_definitions=gate_definitions,
+            reservation_arn=reservation_arn,
             *aws_quantum_task_args,
             **aws_quantum_task_kwargs,
         )

@@ -516,7 +516,12 @@ def device_arn(request):
 
 
 @pytest.fixture
-def prepare_job_args(aws_session, device_arn):
+def reservation_arn():
+    return "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+
+
+@pytest.fixture
+def prepare_job_args(aws_session, device_arn, reservation_arn):
     return {
         "device": device_arn,
         "source_module": Mock(),
@@ -535,6 +540,7 @@ def prepare_job_args(aws_session, device_arn):
         "checkpoint_config": Mock(),
         "aws_session": aws_session,
         "tags": Mock(),
+        "reservation_arn": reservation_arn,
     }
 
 
@@ -580,6 +586,22 @@ def test_create_job(
     else:
         mock_logs.assert_not_called()
     assert job.arn == quantum_job_arn
+
+
+@pytest.mark.parametrize("wait_until_complete", [True])
+@patch("braket.aws.aws_quantum_job.AwsQuantumJob.logs")
+@patch("braket.aws.aws_quantum_job.prepare_quantum_job")
+def test_create_job_fake_reservation_arn(
+    mock_prepare_quantum_job,
+    mock_logs,
+    aws_session,
+    prepare_job_args,
+    quantum_job_arn,
+    wait_until_complete,
+):
+    prepare_job_args["reservation_arn"] = "abcd"
+    with pytest.raises(ValueError, match="Provided reservation arn"):
+        AwsQuantumJob.create(wait_until_complete=wait_until_complete, **prepare_job_args)
 
 
 def test_create_fake_arg():
@@ -1027,7 +1049,7 @@ def test_initialize_session_local_device(mock_new_session, aws_session):
     assert AwsQuantumJob._initialize_session(None, device, logger) == mock_new_session()
 
 
-def test_bad_arn_format(aws_session):
+def test_bad_device_arn_format(aws_session):
     logger = logging.getLogger(__name__)
     device_not_found = (
         "Device ARN is not a valid format: bad-arn-format. For valid Braket ARNs, "

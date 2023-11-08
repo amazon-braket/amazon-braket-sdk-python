@@ -20,12 +20,13 @@ import time
 from enum import Enum
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any
+from typing import Optional, Any
 
 import boto3
 from botocore.exceptions import ClientError
 
 from braket.aws import AwsDevice
+from braket.aws.aws_quantum_task import is_invalid_reservation_arn
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import HybridJobQueueInfo
 from braket.jobs import logs
@@ -80,6 +81,7 @@ class AwsQuantumJob(QuantumJob):
         checkpoint_config: CheckpointConfig | None = None,
         aws_session: AwsSession | None = None,
         tags: dict[str, str] | None = None,
+        reservation_arn: Optional[str] | None = None,
         logger: Logger = getLogger(__name__),
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
@@ -175,6 +177,9 @@ class AwsQuantumJob(QuantumJob):
                 while waiting for quantum task to be in a terminal state. Default is
                 `getLogger(__name__)`
 
+            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct
+                to reserve exclusive usage for the device to run the hybrid job on
+
         Returns:
             AwsQuantumJob: Hybrid job tracking the execution on Amazon Braket.
 
@@ -182,6 +187,9 @@ class AwsQuantumJob(QuantumJob):
             ValueError: Raises ValueError if the parameters are not valid.
         """
         aws_session = AwsQuantumJob._initialize_session(aws_session, device, logger)
+
+        if reservation_arn:
+            is_invalid_reservation_arn(reservation_arn)
 
         create_job_kwargs = prepare_quantum_job(
             device=device,
@@ -201,6 +209,7 @@ class AwsQuantumJob(QuantumJob):
             checkpoint_config=checkpoint_config,
             aws_session=aws_session,
             tags=tags,
+            reservation_arn=reservation_arn,
         )
 
         job_arn = aws_session.create_job(**create_job_kwargs)

@@ -201,6 +201,7 @@ def run_and_assert(
     poll_interval_seconds,  # Treated as positional arg
     inputs,  # Treated as positional arg
     gate_definitions,  # Treated as positional arg
+    reservation_arn,  # Treated as positional arg
     extra_args,
     extra_kwargs,
 ):
@@ -222,6 +223,8 @@ def run_and_assert(
         run_args.append(gate_definitions)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
+    if reservation_arn:
+        run_kwargs["reservation_arn"] = reservation_arn
 
     task = device.run(circuit, *run_args, **run_kwargs)
     assert task == task_mock
@@ -237,6 +240,7 @@ def run_and_assert(
         poll_interval_seconds,
         inputs,
         gate_definitions,
+        reservation_arn,
         extra_args,
         extra_kwargs,
     )
@@ -263,6 +267,7 @@ def run_batch_and_assert(
     poll_interval_seconds,
     inputs,
     gate_definitions,
+    reservation_arn,
     extra_args,
     extra_kwargs,
 ):
@@ -291,6 +296,8 @@ def run_batch_and_assert(
         run_args.append(gate_definitions)
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
+    if reservation_arn:
+        run_kwargs["reservation_arn"] = reservation_arn
 
     batch = device.run_batch(circuits, *run_args, **run_kwargs)
     assert batch.tasks == [task_mock for _ in range(len(circuits))]
@@ -306,6 +313,7 @@ def run_batch_and_assert(
         poll_interval_seconds,
         inputs,
         gate_definitions,
+        reservation_arn,
         extra_args,
         extra_kwargs,
     )
@@ -333,6 +341,7 @@ def _create_task_args_and_kwargs(
     poll_interval_seconds,
     inputs,
     gate_definitions,
+    reservation_arn,
     extra_args,
     extra_kwargs,
 ):
@@ -352,6 +361,9 @@ def _create_task_args_and_kwargs(
             else default_poll_interval,
             "inputs": inputs,
             "gate_definitions": gate_definitions,
+            "reservation_arn": reservation_arn,
         }
     )
+    if reservation_arn:
+        create_kwargs["reservation_arn"] = reservation_arn
     return create_args, create_kwargs

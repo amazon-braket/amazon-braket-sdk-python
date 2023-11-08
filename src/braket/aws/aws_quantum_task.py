@@ -71,6 +71,7 @@ from braket.tasks import (
 )
 from braket.tracking.tracking_context import broadcast_event
 from braket.tracking.tracking_events import _TaskCompletionEvent
+import re
 
 
 class AwsQuantumTask(QuantumTask):
@@ -105,6 +106,7 @@ class AwsQuantumTask(QuantumTask):
         tags: dict[str, str] | None = None,
         inputs: dict[str, float] | None = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None = None,
+        reservation_arn: Optional[str] | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -178,6 +180,14 @@ class AwsQuantumTask(QuantumTask):
         if tags is not None:
             create_task_kwargs.update({"tags": tags})
         inputs = inputs or {}
+
+        if reservation_arn:
+            create_task_kwargs["associationConfig"] = [
+                {
+                    "arn": reservation_arn,
+                    "type": "RESERVATION_TIME_WINDOW_ARN",
+                }
+            ]
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}
@@ -781,6 +791,17 @@ def _create_common_params(
         "outputS3KeyPrefix": s3_destination_folder[1],
         "shots": shots,
     }
+
+
+def is_invalid_reservation_arn(reservation_arn: Optional[str]):
+    # Use the re.match function to check if the input string matches the pattern
+    if not re.match(
+        r"^arn:aws:braket:[a-zA-Z0-9-]+:[0-9]+:reservation/[a-zA-Z0-9-]+$", reservation_arn
+    ):
+        raise ValueError(
+            f"Provided reservation arn ({reservation_arn}) is invalid. It should follow format "
+            "arn:aws:braket:<Region>:<AccountId>:reservation/<ReservationId>"
+        )
 
 
 @singledispatch

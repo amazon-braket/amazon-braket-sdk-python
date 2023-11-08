@@ -560,6 +560,31 @@ def test_create_ahs_problem(aws_session, arn, ahs_problem):
     )
 
 
+def test_create_task_with_reservation_arn(aws_session, arn, ahs_problem):
+    aws_session.create_quantum_task.return_value = arn
+    shots = 21
+    reservation_arn = (
+        "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+    )
+    AwsQuantumTask.create(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem,
+        S3_TARGET,
+        shots,
+        reservation_arn=reservation_arn,
+    )
+
+    _assert_create_quantum_task_called_with(
+        aws_session,
+        SIMULATOR_ARN,
+        ahs_problem.to_ir().json(),
+        S3_TARGET,
+        shots,
+        reservation_arn=reservation_arn,
+    )
+
+
 def test_create_pulse_sequence(aws_session, arn, pulse_sequence):
     expected_openqasm = "\n".join(
         [
@@ -1098,6 +1123,7 @@ def _assert_create_quantum_task_called_with(
     shots,
     device_parameters=None,
     tags=None,
+    reservation_arn=None,
 ):
     test_kwargs = {
         "deviceArn": arn,
@@ -1111,6 +1137,13 @@ def _assert_create_quantum_task_called_with(
         test_kwargs.update({"deviceParameters": device_parameters.json(exclude_none=True)})
     if tags is not None:
         test_kwargs.update({"tags": tags})
+    if reservation_arn:
+        test_kwargs["associationConfig"] = [
+            {
+                "arn": reservation_arn,
+                "type": "RESERVATION_TIME_WINDOW_ARN",
+            }
+        ]
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 

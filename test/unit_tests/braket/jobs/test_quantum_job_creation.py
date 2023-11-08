@@ -176,6 +176,11 @@ def checkpoint_config(bucket, s3_prefix):
 
 
 @pytest.fixture
+def reservation_arn():
+    return "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+
+
+@pytest.fixture
 def generate_get_job_response():
     def _get_job_response(**kwargs):
         response = {
@@ -247,6 +252,7 @@ def create_job_args(
     output_data_config,
     checkpoint_config,
     tags,
+    reservation_arn,
 ):
     if request.param == "fixtures":
         return dict(
@@ -268,6 +274,7 @@ def create_job_args(
                 "checkpoint_config": checkpoint_config,
                 "aws_session": aws_session,
                 "tags": tags,
+                "reservation_arn": reservation_arn,
             }.items()
             if value is not None
         )
@@ -366,6 +373,14 @@ def _translate_creation_args(create_job_args):
         "stoppingCondition": asdict(stopping_condition),
         "tags": tags,
     }
+
+    if create_job_args["reservation_arn"]:
+        test_kwargs["associationConfig"] = [
+            {
+                "arn": create_job_args["reservation_arn"],
+                "type": "RESERVATION_TIME_WINDOW_ARN",
+            }
+        ]
 
     return test_kwargs
 

@@ -25,7 +25,7 @@ from collections.abc import Callable, Iterable
 from logging import Logger, getLogger
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, Optional
 
 import cloudpickle
 
@@ -62,6 +62,7 @@ def hybrid_job(
     output_data_config: OutputDataConfig | None = None,
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
+    reservation_arn: Optional[str] | None = None,
     logger: Logger = getLogger(__name__),
 ) -> Callable:
     """Defines a hybrid job by decorating the entry point function. The job will be created
@@ -152,6 +153,9 @@ def hybrid_job(
         logger (Logger): Logger object with which to write logs, such as task statuses
             while waiting for task to be in a terminal state. Default: `getLogger(__name__)`
 
+        reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to
+            reserve exclusive usage for the device to run the hybrid job on
+
     Returns:
         Callable: the callable for creating a Hybrid Job.
     """
@@ -205,7 +209,9 @@ def hybrid_job(
                     "output_data_config": output_data_config,
                     "aws_session": aws_session,
                     "tags": tags,
+                    "reservation_arn": reservation_arn,
                 }
+
                 for key, value in optional_args.items():
                     if value is not None:
                         job_args[key] = value
