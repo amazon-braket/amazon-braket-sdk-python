@@ -19,7 +19,7 @@ from typing import Any, Union
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
-from .utils import _convert_parameters
+from .utils import _register_and_convert_parameters
 
 
 def lt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
@@ -39,11 +39,9 @@ def lt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _aq_lt(a: Any, b: Any) -> aq_types.BoolVar:
-    program_conversion_context = program.get_program_conversion_context()
-    program_conversion_context.register_args([a, b])
-    a, b = _convert_parameters(a, b)
+    a, b = _register_and_convert_parameters(a, b)
 
-    oqpy_program = program_conversion_context.get_oqpy_program()
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
     oqpy_program.set(result, a < b)
@@ -67,11 +65,9 @@ def lteq_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _aq_lteq(a: Any, b: Any) -> aq_types.BoolVar:
-    program_conversion_context = program.get_program_conversion_context()
-    program_conversion_context.register_args([a, b])
-    a, b = _convert_parameters(a, b)
+    a, b = _register_and_convert_parameters(a, b)
 
-    oqpy_program = program_conversion_context.get_oqpy_program()
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
     oqpy_program.set(result, a <= b)
@@ -95,11 +91,9 @@ def gt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _aq_gt(a: Any, b: Any) -> aq_types.BoolVar:
-    program_conversion_context = program.get_program_conversion_context()
-    program_conversion_context.register_args([a, b])
-    a, b = _convert_parameters(a, b)
+    a, b = _register_and_convert_parameters(a, b)
 
-    oqpy_program = program_conversion_context.get_oqpy_program()
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
     oqpy_program.set(result, a > b)
@@ -123,11 +117,9 @@ def gteq_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _aq_gteq(a: Any, b: Any) -> aq_types.BoolVar:
-    program_conversion_context = program.get_program_conversion_context()
-    program_conversion_context.register_args([a, b])
-    a, b = _convert_parameters(a, b)
+    a, b = _register_and_convert_parameters(a, b)
 
-    oqpy_program = program_conversion_context.get_oqpy_program()
+    oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
     oqpy_program.set(result, a >= b)
