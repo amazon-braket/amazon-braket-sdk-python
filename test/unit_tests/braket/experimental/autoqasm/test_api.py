@@ -131,7 +131,9 @@ def do_h(int[32] q) {
 }
 def recursive_h(int[32] q) {
     do_h(q);
-    if (q > 0) {
+    bool __bool_0__;
+    __bool_0__ = q > 0;
+    if (__bool_0__) {
         recursive_h(q - 1);
     }
 }
@@ -155,7 +157,9 @@ def do_h(int[32] q) {
 }
 def recursive_h(int[32] q) {
     do_h(q);
-    if (q > 0) {
+    bool __bool_0__;
+    __bool_0__ = q > 0;
+    if (__bool_0__) {
         recursive_h(q - 1);
     }
 }
