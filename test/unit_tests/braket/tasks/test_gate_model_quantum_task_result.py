@@ -147,25 +147,17 @@ def result_obj_1(task_metadata_shots, additional_metadata):
 
 
 @pytest.fixture
-def result_rigetti(task_metadata_shots, additional_metadata_rigetti):
-    result = GateModelTaskResult(
-        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
-        measuredQubits=[0, 1],
-        taskMetadata=task_metadata_shots,
-        additionalMetadata=additional_metadata_rigetti,
-    )
-    return GateModelQuantumTaskResult.from_object(result)
+def result_rigetti(result_obj_1, additional_metadata_rigetti):
+    result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    result.additional_metadata = additional_metadata_rigetti
+    return result
 
 
 @pytest.fixture
-def result_oqc(task_metadata_shots, additional_metadata_oqc):
-    result = GateModelTaskResult(
-        measurements=[[0, 0], [0, 1], [0, 1], [0, 1]],
-        measuredQubits=[0, 1],
-        taskMetadata=task_metadata_shots,
-        additionalMetadata=additional_metadata_oqc,
-    )
-    return GateModelQuantumTaskResult.from_object(result)
+def result_oqc(result_obj_1, additional_metadata_oqc):
+    result = GateModelQuantumTaskResult.from_object(result_obj_1)
+    result.additional_metadata = additional_metadata_oqc
+    return result
 
 
 @pytest.fixture
@@ -341,7 +333,7 @@ def test_get_compiled_circuit_oqc(result_oqc, qasm2_program):
     assert result_oqc.get_compiled_circuit() == qasm2_program
 
 
-def test_get_compiled_circuit(result_obj_1):
+def test_get_compiled_circuit_no_qhp_metadata(result_obj_1):
     """Test get_compiled_circuit method."""
     result = GateModelQuantumTaskResult.from_object(result_obj_1)
     assert result.get_compiled_circuit() is None

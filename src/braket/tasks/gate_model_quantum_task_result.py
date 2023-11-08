@@ -143,11 +143,13 @@ class GateModelQuantumTaskResult:
         """
         metadata = self.additional_metadata
         if not metadata:
-            return
+            return None
         if metadata.rigettiMetadata:
             return metadata.rigettiMetadata.compiledProgram
         elif metadata.oqcMetadata:
             return metadata.oqcMetadata.compiledProgram
+        else:
+            return None
 
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
