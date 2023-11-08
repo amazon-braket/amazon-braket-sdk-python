@@ -206,7 +206,7 @@ class AwsQuantumTask(QuantumTask):
         aws_session: AwsSession | None = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
-        logger: Logger = getLogger(__name__),  # noqa 
+        logger: Logger = getLogger(__name__),
     ):
         """Inits an `AwsQuantumTask`.
 
