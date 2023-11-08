@@ -1,0 +1,233 @@
+src/braket/aws/aws_device.py
+	DOC101: Method `AwsDevice.run_batch`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `AwsDevice.run_batch`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**aws_quantum_task_kwargs: , *aws_quantum_task_args: ].
+--------------------
+src/braket/aws/aws_quantum_job.py
+	DOC502: Method `AwsQuantumJob.create` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC101: Method `AwsQuantumJob._is_valid_aws_session_region_for_job_arn`: Docstring contains fewer arguments than in function signature.
+	DOC109: Method `AwsQuantumJob._is_valid_aws_session_region_for_job_arn`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `AwsQuantumJob._is_valid_aws_session_region_for_job_arn`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [aws_session: AwsSession, job_arn: str].
+	DOC502: Method `AwsQuantumJob.logs` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC502: Method `AwsQuantumJob.cancel` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+--------------------
+src/braket/aws/aws_quantum_task.py
+	DOC101: Method `AwsQuantumTask.create`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `AwsQuantumTask.create`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: , *args: ].
+	DOC501: Method `AwsQuantumTask.create` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC101: Method `AwsQuantumTask._aws_session_for_task_arn`: Docstring contains fewer arguments than in function signature.
+	DOC109: Method `AwsQuantumTask._aws_session_for_task_arn`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `AwsQuantumTask._aws_session_for_task_arn`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [task_arn: str].
+	DOC501: Function `_create_annealing_device_params` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/aws/aws_quantum_task_batch.py
+	DOC501: Method `AwsQuantumTaskBatch.results` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `AwsQuantumTaskBatch.retry_unsuccessful_tasks` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/aws/aws_session.py
+	DOC106: Method `AwsSession.create_quantum_task`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `AwsSession.create_quantum_task`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC106: Method `AwsSession.create_job`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `AwsSession.create_job`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC001: Function/method `parse_s3_uri`: Potential formatting errors in docstring. Error message: Expected a colon in 'a valid S3 URI.'.
+	DOC101: Method `AwsSession.parse_s3_uri`: Docstring contains fewer arguments than in function signature.
+	DOC109: Method `AwsSession.parse_s3_uri`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `AwsSession.parse_s3_uri`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [s3_uri: str].
+	DOC201: Method `AwsSession.parse_s3_uri` does not have a return section in docstring
+	DOC203: Method `AwsSession.parse_s3_uri` return type(s) in docstring not consistent with the return annotation. Return annotation has 1 type(s); docstring return section has 0 type(s).
+	DOC501: Method `AwsSession.parse_s3_uri` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC001: Function/method `construct_s3_uri`: Potential formatting errors in docstring. Error message: Expected a colon in 'valid to generate an S3 URI'.
+	DOC101: Method `AwsSession.construct_s3_uri`: Docstring contains fewer arguments than in function signature.
+	DOC109: Method `AwsSession.construct_s3_uri`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `AwsSession.construct_s3_uri`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [*dirs: str, bucket: str].
+	DOC201: Method `AwsSession.construct_s3_uri` does not have a return section in docstring
+	DOC203: Method `AwsSession.construct_s3_uri` return type(s) in docstring not consistent with the return annotation. Return annotation has 1 type(s); docstring return section has 0 type(s).
+	DOC501: Method `AwsSession.construct_s3_uri` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `AwsSession.get_full_image_tag` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/angled_gate.py
+	DOC101: Method `AngledGate.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `AngledGate.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `AngledGate.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `AngledGate.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC501: Method `DoubleAngledGate.adjoint` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `TripleAngledGate.adjoint` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/braket_program_context.py
+	DOC101: Method `BraketProgramContext.add_gate_instruction`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `BraketProgramContext.add_gate_instruction`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [*params: ].
+--------------------
+src/braket/circuits/circuit.py
+	DOC101: Method `Circuit.__init__`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `Circuit.__init__`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: , *args: ].
+	DOC502: Method `Circuit.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC105: Method `Circuit.apply_gate_noise`: Argument names match, but type hints do not match
+	DOC001: Function/method `_validate_parameters`: Potential formatting errors in docstring. Error message: No specification for "Raises": ""
+	DOC101: Method `Circuit._validate_parameters`: Docstring contains fewer arguments than in function signature.
+	DOC109: Method `Circuit._validate_parameters`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `Circuit._validate_parameters`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [parameter_values: dict[str, Number]].
+	DOC501: Method `Circuit._validate_parameters` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC101: Method `Circuit.add`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `Circuit.add`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: , *args: ].
+	DOC502: Method `Circuit.to_unitary` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+--------------------
+src/braket/circuits/compiler_directive.py
+	DOC501: Method `CompilerDirective.__init__` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC101: Method `CompilerDirective.to_ir`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `CompilerDirective.to_ir`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC501: Method `CompilerDirective.counterpart` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/gate.py
+	DOC502: Method `Gate.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC501: Method `Gate.adjoint` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC001: Function/method `to_ir`: Potential formatting errors in docstring. Error message: Expected a colon in "properties don't correspond to the `ir_type`.".
+	DOC101: Method `Gate.to_ir`: Docstring contains fewer arguments than in function signature.
+	DOC109: Method `Gate.to_ir`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `Gate.to_ir`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [control: Optional[QubitSet], control_state: Optional[BasisStateInput], ir_type: IRType, power: float, serialization_properties: Optional[SerializationProperties], target: QubitSet].
+	DOC201: Method `Gate.to_ir` does not have a return section in docstring
+	DOC203: Method `Gate.to_ir` return type(s) in docstring not consistent with the return annotation. Return annotation has 1 type(s); docstring return section has 0 type(s).
+	DOC501: Method `Gate.to_ir` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Gate._to_jaqcd` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/gates.py
+	DOC105: Method `Unitary.__init__`: Argument names match, but type hints do not match
+	DOC105: Method `Unitary.unitary`: Argument names match, but type hints do not match
+	DOC501: Method `PulseGate.__init__` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC101: Method `PulseGate.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `PulseGate.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `PulseGate.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `PulseGate.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+--------------------
+src/braket/circuits/noise.py
+	DOC502: Method `Noise.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC001: Function/method `to_ir`: Potential formatting errors in docstring. Error message: Expected a colon in "properties don't correspond to the `ir_type`.".
+	DOC101: Method `Noise.to_ir`: Docstring contains fewer arguments than in function signature.
+	DOC109: Method `Noise.to_ir`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `Noise.to_ir`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [ir_type: IRType, serialization_properties: SerializationProperties | None, target: QubitSet].
+	DOC201: Method `Noise.to_ir` does not have a return section in docstring
+	DOC203: Method `Noise.to_ir` return type(s) in docstring not consistent with the return annotation. Return annotation has 1 type(s); docstring return section has 0 type(s).
+	DOC501: Method `Noise.to_ir` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Noise._to_jaqcd` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Noise._to_openqasm` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC101: Method `Noise.to_matrix`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `Noise.to_matrix`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `Noise.to_matrix`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `Noise.to_matrix`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: , *args: ].
+	DOC203: Method `Noise.to_matrix` return type(s) in docstring not consistent with the return annotation. Return annotation types: ['Iterable[np.ndarray]']; docstring return section types: ['Iterable[ndarray]']
+	DOC501: Method `Noise.to_matrix` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Noise.from_dict` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC502: Method `SingleProbabilisticNoise.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC101: Method `SingleProbabilisticNoise.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `SingleProbabilisticNoise.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `SingleProbabilisticNoise.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `SingleProbabilisticNoise.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC502: Method `SingleProbabilisticNoise_34.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC502: Method `SingleProbabilisticNoise_1516.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC101: Method `MultiQubitPauliNoise.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `MultiQubitPauliNoise.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `MultiQubitPauliNoise.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `MultiQubitPauliNoise.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC203: Method `PauliNoise.probX` return type(s) in docstring not consistent with the return annotation. Return annotation types: ['Union[FreeParameterExpression, float]']; docstring return section types: ['']
+	DOC203: Method `PauliNoise.probY` return type(s) in docstring not consistent with the return annotation. Return annotation types: ['Union[FreeParameterExpression, float]']; docstring return section types: ['']
+	DOC203: Method `PauliNoise.probZ` return type(s) in docstring not consistent with the return annotation. Return annotation types: ['Union[FreeParameterExpression, float]']; docstring return section types: ['']
+	DOC101: Method `PauliNoise.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `PauliNoise.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `PauliNoise.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `PauliNoise.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC502: Method `DampingNoise.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC101: Method `DampingNoise.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `DampingNoise.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `DampingNoise.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `DampingNoise.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC502: Method `GeneralizedAmplitudeDampingNoise.__init__` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC501: Function `_validate_param_value` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/noise_helpers.py
+	DOC501: Function `check_noise_target_gates` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC105: Function `check_noise_target_unitary`: Argument names match, but type hints do not match
+	DOC501: Function `check_noise_target_unitary` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Function `check_noise_target_qubits` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC105: Function `apply_noise_to_gates`: Argument names match, but type hints do not match
+	DOC502: Function `apply_noise_to_gates` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+--------------------
+src/braket/circuits/noise_model/criteria.py
+	DOC501: Method `Criteria.applicable_key_types` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Criteria.get_keys` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Criteria.to_dict` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Criteria.from_dict` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/noise_model/criteria_input_parsing.py
+	DOC501: Function `parse_operator_input` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Function `parse_qubit_input` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/noise_model/initialization_criteria.py
+	DOC501: Method `InitializationCriteria.qubit_intersection` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/noise_model/result_type_criteria.py
+	DOC501: Method `ResultTypeCriteria.result_type_matches` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/noises.py
+	DOC101: Method `PauliChannel.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `PauliChannel.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `PauliChannel.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `PauliChannel.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC101: Method `Depolarizing.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `Depolarizing.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `Depolarizing.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `Depolarizing.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC101: Method `TwoQubitDepolarizing.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `TwoQubitDepolarizing.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `TwoQubitDepolarizing.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `TwoQubitDepolarizing.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC101: Method `TwoQubitDephasing.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `TwoQubitDephasing.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `TwoQubitDephasing.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `TwoQubitDephasing.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC101: Method `TwoQubitPauliChannel.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `TwoQubitPauliChannel.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `TwoQubitPauliChannel.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `TwoQubitPauliChannel.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC101: Method `AmplitudeDamping.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `AmplitudeDamping.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `AmplitudeDamping.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `AmplitudeDamping.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC101: Method `GeneralizedAmplitudeDamping.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `GeneralizedAmplitudeDamping.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `GeneralizedAmplitudeDamping.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `GeneralizedAmplitudeDamping.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC101: Method `PhaseDamping.bind_values`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `PhaseDamping.bind_values`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `PhaseDamping.bind_values`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `PhaseDamping.bind_values`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+	DOC501: Method `Kraus.kraus` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Kraus.to_dict` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Kraus.from_dict` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/observable.py
+	DOC501: Method `Observable._to_openqasm` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Observable.basis_rotation_gates` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Observable.eigenvalues` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `Observable.eigenvalue` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/observables.py
+	DOC501: Method `TensorProduct.__init__` has "raise" statements, but the docstring does not have a "Raises" section
+	DOC501: Method `TensorProduct.eigenvalue` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/circuits/operator.py
+	DOC101: Method `Operator.to_ir`: Docstring contains fewer arguments than in function signature.
+	DOC106: Method `Operator.to_ir`: The option `--arg-type-hints-in-signature` is `True` but there are no argument type hints in the signature
+	DOC109: Method `Operator.to_ir`: The option `--arg-type-hints-in-docstring` is `True` but there are no type hints in the docstring arg list
+	DOC103: Method `Operator.to_ir`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: , *args: ].
+--------------------
+src/braket/circuits/result_type.py
+	DOC101: Method `ResultType.to_ir`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `ResultType.to_ir`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: ].
+--------------------
+src/braket/devices/local_simulator.py
+	DOC101: Method `LocalSimulator.run_batch`: Docstring contains fewer arguments than in function signature.
+	DOC103: Method `LocalSimulator.run_batch`: Docstring arguments are different from function arguments. (Or could be other formatting issues: https://jsh9.github.io/pydoclint/violation_codes.html#notes-on-doc103 ). Arguments in the function signature but not in the docstring: [**kwargs: , *args: ].
+	DOC501: Method `LocalSimulator.run_batch` has "raise" statements, but the docstring does not have a "Raises" section
+--------------------
+src/braket/tasks/gate_model_quantum_task_result.py
+	DOC502: Method `GateModelQuantumTaskResult.from_object` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+	DOC502: Method `GateModelQuantumTaskResult.from_string` has a "Raises" section in the docstring, but there are not "raise" statements in the body
+--------------------

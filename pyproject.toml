@@ -83,5 +83,6 @@ style = 'google'
 exclude = '\.git|\.tox|tests'
 allow-init-docstring = true
 require-return-section-when-returning-nothing = false
+baseline = "pydoclint-baseline.txt"
 
 
