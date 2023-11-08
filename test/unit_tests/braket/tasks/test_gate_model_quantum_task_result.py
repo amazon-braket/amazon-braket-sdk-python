@@ -105,7 +105,17 @@ def additional_metadata_rigetti(quil_program):
 
 @pytest.fixture
 def qasm2_program():
-    return """TODO"""
+    return """
+    OPENQASM 2.0;
+    include "qelib1.inc";
+
+    qreg node[8];
+    creg b[2];
+    u3(0.5*pi,0.0*pi,1.0*pi) node[0];
+    cx node[0],node[1];
+    measure node[0] -> b[0];
+    measure node[1] -> b[1];
+    """
 
 
 @pytest.fixture
@@ -114,10 +124,11 @@ def additional_metadata_oqc(qasm2_program):
         source="""
         OPENQASM 3.0;
         bit[2] b;
-        h $0;
-        cnot $0, $7;
-        b[0] = measure $0;
-        b[1] = measure $7;
+        qubit[8] q;
+        h q[0];
+        cnot q[0], q[7];
+        b[0] = measure q[0];
+        b[1] = measure q[7];
         """
     )
     oqc_metadata = OqcMetadata(compiledProgram=qasm2_program)
