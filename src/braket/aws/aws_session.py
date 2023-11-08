@@ -202,7 +202,7 @@ class AwsSession:
             request.headers.add_header("User-Agent", self._braket_user_agents)
 
     @staticmethod
-    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:
+    def _add_cost_tracker_count_handler(request: awsrequest.AWSRequest, **kwargs) -> None:  # noqa: ARG004
         request.headers.add_header("Braket-Trackers", str(len(active_trackers())))
 
     #

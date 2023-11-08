@@ -105,7 +105,7 @@ class Circuit:
             Instruction('operator': 'H', 'target': QubitSet(Qubit(1),))
         """
 
-        def method_from_subroutine(self, *args, **kwargs) -> SubroutineReturn:
+        def method_from_subroutine(self, *args, **kwargs) -> SubroutineReturn:  # noqa: ANN001
             return self.add(func, *args, **kwargs)
 
         function_name = func.__name__
@@ -114,7 +114,7 @@ class Circuit:
         function_attr = getattr(cls, function_name)
         function_attr.__doc__ = func.__doc__
 
-    def __init__(self, addable: AddableTypes | None = None, *args, **kwargs):
+    def __init__(self, addable: AddableTypes | None = None, *args, **kwargs):  # noqa: D417
         """Inits a `Circuit`.
 
         Args:
@@ -1002,7 +1002,7 @@ class Circuit:
 
         return apply_noise_to_moments(self, noise, target_qubits, "readout")
 
-    def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:
+    def add(self, addable: AddableTypes, *args, **kwargs) -> Circuit:  # noqa: D417
         """Generic add method for adding item(s) to self. Any arguments that
         `add_circuit()` and / or `add_instruction()` and / or `add_result_type`
         supports are supported by this method. If adding a

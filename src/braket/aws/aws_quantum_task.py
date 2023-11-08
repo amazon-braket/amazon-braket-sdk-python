@@ -87,7 +87,7 @@ class AwsQuantumTask(QuantumTask):
     RESULTS_FILENAME = "results.json"
 
     @staticmethod
-    def create(
+    def create(  # noqa: D417
         aws_session: AwsSession,
         device_arn: str,
         task_specification: Union[
@@ -673,7 +673,7 @@ def _(
         DwaveAdvantageDeviceParameters,
         Dwave2000QDeviceParameters,
     ],
-    _,
+    _,  # noqa: ANN001
     inputs: dict[str, float],
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,

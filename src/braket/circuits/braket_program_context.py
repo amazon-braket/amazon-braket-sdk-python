@@ -59,7 +59,7 @@ class BraketProgramContext(AbstractProgramContext):
     def add_phase_instruction(self, target: tuple[int], phase_value: int) -> None:
         raise NotImplementedError
 
-    def add_gate_instruction(
+    def add_gate_instruction(  # noqa: D417
         self, gate_name: str, target: tuple[int], *params, ctrl_modifiers: list[int], power: float
     ) -> None:
         """Add Braket gate to the circuit.

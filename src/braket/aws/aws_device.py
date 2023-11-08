@@ -203,7 +203,7 @@ class AwsDevice(Device):
             **aws_quantum_task_kwargs,
         )
 
-    def run_batch(
+    def run_batch(  # noqa: D417
         self,
         task_specifications: Union[
             Union[
@@ -406,7 +406,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.utcnow()
+        current_datetime_utc = datetime.utcnow()  # noqa: DTZ003
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)

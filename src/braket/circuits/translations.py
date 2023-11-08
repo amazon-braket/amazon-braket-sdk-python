@@ -15,7 +15,7 @@ from functools import reduce, singledispatch
 from typing import Union
 
 import braket.circuits.gates as braket_gates
-import braket.circuits.result_types as ResultTypes
+import braket.circuits.result_types as ResultTypes  # noqa: N812
 import braket.ir.jaqcd.shared_models as models
 from braket.circuits import Observable, noises, observables
 from braket.ir.jaqcd import (
@@ -100,7 +100,7 @@ def _get_observable(obs: Union[models.Observable, list]) -> Observable:
 
 
 @_get_observable.register(list)
-def _(obs):
+def _(obs):  # noqa: ANN001
     raise NotImplementedError
 
 
@@ -127,7 +127,7 @@ def _braket_result_to_result_type(result: Results) -> None:
     raise TypeError(f"Result type {type(result).__name__} is not supported")
 
 
-def braket_result_to_result_type(result: Results) -> None:
+def braket_result_to_result_type(result: Results) -> None:  # noqa: D103
     return _braket_result_to_result_type(result)
 
 

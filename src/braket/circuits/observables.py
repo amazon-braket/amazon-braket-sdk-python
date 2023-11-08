@@ -66,7 +66,7 @@ class H(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Ry(-math.pi / 4)])
+        return tuple([Gate.Ry(-math.pi / 4)])  # noqa: C409
 
 
 Observable.register_observable(H)
@@ -154,7 +154,7 @@ class X(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.H()])
+        return tuple([Gate.H()])  # noqa: C409
 
 
 Observable.register_observable(X)
@@ -192,7 +192,7 @@ class Y(StandardObservable):
 
     @property
     def basis_rotation_gates(self) -> tuple[Gate, ...]:
-        return tuple([Gate.Z(), Gate.S(), Gate.H()])
+        return tuple([Gate.Z(), Gate.S(), Gate.H()])  # noqa: C409
 
 
 Observable.register_observable(Y)

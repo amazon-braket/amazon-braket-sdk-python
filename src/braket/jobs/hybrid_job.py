@@ -271,7 +271,7 @@ class _IncludeModules:
         for module in self._modules:
             cloudpickle.register_pickle_by_value(module)
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
         """Unregister included modules with cloudpickle to be pickled by value"""
         for module in self._modules:
             cloudpickle.unregister_pickle_by_value(module)

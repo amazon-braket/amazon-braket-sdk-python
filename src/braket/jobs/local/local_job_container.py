@@ -60,7 +60,7 @@ class _LocalJobContainer:
         self._container_name = self._start_container(self.image_uri, self._force_update)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001
         """Stops and removes the local docker container."""
         self._end_session()
 

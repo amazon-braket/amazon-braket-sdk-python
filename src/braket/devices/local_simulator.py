@@ -103,7 +103,7 @@ class LocalSimulator(Device):
         result = self._run_internal(task_specification, shots, inputs=inputs, *args, **kwargs)
         return LocalQuantumTask(result)
 
-    def run_batch(
+    def run_batch(  # noqa: D417
         self,
         task_specifications: Union[
             Union[Circuit, Problem, Program, AnalogHamiltonianSimulation],
