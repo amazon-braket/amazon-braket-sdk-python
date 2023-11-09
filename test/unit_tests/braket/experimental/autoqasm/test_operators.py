@@ -488,7 +488,7 @@ def test_logical_ops_py() -> None:
 
 
 def test_comparison_lt() -> None:
-    """Tests aq.operators.lt_."""
+    """Tests less than operator handling."""
 
     @aq.main
     def prog():
@@ -512,7 +512,7 @@ if (__bool_1__) {
 
 
 def test_comparison_gt() -> None:
-    """Tests aq.operators.lt_."""
+    """Tests greater than operator handling."""
 
     @aq.main
     def prog():
