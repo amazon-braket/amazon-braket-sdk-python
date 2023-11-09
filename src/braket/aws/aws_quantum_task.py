@@ -182,12 +182,16 @@ class AwsQuantumTask(QuantumTask):
         inputs = inputs or {}
 
         if reservation_arn:
-            create_task_kwargs["associationConfig"] = [
+            create_task_kwargs.update(
                 {
-                    "arn": reservation_arn,
-                    "type": "RESERVATION_TIME_WINDOW_ARN",
+                    "associationConfig": [
+                        {
+                            "arn": reservation_arn,
+                            "type": "RESERVATION_TIME_WINDOW_ARN",
+                        }
+                    ]
                 }
-            ]
+            )
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}
@@ -498,7 +502,12 @@ class AwsQuantumTask(QuantumTask):
             current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
         )
         self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
-        task_event = {"arn": self.id, "status": self.state(), "execution_duration": None}
+        task_event = {
+            "arn": self.id,
+            "status": self.state(),
+            "execution_duration": None,
+            "has_reservation_arn": bool(self._aws_session.reservation_arn),
+        }
         try:
             task_event[
                 "execution_duration"

@@ -599,7 +599,7 @@ def test_create_job_fake_reservation_arn(
     quantum_job_arn,
     wait_until_complete,
 ):
-    prepare_job_args["reservation_arn"] = "abcd"
+    prepare_job_args.update({"reservation_arn": "abcd"})
     with pytest.raises(ValueError, match="Provided reservation arn"):
         AwsQuantumJob.create(wait_until_complete=wait_until_complete, **prepare_job_args)
 

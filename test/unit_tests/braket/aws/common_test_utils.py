@@ -224,7 +224,7 @@ def run_and_assert(
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
     if reservation_arn:
-        run_kwargs["reservation_arn"] = reservation_arn
+        run_kwargs.update({"reservation_arn": reservation_arn})
 
     task = device.run(circuit, *run_args, **run_kwargs)
     assert task == task_mock
@@ -297,7 +297,7 @@ def run_batch_and_assert(
     run_args += extra_args if extra_args else []
     run_kwargs = extra_kwargs or {}
     if reservation_arn:
-        run_kwargs["reservation_arn"] = reservation_arn
+        run_kwargs.update({"reservation_arn": reservation_arn})
 
     batch = device.run_batch(circuits, *run_args, **run_kwargs)
     assert batch.tasks == [task_mock for _ in range(len(circuits))]
@@ -364,6 +364,6 @@ def _create_task_args_and_kwargs(
             "reservation_arn": reservation_arn,
         }
     )
-    if reservation_arn:
-        create_kwargs["reservation_arn"] = reservation_arn
+    # if reservation_arn:
+    #     create_kwargs.update("reservation_arn", reservation_arn)
     return create_args, create_kwargs

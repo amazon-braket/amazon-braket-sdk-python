@@ -332,6 +332,7 @@ def _translate_creation_args(create_job_args):
     hyperparameters = {str(key): str(value) for key, value in hyperparameters.items()}
     input_data = create_job_args["input_data"] or {}
     instance_config = create_job_args["instance_config"] or InstanceConfig()
+    reservation_arn = create_job_args["reservation_arn"]
     if create_job_args["distribution"] == "data_parallel":
         distributed_hyperparams = {
             "sagemaker_distributed_dataparallel_enabled": "true",
@@ -374,13 +375,17 @@ def _translate_creation_args(create_job_args):
         "tags": tags,
     }
 
-    if create_job_args["reservation_arn"]:
-        test_kwargs["associationConfig"] = [
+    if reservation_arn:
+        test_kwargs.update(
             {
-                "arn": create_job_args["reservation_arn"],
-                "type": "RESERVATION_TIME_WINDOW_ARN",
+                "associationConfig": [
+                    {
+                        "arn": reservation_arn,
+                        "type": "RESERVATION_TIME_WINDOW_ARN",
+                    }
+                ]
             }
-        ]
+        )
 
     return test_kwargs
 

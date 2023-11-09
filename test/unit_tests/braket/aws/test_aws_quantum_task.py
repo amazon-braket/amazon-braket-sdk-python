@@ -1138,12 +1138,16 @@ def _assert_create_quantum_task_called_with(
     if tags is not None:
         test_kwargs.update({"tags": tags})
     if reservation_arn:
-        test_kwargs["associationConfig"] = [
+        test_kwargs.update(
             {
-                "arn": reservation_arn,
-                "type": "RESERVATION_TIME_WINDOW_ARN",
+                "associationConfig": [
+                    {
+                        "arn": reservation_arn,
+                        "type": "RESERVATION_TIME_WINDOW_ARN",
+                    }
+                ]
             }
-        ]
+        )
     aws_session.create_quantum_task.assert_called_with(**test_kwargs)
 
 

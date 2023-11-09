@@ -158,7 +158,7 @@ class Tracker:
                     device_stats.get("execution_duration", timedelta(0))
                     + details["execution_duration"]
                 )
-                billed_duration = (
+                billed_duration = timedelta(0) if details.get("has_reservation_arn") else (
                     device_stats.get("billed_execution_duration", timedelta(0))
                     + details["billed_duration"]
                 )
@@ -196,14 +196,20 @@ class Tracker:
         # Update task completion data corresponding to the arn only if it exists in resources
         if event.arn in resources:
             resources[event.arn]["status"] = event.status
+            has_reservation_arn = event.has_reservation_arn
+            resources[event.arn]["has_reservation_arn"] = has_reservation_arn
             if event.execution_duration:
                 duration = timedelta(milliseconds=event.execution_duration)
                 resources[event.arn]["execution_duration"] = duration
-                resources[event.arn]["billed_duration"] = max(duration, MIN_SIMULATOR_DURATION)
+                resources[event.arn]["billed_duration"] = (
+                    timedelta(milliseconds=0)
+                    if has_reservation_arn
+                    else max(duration, MIN_SIMULATOR_DURATION)
+                )
 
 
 def _get_qpu_task_cost(task_arn: str, details: dict) -> Decimal:
-    if details["status"] in ["FAILED", "CANCELLED"]:
+    if details["status"] in ["FAILED", "CANCELLED"] or details.get("has_reservation_arn"):
         return Decimal(0)
     task_region = task_arn.split(":")[3]
 
