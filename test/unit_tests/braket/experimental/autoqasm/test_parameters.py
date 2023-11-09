@@ -488,13 +488,13 @@ def test_binding_variable_fails():
         parametric().make_bound_program({"beta": 0.5}, strict=True)
 
 
-def test_parameter_as_condition_gt():
+def test_compound_condition():
     """Test parameters used in greater than conditional statements."""
 
     @aq.main
     def parametric(val: float):
         threshold = 0.9
-        if val > threshold:
+        if val > threshold or val >= 1.2:
             x(0)
         measure(0)
 
@@ -503,15 +503,53 @@ input float[64] val;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = val > 0.9;
-if (__bool_0__) {
+bool __bool_1__;
+__bool_1__ = val >= 1.2;
+bool __bool_2__;
+__bool_2__ = __bool_0__ || __bool_1__;
+if (__bool_2__) {
     x __qubits__[0];
 }
-bit __bit_1__;
-__bit_1__ = measure __qubits__[0];"""
+bit __bit_3__;
+__bit_3__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("val")).to_ir() == expected
 
 
-def test_parameter_as_condition_in_subroutine():
+def test_lt_condition():
+    """Test parameters used in less than conditional statements."""
+
+    @aq.main
+    def parametric(val: float):
+        if 1 < 2:
+            pulse.delay("$1", 0)
+        if val < 0.9:
+            x(0)
+        if val <= 0.9:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+qubit[1] __qubits__;
+cal {
+    delay[0.0ns] $1;
+}
+bool __bool_0__;
+__bool_0__ = val < 0.9;
+if (__bool_0__) {
+    x __qubits__[0];
+}
+bool __bool_1__;
+__bool_1__ = val <= 0.9;
+if (__bool_1__) {
+    h __qubits__[0];
+}
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_parameter_in_predicate_in_subroutine():
     """Test parameters used in conditional statements."""
 
     @aq.subroutine
@@ -541,7 +579,7 @@ __bit_1__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("val")).to_ir() == expected
 
 
-def test_parameter_in_eq_condition():
+def test_eq_condition():
     """Test parameters used in conditional equals statements."""
 
     @aq.main
