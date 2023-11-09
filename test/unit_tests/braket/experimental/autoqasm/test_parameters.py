@@ -520,8 +520,6 @@ def test_lt_condition():
 
     @aq.main
     def parametric(val: float):
-        if 1 < 2:
-            pulse.delay("$1", 0)
         if val < 0.9:
             x(0)
         if val <= 0.9:
@@ -531,9 +529,6 @@ def test_lt_condition():
     expected = """OPENQASM 3.0;
 input float[64] val;
 qubit[1] __qubits__;
-cal {
-    delay[0.0ns] $1;
-}
 bool __bool_0__;
 __bool_0__ = val < 0.9;
 if (__bool_0__) {

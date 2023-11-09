@@ -487,6 +487,73 @@ def test_logical_ops_py() -> None:
     assert prog().to_ir() == expected
 
 
+def test_comparison_lt() -> None:
+    """Tests aq.operators.lt_."""
+
+    @aq.main
+    def prog():
+        a = measure(0)
+        if a < 1:
+            h(0)
+
+    expected = """OPENQASM 3.0;
+bit a;
+qubit[1] __qubits__;
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+a = __bit_0__;
+bool __bool_1__;
+__bool_1__ = a < 1;
+if (__bool_1__) {
+    h __qubits__[0];
+}"""
+    qasm = prog().to_ir()
+    assert qasm == expected
+
+
+def test_comparison_gt() -> None:
+    """Tests aq.operators.lt_."""
+
+    @aq.main
+    def prog():
+        a = measure(0)
+        if a > 1:
+            h(0)
+
+    expected = """OPENQASM 3.0;
+bit a;
+qubit[1] __qubits__;
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];
+a = __bit_0__;
+bool __bool_1__;
+__bool_1__ = a > 1;
+if (__bool_1__) {
+    h __qubits__[0];
+}"""
+    qasm = prog().to_ir()
+    assert qasm == expected
+
+
+def test_comparison_ops_py() -> None:
+    """Tests the comparison aq.operators for Python expressions."""
+
+    @aq.main
+    def prog():
+        a = 1.2
+        b = 12
+        c = a < b
+        d = a <= b
+        e = a > b
+        f = a >= b
+        g = 1.2
+        h = a <= g
+        assert all([c, d, not e, not f, h])
+
+    expected = """OPENQASM 3.0;"""
+    assert prog().to_ir() == expected
+
+
 @pytest.mark.parametrize(
     "target", [oqpy.ArrayVar(dimensions=[3], name="arr"), oqpy.BitVar(size=3, name="arr")]
 )
