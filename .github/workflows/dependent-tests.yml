@@ -31,14 +31,13 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@main
         pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
-        pip install -e .
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git
         cd ${{ matrix.dependent }}
         # Update the amazon-braket-sdk dependency to reference the current commit
         python ${GITHUB_WORKSPACE}/.github/scripts/update_dependency.py
-        pip install -e .[test]
+        pip install tox
     - name: Run unit tests
       run: |
         cd ../${{ matrix.dependent }}
-        pytest
+        tox -e unit-tests
