@@ -17,7 +17,14 @@ import oqpy
 import pytest
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.types.types import qasm_range
+from braket.experimental.autoqasm.types.types import (
+    ArrayVar,
+    BitVar,
+    BoolVar,
+    FloatVar,
+    IntVar,
+    qasm_range,
+)
 
 
 @pytest.mark.parametrize(
@@ -40,6 +47,21 @@ def test_qasm_range(
     qrange = qasm_range(start, stop, step)
     assert isinstance(qrange, oqpy.Range)
     assert (qrange.start, qrange.stop, qrange.step) == expected_range_params
+
+
+@pytest.mark.parametrize("type_", [FloatVar, IntVar, BitVar, BoolVar])
+def test_manual_name_for_aq_types(type_):
+    """Test that types can accept a given name."""
+    with aq.build_program():
+        var = type_(name="test")
+        assert var.name == "test"
+
+
+def test_manual_name_for_arrayvar():
+    """Test that types can accept a given name."""
+    with aq.build_program():
+        var = ArrayVar(name="test", dimensions=[1])
+        assert var.name == "test"
 
 
 def test_return_bit():
