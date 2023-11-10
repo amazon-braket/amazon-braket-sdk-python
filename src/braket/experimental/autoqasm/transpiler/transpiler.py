@@ -150,8 +150,8 @@ class PyToOqpy(transpiler.PyToPy):
         node = call_trees.transform(node, ctx)
         node = control_flow.transform(node, ctx)
         node = conditional_expressions.transform(node, ctx)
-        node = logical_expressions.transform(node, ctx)
         node = comparisons.transform(node, ctx)
+        node = logical_expressions.transform(node, ctx)
         node = variables.transform(node, ctx)
 
         return node
