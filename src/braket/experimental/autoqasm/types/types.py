@@ -68,15 +68,13 @@ class ArrayVar(oqpy.ArrayVar):
                 "Arrays may only be declared at the root scope of an AutoQASM main function."
             )
         super(ArrayVar, self).__init__(*args, **kwargs)
-        if "name" not in kwargs:
-            self.name = program.get_program_conversion_context().next_var_name(oqpy.ArrayVar)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.ArrayVar)
 
 
 class BitVar(oqpy.BitVar):
     def __init__(self, *args, **kwargs):
         super(BitVar, self).__init__(*args, **kwargs)
-        if "name" not in kwargs:
-            self.name = program.get_program_conversion_context().next_var_name(oqpy.BitVar)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.BitVar)
         if self.size:
             value = self.init_expression or 0
             self.init_expression = ast.BitstringLiteral(value, self.size)
@@ -85,19 +83,16 @@ class BitVar(oqpy.BitVar):
 class BoolVar(oqpy.BoolVar):
     def __init__(self, *args, **kwargs):
         super(BoolVar, self).__init__(*args, **kwargs)
-        if "name" not in kwargs:
-            self.name = program.get_program_conversion_context().next_var_name(oqpy.BoolVar)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.BoolVar)
 
 
 class FloatVar(oqpy.FloatVar):
     def __init__(self, *args, **kwargs):
         super(FloatVar, self).__init__(*args, **kwargs)
-        if "name" not in kwargs:
-            self.name = program.get_program_conversion_context().next_var_name(oqpy.FloatVar)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.FloatVar)
 
 
 class IntVar(oqpy.IntVar):
     def __init__(self, *args, **kwargs):
         super(IntVar, self).__init__(*args, **kwargs)
-        if "name" not in kwargs:
-            self.name = program.get_program_conversion_context().next_var_name(oqpy.IntVar)
+        self.name = program.get_program_conversion_context().next_var_name(oqpy.IntVar)
