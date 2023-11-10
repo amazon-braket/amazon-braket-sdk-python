@@ -25,6 +25,10 @@ OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 
 
+@pytest.fixture()
+def braket_devices():
+    AwsDevice.get_devices()
+
 @pytest.mark.parametrize(
     "arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
 )
@@ -76,8 +80,8 @@ def test_get_devices_others():
         assert result.status in statuses
 
 
-def test_get_devices_all():
-    result_arns = [result.arn for result in AwsDevice.get_devices()]
+def test_get_devices_all(braket_devices):
+    result_arns = [result.arn for result in braket_devices]
     for arn in [RIGETTI_ARN, IONQ_ARN, SIMULATOR_ARN, OQC_ARN]:
         assert arn in result_arns
 
@@ -127,12 +131,11 @@ def _validate_device(device: AwsDevice, active_providers: Set[str]):
     assert getattr(getattr(Devices, provider_name), device_name) == device.arn
 
 
-def test_device_enum():
-    aws_devices = AwsDevice.get_devices()
-    active_providers = _get_active_providers(aws_devices)
+def test_device_enum(braket_devices):
+    active_providers = _get_active_providers(braket_devices)
 
     # validate all devices in API
-    for device in aws_devices:
+    for device in braket_devices:
         _validate_device(device, active_providers)
 
     # validate all devices in enum
