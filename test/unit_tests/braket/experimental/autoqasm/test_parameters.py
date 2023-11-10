@@ -27,7 +27,7 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 
 def _test_parametric_on_local_sim(program: aq.Program, inputs: dict[str, float]) -> None:
     device = LocalSimulator(backend=StateVectorSimulator())
-    task = device.run(program, shots=10, inputs=inputs)
+    task = device.run(program, shots=100, inputs=inputs)
     assert isinstance(task, LocalQuantumTask)
     assert isinstance(task.result().measurements, dict)
     return task.result().measurements
@@ -608,6 +608,34 @@ if (__bool_0__) {
 bit __bit_2__;
 __bit_2__ = measure __qubits__[0];"""
     assert parametric(FreeParameter("basis")).to_ir() == expected
+
+
+def test_sim_conditional_stmts():
+    @aq.main
+    def main(basis: int):
+        if basis == 1:
+            h(0)
+        else:
+            x(0)
+        c = measure(0)  # noqa: F841
+
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0})
+    assert all(val == 1 for val in measurements["c"])
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 1})
+    assert 1 in measurements["c"] and 0 in measurements["c"]
+
+
+def test_sim_comparison_stmts():
+    @aq.main
+    def main(basis: int):
+        if basis > 0.5:
+            x(0)
+        c = measure(0)  # noqa: F841
+
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0.5})
+    assert all(val == 0 for val in measurements["c"])
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0.55})
+    assert all(val == 1 for val in measurements["c"])
 
 
 def test_param_neq():
