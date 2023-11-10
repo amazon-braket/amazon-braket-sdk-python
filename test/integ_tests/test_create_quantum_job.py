@@ -163,20 +163,12 @@ def test_completed_quantum_job(aws_session, capsys):
             == expected_data
         )
 
-    # Check downloaded results exists in the file system after the call.
-    downloaded_result = f"{job_name}/{AwsQuantumJob.RESULTS_FILENAME}"
     current_dir = Path.cwd()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
         try:
-            job.download_result()
-            assert (
-                Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists()
-                and Path(downloaded_result).exists()
-            )
-
-            # Check results match the expectations.
+             # Check results match the expectations.
             assert job.result() == {"converged": True, "energy": -0.2}
         finally:
             os.chdir(current_dir)

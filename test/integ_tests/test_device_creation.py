@@ -25,15 +25,12 @@ OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 
 
-@pytest.fixture()
-def braket_devices():
-    AwsDevice.get_devices()
 
 @pytest.mark.parametrize(
     "arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
 )
-def test_device_creation(arn, aws_session):
-    device = AwsDevice(arn, aws_session=aws_session)
+def test_device_creation(arn, aws_session, created_braket_devices):
+    device = created_braket_devices[arn]
     assert device.arn == arn
     assert device.name
     assert device.status
@@ -43,8 +40,8 @@ def test_device_creation(arn, aws_session):
 
 
 @pytest.mark.parametrize("arn", [(PULSE_ARN)])
-def test_device_pulse_properties(arn, aws_session):
-    device = AwsDevice(arn, aws_session=aws_session)
+def test_device_pulse_properties(arn, aws_session, created_braket_devices):
+    device = created_braket_devices[arn]
     assert device.ports
     assert device.frames
 
@@ -63,8 +60,8 @@ def test_get_devices_arn(arn):
 
 
 @pytest.mark.parametrize("arn", [(PULSE_ARN)])
-def test_device_gate_calibrations(arn, aws_session):
-    device = AwsDevice(arn, aws_session=aws_session)
+def test_device_gate_calibrations(arn, aws_session, created_braket_devices):
+    device = created_braket_devices[arn]
     assert device.gate_calibrations
 
 
@@ -131,7 +128,7 @@ def _validate_device(device: AwsDevice, active_providers: Set[str]):
     assert getattr(getattr(Devices, provider_name), device_name) == device.arn
 
 
-def test_device_enum(braket_devices):
+def test_device_enum(braket_devices, created_braket_devices):
     active_providers = _get_active_providers(braket_devices)
 
     # validate all devices in API
@@ -142,5 +139,5 @@ def test_device_enum(braket_devices):
     providers = [getattr(Devices, attr) for attr in dir(Devices) if not attr.startswith("__")]
     for provider in providers:
         for device_arn in provider:
-            device = AwsDevice(device_arn)
+            device = created_braket_devices[device_arn]
             _validate_device(device, active_providers)

@@ -17,7 +17,13 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 
+from braket.aws.aws_device import AwsDevice
 from braket.aws.aws_session import AwsSession
+
+SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
+DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
+TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
+SIMULATOR_ARNS = [SV1_ARN, DM1_ARN, TN1_ARN]
 
 
 @pytest.fixture(scope="session")
@@ -82,3 +88,22 @@ def s3_prefix():
 @pytest.fixture(scope="module")
 def s3_destination_folder(s3_bucket, s3_prefix):
     return AwsSession.S3DestinationFolder(s3_bucket, s3_prefix)
+
+
+@pytest.fixture(scope="session")
+def braket_simulators(aws_session):
+    return {
+        simulator_arn: AwsDevice(simulator_arn, aws_session) for simulator_arn in SIMULATOR_ARNS
+    }
+
+
+@pytest.fixture(scope="session")
+def braket_devices():
+    return AwsDevice.get_devices()
+
+
+@pytest.fixture(scope="session")
+def created_braket_devices(aws_session, braket_devices):
+    return {
+        device.arn: AwsDevice(device.arn, aws_session) for device in braket_devices
+    }

@@ -54,16 +54,18 @@ ARNS_WITH_SHOTS = [(SV1_ARN, SHOTS), (SV1_ARN, 0), (DM1_ARN, SHOTS), (DM1_ARN, 0
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_no_result_types_bell_pair(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_no_result_types_bell_pair(
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     no_result_types_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder, braket_simulators):
+    device = braket_simulators[simulator_arn]
     qubit_ordering_testing(device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder})
 
 
@@ -71,9 +73,9 @@ def test_qubit_ordering(simulator_arn, aws_session, s3_destination_folder):
     "simulator_arn, include_amplitude", list(zip(SIMULATOR_ARNS, [True, False]))
 )
 def test_result_types_no_shots(
-    simulator_arn, include_amplitude, aws_session, s3_destination_folder
+    simulator_arn, include_amplitude, aws_session, s3_destination_folder, braket_simulators
 ):
-    device = AwsDevice(simulator_arn, aws_session)
+    device = braket_simulators[simulator_arn]
     result_types_zero_shots_bell_pair_testing(
         device,
         False,
@@ -83,16 +85,20 @@ def test_result_types_no_shots(
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_result_types_nonzero_shots_bell_pair(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_nonzero_shots_bell_pair(
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_nonzero_shots_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_result_types_bell_pair_full_probability(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_bell_pair_full_probability(
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_bell_pair_full_probability_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
@@ -100,41 +106,49 @@ def test_result_types_bell_pair_full_probability(simulator_arn, aws_session, s3_
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_bell_pair_marginal_probability(
-    simulator_arn, aws_session, s3_destination_folder
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
 ):
-    device = AwsDevice(simulator_arn, aws_session)
+    device = braket_simulators[simulator_arn]
     result_types_bell_pair_marginal_probability_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
-def test_result_types_tensor_x_y(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_tensor_x_y(
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_tensor_x_y_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
-def test_result_types_tensor_z_h_y(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_tensor_z_h_y(
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_tensor_z_h_y_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
-def test_result_types_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_hermitian(
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
-def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_tensor_z_z(
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_tensor_z_z_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
@@ -142,103 +156,117 @@ def test_result_types_tensor_z_z(simulator_arn, shots, aws_session, s3_destinati
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_tensor_hermitian_hermitian(
-    simulator_arn, shots, aws_session, s3_destination_folder
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
 ):
-    device = AwsDevice(simulator_arn, aws_session)
+    device = braket_simulators[simulator_arn]
     result_types_tensor_hermitian_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
-def test_result_types_tensor_y_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_tensor_y_hermitian(
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_tensor_y_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
-def test_result_types_tensor_z_hermitian(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_tensor_z_hermitian(
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_tensor_z_hermitian_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
-def test_result_types_all_selected(simulator_arn, shots, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_all_selected(
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_all_selected_testing(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_result_types_noncommuting(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_noncommuting(
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_noncommuting_testing(device, {"s3_destination_folder": s3_destination_folder})
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 def test_result_types_noncommuting_flipped_targets(
-    simulator_arn, aws_session, s3_destination_folder
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
 ):
-    device = AwsDevice(simulator_arn, aws_session)
+    device = braket_simulators[simulator_arn]
     result_types_noncommuting_flipped_targets_testing(
         device, {"s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_result_types_noncommuting_all(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_result_types_noncommuting_all(
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     result_types_noncommuting_all(device, {"s3_destination_folder": s3_destination_folder})
 
 
 @pytest.mark.parametrize("simulator_arn,shots", ARNS_WITH_SHOTS)
 def test_result_types_observable_not_in_instructions(
-    simulator_arn, shots, aws_session, s3_destination_folder
+    simulator_arn, shots, aws_session, s3_destination_folder, braket_simulators
 ):
-    device = AwsDevice(simulator_arn, aws_session)
+    device = braket_simulators[simulator_arn]
     result_types_observable_not_in_instructions(
         device, {"shots": shots, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_multithreaded_bell_pair(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_multithreaded_bell_pair(
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     multithreaded_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_batch_bell_pair(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_batch_bell_pair(simulator_arn, aws_session, s3_destination_folder, braket_simulators):
+    device = braket_simulators[simulator_arn]
     batch_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_bell_pair_openqasm(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_bell_pair_openqasm(simulator_arn, aws_session, s3_destination_folder, braket_simulators):
+    device = braket_simulators[simulator_arn]
     bell_pair_openqasm_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
-def test_bell_pair_openqasm_results(simulator_arn, aws_session, s3_destination_folder):
-    device = AwsDevice(simulator_arn, aws_session)
+def test_bell_pair_openqasm_results(
+    simulator_arn, aws_session, s3_destination_folder, braket_simulators
+):
+    device = braket_simulators[simulator_arn]
     openqasm_result_types_bell_pair_testing(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
     )
 
 
-def test_openqasm_probability_results(aws_session, s3_destination_folder):
+def test_openqasm_probability_results(aws_session, s3_destination_folder, braket_simulators):
     device = AwsDevice("arn:aws:braket:::device/quantum-simulator/amazon/dm1", aws_session)
     openqasm_noisy_circuit_1qubit_noise_full_probability(
         device, {"shots": SHOTS, "s3_destination_folder": s3_destination_folder}
@@ -247,10 +275,12 @@ def test_openqasm_probability_results(aws_session, s3_destination_folder):
 
 @pytest.mark.parametrize("simulator_arn", SIMULATOR_ARNS)
 @pytest.mark.parametrize("num_layers", [50, 100, 500, 1000])
-def test_many_layers(simulator_arn, num_layers, aws_session, s3_destination_folder):
+def test_many_layers(
+    simulator_arn, num_layers, aws_session, s3_destination_folder, braket_simulators
+):
     num_qubits = 10
     circuit = many_layers(num_qubits, num_layers)
-    device = AwsDevice(simulator_arn, aws_session)
+    device = braket_simulators[simulator_arn]
 
     tol = get_tol(SHOTS)
     result = device.run(circuit, shots=SHOTS, s3_destination_folder=s3_destination_folder).result()
