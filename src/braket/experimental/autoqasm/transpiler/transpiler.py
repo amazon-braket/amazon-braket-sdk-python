@@ -144,7 +144,6 @@ class PyToOqpy(transpiler.PyToPy):
         # canonicalization creates.
         node = continue_statements.transform(node, ctx)
         node = return_statements.transform(node, ctx)
-        node = comparisons.transform(node, ctx)
         node = assignments.transform(node, ctx)
         node = lists.transform(node, ctx)
         node = slices.transform(node, ctx)
@@ -152,6 +151,7 @@ class PyToOqpy(transpiler.PyToPy):
         node = control_flow.transform(node, ctx)
         node = conditional_expressions.transform(node, ctx)
         node = logical_expressions.transform(node, ctx)
+        node = comparisons.transform(node, ctx)
         node = variables.transform(node, ctx)
 
         return node

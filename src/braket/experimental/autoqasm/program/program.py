@@ -130,11 +130,12 @@ class Program(SerializableProgram):
         Args:
             param_values (dict[str, float]): A mapping of FreeParameter names
                 to a value to assign to them.
-            strict (bool): If True, raises a ValueError if any of the FreeParameters
+            strict (bool): If True, raises a ParameterNotFoundError if any of the FreeParameters
                 in param_values do not appear in the program. False by default.
 
         Raises:
-            ValueError: If a parameter name is given which does not appear in the program.
+            ParameterNotFoundError: If a parameter name is given which does not appear in
+                the program.
 
         Returns:
             Program: Returns a program with all present parameters fixed to their respective
@@ -148,7 +149,7 @@ class Program(SerializableProgram):
                 assert target.init_expression == "input", "Only free parameters can be bound."
                 target.init_expression = value
             elif strict:
-                raise ValueError(f"No parameter in the program named: {name}")
+                raise errors.ParameterNotFoundError(f"No parameter in the program named: {name}")
 
         return Program(bound_oqpy_program, self._has_pulse_control)
 
@@ -345,13 +346,14 @@ class ProgramConversionContext:
             name (str): The name of the parameter.
 
         Raises:
-            ValueError: If there is no parameter with the given name registered with the program.
+            ParameterNotFoundError: If there is no parameter with the given name registered
+            with the program.
 
         Returns:
             FloatVar: The associated variable.
         """
         if name not in self._free_parameters:
-            raise ValueError(f"Free parameter '{name}' was not found.")
+            raise errors.ParameterNotFoundError(f"Free parameter '{name}' was not found.")
         return self._free_parameters[name]
 
     def get_free_parameters(self) -> list[oqpy.FloatVar]:

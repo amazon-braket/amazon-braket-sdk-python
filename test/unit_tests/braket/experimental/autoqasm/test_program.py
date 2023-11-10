@@ -44,7 +44,7 @@ def test_get_parameter_invalid_name():
     """Tests the get_parameter function."""
     prog = aq.program.ProgramConversionContext()
     prog.register_parameter(FreeParameter("alpha"))
-    with pytest.raises(ValueError):
+    with pytest.raises(aq.errors.ParameterNotFoundError):
         prog.get_parameter("not_a_parameter")
 
 

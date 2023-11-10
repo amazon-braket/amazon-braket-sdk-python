@@ -14,27 +14,29 @@
 
 "Utility methods for operators."
 
-from typing import Any
+from typing import Any, Union
 
 from braket.circuits import FreeParameter
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
 
-def _register_and_convert_parameters(*args: list[Any]) -> list[aq_types.FloatVar]:
+def _register_and_convert_parameters(
+    *args: tuple[Any],
+) -> Union[list[aq_types.FloatVar], aq_types.FloatVar]:
     """Adds FreeParameters to the program conversion context parameter registry, and
     returns the associated FloatVar objects.
 
     Notes: Adding a parameter to the registry twice is safe. Conversion is a pass through
-    for non-FreeParameter inputs.
+    for non-FreeParameter inputs. Input and output arity is the same.
 
     FloatVars are more compatible with the program conversion operations.
 
     Returns:
-        list[FloatVar]: FloatVars for program conversion.
+        Union[list[FloatVar], FloatVar]: FloatVars for program conversion.
     """
     program_conversion_context = program.get_program_conversion_context()
-    program_conversion_context.register_args(args)  # TODO could be one item
+    program_conversion_context.register_args(args)
     result = []
     for arg in args:
         if isinstance(arg, FreeParameter):

@@ -461,7 +461,9 @@ def test_strict_parameter_bind_failure():
         measure(0)
 
     prog = parametric(FreeParameter("alpha"))
-    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+    with pytest.raises(
+        aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
+    ):
         prog.make_bound_program({"beta": 0.5}, strict=True)
 
 
@@ -484,7 +486,9 @@ def test_binding_variable_fails():
     def parametric():
         alpha = aq.FloatVar(1.2)  # noqa: F841
 
-    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+    with pytest.raises(
+        aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
+    ):
         parametric().make_bound_program({"beta": 0.5}, strict=True)
 
 
