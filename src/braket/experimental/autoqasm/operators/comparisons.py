@@ -26,8 +26,8 @@ def lt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
     """Functional form of "<".
 
     Args:
-        a (Any): Callable that returns the first expression.
-        b (Any): Callable that returns the second expression.
+        a (Any): The first expression.
+        b (Any): The second expression.
 
     Returns:
         Union[bool, BoolVar]: Whether the first expression is less than the second.
