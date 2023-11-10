@@ -100,11 +100,11 @@ class AwsQuantumTask(QuantumTask):
         ],
         s3_destination_folder: AwsSession.S3DestinationFolder,
         shots: int,
-        device_parameters: dict[str, Any] = None,
+        device_parameters: dict[str, Any] | None = None,
         disable_qubit_rewiring: bool = False,
-        tags: dict[str, str] = None,
-        inputs: dict[str, float] = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
+        tags: dict[str, str] | None = None,
+        inputs: dict[str, float] | None = None,
+        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -129,7 +129,7 @@ class AwsQuantumTask(QuantumTask):
                 `shots=0` is only available on simulators and means that the simulator
                 will compute the exact results based on the quantum task specification.
 
-            device_parameters (dict[str, Any]): Additional parameters to send to the device.
+            device_parameters (dict[str, Any] | None): Additional parameters to send to the device.
 
             disable_qubit_rewiring (bool): Whether to run the circuit with the exact qubits chosen,
                 without any rewiring downstream, if this is supported by the device.
@@ -137,15 +137,15 @@ class AwsQuantumTask(QuantumTask):
                 If ``True``, no qubit rewiring is allowed; if ``False``, qubit rewiring is allowed.
                 Default: False
 
-            tags (dict[str, str]): Tags, which are Key-Value pairs to add to this quantum task.
-                An example would be:
+            tags (dict[str, str] | None): Tags, which are Key-Value pairs to add to this quantum
+                task. An example would be:
                 `{"state": "washington"}`
 
-            inputs (dict[str, float]): Inputs to be passed along with the
+            inputs (dict[str, float] | None): Inputs to be passed along with the
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]):
+            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None):
                 A `Dict` for user defined gate calibration. The calibration is defined for
                 for a particular `Gate` on a particular `QubitSet` and is represented by
                 a `PulseSequence`.
@@ -203,7 +203,7 @@ class AwsQuantumTask(QuantumTask):
     def __init__(
         self,
         arn: str,
-        aws_session: AwsSession = None,
+        aws_session: AwsSession | None = None,
         poll_timeout_seconds: float = DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
@@ -211,7 +211,7 @@ class AwsQuantumTask(QuantumTask):
         """
         Args:
             arn (str): The ARN of the quantum task.
-            aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
+            aws_session (AwsSession | None): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the quantum task.
             poll_timeout_seconds (float): The polling timeout for `result()`. Default: 5 days.

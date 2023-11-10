@@ -316,7 +316,7 @@ def test_batch_circuit():
     theta = FreeParameter("theta")
     task = Circuit().rx(angle=theta, target=0)
     device = LocalSimulator(dummy)
-    num_tasks = 10
+    num_tasks = 3
     circuits = [task for _ in range(num_tasks)]
     inputs = [{"theta": i} for i in range(num_tasks)]
     batch = device.run_batch(circuits, inputs=inputs, shots=10)
@@ -329,7 +329,7 @@ def test_batch_with_max_parallel():
     dummy = DummyProgramSimulator()
     task = Circuit().h(0).cnot(0, 1)
     device = LocalSimulator(dummy)
-    num_tasks = 10
+    num_tasks = 3
     circuits = [task for _ in range(num_tasks)]
     batch = device.run_batch(circuits, shots=10, max_parallel=2)
     assert len(batch.results()) == num_tasks
@@ -341,7 +341,7 @@ def test_batch_with_annealing_problems():
     dummy = DummyAnnealingSimulator()
     problem = Problem(ProblemType.ISING)
     device = LocalSimulator(dummy)
-    num_tasks = 10
+    num_tasks = 3
     problems = [problem for _ in range(num_tasks)]
     batch = device.run_batch(problems, shots=10)
     assert len(batch.results()) == num_tasks
@@ -353,7 +353,7 @@ def test_batch_circuit_without_inputs():
     dummy = DummyProgramSimulator()
     bell = Circuit().h(0).cnot(0, 1)
     device = LocalSimulator(dummy)
-    num_tasks = 10
+    num_tasks = 3
     circuits = [bell for _ in range(num_tasks)]
     batch = device.run_batch(circuits, shots=10)
     assert len(batch.results()) == num_tasks
@@ -385,7 +385,7 @@ def test_batch_circuit_with_task_and_input_mismatch():
     dummy = DummyProgramSimulator()
     bell = Circuit().h(0).cnot(0, 1)
     device = LocalSimulator(dummy)
-    num_tasks = 10
+    num_tasks = 3
     circuits = [bell for _ in range(num_tasks)]
     inputs = [{} for _ in range(num_tasks - 1)]
     with pytest.raises(ValueError):

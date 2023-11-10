@@ -100,7 +100,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(1)]))
     """
 
-    def __init__(self, instructions: Iterable[Instruction] = None):
+    def __init__(self, instructions: Iterable[Instruction] | None = None):
         self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
         self._max_times: dict[Qubit, int] = {}
         self._qubits = QubitSet()
@@ -283,13 +283,13 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self.sort_moments()
         return self._moments.values()
 
-    def get(self, key: MomentsKey, default: Any = None) -> Instruction:
+    def get(self, key: MomentsKey, default: Any | None = None) -> Instruction:
         """
         Get the instruction in self by key.
 
         Args:
             key (MomentsKey): Key of the instruction to fetch.
-            default (Any): Value to return if `key` is not in `moments`. Default = `None`.
+            default (Any | None): Value to return if `key` is not in `moments`. Default = `None`.
 
         Returns:
             Instruction: `moments[key]` if `key` in `moments`, else `default` is returned.
