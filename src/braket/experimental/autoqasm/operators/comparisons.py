@@ -82,7 +82,7 @@ def gt_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): Callable that returns the second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether the first expression greater than the second.
+        Union[bool, BoolVar]: Whether the first expression is greater than the second.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _aq_gt(a, b)
@@ -108,7 +108,7 @@ def gteq_(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
         b (Any): Callable that returns the second expression.
 
     Returns:
-        Union[bool, BoolVar]: Whether the first expression greater than or equal to the second.
+        Union[bool, BoolVar]: Whether the first expression is greater than or equal to the second.
     """
     if aq_types.is_qasm_type(a) or aq_types.is_qasm_type(b):
         return _aq_gteq(a, b)
