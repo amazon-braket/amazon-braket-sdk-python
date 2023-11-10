@@ -59,7 +59,12 @@ from braket.experimental.autoqasm.autograph.pyct.static_analysis import (
     reaching_definitions,
 )
 from braket.experimental.autoqasm.autograph.tf_utils import tf_stack
-from braket.experimental.autoqasm.converters import assignments, break_statements, return_statements
+from braket.experimental.autoqasm.converters import (
+    assignments,
+    break_statements,
+    comparisons,
+    return_statements,
+)
 
 
 class PyToOqpy(transpiler.PyToPy):
@@ -145,6 +150,7 @@ class PyToOqpy(transpiler.PyToPy):
         node = call_trees.transform(node, ctx)
         node = control_flow.transform(node, ctx)
         node = conditional_expressions.transform(node, ctx)
+        node = comparisons.transform(node, ctx)
         node = logical_expressions.transform(node, ctx)
         node = variables.transform(node, ctx)
 

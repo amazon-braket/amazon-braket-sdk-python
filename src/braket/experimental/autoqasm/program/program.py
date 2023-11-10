@@ -130,11 +130,12 @@ class Program(SerializableProgram):
         Args:
             param_values (dict[str, float]): A mapping of FreeParameter names
                 to a value to assign to them.
-            strict (bool): If True, raises a ValueError if any of the FreeParameters
+            strict (bool): If True, raises a ParameterNotFoundError if any of the FreeParameters
                 in param_values do not appear in the program. False by default.
 
         Raises:
-            ValueError: If a parameter name is given which does not appear in the program.
+            ParameterNotFoundError: If a parameter name is given which does not appear in
+                the program.
 
         Returns:
             Program: Returns a program with all present parameters fixed to their respective
@@ -148,7 +149,7 @@ class Program(SerializableProgram):
                 assert target.init_expression == "input", "Only free parameters can be bound."
                 target.init_expression = value
             elif strict:
-                raise ValueError(f"No parameter in the program named: {name}")
+                raise errors.ParameterNotFoundError(f"No parameter in the program named: {name}")
 
         return Program(bound_oqpy_program, self._has_pulse_control)
 
@@ -321,22 +322,39 @@ class ProgramConversionContext:
         """
         for arg in args:
             if isinstance(arg, FreeParameter):
-                self.register_parameter(arg.name)
+                self.register_parameter(arg)
             elif isinstance(arg, FreeParameterExpression):
                 # TODO laurecap: Support for expressions
                 raise NotImplementedError(
                     "Expressions of FreeParameters will be supported shortly!"
                 )
 
-    def register_parameter(self, name: str) -> None:
-        """Register an input parameter with the given name, if it has not already been
-        registered. Only floats are currently supported.
+    def register_parameter(self, parameter: FreeParameter) -> None:
+        """Register an input parameter if it has not already been registered.
+        Only floats are currently supported.
 
         Args:
-            name (str): The identifier for the parameter.
+            parameter (FreeParameter): The parameter to register with the program.
+        """
+        if parameter.name not in self._free_parameters:
+            self._free_parameters[parameter.name] = oqpy.FloatVar("input", name=parameter.name)
+
+    def get_parameter(self, name: str) -> oqpy.FloatVar:
+        """Return a named oqpy.FloatVar that is used as a free parameter in the program.
+
+        Args:
+            name (str): The name of the parameter.
+
+        Raises:
+            ParameterNotFoundError: If there is no parameter with the given name registered
+            with the program.
+
+        Returns:
+            FloatVar: The associated variable.
         """
         if name not in self._free_parameters:
-            self._free_parameters[name] = oqpy.FloatVar("input", name=name)
+            raise errors.ParameterNotFoundError(f"Free parameter '{name}' was not found.")
+        return self._free_parameters[name]
 
     def get_free_parameters(self) -> list[oqpy.FloatVar]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""

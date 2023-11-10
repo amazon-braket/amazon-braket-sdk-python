@@ -22,6 +22,8 @@ from openpulse import ast
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
+from .utils import _register_and_convert_parameters
+
 
 def and_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.BoolVar]:
     """Functional form of "and".
@@ -42,6 +44,8 @@ def and_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.Boo
 
 
 def _oqpy_and(a: Any, b: Any) -> aq_types.BoolVar:
+    a, b = _register_and_convert_parameters(a, b)
+
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
@@ -72,6 +76,8 @@ def or_(a: Callable[[], Any], b: Callable[[], Any]) -> Union[bool, aq_types.Bool
 
 
 def _oqpy_or(a: Any, b: Any) -> aq_types.BoolVar:
+    a, b = _register_and_convert_parameters(a, b)
+
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
@@ -99,6 +105,8 @@ def not_(a: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _oqpy_not(a: Any) -> aq_types.BoolVar:
+    a = _register_and_convert_parameters(a)
+
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     result = aq_types.BoolVar()
     oqpy_program.declare(result)
@@ -127,6 +135,8 @@ def eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _oqpy_eq(a: Any, b: Any) -> aq_types.BoolVar:
+    a, b = _register_and_convert_parameters(a, b)
+
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     is_equal = aq_types.BoolVar()
     oqpy_program.declare(is_equal)
@@ -155,6 +165,8 @@ def not_eq(a: Any, b: Any) -> Union[bool, aq_types.BoolVar]:
 
 
 def _oqpy_not_eq(a: Any, b: Any) -> aq_types.BoolVar:
+    a, b = _register_and_convert_parameters(a, b)
+
     oqpy_program = program.get_program_conversion_context().get_oqpy_program()
     is_not_equal = aq_types.BoolVar()
     oqpy_program.declare(is_not_equal)

@@ -19,6 +19,7 @@ import oqpy
 import oqpy.base
 from openpulse import ast
 
+from braket.circuits import FreeParameterExpression
 from braket.experimental.autoqasm import errors, program
 
 
@@ -32,11 +33,12 @@ def is_qasm_type(val: Any) -> bool:
     Returns:
         bool: Whether the object is a QASM type.
     """
+    qasm_types = (oqpy.Range, oqpy._ClassicalVar, oqpy.base.OQPyExpression, FreeParameterExpression)
     # The input can either be a class, like oqpy.Range ...
     if type(val) is type:
-        return issubclass(val, (oqpy.Range, oqpy._ClassicalVar, oqpy.base.OQPyExpression))
+        return issubclass(val, qasm_types)
     # ... or an instance of a class, like oqpy.Range(10)
-    return isinstance(val, (oqpy.Range, oqpy._ClassicalVar, oqpy.base.OQPyExpression))
+    return isinstance(val, qasm_types)
 
 
 def qasm_range(start: int, stop: Optional[int] = None, step: Optional[int] = 1) -> oqpy.Range:

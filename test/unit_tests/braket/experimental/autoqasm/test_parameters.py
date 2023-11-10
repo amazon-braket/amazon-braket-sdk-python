@@ -21,13 +21,13 @@ from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
 from braket.experimental.autoqasm import pulse
-from braket.experimental.autoqasm.instructions import cnot, cphaseshift, measure, ms, rx, rz
+from braket.experimental.autoqasm.instructions import cnot, cphaseshift, h, measure, ms, rx, rz, x
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
 def _test_parametric_on_local_sim(program: aq.Program, inputs: dict[str, float]) -> None:
     device = LocalSimulator(backend=StateVectorSimulator())
-    task = device.run(program, shots=10, inputs=inputs)
+    task = device.run(program, shots=100, inputs=inputs)
     assert isinstance(task, LocalQuantumTask)
     assert isinstance(task.result().measurements, dict)
     return task.result().measurements
@@ -461,7 +461,9 @@ def test_strict_parameter_bind_failure():
         measure(0)
 
     prog = parametric(FreeParameter("alpha"))
-    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+    with pytest.raises(
+        aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
+    ):
         prog.make_bound_program({"beta": 0.5}, strict=True)
 
 
@@ -484,5 +486,292 @@ def test_binding_variable_fails():
     def parametric():
         alpha = aq.FloatVar(1.2)  # noqa: F841
 
-    with pytest.raises(ValueError, match="No parameter in the program named: beta"):
+    with pytest.raises(
+        aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
+    ):
         parametric().make_bound_program({"beta": 0.5}, strict=True)
+
+
+def test_compound_condition():
+    """Test parameters used in greater than conditional statements."""
+
+    @aq.main
+    def parametric(val: float):
+        threshold = 0.9
+        if val > threshold or val >= 1.2:
+            x(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = val > 0.9;
+bool __bool_1__;
+__bool_1__ = val >= 1.2;
+bool __bool_2__;
+__bool_2__ = __bool_0__ || __bool_1__;
+if (__bool_2__) {
+    x __qubits__[0];
+}
+bit __bit_3__;
+__bit_3__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_lt_condition():
+    """Test parameters used in less than conditional statements."""
+
+    @aq.main
+    def parametric(val: float):
+        if val < 0.9:
+            x(0)
+        if val <= 0.9:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = val < 0.9;
+if (__bool_0__) {
+    x __qubits__[0];
+}
+bool __bool_1__;
+__bool_1__ = val <= 0.9;
+if (__bool_1__) {
+    h __qubits__[0];
+}
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_parameter_in_predicate_in_subroutine():
+    """Test parameters used in conditional statements."""
+
+    @aq.subroutine
+    def sub(val: float):
+        threshold = 0.9
+        if val > threshold:
+            x(0)
+
+    @aq.main
+    def parametric(val: float):
+        sub(val)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+def sub(float[64] val) {
+    bool __bool_0__;
+    __bool_0__ = val > 0.9;
+    if (__bool_0__) {
+        x __qubits__[0];
+    }
+}
+input float[64] val;
+qubit[1] __qubits__;
+sub(val);
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_eq_condition():
+    """Test parameters used in conditional equals statements."""
+
+    @aq.main
+    def parametric(basis: int):
+        if basis == 1:
+            h(0)
+        elif basis == 2:
+            x(0)
+        else:
+            pass
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] basis;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = basis == 1;
+if (__bool_0__) {
+    h __qubits__[0];
+} else {
+    bool __bool_1__;
+    __bool_1__ = basis == 2;
+    if (__bool_1__) {
+        x __qubits__[0];
+    }
+}
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("basis")).to_ir() == expected
+
+
+def test_sim_conditional_stmts():
+    @aq.main
+    def main(basis: int):
+        if basis == 1:
+            h(0)
+        else:
+            x(0)
+        c = measure(0)  # noqa: F841
+
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0})
+    assert all(val == 1 for val in measurements["c"])
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 1})
+    assert 1 in measurements["c"] and 0 in measurements["c"]
+
+
+def test_sim_comparison_stmts():
+    @aq.main
+    def main(basis: int):
+        if basis > 0.5:
+            x(0)
+        c = measure(0)  # noqa: F841
+
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0.5})
+    assert all(val == 0 for val in measurements["c"])
+    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0.55})
+    assert all(val == 1 for val in measurements["c"])
+
+
+def test_param_neq():
+    """Test parameters used in conditional not equals statements."""
+
+    @aq.main
+    def parametric(val: int):
+        if val != 1:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = val != 1;
+if (__bool_0__) {
+    h __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_param_or():
+    """Test parameters used in conditional `or` statements."""
+
+    @aq.main
+    def parametric(alpha: float, beta: float):
+        if alpha or beta:
+            rx(0, alpha)
+            rx(0, beta)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+input float[64] beta;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = alpha || beta;
+if (__bool_0__) {
+    rx(alpha) __qubits__[0];
+    rx(beta) __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
+
+
+def test_param_and():
+    """Test parameters used in conditional `and` statements."""
+
+    @aq.main
+    def parametric(alpha: float, beta: float):
+        if alpha and beta:
+            rx(0, alpha)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+input float[64] beta;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = alpha && beta;
+if (__bool_0__) {
+    rx(alpha) __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
+
+
+def test_param_and_float():
+    """Test parameters used in conditional `and` statements."""
+
+    @aq.main
+    def parametric(alpha: float, beta: float):
+        if alpha and beta:
+            rx(0, alpha)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = alpha && 1.5;
+if (__bool_0__) {
+    rx(alpha) __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("alpha"), 1.5).to_ir() == expected
+
+
+def test_param_not():
+    """Test parameters used in conditional `not` statements."""
+
+    @aq.main
+    def parametric(val: int):
+        if not val:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] val;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = !val;
+if (__bool_0__) {
+    h __qubits__[0];
+}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    assert parametric(FreeParameter("val")).to_ir() == expected
+
+
+def test_parameter_binding_conditions():
+    """Test that parameters can be used in conditions and then bound."""
+
+    @aq.main
+    def parametric(val: float):
+        if val == 1:
+            x(0)
+        measure(0)
+
+    template = """OPENQASM 3.0;
+float[64] val = {};
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = val == 1;
+if (__bool_0__) {{
+    x __qubits__[0];
+}}
+bit __bit_1__;
+__bit_1__ = measure __qubits__[0];"""
+    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 0})
+    assert bound_prog.to_ir() == template.format(0)
+    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 1})
+    assert bound_prog.to_ir() == template.format(1)

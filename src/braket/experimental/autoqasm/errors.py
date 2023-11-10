@@ -37,6 +37,10 @@ class MissingParameterTypeError(AutoQasmError):
     """AutoQASM requires type hints for subroutine parameters."""
 
 
+class ParameterNotFoundError(AutoQasmError):
+    """A FreeParameter could not be found in the program."""
+
+
 class InvalidGateDefinition(AutoQasmError):
     """Gate definition does not meet the necessary requirements."""
 
