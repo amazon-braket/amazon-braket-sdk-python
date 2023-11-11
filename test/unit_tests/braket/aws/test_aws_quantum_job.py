@@ -588,22 +588,6 @@ def test_create_job(
     assert job.arn == quantum_job_arn
 
 
-@pytest.mark.parametrize("wait_until_complete", [True])
-@patch("braket.aws.aws_quantum_job.AwsQuantumJob.logs")
-@patch("braket.aws.aws_quantum_job.prepare_quantum_job")
-def test_create_job_fake_reservation_arn(
-    mock_prepare_quantum_job,
-    mock_logs,
-    aws_session,
-    prepare_job_args,
-    quantum_job_arn,
-    wait_until_complete,
-):
-    prepare_job_args.update({"reservation_arn": "abcd"})
-    with pytest.raises(ValueError, match="Provided reservation arn"):
-        AwsQuantumJob.create(wait_until_complete=wait_until_complete, **prepare_job_args)
-
-
 def test_create_fake_arg():
     unexpected_kwarg = "create\\(\\) got an unexpected keyword argument 'fake_arg'"
     with pytest.raises(TypeError, match=unexpected_kwarg):

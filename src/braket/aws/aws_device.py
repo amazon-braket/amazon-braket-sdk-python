@@ -27,7 +27,7 @@ from networkx import DiGraph, complete_graph, from_edgelist
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
-from braket.aws.aws_quantum_task import AwsQuantumTask, is_invalid_reservation_arn
+from braket.aws.aws_quantum_task import AwsQuantumTask
 from braket.aws.aws_quantum_task_batch import AwsQuantumTaskBatch
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import QueueDepthInfo, QueueType
@@ -186,8 +186,6 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
         """
-        if reservation_arn:
-            is_invalid_reservation_arn(reservation_arn)
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -281,8 +279,6 @@ class AwsDevice(Device):
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
         """
-        if reservation_arn:
-            is_invalid_reservation_arn(reservation_arn)
         return AwsQuantumTaskBatch(
             AwsSession.copy_session(self._aws_session, max_connections=max_connections),
             self._arn,

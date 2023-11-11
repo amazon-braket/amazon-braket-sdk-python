@@ -997,17 +997,6 @@ def test_run_with_reservation_arn(aws_quantum_task_mock, device, circuit):
     )
 
 
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_with_invalid_reservation_arn(aws_quantum_task_mock, device, circuit):
-    with pytest.raises(ValueError, match="Provided reservation arn"):
-        _run_and_assert(
-            aws_quantum_task_mock,
-            device,
-            circuit,
-            reservation_arn="abdc",
-        )
-
-
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask")
 def test_run_param_circuit_with_no_inputs(
     aws_quantum_task_mock, single_circuit_input, device, s3_destination_folder
@@ -1075,38 +1064,6 @@ def test_run_param_circuit_with_reservation_arn_batch_task(
         None,
         reservation_arn="arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
     )
-
-
-@patch("braket.aws.aws_session.boto3.Session")
-@patch("braket.aws.aws_session.AwsSession")
-@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
-def test_run_param_circuit_with_invalid_reservation_arn_batch_task(
-    aws_quantum_task_mock,
-    aws_session_mock,
-    boto_session_mock,
-    single_circuit_input,
-    device,
-    s3_destination_folder,
-):
-    inputs = {"theta": 0.2}
-    circ_1 = Circuit().rx(angle=0.2, target=0)
-    circuits = [circ_1, single_circuit_input]
-
-    with pytest.raises(ValueError, match="Provided reservation arn"):
-        _run_batch_and_assert(
-            aws_quantum_task_mock,
-            aws_session_mock,
-            device,
-            circuits,
-            s3_destination_folder,
-            10,
-            20,
-            50,
-            43200,
-            0.25,
-            inputs,
-            reservation_arn="arn:aws:braket:us-west-1::device/quantum-simulator/amazon/sim",
-        )
 
 
 @patch("braket.aws.aws_session.boto3.Session")

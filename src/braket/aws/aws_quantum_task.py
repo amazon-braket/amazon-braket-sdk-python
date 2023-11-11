@@ -491,6 +491,12 @@ class AwsQuantumTask(QuantumTask):
         self._result = None
         return None
 
+    def has_reservation_arn_from_metadata(self, current_metadata) -> bool:
+        for configItem in current_metadata.get("associationConfig", []):
+            if configItem.get("type") == "RESERVATION_TIME_WINDOW_ARN":
+                return True
+        return False
+
     def _download_result(
         self,
     ) -> Union[
@@ -506,7 +512,7 @@ class AwsQuantumTask(QuantumTask):
             "arn": self.id,
             "status": self.state(),
             "execution_duration": None,
-            "has_reservation_arn": bool(self._aws_session.reservation_arn),
+            "has_reservation_arn": self.has_reservation_arn_from_metadata(current_metadata),
         }
         try:
             task_event[
@@ -800,17 +806,6 @@ def _create_common_params(
         "outputS3KeyPrefix": s3_destination_folder[1],
         "shots": shots,
     }
-
-
-def is_invalid_reservation_arn(reservation_arn: Optional[str]):
-    # Use the re.match function to check if the input string matches the pattern
-    if not re.match(
-        r"^arn:aws:braket:[a-zA-Z0-9-]+:[0-9]+:reservation/[a-zA-Z0-9-]+$", reservation_arn
-    ):
-        raise ValueError(
-            f"Provided reservation arn ({reservation_arn}) is invalid. It should follow format "
-            "arn:aws:braket:<Region>:<AccountId>:reservation/<ReservationId>"
-        )
 
 
 @singledispatch

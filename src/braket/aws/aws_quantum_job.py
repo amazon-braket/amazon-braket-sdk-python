@@ -26,7 +26,6 @@ import boto3
 from botocore.exceptions import ClientError
 
 from braket.aws import AwsDevice
-from braket.aws.aws_quantum_task import is_invalid_reservation_arn
 from braket.aws.aws_session import AwsSession
 from braket.aws.queue_information import HybridJobQueueInfo
 from braket.jobs import logs
@@ -187,9 +186,6 @@ class AwsQuantumJob(QuantumJob):
             ValueError: Raises ValueError if the parameters are not valid.
         """
         aws_session = AwsQuantumJob._initialize_session(aws_session, device, logger)
-
-        if reservation_arn:
-            is_invalid_reservation_arn(reservation_arn)
 
         create_job_kwargs = prepare_quantum_job(
             device=device,

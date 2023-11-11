@@ -211,7 +211,6 @@ def hybrid_job(
                     "tags": tags,
                     "reservation_arn": reservation_arn,
                 }
-
                 for key, value in optional_args.items():
                     if value is not None:
                         job_args[key] = value
