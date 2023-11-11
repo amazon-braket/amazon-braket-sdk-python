@@ -18,6 +18,7 @@ import pytest
 from botocore.exceptions import ClientError
 
 from braket.aws.aws_device import AwsDevice
+from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.aws.aws_session import AwsSession
 
 SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
@@ -107,3 +108,27 @@ def created_braket_devices(aws_session, braket_devices):
     return {
         device.arn: AwsDevice(device.arn, aws_session) for device in braket_devices
     }
+
+@pytest.fixture(scope="session")
+def failed_job(aws_session):
+    return AwsQuantumJob.create(
+        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+        source_module="test/integ_tests/job_test_script.py",
+        entry_point="job_test_script:start_here",
+        aws_session=aws_session,
+        wait_until_complete=False,
+        hyperparameters={"test_case": "failed"},
+    )
+
+@pytest.fixture(scope="session")
+def completed_job(aws_session):
+    return AwsQuantumJob.create(
+        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+        source_module="test/integ_tests/job_test_script.py",
+        entry_point="job_test_script:start_here",
+        wait_until_complete=False,
+        aws_session=aws_session,
+        hyperparameters={"test_case": "completed"},
+    )
+
+

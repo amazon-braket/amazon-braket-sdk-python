@@ -19,7 +19,7 @@ from multiprocessing import Pool
 from os import cpu_count
 from typing import Optional, Union
 
-import pkg_resources
+from importlib.metadata import entry_points
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
@@ -39,7 +39,7 @@ from braket.tasks.local_quantum_task import LocalQuantumTask
 from braket.tasks.local_quantum_task_batch import LocalQuantumTaskBatch
 
 _simulator_devices = {
-    entry.name: entry for entry in pkg_resources.iter_entry_points("braket.simulators")
+    entry.name: entry for entry in entry_points(group="braket.simulators")
 }
 
 
