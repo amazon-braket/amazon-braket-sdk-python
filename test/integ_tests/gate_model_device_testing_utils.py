@@ -103,9 +103,9 @@ def result_types_zero_shots_bell_pair_testing(
         circuit.amplitude(["01", "10", "00", "11"])
     if include_state_vector:
         circuit.state_vector()
-    tasks = (circuit, circuit.to_ir(ir_type=IRType.OPENQASM))
-    for task in tasks:
-        result = device.run(task, **run_kwargs).result()
+    tasks = [circuit, circuit.to_ir(ir_type=IRType.OPENQASM)]
+    results = device.run_batch(tasks, **run_kwargs).results()
+    for result in results:
         assert len(result.result_types) == 3 if include_state_vector else 2
         assert np.allclose(
             result.get_value_by_result_type(

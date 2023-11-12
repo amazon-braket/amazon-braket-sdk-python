@@ -99,6 +99,7 @@ def test_completed_local_job(aws_session, capsys):
 
             for data in logs_to_validate:
                 assert data in log_data
+
         finally:
             os.chdir(current_dir)
 

@@ -29,7 +29,7 @@ PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 @pytest.mark.parametrize(
     "arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
 )
-def test_device_creation(arn, aws_session, created_braket_devices):
+def test_device_creation(arn, created_braket_devices):
     device = created_braket_devices[arn]
     assert device.arn == arn
     assert device.name
@@ -46,11 +46,11 @@ def test_device_pulse_properties(arn, aws_session, created_braket_devices):
     assert device.frames
 
 
-def test_device_across_regions(aws_session):
+def test_device_across_regions(aws_session, created_braket_devices):
     # assert QPUs across different regions can be created using the same aws_session
-    AwsDevice(RIGETTI_ARN, aws_session)
-    AwsDevice(IONQ_ARN, aws_session)
-    AwsDevice(OQC_ARN, aws_session)
+    created_braket_devices[RIGETTI_ARN]
+    created_braket_devices[IONQ_ARN]
+    created_braket_devices[OQC_ARN]
 
 
 @pytest.mark.parametrize("arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN)])

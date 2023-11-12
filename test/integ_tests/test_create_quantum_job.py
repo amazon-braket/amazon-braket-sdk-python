@@ -37,13 +37,13 @@ def decorator_python_version():
     return int(major_version), int(minor_version)
 
 
-def test_failed_quantum_job(aws_session, capsys, failed_job):
+def test_failed_quantum_job(aws_session, capsys, failed_quantum_job):
     """Asserts the hybrid job is failed with the output, checkpoints,
     quantum tasks not created in bucket and only input is uploaded to s3. Validate the
     results/download results have the response raising RuntimeError. Also,
     check if the logs displays the Assertion Error.
     """
-    job = failed_job
+    job = failed_quantum_job
     job_name = job.name
     pattern = f"^arn:aws:braket:{aws_session.region}:\\d12:job/{job_name}$"
     re.match(pattern=pattern, string=job.arn)
@@ -89,14 +89,14 @@ def test_failed_quantum_job(aws_session, capsys, failed_job):
     )
 
 
-def test_completed_quantum_job(aws_session, capsys, completed_job):
+def test_completed_quantum_job(aws_session, capsys, completed_quantum_job):
     """Asserts the hybrid job is completed with the output, checkpoints, quantum tasks and
     script folder created in S3 for respective hybrid job. Validate the results are
     downloaded and results are what we expect. Also, assert that logs contains all the
     necessary steps for setup and running the hybrid job and is displayed to the user.
     """
 
-    job = completed_job
+    job = completed_quantum_job
     job_name = job.name
     pattern = f"^arn:aws:braket:{aws_session.region}:\\d12:job/{job_name}$"
     re.match(pattern=pattern, string=job.arn)

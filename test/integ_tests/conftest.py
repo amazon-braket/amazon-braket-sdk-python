@@ -109,9 +109,22 @@ def created_braket_devices(aws_session, braket_devices):
         device.arn: AwsDevice(device.arn, aws_session) for device in braket_devices
     }
 
+
 @pytest.fixture(scope="session")
-def failed_job(aws_session):
-    return AwsQuantumJob.create(
+def completed_quantum_job(aws_session):
+    job = AwsQuantumJob.create(
+        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+        source_module="test/integ_tests/job_test_script.py",
+        entry_point="job_test_script:start_here",
+        aws_session=aws_session,
+        wait_until_complete=True,
+        hyperparameters={"test_case": "completed"},
+    )
+    return job
+
+@pytest.fixture(scope="session")
+def failed_quantum_job(aws_session):
+    job = AwsQuantumJob.create(
         "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
         source_module="test/integ_tests/job_test_script.py",
         entry_point="job_test_script:start_here",
@@ -119,16 +132,6 @@ def failed_job(aws_session):
         wait_until_complete=False,
         hyperparameters={"test_case": "failed"},
     )
-
-@pytest.fixture(scope="session")
-def completed_job(aws_session):
-    return AwsQuantumJob.create(
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        wait_until_complete=False,
-        aws_session=aws_session,
-        hyperparameters={"test_case": "completed"},
-    )
+    return job
 
 
