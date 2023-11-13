@@ -161,7 +161,7 @@ def test_completed_quantum_job(aws_session, capsys, completed_quantum_job):
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
         try:
-             # Check results match the expectations.
+            # Check results match the expectations.
             assert job.result() == {"converged": True, "energy": -0.2}
         finally:
             os.chdir(current_dir)

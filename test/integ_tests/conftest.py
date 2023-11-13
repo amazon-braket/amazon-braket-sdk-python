@@ -12,6 +12,8 @@
 # language governing permissions and limitations under the License.
 
 import os
+import random
+import string
 
 import boto3
 import pytest
@@ -25,6 +27,15 @@ SV1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
 DM1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/dm1"
 TN1_ARN = "arn:aws:braket:::device/quantum-simulator/amazon/tn1"
 SIMULATOR_ARNS = [SV1_ARN, DM1_ARN, TN1_ARN]
+
+job_complete_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
+job_fail_name = "".join(random.choices(string.ascii_uppercase + string.digits, k=12))
+
+
+def pytest_configure_node(node):
+    """xdist hook"""
+    node.workerinput["JOB_COMPLETED_NAME"] = job_complete_name
+    node.workerinput["JOB_FAILED_NAME"] = job_fail_name
 
 
 @pytest.fixture(scope="session")
@@ -103,35 +114,56 @@ def braket_devices():
     return AwsDevice.get_devices()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def created_braket_devices(aws_session, braket_devices):
-    return {
-        device.arn: AwsDevice(device.arn, aws_session) for device in braket_devices
-    }
+    return {device.arn: device for device in braket_devices}
 
 
 @pytest.fixture(scope="session")
-def completed_quantum_job(aws_session):
-    job = AwsQuantumJob.create(
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        aws_session=aws_session,
-        wait_until_complete=True,
-        hyperparameters={"test_case": "completed"},
-    )
-    return job
+def job_completed_name(request):
+    return request.config.workerinput["JOB_COMPLETED_NAME"]
+
 
 @pytest.fixture(scope="session")
-def failed_quantum_job(aws_session):
-    job = AwsQuantumJob.create(
-        "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-        source_module="test/integ_tests/job_test_script.py",
-        entry_point="job_test_script:start_here",
-        aws_session=aws_session,
-        wait_until_complete=False,
-        hyperparameters={"test_case": "failed"},
-    )
+def job_failed_name(request):
+    return request.config.workerinput["JOB_FAILED_NAME"]
+
+
+@pytest.fixture(scope="session", autouse=True)
+def completed_quantum_job(aws_session, job_completed_name):
+    # Race condition with xdist where the workers all try to create the job.
+    # Autouse is added to start the job at run instantiation.
+    try:
+        job = AwsQuantumJob.create(
+            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            job_name=job_completed_name,
+            source_module="test/integ_tests/job_test_script.py",
+            entry_point="job_test_script:start_here",
+            aws_session=aws_session,
+            wait_until_complete=False,
+            hyperparameters={"test_case": "completed"},
+        )
+    except ClientError:
+        pass
+    job = AwsQuantumJob(arn=f"arn:aws:braket:us-west-2:046073650652:job/{job_completed_name}")
     return job
 
 
+@pytest.fixture(scope="session", autouse=True)
+def failed_quantum_job(aws_session, job_failed_name):
+    # Race condition with xdist where the workers all try to create the job.
+    # Autouse is added to start the job at run instantiation.
+    try:
+        AwsQuantumJob.create(
+            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            job_name=job_failed_name,
+            source_module="test/integ_tests/job_test_script.py",
+            entry_point="job_test_script:start_here",
+            aws_session=aws_session,
+            wait_until_complete=False,
+            hyperparameters={"test_case": "failed"},
+        )
+    except ClientError:
+        pass
+    job = AwsQuantumJob(arn=f"arn:aws:braket:us-west-2:046073650652:job/{job_failed_name}")
+    return job

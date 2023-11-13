@@ -25,7 +25,6 @@ OQC_ARN = "arn:aws:braket:eu-west-2::device/qpu/oqc/Lucy"
 PULSE_ARN = "arn:aws:braket:us-west-1::device/qpu/rigetti/Aspen-M-3"
 
 
-
 @pytest.mark.parametrize(
     "arn", [(RIGETTI_ARN), (IONQ_ARN), (OQC_ARN), (SIMULATOR_ARN), (PULSE_ARN)]
 )
