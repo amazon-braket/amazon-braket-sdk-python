@@ -30,6 +30,7 @@ from braket.experimental.autoqasm.pulse import (
     shift_frequency,
     shift_phase,
 )
+from braket.parametric import FreeParameter
 from braket.pulse import ArbitraryWaveform, Frame, Port
 
 PORT = Port(port_id="device_port_x0", dt=1e-9, properties={})
@@ -183,3 +184,43 @@ def test_pulse_control_invalid_physical_qubit(instruction, qubits_or_frames, par
     with pytest.raises(ValueError):
         with aq.build_program():
             instruction(qubits_or_frames, *params)
+
+
+def test_pulse_freeparameter() -> None:
+    """Test pulse program with freeparameter."""
+
+    @aq.main
+    def my_program():
+        delay(["$3", "$4"], FreeParameter("duration"))
+
+    expected = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        input float[64] duration;
+        cal {
+            delay[(duration) * 1s] $3, $4;
+        }
+        """
+    ).strip()
+    qasm = my_program().to_ir()
+    assert qasm == expected
+
+
+def test_pulse_freeparameter_bound() -> None:
+    """Test pulse program with freeparameter bound with values."""
+
+    @aq.main
+    def my_program():
+        delay(["$3", "$4"], FreeParameter("duration"))
+
+    expected = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        float[64] duration = 0.123;
+        cal {
+            delay[(duration) * 1s] $3, $4;
+        }
+        """
+    ).strip()
+    qasm = my_program().make_bound_program({"duration": 0.123}).to_ir()
+    assert qasm == expected
