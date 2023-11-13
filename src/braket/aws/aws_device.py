@@ -569,7 +569,9 @@ class AwsDevice(Device):
             types (Optional[list[AwsDeviceType]]): device type list, default is `None`
                 QPUs will be searched for all regions and simulators will only be
                 searched for the region of the current session.
-            statuses (Optional[list[str]]): device status list, default is `None`
+            statuses (Optional[list[str]]): device status list, default is `None`. When `None`
+                is used, RETIRED devices will not be returned. To include RETIRED devices in
+                the results, add `RETIRED` to the list passed to this parameter.
             provider_names (Optional[list[str]]): provider name list, default is `None`
             order_by (str): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
