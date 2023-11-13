@@ -51,7 +51,6 @@ def test_failed_quantum_job(aws_session, capsys, failed_quantum_job):
     # Check job is in failed state.
     while True:
         time.sleep(5)
-        print("Check")
         if job.state() in AwsQuantumJob.TERMINAL_STATES:
             break
     assert job.state(use_cached_value=True) == "FAILED"
