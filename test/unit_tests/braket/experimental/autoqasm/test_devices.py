@@ -257,12 +257,21 @@ def test_validate_connectivity(aws_device: Mock) -> None:
     assert my_program().to_ir()
 
 
+@pytest.mark.parametrize(
+    "inputs,device_parameters",
+    [
+        (None, None),
+        ({"angle": 0.123}, {"foo": "bar"}),
+    ],
+)
 @patch("braket.aws.aws_device.AwsSession.copy_session")
 @patch("braket.aws.aws_device.AwsSession")
 def test_aws_device_run(
     aws_session_init: Mock,
     mock_copy_session: Mock,
     aws_session: Mock,
+    inputs,
+    device_parameters,
 ) -> None:
     """Tests AwsDevice.run with AutoQASM program."""
     aws_session_init.return_value = aws_session
@@ -275,7 +284,7 @@ def test_aws_device_run(
 
     program = my_program()
     aws_device = AwsDevice(Devices.Amazon.SV1.value)
-    _ = aws_device.run(program, shots=10, inputs={"angle": 0.123})
+    _ = aws_device.run(program, shots=10, inputs=inputs, device_parameters=device_parameters)
 
     run_call_args = aws_session.create_quantum_task.mock_calls[0].kwargs
     run_call_args_action = json.loads(run_call_args["action"])
@@ -289,4 +298,4 @@ def test_aws_device_run(
     aws_session.create_quantum_task.assert_called_once()
     assert expected_run_call_args.items() <= run_call_args.items()
     assert run_call_args_action["source"] == program.to_ir()
-    assert run_call_args_action["inputs"] == {"angle": 0.123}
+    assert run_call_args_action["inputs"] == inputs
