@@ -34,6 +34,7 @@ from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
+    SerializableProgram,
 )
 from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import (
@@ -557,6 +558,46 @@ def _(
     *args,
     **kwargs,
 ) -> AwsQuantumTask:
+    if inputs:
+        inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
+        inputs_copy.update(inputs)
+        openqasm_program = OpenQASMProgram(
+            source=openqasm_program.source,
+            inputs=inputs_copy,
+        )
+    create_task_kwargs.update({"action": openqasm_program.json()})
+    if device_parameters:
+        final_device_parameters = (
+            _circuit_device_params_from_dict(
+                device_parameters,
+                device_arn,
+                GateModelParameters(qubitCount=0),  # qubitCount unused
+            )
+            if type(device_parameters) is dict
+            else device_parameters
+        )
+        create_task_kwargs.update(
+            {"deviceParameters": final_device_parameters.json(exclude_none=True)}
+        )
+
+    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
+    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+@_create_internal.register
+def _(
+    serializable_program: SerializableProgram,
+    aws_session: AwsSession,
+    create_task_kwargs: dict[str, Any],
+    device_arn: str,
+    device_parameters: Union[dict, BraketSchemaBase],
+    _disable_qubit_rewiring: bool,
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    openqasm_program = OpenQASMProgram(source=serializable_program.to_ir(ir_type=IRType.OPENQASM))
     if inputs:
         inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
         inputs_copy.update(inputs)
