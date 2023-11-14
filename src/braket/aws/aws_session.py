@@ -622,12 +622,12 @@ class AwsSession(object):
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
-            arns (Optional[list[str]]): device ARN list, default is `None`.
-            names (Optional[list[str]]): device name list, default is `None`.
-            types (Optional[list[str]]): device type list, default is `None`.
-            statuses (Optional[list[str]]): device status list, default is `None`. When `None`
+            arns (Optional[list[str]]): device ARN filter, default is `None`.
+            names (Optional[list[str]]): device name filter, default is `None`.
+            types (Optional[list[str]]): device type filter, default is `None`.
+            statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
                 is used, RETIRED devices will not be returned. To include RETIRED devices in
-                the results, add `RETIRED` to the list passed to this parameter.
+                the results, use a filter that includes `RETIRED` for this parameter.
             provider_names (Optional[list[str]]): provider name list, default is `None`.
 
         Returns:
