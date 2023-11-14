@@ -598,30 +598,18 @@ def _(
     **kwargs,
 ) -> AwsQuantumTask:
     openqasm_program = OpenQASMProgram(source=serializable_program.to_ir(ir_type=IRType.OPENQASM))
-    if inputs:
-        inputs_copy = openqasm_program.inputs.copy() if openqasm_program.inputs is not None else {}
-        inputs_copy.update(inputs)
-        openqasm_program = OpenQASMProgram(
-            source=openqasm_program.source,
-            inputs=inputs_copy,
-        )
-    create_task_kwargs.update({"action": openqasm_program.json()})
-    if device_parameters:
-        final_device_parameters = (
-            _circuit_device_params_from_dict(
-                device_parameters,
-                device_arn,
-                GateModelParameters(qubitCount=0),  # qubitCount unused
-            )
-            if type(device_parameters) is dict
-            else device_parameters
-        )
-        create_task_kwargs.update(
-            {"deviceParameters": final_device_parameters.json(exclude_none=True)}
-        )
-
-    task_arn = aws_session.create_quantum_task(**create_task_kwargs)
-    return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+    return _create_internal(
+        openqasm_program,
+        aws_session,
+        create_task_kwargs,
+        device_arn,
+        device_parameters,
+        _disable_qubit_rewiring,
+        inputs,
+        gate_definitions,
+        *args,
+        **kwargs,
+    )
 
 
 @_create_internal.register
