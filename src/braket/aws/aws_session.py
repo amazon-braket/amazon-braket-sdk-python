@@ -627,7 +627,7 @@ class AwsSession(object):
             types (Optional[list[str]]): device type filter, default is `None`.
             statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
                 is used, RETIRED devices will not be returned. To include RETIRED devices in
-                the results, use a filter that includes `RETIRED` for this parameter.
+                the results, use a filter that includes `"RETIRED"` for this parameter.
             provider_names (Optional[list[str]]): provider name list, default is `None`.
 
         Returns:
