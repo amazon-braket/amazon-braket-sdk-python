@@ -54,6 +54,7 @@ testdata = [
     (Gate.Rx, "rx", ir.Rx, [SingleTarget, Angle], {}),
     (Gate.Ry, "ry", ir.Ry, [SingleTarget, Angle], {}),
     (Gate.Rz, "rz", ir.Rz, [SingleTarget, Angle], {}),
+    (Gate.U, "u", None, [SingleTarget, TripleAngle], {}),
     (Gate.CNot, "cnot", ir.CNot, [SingleTarget, SingleControl], {}),
     (Gate.CV, "cv", ir.CV, [SingleTarget, SingleControl], {}),
     (Gate.CCNot, "ccnot", ir.CCNot, [SingleTarget, DoubleControl], {}),
@@ -121,6 +122,7 @@ parameterizable_gates = [
     Gate.Rx,
     Gate.Ry,
     Gate.Rz,
+    Gate.U,
     Gate.PhaseShift,
     Gate.PSwap,
     Gate.XX,
@@ -433,6 +435,18 @@ def test_ir_gate_level(testclass, subroutine_name, irclass, irsubclasses, kwargs
             [4],
             OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
             "rz(0.17) $4;",
+        ),
+        (
+            Gate.U(angle_1=0.17, angle_2=3.45, angle_3=5.21),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.VIRTUAL),
+            "U(0.17, 3.45, 5.21) q[4];",
+        ),
+        (
+            Gate.U(angle_1=0.17, angle_2=3.45, angle_3=5.21),
+            [4],
+            OpenQASMSerializationProperties(qubit_reference_type=QubitReferenceType.PHYSICAL),
+            "U(0.17, 3.45, 5.21) $4;",
         ),
         (
             Gate.XX(angle=0.17),
@@ -859,6 +873,8 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         subroutine_input = {"target": multi_targets}
         if Angle in irsubclasses:
             subroutine_input.update(angle_valid_input())
+        if TripleAngle in irsubclasses:
+            subroutine_input.update(triple_angle_valid_input())
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
 
 
@@ -925,7 +941,7 @@ def test_large_unitary():
 
 @pytest.mark.parametrize("gate", parameterizable_gates)
 def test_bind_values(gate):
-    triple_angled = gate.__name__ in ("MS",)
+    triple_angled = gate.__name__ in ("MS", "U")
     num_params = 3 if triple_angled else 1
     thetas = [FreeParameter(f"theta_{i}") for i in range(num_params)]
     mapping = {f"theta_{i}": i for i in range(num_params)}

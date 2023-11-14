@@ -1091,6 +1091,118 @@ class PhaseShift(AngledGate):
 Gate.register_gate(PhaseShift)
 
 
+class U(TripleAngledGate):
+    """Parameterized primitive gate for OpenQASM simulator
+
+    Args:
+        angle_1 (Union[FreeParameterExpression, float]): theta angle in radians.
+        angle_2 (Union[FreeParameterExpression, float]): phi angle in radians.
+        angle_3 (Union[FreeParameterExpression, float]): lambda angle in radians.
+    """
+
+    def __init__(
+        self,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+        angle_3: Union[FreeParameterExpression, float],
+    ):
+        super().__init__(
+            angle_1=angle_1,
+            angle_2=angle_2,
+            angle_3=angle_3,
+            qubit_count=None,
+            ascii_symbols=[_multi_angled_ascii_characters("U", angle_1, angle_2, angle_3)],
+        )
+
+    @property
+    def _qasm_name(self) -> str:
+        return "U"
+
+    def to_matrix(self) -> np.ndarray:
+        """
+        Generate parameterized Unitary matrix.
+        https://openqasm.com/language/gates.html#built-in-gates
+
+        Returns:
+            np.ndarray: U Matrix
+        """
+        theta = self.angle_1
+        phi = self.angle_2
+        lam = self.angle_3
+        return np.array(
+            [
+                [
+                    np.cos(theta / 2),
+                    -np.exp(1j * lam) * np.sin(theta / 2),
+                ],
+                [
+                    np.exp(1j * phi) * np.sin(theta / 2),
+                    np.exp(1j * (phi + lam)) * np.cos(theta / 2),
+                ],
+            ]
+        )
+
+    def adjoint(self) -> list[Gate]:
+        return [U(self.angle_1, np.pi - self.angle_3, np.pi - self.angle_2)]
+
+    @staticmethod
+    def fixed_qubit_count() -> int:
+        return 1
+
+    def bind_values(self, **kwargs) -> U:
+        return _get_angles(self, **kwargs)
+
+    @staticmethod
+    @circuit.subroutine(register=True)
+    def u(
+        target: QubitInput,
+        angle_1: Union[FreeParameterExpression, float],
+        angle_2: Union[FreeParameterExpression, float],
+        angle_3: Union[FreeParameterExpression, float],
+        *,
+        control: Optional[QubitSetInput] = None,
+        control_state: Optional[BasisStateInput] = None,
+        power: float = 1,
+    ) -> Iterable[Instruction]:
+        """Registers this function into the circuit class.
+
+        Args:
+            target1 (QubitInput): Target qubit 1 index.
+            angle_1 (Union[FreeParameterExpression, float]): theta angle in radians.
+            angle_2 (Union[FreeParameterExpression, float]): phi angle in radians.
+            angle_3 (Union[FreeParameterExpression, float]): lambda angle in radians.
+            control (Optional[QubitSetInput]): Control qubit(s). Default None.
+            control_state (Optional[BasisStateInput]): Quantum state on which to control the
+                operation. Must be a binary sequence of same length as number of qubits in
+                `control`. Will be ignored if `control` is not present. May be represented as a
+                string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+                controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+                in the \\|1⟩ state. Default "1" * len(control).
+            power (float): Integer or fractional power to raise the gate to. Negative
+                powers will be split into an inverse, accompanied by the positive power.
+                Default 1.
+
+        Returns:
+            Iterable[Instruction]: MS instruction.
+
+        Examples:
+            >>> circ = Circuit().ms(0, 1, 0.15, 0.34)
+        """
+        return [
+            Instruction(
+                U(angle_1, angle_2, angle_3),
+                target=qubit,
+                control=control,
+                control_state=control_state,
+                power=power,
+            )
+            for qubit in QubitSet(target)
+        ]
+
+
+Gate.register_gate(U)
+
+
 # Two qubit gates #
 
 
