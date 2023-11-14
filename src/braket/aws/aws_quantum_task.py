@@ -34,6 +34,7 @@ from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     QubitReferenceType,
+    SerializableProgram,
 )
 from braket.device_schema import GateModelParameters
 from braket.device_schema.dwave import (
@@ -581,6 +582,34 @@ def _(
 
     task_arn = aws_session.create_quantum_task(**create_task_kwargs)
     return AwsQuantumTask(task_arn, aws_session, *args, **kwargs)
+
+
+@_create_internal.register
+def _(
+    serializable_program: SerializableProgram,
+    aws_session: AwsSession,
+    create_task_kwargs: dict[str, Any],
+    device_arn: str,
+    device_parameters: Union[dict, BraketSchemaBase],
+    _disable_qubit_rewiring: bool,
+    inputs: dict[str, float],
+    gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
+    *args,
+    **kwargs,
+) -> AwsQuantumTask:
+    openqasm_program = OpenQASMProgram(source=serializable_program.to_ir(ir_type=IRType.OPENQASM))
+    return _create_internal(
+        openqasm_program,
+        aws_session,
+        create_task_kwargs,
+        device_arn,
+        device_parameters,
+        _disable_qubit_rewiring,
+        inputs,
+        gate_definitions,
+        *args,
+        **kwargs,
+    )
 
 
 @_create_internal.register
