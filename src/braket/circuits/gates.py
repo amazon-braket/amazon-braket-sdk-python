@@ -1123,27 +1123,32 @@ class U(TripleAngledGate):
         Generate parameterized Unitary matrix.
         https://openqasm.com/language/gates.html#built-in-gates
 
+        Unitary matrix:
+            .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
+                    \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
+                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)} \end{bmatrix}.
+
         Returns:
             np.ndarray: U Matrix
         """
-        theta = self.angle_1
-        phi = self.angle_2
-        lam = self.angle_3
+        _theta = self.angle_1
+        _phi = self.angle_2
+        _lambda = self.angle_3
         return np.array(
             [
                 [
-                    np.cos(theta / 2),
-                    -np.exp(1j * lam) * np.sin(theta / 2),
+                    np.cos(_theta / 2),
+                    -np.exp(1j * _lambda) * np.sin(_theta / 2),
                 ],
                 [
-                    np.exp(1j * phi) * np.sin(theta / 2),
-                    np.exp(1j * (phi + lam)) * np.cos(theta / 2),
+                    np.exp(1j * _phi) * np.sin(_theta / 2),
+                    np.exp(1j * (_phi + _lambda)) * np.cos(_theta / 2),
                 ],
             ]
         )
 
     def adjoint(self) -> list[Gate]:
-        return [U(self.angle_1, np.pi - self.angle_3, np.pi - self.angle_2)]
+        return [U(-self.angle_1, -self.angle_3, -self.angle_2)]
 
     @staticmethod
     def fixed_qubit_count() -> int:
@@ -1167,7 +1172,7 @@ class U(TripleAngledGate):
         """Registers this function into the circuit class.
 
         Args:
-            target1 (QubitInput): Target qubit 1 index.
+            target (QubitSetInput): Target qubit(s)
             angle_1 (Union[FreeParameterExpression, float]): theta angle in radians.
             angle_2 (Union[FreeParameterExpression, float]): phi angle in radians.
             angle_3 (Union[FreeParameterExpression, float]): lambda angle in radians.
@@ -1183,10 +1188,10 @@ class U(TripleAngledGate):
                 Default 1.
 
         Returns:
-            Iterable[Instruction]: MS instruction.
+            Iterable[Instruction]: U instruction.
 
         Examples:
-            >>> circ = Circuit().ms(0, 1, 0.15, 0.34)
+            >>> circ = Circuit().u(0, 0.15, 0.34, 0.52)
         """
         return [
             Instruction(
