@@ -189,6 +189,78 @@ class I(Gate):  # noqa: E742, E261
 Gate.register_gate(I)
 
 
+# class GPhase(AngledGate):
+#     """Z-axis rotation gate.
+
+#     Args:
+#         angle (Union[FreeParameterExpression, float]): angle in radians.
+#     """
+
+#     def __init__(self, angle: Union[FreeParameterExpression, float]):
+#         super().__init__(
+#             angle=angle,
+#             qubit_count=None,
+#             ascii_symbols=[angled_ascii_characters("GPhase", angle)],
+#         )
+
+#     @property
+#     def _qasm_name(self) -> str:
+#         return "gphase"
+
+#     # def to_matrix(self) -> np.ndarray:
+#     #     return np.array(
+#     #         [[np.exp(1j * self.angle / 2), 0], [0, np.exp(1j * self.angle / 2)]], dtype=complex
+#     #     )
+
+#     def bind_values(self, **kwargs) -> AngledGate:
+#         return get_angle(self, **kwargs)
+
+#     @staticmethod
+#     def fixed_qubit_count() -> int:
+#         return 0
+
+#     @staticmethod
+#     @circuit.subroutine(register=True)
+#     def gphase(
+#         angle: Union[FreeParameterExpression, float],
+#         *,
+#         control: Optional[QubitSetInput] = None,
+#         control_state: Optional[BasisStateInput] = None,
+#         power: float = 1,
+#     ) -> Iterable[Instruction]:
+#         """Registers this function into the circuit class.
+
+#         Args:
+#             target (QubitSetInput): Target qubit(s).
+#             angle (Union[FreeParameterExpression, float]): Angle in radians.
+#             control (Optional[QubitSetInput]): Control qubit(s). Default None.
+#             control_state (Optional[BasisStateInput]): Quantum state on which to control the
+#                 operation. Must be a binary sequence of same length as number of qubits in
+#                 `control`. Will be ignored if `control` is not present. May be represented as a
+#                 string, list, or int. For example "0101", [0, 1, 0, 1], 5 all represent
+#                 controlling on qubits 0 and 2 being in the \\|0⟩ state and qubits 1 and 3 being
+#                 in the \\|1⟩ state. Default "1" * len(control).
+#             power (float): Integer or fractional power to raise the gate to. Negative
+#                 powers will be split into an inverse, accompanied by the positive power.
+#                 Default 1.
+
+#         Returns:
+#             Iterable[Instruction]: Rx instruction.
+
+#         Examples:
+#             >>> circ = Circuit().rz(0, 0.15)
+#         """
+#         return [
+#             Instruction(
+#                 GPhase(angle), target=[], control=control, control_state=control_state,
+#                   power=power
+#             )
+#         ]
+
+
+# Gate.register_gate(GPhase)
+
+
 class X(Gate):
     """Pauli-X gate."""
 
@@ -1119,14 +1191,15 @@ class U(TripleAngledGate):
         return "U"
 
     def to_matrix(self) -> np.ndarray:
-        """
+        r"""
         Generate parameterized Unitary matrix.
         https://openqasm.com/language/gates.html#built-in-gates
 
         Unitary matrix:
             .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
                     \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
-                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)} \end{bmatrix}.
+                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                    \end{bmatrix}.
 
         Returns:
             np.ndarray: U Matrix
@@ -1160,7 +1233,7 @@ class U(TripleAngledGate):
     @staticmethod
     @circuit.subroutine(register=True)
     def u(
-        target: QubitInput,
+        target: QubitSetInput,
         angle_1: Union[FreeParameterExpression, float],
         angle_2: Union[FreeParameterExpression, float],
         angle_3: Union[FreeParameterExpression, float],
