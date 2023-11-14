@@ -21,7 +21,17 @@ from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
 from braket.experimental.autoqasm import pulse
-from braket.experimental.autoqasm.instructions import cnot, cphaseshift, h, measure, ms, rx, rz, x
+from braket.experimental.autoqasm.instructions import (
+    cnot,
+    cphaseshift,
+    gpi,
+    h,
+    measure,
+    ms,
+    rx,
+    rz,
+    x,
+)
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
@@ -775,3 +785,44 @@ __bit_1__ = measure __qubits__[0];"""
     assert bound_prog.to_ir() == template.format(0)
     bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 1})
     assert bound_prog.to_ir() == template.format(1)
+
+
+def test_parameter_expressions():
+    """Test expressions of free parameters with numeric literals."""
+
+    @aq.main
+    def parametric():
+        expr = 2 * FreeParameter("theta")
+        gpi(0, expr)
+
+    expected = """OPENQASM 3.0;
+input float[64] theta;
+qubit[1] __qubits__;
+gpi(2*theta) __qubits__[0];"""
+    assert parametric().to_ir() == expected
+
+
+def test_sim_expressions():
+    @aq.main
+    def parametric():
+        rx(0, 2 * FreeParameter("phi"))
+        measure(0)
+
+    measurements = _test_parametric_on_local_sim(parametric(), {"phi": np.pi / 2})
+    assert 0 not in measurements["__bit_0__"]
+
+
+def test_multi_parameter_expressions():
+    """Test expressions of multiple free parameters."""
+
+    @aq.main
+    def parametric():
+        expr = FreeParameter("alpha") * FreeParameter("theta")
+        gpi(0, expr)
+
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+input float[64] theta;
+qubit[1] __qubits__;
+gpi(alpha*theta) __qubits__[0];"""
+    assert parametric().to_ir() == expected

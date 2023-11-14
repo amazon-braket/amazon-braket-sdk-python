@@ -23,6 +23,7 @@ from enum import Enum
 from typing import Any, Optional, Union
 
 import oqpy.base
+from sympy import Symbol, preorder_traversal
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -322,22 +323,21 @@ class ProgramConversionContext:
         """
         for arg in args:
             if isinstance(arg, FreeParameter):
-                self.register_parameter(arg)
+                self.register_parameter(arg.name)
             elif isinstance(arg, FreeParameterExpression):
-                # TODO laurecap: Support for expressions
-                raise NotImplementedError(
-                    "Expressions of FreeParameters will be supported shortly!"
-                )
+                for expression_arg in preorder_traversal(arg._expression.args):
+                    if isinstance(expression_arg, Symbol):
+                        self.register_parameter(expression_arg.name)
 
-    def register_parameter(self, parameter: FreeParameter) -> None:
+    def register_parameter(self, parameter_name: str) -> None:
         """Register an input parameter if it has not already been registered.
         Only floats are currently supported.
 
         Args:
-            parameter (FreeParameter): The parameter to register with the program.
+            parameter_name (str): The name of the parameter to register with the program.
         """
-        if parameter.name not in self._free_parameters:
-            self._free_parameters[parameter.name] = oqpy.FloatVar("input", name=parameter.name)
+        if parameter_name not in self._free_parameters:
+            self._free_parameters[parameter_name] = oqpy.FloatVar("input", name=parameter_name)
 
     def get_parameter(self, name: str) -> oqpy.FloatVar:
         """Return a named oqpy.FloatVar that is used as a free parameter in the program.
