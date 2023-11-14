@@ -325,11 +325,11 @@ class ProgramConversionContext:
             if isinstance(arg, FreeParameter):
                 self.register_parameter(arg)
             elif isinstance(arg, FreeParameterExpression):
-                free_symbols = [
+                free_symbol_names = [
                     str(s) for s in arg._expression.free_symbols if isinstance(s, Symbol)
                 ]
-                for free_symbol in sorted(free_symbols):
-                    self.register_parameter(free_symbol)
+                for free_symbol_name in sorted(free_symbol_names):
+                    self.register_parameter(free_symbol_name)
 
     def register_parameter(self, parameter: str | FreeParameter) -> None:
         """Register an input parameter if it has not already been registered.
