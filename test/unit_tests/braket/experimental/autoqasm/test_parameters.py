@@ -826,3 +826,33 @@ input float[64] theta;
 qubit[1] __qubits__;
 gpi(alpha*theta) __qubits__[0];"""
     assert parametric().to_ir() == expected
+
+
+def test_bound_parameter_expressions():
+    """Test expressions of free parameters bound to specific values."""
+
+    @aq.main
+    def parametric():
+        rx(0, 2 * FreeParameter("phi"))
+
+    expected = """OPENQASM 3.0;
+float[64] phi = 1.5707963267948966;
+qubit[1] __qubits__;
+rx(2*phi) __qubits__[0];"""
+    assert parametric().make_bound_program({"phi": np.pi / 2}).to_ir() == expected
+
+
+def test_partially_bound_parameter_expressions():
+    """Test expressions of free parameters partially bound to specific values."""
+
+    @aq.main
+    def parametric():
+        expr = FreeParameter("prefactor") * FreeParameter("theta")
+        gpi(0, expr)
+
+    expected = """OPENQASM 3.0;
+float[64] prefactor = 3;
+input float[64] theta;
+qubit[1] __qubits__;
+gpi(prefactor*theta) __qubits__[0];"""
+    assert parametric().make_bound_program({"prefactor": 3}).to_ir() == expected
