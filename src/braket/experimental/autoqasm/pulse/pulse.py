@@ -43,6 +43,7 @@ def _pulse_instruction(name: str, frame: Frame, *args) -> None:
     """
     program_conversion_context = aq_program.get_program_conversion_context()
     program_conversion_context._has_pulse_control = True
+    program_conversion_context.register_args(args)
 
     pulse_sequence = PulseSequence()
     pulse_sequence._program = program_conversion_context.get_oqpy_program(
