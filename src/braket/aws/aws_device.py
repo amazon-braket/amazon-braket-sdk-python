@@ -571,7 +571,7 @@ class AwsDevice(Device):
                 searched for the region of the current session.
             statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
                 is used, RETIRED devices will not be returned. To include RETIRED devices in
-                the results, use a filter that includes `"RETIRED"` for this parameter.
+                the results, use a filter that includes "RETIRED" for this parameter.
             provider_names (Optional[list[str]]): provider name filter, default is `None`
             order_by (str): field to order result by, default is `name`.
                 Accepted values are ['arn', 'name', 'type', 'provider_name', 'status']
