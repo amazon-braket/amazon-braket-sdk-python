@@ -224,3 +224,33 @@ def test_pulse_freeparameter_bound() -> None:
     ).strip()
     qasm = my_program().make_bound_program({"duration": 0.123}).to_ir()
     assert qasm == expected
+
+
+def test_pulse_freeparameter_condition() -> None:
+    """Test pulse program with freeparameter in condition."""
+
+    @aq.main
+    def my_program():
+        delay(["$3", "$4"], FreeParameter("duration"))
+        if FreeParameter("duration") > FreeParameter("duration2"):
+            delay(["$3", "$4"], FreeParameter("duration2"))
+
+    expected = textwrap.dedent(
+        """
+        OPENQASM 3.0;
+        input float[64] duration;
+        input float[64] duration2;
+        cal {
+            delay[(duration) * 1s] $3, $4;
+        }
+        bool __bool_0__;
+        __bool_0__ = duration > duration2;
+        if (__bool_0__) {
+            cal {
+                delay[(duration2) * 1s] $3, $4;
+            }
+        }
+        """
+    ).strip()
+    qasm = my_program().to_ir()
+    assert qasm == expected
