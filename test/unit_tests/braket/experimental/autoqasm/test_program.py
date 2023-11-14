@@ -22,6 +22,7 @@ import pytest
 import braket.experimental.autoqasm as aq
 from braket.circuits.serialization import IRType
 from braket.experimental.autoqasm.instructions import cnot, measure, rx
+from braket.parametric.free_parameter import FreeParameter
 
 
 def test_program_conversion_context() -> None:
@@ -42,7 +43,7 @@ def test_program_conversion_context() -> None:
 def test_get_parameter_invalid_name():
     """Tests the get_parameter function."""
     prog = aq.program.ProgramConversionContext()
-    prog.register_parameter("alpha")
+    prog.register_parameter(FreeParameter("alpha"))
     with pytest.raises(aq.errors.ParameterNotFoundError):
         prog.get_parameter("not_a_parameter")
 

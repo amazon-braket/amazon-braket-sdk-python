@@ -23,7 +23,7 @@ from enum import Enum
 from typing import Any, Optional, Union
 
 import oqpy.base
-from sympy import Symbol, preorder_traversal
+from sympy import Symbol
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
@@ -323,19 +323,22 @@ class ProgramConversionContext:
         """
         for arg in args:
             if isinstance(arg, FreeParameter):
-                self.register_parameter(arg.name)
+                self.register_parameter(arg)
             elif isinstance(arg, FreeParameterExpression):
-                for expression_arg in preorder_traversal(arg._expression.args):
-                    if isinstance(expression_arg, Symbol):
-                        self.register_parameter(expression_arg.name)
+                free_symbols = [
+                    str(s) for s in arg._expression.free_symbols if isinstance(s, Symbol)
+                ]
+                for free_symbol in sorted(free_symbols):
+                    self.register_parameter(free_symbol)
 
-    def register_parameter(self, parameter_name: str) -> None:
+    def register_parameter(self, parameter: str | FreeParameter) -> None:
         """Register an input parameter if it has not already been registered.
         Only floats are currently supported.
 
         Args:
-            parameter_name (str): The name of the parameter to register with the program.
+            parameter (str | FreeParameter): The parameter to register with the program.
         """
+        parameter_name = str(parameter)
         if parameter_name not in self._free_parameters:
             self._free_parameters[parameter_name] = oqpy.FloatVar("input", name=parameter_name)
 
