@@ -29,8 +29,8 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@main
-        pip install --upgrade git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
+        pip install --upgrade git+https://github.com/aws/amazon-braket-schemas-python.git@main \
+          git+https://github.com/aws/amazon-braket-default-simulator-python.git@main
         cd ..
         git clone https://github.com/aws/${{ matrix.dependent }}.git
         cd ${{ matrix.dependent }}
