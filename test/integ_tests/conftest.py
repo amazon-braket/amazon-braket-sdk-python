@@ -38,6 +38,34 @@ def pytest_configure_node(node):
     node.workerinput["JOB_FAILED_NAME"] = job_fail_name
 
 
+def pytest_configure():
+    """Commands ran at the start of pytest. Worker nodes have not been started yet."""
+    profile_name = os.environ["AWS_PROFILE"]
+    aws_session = AwsSession(boto3.session.Session(profile_name=profile_name))
+    # We want to have the controller thread start the jobs. Later the job name is passed to
+    # the nodes.
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker_id is None:
+        AwsQuantumJob.create(
+            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            job_name=job_fail_name,
+            source_module="test/integ_tests/job_test_script.py",
+            entry_point="job_test_script:start_here",
+            aws_session=aws_session,
+            wait_until_complete=False,
+            hyperparameters={"test_case": "failed"},
+        )
+        AwsQuantumJob.create(
+            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+            job_name=job_complete_name,
+            source_module="test/integ_tests/job_test_script.py",
+            entry_point="job_test_script:start_here",
+            aws_session=aws_session,
+            wait_until_complete=False,
+            hyperparameters={"test_case": "completed"},
+        )
+
+
 @pytest.fixture(scope="session")
 def boto_session():
     profile_name = os.environ["AWS_PROFILE"]
@@ -131,39 +159,11 @@ def job_failed_name(request):
 
 @pytest.fixture(scope="session", autouse=True)
 def completed_quantum_job(aws_session, job_completed_name):
-    # Race condition with xdist where the workers all try to create the job.
-    # Autouse is added to start the job at run instantiation.
-    try:
-        job = AwsQuantumJob.create(
-            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            job_name=job_completed_name,
-            source_module="test/integ_tests/job_test_script.py",
-            entry_point="job_test_script:start_here",
-            aws_session=aws_session,
-            wait_until_complete=False,
-            hyperparameters={"test_case": "completed"},
-        )
-    except ClientError:
-        pass
     job = AwsQuantumJob(arn=f"arn:aws:braket:us-west-2:046073650652:job/{job_completed_name}")
     return job
 
 
 @pytest.fixture(scope="session", autouse=True)
 def failed_quantum_job(aws_session, job_failed_name):
-    # Race condition with xdist where the workers all try to create the job.
-    # Autouse is added to start the job at run instantiation.
-    try:
-        AwsQuantumJob.create(
-            "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
-            job_name=job_failed_name,
-            source_module="test/integ_tests/job_test_script.py",
-            entry_point="job_test_script:start_here",
-            aws_session=aws_session,
-            wait_until_complete=False,
-            hyperparameters={"test_case": "failed"},
-        )
-    except ClientError:
-        pass
     job = AwsQuantumJob(arn=f"arn:aws:braket:us-west-2:046073650652:job/{job_failed_name}")
     return job
