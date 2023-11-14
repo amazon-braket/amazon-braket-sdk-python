@@ -84,13 +84,15 @@ class Circuit:
     _ALL_QUBITS = "ALL"  # Flag to indicate all qubits in _qubit_observable_mapping
 
     @classmethod
-    def register_subroutine(cls, func: SubroutineCallable) -> None:
+    def register_subroutine(cls, func: SubroutineCallable, cls_docstring: str) -> None:
         """
         Register the subroutine `func` as an attribute of the `Circuit` class. The attribute name
         is the name of `func`.
 
         Args:
             func (SubroutineCallable): The function of the subroutine to add to the class.
+            cls_docstring (str): The docstring to the class. This will be appended to the
+                subroutine docstring.
 
         Examples:
             >>> def h_on_all(target):
@@ -115,7 +117,11 @@ class Circuit:
         setattr(cls, function_name, method_from_subroutine)
 
         function_attr = getattr(cls, function_name)
-        setattr(function_attr, "__doc__", func.__doc__)
+        # docstrings don't like a single newline for some reason.
+        function_docstring = (
+            "\n\n".join([cls_docstring, func.__doc__]) if len(cls_docstring) > 0 else func.__doc__
+        )
+        setattr(function_attr, "__doc__", function_docstring)
 
     def __init__(self, addable: AddableTypes | None = None, *args, **kwargs):
         """
@@ -1511,13 +1517,15 @@ class Circuit:
         return self.make_bound_circuit(param_values)
 
 
-def subroutine(register: bool = False) -> Callable:
+def subroutine(register: bool = False, cls_docstring: str = "") -> Callable:
     """
     Subroutine is a function that returns instructions, result types, or circuits.
 
     Args:
         register (bool): If `True`, adds this subroutine into the `Circuit` class.
             Default = `False`.
+        cls_docstring (str): The docstring to the class. This will be appended to the
+            subroutine docstring.
 
     Returns:
         Callable: The subroutine function.
@@ -1537,7 +1545,7 @@ def subroutine(register: bool = False) -> Callable:
 
     def _subroutine_function_wrapper(func: Callable[..., SubroutineReturn]) -> SubroutineReturn:
         if register:
-            Circuit.register_subroutine(func)
+            Circuit.register_subroutine(func, cls_docstring)
         return func
 
     return _subroutine_function_wrapper

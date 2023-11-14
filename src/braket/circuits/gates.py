@@ -83,7 +83,7 @@ class H(Gate):
         return 1
 
     @staticmethod
-    @circuit.subroutine(register=True)
+    @circuit.subroutine(register=True, cls_docstring=__doc__)
     def h(
         target: QubitSetInput,
         *,
