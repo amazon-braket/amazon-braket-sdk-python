@@ -16,7 +16,7 @@
 
 from typing import Any, Union
 
-from braket.circuits import FreeParameter
+from braket.circuits import FreeParameterExpression
 from braket.experimental.autoqasm import program
 from braket.experimental.autoqasm import types as aq_types
 
@@ -39,8 +39,8 @@ def _register_and_convert_parameters(
     program_conversion_context.register_args(args)
     result = []
     for arg in args:
-        if isinstance(arg, FreeParameter):
-            var = program.get_program_conversion_context().get_parameter(arg.name)
+        if isinstance(arg, FreeParameterExpression):
+            var = program.get_program_conversion_context().get_expression_var(arg)
             result.append(var)
         else:
             result.append(arg)

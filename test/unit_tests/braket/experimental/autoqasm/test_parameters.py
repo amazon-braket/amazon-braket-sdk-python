@@ -856,3 +856,68 @@ input float[64] theta;
 qubit[1] __qubits__;
 gpi(prefactor*theta) __qubits__[0];"""
     assert parametric().make_bound_program({"prefactor": 3}).to_ir() == expected
+
+
+def test_subroutine_parameter_expressions():
+    """Test expressions of free parameters passed to subroutines."""
+
+    @aq.subroutine
+    def rotate(theta: float):
+        rx(0, 3 * theta)
+
+    @aq.main
+    def parametric():
+        rotate(2 * FreeParameter("alpha"))
+
+    expected = """OPENQASM 3.0;
+def rotate(float[64] theta) {
+    rx(3 * theta) __qubits__[0];
+}
+input float[64] alpha;
+qubit[1] __qubits__;
+rotate(2*alpha);"""
+    assert parametric().to_ir() == expected
+
+
+def test_gate_parameter_expressions():
+    """Test expressions of free parameters passed to custom gates."""
+
+    @aq.gate
+    def rotate(q: aq.Qubit, theta: float):
+        rx(q, 3 * theta)
+
+    @aq.main
+    def parametric():
+        rotate(0, 2 * FreeParameter("alpha"))
+
+    expected = """OPENQASM 3.0;
+gate rotate(theta) q {
+    rx(3 * theta) q;
+}
+input float[64] alpha;
+qubit[1] __qubits__;
+rotate(2*alpha) __qubits__[0];"""
+    assert parametric().to_ir() == expected
+
+
+def test_conditional_parameter_expressions():
+    """Test expressions of free parameters contained in conditional statements."""
+
+    @aq.main
+    def parametric():
+        if 2 * FreeParameter("phi") > np.pi:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] phi;
+qubit[1] __qubits__;
+float[64] __float_0__ = 2*phi;
+bool __bool_1__;
+__bool_1__ = __float_0__ > 3.141592653589793;
+if (__bool_1__) {
+    h __qubits__[0];
+}
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];"""
+    assert parametric().to_ir() == expected

@@ -25,6 +25,7 @@ from typing import Any, Optional, Union
 import oqpy.base
 from sympy import Symbol
 
+import braket.experimental.autoqasm.types as aq_types
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.serialization import IRType, SerializableProgram
@@ -322,14 +323,13 @@ class ProgramConversionContext:
             args (list[Any]): Arguments passed to the main program or a subroutine.
         """
         for arg in args:
-            if isinstance(arg, FreeParameter):
-                self.register_parameter(arg)
-            elif isinstance(arg, FreeParameterExpression):
-                free_symbol_names = [
-                    str(s) for s in arg._expression.free_symbols if isinstance(s, Symbol)
-                ]
-                for free_symbol_name in sorted(free_symbol_names):
+            if isinstance(arg, FreeParameterExpression):
+                for free_symbol_name in self._free_symbol_names(arg):
                     self.register_parameter(free_symbol_name)
+
+    @staticmethod
+    def _free_symbol_names(expr: FreeParameterExpression) -> Iterable[str]:
+        return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
     def register_parameter(self, parameter: str | FreeParameter) -> None:
         """Register an input parameter if it has not already been registered.
@@ -342,22 +342,32 @@ class ProgramConversionContext:
         if parameter_name not in self._free_parameters:
             self._free_parameters[parameter_name] = oqpy.FloatVar("input", name=parameter_name)
 
-    def get_parameter(self, name: str) -> oqpy.FloatVar:
-        """Return a named oqpy.FloatVar that is used as a free parameter in the program.
+    def get_expression_var(self, expression: FreeParameterExpression) -> oqpy.FloatVar:
+        """Return an oqpy.FloatVar that represents the provided expression.
 
         Args:
-            name (str): The name of the parameter.
+            expression (FreeParameterExpression): The expression to represent.
 
         Raises:
-            ParameterNotFoundError: If there is no parameter with the given name registered
-            with the program.
+            ParameterNotFoundError: If the expression contains any free parameter which has
+            not already been registered with the program.
 
         Returns:
-            FloatVar: The associated variable.
+            FloatVar: The variable representing the expression.
         """
-        if name not in self._free_parameters:
-            raise errors.ParameterNotFoundError(f"Free parameter '{name}' was not found.")
-        return self._free_parameters[name]
+        # Validate that all of the free symbols are registered as free parameters.
+        for name in self._free_symbol_names(expression):
+            if name not in self._free_parameters:
+                raise errors.ParameterNotFoundError(f"Free parameter '{name}' was not found.")
+
+        # If the expression is just a standalone parameter, return the registered variable.
+        if isinstance(expression, FreeParameter):
+            return self._free_parameters[name]
+
+        # Otherwise, create a new variable and declare it here
+        var = aq_types.FloatVar(init_expression=expression)
+        self.get_oqpy_program().declare(var)
+        return var
 
     def get_free_parameters(self) -> list[oqpy.FloatVar]:
         """Return a list of named oqpy.Vars that are used as free parameters in the program."""
