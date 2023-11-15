@@ -98,7 +98,7 @@ class H(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Hadamard gate.
 
         Unitary matrix:
 
@@ -176,7 +176,7 @@ class I(Gate):  # noqa: E742, E261
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Identity gate.
 
         Unitary matrix:
 
@@ -255,7 +255,7 @@ class X(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Pauli-X gate.
 
         Unitary matrix:
 
@@ -335,7 +335,7 @@ class Y(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Pauli-Y gate.
 
         Unitary matrix:
 
@@ -415,7 +415,7 @@ class Z(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Pauli-Z gate.
 
         .. math:: \mathtt{Z} = \begin{bmatrix}
                 1 & 0 \\
@@ -493,7 +493,7 @@ class S(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""S gate.
 
         .. math:: \mathtt{S} = \begin{bmatrix}
                 1 & 0 \\
@@ -571,7 +571,7 @@ class Si(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Conjugate transpose of S gate.
 
         .. math:: \mathtt{S}^\dagger = \begin{bmatrix}
                 1 & 0 \\
@@ -649,7 +649,7 @@ class T(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""T gate.
 
         .. math:: \mathtt{T} = \begin{bmatrix}
                 1 & 0 \\
@@ -727,7 +727,7 @@ class Ti(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Conjugate transpose of T gate.
 
         .. math:: \mathtt{T}^\dagger = \begin{bmatrix}
                 1 & 0 \\
@@ -766,7 +766,7 @@ Gate.register_gate(Ti)
 
 
 class V(Gate):
-    r"""Square root of not gate.
+    r"""Square root of X gate (V gate).
 
     Unitary matrix:
 
@@ -805,7 +805,7 @@ class V(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Square root of X gate (V gate).
 
         .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
                 1+i & 1-i \\
@@ -844,7 +844,7 @@ Gate.register_gate(V)
 
 
 class Vi(Gate):
-    r"""Conjugate transpose of square root of not gate.
+    r"""Conjugate transpose of square root of X gate (conjugate transpose of V).
 
     Unitary matrix:
 
@@ -883,7 +883,7 @@ class Vi(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Conjugate transpose of square root of X gate (conjugate transpose of V).
 
         .. math:: \mathtt{V}^\dagger = \frac{1}{2}\begin{bmatrix}
                 1-i & 1+i \\
@@ -978,7 +978,7 @@ class Rx(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""X-axis rotation gate.
 
         .. math:: \mathtt{R_x}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & -i \sin{(\phi/2)} \\
@@ -1070,7 +1070,7 @@ class Ry(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Y-axis rotation gate.
 
         .. math:: \mathtt{R_y}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & -\sin{(\phi/2)} \\
@@ -1159,7 +1159,7 @@ class Rz(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Z-axis rotation gate.
 
         .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
                 e^{-i \phi/2} & 0 \\
@@ -1245,7 +1245,7 @@ class PhaseShift(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Phase shift gate.
 
         .. math:: \mathtt{PhaseShift}(\phi) = \begin{bmatrix}
                 1 & 0 \\
@@ -1334,7 +1334,7 @@ class CNot(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cnot(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled NOT gate.
 
         .. math:: \mathtt{CNOT} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -1418,7 +1418,7 @@ class Swap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Swap gate.
 
         .. math:: \mathtt{SWAP} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -1510,7 +1510,7 @@ class ISwap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""ISwap gate.
 
         .. math:: \mathtt{iSWAP} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -1613,7 +1613,7 @@ class PSwap(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""PSwap gate.
 
         .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -1726,7 +1726,7 @@ class XY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""XY gate.
 
         .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -1816,7 +1816,7 @@ class CPhaseShift(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled phase shift gate.
 
         .. math:: \mathtt{CPhaseShift}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -1901,7 +1901,7 @@ class CPhaseShift00(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled phase shift gate for phasing the \|00> state.
 
         .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
                 e^{i \phi} & 0 & 0 & 0 \\
@@ -1986,7 +1986,7 @@ class CPhaseShift01(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled phase shift gate for phasing the \|01> state.
 
         .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -2071,7 +2071,7 @@ class CPhaseShift10(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled phase shift gate for phasing the \\|10> state.
 
         .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -2109,7 +2109,7 @@ Gate.register_gate(CPhaseShift10)
 
 
 class CV(Gate):
-    r"""Controlled Sqrt of NOT gate.
+    r"""Controlled Sqrt of X gate.
 
     Unitary matrix:
 
@@ -2152,7 +2152,7 @@ class CV(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cv(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled Sqrt of X gate.
 
         .. math:: \mathtt{CV} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -2229,7 +2229,7 @@ class CY(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cy(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled Pauli-Y gate.
 
         .. math:: \mathtt{CY} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -2298,7 +2298,7 @@ class CZ(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cz(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled Pauli-Z gate.
 
         .. math:: \mathtt{CZ} = \begin{bmatrix}
                 1 & 0 & 0 & 0 \\
@@ -2381,7 +2381,7 @@ class ECR(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""An echoed RZX(pi/2) gate (ECR gate).
 
         .. math:: \mathtt{ECR} = \begin{bmatrix}
                 0 & 0 & 1 & i \\
@@ -2492,7 +2492,7 @@ class XX(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Ising XX coupling gate.
 
         .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & 0 & 0 & -i \sin{(\phi/2)} \\
@@ -2604,7 +2604,7 @@ class YY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Ising YY coupling gate.
 
         .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
                 \cos{(\phi/2)} & 0 & 0 & i \sin{(\phi/2)} \\
@@ -2710,7 +2710,7 @@ class ZZ(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Ising ZZ coupling gate.
 
         .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
                 e^{-i\phi/2} & 0 & 0 & 0 \\
@@ -2815,7 +2815,7 @@ class CCNot(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""CCNOT gate or Toffoli gate.
 
         .. math:: \mathtt{CCNOT} = \begin{bmatrix}
                 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -2920,7 +2920,7 @@ class CSwap(Gate):
         target2: QubitInput,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Controlled Swap gate.
 
         .. math:: \mathtt{CSWAP} = \begin{bmatrix}
                 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -3014,7 +3014,7 @@ class GPi(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""IonQ GPi gate.
 
         .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
                 0 & e^{-i \phi} \\
@@ -3105,7 +3105,7 @@ class GPi2(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""IonQ GPi2 gate.
 
         .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
                 1 & -i e^{-i \phi} \\
@@ -3237,7 +3237,7 @@ class MS(TripleAngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""IonQ Mølmer-Sørensen gate.
 
         .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
                     \cos{\frac{\theta}{2}} & 0 &
@@ -3288,7 +3288,7 @@ Gate.register_gate(MS)
 
 
 class Unitary(Gate):
-    """Arbitrary unitary gate
+    """Arbitrary unitary gate.
 
     Args:
         matrix (numpy.ndarray): Unitary matrix which defines the gate.
@@ -3351,7 +3351,7 @@ class Unitary(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def unitary(targets: QubitSet, matrix: np.ndarray, display_name: str = "U") -> Instruction:
-        r"""Registers this function into the circuit class.
+        r"""Arbitrary unitary gate.
 
         Args:
             targets (QubitSet): Target qubits.
