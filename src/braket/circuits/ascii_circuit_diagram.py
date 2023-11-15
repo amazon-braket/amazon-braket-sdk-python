@@ -115,8 +115,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
         groupings = []
         for item in items:
             # Can only print Gate and Noise operators for instructions at the moment
-            if isinstance(item, Instruction) and not isinstance(
-                item.operator, (Gate, Noise, CompilerDirective)
+            if isinstance(item, Instruction) and (
+                not isinstance(item.operator, (Gate, Noise, CompilerDirective))
+                or item.operator.__class__.__name__ == "GPhase"
             ):
                 continue
 

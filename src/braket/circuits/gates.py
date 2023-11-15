@@ -190,7 +190,7 @@ Gate.register_gate(I)
 
 
 class GPhase(AngledGate):
-    """Z-axis rotation gate.
+    """Global phase gate.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -216,7 +216,16 @@ class GPhase(AngledGate):
         return [GPhase(-self.angle)]
 
     def to_matrix(self) -> np.ndarray:
-        return np.exp(1j * self.angle) * np.eye(1)
+        r"""
+        Generate a 1x1 matrix containing the global phase.
+
+        Unitary matrix:
+            .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_m.
+
+        Returns:
+            np.ndarray: GPhase Matrix
+        """
+        return np.exp(1j * self.angle) * np.eye(1, dtype=complex)
 
     def bind_values(self, **kwargs) -> AngledGate:
         return get_angle(self, **kwargs)
@@ -250,14 +259,29 @@ class GPhase(AngledGate):
                 Default 1.
 
         Returns:
-            Instruction: GPhase instruction d.
+            Instruction: GPhase instruction.
 
         Examples:
             >>> circ = Circuit().gphase(0.45)
         """
-        return [
-            Instruction(GPhase(angle), control=control, control_state=control_state, power=power)
-        ]
+        if control is not None:
+            if control_state is None:
+                inv = 0
+            elif isinstance(control_state, int):
+                inv = 1 if control_state % 2 else 0
+                control_state = control_state - 1
+            elif isinstance(control_state, (str, list)):
+                inv = 1 - control_state[0]
+                control_state = control_state[1:]
+            return PhaseShift.phaseshift(
+                control[0],
+                angle * (-1) ** inv,
+                control=control[1:],
+                control_state=control_state,
+                power=power,
+            )
+
+        return Instruction(GPhase(angle), control=control, control_state=control_state, power=power)
 
 
 Gate.register_gate(GPhase)
