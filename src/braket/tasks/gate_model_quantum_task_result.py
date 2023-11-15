@@ -132,8 +132,7 @@ class GateModelQuantumTaskResult:
         return NotImplemented
 
     def get_compiled_circuit(self) -> Optional[str]:
-        """
-        Get the compiled circuit, if one is available.
+        """Get the compiled circuit, if one is available.
 
         Returns:
             Optional[str]: The compiled circuit or None.
