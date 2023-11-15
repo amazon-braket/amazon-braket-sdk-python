@@ -694,7 +694,6 @@ class Ti(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-
     @_prepend_docstring(__doc__)
     def ti(
         target: QubitSetInput,
@@ -1106,7 +1105,6 @@ class Rz(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-
     @_prepend_docstring(__doc__)
     def rz(
         target: QubitSetInput,
@@ -2559,7 +2557,6 @@ class ZZ(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
-
     @_prepend_docstring(__doc__)
     def zz(
         target1: QubitInput,
