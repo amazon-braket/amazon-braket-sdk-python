@@ -341,14 +341,13 @@ class ProgramConversionContext:
         """
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
-    def register_parameter(self, parameter: str | FreeParameter) -> None:
+    def register_parameter(self, parameter_name: str) -> None:
         """Register an input parameter if it has not already been registered.
         Only floats are currently supported.
 
         Args:
-            parameter (str | FreeParameter): The parameter to register with the program.
+            parameter_name (str): The name of the parameter to register with the program.
         """
-        parameter_name = str(parameter)
         if parameter_name not in self._free_parameters:
             self._free_parameters[parameter_name] = oqpy.FloatVar("input", name=parameter_name)
 
