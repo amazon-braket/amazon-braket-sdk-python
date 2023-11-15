@@ -329,6 +329,16 @@ class ProgramConversionContext:
 
     @staticmethod
     def _free_symbol_names(expr: FreeParameterExpression) -> Iterable[str]:
+        """Return the names of any free symbols found in the provided expression
+        which are Symbol objects.
+
+        Args:
+            expr (FreeParameterExpression): The expression in which to look for free symbols.
+
+        Returns:
+            Iterable[str]: The list of free symbol names in sorted order (sorted to ensure
+            that the order is deterministic).
+        """
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
     def register_parameter(self, parameter: str | FreeParameter) -> None:
@@ -362,7 +372,7 @@ class ProgramConversionContext:
 
         # If the expression is just a standalone parameter, return the registered variable.
         if isinstance(expression, FreeParameter):
-            return self._free_parameters[name]
+            return self._free_parameters[expression.name]
 
         # Otherwise, create a new variable and declare it here
         var = aq_types.FloatVar(init_expression=expression)
