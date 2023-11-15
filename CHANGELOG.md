@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.62.0 (2023-11-09)
+
+### Features
+
+ * Add get_compiled_circuit convenience method
+
 ## v1.61.0.post0 (2023-11-07)
 
 ### Documentation Changes

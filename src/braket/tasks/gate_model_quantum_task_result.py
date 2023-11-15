@@ -134,6 +134,23 @@ class GateModelQuantumTaskResult:
             return self.task_metadata.id == other.task_metadata.id
         return NotImplemented
 
+    def get_compiled_circuit(self) -> Optional[str]:
+        """
+        Get the compiled circuit, if one is available.
+
+        Returns:
+            Optional[str]: The compiled circuit or None.
+        """
+        metadata = self.additional_metadata
+        if not metadata:
+            return None
+        if metadata.rigettiMetadata:
+            return metadata.rigettiMetadata.compiledProgram
+        elif metadata.oqcMetadata:
+            return metadata.oqcMetadata.compiledProgram
+        else:
+            return None
+
     @staticmethod
     def measurement_counts_from_measurements(measurements: np.ndarray) -> Counter:
         """
