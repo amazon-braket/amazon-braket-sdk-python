@@ -21,7 +21,17 @@ from braket.circuits import FreeParameter
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
 from braket.experimental.autoqasm import pulse
-from braket.experimental.autoqasm.instructions import cnot, cphaseshift, h, measure, ms, rx, rz, x
+from braket.experimental.autoqasm.instructions import (
+    cnot,
+    cphaseshift,
+    gpi,
+    h,
+    measure,
+    ms,
+    rx,
+    rz,
+    x,
+)
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
@@ -775,3 +785,139 @@ __bit_1__ = measure __qubits__[0];"""
     assert bound_prog.to_ir() == template.format(0)
     bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 1})
     assert bound_prog.to_ir() == template.format(1)
+
+
+def test_parameter_expressions():
+    """Test expressions of free parameters with numeric literals."""
+
+    @aq.main
+    def parametric():
+        expr = 2 * FreeParameter("theta")
+        gpi(0, expr)
+
+    expected = """OPENQASM 3.0;
+input float[64] theta;
+qubit[1] __qubits__;
+gpi(2*theta) __qubits__[0];"""
+    assert parametric().to_ir() == expected
+
+
+def test_sim_expressions():
+    @aq.main
+    def parametric():
+        rx(0, 2 * FreeParameter("phi"))
+        measure(0)
+
+    measurements = _test_parametric_on_local_sim(parametric(), {"phi": np.pi / 2})
+    assert 0 not in measurements["__bit_0__"]
+
+
+def test_multi_parameter_expressions():
+    """Test expressions of multiple free parameters."""
+
+    @aq.main
+    def parametric():
+        expr = FreeParameter("alpha") * FreeParameter("theta")
+        gpi(0, expr)
+
+    expected = """OPENQASM 3.0;
+input float[64] alpha;
+input float[64] theta;
+qubit[1] __qubits__;
+gpi(alpha*theta) __qubits__[0];"""
+    assert parametric().to_ir() == expected
+
+
+def test_bound_parameter_expressions():
+    """Test expressions of free parameters bound to specific values."""
+
+    @aq.main
+    def parametric():
+        rx(0, 2 * FreeParameter("phi"))
+
+    expected = """OPENQASM 3.0;
+float[64] phi = 1.5707963267948966;
+qubit[1] __qubits__;
+rx(2*phi) __qubits__[0];"""
+    assert parametric().make_bound_program({"phi": np.pi / 2}).to_ir() == expected
+
+
+def test_partially_bound_parameter_expressions():
+    """Test expressions of free parameters partially bound to specific values."""
+
+    @aq.main
+    def parametric():
+        expr = FreeParameter("prefactor") * FreeParameter("theta")
+        gpi(0, expr)
+
+    expected = """OPENQASM 3.0;
+float[64] prefactor = 3;
+input float[64] theta;
+qubit[1] __qubits__;
+gpi(prefactor*theta) __qubits__[0];"""
+    assert parametric().make_bound_program({"prefactor": 3}).to_ir() == expected
+
+
+def test_subroutine_parameter_expressions():
+    """Test expressions of free parameters passed to subroutines."""
+
+    @aq.subroutine
+    def rotate(theta: float):
+        rx(0, 3 * theta)
+
+    @aq.main
+    def parametric():
+        rotate(2 * FreeParameter("alpha"))
+
+    expected = """OPENQASM 3.0;
+def rotate(float[64] theta) {
+    rx(3 * theta) __qubits__[0];
+}
+input float[64] alpha;
+qubit[1] __qubits__;
+rotate(2*alpha);"""
+    assert parametric().to_ir() == expected
+
+
+def test_gate_parameter_expressions():
+    """Test expressions of free parameters passed to custom gates."""
+
+    @aq.gate
+    def rotate(q: aq.Qubit, theta: float):
+        rx(q, 3 * theta)
+
+    @aq.main
+    def parametric():
+        rotate(0, 2 * FreeParameter("alpha"))
+
+    expected = """OPENQASM 3.0;
+gate rotate(theta) q {
+    rx(3 * theta) q;
+}
+input float[64] alpha;
+qubit[1] __qubits__;
+rotate(2*alpha) __qubits__[0];"""
+    assert parametric().to_ir() == expected
+
+
+def test_conditional_parameter_expressions():
+    """Test expressions of free parameters contained in conditional statements."""
+
+    @aq.main
+    def parametric():
+        if 2 * FreeParameter("phi") > np.pi:
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input float[64] phi;
+qubit[1] __qubits__;
+float[64] __float_0__ = 2*phi;
+bool __bool_1__;
+__bool_1__ = __float_0__ > 3.141592653589793;
+if (__bool_1__) {
+    h __qubits__[0];
+}
+bit __bit_2__;
+__bit_2__ = measure __qubits__[0];"""
+    assert parametric().to_ir() == expected

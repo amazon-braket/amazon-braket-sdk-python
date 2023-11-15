@@ -40,12 +40,14 @@ def test_program_conversion_context() -> None:
     assert len(prog._oqpy_program_stack) == 1
 
 
-def test_get_parameter_invalid_name():
-    """Tests the get_parameter function."""
+def test_get_expression_var_invalid_name():
+    """Tests the get_expression_var function."""
     prog = aq.program.ProgramConversionContext()
-    prog.register_parameter(FreeParameter("alpha"))
+    prog.register_parameter("alpha")
     with pytest.raises(aq.errors.ParameterNotFoundError):
-        prog.get_parameter("not_a_parameter")
+        prog.get_expression_var(FreeParameter("not_a_parameter"))
+    with pytest.raises(aq.errors.ParameterNotFoundError):
+        prog.get_expression_var(3 * FreeParameter("also_not_a_parameter"))
 
 
 def test_build_program() -> None:
