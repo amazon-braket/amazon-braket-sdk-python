@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from copy import deepcopy
 from typing import Any, Optional, Union
 
@@ -49,11 +49,23 @@ from braket.registers.qubit_set import QubitSet, QubitSetInput
 """
 To add a new gate:
     1. Implement the class and extend `Gate`
-    2. Add a method with the `@circuit.subroutine(register=True)` decorator. Method name
+    2. Add a method with the `@circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)` decorator. Method name
        will be added into the `Circuit` class. This method is the default way
        clients add this gate to a circuit.
     3. Register the class with the `Gate` class via `Gate.register_gate()`.
 """
+
+
+def _prepend_docstring(source: str) -> Callable:
+    def _update_docstring(func: Callable) -> Callable:
+        doc_string = source
+        if arg_loc := source.find("\n    Args:"):
+            doc_string = source[:arg_loc]
+        func.__doc__ = "\n".join([doc_string, func.__doc__])
+        return func
+
+    return _update_docstring
 
 
 # Single qubit gates #
@@ -91,6 +103,7 @@ class H(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def h(
         target: QubitSetInput,
         *,
@@ -98,13 +111,7 @@ class H(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        Unitary matrix:
-
-            .. math:: \mathtt{H} = \frac{1}{\sqrt{2}} \begin{bmatrix}
-                    1 & 1 \\
-                    1 & -1 \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -169,6 +176,7 @@ class I(Gate):  # noqa: E742, E261
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def i(
         target: QubitSetInput,
         *,
@@ -176,13 +184,7 @@ class I(Gate):  # noqa: E742, E261
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        Unitary matrix:
-
-            .. math:: \mathtt{I} = \begin{bmatrix}
-                    1 & 0 \\
-                    0 & 1 \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -248,6 +250,7 @@ class X(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def x(
         target: QubitSetInput,
         *,
@@ -255,14 +258,7 @@ class X(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        Unitary matrix:
-
-            .. math:: \mathtt{X} = \begin{bmatrix}
-                    0 & 1 \\
-                    1 & 0
-                    \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -328,6 +324,7 @@ class Y(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def y(
         target: QubitSetInput,
         *,
@@ -335,14 +332,7 @@ class Y(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        Unitary matrix:
-
-            .. math:: \mathtt{Y} = \begin{bmatrix}
-                    0 & -i \\
-                    i & 0
-                    \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -408,6 +398,7 @@ class Z(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def z(
         target: QubitSetInput,
         *,
@@ -415,12 +406,7 @@ class Z(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{Z} = \begin{bmatrix}
-                1 & 0 \\
-                0 & -1
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -486,6 +472,7 @@ class S(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def s(
         target: QubitSetInput,
         *,
@@ -493,12 +480,7 @@ class S(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{S} = \begin{bmatrix}
-                1 & 0 \\
-                0 & i
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -564,6 +546,7 @@ class Si(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def si(
         target: QubitSetInput,
         *,
@@ -571,12 +554,7 @@ class Si(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{S}^\dagger = \begin{bmatrix}
-                1 & 0 \\
-                0 & -i
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -642,6 +620,7 @@ class T(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def t(
         target: QubitSetInput,
         *,
@@ -649,12 +628,7 @@ class T(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{T} = \begin{bmatrix}
-                1 & 0 \\
-                0 & e^{i \pi/4}
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -720,6 +694,7 @@ class Ti(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def ti(
         target: QubitSetInput,
         *,
@@ -727,12 +702,7 @@ class Ti(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{T}^\dagger = \begin{bmatrix}
-                1 & 0 \\
-                0 & e^{-i \pi/4}
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -798,6 +768,7 @@ class V(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def v(
         target: QubitSetInput,
         *,
@@ -805,12 +776,7 @@ class V(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
-                1+i & 1-i \\
-                1-i & 1+i
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -876,6 +842,7 @@ class Vi(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def vi(
         target: QubitSetInput,
         *,
@@ -883,12 +850,7 @@ class Vi(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{V}^\dagger = \frac{1}{2}\begin{bmatrix}
-                1-i & 1+i \\
-                1+i & 1-i
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -953,7 +915,7 @@ class Rx(AngledGate):
         return ir.Rx.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        r"""Returns a matrix representation of this gate.
+        """Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -970,6 +932,7 @@ class Rx(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def rx(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
@@ -978,12 +941,7 @@ class Rx(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{R_x}(\phi) = \begin{bmatrix}
-                \cos{(\phi/2)} & -i \sin{(\phi/2)} \\
-                -i \sin{(\phi/2)} & \cos{(\phi/2)}
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1045,7 +1003,7 @@ class Ry(AngledGate):
         return ir.Ry.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        r"""Returns a matrix representation of this gate.
+        """Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -1062,6 +1020,7 @@ class Ry(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def ry(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
@@ -1070,12 +1029,7 @@ class Ry(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{R_y}(\phi) = \begin{bmatrix}
-                \cos{(\phi/2)} & -\sin{(\phi/2)} \\
-                \sin{(\phi/2)} & \cos{(\phi/2)}
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1151,6 +1105,7 @@ class Rz(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def rz(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
@@ -1159,12 +1114,7 @@ class Rz(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
-                e^{-i \phi/2} & 0 \\
-                0 & e^{i \phi/2}
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1237,6 +1187,7 @@ class PhaseShift(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def phaseshift(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
@@ -1245,12 +1196,7 @@ class PhaseShift(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{PhaseShift}(\phi) = \begin{bmatrix}
-                1 & 0 \\
-                0 & e^{i \phi}
-                \end{bmatrix}
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1333,15 +1279,9 @@ class CNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cnot(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CNOT} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-                0 & 0 & 1 & 0 \\
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1410,6 +1350,7 @@ class Swap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def swap(
         target1: QubitInput,
         target2: QubitInput,
@@ -1418,14 +1359,7 @@ class Swap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{SWAP} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1502,6 +1436,7 @@ class ISwap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def iswap(
         target1: QubitInput,
         target2: QubitInput,
@@ -1510,14 +1445,7 @@ class ISwap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{iSWAP} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 0 & i & 0 \\
-                0 & i & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1604,6 +1532,7 @@ class PSwap(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def pswap(
         target1: QubitInput,
         target2: QubitInput,
@@ -1613,14 +1542,7 @@ class PSwap(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 0 & e^{i \phi} & 0 \\
-                0 & e^{i \phi} & 0 & 0 \\
-                0 & 0 & 0 & 1 \\
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1692,7 +1614,7 @@ class XY(AngledGate):
         return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        r"""Returns a matrix representation of this gate.
+        """Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -1717,6 +1639,7 @@ class XY(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def xy(
         target1: QubitInput,
         target2: QubitInput,
@@ -1726,14 +1649,7 @@ class XY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & \cos{(\phi/2)} & i\sin{(\phi/2)} & 0 \\
-                0 & i\sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
-                0 & 0 & 0 & 1 \\
-            \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1810,20 +1726,14 @@ class CPhaseShift(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cphaseshift(
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CPhaseShift}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & e^{i \phi}
-            \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1895,20 +1805,14 @@ class CPhaseShift00(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cphaseshift00(
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
-                e^{i \phi} & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & 1
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1980,20 +1884,14 @@ class CPhaseShift01(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cphaseshift01(
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & e^{i \phi} & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & 1
-            \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2065,20 +1963,14 @@ class CPhaseShift10(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cphaseshift10(
         control: QubitSetInput,
         target: QubitInput,
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & e^{i \phi} & 0 \\
-                0 & 0 & 0 & 1
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2151,15 +2043,9 @@ class CV(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cv(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CV} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0.5+0.5i & 0.5-0.5i \\
-                0 & 0 & 0.5-0.5i & 0.5+0.5i
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2228,15 +2114,9 @@ class CY(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cy(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CY} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & -i \\
-                0 & 0 & i & 0
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2297,15 +2177,9 @@ class CZ(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cz(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CZ} = \begin{bmatrix}
-                1 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 \\
-                0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & -1
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2373,6 +2247,7 @@ class ECR(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def ecr(
         target1: QubitInput,
         target2: QubitInput,
@@ -2381,14 +2256,7 @@ class ECR(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{ECR} = \begin{bmatrix}
-                0 & 0 & 1 & i \\
-                0 & 0 & i & 1 \\
-                1 & -i & 0 & 0 \\
-                -i & 1 & 0 & 0
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2458,7 +2326,7 @@ class XX(AngledGate):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        r"""Returns a matrix representation of this gate.
+        """Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -2483,6 +2351,7 @@ class XX(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def xx(
         target1: QubitInput,
         target2: QubitInput,
@@ -2492,14 +2361,7 @@ class XX(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
-                \cos{(\phi/2)} & 0 & 0 & -i \sin{(\phi/2)} \\
-                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
-                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
-                -i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2570,7 +2432,7 @@ class YY(AngledGate):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        r"""Returns a matrix representation of this gate.
+        """Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -2595,6 +2457,7 @@ class YY(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def yy(
         target1: QubitInput,
         target2: QubitInput,
@@ -2604,14 +2467,7 @@ class YY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
-                \cos{(\phi/2)} & 0 & 0 & i \sin{(\phi/2)} \\
-                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
-                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
-                i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2701,6 +2557,7 @@ class ZZ(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def zz(
         target1: QubitInput,
         target2: QubitInput,
@@ -2710,14 +2567,7 @@ class ZZ(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
-                e^{-i\phi/2} & 0 & 0 & 0 \\
-                0 & e^{i\phi/2} & 0 & 0 \\
-                0 & 0 & e^{i\phi/2} & 0 \\
-                0 & 0 & 0 & e^{-i\phi/2}
-            \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2806,6 +2656,7 @@ class CCNot(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def ccnot(
         control1: QubitInput,
         control2: QubitInput,
@@ -2815,18 +2666,7 @@ class CCNot(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CCNOT} = \begin{bmatrix}
-                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
-                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control1 (QubitInput): Control qubit 1 index.
@@ -2914,24 +2754,14 @@ class CSwap(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def cswap(
         control: QubitSetInput,
         target1: QubitInput,
         target2: QubitInput,
         power: float = 1,
     ) -> Instruction:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{CSWAP} = \begin{bmatrix}
-                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
-                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
-                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -3006,6 +2836,7 @@ class GPi(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def gpi(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
@@ -3014,12 +2845,7 @@ class GPi(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
-                0 & e^{-i \phi} \\
-                e^{i \phi} & 0
-                \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -3097,6 +2923,7 @@ class GPi2(AngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def gpi2(
         target: QubitSetInput,
         angle: Union[FreeParameterExpression, float],
@@ -3105,12 +2932,7 @@ class GPi2(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
-                1 & -i e^{-i \phi} \\
-                -i e^{i \phi} & 1
-            \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -3226,6 +3048,7 @@ class MS(TripleAngledGate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def ms(
         target1: QubitInput,
         target2: QubitInput,
@@ -3237,18 +3060,7 @@ class MS(TripleAngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
-
-        .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
-                    \cos{\frac{\theta}{2}} & 0 &
-                    0 & -ie^{-i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} \\
-                    0 & \cos{\frac{\theta}{2}} &
-                    -ie^{-i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} & 0 \\
-                    0 & -ie^{i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} &
-                    \cos{\frac{\theta}{2}} & 0 \\
-                    -ie^{i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} & 0
-                    & 0 & \cos{\frac{\theta}{2}}
-                    \end{bmatrix}.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -3350,8 +3162,9 @@ class Unitary(Gate):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def unitary(targets: QubitSet, matrix: np.ndarray, display_name: str = "U") -> Instruction:
-        r"""Registers this function into the circuit class.
+        """This method allows adding this gate within the Circuit class.
 
         Args:
             targets (QubitSet): Target qubits.
@@ -3437,6 +3250,7 @@ class PulseGate(Gate, Parameterizable):
 
     @staticmethod
     @circuit.subroutine(register=True)
+    @_prepend_docstring(__doc__)
     def pulse_gate(
         targets: QubitSet,
         pulse_sequence: PulseSequence,
