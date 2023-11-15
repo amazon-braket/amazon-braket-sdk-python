@@ -1,5 +1,56 @@
 # Changelog
 
+## v1.62.0 (2023-11-09)
+
+### Features
+
+ * Add get_compiled_circuit convenience method
+
+## v1.61.0.post0 (2023-11-07)
+
+### Documentation Changes
+
+ * Improve docstring for make_bound_circuit
+
+## v1.61.0 (2023-11-06)
+
+### Features
+
+ * simplify entry point wrapper
+
+### Bug Fixes and Other Changes
+
+ * fixing some type hints for optional params
+
+## v1.60.2 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * drop task count for batch task tests to 3
+
+## v1.60.1 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * set python container version explicitly
+ * set decorator job working directory inside of function
+ * s3 config support for decorator jobs
+
+## v1.60.0 (2023-10-31)
+
+### Features
+
+ * support dependency list for decorator hybrid jobs
+
+### Bug Fixes and Other Changes
+
+ * Don't run pulse tests when QPU offline
+
+### Documentation Changes
+
+ * Fix some nits in the decorator doc string
+ * update intended audience to include education and research
+
 ## v1.59.2 (2023-10-25)
 
 ### Bug Fixes and Other Changes
