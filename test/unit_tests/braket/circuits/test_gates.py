@@ -35,12 +35,17 @@ from braket.ir.jaqcd.shared_models import (
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 
 
+class NoTarget:
+    pass
+
+
 class TripleAngle:
     pass
 
 
 testdata = [
     (Gate.H, "h", ir.H, [SingleTarget], {}),
+    (Gate.GPhase, "gphase", None, [NoTarget, Angle], {}),
     (Gate.I, "i", ir.I, [SingleTarget], {}),
     (Gate.X, "x", ir.X, [SingleTarget], {}),
     (Gate.Y, "y", ir.Y, [SingleTarget], {}),
@@ -119,6 +124,7 @@ testdata = [
 ]
 
 parameterizable_gates = [
+    Gate.GPhase,
     Gate.Rx,
     Gate.Ry,
     Gate.Rz,
@@ -147,6 +153,10 @@ invalid_unitary_matrices = [
     (np.array([[0, 1, 2], [3, 4, 5], [6, 7, 8]])),
     (np.array([[0, 1], [1, 1]])),
 ]
+
+
+def no_target_valid_input(**kwargs):
+    return {}
 
 
 def single_target_valid_input(**kwargs):
@@ -195,6 +205,7 @@ def two_dimensional_matrix_valid_input(**kwargs):
 
 
 valid_ir_switcher = {
+    "NoTarget": no_target_valid_input,
     "SingleTarget": single_target_valid_input,
     "DoubleTarget": double_target_valid_ir_input,
     "Angle": angle_valid_input,
@@ -236,7 +247,9 @@ def create_valid_target_input(irsubclasses):
     qubit_set = []
     # based on the concept that control goes first in target input
     for subclass in irsubclasses:
-        if subclass == SingleTarget:
+        if subclass == NoTarget:
+            qubit_set.extend(list(no_target_valid_input().values()))
+        elif subclass == SingleTarget:
             qubit_set.extend(list(single_target_valid_input().values()))
         elif subclass == DoubleTarget:
             qubit_set.extend(list(double_target_valid_ir_input().values()))
@@ -284,7 +297,7 @@ def calculate_qubit_count(irsubclasses):
             qubit_count += 2
         elif subclass == MultiTarget:
             qubit_count += 3
-        elif subclass in (Angle, TwoDimensionalMatrix, TripleAngle):
+        elif subclass in (NoTarget, Angle, TwoDimensionalMatrix, TripleAngle):
             pass
         else:
             raise ValueError("Invalid subclass")

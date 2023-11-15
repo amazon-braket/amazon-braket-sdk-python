@@ -31,6 +31,7 @@ from braket.ir.jaqcd import (
 from braket.ir.jaqcd.program_v1 import Results
 
 BRAKET_GATES = {
+    "gphase": braket_gates.GPhase,
     "i": braket_gates.I,
     "h": braket_gates.H,
     "x": braket_gates.X,
