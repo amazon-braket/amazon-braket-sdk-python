@@ -28,6 +28,8 @@ parser = argparse.ArgumentParser()
 # --branch={branch_name}
 parser.add_argument("-b", "--branch", help="PR branch name")
 
+args = parser.parse_args()
+
 package = "amazon-braket-sdk"
 path = Path.cwd().parent.resolve()
 
