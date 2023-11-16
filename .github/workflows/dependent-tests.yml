@@ -26,6 +26,10 @@ jobs:
       uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # v4.7.1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Extract branch name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      id: extract_branch
     - name: Install dependencies
       run: |
         pip install --upgrade pip
@@ -33,7 +37,7 @@ jobs:
         git clone https://github.com/aws/${{ matrix.dependent }}.git
         cd ${{ matrix.dependent }}
         # Update the amazon-braket-sdk dependency to reference the current commit
-        python ${GITHUB_WORKSPACE}/.github/scripts/update_dependency.py
+        python ${GITHUB_WORKSPACE}/.github/scripts/update_dependency.py --branch ${{ steps.extract_branch.outputs.branch }}
         pip install tox
     - name: Run unit tests
       run: |

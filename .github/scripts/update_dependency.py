@@ -12,6 +12,7 @@
 # language governing permissions and limitations under the License.
 
 import fileinput
+import argparse
 from pathlib import Path
 
 # Here we replace the `amazon-braket-sdk` dependency to point to the file system; otherwise
@@ -22,6 +23,11 @@ from pathlib import Path
 # dependency, we can do this for the ones we own to make sure that when the sdk updates
 # its dependencies, these upstream github repos will not be impacted.
 
+parser = argparse.ArgumentParser()
+
+# --branch={branch_name}
+parser.add_argument("-b", "--branch", help="PR branch name")
+
 package = "amazon-braket-sdk"
 path = Path.cwd().parent.resolve()
 
@@ -30,5 +36,12 @@ for line in fileinput.input("setup.py", inplace=True):
     # would help catch conflicts during the installation process.
     replaced_line = (
         line if package not in line else f'"{package} @ file://{path}/{package}-python",\n'
+    )
+    print(replaced_line, end="")
+
+for line in fileinput.input("tox.ini", inplace=True):
+    # Ensure that tox uses the working branch for the SDK PR.
+    replaced_line = (
+        line if package not in line else f'    git+https://github.com/amazon-braket/{package}-python.git@{args.branch}\n'
     )
     print(replaced_line, end="")
