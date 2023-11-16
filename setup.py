@@ -44,13 +44,10 @@ setup(
     ],
     extras_require={
         "test": [
-            "black",
             "botocore",
-            "isort",
             "jsonschema==3.2.0",
             "pre-commit",
-            "pydoclint",
-            "pylint",
+            "pydoclint==0.3.8",
             "pytest",
             "pytest-cov",
             "pytest-rerunfailures",
