@@ -11,8 +11,8 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import fileinput
 import argparse
+import fileinput
 from pathlib import Path
 
 # Here we replace the `amazon-braket-sdk` dependency to point to the file system; otherwise
@@ -44,6 +44,8 @@ for line in fileinput.input("setup.py", inplace=True):
 for line in fileinput.input("tox.ini", inplace=True):
     # Ensure that tox uses the working branch for the SDK PR.
     replaced_line = (
-        line if package not in line else f'    git+https://github.com/amazon-braket/{package}-python.git@{args.branch}\n'
+        line
+        if package not in line
+        else f"    git+https://github.com/amazon-braket/{package}-python.git@{args.branch}\n"
     )
     print(replaced_line, end="")
