@@ -42,14 +42,15 @@ from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
+from braket.parametric import FreeParameter
 
 
 def main(
-    func: Optional[Callable] = None,
-    *,
-    num_qubits: Optional[int] = None,
-    device: Optional[Union[Device, str]] = None,
-) -> Callable[..., aq_program.Program]:
+        func: Optional[Callable] = None,
+        *,
+        num_qubits: Optional[int] = None,
+        device: Optional[Union[Device, str]] = None,
+) -> aq_program.Program:
     """Decorator that converts a function into a callable that returns
     a Program object containing the quantum program.
 
@@ -71,7 +72,7 @@ def main(
     if isinstance(device, str):
         device = AwsDevice(device)
 
-    return _function_wrapper(
+    fw = _function_wrapper(
         func,
         converter_callback=_convert_main,
         converter_args={
@@ -80,6 +81,12 @@ def main(
                 device=device,
             )
         },
+    )
+
+    return (
+        fw
+        if fw.__name__ == "_wrapped_function_wrapper"
+        else fw()
     )
 
 
@@ -133,11 +140,18 @@ def gate_calibration(*, implements: Callable, **kwargs) -> Callable[[], GateCali
     )
 
 
+def _wrap_function_wrapper(**kwargs):
+    def _wrapped_function_wrapper(func: Callable):
+        return _function_wrapper(func, **kwargs)()
+
+    return _wrapped_function_wrapper
+
+
 def _function_wrapper(
-    func: Optional[Callable],
-    *,
-    converter_callback: Callable,
-    converter_args: Optional[dict[str, Any]] = None,
+        func: Optional[Callable],
+        *,
+        converter_callback: Callable,
+        converter_args: Optional[dict[str, Any]] = None,
 ) -> Callable[..., Optional[Union[aq_program.Program, GateCalibration]]]:
     """Wrapping and conversion logic around the user function `f`.
 
@@ -165,9 +179,13 @@ def _function_wrapper(
         #
         # To make this work, here we simply return a partial application of this function
         # which still expects a Callable as the single positional argument.
-        return functools.partial(
-            _function_wrapper, converter_callback=converter_callback, converter_args=converter_args
+        return _wrap_function_wrapper(
+            converter_callback=converter_callback,
+            converter_args=converter_args,
         )
+        # return functools.partial(
+        #     _function_wrapper, converter_callback=converter_callback, converter_args=converter_args
+        # )
 
     if is_autograph_artifact(func):
         return func
@@ -199,11 +217,11 @@ def _autograph_optional_features() -> tuple[converter.Feature]:
 
 
 def _convert_main(
-    f: Callable,
-    options: converter.ConversionOptions,
-    args: tuple[Any],
-    kwargs: dict[str, Any],
-    user_config: aq_program.UserConfig,
+        f: Callable,
+        options: converter.ConversionOptions,
+        args: tuple[Any],
+        kwargs: dict[str, Any],
+        user_config: aq_program.UserConfig,
 ) -> None:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
     Puts the contents of `f` at the global level of the program, rather than
@@ -225,9 +243,24 @@ def _convert_main(
             "to use '@aq.subroutine'?"
         )
 
+    kwargs = {}
+    parameters = inspect.signature(f).parameters
+    for param in parameters.values():
+        if param.kind == param.POSITIONAL_OR_KEYWORD:
+            kwargs[param.name] = FreeParameter(param.name)
+        else:
+            raise NotImplementedError
+
     with aq_program.build_program(user_config) as program_conversion_context:
         # Process the program
-        aq_transpiler.converted_call(f, args, kwargs, options=options)
+        for param in parameters.values():
+            if param.kind == param.POSITIONAL_OR_KEYWORD:
+                param_type = param.annotation if param.annotation is not param.empty else float
+                program_conversion_context.register_parameter(param.name, param_type)
+            else:
+                raise NotImplementedError
+
+        aq_transpiler.converted_call(f, (), kwargs, options=options)
 
         # Modify program to add global declarations if necessary
         _add_qubit_declaration(program_conversion_context)
@@ -283,10 +316,10 @@ def _add_qubit_declaration(program_conversion_context: aq_program.ProgramConvers
 
 
 def _convert_subroutine(
-    f: Callable,
-    options: converter.ConversionOptions,
-    args: list[Any],
-    kwargs: dict[str, Any],
+        f: Callable,
+        options: converter.ConversionOptions,
+        args: list[Any],
+        kwargs: dict[str, Any],
 ) -> None:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
     The contents of `f` are converted into a subroutine in the program.
@@ -353,8 +386,8 @@ def _convert_subroutine(
         )
         subroutine_name = subroutine_function_call.identifier.name
         if (
-            subroutine_name not in root_oqpy_program.subroutines
-            and subroutine_function_call.subroutine_decl is not None
+                subroutine_name not in root_oqpy_program.subroutines
+                and subroutine_function_call.subroutine_decl is not None
         ):
             root_oqpy_program._add_subroutine(
                 subroutine_name, subroutine_function_call.subroutine_decl
@@ -468,10 +501,10 @@ def _get_bitvar_size(node: qasm_ast.BitType) -> Optional[int]:
 
 
 def _convert_gate(
-    f: Callable,
-    options: converter.ConversionOptions,
-    args: list[Any],
-    kwargs: dict[str, Any],
+        f: Callable,
+        options: converter.ConversionOptions,
+        args: list[Any],
+        kwargs: dict[str, Any],
 ) -> Callable:
     # We must be inside an active conversion context in order to invoke a gate
     program_conversion_context = aq_program.get_program_conversion_context()
@@ -514,8 +547,8 @@ def _convert_gate(
 
 
 def _wrap_for_oqpy_gate(
-    f: Callable,
-    options: converter.ConversionOptions,
+        f: Callable,
+        options: converter.ConversionOptions,
 ) -> Callable[..., None]:
     """Wraps the given function into a callable expected by oqpy.gate.
 
@@ -555,7 +588,7 @@ def _get_gate_args(f: Callable) -> aq_program.GateArgs:
         if param.annotation == aq_instructions.QubitIdentifierType:
             gate_args.append_qubit(param.name)
         elif param.annotation == float or any(
-            type_ == float for type_ in get_args(param.annotation)
+                type_ == float for type_ in get_args(param.annotation)
         ):
             gate_args.append_angle(param.name)
         else:
@@ -567,12 +600,12 @@ def _get_gate_args(f: Callable) -> aq_program.GateArgs:
 
 
 def _convert_calibration(
-    f: Callable,
-    options: converter.ConversionOptions,
-    args: list[Any],
-    kwargs: dict[str, Any],
-    gate_function: Callable,
-    **decorator_kwargs,
+        f: Callable,
+        options: converter.ConversionOptions,
+        args: list[Any],
+        kwargs: dict[str, Any],
+        gate_function: Callable,
+        **decorator_kwargs,
 ) -> GateCalibration:
     """Convert the initial callable `f` into a GateCalibration object that will be added to
     the main program as defcal.
@@ -621,7 +654,7 @@ def _convert_calibration(
 
     with aq_program.build_program() as program_conversion_context:
         with program_conversion_context.calibration_definition(
-            gate_function.__name__, gate_calibration_qubits, gate_calibration_angles
+                gate_function.__name__, gate_calibration_qubits, gate_calibration_angles
         ):
             aq_transpiler.converted_call(f, [], func_call_kwargs, options=options)
 
@@ -634,9 +667,9 @@ def _convert_calibration(
 
 
 def _validate_calibration_args(
-    gate_function: Callable,
-    decorator_args: dict[str, Union[Qubit, float]],
-    func_args: aq_program.GateArgs,
+        gate_function: Callable,
+        decorator_args: dict[str, Union[Qubit, float]],
+        func_args: aq_program.GateArgs,
 ) -> None:
     """Validate the arguments passed to the calibration decorator and function.
 
