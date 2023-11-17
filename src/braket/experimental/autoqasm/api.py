@@ -66,24 +66,30 @@ def main(
             program. Can be either an Device object or a valid Amazon Braket device ARN.
 
     Returns:
-        Callable[..., Program]: A callable which returns the converted
+        Program: A callable which returns the converted
         quantum program when called.
     """
     if isinstance(device, str):
         device = AwsDevice(device)
 
-    fw = _function_wrapper(
-        func,
-        converter_callback=_convert_main,
-        converter_args={
-            "user_config": aq_program.UserConfig(
-                num_qubits=num_qubits,
-                device=device,
-            )
-        },
+    bound_convert_main = functools.partial(
+        _convert_main,
+        options=converter.ConversionOptions(
+            user_requested=True,
+            optional_features=_autograph_optional_features(),
+        ),
+        user_config=aq_program.UserConfig(
+            num_qubits=num_qubits,
+            device=device,
+        ),
     )
 
-    return fw if fw.__name__ == "_wrapped_function_wrapper" else fw()
+    if not (func and callable(func)):
+        # decorator is used with parentheses
+        # (see _function_wrapper for more details)
+        return bound_convert_main
+
+    return bound_convert_main(func)
 
 
 def subroutine(func: Optional[Callable] = None) -> Callable[..., aq_program.Program]:
@@ -136,13 +142,6 @@ def gate_calibration(*, implements: Callable, **kwargs) -> Callable[[], GateCali
     )
 
 
-def _wrap_function_wrapper(**kwargs):
-    def _wrapped_function_wrapper(func: Callable):
-        return _function_wrapper(func, **kwargs)()
-
-    return _wrapped_function_wrapper
-
-
 def _function_wrapper(
     func: Optional[Callable],
     *,
@@ -175,13 +174,9 @@ def _function_wrapper(
         #
         # To make this work, here we simply return a partial application of this function
         # which still expects a Callable as the single positional argument.
-        return _wrap_function_wrapper(
-            converter_callback=converter_callback,
-            converter_args=converter_args,
+        return functools.partial(
+            _function_wrapper, converter_callback=converter_callback, converter_args=converter_args
         )
-        # return functools.partial(
-        #     _function_wrapper, converter_callback=converter_callback, converter_args=converter_args
-        # )
 
     if is_autograph_artifact(func):
         return func
@@ -215,10 +210,8 @@ def _autograph_optional_features() -> tuple[converter.Feature]:
 def _convert_main(
     f: Callable,
     options: converter.ConversionOptions,
-    args: tuple[Any],
-    kwargs: dict[str, Any],
     user_config: aq_program.UserConfig,
-) -> None:
+) -> aq_program.Program:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
     Puts the contents of `f` at the global level of the program, rather than
     putting it into a subroutine as done in `_convert_subroutine`.
@@ -229,9 +222,10 @@ def _convert_main(
     Args:
         f (Callable): The function to be converted.
         options (converter.ConversionOptions): Converter options.
-        args (tuple[Any]): Arguments passed to the program when called.
-        kwargs (dict[str, Any]): Keyword arguments passed to the program when called.
         user_config (UserConfig): User-specified settings that influence program building.
+
+    Returns:
+        aq_program.Program: Generated AutoQASM Program.
     """
     if aq_program.in_active_program_conversion_context():
         raise errors.AutoQasmTypeError(
@@ -241,16 +235,12 @@ def _convert_main(
 
     kwargs = {}
     parameters = inspect.signature(f).parameters
-    for param in parameters.values():
-        if param.kind == param.POSITIONAL_OR_KEYWORD:
-            kwargs[param.name] = FreeParameter(param.name)
-        else:
-            raise NotImplementedError
 
     with aq_program.build_program(user_config) as program_conversion_context:
         # Process the program
         for param in parameters.values():
             if param.kind == param.POSITIONAL_OR_KEYWORD:
+                kwargs[param.name] = FreeParameter(param.name)
                 param_type = param.annotation if param.annotation is not param.empty else float
                 program_conversion_context.register_parameter(param.name, param_type)
             else:

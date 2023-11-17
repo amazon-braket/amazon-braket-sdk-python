@@ -22,7 +22,7 @@ import braket.experimental.autoqasm as aq
 from braket.default_simulator import StateVectorSimulator
 from braket.devices.local_simulator import LocalSimulator
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.instructions import cnot, h, measure, x
+from braket.experimental.autoqasm.instructions import cnot, h, measure, rx, x
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
@@ -1005,3 +1005,38 @@ def nothing() {
 nothing();"""
 
     assert main.to_ir() == expected
+
+
+def test_input_types():
+    @aq.main
+    def multiple_input_types(x: int, y: bool, z: float, u):
+        if x and y:
+            rx(target=0, angle=u + z)
+
+    @aq.main()
+    def multiple_input_types_parens(x: int, y: bool, z: float, u):
+        if x and y:
+            rx(target=0, angle=u + z)
+
+    @aq.main(num_qubits=1)
+    def multiple_input_types_params(x: int, y: bool, z: float, u):
+        if x and y:
+            rx(target=0, angle=u + z)
+
+    expected_ir = """OPENQASM 3.0;
+input int[32] x;
+input bool y;
+input float[64] z;
+input float[64] u;
+qubit[1] __qubits__;
+bool __bool_0__;
+__bool_0__ = x && y;
+if (__bool_0__) {
+    rx(u + z) __qubits__[0];
+}"""
+    assert (
+        multiple_input_types.to_ir()
+        == multiple_input_types_parens.to_ir()
+        == multiple_input_types_params.to_ir()
+        == expected_ir
+    )
