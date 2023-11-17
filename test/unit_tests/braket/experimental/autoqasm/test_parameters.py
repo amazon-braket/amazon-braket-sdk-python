@@ -49,6 +49,7 @@ def simple_parametric():
     def simple_parametric(theta):
         rx(0, theta)
         measure(0)
+
     return simple_parametric
 
 
@@ -58,6 +59,7 @@ def simple_parametric_fp():
     def simple_parametric():
         rx(0, FreeParameter("theta"))
         measure(0)
+
     return simple_parametric
 
 
@@ -106,6 +108,7 @@ def multi_parametric():
         rx(0, alpha)
         rx(1, theta)
         c = measure([0, 1])  # noqa: F841
+
     return multi_parametric
 
 
@@ -216,12 +219,15 @@ input float[64] phi;
 float[64] theta = 0.5;
 qubit[5] __qubits__;
 ms(phi, phi, theta) __qubits__[0], __qubits__[qubit_0];"""
-    assert parametric.make_bound_program(
-        param_values={
-            "qubit_0": 2,
-            "theta": 0.5,
-        }
-    ).to_ir() == expected
+    assert (
+        parametric.make_bound_program(
+            param_values={
+                "qubit_0": 2,
+                "theta": 0.5,
+            }
+        ).to_ir()
+        == expected
+    )
 
 
 def test_sim_multi_angle():
@@ -523,12 +529,14 @@ def test_duplicate_variable_name_fails():
     """Test using a variable and FreeParameter with the same name."""
 
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+
         @aq.main
         def parametric():
             alpha = aq.FloatVar(1.2)  # noqa: F841
             rx(0, FreeParameter("alpha"))
 
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+
         @aq.main
         def parametric(alpha):
             alpha = aq.FloatVar(1.2)  # noqa: F841

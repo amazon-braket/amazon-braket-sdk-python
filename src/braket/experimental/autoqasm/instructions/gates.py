@@ -17,6 +17,7 @@
 from typing import Union
 
 import oqpy
+
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 
 from .instructions import _qubit_instruction
