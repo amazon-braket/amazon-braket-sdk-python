@@ -95,7 +95,7 @@ def test_multiprocessing() -> None:
     angles = [0.1, 0.2, 0.3]
     with ThreadPool(processes=5) as executor:
         programs = executor.map(
-            lambda args: zne.make_bound_program(dict(zip(("scales", "angles"), args))),
+            lambda args: zne.make_bound_program(dict(zip(("scale", "angle"), args))),
             [(scale, angle) for scale, angle in itertools.product(scales, angles)],
         )
 
