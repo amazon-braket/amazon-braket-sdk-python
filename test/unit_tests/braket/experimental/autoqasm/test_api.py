@@ -125,6 +125,7 @@ def recursive_h_wrapper():
     @aq.main(num_qubits=6)
     def recursive_h_wrapper(q: int):
         recursive_h(q)
+
     return recursive_h_wrapper
 
 
@@ -188,6 +189,7 @@ def double_bell_state():
     def double_bell_state() -> None:
         bell_state_arbitrary_qubits(0, 1)
         bell_state_arbitrary_qubits(2, 3)
+
     return double_bell_state
 
 
@@ -215,6 +217,7 @@ def bell_measurement_undeclared():
         h(0)
         cnot(0, 1)
         c = measure([0, 1])  # noqa: F841
+
     return bell_measurement_undeclared
 
 
@@ -244,6 +247,7 @@ def bell_measurement_declared():
         h(0)
         cnot(0, 1)
         c = measure([0, 1])  # noqa: F841
+
     return bell_measurement_declared
 
 
@@ -272,6 +276,7 @@ def bell_partial_measurement():
         h(0)
         cnot(0, 1)
         c = measure(1)  # noqa: F841
+
     return bell_partial_measurement
 
 
@@ -291,6 +296,7 @@ def test_bell_measurement_invalid_declared_type() -> None:
     """Test measurement with result stored in a variable with invalid type."""
     expected_error_message = "Variables in assignment statements must have the same type"
     with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
+
         @aq.main
         def bell_measurement_invalid_declared_type() -> None:
             """A function that generates and measures a two-qubit Bell state. But stores
@@ -300,6 +306,7 @@ def test_bell_measurement_invalid_declared_type() -> None:
             h(0)
             cnot(0, 1)
             c = measure(1)  # noqa: F841
+
     assert expected_error_message in str(exc_info.value)
 
 
@@ -307,6 +314,7 @@ def test_bell_measurement_invalid_declared_size() -> None:
     """Test measurement with result stored in a variable with invalid size."""
     expected_error_message = "Variables in assignment statements must have the same size"
     with pytest.raises(errors.InvalidAssignmentStatement) as exc_info:
+
         @aq.main
         def bell_measurement_invalid_declared_size() -> None:
             """A function that generates and measures a two-qubit Bell state. But stores
@@ -316,6 +324,7 @@ def test_bell_measurement_invalid_declared_size() -> None:
             h(0)
             cnot(0, 1)
             c = measure(1)  # noqa: F841
+
     assert expected_error_message in str(exc_info.value)
 
 
@@ -327,6 +336,7 @@ def measure_physical_qubits():
         a = measure("$0")  # noqa: F841
         b = measure("$1")  # noqa: F841
         c = measure(["$0", "$1"])  # noqa: F841
+
     return measure_physical_qubits
 
 
@@ -357,6 +367,7 @@ def ghz_qasm_for_loop():
         h(0)
         for i in aq.range(n_qubits - 1):
             cnot(i, i + 1)
+
     return ghz_qasm_for_loop
 
 
@@ -383,6 +394,7 @@ def ghz_py_for_loop():
         h(0)
         for i in range(n_qubits - 1):
             cnot(i, i + 1)
+
     return ghz_py_for_loop
 
 
@@ -422,6 +434,7 @@ def qasm_simple_condition_wrapper():
     @aq.main
     def qasm_simple_condition_wrapper(do_cnot: bool):
         qasm_simple_condition(do_cnot)
+
     return qasm_simple_condition_wrapper
 
 
@@ -439,10 +452,11 @@ bool do_cnot = {"true" if do_cnot else "false"};
 qubit[2] __qubits__;
 bool __bool_0__;
 """
-    expected += f"__bool_0__ = qasm_simple_condition(do_cnot);"
-    assert qasm_simple_condition_wrapper.make_bound_program(
-        param_values={"do_cnot": do_cnot}
-    ).to_ir() == expected
+    expected += "__bool_0__ = qasm_simple_condition(do_cnot);"
+    assert (
+        qasm_simple_condition_wrapper.make_bound_program(param_values={"do_cnot": do_cnot}).to_ir()
+        == expected
+    )
 
 
 @pytest.mark.parametrize("do_cnot", [True, False])
@@ -464,6 +478,7 @@ def qasm_inline_var_condition():
             cnot(0, 1)
         x(0) if aq.IntVar(1) else x(1)
         return measure(1)
+
     return qasm_inline_var_condition
 
 
@@ -498,6 +513,7 @@ def ground_state_measurements():
     def ground_state_measurements() -> aq.BitVar:
         """Measure a few ground state qubits."""
         return measure([5, 2, 1])
+
     return ground_state_measurements
 
 
@@ -564,6 +580,7 @@ def qasm_measurement_condition():
         if measure(0):
             cnot(0, 1)
         return measure(1)
+
     return qasm_measurement_condition
 
 
@@ -610,6 +627,7 @@ def test_physical_qubit_decl(physical_bell_subroutine) -> None:
 def test_invalid_physical_qubit_fails() -> None:
     """Tests invalid physical qubit formatting."""
     with pytest.raises(ValueError):
+
         @aq.main
         def broken() -> None:
             """Uses invalid string for qubit index"""
@@ -619,6 +637,7 @@ def test_invalid_physical_qubit_fails() -> None:
 def test_invalid_qubit_label_fails() -> None:
     """Tests random string fails for qubit label."""
     with pytest.raises(ValueError):
+
         @aq.main
         def broken() -> None:
             """Uses invalid string for qubit index"""
@@ -628,6 +647,7 @@ def test_invalid_qubit_label_fails() -> None:
 def test_float_qubit_index_fails() -> None:
     """Tests floats fails for qubit label."""
     with pytest.raises(TypeError):
+
         @aq.main
         def broken() -> None:
             """Uses float for qubit index"""
@@ -638,6 +658,7 @@ def test_float_qubit_index_fails() -> None:
 def test_bool_qubit_index_fails() -> None:
     """Tests that an error is raised for boolean qubit type."""
     with pytest.raises(ValueError):
+
         @aq.main
         def broken() -> None:
             """Uses invalid type for qubit index"""
@@ -647,6 +668,7 @@ def test_bool_qubit_index_fails() -> None:
 def test_invalid_qubit_type_fails() -> None:
     """Tests that an error is raised for other unusual qubit types."""
     with pytest.raises(ValueError):
+
         @aq.main
         def broken() -> None:
             """Uses invalid type for qubit index"""
@@ -684,6 +706,7 @@ def reset():
             x(0)
         if measure(0):
             x(0)
+
     return reset
 
 
@@ -714,6 +737,7 @@ def test_program_simple_expr() -> None:
     an error if the user doesn't specify the number of qubits.
     """
     with pytest.raises(errors.UnknownQubitCountError):
+
         @aq.main
         def simple_range() -> None:
             "Uses aq.range iterator for qubit index."
@@ -726,6 +750,7 @@ def test_program_with_expr() -> None:
     an error if the user doesn't specify the number of qubits.
     """
     with pytest.raises(errors.UnknownQubitCountError):
+
         @aq.main
         def qubit_expr() -> None:
             "Uses aq.range iterator for qubit index."
@@ -769,6 +794,7 @@ def bell_in_for_loop():
     def bell_in_for_loop() -> None:
         for i in aq.range(3):
             bell(0, 1)
+
     return bell_in_for_loop
 
 
@@ -804,6 +830,7 @@ def classical_variables_types():
 
         c = aq.FloatVar(1.2)
         c = aq.FloatVar(3.4)  # noqa: F841
+
     return classical_variables_types
 
 
@@ -897,6 +924,7 @@ def test_double_decorated_function():
 def test_main_return():
     # todo: outputs?
     with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
+
         @aq.main
         def main() -> int:
             return 1
@@ -956,6 +984,7 @@ def test_main_from_main():
         cnot(q0, q1)
 
     with pytest.raises(errors.AutoQasmTypeError):
+
         @aq.main
         def main():
             bell(0, 1)

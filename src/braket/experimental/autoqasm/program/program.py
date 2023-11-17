@@ -341,7 +341,9 @@ class ProgramConversionContext:
         """
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
-    def register_parameter(self, parameter_name: str, parameter_type: Optional[Union[float, int]] = float) -> None:
+    def register_parameter(
+        self, parameter_name: str, parameter_type: Optional[Union[float, int]] = float
+    ) -> None:
         """Register an input parameter if it has not already been registered.
         Only floats are currently supported.
 
