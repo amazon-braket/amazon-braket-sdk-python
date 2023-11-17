@@ -69,6 +69,7 @@ def test_gate_class() -> None:
             h(q)
 
     with pytest.raises(ValueError):
+
         @aq.main
         def main():
             MyGate(0)
@@ -81,6 +82,7 @@ def test_invalid_symbol() -> None:
         not_a_symbol()  # noqa: F821 # type: ignore
 
     with pytest.raises(NameError):
+
         @aq.main
         def main():
             my_gate(0)
@@ -153,6 +155,7 @@ def test_incorrect_arg_count() -> None:
         errors.ParameterTypeError,
         match='Incorrect number of arguments passed to gate "my_gate". Expected 2, got 1.',
     ):
+
         @aq.main
         def incorrect_arg_count():
             my_gate(0)
@@ -165,6 +168,7 @@ def test_incorrect_arg_types() -> None:
         rx(q, theta)
 
     with pytest.raises(TypeError):
+
         @aq.main
         def incorrect_arg_types():
             my_gate(0.25, 0)
@@ -176,6 +180,7 @@ def test_missing_annotation() -> None:
         pass
 
     with pytest.raises(errors.MissingParameterTypeError):
+
         @aq.main
         def my_program():
             my_gate("test")
@@ -187,6 +192,7 @@ def test_incorrect_annotation() -> None:
         pass
 
     with pytest.raises(errors.ParameterTypeError):
+
         @aq.main
         def my_program():
             my_gate("test")
@@ -201,6 +207,7 @@ def test_no_qubit_args() -> None:
         errors.ParameterTypeError,
         match='Gate definition "not_a_gate" has no arguments of type aq.Qubit.',
     ):
+
         @aq.main
         def my_program():
             not_a_gate(np.pi)
@@ -216,6 +223,7 @@ def test_invalid_qubit_used() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses qubit "1" which is not an argument to the gate.',
     ):
+
         @aq.main
         def my_program():
             my_gate(0)
@@ -234,6 +242,7 @@ def test_invalid_angle_used() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" uses angle (.*) which is not an argument to the gate.',
     ):
+
         @aq.main
         def my_program():
             my_gate(0, np.pi / 2)
@@ -249,6 +258,7 @@ def test_invalid_instruction() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
+
         @aq.main
         def my_program():
             my_gate(0)
@@ -265,6 +275,7 @@ def test_invalid_control_flow() -> None:
         errors.InvalidGateDefinition,
         match='Gate definition "my_gate" contains invalid operations.',
     ):
+
         @aq.main
         def my_program():
             my_gate(0)

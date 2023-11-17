@@ -61,6 +61,7 @@ e = a;"""
 
 def test_break_for_loop():
     with pytest.raises(aq.errors.UnsupportedFeatureError):
+
         @aq.main
         def main():
             for i in aq.range(3):
@@ -70,6 +71,7 @@ def test_break_for_loop():
 
 def test_break_while_loop():
     with pytest.raises(aq.errors.UnsupportedFeatureError):
+
         @aq.main
         def uses_while_w_break():
             while aq.gates.measure(0):
