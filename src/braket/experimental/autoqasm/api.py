@@ -97,7 +97,7 @@ def main(
     return bound_convert_main(func)
 
 
-def subroutine(func: Optional[Callable] = None) -> Callable[..., aq_program.Program]:
+  def subroutine(func: Optional[Callable] = None) -> Callable[..., aq_program.Program]:
     """Decorator that converts a function into a callable that will insert a subroutine into
     the quantum program.
 
