@@ -978,7 +978,7 @@ def test_direct_subroutine_call_no_args():
 def test_main_from_main():
     """Can't call main from main!"""
 
-    @aq.main
+    @aq.main(num_qubits=2)
     def bell(q0: int, q1: int) -> None:
         h(q0)
         cnot(q0, q1)
@@ -1040,3 +1040,24 @@ if (__bool_0__) {
         == multiple_input_types_params.to_ir()
         == expected_ir
     )
+
+
+def test_input_qubit_indices():
+    @aq.main(num_qubits=8)
+    def circ(q: int, r: int):
+        h(2 * q + r)
+
+    expected_ir = """OPENQASM 3.0;
+input int[32] q;
+input int[32] r;
+qubit[8] __qubits__;
+h __qubits__[2*q + r];"""
+    assert circ.to_ir() == expected_ir
+
+
+def test_input_qubit_indices_needs_num_qubits():
+    with pytest.raises(errors.UnknownQubitCountError):
+
+        @aq.main
+        def circ(q: int, r: int):
+            h(2 * q + r)

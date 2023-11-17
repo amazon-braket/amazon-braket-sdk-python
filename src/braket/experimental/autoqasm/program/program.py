@@ -345,7 +345,6 @@ class ProgramConversionContext:
         self, parameter_name: str, parameter_type: Optional[Union[float, int]] = float
     ) -> None:
         """Register an input parameter if it has not already been registered.
-        Only floats are currently supported.
 
         Args:
             parameter_name (str): The name of the parameter to register with the program.

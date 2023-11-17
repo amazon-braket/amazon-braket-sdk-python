@@ -50,7 +50,9 @@ def main(
     *,
     num_qubits: Optional[int] = None,
     device: Optional[Union[Device, str]] = None,
-) -> aq_program.Program:
+) -> (
+    aq_program.Program | Callable[[Optional[int], Optional[Union[Device, str]]], aq_program.Program]
+):
     """Decorator that converts a function into a callable that returns
     a Program object containing the quantum program.
 
@@ -66,8 +68,8 @@ def main(
             program. Can be either an Device object or a valid Amazon Braket device ARN.
 
     Returns:
-        Program: A callable which returns the converted
-        quantum program when called.
+        Program | Callable[[Optional[int], Optional[Union[Device, str]]], Program]: A callable
+        which returns the converted quantum program when called.
     """
     if isinstance(device, str):
         device = AwsDevice(device)
@@ -83,6 +85,9 @@ def main(
             device=device,
         ),
     )
+
+    if isinstance(func, aq_program.Program):
+        return func
 
     if not (func and callable(func)):
         # decorator is used with parentheses
