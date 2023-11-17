@@ -348,7 +348,8 @@ class ProgramConversionContext:
 
         Args:
             parameter_name (str): The name of the parameter to register with the program.
-            parameter_type (Optional[Union[float, int]]): The type of the parameter to register with the program.
+            parameter_type (Optional[Union[float, int]]): The type of the parameter to register
+                with the program.
         """
         if parameter_name not in self._free_parameters:
             if parameter_type in [float, None]:
