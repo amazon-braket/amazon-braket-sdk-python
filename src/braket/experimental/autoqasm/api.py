@@ -242,7 +242,7 @@ def _convert_main(
     parameters = inspect.signature(f).parameters
 
     with aq_program.build_program(user_config) as program_conversion_context:
-        # Process the program
+        # Capture inputs
         for param in parameters.values():
             if param.kind == param.POSITIONAL_OR_KEYWORD:
                 kwargs[param.name] = FreeParameter(param.name)
@@ -251,6 +251,7 @@ def _convert_main(
             else:
                 raise NotImplementedError
 
+        # Process the program
         aq_transpiler.converted_call(f, (), kwargs, options=options)
 
         # Modify program to add global declarations if necessary
