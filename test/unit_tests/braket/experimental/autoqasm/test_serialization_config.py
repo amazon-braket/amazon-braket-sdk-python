@@ -41,7 +41,7 @@ def test_openqasm_serialization_properties_auto_defcalgrammar() -> None:
         }
         """
     ).strip()
-    qasm = my_program().to_ir(
+    qasm = my_program.to_ir(
         serialization_properties=OpenQASMSerializationProperties(auto_defcalgrammar=True)
     )
     assert qasm == expected_true
@@ -54,7 +54,7 @@ def test_openqasm_serialization_properties_auto_defcalgrammar() -> None:
         }
         """
     ).strip()
-    qasm = my_program().to_ir(
+    qasm = my_program.to_ir(
         serialization_properties=OpenQASMSerializationProperties(auto_defcalgrammar=False)
     )
     assert qasm == expected_false
@@ -77,7 +77,7 @@ def test_openqasm_serialization_properties_include_externs() -> None:
         }
         """
     ).strip()
-    qasm = my_program().to_ir(
+    qasm = my_program.to_ir(
         serialization_properties=OpenQASMSerializationProperties(include_externs=True)
     )
     assert qasm == expected_true
@@ -91,7 +91,7 @@ def test_openqasm_serialization_properties_include_externs() -> None:
         }
         """
     ).strip()
-    qasm = my_program().to_ir(
+    qasm = my_program.to_ir(
         serialization_properties=OpenQASMSerializationProperties(include_externs=False)
     )
     assert qasm == expected_false
