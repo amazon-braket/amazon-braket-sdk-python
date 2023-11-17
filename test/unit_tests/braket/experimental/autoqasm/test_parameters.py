@@ -531,7 +531,7 @@ def test_duplicate_variable_name_fails():
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
 
         @aq.main
-        def parametric():
+        def parametric_explicit():
             alpha = aq.FloatVar(1.2)  # noqa: F841
             rx(0, FreeParameter("alpha"))
 
