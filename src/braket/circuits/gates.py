@@ -30,7 +30,7 @@ from braket.circuits.angled_gate import (
     angled_ascii_characters,
     get_angle,
 )
-from braket.circuits.basis_state import BasisStateInput
+from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.gate import Gate
@@ -242,7 +242,7 @@ class GPhase(AngledGate):
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
-    ) -> Instruction:
+    ) -> Instruction | Iterable[Instruction]:
         """Registers this function into the circuit class.
 
         Args:
@@ -259,29 +259,48 @@ class GPhase(AngledGate):
                 Default 1.
 
         Returns:
-            Instruction: GPhase instruction.
+            Instruction | Iterable[Instruction]: GPhase instruction.
 
         Examples:
             >>> circ = Circuit().gphase(0.45)
         """
         if control is not None:
+            control_qubits = QubitSet(control)
+
             if control_state is None:
-                inv = 0
-            elif isinstance(control_state, int):
-                inv = 1 if control_state % 2 else 0
-                control_state = control_state - 1
-            elif isinstance(control_state, (str, list)):
-                inv = 1 - control_state[0]
-                control_state = control_state[1:]
+                control_state = len(control_qubits)
+            control_basis_state = list(BasisState(control_state, len(control_qubits)).as_tuple)
+
+            if not any(control_basis_state):
+                return [
+                    X.x(control_qubits[-1]),
+                    PhaseShift.phaseshift(
+                        control_qubits[-1],
+                        angle,
+                        control=control_qubits[:-1],
+                        control_state=control_basis_state[:-1],
+                        power=power,
+                    ),
+                    X.x(control_qubits[-1]),
+                ]
+
+            highest_control_qubit = max(
+                [qubit for qubit, state in zip(control_qubits, control_basis_state) if state]
+            )
+            highest_control_qubit_index = control_qubits.index(highest_control_qubit)
+
+            control_qubits.pop(highest_control_qubit_index)
+            control_basis_state.pop(highest_control_qubit_index)
+
             return PhaseShift.phaseshift(
-                control[0],
-                angle * (-1) ** inv,
-                control=control[1:],
-                control_state=control_state,
+                highest_control_qubit,
+                angle,
+                control=control_qubits,
+                control_state=control_basis_state,
                 power=power,
             )
 
-        return Instruction(GPhase(angle), control=control, control_state=control_state, power=power)
+        return Instruction(GPhase(angle), power=power)
 
 
 Gate.register_gate(GPhase)

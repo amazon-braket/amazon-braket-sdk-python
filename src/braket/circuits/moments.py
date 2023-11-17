@@ -106,6 +106,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self._qubits = QubitSet()
         self._depth = 0
         self._time_all_qubits = -1
+        self._global_phase = 0
 
         self.add(instructions or [])
 
@@ -181,6 +182,8 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._time_all_qubits = time
         elif isinstance(operator, Noise):
             self.add_noise(instruction)
+        elif instruction.target == QubitSet([]):
+            self._global_phase += operator.angle
         else:
             qubit_range = instruction.target.union(instruction.control)
             time = self._update_qubit_times(qubit_range)

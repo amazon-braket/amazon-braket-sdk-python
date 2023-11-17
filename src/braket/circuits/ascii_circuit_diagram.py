@@ -23,6 +23,7 @@ from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
 from braket.circuits.result_type import ResultType
+from braket.registers.qubit import Qubit
 from braket.registers.qubit_set import QubitSet
 
 
@@ -84,6 +85,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
         # Time on top and bottom
         lines.append(lines[0])
 
+        if circuit.global_phase:
+            lines.append(f"\nGlobal phase: {circuit.global_phase}")
+
         # Additional result types line on bottom
         if additional_result_types:
             lines.append(f"\nAdditional result types: {', '.join(additional_result_types)}")
@@ -117,7 +121,6 @@ class AsciiCircuitDiagram(CircuitDiagram):
             # Can only print Gate and Noise operators for instructions at the moment
             if isinstance(item, Instruction) and (
                 not isinstance(item.operator, (Gate, Noise, CompilerDirective))
-                or item.operator.__class__.__name__ == "GPhase"
             ):
                 continue
 
@@ -259,6 +262,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 else:
                     target_qubits = item.target
                 control_qubits = getattr(item, "control", QubitSet())
+                map_control_qubit_states = AsciiCircuitDiagram._build_map_control_qubits(
+                    item, control_qubits
+                )
+
                 target_and_control = target_qubits.union(control_qubits)
                 qubits = QubitSet(range(min(target_and_control), max(target_and_control) + 1))
 
@@ -289,7 +296,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         else ascii_symbols[item_qubit_index]
                     )
                 elif qubit in control_qubits:
-                    symbols[qubit] = "C"
+                    symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
                 else:
                     symbols[qubit] = "|"
 
@@ -306,3 +313,15 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 symbols[qubit], fill="-", align="<", width=symbols_width + 1
             )
         return output
+
+    @staticmethod
+    def _build_map_control_qubits(item: Instruction, control_qubits: QubitSet) -> dict(Qubit, int):
+        control_state = getattr(item, "control_state", None)
+        if control_state is not None:
+            map_control_qubit_states = {
+                qubit: state for qubit, state in zip(control_qubits, control_state.as_tuple)
+            }
+        else:
+            map_control_qubit_states = {qubit: 1 for qubit in control_qubits}
+
+        return map_control_qubit_states
