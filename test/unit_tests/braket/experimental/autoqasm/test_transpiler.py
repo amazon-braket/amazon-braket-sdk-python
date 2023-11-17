@@ -20,18 +20,17 @@ import pytest
 import braket.experimental.autoqasm as aq
 from braket.experimental.autoqasm.autograph import ag_logging
 from braket.experimental.autoqasm.autograph.core.ag_ctx import ControlStatusCtx, Status
-from braket.experimental.autoqasm.instructions import cnot, h, measure, x
+from braket.experimental.autoqasm.instructions import cnot, h, measure, rx, x
 
 
 def test_convert_invalid_main_object() -> None:
     """Tests the aq.main decorator on something that is not a function."""
 
-    @aq.main
-    class MyClass:
-        pass
-
     with pytest.raises(ValueError):
-        MyClass()
+
+        @aq.main
+        class MyClass:
+            pass
 
 
 def test_convert_invalid_subroutine_object() -> None:
@@ -41,27 +40,25 @@ def test_convert_invalid_subroutine_object() -> None:
     class MyClass:
         pass
 
-    @aq.main
-    def main():
-        MyClass()
-
     with pytest.raises(ValueError):
-        main()
+
+        @aq.main
+        def main():
+            MyClass()
 
 
 def test_autograph_disabled() -> None:
     """Tests the aq.main decorator with autograph disabled by control status,
     and verifies that the function is not converted."""
 
-    @aq.main
-    def my_program():
-        h(0)
-        if measure(0):
-            x(0)
-
     with ControlStatusCtx(Status.DISABLED):
         with pytest.raises(RuntimeError):
-            my_program()
+
+            @aq.main
+            def my_program():
+                h(0)
+                if measure(0):
+                    x(0)
 
 
 def test_partial_function() -> None:
@@ -71,50 +68,86 @@ def test_partial_function() -> None:
         h(q0)
         cnot(q0, q1)
 
-    @aq.main
-    def bell_decorated(q0: int, q1: int):
-        bell(q0, q1)
+    expected_partial = """OPENQASM 3.0;
+input int[32] q1;
+qubit[2] __qubits__;
+h __qubits__[1];
+cnot __qubits__[1], __qubits__[q1];"""
 
-    expected = """OPENQASM 3.0;
-qubit[4] __qubits__;
+    expected_no_arg_partial = """OPENQASM 3.0;
+qubit[2] __qubits__;
 h __qubits__[1];
 cnot __qubits__[1], __qubits__[3];"""
 
-    bell_partial = aq.main(functools.partial(bell, 1))
-    assert bell_partial(3).to_ir() == expected
+    bell_partial = aq.main(num_qubits=2)(functools.partial(bell, 1))
+    assert bell_partial.to_ir() == expected_partial
 
-    bell_decorated_partial = functools.partial(bell_decorated, 1)
-    assert bell_decorated_partial(3).to_ir() == expected
-
-    bell_noarg_partial = functools.partial(bell_decorated, 1, 3)
-    assert bell_noarg_partial().to_ir() == expected
+    bell_noarg_partial = aq.main(num_qubits=2)(functools.partial(bell, 1, 3))
+    assert bell_noarg_partial.to_ir() == expected_no_arg_partial
 
 
 def test_classmethod() -> None:
     """Tests aq.main decorator application to a classmethod."""
 
+    # todo: see if this functionality should work
+    pytest.xfail("cls must be handled")
+    # we could try to catch `cls` parameters and use qualname to extrapolate
+    # class info, but it's a best-effort approach
+
     class MyClass:
         @classmethod
-        def bell(self, q0: int, q1: int):
+        def bell(cls, q0: int, q1: int):
             h(q0)
             cnot(q0, q1)
 
         @classmethod
-        @aq.main
-        def bell_decorated(self, q0: int, q1: int):
-            self.bell(q0, q1)
+        @aq.main(num_qubits=2)
+        def bell_decorated(cls, q0: int, q1: int):
+            cls.bell(q0, q1)
 
     expected = """OPENQASM 3.0;
-qubit[4] __qubits__;
-h __qubits__[1];
-cnot __qubits__[1], __qubits__[3];"""
+input int[32] q0;
+input int[32] q1;
+qubit[2] __qubits__;
+h __qubits__[q0];
+cnot __qubits__[q0], __qubits__[q1];"""
 
-    assert aq.main(MyClass.bell)(1, 3).to_ir() == expected
-    assert MyClass.bell_decorated(1, 3).to_ir() == expected
+    assert aq.main(num_qubits=2)(MyClass.bell).to_ir() == expected
+    assert MyClass.bell_decorated.to_ir() == expected
 
     a = MyClass()
-    assert aq.main(a.bell)(1, 3).to_ir() == expected
-    assert a.bell_decorated(1, 3).to_ir() == expected
+    assert aq.main(num_qubits=2)(a.bell).to_ir() == expected
+    assert a.bell_decorated.to_ir() == expected
+
+
+def test_method() -> None:
+    """Tests aq.main decorator application to a classmethod."""
+
+    # todo: see if this functionality should work
+    pytest.xfail("can't access `self` at function definition time")
+
+    class MyClass:
+        def __init__(self):
+            self.class_param = 2
+
+        def rx(self, q0: int):
+            rx(target=q0, angle=self.class_param)
+
+        @aq.main(num_qubits=1)
+        def rx_decorated(self, q0: int):
+            self.rx(q0)
+
+    expected = """OPENQASM 3.0;
+input int[32] q0;
+qubit[1] __qubits__;
+rx __qubits__[q0];"""
+
+    assert aq.main(num_qubits=2)(MyClass.rx).to_ir() == expected
+    assert MyClass.rx_decorated.to_ir() == expected
+
+    a = MyClass()
+    assert aq.main(num_qubits=2)(a.rx).to_ir() == expected
+    assert a.rx_decorated.to_ir() == expected
 
 
 def test_with_verbose_logging() -> None:
@@ -125,4 +158,3 @@ def test_with_verbose_logging() -> None:
         pass
 
     ag_logging.set_verbosity(10)
-    nothing()
