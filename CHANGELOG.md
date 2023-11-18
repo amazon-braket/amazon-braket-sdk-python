@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.62.1 (2023-11-17)
+
+### Bug Fixes and Other Changes
+
+ * Fix broken link to example notebook
+ * update: default no longer returning RETIRED devices from get_devices
+
+### Documentation Changes
+
+ * Add matrix expressions to docstrings
+
 ## v1.62.0 (2023-11-09)
 
 ### Features
