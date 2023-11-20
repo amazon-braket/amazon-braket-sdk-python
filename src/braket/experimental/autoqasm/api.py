@@ -194,9 +194,6 @@ def _function_wrapper(
             optional_features=_autograph_optional_features(),
         )
         # Call the appropriate function converter
-        if converter_callback == _convert_main:
-            # main doesn't take args or kwargs at call time
-            return converter_callback(func, options=options, **converter_args)
         return converter_callback(func, options=options, args=args, kwargs=kwargs, **converter_args)
 
     if inspect.isfunction(func) or inspect.ismethod(func):
