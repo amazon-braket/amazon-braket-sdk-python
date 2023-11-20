@@ -911,6 +911,11 @@ def test_control_gphase_subroutine():
     )
 
 
+def test_angle_gphase_is_none():
+    with pytest.raises(ValueError, match="angle must not be None"):
+        Gate.GPhase(angle=None)
+
+
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
     gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))

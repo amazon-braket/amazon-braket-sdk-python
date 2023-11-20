@@ -1718,6 +1718,22 @@ def test_circuit_user_gate(pulse_sequence_2):
                 inputs={},
             ),
         ),
+        (
+            Circuit().gphase(0.15).x(0),
+            OpenQasmProgram(
+                source="\n".join(
+                    [
+                        "OPENQASM 3.0;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "x q[0];",
+                        "gphase(0.15);",
+                        "b[0] = measure q[0];",
+                    ]
+                ),
+                inputs={},
+            ),
+        ),
     ],
 )
 def test_from_ir(expected_circuit, ir):
@@ -3106,3 +3122,23 @@ def test_parametrized_pulse_circuit(user_defined_frame):
 
 def test_free_param_float_mix():
     Circuit().ms(0, 1, 0.1, FreeParameter("theta"))
+
+
+def test_circuit_with_global_phase():
+    circuit = Circuit().gphase(0.15).x(0)
+    assert circuit.global_phase == 0.15
+
+    assert circuit.to_ir(
+        ir_type=IRType.OPENQASM,
+        serialization_properties=OpenQASMSerializationProperties(
+            qubit_reference_type=QubitReferenceType.PHYSICAL
+        ),
+    ).source == "\n".join(
+        [
+            "OPENQASM 3.0;",
+            "bit[1] b;",
+            "x $0;",
+            "gphase(0.15);",
+            "b[0] = measure $0;",
+        ]
+    )

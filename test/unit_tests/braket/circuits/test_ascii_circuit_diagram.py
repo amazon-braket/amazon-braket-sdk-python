@@ -58,6 +58,20 @@ def test_one_gate_one_qubit_rotation_with_parameter():
     _assert_correct_diagram(circ, expected)
 
 
+def test_one_gate_with_global_phase():
+    circ = Circuit().x(target=0).gphase(0.15)
+    expected = (
+        "T  : |0|",
+        "        ",
+        "q0 : -X-",
+        "",
+        "T  : |0|",
+        "",
+        "Global phase: 0.15",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_one_gate_one_qubit_rotation_with_unicode():
     theta = FreeParameter("\u03B8")
     circ = Circuit().rx(angle=theta, target=0)
