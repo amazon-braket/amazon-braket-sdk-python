@@ -254,7 +254,7 @@ class AwsSession(object):
         return next(
             (
                 configItem
-                for configItem in boto3_kwargs.get("associationConfig", [])
+                for configItem in boto3_kwargs.get("associations", [])
                 if configItem.get("type") == "RESERVATION_TIME_WINDOW_ARN"
             ),
             None,

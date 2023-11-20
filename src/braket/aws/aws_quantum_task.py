@@ -71,7 +71,6 @@ from braket.tasks import (
 )
 from braket.tracking.tracking_context import broadcast_event
 from braket.tracking.tracking_events import _TaskCompletionEvent
-import re
 
 
 class AwsQuantumTask(QuantumTask):
@@ -184,7 +183,7 @@ class AwsQuantumTask(QuantumTask):
         if reservation_arn:
             create_task_kwargs.update(
                 {
-                    "associationConfig": [
+                    "associations": [
                         {
                             "arn": reservation_arn,
                             "type": "RESERVATION_TIME_WINDOW_ARN",
@@ -491,9 +490,9 @@ class AwsQuantumTask(QuantumTask):
         self._result = None
         return None
 
-    def has_reservation_arn_from_metadata(self, current_metadata) -> bool:
-        for configItem in current_metadata.get("associationConfig", []):
-            if configItem.get("type") == "RESERVATION_TIME_WINDOW_ARN":
+    def _has_reservation_arn_from_metadata(self, current_metadata) -> bool:
+        for config_item in current_metadata.get("associations", []):
+            if config_item.get("type") == "RESERVATION_TIME_WINDOW_ARN":
                 return True
         return False
 
@@ -512,7 +511,7 @@ class AwsQuantumTask(QuantumTask):
             "arn": self.id,
             "status": self.state(),
             "execution_duration": None,
-            "has_reservation_arn": self.has_reservation_arn_from_metadata(current_metadata),
+            "has_reservation_arn": self._has_reservation_arn_from_metadata(current_metadata),
         }
         try:
             task_event[

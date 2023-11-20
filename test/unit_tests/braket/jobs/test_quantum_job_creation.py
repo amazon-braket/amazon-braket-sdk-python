@@ -378,7 +378,7 @@ def _translate_creation_args(create_job_args):
     if reservation_arn:
         test_kwargs.update(
             {
-                "associationConfig": [
+                "associations": [
                     {
                         "arn": reservation_arn,
                         "type": "RESERVATION_TIME_WINDOW_ARN",

@@ -1140,7 +1140,7 @@ def _assert_create_quantum_task_called_with(
     if reservation_arn:
         test_kwargs.update(
             {
-                "associationConfig": [
+                "associations": [
                     {
                         "arn": reservation_arn,
                         "type": "RESERVATION_TIME_WINDOW_ARN",

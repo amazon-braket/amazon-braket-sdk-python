@@ -238,7 +238,7 @@ def prepare_quantum_job(
     if reservation_arn:
         create_job_kwargs.update(
             {
-                "associationConfig": [
+                "associations": [
                     {
                         "arn": reservation_arn,
                         "type": "RESERVATION_TIME_WINDOW_ARN",
