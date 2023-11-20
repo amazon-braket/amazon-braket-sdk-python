@@ -218,6 +218,22 @@ def test_connector_across_two_qubits():
     _assert_correct_diagram(circ, expected)
 
 
+def test_neg_control_qubits():
+    circ = Circuit().x(2, control=[0, 1], control_state=[0, 1])
+    expected = (
+        "T  : |0|",
+        "        ",
+        "q0 : -N-",
+        "      | ",
+        "q1 : -C-",
+        "      | ",
+        "q2 : -X-",
+        "",
+        "T  : |0|",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_connector_across_three_qubits():
     circ = Circuit().x(control=(3, 4), target=5).h(range(2, 6))
     expected = (
