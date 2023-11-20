@@ -63,6 +63,7 @@ def hybrid_job(
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
     logger: Logger = getLogger(__name__),
+    quiet: bool | None = None,
 ) -> Callable:
     """Defines a hybrid job by decorating the entry point function. The job will be created
     when the decorated function is called.
@@ -70,7 +71,7 @@ def hybrid_job(
     The job created will be a `LocalQuantumJob` when `local` is set to `True`, otherwise an
     `AwsQuantumJob`. The following parameters will be ignored when running a job with
     `local` set to `True`: `wait_until_complete`, `instance_config`, `distribution`,
-    `copy_checkpoints_from_job`, `stopping_condition`, `tags`, and `logger`.
+    `copy_checkpoints_from_job`, `stopping_condition`, `tags`, `logger`, and `quiet`.
 
     Args:
         device (str | None): Device ARN of the QPU device that receives priority quantum
@@ -152,6 +153,9 @@ def hybrid_job(
         logger (Logger): Logger object with which to write logs, such as task statuses
             while waiting for task to be in a terminal state. Default: `getLogger(__name__)`
 
+        quiet (bool | None): Sets the verbosity of the logger to low and does not report queue
+            position. Default is `False`.
+
     Returns:
         Callable: the callable for creating a Hybrid Job.
     """
@@ -205,6 +209,7 @@ def hybrid_job(
                     "output_data_config": output_data_config,
                     "aws_session": aws_session,
                     "tags": tags,
+                    "quiet": quiet,
                 }
                 for key, value in optional_args.items():
                     if value is not None:

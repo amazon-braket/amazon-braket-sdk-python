@@ -84,6 +84,11 @@ def quantum_task(aws_session):
 
 
 @pytest.fixture
+def quantum_task_not_quiet(aws_session):
+    return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2, quiet=True)
+
+
+@pytest.fixture
 def circuit_task(aws_session):
     return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2)
 
@@ -216,6 +221,23 @@ def test_queue_position(quantum_task):
     )
     _mock_metadata(quantum_task._aws_session, state_2)
     assert quantum_task.queue_position() == QuantumTaskQueueInfo(
+        queue_type=QueueType.NORMAL, queue_position=None, message=message
+    )
+
+
+def test_queued_not_quiet(quantum_task_not_quiet):
+    state_1 = "QUEUED"
+    _mock_metadata(quantum_task_not_quiet._aws_session, state_1)
+    assert quantum_task_not_quiet.queue_position() == QuantumTaskQueueInfo(
+        queue_type=QueueType.NORMAL, queue_position="2", message=None
+    )
+
+    state_2 = "COMPLETED"
+    message = (
+        f"'Task is in {state_2} status. AmazonBraket does not show queue position for this status.'"
+    )
+    _mock_metadata(quantum_task_not_quiet._aws_session, state_2)
+    assert quantum_task_not_quiet.queue_position() == QuantumTaskQueueInfo(
         queue_type=QueueType.NORMAL, queue_position=None, message=message
     )
 
@@ -386,6 +408,43 @@ def test_async_result(circuit_task, status, result):
         result_from_callback = future.result()
 
     _mock_metadata(circuit_task._aws_session, "RUNNING")
+    _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
+
+    future = circuit_task.async_result()
+
+    # test the different ways to get the result from async
+
+    # via callback
+    result_from_callback = None
+    future.add_done_callback(set_result_from_callback)
+
+    # via asyncio waiting for result
+    _mock_metadata(circuit_task._aws_session, status)
+    event_loop = asyncio.get_event_loop()
+    result_from_waiting = event_loop.run_until_complete(future)
+
+    # via future.result(). Note that this would fail if the future is not complete.
+    result_from_future = future.result()
+
+    assert result_from_callback == result
+    assert result_from_waiting == result
+    assert result_from_future == result
+
+
+@pytest.mark.parametrize(
+    "status, result",
+    [
+        ("COMPLETED", GateModelQuantumTaskResult.from_string(MockS3.MOCK_S3_RESULT_GATE_MODEL)),
+        ("FAILED", None),
+    ],
+)
+def test_async_result_queued(circuit_task, status, result):
+    def set_result_from_callback(future):
+        # Set the result_from_callback variable in the enclosing functions scope
+        nonlocal result_from_callback
+        result_from_callback = future.result()
+
+    _mock_metadata(circuit_task._aws_session, "QUEUED")
     _mock_s3(circuit_task._aws_session, MockS3.MOCK_S3_RESULT_GATE_MODEL)
 
     future = circuit_task.async_result()

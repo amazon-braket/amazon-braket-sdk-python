@@ -155,7 +155,7 @@ def log_stream(
             yield ev
 
 
-def flush_log_streams(
+def flush_log_streams(  # noqa C901
     aws_session: AwsSession,
     log_group: str,
     stream_prefix: str,
@@ -164,6 +164,8 @@ def flush_log_streams(
     stream_count: int,
     has_streams: bool,
     color_wrap: ColorWrap,
+    state: list[str],
+    queue_position: str | None = None,
 ) -> bool:
     """Flushes log streams to stdout.
 
@@ -183,6 +185,9 @@ def flush_log_streams(
             been found. This value is possibly updated and returned at the end of execution.
         color_wrap (ColorWrap): An instance of ColorWrap to potentially color-wrap print statements
             from different streams.
+        state (list[str]): The previous and current state of the job.
+        queue_position (str | None): The current queue position. This is not passed in if the job
+            is ran with `quiet=True`
 
     Returns:
         bool: Returns 'True' if any streams have been flushed.
@@ -225,6 +230,10 @@ def flush_log_streams(
                 positions[stream_names[idx]] = Position(timestamp=ts, skip=count + 1)
             else:
                 positions[stream_names[idx]] = Position(timestamp=event["timestamp"], skip=1)
+    elif queue_position is not None and state[1] == "QUEUED":
+        print(f"Job queue position: {queue_position}", end="\n", flush=True)
+    elif state[0] != state[1] and state[1] == "RUNNING" and queue_position is not None:
+        print("Running:", end="\n", flush=True)
     else:
         print(".", end="", flush=True)
     return has_streams
