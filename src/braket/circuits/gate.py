@@ -70,7 +70,7 @@ class Gate(QuantumOperator):
         self,
         target: QubitSet,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: Optional[SerializationProperties] = None,
         *,
         control: Optional[QubitSet] = None,
         control_state: Optional[BasisStateInput] = None,
@@ -82,9 +82,10 @@ class Gate(QuantumOperator):
             target (QubitSet): target qubit(s).
             ir_type(IRType) : The IRType to use for converting the gate object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (Optional[SerializationProperties]): The serialization
+                properties to use while serializing the object to the IR representation. The
+                serialization properties supplied must correspond to the supplied `ir_type`.
+                Defaults to None.
             control (Optional[QubitSet]): Control qubit(s). Only supported for OpenQASM.
                 Default None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the

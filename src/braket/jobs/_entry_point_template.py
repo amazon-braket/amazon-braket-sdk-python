@@ -5,16 +5,16 @@ from braket.jobs import get_results_dir, save_job_result
 from braket.jobs_data import PersistedJobDataFormat
 
 
-# set working directory to results dir
-os.chdir(get_results_dir())
-
-# create symlinks to input data
-links = link_input()
-
 # load and run serialized entry point function
 recovered = cloudpickle.loads({serialized})
 def {function_name}():
     try:
+        # set working directory to results dir
+        os.chdir(get_results_dir())
+
+        # create symlinks to input data
+        links = link_input()
+
         result = recovered()
     finally:
         clean_links(links)

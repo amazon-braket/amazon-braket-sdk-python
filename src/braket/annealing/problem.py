@@ -37,16 +37,16 @@ class Problem:
     def __init__(
         self,
         problem_type: ProblemType,
-        linear: Dict[int, float] = None,
-        quadratic: Dict[Tuple[int, int], float] = None,
+        linear: Dict[int, float] | None = None,
+        quadratic: Dict[Tuple[int, int], float] | None = None,
     ):
         """
 
         Args:
             problem_type (ProblemType): The type of annealing problem
-            linear (Dict[int, float]): The linear terms of this problem,
+            linear (Dict[int, float] | None): The linear terms of this problem,
                 as a map of variable to coefficient
-            quadratic (Dict[Tuple[int, int], float]): The quadratic terms of this problem,
+            quadratic (Dict[Tuple[int, int], float] | None): The quadratic terms of this problem,
                 as a map of variables to coefficient
 
         Examples:

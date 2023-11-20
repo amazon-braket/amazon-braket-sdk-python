@@ -40,17 +40,17 @@ class AwsSession(object):
 
     def __init__(
         self,
-        boto_session: boto3.Session = None,
-        braket_client: client = None,
-        config: Config = None,
-        default_bucket: str = None,
+        boto_session: boto3.Session | None = None,
+        braket_client: client | None = None,
+        config: Config | None = None,
+        default_bucket: str | None = None,
     ):
         """
         Args:
-            boto_session (Session): A boto3 session object.
-            braket_client (client): A boto3 Braket client.
-            config (Config): A botocore Config object.
-            default_bucket (str): The name of the default bucket of the AWS Session.
+            boto_session (Session | None): A boto3 session object.
+            braket_client (client | None): A boto3 Braket client.
+            config (Config | None): A botocore Config object.
+            default_bucket (str | None): The name of the default bucket of the AWS Session.
         """
         if (
             boto_session
@@ -622,10 +622,12 @@ class AwsSession(object):
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
-            arns (Optional[list[str]]): device ARN list, default is `None`.
-            names (Optional[list[str]]): device name list, default is `None`.
-            types (Optional[list[str]]): device type list, default is `None`.
-            statuses (Optional[list[str]]): device status list, default is `None`.
+            arns (Optional[list[str]]): device ARN filter, default is `None`.
+            names (Optional[list[str]]): device name filter, default is `None`.
+            types (Optional[list[str]]): device type filter, default is `None`.
+            statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
+                is used, RETIRED devices will not be returned. To include RETIRED devices in
+                the results, use a filter that includes "RETIRED" for this parameter.
             provider_names (Optional[list[str]]): provider name list, default is `None`.
 
         Returns:
@@ -644,6 +646,8 @@ class AwsSession(object):
                 if types and result["deviceType"] not in types:
                     continue
                 if statuses and result["deviceStatus"] not in statuses:
+                    continue
+                if statuses is None and result["deviceStatus"] == "RETIRED":
                     continue
                 if provider_names and result["providerName"] not in provider_names:
                     continue
@@ -716,7 +720,7 @@ class AwsSession(object):
         self,
         log_group: str,
         log_stream_prefix: str,
-        limit: int = None,
+        limit: Optional[int] = None,
         next_token: Optional[str] = None,
     ) -> dict[str, Any]:
         """
@@ -725,7 +729,7 @@ class AwsSession(object):
         Args:
             log_group (str): Name of the log group.
             log_stream_prefix (str): Prefix for log streams to include.
-            limit (int): Limit for number of log streams returned.
+            limit (Optional[int]): Limit for number of log streams returned.
                 default is 50.
             next_token (Optional[str]): The token for the next set of items to return.
                 Would have been received in a previous call.

@@ -1673,6 +1673,7 @@ def test_get_devices_simulators_only(mock_copy_session, aws_session):
     assert [result.name for result in results] == ["SV1"]
 
 
+@pytest.mark.filterwarnings("ignore:Test Code:")
 @patch("braket.aws.aws_device.AwsSession.copy_session")
 def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
     aws_session.search_devices.side_effect = [

@@ -15,7 +15,13 @@ from cloudpickle import cloudpickle
 from braket.aws import AwsQuantumJob
 from braket.devices import Devices
 from braket.jobs import hybrid_job
-from braket.jobs.config import CheckpointConfig, InstanceConfig, OutputDataConfig, StoppingCondition
+from braket.jobs.config import (
+    CheckpointConfig,
+    InstanceConfig,
+    OutputDataConfig,
+    S3DataSourceConfig,
+    StoppingCondition,
+)
 from braket.jobs.hybrid_job import _sanitize, _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
@@ -110,6 +116,7 @@ def test_decorator_non_defaults(
             "my_dir": Path(tempdir, "temp_dir"),
             "my_file": Path(tempdir, "temp_file"),
             "my_s3_prefix": "s3://bucket/path/to/prefix",
+            "my_s3_config": S3DataSourceConfig(s3_data="s3://bucket/path/to/prefix"),
         }
 
         @hybrid_job(
