@@ -310,16 +310,12 @@ class GPhase(AngledGate):
                     X.x(control_qubits[-1]),
                 ]
 
-            highest_control_qubit = max(
-                [qubit for qubit, state in zip(control_qubits, control_basis_state) if state]
-            )
-            highest_control_qubit_index = control_qubits.index(highest_control_qubit)
-
-            control_qubits.pop(highest_control_qubit_index)
-            control_basis_state.pop(highest_control_qubit_index)
+            rightmost_control_qubit_index = control_basis_state.index(1)
+            rightmost_control_qubit = control_qubits.pop(rightmost_control_qubit_index)
+            control_basis_state.pop(rightmost_control_qubit_index)
 
             return PhaseShift.phaseshift(
-                highest_control_qubit,
+                rightmost_control_qubit,
                 angle,
                 control=control_qubits,
                 control_state=control_basis_state,
