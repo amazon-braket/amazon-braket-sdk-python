@@ -891,7 +891,6 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
 
 
-# @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_control_gphase_subroutine():
     subroutine = getattr(Circuit(), "gphase")
     assert subroutine(angle=0.123, control=2) == Circuit(
