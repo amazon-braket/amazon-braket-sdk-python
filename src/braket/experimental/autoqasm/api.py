@@ -214,6 +214,8 @@ def _convert_main(
     f: Callable,
     *,
     options: converter.ConversionOptions,
+    args: tuple[Any],
+    kwargs: dict[str, Any],
     user_config: aq_program.UserConfig,
 ) -> aq_program.Program:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
@@ -226,6 +228,8 @@ def _convert_main(
     Args:
         f (Callable): The function to be converted.
         options (converter.ConversionOptions): Converter options.
+        args (tuple[Any]): Arguments passed to the program when called.
+        kwargs (dict[str, Any]): Keyword arguments passed to the program when called.
         user_config (UserConfig): User-specified settings that influence program building.
 
     Returns:
