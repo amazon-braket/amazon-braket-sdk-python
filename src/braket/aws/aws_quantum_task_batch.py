@@ -93,7 +93,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
             reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
-                exclusive usage for the device to run the quantum task on
+                exclusive usage for the device to run the quantum task on. Default: None.
         """
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,

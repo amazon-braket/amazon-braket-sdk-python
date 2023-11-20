@@ -141,8 +141,9 @@ def prepare_quantum_job(
             hybrid job.
             Default: {}.
 
-        reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to
-            reserve exclusive usage for the device to run the hybrid job on
+        reservation_arn (Optional[str]): the reservation window arn provided by Braket
+            Direct to reserve exclusive usage for the device to run the hybrid job on.
+            Default: None.
 
     Returns:
         dict: Hybrid job tracking the execution on Amazon Braket.

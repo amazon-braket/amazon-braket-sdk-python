@@ -364,6 +364,4 @@ def _create_task_args_and_kwargs(
             "reservation_arn": reservation_arn,
         }
     )
-    # if reservation_arn:
-    #     create_kwargs.update("reservation_arn", reservation_arn)
     return create_args, create_kwargs

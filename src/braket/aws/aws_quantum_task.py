@@ -146,11 +146,14 @@ class AwsQuantumTask(QuantumTask):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None):
+            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]):
                 A `Dict` for user defined gate calibration. The calibration is defined for
                 for a particular `Gate` on a particular `QubitSet` and is represented by
                 a `PulseSequence`.
                 Default: None.
+
+            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
+                exclusive usage for the device to run the quantum task on. Default: None.
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the quantum task execution on the device.

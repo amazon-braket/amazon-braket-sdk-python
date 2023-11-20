@@ -93,7 +93,6 @@ class AwsSession(object):
         self._sts = None
         self._logs = None
         self._ecr = None
-        self._reservation_arn = None
 
     @property
     def region(self) -> str:

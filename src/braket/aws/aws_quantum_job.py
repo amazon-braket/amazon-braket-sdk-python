@@ -176,8 +176,9 @@ class AwsQuantumJob(QuantumJob):
                 while waiting for quantum task to be in a terminal state. Default is
                 `getLogger(__name__)`
 
-            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct
-                to reserve exclusive usage for the device to run the hybrid job on
+            reservation_arn (Optional[str]): the reservation window arn provided by Braket
+                Direct to reserve exclusive usage for the device to run the hybrid job on.
+                Default: None.
 
         Returns:
             AwsQuantumJob: Hybrid job tracking the execution on Amazon Braket.

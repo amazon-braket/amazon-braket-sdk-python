@@ -153,8 +153,9 @@ def hybrid_job(
         logger (Logger): Logger object with which to write logs, such as task statuses
             while waiting for task to be in a terminal state. Default: `getLogger(__name__)`
 
-        reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to
-            reserve exclusive usage for the device to run the hybrid job on
+        reservation_arn (Optional[str]): the reservation window arn provided by Braket
+            Direct to reserve exclusive usage for the device to run the hybrid job on.
+            Default: None.
 
     Returns:
         Callable: the callable for creating a Hybrid Job.
