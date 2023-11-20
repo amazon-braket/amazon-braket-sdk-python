@@ -891,6 +891,26 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
 
 
+# @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
+def test_control_gphase_subroutine():
+    subroutine = getattr(Circuit(), "gphase")
+    assert subroutine(angle=0.123, control=2) == Circuit(
+        Instruction(**create_valid_instruction_input(Gate.PhaseShift, [SingleTarget, Angle]))
+    )
+    subroutine = getattr(Circuit(), "gphase")
+    assert subroutine(angle=0.123, control=2, control_state=[0]) == Circuit(
+        [
+            Instruction(operator=Gate.X(), target=2),
+            Instruction(**create_valid_instruction_input(Gate.PhaseShift, [SingleTarget, Angle])),
+            Instruction(operator=Gate.X(), target=2),
+        ]
+    )
+    subroutine = getattr(Circuit(), "gphase")
+    assert subroutine(angle=0.123, control=[2, 0], control_state=[0, 1]) == Circuit(
+        Instruction(operator=Gate.PhaseShift(angle=0.123), target=0, control=2, control_state=[0])
+    )
+
+
 @pytest.mark.parametrize("testclass,subroutine_name,irclass,irsubclasses,kwargs", testdata)
 def test_gate_adjoint_expansion_correct(testclass, subroutine_name, irclass, irsubclasses, kwargs):
     gate = testclass(**create_valid_gate_class_input(irsubclasses, **kwargs))
@@ -1098,6 +1118,13 @@ def test_pulse_gate_to_matrix():
             QubitSet([1, 2, 3]),
             "10",
             "negctrl @ ctrl @ negctrl @ z q[1], q[2], q[3], q[0];",
+        ),
+        (
+            Gate.GPhase(0.3),
+            QubitSet([]),
+            QubitSet([1]),
+            "1",
+            "ctrl @ gphase(0.3) q[1];",
         ),
     ),
 )

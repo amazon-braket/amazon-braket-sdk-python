@@ -2016,6 +2016,8 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
         (Circuit().rx(0, 0.15), gates.Rx(0.15).to_matrix()),
         (Circuit().ry(0, 0.15), gates.Ry(0.15).to_matrix()),
         (Circuit().rz(0, 0.15), gates.Rz(0.15).to_matrix()),
+        (Circuit().u(0, 0.15, 0.16, 0.17), gates.U(0.15, 0.16, 0.17).to_matrix()),
+        (Circuit().gphase(0.15), gates.GPhase(0.15).to_matrix()),
         (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
         (Circuit().cnot(0, 1), gates.CNot().to_matrix()),
         (Circuit().cnot(0, 1).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
