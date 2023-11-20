@@ -15,7 +15,13 @@ from cloudpickle import cloudpickle
 from braket.aws import AwsQuantumJob
 from braket.devices import Devices
 from braket.jobs import hybrid_job
-from braket.jobs.config import CheckpointConfig, InstanceConfig, OutputDataConfig, StoppingCondition
+from braket.jobs.config import (
+    CheckpointConfig,
+    InstanceConfig,
+    OutputDataConfig,
+    S3DataSourceConfig,
+    StoppingCondition,
+)
 from braket.jobs.hybrid_job import _sanitize, _serialize_entry_point
 from braket.jobs.local import LocalQuantumJob
 
@@ -110,6 +116,7 @@ def test_decorator_non_defaults(
             "my_dir": Path(tempdir, "temp_dir"),
             "my_file": Path(tempdir, "temp_file"),
             "my_s3_prefix": "s3://bucket/path/to/prefix",
+            "my_s3_config": S3DataSourceConfig(s3_data="s3://bucket/path/to/prefix"),
         }
 
         @hybrid_job(
@@ -226,6 +233,53 @@ def test_decorator_non_dict_input(
         aws_session=aws_session,
     )
     assert mock_tempdir.return_value.__exit__.called
+
+
+@patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
+@patch("time.time", return_value=123.0)
+@patch("builtins.open")
+@patch("tempfile.TemporaryDirectory")
+@patch.object(AwsQuantumJob, "create")
+def test_decorator_list_dependencies(
+    mock_create, mock_tempdir, _mock_open, mock_time, mock_retrieve, aws_session
+):
+    mock_retrieve.return_value = "00000000.dkr.ecr.us-west-2.amazonaws.com/latest"
+    dependency_list = ["dep_1", "dep_2", "dep_3"]
+
+    @hybrid_job(
+        device=None,
+        aws_session=aws_session,
+        dependencies=dependency_list,
+    )
+    def my_entry(c=0, d: float = 1.0, **extras):
+        return "my entry return value"
+
+    mock_tempdir_name = "job_temp_dir_00000"
+    mock_tempdir.return_value.__enter__.return_value = mock_tempdir_name
+
+    source_module = mock_tempdir_name
+    entry_point = f"{mock_tempdir_name}.entry_point:my_entry"
+    wait_until_complete = False
+
+    device = "local:none/none"
+
+    my_entry()
+
+    mock_create.assert_called_with(
+        device=device,
+        source_module=source_module,
+        entry_point=entry_point,
+        wait_until_complete=wait_until_complete,
+        job_name="my-entry-123000",
+        hyperparameters={"c": "0", "d": "1.0"},
+        logger=getLogger("braket.jobs.hybrid_job"),
+        aws_session=aws_session,
+    )
+    assert mock_tempdir.return_value.__exit__.called
+    _mock_open.assert_called_with(Path(mock_tempdir_name) / "requirements.txt", "w")
+    _mock_open.return_value.__enter__.return_value.write.assert_called_with(
+        "\n".join(dependency_list)
+    )
 
 
 @patch.object(sys.modules["braket.jobs.hybrid_job"], "retrieve_image")
@@ -487,7 +541,7 @@ def test_python_validation(aws_session):
         ),
         (
             "?" * 2600,
-            f"{'?'*2477}...{'?'*20}",
+            f"{'?' * 2477}...{'?' * 20}",
         ),
     ),
 )

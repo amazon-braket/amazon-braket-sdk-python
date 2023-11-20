@@ -674,6 +674,18 @@ def test_cancel_job_surfaces_errors(exception_type, aws_session):
             ],
         ),
         (
+            {"statuses": ["RETIRED"]},
+            [
+                {
+                    "deviceArn": "arn4",
+                    "deviceName": "name4",
+                    "deviceType": "QPU",
+                    "deviceStatus": "RETIRED",
+                    "providerName": "pname3",
+                },
+            ],
+        ),
+        (
             {"provider_names": ["pname2"]},
             [
                 {
@@ -744,6 +756,13 @@ def test_search_devices(input, output, aws_session):
                     "deviceType": "QPU",
                     "deviceStatus": "ONLINE",
                     "providerName": "pname2",
+                },
+                {
+                    "deviceArn": "arn4",
+                    "deviceName": "name4",
+                    "deviceType": "QPU",
+                    "deviceStatus": "RETIRED",
+                    "providerName": "pname3",
                 },
             ]
         }
