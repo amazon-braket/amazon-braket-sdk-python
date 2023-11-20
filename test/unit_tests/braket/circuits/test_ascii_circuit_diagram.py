@@ -88,6 +88,23 @@ def test_one_gate_one_qubit_rotation_with_unicode():
     _assert_correct_diagram(circ, expected)
 
 
+def test_one_gate_with_parametric_expression_global_phase_():
+    theta = FreeParameter("\u03B8")
+    circ = Circuit().x(target=0).gphase(2 * theta + 1)
+    expected = (
+        "T  : |0|",
+        "        ",
+        "q0 : -X-",
+        "",
+        "T  : |0|",
+        "",
+        "Global phase: 2*θ + 1",
+        "",
+        "Unassigned parameters: [θ].",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
 def test_one_gate_one_qubit_rotation_with_parameter_assigned():
     theta = FreeParameter("theta")
     circ = Circuit().rx(angle=theta, target=0)
