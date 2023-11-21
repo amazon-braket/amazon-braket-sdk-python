@@ -95,3 +95,13 @@ def test_as_props(basis_state_input, size, as_tuple, as_int, as_string):
 )
 def test_indexing(basis_state_input, index, substate_input):
     assert BasisState(basis_state_input)[index] == BasisState(substate_input)
+
+
+def test_index():
+    assert BasisState("1010").index(0) == 1
+
+
+def test_pop():
+    basis_state = BasisState("1010", 4)
+    assert basis_state.pop(1) == 0
+    assert basis_state == BasisState("110", 3)
