@@ -295,7 +295,7 @@ class GPhase(AngledGate):
 
             if control_state is None:
                 control_state = len(control_qubits)
-            control_basis_state = list(BasisState(control_state, len(control_qubits)).as_tuple)
+            control_basis_state = BasisState(control_state, len(control_qubits))
 
             if not any(control_basis_state):
                 return [
@@ -310,7 +310,9 @@ class GPhase(AngledGate):
                     X.x(control_qubits[-1]),
                 ]
 
-            rightmost_control_qubit_index = control_basis_state.index(1)
+            rightmost_control_qubit_index = (
+                len(control_qubits) - control_basis_state[::-1].index(1) - 1
+            )
             rightmost_control_qubit = control_qubits.pop(rightmost_control_qubit_index)
             control_basis_state.pop(rightmost_control_qubit_index)
 

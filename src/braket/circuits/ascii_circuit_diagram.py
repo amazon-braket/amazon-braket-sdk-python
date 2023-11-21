@@ -319,7 +319,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         control_state = getattr(item, "control_state", None)
         if control_state is not None:
             map_control_qubit_states = {
-                qubit: state for qubit, state in zip(control_qubits, control_state.as_tuple)
+                qubit: state for qubit, state in zip(control_qubits, control_state)
             }
         else:
             map_control_qubit_states = {qubit: 1 for qubit in control_qubits}
