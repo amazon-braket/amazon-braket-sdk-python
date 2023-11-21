@@ -51,6 +51,46 @@ from braket.circuits.basis_state import BasisState
     ),
 )
 def test_as_props(basis_state_input, size, as_tuple, as_int, as_string):
-    assert BasisState(basis_state_input, size).as_tuple == as_tuple
-    assert BasisState(basis_state_input, size).as_int == as_int
-    assert BasisState(basis_state_input, size).as_string == as_string
+    basis_state = BasisState(basis_state_input, size)
+    assert basis_state.as_tuple == as_tuple
+    assert basis_state.as_int == as_int
+    assert basis_state.as_string == as_string == str(basis_state)
+
+
+@pytest.mark.parametrize(
+    "basis_state_input, index, substate_input",
+    (
+        (
+            "1001",
+            slice(None),
+            "1001",
+        ),
+        (
+            "1001",
+            3,
+            "1",
+        ),
+        (
+            "1010",
+            slice(None, None, 2),
+            "11",
+        ),
+        (
+            "1010",
+            slice(1, None, 2),
+            "00",
+        ),
+        (
+            "1010",
+            slice(None, -2),
+            "10",
+        ),
+        (
+            "1010",
+            -1,
+            "0",
+        ),
+    ),
+)
+def test_indexing(basis_state_input, index, substate_input):
+    assert BasisState(basis_state_input)[index] == BasisState(substate_input)
