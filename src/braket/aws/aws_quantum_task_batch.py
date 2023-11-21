@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
 from itertools import repeat
-from typing import Optional, Union
+from typing import Union
 
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing import Problem
@@ -61,7 +61,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] | None = None,
-        reservation_arn: Optional[str] | None = None,
+        reservation_arn: str | None = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ):
@@ -92,7 +92,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             inputs (Union[dict[str, float], list[dict[str, float]]] | None): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
+            reservation_arn (str | None): the reservation window arn provided by Braket Direct to reserve
                 exclusive usage for the device to run the quantum task on. Default: None.
         """
         self._tasks = AwsQuantumTaskBatch._execute(
@@ -202,7 +202,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         poll_timeout_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: Union[dict[str, float], list[dict[str, float]]] = None,
-        reservation_arn: Optional[str] = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> list[AwsQuantumTask]:
@@ -255,7 +255,7 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
         shots: int,
         poll_interval_seconds: float = AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         inputs: dict[str, float] = None,
-        reservation_arn: Optional[str] = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:

@@ -20,7 +20,7 @@ import time
 from enum import Enum
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
@@ -80,7 +80,7 @@ class AwsQuantumJob(QuantumJob):
         checkpoint_config: CheckpointConfig | None = None,
         aws_session: AwsSession | None = None,
         tags: dict[str, str] | None = None,
-        reservation_arn: Optional[str] | None = None,
+        reservation_arn: str | None = None,
         logger: Logger = getLogger(__name__),
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
@@ -176,7 +176,7 @@ class AwsQuantumJob(QuantumJob):
                 while waiting for quantum task to be in a terminal state. Default is
                 `getLogger(__name__)`
 
-            reservation_arn (Optional[str]): the reservation window arn provided by Braket
+            reservation_arn (str | None): the reservation window arn provided by Braket
                 Direct to reserve exclusive usage for the device to run the hybrid job on.
                 Default: None.
 

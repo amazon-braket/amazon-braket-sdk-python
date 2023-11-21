@@ -104,8 +104,8 @@ class AwsQuantumTask(QuantumTask):
         disable_qubit_rewiring: bool = False,
         tags: dict[str, str] | None = None,
         inputs: dict[str, float] | None = None,
-        gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None = None,
-        reservation_arn: Optional[str] | None = None,
+        gate_definitions: dict[tuple[Gate, QubitSet], PulseSequence] | None = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -146,13 +146,13 @@ class AwsQuantumTask(QuantumTask):
                 IR. If the IR supports inputs, the inputs will be updated with this value.
                 Default: {}.
 
-            gate_definitions (Optional[dict[tuple[Gate, QubitSet], PulseSequence]]):
+            gate_definitions (dict[tuple[Gate, QubitSet], PulseSequence] | None):
                 A `Dict` for user defined gate calibration. The calibration is defined for
                 for a particular `Gate` on a particular `QubitSet` and is represented by
                 a `PulseSequence`.
                 Default: None.
 
-            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
+            reservation_arn (str | None): the reservation window arn provided by Braket Direct to reserve
                 exclusive usage for the device to run the quantum task on. Default: None.
 
         Returns:
@@ -494,8 +494,8 @@ class AwsQuantumTask(QuantumTask):
         return None
 
     def _has_reservation_arn_from_metadata(self, current_metadata) -> bool:
-        for config_item in current_metadata.get("associations", []):
-            if config_item.get("type") == "RESERVATION_TIME_WINDOW_ARN":
+        for association in current_metadata.get("associations", []):
+            if association.get("type") == "RESERVATION_TIME_WINDOW_ARN":
                 return True
         return False
 

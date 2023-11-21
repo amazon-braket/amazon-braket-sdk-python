@@ -23,7 +23,7 @@ import warnings
 from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from braket.aws.aws_session import AwsSession
 from braket.jobs.config import (
@@ -55,7 +55,7 @@ def prepare_quantum_job(
     checkpoint_config: CheckpointConfig | None = None,
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
-    reservation_arn: Optional[str] | None = None,
+    reservation_arn: str | None = None,
 ) -> dict:
     """Creates a hybrid job by invoking the Braket CreateJob API.
 
@@ -141,7 +141,7 @@ def prepare_quantum_job(
             hybrid job.
             Default: {}.
 
-        reservation_arn (Optional[str]): the reservation window arn provided by Braket
+        reservation_arn (str | None): the reservation window arn provided by Braket
             Direct to reserve exclusive usage for the device to run the hybrid job on.
             Default: None.
 

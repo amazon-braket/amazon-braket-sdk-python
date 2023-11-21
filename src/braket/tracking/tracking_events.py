@@ -33,7 +33,7 @@ class _TaskCreationEvent(_TrackingEvent):
 class _TaskCompletionEvent(_TrackingEvent):
     execution_duration: Optional[float]
     status: str
-    has_reservation_arn: Optional[bool] = False
+    has_reservation_arn: bool = False
 
 
 @dataclass

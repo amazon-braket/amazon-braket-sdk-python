@@ -121,7 +121,7 @@ class AwsDevice(Device):
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[dict[str, float]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        reservation_arn: Optional[str] = None,
+        reservation_arn: str | None = None,
         *aws_quantum_task_args,
         **aws_quantum_task_kwargs,
     ) -> AwsQuantumTask:
@@ -151,7 +151,7 @@ class AwsDevice(Device):
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
-            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
+            reservation_arn (str | None): the reservation window arn provided by Braket Direct to reserve
                 exclusive usage for the device to run the quantum task on.
                 Default: None.
 
