@@ -19,24 +19,30 @@ from braket.circuits import Circuit
 from braket.aws.aws_quantum_job import AwsQuantumJob
 
 
+IONQ_ARN = "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
+
+
 @pytest.fixture
-def qpu_arn():
-    return "arn:aws:braket:us-east-1::device/qpu/ionq/Harmony"
+def reservation_arn(aws_session):
+    return (
+        f"arn:aws:braket:{aws_session.region}"
+        f":{aws_session.account_id}:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+    )
 
 
-def test_create_task_via_invalid_reservation_arn_on_qpu(qpu_arn):
+def test_create_task_via_invalid_reservation_arn_on_qpu(reservation_arn):
     circuit = Circuit().h(0)
-    device = AwsDevice(qpu_arn)
+    device = AwsDevice(IONQ_ARN)
 
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
         device.run(
             circuit,
             shots=10,
-            reservation_arn="arn:aws:braket:us-west-2:872076371963:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
+            reservation_arn=reservation_arn,
         )
 
 
-def test_create_task_via_reservation_arn_on_simulator():
+def test_create_task_via_reservation_arn_on_simulator(reservation_arn):
     device_arn = "arn:aws:braket:::device/quantum-simulator/amazon/sv1"
     circuit = Circuit().h(0)
     device = AwsDevice(device_arn)
@@ -45,7 +51,7 @@ def test_create_task_via_reservation_arn_on_simulator():
         device.run(
             circuit,
             shots=10,
-            reservation_arn="arn:aws:braket:us-west-2:872076371963:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
+            reservation_arn=reservation_arn,
         )
 
 

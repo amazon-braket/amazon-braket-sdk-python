@@ -157,15 +157,6 @@ class AwsSession(object):
             self._ecr = self.boto_session.client("ecr", region_name=self.region)
         return self._ecr
 
-    @property
-    def reservation_arn(self) -> Optional[str]:
-        """Gets the reservation_arn.
-
-        Returns:
-            reservation_arn: The Braket direct reservation arn the task is created with.
-        """
-        return self._reservation_arn
-
     def _update_user_agent(self) -> None:
         """
         Updates the `User-Agent` header forwarded by boto3 to include the braket-sdk,
@@ -238,7 +229,6 @@ class AwsSession(object):
         if job_token:
             boto3_kwargs.update({"jobToken": job_token})
         response = self.braket_client.create_quantum_task(**boto3_kwargs)
-        self._reservation_arn = self.get_reservation_arn_from_boto3_kwargs(**boto3_kwargs)
         broadcast_event(
             _TaskCreationEvent(
                 arn=response["quantumTaskArn"],
@@ -248,16 +238,6 @@ class AwsSession(object):
             )
         )
         return response["quantumTaskArn"]
-
-    def get_reservation_arn_from_boto3_kwargs(self, **boto3_kwargs) -> Optional[str]:
-        return next(
-            (
-                configItem
-                for configItem in boto3_kwargs.get("associations", [])
-                if configItem.get("type") == "RESERVATION_TIME_WINDOW_ARN"
-            ),
-            None,
-        )
 
     def create_job(self, **boto3_kwargs) -> str:
         """
