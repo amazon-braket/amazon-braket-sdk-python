@@ -1,5 +1,5 @@
 from functools import singledispatch
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -41,6 +41,9 @@ class BasisState:
 
     def __getitem__(self, item):
         return BasisState(self.state[item])
+
+    def index(self, value: Any) -> int:
+        return list(self.state).index(value)
 
 
 BasisStateInput = Union[int, list[int], str, BasisState]
