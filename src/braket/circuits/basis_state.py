@@ -45,11 +45,11 @@ class BasisState:
     def index(self, value: Any) -> int:
         return list(self.state).index(value)
 
-    def pop(self, index: int | None = None) -> int:
+    def pop(self, index: Optional[int] = None) -> int:
         """Removes and returns item at index.
 
         Args:
-            index (int | None): index of the object to remove (default last).
+            index (Optional[int]): index of the object to remove (default last).
 
         Returns:
             int: removed item.
