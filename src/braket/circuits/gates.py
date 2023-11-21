@@ -216,7 +216,11 @@ Gate.register_gate(I)
 
 
 class GPhase(AngledGate):
-    """Global phase gate.
+    r"""Global phase gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -242,15 +246,6 @@ class GPhase(AngledGate):
         return [GPhase(-self.angle)]
 
     def to_matrix(self) -> np.ndarray:
-        r"""
-        Generate a 1x1 matrix containing the global phase.
-
-        Unitary matrix:
-            .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_m.
-
-        Returns:
-            np.ndarray: GPhase Matrix
-        """
         return np.exp(1j * self.angle) * np.eye(1, dtype=complex)
 
     def bind_values(self, **kwargs) -> AngledGate:
@@ -269,7 +264,11 @@ class GPhase(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction | Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
 
         Args:
             angle (Union[FreeParameterExpression, float]): Phase in radians.
@@ -294,20 +293,21 @@ class GPhase(AngledGate):
             control_qubits = QubitSet(control)
 
             if control_state is None:
-                control_state = len(control_qubits)
+                control_state = (1,) * len(control_qubits)
             control_basis_state = BasisState(control_state, len(control_qubits))
 
             if not any(control_basis_state):
+                phaseshift_target = control_qubits[-1]
                 return [
-                    X.x(control_qubits[-1]),
+                    X.x(phaseshift_target),
                     PhaseShift.phaseshift(
-                        control_qubits[-1],
+                        phaseshift_target,
                         angle,
                         control=control_qubits[:-1],
                         control_state=control_basis_state[:-1],
                         power=power,
                     ),
-                    X.x(control_qubits[-1]),
+                    X.x(phaseshift_target),
                 ]
 
             rightmost_control_qubit_index = (
@@ -1403,7 +1403,14 @@ Gate.register_gate(PhaseShift)
 
 
 class U(TripleAngledGate):
-    """Parameterized primitive gate for OpenQASM simulator
+    r"""Parameterized single-qubit gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
+                \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
+                e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                \end{bmatrix}.
 
     Args:
         angle_1 (Union[FreeParameterExpression, float]): theta angle in radians.
@@ -1430,19 +1437,6 @@ class U(TripleAngledGate):
         return "U"
 
     def to_matrix(self) -> np.ndarray:
-        r"""
-        Generate parameterized Unitary matrix.
-        https://openqasm.com/language/gates.html#built-in-gates
-
-        Unitary matrix:
-            .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
-                    \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
-                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
-                    \end{bmatrix}.
-
-        Returns:
-            np.ndarray: U Matrix
-        """
         _theta = self.angle_1
         _phi = self.angle_2
         _lambda = self.angle_3
@@ -1482,6 +1476,13 @@ class U(TripleAngledGate):
         power: float = 1,
     ) -> Iterable[Instruction]:
         """Registers this function into the circuit class.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{U}(\theta, \phi, \lambda) = \begin{bmatrix}
+                    \cos{(\theta/2)} & -e^{i \lambda} \sin{(\theta/2)} \\
+                    e^{i \phi} \sin{(\theta/2)} & -e^{i (\phi + \lambda)} \cos{(\theta/2)}
+                    \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
