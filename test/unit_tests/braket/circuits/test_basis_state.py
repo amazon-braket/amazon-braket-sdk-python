@@ -55,6 +55,7 @@ def test_as_props(basis_state_input, size, as_tuple, as_int, as_string):
     assert basis_state.as_tuple == as_tuple
     assert basis_state.as_int == as_int
     assert basis_state.as_string == as_string == str(basis_state)
+    assert repr(basis_state) == f'BasisState("{as_string}")'
 
 
 @pytest.mark.parametrize(
