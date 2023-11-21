@@ -1,5 +1,5 @@
 from functools import singledispatch
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -32,6 +32,35 @@ class BasisState:
 
     def __eq__(self, other):
         return self.state == other.state
+
+    def __str__(self):
+        return self.as_string
+
+    def __repr__(self):
+        return f'BasisState("{self.as_string}")'
+
+    def __getitem__(self, item):
+        return BasisState(self.state[item])
+
+    def index(self, value: Any) -> int:
+        return list(self.state).index(value)
+
+    def pop(self, index: int | None = None) -> int:
+        """Removes and returns item at index.
+
+        Args:
+            index (int | None): index of the object to remove (default last).
+
+        Returns:
+            int: removed item.
+        """
+        if index is None:
+            item = self.state[-1]
+            self.state = self.state[:-1]
+        else:
+            item = self.state[index]
+            self.state = self.state[:index] + self.state[index + 1 :]
+        return item
 
 
 BasisStateInput = Union[int, list[int], str, BasisState]
