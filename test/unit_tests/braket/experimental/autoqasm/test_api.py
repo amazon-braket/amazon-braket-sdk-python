@@ -975,6 +975,7 @@ def test_direct_subroutine_call_no_args():
         bell()
 
 
+@pytest.mark.xfail(reason="will fix by adding a checker to the transpiler")
 def test_main_from_main():
     """Can't call main from main!"""
 
@@ -990,7 +991,6 @@ def test_main_from_main():
             bell(0, 1)
 
 
-@pytest.mark.xfail(reason="will fix by adding a checker to the transpiler")
 def test_empty_decorator_parentheses():
     @aq.subroutine()
     def nothing():
