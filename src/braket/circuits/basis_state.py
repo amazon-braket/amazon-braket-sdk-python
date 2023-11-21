@@ -45,6 +45,23 @@ class BasisState:
     def index(self, value: Any) -> int:
         return list(self.state).index(value)
 
+    def pop(self, index: int | None = None) -> int:
+        """Removes and returns item at index.
+
+        Args:
+            index (int | None): index of the object to remove (default last).
+
+        Returns:
+            int: removed item.
+        """
+        if index is None:
+            item = self.state[-1]
+            self.state = self.state[:-1]
+        else:
+            item = self.state[index]
+            self.state = self.state[:index] + self.state[index + 1 :]
+        return item
+
 
 BasisStateInput = Union[int, list[int], str, BasisState]
 
