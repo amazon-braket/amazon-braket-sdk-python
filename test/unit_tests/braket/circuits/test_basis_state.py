@@ -105,3 +105,6 @@ def test_pop():
     basis_state = BasisState("1010", 4)
     assert basis_state.pop(1) == 0
     assert basis_state == BasisState("110", 3)
+
+    assert basis_state.pop() == 0
+    assert basis_state == BasisState("11", 2)
