@@ -39,9 +39,11 @@ jobs:
             # check if the branch matches unfrozen prefix
             if [[ "$BRANCH_NAME" != $UNFROZEN_PREFIX* ]]; then
               echo "Error: You can only merge from branches that start with '$UNFROZEN_PREFIX', or PRs titled with prefix 'fix(critical): '."
+              exit 1
             fi
           # repo is fully frozen
           else
             echo "Error: You can only merge PRs titled with prefix 'fix(critical): '."
+            exit 1
           fi
         fi
