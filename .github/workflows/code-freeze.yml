@@ -32,14 +32,11 @@ jobs:
         echo $BRANCH_NAME
         echo $PR_TITLE
 
-        if [[ $UNFROZEN_PREFIX == '' ]] && 
-           ! [[ "$PR_TITLE" == fix:* && "$PR_TITLE" == *"[critical]"* ]]; then
-          echo "Error: You can only merge PRs titled with 'fix: ' and containing '[critical]'."
-          exit 1
-        fi
-
-        if [[ "$BRANCH_NAME" != $UNFROZEN_PREFIX* ]] && 
-           ! [[ "$PR_TITLE" == fix:* && "$PR_TITLE" == *"[critical]"* ]]; then
-          echo "Error: You can only merge from branches that start with '$UNFROZEN_PREFIX', or PRs titled with 'fix: ' and containing '[critical]'."
-          exit 1
+        if ! [[ "$PR_TITLE" == fix(critical):* ]]; then
+          if [[ -z $UNFROZEN_PREFIX ]];
+            then
+              echo "Error: You can only merge PRs titled with prefix 'fix(critical): '."
+            else
+              echo "Error: You can only merge from branches that start with '$UNFROZEN_PREFIX', or PRs titled with prefix 'fix(critical): '."
+          fi
         fi
