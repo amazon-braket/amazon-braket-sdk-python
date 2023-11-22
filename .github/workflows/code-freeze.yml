@@ -32,7 +32,7 @@ jobs:
         echo $BRANCH_NAME
         echo $PR_TITLE
 
-        if ! [[ "$PR_TITLE" == "fix(critical):"* ]]; then
+        if ! [[ "$PR_TITLE" =~ ^fix\(critical\): ]]; then
           if [[ -z $UNFROZEN_PREFIX ]];
             then
               echo "Error: You can only merge PRs titled with prefix 'fix(critical): '."
