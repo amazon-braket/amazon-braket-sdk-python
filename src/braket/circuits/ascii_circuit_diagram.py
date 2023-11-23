@@ -124,6 +124,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
             ):
                 continue
 
+            # TODO: We should use isinstance(item.operator, GPhase)
+            if isinstance(item, Instruction) and item.operator.__class__.__name__ == "GPhase":
+                continue
+
             if (isinstance(item, ResultType) and not item.target) or (
                 isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
             ):
@@ -200,6 +204,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
             AsciiCircuitDiagram._ascii_diagram_column(circuit_qubits, grouping[1])
             for grouping in groupings
         ]
+
+        if not groupings:
+            return ""
 
         # Unite column strings
         lines = column_strs[0].split("\n")

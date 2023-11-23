@@ -1726,8 +1726,8 @@ def test_circuit_user_gate(pulse_sequence_2):
                         "OPENQASM 3.0;",
                         "bit[1] b;",
                         "qubit[1] q;",
-                        "x q[0];",
                         "gphase(0.15);",
+                        "x q[0];",
                         "b[0] = measure q[0];",
                     ]
                 ),
@@ -3137,8 +3137,8 @@ def test_circuit_with_global_phase():
         [
             "OPENQASM 3.0;",
             "bit[1] b;",
-            "x $0;",
             "gphase(0.15);",
+            "x $0;",
             "b[0] = measure $0;",
         ]
     )

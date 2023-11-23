@@ -297,27 +297,25 @@ class GPhase(AngledGate):
             control_basis_state = BasisState(control_state, len(control_qubits))
 
             if not any(control_basis_state):
-                phaseshift_target = control_qubits[-1]
+                phaseshift_target = control_qubits[0]
                 return [
                     X.x(phaseshift_target),
                     PhaseShift.phaseshift(
                         phaseshift_target,
                         angle,
-                        control=control_qubits[:-1],
-                        control_state=control_basis_state[:-1],
+                        control=control_qubits[1:],
+                        control_state=control_basis_state[1:],
                         power=power,
                     ),
                     X.x(phaseshift_target),
                 ]
 
-            rightmost_control_qubit_index = (
-                len(control_qubits) - control_basis_state[::-1].index(1) - 1
-            )
-            rightmost_control_qubit = control_qubits.pop(rightmost_control_qubit_index)
-            control_basis_state.pop(rightmost_control_qubit_index)
+            leftmost_control_qubit_index = control_basis_state.index(1)
+            leftmost_control_qubit = control_qubits.pop(leftmost_control_qubit_index)
+            control_basis_state.pop(leftmost_control_qubit_index)
 
             return PhaseShift.phaseshift(
-                rightmost_control_qubit,
+                leftmost_control_qubit,
                 angle,
                 control=control_qubits,
                 control_state=control_basis_state,
@@ -1437,6 +1435,10 @@ class U(TripleAngledGate):
         return "U"
 
     def to_matrix(self) -> np.ndarray:
+        r"""Returns a matrix representation of this gate.
+        Returns:
+            ndarray: The matrix representation of this gate.
+        """
         _theta = self.angle_1
         _phi = self.angle_2
         _lambda = self.angle_3
@@ -1475,7 +1477,7 @@ class U(TripleAngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Registers this function into the circuit class.
 
         Unitary matrix:
 
