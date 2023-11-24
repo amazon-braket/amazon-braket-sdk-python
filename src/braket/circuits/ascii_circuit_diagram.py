@@ -21,6 +21,7 @@ from braket.circuits.circuit_diagram import CircuitDiagram
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
+from braket.circuits.moments import MomentType
 from braket.circuits.noise import Noise
 from braket.circuits.result_type import ResultType
 from braket.registers.qubit import Qubit
@@ -48,13 +49,12 @@ class AsciiCircuitDiagram(CircuitDiagram):
         circuit_qubits = circuit.qubits
         circuit_qubits.sort()
 
-        y_axis_str = AsciiCircuitDiagram._prepare_y_axis_str(circuit, circuit_qubits)
+        y_axis_str, global_phase = AsciiCircuitDiagram._prepare_y_axis_str(circuit, circuit_qubits)
 
         time_slices = circuit.moments.time_slices()
         column_strs = []
 
         # Moment columns
-        global_phase = 0 if circuit.global_phase else None
         for time, instructions in time_slices.items():
             moment_str, global_phase = AsciiCircuitDiagram._ascii_diagram_column_set(
                 str(time), circuit_qubits, instructions, global_phase
@@ -66,11 +66,10 @@ class AsciiCircuitDiagram(CircuitDiagram):
             circuit.result_types
         )
         if target_result_types:
-            column_strs.append(
-                AsciiCircuitDiagram._ascii_diagram_column_set(
-                    "Result Types", circuit_qubits, target_result_types, global_phase
-                )[0]
+            result_type_col_str, global_phase = AsciiCircuitDiagram._ascii_diagram_column_set(
+                "Result Types", circuit_qubits, target_result_types, global_phase
             )
+            column_strs.append(result_type_col_str)
 
         # Unite strings
         lines = y_axis_str.split("\n")
@@ -81,8 +80,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
         # Time on top and bottom
         lines.append(lines[0])
 
-        if circuit.global_phase:
-            lines.append(f"\nGlobal phase: {circuit.global_phase}")
+        if global_phase:
+            lines.append(f"\nGlobal phase: {global_phase}")
 
         # Additional result types line on bottom
         if additional_result_types:
@@ -98,19 +97,23 @@ class AsciiCircuitDiagram(CircuitDiagram):
         return "\n".join(lines)
 
     @staticmethod
-    def _prepare_y_axis_str(circuit: cir.Circuit, circuit_qubits: QubitSet) -> str:
+    def _prepare_y_axis_str(
+        circuit: cir.Circuit, circuit_qubits: QubitSet
+    ) -> tuple[str, float | None]:
         # Y Axis Column
         y_axis_width = len(str(int(max(circuit_qubits))))
         y_axis_str = "{0:{width}} : |\n".format("T", width=y_axis_width + 1)
 
-        if circuit.global_phase:  # FIXME: this won't work if GPHASE(-1), GPHASE(1)
+        global_phase = None
+        if any(m for m in circuit._moments if m.moment_type == MomentType.GLOBAL_PHASE):
             y_axis_str += "{0:{width}} : |\n".format("GP", width=y_axis_width)
+            global_phase = 0
 
         for qubit in circuit_qubits:
             y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
             y_axis_str += "q{0:{width}} : -\n".format(str(int(qubit)), width=y_axis_width)
 
-        return y_axis_str
+        return y_axis_str, global_phase
 
     @staticmethod
     def _ascii_group_items(
