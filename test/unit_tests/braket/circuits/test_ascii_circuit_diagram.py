@@ -61,11 +61,12 @@ def test_one_gate_one_qubit_rotation_with_parameter():
 def test_one_gate_with_global_phase():
     circ = Circuit().x(target=0).gphase(0.15)
     expected = (
-        "T  : |0|",
-        "        ",
-        "q0 : -X-",
+        "T  : |0| 1  |",
+        "GP : |0|0.15|",
+        "             ",
+        "q0 : -X------",
         "",
-        "T  : |0|",
+        "T  : |0| 1  |",
         "",
         "Global phase: 0.15",
     )
@@ -90,15 +91,16 @@ def test_one_gate_one_qubit_rotation_with_unicode():
 
 def test_one_gate_with_parametric_expression_global_phase_():
     theta = FreeParameter("\u03B8")
-    circ = Circuit().x(target=0).gphase(2 * theta + 1)
+    circ = Circuit().x(target=0).gphase(2 * theta).x(0).gphase(1)
     expected = (
-        "T  : |0|",
-        "        ",
-        "q0 : -X-",
+        "T  : |0| 1 |    2    |",
+        "GP : |0|2*θ|2*θ + 1.0|",
+        "                      ",
+        "q0 : -X-X-------------",
         "",
-        "T  : |0|",
+        "T  : |0| 1 |    2    |",
         "",
-        "Global phase: 2*θ + 1",
+        "Global phase: 2*θ + 1.0",
         "",
         "Unassigned parameters: [θ].",
     )

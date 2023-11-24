@@ -48,20 +48,16 @@ class AsciiCircuitDiagram(CircuitDiagram):
         circuit_qubits = circuit.qubits
         circuit_qubits.sort()
 
-        # Y Axis Column
-        y_axis_width = len(str(int(max(circuit_qubits))))
-        y_axis_str = "{0:{width}} : |\n".format("T", width=y_axis_width + 1)
-        for qubit in circuit_qubits:
-            y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
-            y_axis_str += "q{0:{width}} : -\n".format(str(int(qubit)), width=y_axis_width)
+        y_axis_str = AsciiCircuitDiagram._prepare_y_axis_str(circuit, circuit_qubits)
 
         time_slices = circuit.moments.time_slices()
         column_strs = []
 
         # Moment columns
+        global_phase = 0 if circuit.global_phase else None
         for time, instructions in time_slices.items():
-            moment_str = AsciiCircuitDiagram._ascii_diagram_column_set(
-                str(time), circuit_qubits, instructions
+            moment_str, global_phase = AsciiCircuitDiagram._ascii_diagram_column_set(
+                str(time), circuit_qubits, instructions, global_phase
             )
             column_strs.append(moment_str)
 
@@ -72,8 +68,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
         if target_result_types:
             column_strs.append(
                 AsciiCircuitDiagram._ascii_diagram_column_set(
-                    "Result Types", circuit_qubits, target_result_types
-                )
+                    "Result Types", circuit_qubits, target_result_types, global_phase
+                )[0]
             )
 
         # Unite strings
@@ -102,6 +98,21 @@ class AsciiCircuitDiagram(CircuitDiagram):
         return "\n".join(lines)
 
     @staticmethod
+    def _prepare_y_axis_str(circuit: cir.Circuit, circuit_qubits: QubitSet) -> str:
+        # Y Axis Column
+        y_axis_width = len(str(int(max(circuit_qubits))))
+        y_axis_str = "{0:{width}} : |\n".format("T", width=y_axis_width + 1)
+
+        if circuit.global_phase:  # FIXME: this won't work if GPHASE(-1), GPHASE(1)
+            y_axis_str += "{0:{width}} : |\n".format("GP", width=y_axis_width)
+
+        for qubit in circuit_qubits:
+            y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
+            y_axis_str += "q{0:{width}} : -\n".format(str(int(qubit)), width=y_axis_width)
+
+        return y_axis_str
+
+    @staticmethod
     def _ascii_group_items(
         circuit_qubits: QubitSet,
         items: list[Union[Instruction, ResultType]],
@@ -126,9 +137,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
             # TODO: We should use isinstance(item.operator, GPhase)
             if isinstance(item, Instruction) and item.operator.__class__.__name__ == "GPhase":
-                continue
-
-            if (isinstance(item, ResultType) and not item.target) or (
+                qubit_range = QubitSet()
+            elif (isinstance(item, ResultType) and not item.target) or (
                 isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
             ):
                 qubit_range = circuit_qubits
@@ -146,7 +156,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 qubits_added = group[0]
                 instr_group = group[1]
                 # Take into account overlapping multi-qubit gates
-                if not qubits_added.intersection(set(qubit_range)):
+                if not qubits_added.intersection(set(qubit_range)) or (
+                    isinstance(item, Instruction) and item.operator.__class__.__name__ == "GPhase"
+                ):
                     instr_group.append(item)
                     qubits_added.update(qubit_range)
                     found_grouping = True
@@ -183,8 +195,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
     @staticmethod
     def _ascii_diagram_column_set(
-        col_title: str, circuit_qubits: QubitSet, items: list[Union[Instruction, ResultType]]
-    ) -> str:
+        col_title: str,
+        circuit_qubits: QubitSet,
+        items: list[Union[Instruction, ResultType]],
+        global_phase: float | None = None,
+    ) -> tuple[str, float | None]:
         """
         Return a set of columns in the ASCII string diagram of the circuit for a list of items.
 
@@ -192,21 +207,28 @@ class AsciiCircuitDiagram(CircuitDiagram):
             col_title (str): title of column set
             circuit_qubits (QubitSet): qubits in circuit
             items (list[Union[Instruction, ResultType]]): list of instructions or result types
+            global_phase (float | None): the integrated global phase up to this set
 
         Returns:
-            str: An ASCII string diagram for the column set.
+            tuple[str, float | None]: A tuple of the ASCII string diagram for the column set
+            and the integrated global phase.
         """
 
         # Group items to separate out overlapping multi-qubit items
         groupings = AsciiCircuitDiagram._ascii_group_items(circuit_qubits, items)
 
-        column_strs = [
-            AsciiCircuitDiagram._ascii_diagram_column(circuit_qubits, grouping[1])
-            for grouping in groupings
-        ]
-
-        if not groupings:
-            return ""
+        column_strs, global_phases = list(
+            zip(
+                *[
+                    AsciiCircuitDiagram._ascii_diagram_column(
+                        circuit_qubits, grouping[1], global_phase
+                    )
+                    for grouping in groupings
+                ]
+            )
+        )
+        if global_phase is not None:
+            global_phase = sum(global_phases)
 
         # Unite column strings
         lines = column_strs[0].split("\n")
@@ -227,21 +249,25 @@ class AsciiCircuitDiagram(CircuitDiagram):
 
         first_line = "{:^{width}}|\n".format(col_title, width=len(lines[0]) - 1)
 
-        return first_line + "\n".join(lines)
+        return first_line + "\n".join(lines), global_phase
 
     @staticmethod
     def _ascii_diagram_column(
-        circuit_qubits: QubitSet, items: list[Union[Instruction, ResultType]]
-    ) -> str:
+        circuit_qubits: QubitSet,
+        items: list[Union[Instruction, ResultType]],
+        global_phase: float | None = None,
+    ) -> tuple[str, float | None]:
         """
         Return a column in the ASCII string diagram of the circuit for a given list of items.
 
         Args:
             circuit_qubits (QubitSet): qubits in circuit
             items (list[Union[Instruction, ResultType]]): list of instructions or result types
+            global_phase (float | None): the integrated global phase up to this column
 
         Returns:
-            str: An ASCII string diagram for the specified moment in time for a column.
+            tuple[str, float | None]: A tuple of the ASCII string diagram for the specified moment
+            in time for a column and the integrated global phase.
         """
         symbols = {qubit: "-" for qubit in circuit_qubits}
         margins = {qubit: " " for qubit in circuit_qubits}
@@ -263,6 +289,13 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 num_after = len(circuit_qubits) - 1
                 after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
                 ascii_symbols = [ascii_symbol] + after
+            elif isinstance(item, Instruction) and item.operator.__class__.__name__ == "GPhase":
+                target_qubits = circuit_qubits
+                control_qubits = QubitSet()
+                target_and_control = QubitSet()
+                qubits = circuit_qubits
+                ascii_symbols = symbols
+                global_phase += item.operator.angle
             else:
                 if isinstance(item.target, list):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
@@ -308,13 +341,32 @@ class AsciiCircuitDiagram(CircuitDiagram):
                     symbols[qubit] = "|"
 
                 # Set the margin to be a connector if not on the first qubit
-                if qubit != min(target_and_control):
+                if target_and_control and qubit != min(target_and_control):
                     margins[qubit] = "|"
 
-        symbols_width = max([len(symbol) for symbol in symbols.values()])
+        output = AsciiCircuitDiagram._create_output(symbols, margins, circuit_qubits, global_phase)
+        return output, global_phase
 
+    @staticmethod
+    def _create_output(
+        symbols: dict[Qubit, str],
+        margins: dict[Qubit, str],
+        qubits: QubitSet,
+        global_phase: float | None,
+    ) -> str:
+        symbols_width = max([len(symbol) for symbol in symbols.values()])
         output = ""
-        for qubit in circuit_qubits:
+
+        if global_phase is not None:
+            global_phase = (
+                round(global_phase, 2) if isinstance(global_phase, float) else global_phase
+            )
+            symbols_width = max([symbols_width, len(str(global_phase))])
+            output += "{0:{fill}{align}{width}}|\n".format(
+                str(global_phase), fill=" ", align="^", width=symbols_width
+            )
+
+        for qubit in qubits:
             output += "{0:{width}}\n".format(margins[qubit], width=symbols_width + 1)
             output += "{0:{fill}{align}{width}}\n".format(
                 symbols[qubit], fill="-", align="<", width=symbols_width + 1
