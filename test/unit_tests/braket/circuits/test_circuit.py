@@ -2013,6 +2013,14 @@ def test_to_unitary_with_compiler_directives_returns_expected_unitary():
     )
 
 
+def test_to_unitary_with_global_phase():
+    circuit = Circuit().x(0)
+    circuit_unitary = np.array([[0, 1], [1, 0]])
+    assert np.allclose(circuit.to_unitary(), circuit_unitary)
+    circuit = circuit.gphase(np.pi / 2)
+    assert np.allclose(circuit.to_unitary(), 1j * circuit_unitary)
+
+
 @pytest.mark.parametrize(
     "circuit,expected_unitary",
     [

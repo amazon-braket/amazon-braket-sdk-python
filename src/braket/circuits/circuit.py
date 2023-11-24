@@ -1434,9 +1434,7 @@ class Circuit:
         qubits = self.qubits
         if not qubits:
             return np.zeros(0, dtype=complex)
-        return calculate_unitary_big_endian(self.instructions, qubits) * np.exp(
-            1j * self.global_phase
-        )
+        return calculate_unitary_big_endian(self.instructions, qubits)
 
     @property
     def qubits_frozen(self) -> bool:
