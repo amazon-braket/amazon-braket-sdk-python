@@ -264,7 +264,7 @@ class GPhase(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction | Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Global phase gate.
 
         Unitary matrix:
 
@@ -1401,7 +1401,7 @@ Gate.register_gate(PhaseShift)
 
 
 class U(TripleAngledGate):
-    r"""Parameterized single-qubit gate.
+    r"""Generalized single-qubit rotation gate.
 
     Unitary matrix:
 
@@ -1477,7 +1477,7 @@ class U(TripleAngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        r"""Registers this function into the circuit class.
+        r"""Generalized single-qubit rotation gate.
 
         Unitary matrix:
 
