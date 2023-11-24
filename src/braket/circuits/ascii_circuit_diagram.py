@@ -43,7 +43,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
             str: ASCII string circuit diagram.
         """
 
-        if not circuit.instructions:
+        if not circuit.instructions or not any(
+            m for m in circuit._moments if m.moment_type != MomentType.GLOBAL_PHASE
+        ):
             return ""
 
         circuit_qubits = circuit.qubits
@@ -297,7 +299,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 control_qubits = QubitSet()
                 target_and_control = QubitSet()
                 qubits = circuit_qubits
-                ascii_symbols = symbols
+                ascii_symbols = "-" * len(circuit_qubits)
                 global_phase += item.operator.angle
             else:
                 if isinstance(item.target, list):

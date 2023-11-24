@@ -29,6 +29,10 @@ def test_empty_circuit():
     assert AsciiCircuitDiagram.build_diagram(Circuit()) == ""
 
 
+def test_only_gphase_circuit():
+    assert AsciiCircuitDiagram.build_diagram(Circuit().gphase(0.1)) == ""
+
+
 def test_one_gate_one_qubit():
     circ = Circuit().h(0)
     expected = ("T  : |0|", "        ", "q0 : -H-", "", "T  : |0|")
@@ -65,6 +69,21 @@ def test_one_gate_with_global_phase():
         "GP : |0|0.15|",
         "             ",
         "q0 : -X------",
+        "",
+        "T  : |0| 1  |",
+        "",
+        "Global phase: 0.15",
+    )
+    _assert_correct_diagram(circ, expected)
+
+
+def test_one_gate_other_qubit_with_global_phase():
+    circ = Circuit().x(target=1).gphase(0.15)
+    expected = (
+        "T  : |0| 1  |",
+        "GP : |0|0.15|",
+        "             ",
+        "q1 : -X------",
         "",
         "T  : |0| 1  |",
         "",
