@@ -44,8 +44,6 @@ for line in fileinput.input("setup.py", inplace=True):
 for line in fileinput.input("tox.ini", inplace=True):
     # Ensure that tox uses the working branch for the SDK PR.
     replaced_line = (
-        line
-        if package not in line
-        else f"    git+https://github.com/amazon-braket/{package}-python.git@{args.branch}\n"
+        line if package not in line else f'"{package} @ file://{path}/{package}-python",\n'
     )
     print(replaced_line, end="")
