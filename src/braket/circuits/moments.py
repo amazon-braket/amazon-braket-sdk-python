@@ -184,7 +184,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._time_all_qubits = time
         elif isinstance(operator, Noise):
             self.add_noise(instruction)
-        elif instruction.target == QubitSet([]):
+        elif operator.__class__.__name__ == "GPhase":
             time = self._get_qubit_times(self._max_times.keys()) + 1
             self._number_gphase_in_current_moment += 1
             key = MomentsKey(
