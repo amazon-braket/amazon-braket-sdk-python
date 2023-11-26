@@ -140,8 +140,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
             ):
                 continue
 
-            # TODO: We should use isinstance(item.operator, GPhase)
-            if isinstance(item, Instruction) and item.operator.__class__.__name__ == "GPhase":
+            if (
+                isinstance(item, Instruction)
+                and isinstance(item.operator, Gate)
+                and item.operator.name == "GPhase"
+            ):
                 qubit_range = QubitSet()
             elif (isinstance(item, ResultType) and not item.target) or (
                 isinstance(item, Instruction) and isinstance(item.operator, CompilerDirective)
@@ -162,7 +165,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 instr_group = group[1]
                 # Take into account overlapping multi-qubit gates
                 if not qubits_added.intersection(set(qubit_range)) or (
-                    isinstance(item, Instruction) and item.operator.__class__.__name__ == "GPhase"
+                    isinstance(item, Instruction)
+                    and isinstance(item.operator, Gate)
+                    and item.operator.name == "GPhase"
                 ):
                     instr_group.append(item)
                     qubits_added.update(qubit_range)
@@ -294,7 +299,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 num_after = len(circuit_qubits) - 1
                 after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
                 ascii_symbols = [ascii_symbol] + after
-            elif isinstance(item, Instruction) and item.operator.__class__.__name__ == "GPhase":
+            elif (
+                isinstance(item, Instruction)
+                and isinstance(item.operator, Gate)
+                and item.operator.name == "GPhase"
+            ):
                 target_qubits = circuit_qubits
                 control_qubits = QubitSet()
                 target_and_control = QubitSet()

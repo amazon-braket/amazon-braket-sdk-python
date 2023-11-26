@@ -19,6 +19,7 @@ from enum import Enum
 from typing import Any, NamedTuple, Union
 
 from braket.circuits.compiler_directive import CompilerDirective
+from braket.circuits.gate import Gate
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
 from braket.registers.qubit import Qubit
@@ -184,7 +185,7 @@ class Moments(Mapping[MomentsKey, Instruction]):
             self._time_all_qubits = time
         elif isinstance(operator, Noise):
             self.add_noise(instruction)
-        elif operator.__class__.__name__ == "GPhase":
+        elif isinstance(operator, Gate) and operator.name == "GPhase":
             time = self._get_qubit_times(self._max_times.keys()) + 1
             self._number_gphase_in_current_moment += 1
             key = MomentsKey(
