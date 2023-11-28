@@ -52,24 +52,21 @@ def test_multiple_calls(empty_subroutine, bell_state_subroutine) -> None:
     """Tests multiple calls to a single aq.main to ensure that each resulting
     Program object has the expected contents.
     """
-    # todo: delete or update this test as it is no longer relevant as written
 
     def count_function_calls(program: aq.Program, func_name: str) -> int:
         return program.to_ir().count(f"{func_name}();")
 
-    @aq.main
     def empty_program_wrapper():
         empty_subroutine()
 
-    @aq.main
     def bell_state_program_wrapper():
         bell_state_subroutine()
 
-    first_program = empty_program_wrapper
+    first_program = aq.main(empty_program_wrapper)
     assert 1 == count_function_calls(first_program, "empty_function")
     assert 0 == count_function_calls(first_program, "bell_state")
-    second_program = empty_program_wrapper
-    third_program = bell_state_program_wrapper
+    second_program = aq.main(empty_program_wrapper)
+    third_program = aq.main(bell_state_program_wrapper)
     assert 1 == count_function_calls(first_program, "empty_function"), "reverify first program"
     assert 0 == count_function_calls(first_program, "bell_state"), "reverify first program"
     assert 1 == count_function_calls(second_program, "empty_function")
@@ -122,15 +119,16 @@ def recursive_h(q: int):
 
 @pytest.fixture
 def recursive_h_wrapper():
+    q = 5
+
     @aq.main(num_qubits=6)
-    def recursive_h_wrapper(q: int):
+    def recursive_h_wrapper():
         recursive_h(q)
 
     return recursive_h_wrapper
 
 
 def test_recursive_h_wrapper(recursive_h_wrapper):
-    # todo: make sure annotation is captured as int
     expected = """OPENQASM 3.0;
 def do_h(int[32] q) {
     h __qubits__[q];
@@ -143,19 +141,20 @@ def recursive_h(int[32] q) {
         recursive_h(q - 1);
     }
 }
-input int[32] q;
 qubit[6] __qubits__;
-recursive_h(q);"""
+recursive_h(5);"""
     assert recursive_h_wrapper.to_ir() == expected
 
 
 def test_sim_recursive_h_wrapper(recursive_h_wrapper):
-    _test_on_local_sim(recursive_h_wrapper, inputs={"q": 5})
+    _test_on_local_sim(recursive_h_wrapper)
 
 
 def test_recursive_h():
+    n = 4
+
     @aq.main(num_qubits=6)
-    def main(n: int):
+    def main():
         recursive_h(n)
 
     expected = """OPENQASM 3.0;
@@ -170,11 +169,10 @@ def recursive_h(int[32] q) {
         recursive_h(q - 1);
     }
 }
-int[32] n = 4;
 qubit[6] __qubits__;
-recursive_h(n);"""
+recursive_h(4);"""
 
-    assert main.make_bound_program(param_values={"n": 4}).to_ir() == expected
+    assert main.to_ir() == expected
 
 
 @aq.subroutine
@@ -430,38 +428,37 @@ def qasm_simple_condition(do_cnot: bool) -> bool:
 
 
 @pytest.fixture
-def qasm_simple_condition_wrapper():
-    @aq.main
-    def qasm_simple_condition_wrapper(do_cnot: bool):
-        qasm_simple_condition(do_cnot)
+def build_qasm_simple_condition_wrapper():
+    def build_qasm_simple_condition_wrapper(do_cnot: bool):
+        @aq.main
+        def qasm_simple_condition_wrapper():
+            qasm_simple_condition(do_cnot)
 
-    return qasm_simple_condition_wrapper
+        return qasm_simple_condition_wrapper
+
+    return build_qasm_simple_condition_wrapper
 
 
-@pytest.mark.parametrize("do_cnot", [True, False])
-def test_qasm_simple_condition(do_cnot: bool, qasm_simple_condition_wrapper) -> None:
-    expected = f"""OPENQASM 3.0;
-def qasm_simple_condition(bool do_cnot) -> bool {{
+@pytest.mark.parametrize("do_cnot", (True, False))
+def test_qasm_simple_condition(do_cnot: bool, build_qasm_simple_condition_wrapper) -> None:
+    expected = """OPENQASM 3.0;
+def qasm_simple_condition(bool do_cnot) -> bool {
     h __qubits__[0];
-    if (do_cnot) {{
+    if (do_cnot) {
         cnot __qubits__[0], __qubits__[1];
-    }}
+    }
     return do_cnot;
-}}
-bool do_cnot = {"true" if do_cnot else "false"};
+}
 qubit[2] __qubits__;
 bool __bool_0__;
 """
-    expected += "__bool_0__ = qasm_simple_condition(do_cnot);"
-    assert (
-        qasm_simple_condition_wrapper.make_bound_program(param_values={"do_cnot": do_cnot}).to_ir()
-        == expected
-    )
+    expected += f"__bool_0__ = qasm_simple_condition({'true' if do_cnot else 'false'});"
+    assert build_qasm_simple_condition_wrapper(do_cnot).to_ir() == expected
 
 
 @pytest.mark.parametrize("do_cnot", [True, False])
-def test_sim_qasm_simple_condition(do_cnot: bool, qasm_simple_condition_wrapper) -> None:
-    _test_on_local_sim(qasm_simple_condition_wrapper, inputs={"do_cnot": do_cnot})
+def test_sim_qasm_simple_condition(do_cnot: bool, build_qasm_simple_condition_wrapper) -> None:
+    _test_on_local_sim(build_qasm_simple_condition_wrapper(do_cnot))
 
 
 @pytest.fixture
@@ -888,8 +885,10 @@ b = a;"""
 
 
 def test_nested_function():
+    n = 5
+
     @aq.main
-    def make_ghz(n: int) -> None:
+    def make_ghz() -> None:
         def ghz(n: int):
             if n == 1:
                 h(0)
@@ -907,11 +906,10 @@ cnot __qubits__[0], __qubits__[2];
 cnot __qubits__[0], __qubits__[3];
 cnot __qubits__[0], __qubits__[4];"""
 
-    assert make_ghz.make_bound_program(param_values={"n": 5}).to_ir() == expected
+    assert make_ghz.to_ir() == expected
 
 
 def test_double_decorated_function():
-    # todo: what is this test doing
     @aq.main
     @aq.main
     def empty_program() -> None:
