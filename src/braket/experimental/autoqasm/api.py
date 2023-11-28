@@ -51,8 +51,7 @@ def main(
     num_qubits: Optional[int] = None,
     device: Optional[Union[Device, str]] = None,
 ) -> aq_program.Program | functools.partial:
-    """Decorator that converts a function into a callable that returns
-    a Program object containing the quantum program.
+    """Decorator that converts a function into a Program object containing the quantum program.
 
     The decorator re-converts the target function whenever the decorated
     function is called, and a new Program object is returned each time.
@@ -212,7 +211,6 @@ def _autograph_optional_features() -> tuple[converter.Feature]:
 
 def _convert_main(
     f: Callable,
-    *,
     options: converter.ConversionOptions,
     args: tuple[Any],
     kwargs: dict[str, Any],
@@ -235,17 +233,11 @@ def _convert_main(
     Returns:
         aq_program.Program: Generated AutoQASM Program.
     """
-    if aq_program.in_active_program_conversion_context():
-        raise errors.AutoQasmTypeError(
-            f"Cannot call main function '{f.__name__}' from another main function. Did you mean "
-            "to use '@aq.subroutine'?"
-        )
-
     kwargs = {}
     parameters = inspect.signature(f).parameters
 
     with aq_program.build_program(user_config) as program_conversion_context:
-        # Capture inputs
+        # Capture inputs to decorated function as `FreeParameter` inputs for the Program
         for param in parameters.values():
             if param.kind == param.POSITIONAL_OR_KEYWORD:
                 kwargs[param.name] = FreeParameter(param.name)
