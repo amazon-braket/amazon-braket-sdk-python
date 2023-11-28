@@ -342,17 +342,18 @@ class ProgramConversionContext:
         return sorted([str(s) for s in expr._expression.free_symbols if isinstance(s, Symbol)])
 
     def register_parameter(
-        self, parameter_name: str, parameter_type: Optional[Union[float, int]] = float
+        self, parameter_name: str, parameter_type: Union[float, int, bool] = float
     ) -> None:
         """Register an input parameter if it has not already been registered.
 
         Args:
             parameter_name (str): The name of the parameter to register with the program.
-            parameter_type (Optional[Union[float, int]]): The type of the parameter to register
-                with the program.
+            parameter_type (Union[float, int, bool]): The type of the parameter to register
+                with the program. Default: float.
         """
+        # todo: https://github.com/amazon-braket/amazon-braket-sdk-python/issues/814
         if parameter_name not in self._free_parameters:
-            if parameter_type in [float, None]:
+            if parameter_type == float:
                 var_class = oqpy.FloatVar
             elif parameter_type == int:
                 var_class = oqpy.IntVar
