@@ -920,7 +920,7 @@ def test_double_decorated_function():
 
 
 def test_main_return():
-    # todo: outputs?
+    # TODO: outputs?
     with pytest.warns(UserWarning, match="Return value from top level function is ignored"):
 
         @aq.main

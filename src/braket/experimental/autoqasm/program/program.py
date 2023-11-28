@@ -351,7 +351,7 @@ class ProgramConversionContext:
             parameter_type (Union[float, int, bool]): The type of the parameter to register
                 with the program. Default: float.
         """
-        # todo (#814): add type validation against existing inputs
+        # TODO (#814): add type validation against existing inputs
         if parameter_name not in self._free_parameters:
             if parameter_type == float:
                 var_class = oqpy.FloatVar

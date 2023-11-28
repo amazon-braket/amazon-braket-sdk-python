@@ -89,7 +89,7 @@ cnot __qubits__[1], __qubits__[3];"""
 def test_classmethod() -> None:
     """Tests aq.main decorator application to a classmethod."""
 
-    # todo: see if this functionality should work
+    # TODO: see if this functionality should work
     pytest.xfail("cls must be handled")
     # we could try to catch `cls` parameters and use qualname to extrapolate
     # class info, but it's a best-effort approach

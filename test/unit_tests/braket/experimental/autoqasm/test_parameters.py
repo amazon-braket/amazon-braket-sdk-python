@@ -161,7 +161,7 @@ rx(alpha) __qubits__[1];"""
 
 def test_parameter_in_subroutine():
     """Test that parameters in subroutines are declared appropriately."""
-    # todo (#816): the openqasm generated here isn't strictly valid
+    # TODO (#816): the openqasm generated here isn't strictly valid
     # (cannot close over non-const global variables)
     # https://openqasm.com/language/scope.html#subroutine-and-gate-scope
 
