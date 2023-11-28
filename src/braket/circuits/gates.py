@@ -266,6 +266,12 @@ class GPhase(AngledGate):
     ) -> Instruction | Iterable[Instruction]:
         r"""Global phase gate.
 
+        If the gate is applied with control/negative control modifiers, it is translated in an
+        equivalent gate using the following definition: `phaseshift(λ) = ctrl @ gphase(λ)`.
+        The rightmost control qubit is used for the translation. If the polarity of the rightmost
+        control modifier is negative, the following identity is used:
+        `negctrl @ gphase(λ) q = x q; ctrl @ gphase(λ) q; x q`.
+
         Unitary matrix:
 
             .. math:: \mathtt{gphase}(\gamma) = e^(i \gamma) I_1.
