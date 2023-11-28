@@ -161,7 +161,7 @@ rx(alpha) __qubits__[1];"""
 
 def test_parameter_in_subroutine():
     """Test that parameters in subroutines are declared appropriately."""
-    # todo: the openqasm generated here isn't strictly valid
+    # todo (#816): the openqasm generated here isn't strictly valid
     # (cannot close over non-const global variables)
     # https://openqasm.com/language/scope.html#subroutine-and-gate-scope
 
@@ -187,10 +187,6 @@ def test_captured_parameter():
     """Test that a parameter declared in a larger scope is captured
     and functions correctly.
     """
-    # todo: if we enable directly calling Programs to run on device,
-    # these tests should be updated to ensure alpha becomes a kwarg
-    # of the Program callable
-
     alpha = FreeParameter("alpha")
 
     @aq.main
@@ -208,35 +204,29 @@ rx(alpha) __qubits__[1];"""
 
 def test_multi_angle_gates():
     """Test that FreeParameters work with gates that take multiple inputs."""
+    qubit_0 = 2
+    theta = 0.5
 
     @aq.main(num_qubits=5)
-    def parametric(qubit_0: int, phi: float, theta: float):
+    def parametric(phi: float):
         ms(0, qubit_0, phi, phi, theta)
 
     expected = """OPENQASM 3.0;
-int[32] qubit_0 = 2;
 input float[64] phi;
-float[64] theta = 0.5;
 qubit[5] __qubits__;
-ms(phi, phi, theta) __qubits__[0], __qubits__[qubit_0];"""
-    assert (
-        parametric.make_bound_program(
-            param_values={
-                "qubit_0": 2,
-                "theta": 0.5,
-            }
-        ).to_ir()
-        == expected
-    )
+ms(phi, phi, 0.5) __qubits__[0], __qubits__[2];"""
+    assert parametric.to_ir() == expected
 
 
 def test_sim_multi_angle():
+    theta = 0
+
     @aq.main
-    def parametric(phi: float, theta: float):
+    def parametric(phi: float):
         ms(0, 1, phi, phi, theta)
 
     _test_parametric_on_local_sim(
-        parametric.make_bound_program(param_values={"theta": 0}),
+        parametric,
         inputs={"phi": np.pi},
     )
 
@@ -646,25 +636,25 @@ def test_eq_condition():
     """Test parameters used in conditional equals statements."""
 
     @aq.main
-    def parametric(basis: int):
-        if basis == 1:
+    def parametric(threshold: int):
+        if threshold == 1:
             h(0)
-        elif basis == 2:
+        elif threshold == 2:
             x(0)
         else:
             pass
         measure(0)
 
     expected = """OPENQASM 3.0;
-input int[32] basis;
+input int[32] threshold;
 qubit[1] __qubits__;
 bool __bool_0__;
-__bool_0__ = basis == 1;
+__bool_0__ = threshold == 1;
 if (__bool_0__) {
     h __qubits__[0];
 } else {
     bool __bool_1__;
-    __bool_1__ = basis == 2;
+    __bool_1__ = threshold == 2;
     if (__bool_1__) {
         x __qubits__[0];
     }
@@ -774,25 +764,25 @@ __bit_1__ = measure __qubits__[0];"""
 
 def test_param_and_float():
     """Test parameters used in conditional `and` statements."""
+    beta = 1.5
 
     @aq.main
-    def parametric(alpha: float, beta: float):
+    def parametric(alpha: float):
         if alpha and beta:
             rx(0, alpha)
         measure(0)
 
     expected = """OPENQASM 3.0;
 input float[64] alpha;
-float[64] beta = 1.5;
 qubit[1] __qubits__;
 bool __bool_0__;
-__bool_0__ = alpha && beta;
+__bool_0__ = alpha && 1.5;
 if (__bool_0__) {
     rx(alpha) __qubits__[0];
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric.make_bound_program({"beta": 1.5}).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_param_not():
