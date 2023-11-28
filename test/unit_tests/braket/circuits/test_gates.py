@@ -43,6 +43,10 @@ class TripleAngle:
     pass
 
 
+class SingleNegControlModifier:
+    pass
+
+
 testdata = [
     (Gate.H, "h", ir.H, [SingleTarget], {}),
     (Gate.GPhase, "gphase", None, [NoTarget, Angle], {}),
@@ -183,6 +187,10 @@ def single_control_valid_input(**kwargs):
     return {"control": 0}
 
 
+def single_neg_control_valid_input(**kwargs):
+    return {"control": [0], "control_state": [0]}
+
+
 def double_control_valid_ir_input(**kwargs):
     return {"controls": [0, 1]}
 
@@ -211,6 +219,7 @@ valid_ir_switcher = {
     "Angle": angle_valid_input,
     "TripleAngle": triple_angle_valid_input,
     "SingleControl": single_control_valid_input,
+    "SingleNegControlModifier": single_neg_control_valid_input,
     "DoubleControl": double_control_valid_ir_input,
     "MultiTarget": multi_target_valid_input,
     "TwoDimensionalMatrix": two_dimensional_matrix_valid_ir_input,
@@ -245,6 +254,8 @@ def create_valid_subroutine_input(irsubclasses, **kwargs):
 def create_valid_target_input(irsubclasses):
     input = {}
     qubit_set = []
+    control_qubit_set = []
+    control_state = None
     # based on the concept that control goes first in target input
     for subclass in irsubclasses:
         if subclass == NoTarget:
@@ -257,6 +268,9 @@ def create_valid_target_input(irsubclasses):
             qubit_set.extend(list(multi_target_valid_input().values()))
         elif subclass == SingleControl:
             qubit_set = list(single_control_valid_input().values()) + qubit_set
+        elif subclass == SingleNegControlModifier:
+            control_qubit_set = list(single_neg_control_valid_input()["control"])
+            control_state = list(single_neg_control_valid_input()["control_state"])
         elif subclass == DoubleControl:
             qubit_set = list(double_control_valid_ir_input().values()) + qubit_set
         elif subclass in (Angle, TwoDimensionalMatrix, TripleAngle):
@@ -264,6 +278,8 @@ def create_valid_target_input(irsubclasses):
         else:
             raise ValueError("Invalid subclass")
     input["target"] = QubitSet(qubit_set)
+    input["control"] = QubitSet(control_qubit_set)
+    input["control_state"] = control_state
     return input
 
 
@@ -911,10 +927,12 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
             ],
         ),
         (
-            [2, 0],
+            [0, 2],
             [0, 1],
             Instruction(
-                operator=Gate.PhaseShift(angle=0.123), target=0, control=2, control_state=[0]
+                **create_valid_instruction_input(
+                    Gate.PhaseShift, [SingleTarget, SingleNegControlModifier, Angle]
+                )
             ),
         ),
     ],
