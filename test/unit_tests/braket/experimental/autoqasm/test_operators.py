@@ -791,36 +791,22 @@ def test_assignment_py(value: Any) -> None:
 @pytest.mark.parametrize("value", [0, 1])
 def test_py_if_stmt(value: int) -> None:
     """Test Python if branches on true and false conditions."""
-    # todo: if statements are no longer optimized out during binding parameters
-    # we will need to be explicit about this compilation pass functionality
-    # we can still add it to `make_bound_program`
-
-    # outer value gets folded away
-    b = value
+    a = value
 
     @aq.main
-    def test_control_flow(a: int):
+    def test_control_flow():
         """Quick if statement test"""
         if a:
             h(0)
         else:
             x(0)
 
-        if b:
-            h(1)
-        else:
-            x(1)
-
-    expected = f"""OPENQASM 3.0;
-int[32] a = {value};
-qubit[2] __qubits__;
-if (a) {{
-    h __qubits__[0];
-}} else {{
-    x __qubits__[0];
-}}
-{"h" if value else "x"} __qubits__[1];"""
-    assert test_control_flow.make_bound_program(param_values={"a": value}).to_ir() == expected
+    expected = """OPENQASM 3.0;
+qubit[1] __qubits__;
+{} __qubits__[0];""".format(
+        "h" if value else "x"
+    )
+    assert test_control_flow.to_ir() == expected
 
 
 def test_py_while() -> None:
@@ -845,8 +831,6 @@ h __qubits__[0];"""
 def test_py_assert() -> None:
     """Test Python assertions inside an AutoQASM program."""
 
-    # todo: see if this test still makes sense
-
     not_supported = (
         "Assertions are not supported for values that depend on "
         "measurement results or AutoQASM variables."
@@ -857,18 +841,18 @@ def test_py_assert() -> None:
         def test_input_assert(value: bool):
             assert value
 
-    true = 1
-    false = False
+    true_var = 1
+    false_var = False
 
     @aq.main
     def test_assert():
-        assert true
+        assert true_var
 
     with pytest.raises(AssertionError):
 
         @aq.main
         def test_assert_false():
-            assert false
+            assert false_var
 
 
 def test_measurement_assert() -> None:
