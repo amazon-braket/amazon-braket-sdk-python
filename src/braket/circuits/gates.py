@@ -292,34 +292,28 @@ class GPhase(AngledGate):
         if control is not None:
             control_qubits = QubitSet(control)
 
-            if control_state is None:
-                control_state = (1,) * len(control_qubits)
-            control_basis_state = BasisState(control_state, len(control_qubits))
+            control_basis_state = (
+                BasisState(control_state, len(control_qubits))
+                if control_state is not None
+                else BasisState((1,) * len(control_qubits), len(control_qubits))
+            )
 
-            if not any(control_basis_state):
-                phaseshift_target = control_qubits[0]
-                return [
+            phaseshift_target = control_qubits[-1]
+            phaseshift_instruction = PhaseShift.phaseshift(
+                phaseshift_target,
+                angle,
+                control=control_qubits[:-1],
+                control_state=control_basis_state[:-1],
+                power=power,
+            )
+            return (
+                phaseshift_instruction
+                if control_basis_state[-1]
+                else [
                     X.x(phaseshift_target),
-                    PhaseShift.phaseshift(
-                        phaseshift_target,
-                        angle,
-                        control=control_qubits[1:],
-                        control_state=control_basis_state[1:],
-                        power=power,
-                    ),
+                    phaseshift_instruction,
                     X.x(phaseshift_target),
                 ]
-
-            leftmost_control_qubit_index = control_basis_state.index(1)
-            leftmost_control_qubit = control_qubits.pop(leftmost_control_qubit_index)
-            control_basis_state.pop(leftmost_control_qubit_index)
-
-            return PhaseShift.phaseshift(
-                leftmost_control_qubit,
-                angle,
-                control=control_qubits,
-                control_state=control_basis_state,
-                power=power,
             )
 
         return Instruction(GPhase(angle), power=power)
