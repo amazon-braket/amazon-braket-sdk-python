@@ -351,7 +351,7 @@ class ProgramConversionContext:
             parameter_type (Union[float, int, bool]): The type of the parameter to register
                 with the program. Default: float.
         """
-        # todo: https://github.com/amazon-braket/amazon-braket-sdk-python/issues/814
+        # todo (#814): add type validation against existing inputs
         if parameter_name not in self._free_parameters:
             if parameter_type == float:
                 var_class = oqpy.FloatVar

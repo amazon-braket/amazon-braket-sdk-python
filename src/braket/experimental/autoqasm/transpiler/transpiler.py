@@ -132,7 +132,7 @@ class PyToOqpy(transpiler.PyToPy):
             Union[Lambda, FunctionDef]: The root of the transformed AST.
         """
         unsupported_features_checker.verify(node)
-        # todo: add forbidden_aq_program_usage_checker.verify(node)
+        # todo (#809): add forbidden_aq_program_usage_checker.verify(node)
         node = self._initial_analysis(node, ctx)
 
         # autograph converters
