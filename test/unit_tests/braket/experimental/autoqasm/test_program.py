@@ -85,34 +85,41 @@ def test_multiprocessing() -> None:
         rx(0, angle)
         cnot(0, 1)
 
-    @aq.main
-    def zne(scale: int, angle: float) -> aq.BitVar:
-        if scale:
-            circuit(angle)
-        return measure(1)
+    def build_zne(scale: int, angle: float):
+        @aq.main
+        def zne() -> aq.BitVar:
+            for i in aq.range(scale):
+                circuit(angle)
+            return measure(1)
+
+        return zne
 
     scales = [2, 4, 6]
     angles = [0.1, 0.2, 0.3]
     with ThreadPool(processes=5) as executor:
         programs = executor.map(
-            lambda args: zne.make_bound_program(dict(zip(("scale", "angle"), args))),
+            lambda args: build_zne(*args),
             [(scale, angle) for scale, angle in itertools.product(scales, angles)],
         )
 
     def expected(scale, angle):
-        return f"""OPENQASM 3.0;
-def circuit(float[64] angle) {{
+        return (
+            """OPENQASM 3.0;
+def circuit(float[64] angle) {
     rx(angle) __qubits__[0];
     cnot __qubits__[0], __qubits__[1];
-}}
-int[32] scale = {scale};
-float[64] angle = {angle};
+}
 qubit[2] __qubits__;
-if (scale) {{
-    circuit(angle);
-}}
+for int i in [0:"""
+            + str(scale)
+            + """ - 1] {
+    circuit("""
+            + str(angle)
+            + """);
+}
 bit __bit_0__;
 __bit_0__ = measure __qubits__[1];"""
+        )
 
     for i, (scale, angle) in enumerate(itertools.product(scales, angles)):
         assert programs[i].to_ir() == expected(scale, angle)
