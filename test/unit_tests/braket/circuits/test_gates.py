@@ -891,22 +891,38 @@ def test_gate_subroutine(testclass, subroutine_name, irclass, irsubclasses, kwar
         assert subroutine(**subroutine_input) == Circuit(instruction_list)
 
 
-def test_control_gphase_subroutine():
-    subroutine = getattr(Circuit(), "gphase")
-    assert subroutine(angle=0.123, control=2) == Circuit(
-        Instruction(**create_valid_instruction_input(Gate.PhaseShift, [SingleTarget, Angle]))
-    )
-    subroutine = getattr(Circuit(), "gphase")
-    assert subroutine(angle=0.123, control=2, control_state=[0]) == Circuit(
-        [
-            Instruction(operator=Gate.X(), target=2),
+@pytest.mark.parametrize(
+    "control, control_state, instruction_set",
+    [
+        (
+            2,
+            None,
             Instruction(**create_valid_instruction_input(Gate.PhaseShift, [SingleTarget, Angle])),
-            Instruction(operator=Gate.X(), target=2),
-        ]
-    )
+        ),
+        (
+            2,
+            [0],
+            [
+                Instruction(operator=Gate.X(), target=2),
+                Instruction(
+                    **create_valid_instruction_input(Gate.PhaseShift, [SingleTarget, Angle])
+                ),
+                Instruction(operator=Gate.X(), target=2),
+            ],
+        ),
+        (
+            [2, 0],
+            [0, 1],
+            Instruction(
+                operator=Gate.PhaseShift(angle=0.123), target=0, control=2, control_state=[0]
+            ),
+        ),
+    ],
+)
+def test_control_gphase_subroutine(control, control_state, instruction_set):
     subroutine = getattr(Circuit(), "gphase")
-    assert subroutine(angle=0.123, control=[2, 0], control_state=[0, 1]) == Circuit(
-        Instruction(operator=Gate.PhaseShift(angle=0.123), target=0, control=2, control_state=[0])
+    assert subroutine(angle=0.123, control=control, control_state=control_state) == Circuit(
+        instruction_set
     )
 
 
