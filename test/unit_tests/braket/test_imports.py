@@ -7,6 +7,10 @@ import pytest
 
 
 def test_all_imports():
+    # Note, because of all the multiprocessing in this test, when running 'tox', the process
+    # threads may be made to wait as other tests are running in parallel, making it seems like
+    # this test is much slower than it actually is. However, splitting the test into a
+    # parameterized version wasn't able to correctly detect some circular imports when running tox.
     modules = get_all_modules_to_test()
     processes = []
     multiprocessing.set_start_method("spawn")
