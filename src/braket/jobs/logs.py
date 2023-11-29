@@ -20,7 +20,7 @@ import sys
 # Support for reading logs
 #
 ##############################################################################
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from botocore.exceptions import ClientError
 
@@ -165,7 +165,7 @@ def flush_log_streams(  # noqa C901
     has_streams: bool,
     color_wrap: ColorWrap,
     state: list[str],
-    queue_position: str | None = None,
+    queue_position: Optional[str] = None,
 ) -> bool:
     """Flushes log streams to stdout.
 
@@ -186,7 +186,7 @@ def flush_log_streams(  # noqa C901
         color_wrap (ColorWrap): An instance of ColorWrap to potentially color-wrap print statements
             from different streams.
         state (list[str]): The previous and current state of the job.
-        queue_position (str | None): The current queue position. This is not passed in if the job
+        queue_position (Optional[str]): The current queue position. This is not passed in if the job
             is ran with `quiet=True`
 
     Returns:
