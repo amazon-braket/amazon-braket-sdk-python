@@ -9,7 +9,7 @@ import pytest
 def test_all_imports():
     modules = get_all_modules_to_test()
     processes = []
-    multiprocessing.set_start_method('spawn')
+    multiprocessing.set_start_method("spawn")
     for module in modules:
         # We create a separate process to make sure the imports do not interfere with each-other.
         process = multiprocessing.Process(target=import_module, args=(module,))
