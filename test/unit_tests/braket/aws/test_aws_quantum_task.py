@@ -84,7 +84,7 @@ def quantum_task(aws_session):
 
 
 @pytest.fixture
-def quantum_task_not_quiet(aws_session):
+def quantum_task_quiet(aws_session):
     return AwsQuantumTask("foo:bar:arn", aws_session, poll_timeout_seconds=2, quiet=True)
 
 
@@ -225,10 +225,10 @@ def test_queue_position(quantum_task):
     )
 
 
-def test_queued_not_quiet(quantum_task_not_quiet):
+def test_queued_quiet(quantum_task_quiet):
     state_1 = "QUEUED"
-    _mock_metadata(quantum_task_not_quiet._aws_session, state_1)
-    assert quantum_task_not_quiet.queue_position() == QuantumTaskQueueInfo(
+    _mock_metadata(quantum_task_quiet._aws_session, state_1)
+    assert quantum_task_quiet.queue_position() == QuantumTaskQueueInfo(
         queue_type=QueueType.NORMAL, queue_position="2", message=None
     )
 
@@ -236,8 +236,8 @@ def test_queued_not_quiet(quantum_task_not_quiet):
     message = (
         f"'Task is in {state_2} status. AmazonBraket does not show queue position for this status.'"
     )
-    _mock_metadata(quantum_task_not_quiet._aws_session, state_2)
-    assert quantum_task_not_quiet.queue_position() == QuantumTaskQueueInfo(
+    _mock_metadata(quantum_task_quiet._aws_session, state_2)
+    assert quantum_task_quiet.queue_position() == QuantumTaskQueueInfo(
         queue_type=QueueType.NORMAL, queue_position=None, message=message
     )
 
