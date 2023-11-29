@@ -86,40 +86,6 @@ cnot __qubits__[1], __qubits__[3];"""
     assert bell_noarg_partial.to_ir() == expected_no_arg_partial
 
 
-def test_classmethod() -> None:
-    """Tests aq.main decorator application to a classmethod."""
-
-    # TODO: see if this functionality should work
-    pytest.xfail("cls must be handled")
-    # we could try to catch `cls` parameters and use qualname to extrapolate
-    # class info, but it's a best-effort approach
-
-    class MyClass:
-        @classmethod
-        def bell(cls, q0: int, q1: int):
-            h(q0)
-            cnot(q0, q1)
-
-        @classmethod
-        @aq.main(num_qubits=2)
-        def bell_decorated(cls, q0: int, q1: int):
-            cls.bell(q0, q1)
-
-    expected = """OPENQASM 3.0;
-input int[32] q0;
-input int[32] q1;
-qubit[2] __qubits__;
-h __qubits__[q0];
-cnot __qubits__[q0], __qubits__[q1];"""
-
-    assert aq.main(num_qubits=2)(MyClass.bell).to_ir() == expected
-    assert MyClass.bell_decorated.to_ir() == expected
-
-    a = MyClass()
-    assert aq.main(num_qubits=2)(a.bell).to_ir() == expected
-    assert a.bell_decorated.to_ir() == expected
-
-
 def test_method() -> None:
     """Tests aq.main decorator application to a classmethod."""
 
