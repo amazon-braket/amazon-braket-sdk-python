@@ -14,7 +14,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, Tuple
 
 import braket.ir.annealing as ir
 
@@ -37,16 +36,14 @@ class Problem:
     def __init__(
         self,
         problem_type: ProblemType,
-        linear: Dict[int, float] | None = None,
-        quadratic: Dict[Tuple[int, int], float] | None = None,
+        linear: dict[int, float] | None = None,
+        quadratic: dict[tuple[int, int], float] | None = None,
     ):
-        """
-
-        Args:
+        """Args:
             problem_type (ProblemType): The type of annealing problem
-            linear (Dict[int, float] | None): The linear terms of this problem,
+            linear (dict[int, float] | None): The linear terms of this problem,
                 as a map of variable to coefficient
-            quadratic (Dict[Tuple[int, int], float] | None): The quadratic terms of this problem,
+            quadratic (dict[tuple[int, int], float] | None): The quadratic terms of this problem,
                 as a map of variables to coefficient
 
         Examples:
@@ -71,20 +68,20 @@ class Problem:
         return self._problem_type
 
     @property
-    def linear(self) -> Dict[int, float]:
+    def linear(self) -> dict[int, float]:
         """The linear terms of this problem.
 
         Returns:
-            Dict[int, float]: The linear terms of this problem, as a map of variable to coefficient
+            dict[int, float]: The linear terms of this problem, as a map of variable to coefficient
         """
         return self._linear
 
     @property
-    def quadratic(self) -> Dict[Tuple[int, int], float]:
+    def quadratic(self) -> dict[tuple[int, int], float]:
         """The quadratic terms of this problem.
 
         Returns:
-            Dict[Tuple[int, int], float]: The quadratic terms of this problem,
+            dict[tuple[int, int], float]: The quadratic terms of this problem,
             as a map of variables to coefficient
         """
         return self._quadratic
@@ -102,11 +99,11 @@ class Problem:
         self._linear[term] = coefficient
         return self
 
-    def add_linear_terms(self, coefficients: Dict[int, float]) -> Problem:
+    def add_linear_terms(self, coefficients: dict[int, float]) -> Problem:
         """Adds linear terms to the problem.
 
         Args:
-            coefficients (Dict[int, float]): A map of variable to coefficient
+            coefficients (dict[int, float]): A map of variable to coefficient
 
         Returns:
             Problem: This problem object
@@ -114,11 +111,11 @@ class Problem:
         self._linear.update(coefficients)
         return self
 
-    def add_quadratic_term(self, term: Tuple[int, int], coefficient: float) -> Problem:
+    def add_quadratic_term(self, term: tuple[int, int], coefficient: float) -> Problem:
         """Adds a quadratic term to the problem.
 
         Args:
-            term (Tuple[int, int]): The variables of the quadratic term
+            term (tuple[int, int]): The variables of the quadratic term
             coefficient (float): The coefficient of the quadratic term
 
         Returns:
@@ -127,11 +124,11 @@ class Problem:
         self._quadratic[term] = coefficient
         return self
 
-    def add_quadratic_terms(self, coefficients: Dict[Tuple[int, int], float]) -> Problem:
+    def add_quadratic_terms(self, coefficients: dict[tuple[int, int], float]) -> Problem:
         """Adds quadratic terms to the problem.
 
         Args:
-            coefficients (Dict[Tuple[int, int], float]): A map of variables to coefficient
+            coefficients (dict[tuple[int, int], float]): A map of variables to coefficient
 
         Returns:
             Problem: This problem object

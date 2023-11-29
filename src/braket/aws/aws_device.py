@@ -20,11 +20,9 @@ import urllib.request
 import warnings
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 from botocore.errorfactory import ClientError
-from networkx import DiGraph, complete_graph, from_edgelist
-
 from braket.ahs.analog_hamiltonian_simulation import AnalogHamiltonianSimulation
 from braket.annealing.problem import Problem
 from braket.aws.aws_quantum_task import AwsQuantumTask
@@ -35,7 +33,9 @@ from braket.circuits import Circuit, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema import DeviceCapabilities, ExecutionDay, GateModelQpuParadigmProperties
 from braket.device_schema.dwave import DwaveProviderProperties
-from braket.device_schema.pulse.pulse_device_action_properties_v1 import (  # noqa TODO: Remove device_action module once this is added to init in the schemas repo
+
+# TODO: Remove device_action module once this is added to init in the schemas repo
+from braket.device_schema.pulse.pulse_device_action_properties_v1 import (
     PulseDeviceActionProperties,
 )
 from braket.devices.device import Device
@@ -46,6 +46,7 @@ from braket.parametric.free_parameter_expression import _is_float
 from braket.pulse import ArbitraryWaveform, Frame, Port, PulseSequence
 from braket.pulse.waveforms import _parse_waveform_from_calibration_schema
 from braket.schema_common import BraketSchemaBase
+from networkx import DiGraph, complete_graph, from_edgelist
 
 
 class AwsDeviceType(str, Enum):
@@ -56,8 +57,7 @@ class AwsDeviceType(str, Enum):
 
 
 class AwsDevice(Device):
-    """
-    Amazon Braket implementation of a device.
+    """Amazon Braket implementation of a device.
     Use this class to retrieve the latest metadata about the device and to run a quantum task on the
     device.
     """
@@ -70,7 +70,7 @@ class AwsDevice(Device):
 
     _GET_DEVICES_ORDER_BY_KEYS = frozenset({"arn", "name", "type", "provider_name", "status"})
 
-    _RIGETTI_GATES_TO_BRAKET = {
+    _RIGETTI_GATES_TO_BRAKET: ClassVar = {
         # Rx_12 does not exist in the Braket SDK, it is a gate between |1> and |2>.
         "Rx_12": None,
         "Cz": "CZ",
@@ -79,8 +79,7 @@ class AwsDevice(Device):
     }
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
-        """
-        Args:
+        """Args:
             arn (str): The ARN of the device
             aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
 
@@ -121,18 +120,17 @@ class AwsDevice(Device):
         poll_interval_seconds: Optional[float] = None,
         inputs: Optional[dict[str, float]] = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] = None,
-        *aws_quantum_task_args,
-        **aws_quantum_task_kwargs,
+        *aws_quantum_task_args: Any,
+        **aws_quantum_task_kwargs: Any,
     ) -> AwsQuantumTask:
-        """
-        Run a quantum task specification on this device. A quantum task can be a circuit or an
+        """Run a quantum task specification on this device. A quantum task can be a circuit or an
         annealing problem.
 
         Args:
-            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]): # noqa
+            task_specification (Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]):
                 Specification of quantum task (circuit, OpenQASM program or AHS program)
                 to run on device.
-            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
+            s3_destination_folder (Optional[AwsSession.S3DestinationFolder]): The S3 location to
                 save the quantum task's results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Hybrid Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Hybrid Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
@@ -150,6 +148,8 @@ class AwsDevice(Device):
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
+            *aws_quantum_task_args (Any): Arbitrary arguments.
+            **aws_quantum_task_kwargs (Any): Arbitrary keyword arguments.
 
         Returns:
             AwsQuantumTask: An AwsQuantumTask that tracks the execution on the device.
@@ -182,7 +182,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task.AwsQuantumTask.create()`
-        """
+        """  # noqa E501
         return AwsQuantumTask.create(
             self._aws_session,
             self._arn,
@@ -203,7 +203,7 @@ class AwsDevice(Device):
             **aws_quantum_task_kwargs,
         )
 
-    def run_batch(
+    def run_batch(  # noqa: D417
         self,
         task_specifications: Union[
             Union[
@@ -242,7 +242,7 @@ class AwsDevice(Device):
             task_specifications (Union[Union[Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation], list[Union[ Circuit, Problem, OpenQasmProgram, BlackbirdProgram, PulseSequence, AnalogHamiltonianSimulation]]]): # noqa
                 Single instance or list of circuits, annealing problems, pulse sequences,
                 or photonics program to run on device.
-            s3_destination_folder (Optional[S3DestinationFolder]): The S3 location to
+            s3_destination_folder (Optional[AwsSession.S3DestinationFolder]): The S3 location to
                 save the quantum tasks' results to. Default is `<default_bucket>/tasks` if evoked outside a
                 Braket Job, `<Job Bucket>/jobs/<job name>/tasks` if evoked inside a Braket Job.
             shots (Optional[int]): The number of times to run the circuit or annealing problem.
@@ -271,7 +271,7 @@ class AwsDevice(Device):
 
         See Also:
             `braket.aws.aws_quantum_task_batch.AwsQuantumTaskBatch`
-        """
+        """  # noqa E501
         return AwsQuantumTaskBatch(
             AwsSession.copy_session(self._aws_session, max_connections=max_connections),
             self._arn,
@@ -295,9 +295,7 @@ class AwsDevice(Device):
         )
 
     def refresh_metadata(self) -> None:
-        """
-        Refresh the `AwsDevice` object with the most recent Device metadata.
-        """
+        """Refresh the `AwsDevice` object with the most recent Device metadata."""
         self._populate_properties(self._aws_session)
 
     def _get_session_and_initialize(self, session: AwsSession) -> AwsSession:
@@ -319,9 +317,11 @@ class AwsDevice(Device):
             self._populate_properties(region_session)
             return region_session
         except ClientError as e:
-            raise ValueError(f"'{self._arn}' not found") if e.response["Error"][
-                "Code"
-            ] == "ResourceNotFoundException" else e
+            raise (
+                ValueError(f"'{self._arn}' not found")
+                if e.response["Error"]["Code"] == "ResourceNotFoundException"
+                else e
+            )
 
     def _get_non_regional_device_session(self, session: AwsSession) -> AwsSession:
         current_region = session.region
@@ -383,8 +383,7 @@ class AwsDevice(Device):
 
     @property
     def gate_calibrations(self) -> Optional[GateCalibrations]:
-        """
-        Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
+        """Calibration data for a QPU. Calibration data is shown for gates on particular gubits.
         If a QPU does not expose these calibrations, None is returned.
 
         Returns:
@@ -398,6 +397,7 @@ class AwsDevice(Device):
     @property
     def is_available(self) -> bool:
         """Returns true if the device is currently available.
+
         Returns:
             bool: Return if the device is currently available.
         """
@@ -406,7 +406,7 @@ class AwsDevice(Device):
 
         is_available_result = False
 
-        current_datetime_utc = datetime.utcnow()
+        current_datetime_utc = datetime.utcnow()  # noqa: DTZ003
         for execution_window in self.properties.service.executionWindows:
             weekday = current_datetime_utc.weekday()
             current_time_utc = current_datetime_utc.time().replace(microsecond=0)
@@ -459,7 +459,8 @@ class AwsDevice(Device):
 
         Please see `braket.device_schema` in amazon-braket-schemas-python_
 
-        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python"""
+        .. _amazon-braket-schemas-python: https://github.com/aws/amazon-braket-schemas-python
+        """
         return self._properties
 
     @property
@@ -485,8 +486,7 @@ class AwsDevice(Device):
         return self._topology_graph
 
     def _construct_topology_graph(self) -> DiGraph:
-        """
-        Construct topology graph. If no such metadata is available, return `None`.
+        """Construct topology graph. If no such metadata is available, return `None`.
 
         Returns:
             DiGraph: topology of QPU as a networkx `DiGraph` object.
@@ -523,9 +523,9 @@ class AwsDevice(Device):
         return AwsDevice.DEFAULT_MAX_PARALLEL
 
     def __repr__(self):
-        return "Device('name': {}, 'arn': {})".format(self.name, self.arn)
+        return f"Device('name': {self.name}, 'arn': {self.arn})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: AwsDevice):
         if isinstance(other, AwsDevice):
             return self.arn == other.arn
         return NotImplemented
@@ -533,16 +533,18 @@ class AwsDevice(Device):
     @property
     def frames(self) -> dict[str, Frame]:
         """Returns a dict mapping frame ids to the frame objects for predefined frames
-        for this device."""
+        for this device.
+        """
         self._update_pulse_properties()
-        return self._frames or dict()
+        return self._frames or {}
 
     @property
     def ports(self) -> dict[str, Port]:
         """Returns a dict mapping port ids to the port objects for predefined ports
-        for this device."""
+        for this device.
+        """
         self._update_pulse_properties()
-        return self._ports or dict()
+        return self._ports or {}
 
     @staticmethod
     def get_devices(
@@ -554,8 +556,7 @@ class AwsDevice(Device):
         order_by: str = "name",
         aws_session: Optional[AwsSession] = None,
     ) -> list[AwsDevice]:
-        """
-        Get devices based on filters and desired ordering. The result is the AND of
+        """Get devices based on filters and desired ordering. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Examples:
@@ -578,16 +579,18 @@ class AwsDevice(Device):
             aws_session (Optional[AwsSession]): An AWS session object.
                 Default is `None`.
 
+        Raises:
+            ValueError: order_by not in ['arn', 'name', 'type', 'provider_name', 'status']
+
         Returns:
             list[AwsDevice]: list of AWS devices
         """
-
         if order_by not in AwsDevice._GET_DEVICES_ORDER_BY_KEYS:
             raise ValueError(
                 f"order_by '{order_by}' must be in {AwsDevice._GET_DEVICES_ORDER_BY_KEYS}"
             )
         types = (
-            frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})
+            frozenset(types) if types else frozenset({device_type for device_type in AwsDeviceType})  # noqa C416
         )
         aws_session = aws_session if aws_session else AwsSession()
         device_map = {}
@@ -628,7 +631,8 @@ class AwsDevice(Device):
                 warnings.warn(
                     f"{error_code}: Unable to search region '{region}' for devices."
                     " Please check your settings or try again later."
-                    f" Continuing without devices in '{region}'."
+                    f" Continuing without devices in '{region}'.",
+                    stacklevel=1,
                 )
 
         devices = list(device_map.values())
@@ -640,14 +644,14 @@ class AwsDevice(Device):
             self.properties.pulse, PulseDeviceActionProperties
         ):
             if self._ports is None:
-                self._ports = dict()
+                self._ports = {}
                 port_data = self.properties.pulse.ports
                 for port_id, port in port_data.items():
                     self._ports[port_id] = Port(
                         port_id=port_id, dt=port.dt, properties=json.loads(port.json())
                     )
             if self._frames is None:
-                self._frames = dict()
+                self._frames = {}
                 frame_data = self.properties.pulse.frames
                 if frame_data:
                     for frame_id, frame in frame_data.items():
@@ -663,6 +667,7 @@ class AwsDevice(Device):
     @staticmethod
     def get_device_region(device_arn: str) -> str:
         """Gets the region from a device arn.
+
         Args:
             device_arn (str): The device ARN.
 
@@ -681,8 +686,7 @@ class AwsDevice(Device):
             )
 
     def queue_depth(self) -> QueueDepthInfo:
-        """
-        Task queue depth refers to the total number of quantum tasks currently waiting
+        """Task queue depth refers to the total number of quantum tasks currently waiting
         to run on a particular device.
 
         Returns:
@@ -729,8 +733,7 @@ class AwsDevice(Device):
         return QueueDepthInfo(**queue_info)
 
     def refresh_gate_calibrations(self) -> Optional[GateCalibrations]:
-        """
-        Refreshes the gate calibration data upon request.
+        """Refreshes the gate calibration data upon request.
 
         If the device does not have calibration data, None is returned.
 
@@ -747,7 +750,7 @@ class AwsDevice(Device):
             and self.properties.pulse.nativeGateCalibrationsRef
         ):
             try:
-                with urllib.request.urlopen(
+                with urllib.request.urlopen(  # noqa S310
                     self.properties.pulse.nativeGateCalibrationsRef.split("?")[0]
                 ) as f:
                     json_calibration_data = self._parse_calibration_json(
@@ -762,7 +765,7 @@ class AwsDevice(Device):
             return None
 
     def _parse_waveforms(self, waveforms_json: dict) -> dict:
-        waveforms = dict()
+        waveforms = {}
         for waveform in waveforms_json:
             parsed_waveform = _parse_waveform_from_calibration_schema(waveforms_json[waveform])
             waveforms[parsed_waveform.id] = parsed_waveform
@@ -776,8 +779,7 @@ class AwsDevice(Device):
     def _parse_calibration_json(
         self, calibration_data: dict
     ) -> dict[tuple[Gate, QubitSet], PulseSequence]:
-        """
-        Takes the json string from the device calibration URL and returns a structured dictionary of
+        """Takes the json string from the device calibration URL and returns a structured dictionary of
         corresponding `dict[tuple[Gate, QubitSet], PulseSequence]` to represent the calibration data.
 
         Args:
