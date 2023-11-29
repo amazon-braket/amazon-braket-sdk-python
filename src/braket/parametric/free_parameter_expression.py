@@ -200,21 +200,11 @@ class FreeParameterExpression:
         Returns:
             Expression: The AST node.
         """
+        # TODO: capture expressions into expression ASTs rather than just an Identifier
+        identifier = Identifier(name=str(self))
         if isinstance(self._type, DurationType):
-            return DurationLiteral(_FreeParameterExpressionIdentifier(self), TimeUnit.s)
-        return _FreeParameterExpressionIdentifier(self)
-
-
-class _FreeParameterExpressionIdentifier(Identifier):
-    """Dummy AST node with FreeParameterExpression instance attached"""
-
-    def __init__(self, expression: FreeParameterExpression):
-        super().__init__(name=f"FreeParameterExpression({expression})")
-        self._expression = expression
-
-    @property
-    def expression(self) -> FreeParameterExpression:
-        return self._expression
+            return DurationLiteral(identifier, TimeUnit.s)
+        return identifier
 
 
 def subs_if_free_parameter(parameter: Any, **kwargs) -> Any:

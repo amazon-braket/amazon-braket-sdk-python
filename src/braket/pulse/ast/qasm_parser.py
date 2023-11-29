@@ -18,8 +18,6 @@ from openpulse.printer import Printer
 from openqasm3.ast import DurationLiteral
 from openqasm3.printer import PrinterState
 
-from braket.pulse.ast.free_parameters import _FreeParameterExpressionIdentifier
-
 
 class _PulsePrinter(Printer):
     """Walks the AST and prints it to an OpenQASM3 string."""
@@ -27,15 +25,13 @@ class _PulsePrinter(Printer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def visit__FreeParameterExpressionIdentifier(
-        self, node: ast.Identifier, context: PrinterState
-    ) -> None:
-        """Visit a FreeParameterExpressionIdentifier.
+    def visit_Identifier(self, node: ast.Identifier, context: PrinterState) -> None:
+        """Visit an Identifier.
         Args:
             node (ast.Identifier): The identifier.
             context (PrinterState): The printer state context.
         """
-        self.stream.write(str(node.expression.expression))
+        self.stream.write(node.name)
 
     def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState) -> None:
         """Visit Duration Literal.
@@ -46,8 +42,8 @@ class _PulsePrinter(Printer):
             context (PrinterState): The printer state context.
         """
         duration = node.value
-        if isinstance(duration, _FreeParameterExpressionIdentifier):
-            self.stream.write(f"({duration.expression}) * 1{node.unit.name}")
+        if isinstance(duration, ast.Identifier):
+            self.stream.write(f"({duration.name}) * 1{node.unit.name}")
         else:
             super().visit_DurationLiteral(node, context)
 
