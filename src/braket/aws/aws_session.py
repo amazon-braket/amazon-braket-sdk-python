@@ -182,7 +182,7 @@ class AwsSession:
         )
 
     def add_braket_user_agent(self, user_agent: str) -> None:
-        """Appends the `user-agent` value to the User-Agent header, if it does not yet exist in the
+        """Appends the `user-agent` value to the `User-Agent` header, if it does not yet exist in the
         header. This method is typically only relevant for libraries integrating with the
         Amazon Braket SDK.
 
