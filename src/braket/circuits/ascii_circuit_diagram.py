@@ -111,16 +111,16 @@ class AsciiCircuitDiagram(CircuitDiagram):
     ) -> tuple[str, float | None]:
         # Y Axis Column
         y_axis_width = len(str(int(max(circuit_qubits))))
-        y_axis_str = "{0:{width}} : |\n".format("T", width=y_axis_width + 1)
+        y_axis_str = "{0:{width}} : │\n".format("T", width=y_axis_width + 1)
 
         global_phase = None
         if any(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
-            y_axis_str += "{0:{width}} : |\n".format("GP", width=y_axis_width)
+            y_axis_str += "{0:{width}} : │\n".format("GP", width=y_axis_width)
             global_phase = 0
 
         for qubit in circuit_qubits:
             y_axis_str += "{0:{width}}\n".format(" ", width=y_axis_width + 5)
-            y_axis_str += "q{0:{width}} : -\n".format(str(int(qubit)), width=y_axis_width)
+            y_axis_str += "q{0:{width}} : ─\n".format(str(int(qubit)), width=y_axis_width)
 
         return y_axis_str, global_phase
 
@@ -272,12 +272,12 @@ class AsciiCircuitDiagram(CircuitDiagram):
         if symbols_width < col_title_width:
             diff = col_title_width - symbols_width
             for i in range(len(lines) - 1):
-                if lines[i].endswith("-"):
-                    lines[i] += "-" * diff
+                if lines[i].endswith("─"):
+                    lines[i] += "─" * diff
                 else:
                     lines[i] += " "
 
-        first_line = "{:^{width}}|\n".format(col_title, width=len(lines[0]) - 1)
+        first_line = "{:^{width}}│\n".format(col_title, width=len(lines[0]) - 1)
 
         return first_line + "\n".join(lines)
 
@@ -298,7 +298,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         Returns:
             str: an ASCII string diagram for the specified moment in time for a column.
         """
-        symbols = {qubit: "-" for qubit in circuit_qubits}
+        symbols = {qubit: "─" for qubit in circuit_qubits}
         margins = {qubit: " " for qubit in circuit_qubits}
 
         for item in items:
@@ -316,7 +316,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 ascii_symbol = item.ascii_symbols[0]
                 marker = "*" * len(ascii_symbol)
                 num_after = len(circuit_qubits) - 1
-                after = ["|"] * (num_after - 1) + ([marker] if num_after else [])
+                after = ["┼"] * (num_after - 1) + ([marker] if num_after else [])
                 ascii_symbols = [ascii_symbol] + after
             elif (
                 isinstance(item, Instruction)
@@ -327,7 +327,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 control_qubits = QubitSet()
                 target_and_control = QubitSet()
                 qubits = circuit_qubits
-                ascii_symbols = "-" * len(circuit_qubits)
+                ascii_symbols = "─" * len(circuit_qubits)
             else:
                 if isinstance(item.target, list):
                     target_qubits = reduce(QubitSet.union, map(QubitSet, item.target), QubitSet())
@@ -370,11 +370,11 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 elif qubit in control_qubits:
                     symbols[qubit] = "⏺" if map_control_qubit_states[qubit] else "○"
                 else:
-                    symbols[qubit] = "|"
+                    symbols[qubit] = "┼"
 
                 # Set the margin to be a connector if not on the first qubit
                 if target_and_control and qubit != min(target_and_control):
-                    margins[qubit] = "|"
+                    margins[qubit] = "│"
 
         output = AsciiCircuitDiagram._create_output(symbols, margins, circuit_qubits, global_phase)
         return output
@@ -394,7 +394,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                 f"{global_phase:.2f}" if isinstance(global_phase, float) else str(global_phase)
             )
             symbols_width = max([symbols_width, len(global_phase_str)])
-            output += "{0:{fill}{align}{width}}|\n".format(
+            output += "{0:{fill}{align}{width}}│\n".format(
                 global_phase_str,
                 fill=" ",
                 align="^",
@@ -404,7 +404,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         for qubit in qubits:
             output += "{0:{width}}\n".format(margins[qubit], width=symbols_width + 1)
             output += "{0:{fill}{align}{width}}\n".format(
-                symbols[qubit], fill="-", align="<", width=symbols_width + 1
+                symbols[qubit], fill="─", align="<", width=symbols_width + 1
             )
         return output
 
