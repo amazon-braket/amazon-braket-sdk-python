@@ -412,6 +412,26 @@ def ti(
     _qubit_instruction("ti", [target])
 
 
+def u(
+    target: QubitIdentifierType,
+    theta: GateParameterType,
+    phi: GateParameterType,
+    lambda_: GateParameterType,
+) -> None:
+    """U gate.
+
+    Generic single-qubit rotation gate with 3 Euler angles from OpenQASM spec.
+
+    Args:
+        target (QubitIdentifierType): Target qubit.
+        theta (GateParameterType): Rotation angle in radians.
+        phi (GateParameterType): Rotation angle in radians.
+        ``lambda_`` (GateParameterType): Rotation angle in radians.
+
+    """
+    _qubit_instruction("U", [target], theta, phi, lambda_)
+
+
 def v(
     target: QubitIdentifierType,
 ) -> None:
