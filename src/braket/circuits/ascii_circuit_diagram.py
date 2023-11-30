@@ -43,8 +43,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
             str: ASCII string circuit diagram.
         """
 
-        if not circuit.instructions or not any(
-            m for m in circuit._moments if m.moment_type != MomentType.GLOBAL_PHASE
+        if not circuit.instructions or all(
+            m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments
         ):
             return ""
 
@@ -340,7 +340,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                             # when a user has a gate genuinely named C, but
                             # is necessary to enable proper printing of custom
                             # gates with built-in control qubits
-                            and ascii_symbols[item_qubit_index] != "C"
+                            and ascii_symbols[item_qubit_index] != "⏺"
                         )
                         else ""
                     )
@@ -350,7 +350,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         else ascii_symbols[item_qubit_index]
                     )
                 elif qubit in control_qubits:
-                    symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
+                    symbols[qubit] = "⏺" if map_control_qubit_states[qubit] else "○"
                 else:
                     symbols[qubit] = "|"
 
