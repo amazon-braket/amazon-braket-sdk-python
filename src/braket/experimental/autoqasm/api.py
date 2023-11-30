@@ -65,8 +65,8 @@ def main(
             program. Can be either an Device object or a valid Amazon Braket device ARN.
 
     Returns:
-        Program | partial: A callable
-        which returns the converted quantum program when called.
+        Program | partial: The Program object containing the converted quantum program, or a
+        partial function of the `main` decorator.
     """
     if isinstance(device, str):
         device = AwsDevice(device)
