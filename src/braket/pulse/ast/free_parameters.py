@@ -29,13 +29,19 @@ class _FreeParameterTransformer(QASMTransformer):
         self.program = program
         super().__init__()
 
-    def visit_Identifier(self, identifier: ast.Identifier) -> Union[ast.Expression, ast.FloatLiteral]:
+    def visit_Identifier(
+        self, identifier: ast.Identifier
+    ) -> Union[ast.Identifier, ast.FloatLiteral]:
         """Visit an Identifier.
+
+        If the Identifier is used to hold a `FreeParameterExpression`, it will be simplified
+        using the given parameter values.
+
         Args:
             identifier (Identifier): The identifier.
 
         Returns:
-            Union[Expression, FloatLiteral]: The transformed expression.
+            Union[Identifier, FloatLiteral]: The transformed identifier.
         """
         new_value = FreeParameterExpression(identifier.name).subs(self.param_values)
         if isinstance(new_value, FreeParameterExpression):
