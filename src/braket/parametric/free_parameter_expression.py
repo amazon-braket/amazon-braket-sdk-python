@@ -201,7 +201,7 @@ class FreeParameterExpression:
             Expression: The AST node.
         """
         # TODO (#822): capture expressions into expression ASTs rather than just an Identifier
-        identifier = Identifier(name=str(self))
+        identifier = Identifier(name=self)
         if isinstance(self._type, DurationType):
             return DurationLiteral(identifier, TimeUnit.s)
         return identifier

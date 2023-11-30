@@ -43,11 +43,13 @@ class _FreeParameterTransformer(QASMTransformer):
         Returns:
             Union[Identifier, FloatLiteral]: The transformed identifier.
         """
-        new_value = FreeParameterExpression(identifier.name).subs(self.param_values)
-        if isinstance(new_value, FreeParameterExpression):
-            return ast.Identifier(str(new_value))
-        else:
-            return ast.FloatLiteral(float(new_value))
+        if isinstance(identifier.name, FreeParameterExpression):
+            new_value = FreeParameterExpression(identifier.name).subs(self.param_values)
+            if isinstance(new_value, FreeParameterExpression):
+                return ast.Identifier(new_value)
+            else:
+                return ast.FloatLiteral(float(new_value))
+        return identifier
 
     def visit_DurationLiteral(self, duration_literal: ast.DurationLiteral) -> ast.DurationLiteral:
         """Visit Duration Literal.

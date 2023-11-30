@@ -25,6 +25,16 @@ class _PulsePrinter(Printer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def visit_Identifier(
+        self, node: ast.Identifier, context: PrinterState
+    ) -> None:
+        """Visit an Identifier.
+        Args:
+            node (ast.Identifier): The identifier.
+            context (PrinterState): The printer state context.
+        """
+        self.stream.write(str(node.name))
+
     def visit_DurationLiteral(self, node: DurationLiteral, context: PrinterState) -> None:
         """Visit Duration Literal.
             node.value, node.unit (node.unit.name, node.unit.value)
