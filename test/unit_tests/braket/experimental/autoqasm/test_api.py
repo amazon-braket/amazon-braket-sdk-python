@@ -121,7 +121,7 @@ def recursive_h(q: int):
 def recursive_h_wrapper():
     q = 5
 
-    @aq.main(num_qubits=6)
+    @aq.main(num_qubits=q + 1)
     def recursive_h_wrapper():
         recursive_h(q)
 
@@ -972,7 +972,7 @@ def test_direct_subroutine_call_no_args():
         bell()
 
 
-@pytest.mark.xfail(reason="will fix by adding a checker to the transpiler")
+@pytest.mark.xfail(reason="(#809) will fix by adding a checker to the transpiler")
 def test_main_from_main():
     """Can't call main from main!"""
 
