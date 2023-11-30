@@ -681,7 +681,6 @@ class AwsSession:
             )
             print(s3_uri_match)
             if s3_uri_match is None:
-                print("test")
                 raise AssertionError
             bucket, key = s3_uri_match.groups()
             return bucket, key

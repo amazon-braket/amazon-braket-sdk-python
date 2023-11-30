@@ -78,8 +78,8 @@ class AwsQuantumTask(QuantumTask):
     """
 
     # TODO: Add API documentation that defines these states. Make it clear this is the contract.
-    NO_RESULT_TERMINAL_STATES: ClassVar = {"FAILED", "CANCELLED"}
-    RESULTS_READY_STATES: ClassVar = {"COMPLETED"}
+    NO_RESULT_TERMINAL_STATES: ClassVar[set[str]] = {"FAILED", "CANCELLED"}
+    RESULTS_READY_STATES: ClassVar[set[str]] = {"COMPLETED"}
     TERMINAL_STATES = RESULTS_READY_STATES.union(NO_RESULT_TERMINAL_STATES)
 
     DEFAULT_RESULTS_POLL_TIMEOUT = 432000
@@ -208,7 +208,7 @@ class AwsQuantumTask(QuantumTask):
         poll_interval_seconds: float = DEFAULT_RESULTS_POLL_INTERVAL,
         logger: Logger = getLogger(__name__),
     ):
-        """Inits an `AwsQuantumTask`.
+        """Initializes an `AwsQuantumTask`.
 
         Args:
             arn (str): The ARN of the quantum task.
@@ -673,7 +673,7 @@ def _(
         DwaveAdvantageDeviceParameters,
         Dwave2000QDeviceParameters,
     ],
-    _,  # noqa: ANN001
+    _: bool,
     inputs: dict[str, float],
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
@@ -698,7 +698,7 @@ def _(
     create_task_kwargs: dict[str, Any],
     device_arn: str,
     device_parameters: dict,
-    _: AnalogHamiltonianSimulationTaskResult,
+    _: bool,
     inputs: dict[str, float],
     gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]],
     *args,
