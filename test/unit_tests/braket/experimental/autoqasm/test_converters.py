@@ -44,6 +44,8 @@ def test_assignment(program_ctx: ag_ctx.ControlStatusCtx) -> None:
         a = aq.IntVar(1)  # noqa: F841
         e = a  # noqa: F841
         f = aq.BoolVar(0)  # noqa: F841
+        g = aq.BoolVar(1)  # noqa: F841
+        g = f  # noqa: F841
 
     with aq.build_program() as program_conversion_context:
         mock_transpiler = MockTranspiler(assignments)
@@ -57,7 +59,9 @@ int[32] a = 5;
 float[64] b = 1.2;
 a = 1;
 e = a;
-bool f = 0;"""
+bool f = 0;
+bool g = 1;
+g = f;"""
     assert qasm == expected_qasm
 
 
