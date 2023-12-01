@@ -34,7 +34,7 @@ class BasisState:
         return self.state == other.state
 
     def __bool__(self):
-        return bool(self.as_int)
+        return any(self.state)
 
     def __str__(self):
         return self.as_string
