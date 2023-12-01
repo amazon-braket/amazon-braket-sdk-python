@@ -152,8 +152,11 @@ class AwsQuantumTask(QuantumTask):
                 a `PulseSequence`.
                 Default: None.
 
-            reservation_arn (str | None): the reservation window arn provided by Braket Direct to reserve
-                exclusive usage for the device to run the quantum task on. Default: None.
+            reservation_arn (str | None): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
+                Default: None.
 
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the quantum task execution on the device.

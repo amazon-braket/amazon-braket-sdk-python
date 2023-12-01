@@ -151,8 +151,10 @@ class AwsDevice(Device):
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`.
                 Default: None.
-            reservation_arn (str | None): the reservation window arn provided by Braket Direct to reserve
-                exclusive usage for the device to run the quantum task on.
+            reservation_arn (str | None): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
                 Default: None.
 
         Returns:
@@ -270,8 +272,11 @@ class AwsDevice(Device):
                 `dict[tuple[Gate, QubitSet], PulseSequence]]` for a user defined gate calibration.
                 The calibration is defined for a particular `Gate` on a particular `QubitSet`
                 and is represented by a `PulseSequence`. Default: None.
-            reservation_arn (Optional[str]): the reservation window arn provided by Braket Direct to reserve
-                exclusive usage for the device to run the quantum task on. Default: None.
+            reservation_arn (Optional[str]): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
+                Default: None.
 
         Returns:
             AwsQuantumTaskBatch: A batch containing all of the quantum tasks run

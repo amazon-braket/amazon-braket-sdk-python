@@ -92,8 +92,11 @@ class AwsQuantumTaskBatch(QuantumTaskBatch):
             inputs (Union[dict[str, float], list[dict[str, float]]] | None): Inputs to be passed
                 along with the IR. If the IR supports inputs, the inputs will be updated
                 with this value. Default: {}.
-            reservation_arn (str | None): the reservation window arn provided by Braket Direct to reserve
-                exclusive usage for the device to run the quantum task on. Default: None.
+            reservation_arn (str | None): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
+                Default: None.
         """
         self._tasks = AwsQuantumTaskBatch._execute(
             aws_session,
