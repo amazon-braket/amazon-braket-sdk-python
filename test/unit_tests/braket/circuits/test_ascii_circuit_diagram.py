@@ -35,14 +35,14 @@ def test_only_gphase_circuit():
 
 def test_one_gate_one_qubit():
     circ = Circuit().h(0)
-    expected = ("T  : │0│", "        ", "q0 : ─H─", "", "T  : │0│")
+    expected = ("T  : |0|", "        ", "q0 : -H-", "", "T  : |0|")
     _assert_correct_diagram(circ, expected)
 
 
 def test_one_gate_one_qubit_rotation():
     circ = Circuit().rx(angle=3.14, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
-    expected = ("T  : │   0    │", "               ", "q0 : ─Rx(3.14)─", "", "T  : │   0    │")
+    expected = ("T  : |   0    |", "               ", "q0 : -Rx(3.14)-", "", "T  : |   0    |")
     _assert_correct_diagram(circ, expected)
 
 
@@ -51,11 +51,11 @@ def test_one_gate_one_qubit_rotation_with_parameter():
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
-        "T  : │    0    │",
+        "T  : |    0    |",
         "                ",
-        "q0 : ─Rx(theta)─",
+        "q0 : -Rx(theta)-",
         "",
-        "T  : │    0    │",
+        "T  : |    0    |",
         "",
         "Unassigned parameters: [theta].",
     )
@@ -65,12 +65,12 @@ def test_one_gate_one_qubit_rotation_with_parameter():
 def test_one_gate_with_global_phase():
     circ = Circuit().x(target=0).gphase(0.15)
     expected = (
-        "T  : │0│ 1  │",
-        "GP : │0│0.15│",
+        "T  : |0| 1  |",
+        "GP : |0|0.15|",
         "             ",
-        "q0 : ─X──────",
+        "q0 : -X------",
         "",
-        "T  : │0│ 1  │",
+        "T  : |0| 1  |",
         "",
         "Global phase: 0.15",
     )
@@ -80,12 +80,12 @@ def test_one_gate_with_global_phase():
 def test_one_gate_other_qubit_with_global_phase():
     circ = Circuit().x(target=1).gphase(0.15)
     expected = (
-        "T  : │0│ 1  │",
-        "GP : │0│0.15│",
+        "T  : |0| 1  |",
+        "GP : |0|0.15|",
         "             ",
-        "q1 : ─X──────",
+        "q1 : -X------",
         "",
-        "T  : │0│ 1  │",
+        "T  : |0| 1  |",
         "",
         "Global phase: 0.15",
     )
@@ -95,12 +95,12 @@ def test_one_gate_other_qubit_with_global_phase():
 def test_one_gate_with_zero_global_phase():
     circ = Circuit().gphase(-0.15).x(target=0).gphase(0.15)
     expected = (
-        "T  : │  0  │ 1 │",
-        "GP : │-0.15│0.0│",
+        "T  : |  0  | 1 |",
+        "GP : |-0.15|0.0|",
         "                ",
-        "q0 : ─X─────────",
+        "q0 : -X---------",
         "",
-        "T  : │  0  │ 1 │",
+        "T  : |  0  | 1 |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -110,11 +110,11 @@ def test_one_gate_one_qubit_rotation_with_unicode():
     circ = Circuit().rx(angle=theta, target=0)
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
-        "T  : │  0  │",
+        "T  : |  0  |",
         "            ",
-        "q0 : ─Rx(θ)─",
+        "q0 : -Rx(θ)-",
         "",
-        "T  : │  0  │",
+        "T  : |  0  |",
         "",
         "Unassigned parameters: [θ].",
     )
@@ -125,12 +125,12 @@ def test_one_gate_with_parametric_expression_global_phase_():
     theta = FreeParameter("\u03B8")
     circ = Circuit().x(target=0).gphase(2 * theta).x(0).gphase(1)
     expected = (
-        "T  : │0│ 1 │    2    │",
-        "GP : │0│2*θ│2*θ + 1.0│",
+        "T  : |0| 1 |    2    |",
+        "GP : |0|2*θ|2*θ + 1.0|",
         "                      ",
-        "q0 : ─X─X─────────────",
+        "q0 : -X-X-------------",
         "",
-        "T  : │0│ 1 │    2    │",
+        "T  : |0| 1 |    2    |",
         "",
         "Global phase: 2*θ + 1.0",
         "",
@@ -145,11 +145,11 @@ def test_one_gate_one_qubit_rotation_with_parameter_assigned():
     new_circ = circ.make_bound_circuit({"theta": np.pi})
     # Column formats to length of the gate plus the ascii representation for the angle.
     expected = (
-        "T  : │   0    │",
+        "T  : |   0    |",
         "               ",
-        "q0 : ─Rx(3.14)─",
+        "q0 : -Rx(3.14)-",
         "",
-        "T  : │   0    │",
+        "T  : |   0    |",
     )
     _assert_correct_diagram(new_circ, expected)
 
@@ -157,13 +157,13 @@ def test_one_gate_one_qubit_rotation_with_parameter_assigned():
 def test_qubit_width():
     circ = Circuit().h(0).h(100)
     expected = (
-        "T    : │0│",
+        "T    : |0|",
         "          ",
-        "q0   : ─H─",
+        "q0   : -H-",
         "          ",
-        "q100 : ─H─",
+        "q100 : -H-",
         "",
-        "T    : │0│",
+        "T    : |0|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -178,13 +178,13 @@ def test_gate_width():
 
     circ = Circuit().h(0).h(1).add_instruction(Instruction(Foo(), 0))
     expected = (
-        "T  : │0│ 1 │",
+        "T  : |0| 1 |",
         "            ",
-        "q0 : ─H─FOO─",
+        "q0 : -H-FOO-",
         "            ",
-        "q1 : ─H─────",
+        "q1 : -H-----",
         "",
-        "T  : │0│ 1 │",
+        "T  : |0| 1 |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -197,39 +197,39 @@ def test_time_width():
             break
         circ.cnot(qubit, qubit + 1)
     expected = (
-        "T   : │0│1│2│3│4│5│6│7│8│9│10│11│12│13│",
+        "T   : |0|1|2|3|4|5|6|7|8|9|10|11|12|13|",
         "                                       ",
-        "q0  : ─⏺───────────────────────────────",
-        "       │                               ",
-        "q1  : ─X─⏺─────────────────────────────",
-        "         │                             ",
-        "q2  : ───X─⏺───────────────────────────",
-        "           │                           ",
-        "q3  : ─────X─⏺─────────────────────────",
-        "             │                         ",
-        "q4  : ───────X─⏺───────────────────────",
-        "               │                       ",
-        "q5  : ─────────X─⏺─────────────────────",
-        "                 │                     ",
-        "q6  : ───────────X─⏺───────────────────",
-        "                   │                   ",
-        "q7  : ─────────────X─⏺─────────────────",
-        "                     │                 ",
-        "q8  : ───────────────X─⏺───────────────",
-        "                       │               ",
-        "q9  : ─────────────────X─⏺─────────────",
-        "                         │             ",
-        "q10 : ───────────────────X─⏺───────────",
-        "                           │           ",
-        "q11 : ─────────────────────X──⏺────────",
-        "                              │        ",
-        "q12 : ────────────────────────X──⏺─────",
-        "                                 │     ",
-        "q13 : ───────────────────────────X──⏺──",
-        "                                    │  ",
-        "q14 : ──────────────────────────────X──",
+        "q0  : -⏺-------------------------------",
+        "       |                               ",
+        "q1  : -X-⏺-----------------------------",
+        "         |                             ",
+        "q2  : ---X-⏺---------------------------",
+        "           |                           ",
+        "q3  : -----X-⏺-------------------------",
+        "             |                         ",
+        "q4  : -------X-⏺-----------------------",
+        "               |                       ",
+        "q5  : ---------X-⏺---------------------",
+        "                 |                     ",
+        "q6  : -----------X-⏺-------------------",
+        "                   |                   ",
+        "q7  : -------------X-⏺-----------------",
+        "                     |                 ",
+        "q8  : ---------------X-⏺---------------",
+        "                       |               ",
+        "q9  : -----------------X-⏺-------------",
+        "                         |             ",
+        "q10 : -------------------X-⏺-----------",
+        "                           |           ",
+        "q11 : ---------------------X--⏺--------",
+        "                              |        ",
+        "q12 : ------------------------X--⏺-----",
+        "                                 |     ",
+        "q13 : ---------------------------X--⏺--",
+        "                                    |  ",
+        "q14 : ------------------------------X--",
         "",
-        "T   : │0│1│2│3│4│5│6│7│8│9│10│11│12│13│",
+        "T   : |0|1|2|3|4|5|6|7|8|9|10|11|12|13|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -237,17 +237,17 @@ def test_time_width():
 def test_connector_across_two_qubits():
     circ = Circuit().cnot(3, 4).h(range(2, 6))
     expected = (
-        "T  : │0│1│",
+        "T  : |0|1|",
         "          ",
-        "q2 : ─H───",
+        "q2 : -H---",
         "          ",
-        "q3 : ─⏺─H─",
-        "      │   ",
-        "q4 : ─X─H─",
+        "q3 : -⏺-H-",
+        "      |   ",
+        "q4 : -X-H-",
         "          ",
-        "q5 : ─H───",
+        "q5 : -H---",
         "",
-        "T  : │0│1│",
+        "T  : |0|1|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -255,15 +255,15 @@ def test_connector_across_two_qubits():
 def test_neg_control_qubits():
     circ = Circuit().x(2, control=[0, 1], control_state=[0, 1])
     expected = (
-        "T  : │0│",
+        "T  : |0|",
         "        ",
-        "q0 : ─○─",
-        "      │ ",
-        "q1 : ─⏺─",
-        "      │ ",
-        "q2 : ─X─",
+        "q0 : -○-",
+        "      | ",
+        "q1 : -⏺-",
+        "      | ",
+        "q2 : -X-",
         "",
-        "T  : │0│",
+        "T  : |0|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -271,17 +271,17 @@ def test_neg_control_qubits():
 def test_connector_across_three_qubits():
     circ = Circuit().x(control=(3, 4), target=5).h(range(2, 6))
     expected = (
-        "T  : │0│1│",
+        "T  : |0|1|",
         "          ",
-        "q2 : ─H───",
+        "q2 : -H---",
         "          ",
-        "q3 : ─⏺─H─",
-        "      │   ",
-        "q4 : ─⏺─H─",
-        "      │   ",
-        "q5 : ─X─H─",
+        "q3 : -⏺-H-",
+        "      |   ",
+        "q4 : -⏺-H-",
+        "      |   ",
+        "q5 : -X-H-",
         "",
-        "T  : │0│1│",
+        "T  : |0|1|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -289,17 +289,17 @@ def test_connector_across_three_qubits():
 def test_overlapping_qubits():
     circ = Circuit().cnot(0, 2).x(control=1, target=3).h(0)
     expected = (
-        "T  : │ 0 │1│",
+        "T  : | 0 |1|",
         "            ",
-        "q0 : ─⏺───H─",
-        "      │     ",
-        "q1 : ─┼─⏺───",
-        "      │ │   ",
-        "q2 : ─X─┼───",
-        "        │   ",
-        "q3 : ───X───",
+        "q0 : -⏺---H-",
+        "      |     ",
+        "q1 : -|-⏺---",
+        "      | |   ",
+        "q2 : -X-|---",
+        "        |   ",
+        "q3 : ---X---",
         "",
-        "T  : │ 0 │1│",
+        "T  : | 0 |1|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -307,17 +307,17 @@ def test_overlapping_qubits():
 def test_overlapping_qubits_angled_gates():
     circ = Circuit().zz(0, 2, 0.15).x(control=1, target=3).h(0)
     expected = (
-        "T  : │    0     │1│",
+        "T  : |    0     |1|",
         "                   ",
-        "q0 : ─ZZ(0.15)───H─",
-        "      │            ",
-        "q1 : ─┼────────⏺───",
-        "      │        │   ",
-        "q2 : ─ZZ(0.15)─┼───",
-        "               │   ",
-        "q3 : ──────────X───",
+        "q0 : -ZZ(0.15)---H-",
+        "      |            ",
+        "q1 : -|--------⏺---",
+        "      |        |   ",
+        "q2 : -ZZ(0.15)-|---",
+        "               |   ",
+        "q3 : ----------X---",
         "",
-        "T  : │    0     │1│",
+        "T  : |    0     |1|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -325,17 +325,17 @@ def test_overlapping_qubits_angled_gates():
 def test_connector_across_gt_two_qubits():
     circ = Circuit().h(4).x(control=3, target=5).h(4).h(2)
     expected = (
-        "T  : │ 0 │1│",
+        "T  : | 0 |1|",
         "            ",
-        "q2 : ─H─────",
+        "q2 : -H-----",
         "            ",
-        "q3 : ───⏺───",
-        "        │   ",
-        "q4 : ─H─┼─H─",
-        "        │   ",
-        "q5 : ───X───",
+        "q3 : ---⏺---",
+        "        |   ",
+        "q4 : -H-|-H-",
+        "        |   ",
+        "q5 : ---X---",
         "",
-        "T  : │ 0 │1│",
+        "T  : | 0 |1|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -343,17 +343,17 @@ def test_connector_across_gt_two_qubits():
 def test_connector_across_non_used_qubits():
     circ = Circuit().h(4).cnot(3, 100).h(4).h(101)
     expected = (
-        "T    : │ 0 │1│",
+        "T    : | 0 |1|",
         "              ",
-        "q3   : ───⏺───",
-        "          │   ",
-        "q4   : ─H─┼─H─",
-        "          │   ",
-        "q100 : ───X───",
+        "q3   : ---⏺---",
+        "          |   ",
+        "q4   : -H-|-H-",
+        "          |   ",
+        "q100 : ---X---",
         "              ",
-        "q101 : ─H─────",
+        "q101 : -H-----",
         "",
-        "T    : │ 0 │1│",
+        "T    : | 0 |1|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -361,11 +361,11 @@ def test_connector_across_non_used_qubits():
 def test_verbatim_1q_no_preceding():
     circ = Circuit().add_verbatim_box(Circuit().h(0))
     expected = (
-        "T  : │      0      │1│     2     │",
+        "T  : |      0      |1|     2     |",
         "                                  ",
-        "q0 : ─StartVerbatim─H─EndVerbatim─",
+        "q0 : -StartVerbatim-H-EndVerbatim-",
         "",
-        "T  : │      0      │1│     2     │",
+        "T  : |      0      |1|     2     |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -373,11 +373,11 @@ def test_verbatim_1q_no_preceding():
 def test_verbatim_1q_preceding():
     circ = Circuit().h(0).add_verbatim_box(Circuit().h(0))
     expected = (
-        "T  : │0│      1      │2│     3     │",
+        "T  : |0|      1      |2|     3     |",
         "                                    ",
-        "q0 : ─H─StartVerbatim─H─EndVerbatim─",
+        "q0 : -H-StartVerbatim-H-EndVerbatim-",
         "",
-        "T  : │0│      1      │2│     3     │",
+        "T  : |0|      1      |2|     3     |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -385,11 +385,11 @@ def test_verbatim_1q_preceding():
 def test_verbatim_1q_following():
     circ = Circuit().add_verbatim_box(Circuit().h(0)).h(0)
     expected = (
-        "T  : │      0      │1│     2     │3│",
+        "T  : |      0      |1|     2     |3|",
         "                                    ",
-        "q0 : ─StartVerbatim─H─EndVerbatim─H─",
+        "q0 : -StartVerbatim-H-EndVerbatim-H-",
         "",
-        "T  : │      0      │1│     2     │3│",
+        "T  : |      0      |1|     2     |3|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -397,13 +397,13 @@ def test_verbatim_1q_following():
 def test_verbatim_2q_no_preceding():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1))
     expected = (
-        "T  : │      0      │1│2│     3     │",
+        "T  : |      0      |1|2|     3     |",
         "                                    ",
-        "q0 : ─StartVerbatim─H─⏺─EndVerbatim─",
-        "      │               │ │           ",
-        "q1 : ─*************───X─***********─",
+        "q0 : -StartVerbatim-H-⏺-EndVerbatim-",
+        "      |               | |           ",
+        "q1 : -*************---X-***********-",
         "",
-        "T  : │      0      │1│2│     3     │",
+        "T  : |      0      |1|2|     3     |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -411,13 +411,13 @@ def test_verbatim_2q_no_preceding():
 def test_verbatim_2q_preceding():
     circ = Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1))
     expected = (
-        "T  : │0│      1      │2│3│     4     │",
+        "T  : |0|      1      |2|3|     4     |",
         "                                      ",
-        "q0 : ─H─StartVerbatim─H─⏺─EndVerbatim─",
-        "        │               │ │           ",
-        "q1 : ───*************───X─***********─",
+        "q0 : -H-StartVerbatim-H-⏺-EndVerbatim-",
+        "        |               | |           ",
+        "q1 : ---*************---X-***********-",
         "",
-        "T  : │0│      1      │2│3│     4     │",
+        "T  : |0|      1      |2|3|     4     |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -425,13 +425,13 @@ def test_verbatim_2q_preceding():
 def test_verbatim_2q_following():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1)).h(0)
     expected = (
-        "T  : │      0      │1│2│     3     │4│",
+        "T  : |      0      |1|2|     3     |4|",
         "                                      ",
-        "q0 : ─StartVerbatim─H─⏺─EndVerbatim─H─",
-        "      │               │ │             ",
-        "q1 : ─*************───X─***********───",
+        "q0 : -StartVerbatim-H-⏺-EndVerbatim-H-",
+        "      |               | |             ",
+        "q1 : -*************---X-***********---",
         "",
-        "T  : │      0      │1│2│     3     │4│",
+        "T  : |      0      |1|2|     3     |4|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -439,15 +439,15 @@ def test_verbatim_2q_following():
 def test_verbatim_3q_no_preceding():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))
     expected = (
-        "T  : │      0      │1│2│3│     4     │",
+        "T  : |      0      |1|2|3|     4     |",
         "                                      ",
-        "q0 : ─StartVerbatim─H─⏺───EndVerbatim─",
-        "      │               │   │           ",
-        "q1 : ─┼───────────────X─⏺─┼───────────",
-        "      │                 │ │           ",
-        "q2 : ─*************─────X─***********─",
+        "q0 : -StartVerbatim-H-⏺---EndVerbatim-",
+        "      |               |   |           ",
+        "q1 : -|---------------X-⏺-|-----------",
+        "      |                 | |           ",
+        "q2 : -*************-----X-***********-",
         "",
-        "T  : │      0      │1│2│3│     4     │",
+        "T  : |      0      |1|2|3|     4     |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -455,15 +455,15 @@ def test_verbatim_3q_no_preceding():
 def test_verbatim_3q_preceding():
     circ = Circuit().h(0).add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2))
     expected = (
-        "T  : │0│      1      │2│3│4│     5     │",
+        "T  : |0|      1      |2|3|4|     5     |",
         "                                        ",
-        "q0 : ─H─StartVerbatim─H─⏺───EndVerbatim─",
-        "        │               │   │           ",
-        "q1 : ───┼───────────────X─⏺─┼───────────",
-        "        │                 │ │           ",
-        "q2 : ───*************─────X─***********─",
+        "q0 : -H-StartVerbatim-H-⏺---EndVerbatim-",
+        "        |               |   |           ",
+        "q1 : ---|---------------X-⏺-|-----------",
+        "        |                 | |           ",
+        "q2 : ---*************-----X-***********-",
         "",
-        "T  : │0│      1      │2│3│4│     5     │",
+        "T  : |0|      1      |2|3|4|     5     |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -471,15 +471,15 @@ def test_verbatim_3q_preceding():
 def test_verbatim_3q_following():
     circ = Circuit().add_verbatim_box(Circuit().h(0).cnot(0, 1).cnot(1, 2)).h(0)
     expected = (
-        "T  : │      0      │1│2│3│     4     │5│",
+        "T  : |      0      |1|2|3|     4     |5|",
         "                                        ",
-        "q0 : ─StartVerbatim─H─⏺───EndVerbatim─H─",
-        "      │               │   │             ",
-        "q1 : ─┼───────────────X─⏺─┼─────────────",
-        "      │                 │ │             ",
-        "q2 : ─*************─────X─***********───",
+        "q0 : -StartVerbatim-H-⏺---EndVerbatim-H-",
+        "      |               |   |             ",
+        "q1 : -|---------------X-⏺-|-------------",
+        "      |                 | |             ",
+        "q2 : -*************-----X-***********---",
         "",
-        "T  : │      0      │1│2│3│     4     │5│",
+        "T  : |      0      |1|2|3|     4     |5|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -487,17 +487,17 @@ def test_verbatim_3q_following():
 def test_verbatim_different_qubits():
     circ = Circuit().h(1).add_verbatim_box(Circuit().h(0)).cnot(3, 4)
     expected = (
-        "T  : │0│      1      │2│     3     │4│",
+        "T  : |0|      1      |2|     3     |4|",
         "                                      ",
-        "q0 : ───StartVerbatim─H─EndVerbatim───",
-        "        │               │             ",
-        "q1 : ─H─┼───────────────┼─────────────",
-        "        │               │             ",
-        "q3 : ───┼───────────────┼───────────⏺─",
-        "        │               │           │ ",
-        "q4 : ───*************───***********─X─",
+        "q0 : ---StartVerbatim-H-EndVerbatim---",
+        "        |               |             ",
+        "q1 : -H-|---------------|-------------",
+        "        |               |             ",
+        "q3 : ---|---------------|-----------⏺-",
+        "        |               |           | ",
+        "q4 : ---*************---***********-X-",
         "",
-        "T  : │0│      1      │2│     3     │4│",
+        "T  : |0|      1      |2|     3     |4|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -505,17 +505,17 @@ def test_verbatim_different_qubits():
 def test_verbatim_qubset_qubits():
     circ = Circuit().h(1).cnot(0, 1).cnot(1, 2).add_verbatim_box(Circuit().h(1)).cnot(2, 3)
     expected = (
-        "T  : │0│1│2│      3      │4│     5     │6│",
+        "T  : |0|1|2|      3      |4|     5     |6|",
         "                                          ",
-        "q0 : ───⏺───StartVerbatim───EndVerbatim───",
-        "        │   │               │             ",
-        "q1 : ─H─X─⏺─┼─────────────H─┼─────────────",
-        "          │ │               │             ",
-        "q2 : ─────X─┼───────────────┼───────────⏺─",
-        "            │               │           │ ",
-        "q3 : ───────*************───***********─X─",
+        "q0 : ---⏺---StartVerbatim---EndVerbatim---",
+        "        |   |               |             ",
+        "q1 : -H-X-⏺-|-------------H-|-------------",
+        "          | |               |             ",
+        "q2 : -----X-|---------------|-----------⏺-",
+        "            |               |           | ",
+        "q3 : -------*************---***********-X-",
         "",
-        "T  : │0│1│2│      3      │4│     5     │6│",
+        "T  : |0|1|2|      3      |4|     5     |6|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -531,15 +531,15 @@ def test_ignore_non_gates():
 
     circ = Circuit().h(0).h(1).cnot(1, 2).add_instruction(Instruction(Foo(), 0))
     expected = (
-        "T  : │0│1│",
+        "T  : |0|1|",
         "          ",
-        "q0 : ─H───",
+        "q0 : -H---",
         "          ",
-        "q1 : ─H─⏺─",
-        "        │ ",
-        "q2 : ───X─",
+        "q1 : -H-⏺-",
+        "        | ",
+        "q2 : ---X-",
         "",
-        "T  : │0│1│",
+        "T  : |0|1|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -547,13 +547,13 @@ def test_ignore_non_gates():
 def test_result_types_target_none():
     circ = Circuit().h(0).h(100).probability()
     expected = (
-        "T    : │0│Result Types│",
+        "T    : |0|Result Types|",
         "                       ",
-        "q0   : ─H─Probability──",
-        "          │            ",
-        "q100 : ─H─Probability──",
+        "q0   : -H-Probability--",
+        "          |            ",
+        "q100 : -H-Probability--",
         "",
-        "T    : │0│Result Types│",
+        "T    : |0|Result Types|",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -567,15 +567,15 @@ def test_result_types_target_some():
         .expectation(observable=Observable.Y() @ Observable.Z(), target=[0, 100])
     )
     expected = (
-        "T    : │0│  Result Types  │",
+        "T    : |0|  Result Types  |",
         "                           ",
-        "q0   : ─H─Expectation(Y@Z)─",
-        "          │                ",
-        "q1   : ─H─┼────────────────",
-        "          │                ",
-        "q100 : ─H─Expectation(Y@Z)─",
+        "q0   : -H-Expectation(Y@Z)-",
+        "          |                ",
+        "q1   : -H-|----------------",
+        "          |                ",
+        "q100 : -H-Expectation(Y@Z)-",
         "",
-        "T    : │0│  Result Types  │",
+        "T    : |0|  Result Types  |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -583,15 +583,15 @@ def test_result_types_target_some():
 def test_additional_result_types():
     circ = Circuit().h(0).h(1).h(100).state_vector().amplitude(["110", "001"])
     expected = (
-        "T    : │0│",
+        "T    : |0|",
         "          ",
-        "q0   : ─H─",
+        "q0   : -H-",
         "          ",
-        "q1   : ─H─",
+        "q1   : -H-",
         "          ",
-        "q100 : ─H─",
+        "q100 : -H-",
         "",
-        "T    : │0│",
+        "T    : |0|",
         "",
         "Additional result types: StateVector, Amplitude(110,001)",
     )
@@ -609,17 +609,17 @@ def test_multiple_result_types():
         .sample(observable=Observable.Y())
     )
     expected = (
-        "T  : │ 0 │1│      Result Types      │",
+        "T  : | 0 |1|      Result Types      |",
         "                                     ",
-        "q0 : ─⏺───H─Variance(Y)────Sample(Y)─",
-        "      │                    │         ",
-        "q1 : ─┼─⏺──────────────────Sample(Y)─",
-        "      │ │                  │         ",
-        "q2 : ─X─┼───Expectation(Y)─Sample(Y)─",
-        "        │                  │         ",
-        "q3 : ───X──────────────────Sample(Y)─",
+        "q0 : -⏺---H-Variance(Y)----Sample(Y)-",
+        "      |                    |         ",
+        "q1 : -|-⏺------------------Sample(Y)-",
+        "      | |                  |         ",
+        "q2 : -X-|---Expectation(Y)-Sample(Y)-",
+        "        |                  |         ",
+        "q3 : ---X------------------Sample(Y)-",
         "",
-        "T  : │ 0 │1│      Result Types      │",
+        "T  : | 0 |1|      Result Types      |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -637,17 +637,17 @@ def test_multiple_result_types_with_state_vector_amplitude():
         .state_vector()
     )
     expected = (
-        "T  : │ 0 │1│     Result Types     │",
+        "T  : | 0 |1|     Result Types     |",
         "                                   ",
-        "q0 : ─⏺───H─Variance(Y)────────────",
-        "      │                            ",
-        "q1 : ─┼─⏺───Expectation(Hermitian)─",
-        "      │ │                          ",
-        "q2 : ─X─┼──────────────────────────",
-        "        │                          ",
-        "q3 : ───X───Expectation(Y)─────────",
+        "q0 : -⏺---H-Variance(Y)------------",
+        "      |                            ",
+        "q1 : -|-⏺---Expectation(Hermitian)-",
+        "      | |                          ",
+        "q2 : -X-|--------------------------",
+        "        |                          ",
+        "q3 : ---X---Expectation(Y)---------",
         "",
-        "T  : │ 0 │1│     Result Types     │",
+        "T  : | 0 |1|     Result Types     |",
         "",
         "Additional result types: Amplitude(0001), StateVector",
     )
@@ -672,17 +672,17 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
         )
     )
     expected = (
-        "T  : │ 0 │1│   Result Types    │",
+        "T  : | 0 |1|   Result Types    |",
         "                                ",
-        "q0 : ─⏺───H─Variance(Y)─────────",
-        "      │                         ",
-        "q1 : ─┼─⏺───Expectation(MyHerm)─",
-        "      │ │   │                   ",
-        "q2 : ─X─┼───Expectation(MyHerm)─",
-        "        │                       ",
-        "q3 : ───X───Expectation(Y)──────",
+        "q0 : -⏺---H-Variance(Y)---------",
+        "      |                         ",
+        "q1 : -|-⏺---Expectation(MyHerm)-",
+        "      | |   |                   ",
+        "q2 : -X-|---Expectation(MyHerm)-",
+        "        |                       ",
+        "q3 : ---X---Expectation(Y)------",
         "",
-        "T  : │ 0 │1│   Result Types    │",
+        "T  : | 0 |1|   Result Types    |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -690,13 +690,13 @@ def test_multiple_result_types_with_custom_hermitian_ascii_symbol():
 def test_noise_1qubit():
     circ = Circuit().h(0).x(1).bit_flip(1, 0.1)
     expected = (
-        "T  : │    0    │",
+        "T  : |    0    |",
         "                ",
-        "q0 : ─H─────────",
+        "q0 : -H---------",
         "                ",
-        "q1 : ─X─BF(0.1)─",
+        "q1 : -X-BF(0.1)-",
         "",
-        "T  : │    0    │",
+        "T  : |    0    |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -704,15 +704,15 @@ def test_noise_1qubit():
 def test_noise_2qubit():
     circ = Circuit().h(1).kraus((0, 2), [np.eye(4)])
     expected = (
-        "T  : │ 0  │",
+        "T  : | 0  |",
         "           ",
-        "q0 : ───KR─",
-        "        │  ",
-        "q1 : ─H─┼──",
-        "        │  ",
-        "q2 : ───KR─",
+        "q0 : ---KR-",
+        "        |  ",
+        "q1 : -H-|--",
+        "        |  ",
+        "q2 : ---KR-",
         "",
-        "T  : │ 0  │",
+        "T  : | 0  |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -720,13 +720,13 @@ def test_noise_2qubit():
 def test_noise_multi_probabilities():
     circ = Circuit().h(0).x(1).pauli_channel(1, 0.1, 0.2, 0.3)
     expected = (
-        "T  : │        0        │",
+        "T  : |        0        |",
         "                        ",
-        "q0 : ─H─────────────────",
+        "q0 : -H-----------------",
         "                        ",
-        "q1 : ─X─PC(0.1,0.2,0.3)─",
+        "q1 : -X-PC(0.1,0.2,0.3)-",
         "",
-        "T  : │        0        │",
+        "T  : |        0        |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -737,13 +737,13 @@ def test_noise_multi_probabilities_with_parameter():
     c = FreeParameter("c")
     circ = Circuit().h(0).x(1).pauli_channel(1, a, b, c)
     expected = (
-        "T  : │     0     │",
+        "T  : |     0     |",
         "                  ",
-        "q0 : ─H───────────",
+        "q0 : -H-----------",
         "                  ",
-        "q1 : ─X─PC(a,b,c)─",
+        "q1 : -X-PC(a,b,c)-",
         "",
-        "T  : │     0     │",
+        "T  : |     0     |",
         "",
         "Unassigned parameters: [a, b, c].",
     )
@@ -757,11 +757,11 @@ def test_pulse_gate_1_qubit_circuit():
         .pulse_gate(0, PulseSequence().set_phase(Frame("x", Port("px", 1e-9), 1e9, 0), 0))
     )
     expected = (
-        "T  : │0│1 │",
+        "T  : |0|1 |",
         "           ",
-        "q0 : ─H─PG─",
+        "q0 : -H-PG-",
         "",
-        "T  : │0│1 │",
+        "T  : |0|1 |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -773,13 +773,13 @@ def test_pulse_gate_multi_qubit_circuit():
         .pulse_gate([0, 1], PulseSequence().set_phase(Frame("x", Port("px", 1e-9), 1e9, 0), 0))
     )
     expected = (
-        "T  : │0│1 │",
+        "T  : |0|1 |",
         "           ",
-        "q0 : ─H─PG─",
-        "        │  ",
-        "q1 : ───PG─",
+        "q0 : -H-PG-",
+        "        |  ",
+        "q1 : ---PG-",
         "",
-        "T  : │0│1 │",
+        "T  : |0|1 |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -801,13 +801,13 @@ def test_circuit_with_nested_target_list():
     )
 
     expected = (
-        "T  : │0│      Result Types      │",
+        "T  : |0|      Result Types      |",
         "                                 ",
-        "q0 : ─H─Expectation(Hamiltonian)─",
-        "        │                        ",
-        "q1 : ─H─Expectation(Hamiltonian)─",
+        "q0 : -H-Expectation(Hamiltonian)-",
+        "        |                        ",
+        "q1 : -H-Expectation(Hamiltonian)-",
         "",
-        "T  : │0│      Result Types      │",
+        "T  : |0|      Result Types      |",
     )
     _assert_correct_diagram(circ, expected)
 
@@ -824,15 +824,15 @@ def test_hamiltonian():
         )
     )
     expected = (
-        "T  : │0│1│    2    │        Result Types        │",
+        "T  : |0|1|    2    |        Result Types        |",
         "                                                 ",
-        "q0 : ─H─⏺─Rx(theta)─AdjointGradient(Hamiltonian)─",
-        "        │           │                            ",
-        "q1 : ───X───────────AdjointGradient(Hamiltonian)─",
-        "                    │                            ",
-        "q2 : ───────────────AdjointGradient(Hamiltonian)─",
+        "q0 : -H-⏺-Rx(theta)-AdjointGradient(Hamiltonian)-",
+        "        |           |                            ",
+        "q1 : ---X-----------AdjointGradient(Hamiltonian)-",
+        "                    |                            ",
+        "q2 : ---------------AdjointGradient(Hamiltonian)-",
         "",
-        "T  : │0│1│    2    │        Result Types        │",
+        "T  : |0|1|    2    |        Result Types        |",
         "",
         "Unassigned parameters: [theta].",
     )
@@ -858,14 +858,14 @@ def test_power():
     circ.add_instruction(Instruction(CFoo(), (1, 2), control=0, power=3))
     circ.add_instruction(Instruction(FooFoo(), (1, 2), control=0, power=4))
     expected = (
-        "T  : │    0    │   1    │   2   │   3   │   4   │",
+        "T  : |    0    |   1    |   2   |   3   |   4   |",
         "                                                 ",
-        "q0 : ─H─────────(FOO^-1)─⏺───────⏺───────⏺───────",
-        "                         │       │       │       ",
-        "q1 : ─(H^0)──────────────(FOO^2)─⏺───────(FOO^4)─",
-        "                                 │       │       ",
-        "q2 : ─(H^-3.14)──────────────────(FOO^3)─(FOO^4)─",
+        "q0 : -H---------(FOO^-1)-⏺-------⏺-------⏺-------",
+        "                         |       |       |       ",
+        "q1 : -(H^0)--------------(FOO^2)-⏺-------(FOO^4)-",
+        "                                 |       |       ",
+        "q2 : -(H^-3.14)------------------(FOO^3)-(FOO^4)-",
         "",
-        "T  : │    0    │   1    │   2   │   3   │   4   │",
+        "T  : |    0    |   1    |   2   |   3   |   4   |",
     )
     _assert_correct_diagram(circ, expected)
