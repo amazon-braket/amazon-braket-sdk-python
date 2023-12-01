@@ -43,8 +43,8 @@ class AsciiCircuitDiagram(CircuitDiagram):
             str: ASCII string circuit diagram.
         """
 
-        if not circuit.instructions or not any(
-            m for m in circuit._moments if m.moment_type != MomentType.GLOBAL_PHASE
+        if not circuit.instructions or all(
+            m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments
         ):
             return ""
 
