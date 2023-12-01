@@ -33,6 +33,9 @@ class BasisState:
     def __eq__(self, other):
         return self.state == other.state
 
+    def __bool__(self):
+        return bool(self.as_int)
+
     def __str__(self):
         return self.as_string
 
