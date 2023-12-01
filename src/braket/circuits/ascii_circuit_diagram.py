@@ -358,7 +358,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                             # when a user has a gate genuinely named C, but
                             # is necessary to enable proper printing of custom
                             # gates with built-in control qubits
-                            and ascii_symbols[item_qubit_index] != "C"
+                            and ascii_symbols[item_qubit_index] != "⏺"
                         )
                         else ""
                     )
@@ -368,7 +368,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
                         else ascii_symbols[item_qubit_index]
                     )
                 elif qubit in control_qubits:
-                    symbols[qubit] = "C" if map_control_qubit_states[qubit] else "N"
+                    symbols[qubit] = "⏺" if map_control_qubit_states[qubit] else "○"
                 else:
                     symbols[qubit] = "|"
 
