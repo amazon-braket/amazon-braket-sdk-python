@@ -192,6 +192,20 @@ def ecr(
     _qubit_instruction("ecr", [target_0, target_1])
 
 
+def gphase(
+    angle: GateParameterType,
+) -> None:
+    """Global Phase gate.
+
+    Global phase gate from OpenQASM spec.
+
+    Args:
+        angle (GateParameterType): Rotation angle in radians.
+
+    """
+    _qubit_instruction("gphase", [], angle)
+
+
 def gpi(
     target: QubitIdentifierType,
     angle: GateParameterType,

@@ -2,7 +2,7 @@ import numpy as np
 
 import braket.experimental.autoqasm as aq
 from braket.devices import LocalSimulator
-from braket.experimental.autoqasm.instructions import measure, u
+from braket.experimental.autoqasm.instructions import measure, u, gphase
 
 
 @aq.gate
@@ -18,6 +18,7 @@ def u3(target: aq.Qubit, theta: float, phi: float, lambda_: float):
 @aq.main
 def demo_gates():
     u(0, 1, 2, 3)
+    gphase(np.pi / 2)
     u2(0, 4, 5)
     u3(0, 6, 7, 8)
     measure(0)
@@ -34,6 +35,7 @@ gate u3(theta, phi, lambda_) target {
 }
 qubit[1] __qubits__;
 U(1, 2, 3) __qubits__[0];
+gphase(1.5707963267948966);
 u2(4, 5) __qubits__[0];
 u3(6, 7, 8) __qubits__[0];
 bit __bit_0__;

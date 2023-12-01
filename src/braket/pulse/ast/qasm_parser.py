@@ -65,6 +65,15 @@ class _PulsePrinter(Printer):
         if not isinstance(node.type, ast.PortType):
             super().visit_ClassicalDeclaration(node, context)
 
+    def visit_QuantumGate(self, node: ast.QuantumGate, context: PrinterState) -> None:
+        # this is only here to eliminate the space in `gphase(angle) ;`
+        # to fully add support, the instruction should get mapped to the QuantumPhase node
+        if node.name == ast.Identifier("gphase"):
+            phase = ast.QuantumPhase(node.modifiers, node.arguments[0], node.qubits)
+            return self.visit_QuantumPhase(phase, context)
+        else:
+            return super().visit_QuantumGate(node, context)
+
 
 def ast_to_qasm(ast: ast.Program) -> str:
     """Converts an AST program to OpenQASM
