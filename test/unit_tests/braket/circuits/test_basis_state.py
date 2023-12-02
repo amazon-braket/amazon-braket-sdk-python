@@ -98,9 +98,11 @@ def test_indexing(basis_state_input, index, substate_input):
 
 
 def test_bool():
-    assert all([
-        BasisState("100"),
-        BasisState("111"),
-        BasisState("1"),
-    ])
+    assert all(
+        [
+            BasisState("100"),
+            BasisState("111"),
+            BasisState("1"),
+        ]
+    )
     assert not BasisState("0")
