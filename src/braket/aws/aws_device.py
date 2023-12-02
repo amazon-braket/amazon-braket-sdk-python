@@ -79,7 +79,9 @@ class AwsDevice(Device):
     }
 
     def __init__(self, arn: str, aws_session: Optional[AwsSession] = None):
-        """Args:
+        """Initializes an `AwsDevice`.
+	
+	Args:
             arn (str): The ARN of the device
             aws_session (Optional[AwsSession]): An AWS session object. Default is `None`.
 
