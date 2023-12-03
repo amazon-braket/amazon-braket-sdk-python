@@ -51,7 +51,9 @@ class AsciiCircuitDiagram(CircuitDiagram):
         circuit_qubits = circuit.qubits
         circuit_qubits.sort()
 
-        y_axis_str, global_phase = AsciiCircuitDiagram._prepare_y_axis_str(circuit, circuit_qubits)
+        y_axis_str, global_phase = AsciiCircuitDiagram._prepare_diagram_vars(
+            circuit, circuit_qubits
+        )
 
         time_slices = circuit.moments.time_slices()
         column_strs = []
@@ -99,7 +101,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         return "\n".join(lines)
 
     @staticmethod
-    def _prepare_y_axis_str(
+    def _prepare_diagram_vars(
         circuit: cir.Circuit, circuit_qubits: QubitSet
     ) -> tuple[str, float | None]:
         # Y Axis Column
@@ -107,7 +109,7 @@ class AsciiCircuitDiagram(CircuitDiagram):
         y_axis_str = "{0:{width}} : |\n".format("T", width=y_axis_width + 1)
 
         global_phase = None
-        if any(m for m in circuit._moments if m.moment_type == MomentType.GLOBAL_PHASE):
+        if any(m.moment_type == MomentType.GLOBAL_PHASE for m in circuit._moments):
             y_axis_str += "{0:{width}} : |\n".format("GP", width=y_axis_width)
             global_phase = 0
 
