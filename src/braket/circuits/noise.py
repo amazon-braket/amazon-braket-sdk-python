@@ -13,7 +13,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Type, Union
+from collections.abc import Iterable, Sequence
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -21,12 +22,12 @@ from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.free_parameter_expression import FreeParameterExpression
 from braket.circuits.parameterizable import Parameterizable
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
+from braket.registers.qubit_set import QubitSet
 
 
 class Noise(QuantumOperator):
@@ -67,7 +68,7 @@ class Noise(QuantumOperator):
         self,
         target: QubitSet,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
     ) -> Any:
         """Returns IR object of quantum operator and target
 
@@ -75,9 +76,9 @@ class Noise(QuantumOperator):
             target (QubitSet): target qubit(s)
             ir_type(IRType) : The IRType to use for converting the noise object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
         Returns:
             Any: IR object of the quantum operator and target
 
@@ -163,10 +164,10 @@ class Noise(QuantumOperator):
         raise NotImplementedError
 
     @classmethod
-    def register_noise(cls, noise: Type[Noise]) -> None:
+    def register_noise(cls, noise: type[Noise]) -> None:
         """Register a noise implementation by adding it into the Noise class.
         Args:
-            noise (Type[Noise]): Noise class to register.
+            noise (type[Noise]): Noise class to register.
         """
         setattr(cls, noise.__name__, noise)
 
@@ -220,13 +221,13 @@ class SingleProbabilisticNoise(Noise, Parameterizable):
         return f"{self.name}({self.probability})"
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[Union[FreeParameterExpression, float]]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [self._probability]
@@ -343,14 +344,14 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     def __init__(
         self,
-        probabilities: Dict[str, Union[FreeParameterExpression, float]],
+        probabilities: dict[str, Union[FreeParameterExpression, float]],
         qubit_count: Optional[int],
         ascii_symbols: Sequence[str],
     ):
         """[summary]
 
         Args:
-            probabilities (Dict[str, Union[FreeParameterExpression, float]]): A dictionary with
+            probabilities (dict[str, Union[FreeParameterExpression, float]]): A dictionary with
                 Pauli strings as keys and the probabilities as values, i.e. {"XX": 0.1. "IZ": 0.2}.
             qubit_count (Optional[int]): The number of qubits the Pauli noise acts on.
             ascii_symbols (Sequence[str]): ASCII string symbols for the noise. These are used when
@@ -402,7 +403,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
 
     @classmethod
     def _validate_pauli_string(
-        cls, pauli_str: str, qubit_count: int, allowed_substrings: Set[str]
+        cls, pauli_str: str, qubit_count: int, allowed_substrings: set[str]
     ) -> None:
         if not isinstance(pauli_str, str):
             raise TypeError(f"Type of {pauli_str} was not a string.")
@@ -436,15 +437,15 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         return False
 
     @property
-    def probabilities(self) -> Dict[str, float]:
+    def probabilities(self) -> dict[str, float]:
         """A map of a Pauli string to its corresponding probability.
         Returns:
-            Dict[str, float]: A map of a Pauli string to its corresponding probability.
+            dict[str, float]: A map of a Pauli string to its corresponding probability.
         """
         return self._probabilities
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
@@ -452,7 +453,7 @@ class MultiQubitPauliNoise(Noise, Parameterizable):
         Parameters are in alphabetical order of the Pauli strings in `probabilities`.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[Union[FreeParameterExpression, float]]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [
@@ -596,7 +597,7 @@ class PauliNoise(Noise, Parameterizable):
         return False
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
@@ -604,7 +605,7 @@ class PauliNoise(Noise, Parameterizable):
         Parameters are in the order [probX, probY, probZ]
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[Union[FreeParameterExpression, float]]: The free parameter expressions
             or fixed values associated with the object.
         """
         return self._parameters
@@ -689,13 +690,13 @@ class DampingNoise(Noise, Parameterizable):
         return f"{self.name}({self.gamma})"
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[Union[FreeParameterExpression, float]]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [self._gamma]
@@ -791,7 +792,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         return f"{self.name}({self.gamma}, {self.probability})"
 
     @property
-    def parameters(self) -> List[Union[FreeParameterExpression, float]]:
+    def parameters(self) -> list[Union[FreeParameterExpression, float]]:
         """
         Returns the parameters associated with the object, either unbound free parameter expressions
         or bound values.
@@ -799,7 +800,7 @@ class GeneralizedAmplitudeDampingNoise(DampingNoise):
         Parameters are in the order [gamma, probability]
 
         Returns:
-            List[Union[FreeParameterExpression, float]]: The free parameter expressions
+            list[Union[FreeParameterExpression, float]]: The free parameter expressions
             or fixed values associated with the object.
         """
         return [self.gamma, self.probability]

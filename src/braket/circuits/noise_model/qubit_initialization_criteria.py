@@ -11,12 +11,13 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import Any, Iterable, Optional, Set, Union
+from collections.abc import Iterable
+from typing import Any, Optional, Union
 
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.criteria_input_parsing import parse_qubit_input
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class QubitInitializationCriteria(InitializationCriteria):
@@ -45,14 +46,14 @@ class QubitInitializationCriteria(InitializationCriteria):
         """
         return [CriteriaKey.QUBIT]
 
-    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, Set[Any]]:
+    def get_keys(self, key_type: CriteriaKey) -> Union[CriteriaKeyResult, set[Any]]:
         """Gets the keys for a given CriteriaKey.
 
         Args:
             key_type (CriteriaKey): The relevant Criteria Key.
 
         Returns:
-            Union[CriteriaKeyResult, Set[Any]]: The return value is based on the key type:
+            Union[CriteriaKeyResult, set[Any]]: The return value is based on the key type:
             QUBIT will return a set of qubit targets that are relevant to this Critera, or
             CriteriaKeyResult.ALL if the Criteria is relevant for all (possible) qubits.
             All other keys will return an empty set.

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import List, Optional, Type
+from typing import Optional
 
 from braket.circuits.circuit import Circuit
 from braket.circuits.gate import Gate
@@ -25,8 +25,8 @@ from braket.circuits.noise_model.circuit_instruction_criteria import CircuitInst
 from braket.circuits.noise_model.criteria import Criteria, CriteriaKey, CriteriaKeyResult
 from braket.circuits.noise_model.initialization_criteria import InitializationCriteria
 from braket.circuits.noise_model.result_type_criteria import ResultTypeCriteria
-from braket.circuits.qubit_set import QubitSetInput
 from braket.circuits.result_types import ObservableResultType
+from braket.registers.qubit_set import QubitSetInput
 
 
 @dataclass
@@ -76,9 +76,9 @@ class NoiseModelInstruction:
 class NoiseModelInstructions:
     """Represents the instructions in a noise model, separated by type."""
 
-    initialization_noise: List[NoiseModelInstruction]
-    gate_noise: List[NoiseModelInstruction]
-    readout_noise: List[NoiseModelInstruction]
+    initialization_noise: list[NoiseModelInstruction]
+    gate_noise: list[NoiseModelInstruction]
+    readout_noise: list[NoiseModelInstruction]
 
 
 class NoiseModel:
@@ -90,7 +90,7 @@ class NoiseModel:
     a phase flip.
     """
 
-    def __init__(self, instructions: List[NoiseModelInstruction] = None):
+    def __init__(self, instructions: list[NoiseModelInstruction] = None):
         self._instructions = instructions or []
 
     def __repr__(self):
@@ -109,12 +109,12 @@ class NoiseModel:
         return "\n".join(all_strings)
 
     @property
-    def instructions(self) -> List[NoiseModelInstruction]:
+    def instructions(self) -> list[NoiseModelInstruction]:
         """
         List all the noise in the NoiseModel.
 
         Returns:
-            List[NoiseModelInstruction]: The noise model instructions.
+            list[NoiseModelInstruction]: The noise model instructions.
         """
         return self._instructions
 
@@ -198,7 +198,7 @@ class NoiseModel:
         self,
         qubit: Optional[QubitSetInput] = None,
         gate: Optional[Gate] = None,
-        noise: Optional[Type[Noise]] = None,
+        noise: Optional[type[Noise]] = None,
     ) -> NoiseModel:
         """
         Returns a new NoiseModel from this NoiseModel using a given filter. If no filters are
@@ -211,7 +211,7 @@ class NoiseModel:
             gate (Optional[Gate]): The gate to filter. Default is None. If not None,
                 the returned NoiseModel will only have Noise that might be applicable
                 to the passed Gate.
-            noise (Optional[Type[Noise]]): The noise class to filter. Default is None.
+            noise (Optional[type[Noise]]): The noise class to filter. Default is None.
                 If not None, the returned NoiseModel will only have noise that is of the same
                 class as the given noise class.
 
@@ -259,7 +259,7 @@ class NoiseModel:
     def _apply_gate_noise(
         cls,
         circuit: Circuit,
-        gate_noise_instructions: List[NoiseModelInstruction],
+        gate_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
         """
         Applies the gate noise to return a new circuit that's the `noisy` version of the given
@@ -267,7 +267,7 @@ class NoiseModel:
 
         Args:
             circuit (Circuit): a circuit to apply `noise` to.
-            gate_noise_instructions (List[NoiseModelInstruction]): a list of gate noise
+            gate_noise_instructions (list[NoiseModelInstruction]): a list of gate noise
                 instructions to apply to the circuit.
 
         Returns:
@@ -293,14 +293,14 @@ class NoiseModel:
     def _apply_init_noise(
         cls,
         circuit: Circuit,
-        init_noise_instructions: List[NoiseModelInstruction],
+        init_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
         """
         Applies the initialization noise of this noise model to a circuit and returns the circuit.
 
         Args:
             circuit (Circuit): A circuit to apply `noise` to.
-            init_noise_instructions (List[NoiseModelInstruction]): A list of initialization noise
+            init_noise_instructions (list[NoiseModelInstruction]): A list of initialization noise
                 model instructions.
 
         Returns:
@@ -318,14 +318,14 @@ class NoiseModel:
     def _apply_readout_noise(
         cls,
         circuit: Circuit,
-        readout_noise_instructions: List[NoiseModelInstruction],
+        readout_noise_instructions: list[NoiseModelInstruction],
     ) -> Circuit:
         """
         Applies the readout noise of this noise model to a circuit and returns the circuit.
 
         Args:
             circuit (Circuit): A circuit to apply `noise` to.
-            readout_noise_instructions (List[NoiseModelInstruction]): The list of readout noise
+            readout_noise_instructions (list[NoiseModelInstruction]): The list of readout noise
                 to apply.
 
         Returns:
@@ -337,17 +337,17 @@ class NoiseModel:
 
     @classmethod
     def _items_to_string(
-        cls, instructions_title: str, instructions: List[NoiseModelInstruction]
-    ) -> List[str]:
+        cls, instructions_title: str, instructions: list[NoiseModelInstruction]
+    ) -> list[str]:
         """
         Creates a string representation of a list of instructions.
 
         Args:
             instructions_title (str): The title for this list of instructions.
-            instructions (List[NoiseModelInstruction]): A list of instructions.
+            instructions (list[NoiseModelInstruction]): A list of instructions.
 
         Returns:
-            List[str]: A list of string representations of the passed instructions.
+            list[str]: A list of string representations of the passed instructions.
         """
         results = []
         if len(instructions) > 0:
@@ -376,14 +376,14 @@ class NoiseModel:
 
 
 def _apply_noise_on_observable_result_types(
-    circuit: Circuit, readout_noise_instructions: List[NoiseModelInstruction]
+    circuit: Circuit, readout_noise_instructions: list[NoiseModelInstruction]
 ) -> Circuit:
     """Applies readout noise based on the observable result types in the circuit. Each applicable
     Noise will be applied only once to a target in the ObservableResultType.
 
     Args:
         circuit (Circuit): The circuit to apply the readout noise to.
-        readout_noise_instructions (List[NoiseModelInstruction]): The list of readout noise
+        readout_noise_instructions (list[NoiseModelInstruction]): The list of readout noise
             to apply.
 
     Returns:

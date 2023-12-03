@@ -13,16 +13,16 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from braket.circuits.basis_state import BasisState, BasisStateInput
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.gate import Gate
 from braket.circuits.operator import Operator
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import IRType, SerializationProperties
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 # InstructionOperator is a type alias, and it can be expanded to include other operators
 InstructionOperator = Operator
@@ -37,7 +37,7 @@ class Instruction:
     def __init__(
         self,
         operator: InstructionOperator,
-        target: QubitSetInput = None,
+        target: Optional[QubitSetInput] = None,
         *,
         control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
@@ -48,7 +48,8 @@ class Instruction:
 
         Args:
             operator (InstructionOperator): Operator for the instruction.
-            target (QubitSetInput): Target qubits that the operator is applied to. Default is None.
+            target (Optional[QubitSetInput]): Target qubits that the operator is applied to.
+                Default is None.
             control (Optional[QubitSetInput]): Target qubits that the operator is controlled on.
                 Default is None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
@@ -135,13 +136,13 @@ class Instruction:
         """
         return self._power
 
-    def adjoint(self) -> List[Instruction]:
+    def adjoint(self) -> list[Instruction]:
         """Returns a list of Instructions implementing adjoint of this instruction's own operator
 
         This operation only works on Gate operators and compiler directives.
 
         Returns:
-            List[Instruction]: A list of new instructions that comprise the adjoint of this operator
+            list[Instruction]: A list of new instructions that comprise the adjoint of this operator
 
         Raises:
             NotImplementedError: If `operator` is not of type `Gate` or `CompilerDirective`
@@ -165,7 +166,7 @@ class Instruction:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
     ) -> Any:
         """
         Converts the operator into the canonical intermediate representation.
@@ -174,9 +175,9 @@ class Instruction:
         Args:
             ir_type(IRType) : The IRType to use for converting the instruction object to its
                 IR representation.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             Any: IR object of the instruction.
@@ -195,16 +196,16 @@ class Instruction:
         )
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        """Tuple[str, ...]: Returns the ascii symbols for the instruction's operator."""
+    def ascii_symbols(self) -> tuple[str, ...]:
+        """tuple[str, ...]: Returns the ascii symbols for the instruction's operator."""
         return self._operator.ascii_symbols
 
     def copy(
         self,
-        target_mapping: Dict[QubitInput, QubitInput] = None,
-        target: QubitSetInput = None,
-        control_mapping: Dict[QubitInput, QubitInput] = None,
-        control: QubitSetInput = None,
+        target_mapping: Optional[dict[QubitInput, QubitInput]] = None,
+        target: Optional[QubitSetInput] = None,
+        control_mapping: Optional[dict[QubitInput, QubitInput]] = None,
+        control: Optional[QubitSetInput] = None,
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
@@ -217,14 +218,16 @@ class Instruction:
             Same relationship holds for `control_mapping`.
 
         Args:
-            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (Optional[dict[QubitInput, QubitInput]]): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
-            target (QubitSetInput): Target qubits for the new instruction. Default is None.
-            control_mapping (Dict[QubitInput, QubitInput]): A dictionary of
+            target (Optional[QubitSetInput]): Target qubits for the new instruction.
+                Default is None.
+            control_mapping (Optional[dict[QubitInput, QubitInput]]): A dictionary of
                 qubit mappings to apply to the control. Key is the qubit in this `control` and the
                 value is what the key is changed to. Default = `None`.
-            control (QubitSetInput): Control qubits for the new instruction. Default is None.
+            control (Optional[QubitSetInput]): Control qubits for the new instruction.
+                Default is None.
             control_state (Optional[BasisStateInput]): Quantum state on which to control the
                 operation. Must be a binary sequence of same length as number of qubits in
                 `control`. Will be ignored if `control` is not present. May be represented as a

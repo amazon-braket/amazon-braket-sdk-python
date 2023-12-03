@@ -736,8 +736,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -750,10 +750,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "rx(0.15) __qubits__[0];",
-                        "rx(0.3) __qubits__[1];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "rx(0.15) q[0];",
+                        "rx(0.3) q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -766,7 +766,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
+                        "bit[2] b;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -781,8 +781,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "}",
                         "rx(0.15) $0;",
                         "rx(0.3) $4;",
-                        "__bits__[0] = measure $0;",
-                        "__bits__[1] = measure $4;",
+                        "b[0] = measure $0;",
+                        "b[1] = measure $4;",
                     ]
                 ),
                 inputs={},
@@ -832,7 +832,7 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[5] __qubits__;",
+                        "qubit[5] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -845,10 +845,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "rx(0.15) __qubits__[0];",
-                        "rx(0.3) __qubits__[4];",
-                        "#pragma braket noise bit_flip(0.2) __qubits__[3]",
-                        "#pragma braket result expectation i(__qubits__[0])",
+                        "rx(0.15) q[0];",
+                        "rx(0.3) q[4];",
+                        "#pragma braket noise bit_flip(0.2) q[3]",
+                        "#pragma braket result expectation i(q[0])",
                     ]
                 ),
                 inputs={},
@@ -862,8 +862,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                     [
                         "OPENQASM 3.0;",
                         "input float theta;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -876,10 +876,10 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "rx(0.15) __qubits__[0];",
-                        "rx(theta) __qubits__[1];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "rx(0.15) q[0];",
+                        "rx(theta) q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -895,8 +895,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[5] __bits__;",
-                        "qubit[5] __qubits__;",
+                        "bit[5] b;",
+                        "qubit[5] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -909,14 +909,14 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "negctrl @ rx(0.15) __qubits__[2], __qubits__[0];",
-                        "ctrl(2) @ rx(0.3) __qubits__[2], __qubits__[3], __qubits__[1];",
-                        "ctrl(2) @ cnot __qubits__[2], __qubits__[3], __qubits__[4], __qubits__[0];",  # noqa
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
-                        "__bits__[2] = measure __qubits__[2];",
-                        "__bits__[3] = measure __qubits__[3];",
-                        "__bits__[4] = measure __qubits__[4];",
+                        "negctrl @ rx(0.15) q[2], q[0];",
+                        "ctrl(2) @ rx(0.3) q[2], q[3], q[1];",
+                        "ctrl(2) @ cnot q[2], q[3], q[4], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
                     ]
                 ),
                 inputs={},
@@ -929,8 +929,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[7] __bits__;",
-                        "qubit[7] __qubits__;",
+                        "bit[7] b;",
+                        "qubit[7] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -939,16 +939,16 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    set_frequency(predefined_frame_1, 6000000.0);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "cnot __qubits__[0], __qubits__[1];",
-                        "cnot __qubits__[3], __qubits__[2];",
-                        "ctrl @ cnot __qubits__[5], __qubits__[6], __qubits__[4];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
-                        "__bits__[2] = measure __qubits__[2];",
-                        "__bits__[3] = measure __qubits__[3];",
-                        "__bits__[4] = measure __qubits__[4];",
-                        "__bits__[5] = measure __qubits__[5];",
-                        "__bits__[6] = measure __qubits__[6];",
+                        "cnot q[0], q[1];",
+                        "cnot q[3], q[2];",
+                        "ctrl @ cnot q[5], q[6], q[4];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
+                        "b[5] = measure q[5];",
+                        "b[6] = measure q[6];",
                     ]
                 ),
                 inputs={},
@@ -961,8 +961,8 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
                         "cal {",
                         "    waveform drag_gauss_wf = drag_gaussian"
                         + "(3.0ms, 400.0ms, 0.2, 1, false);",
@@ -977,11 +977,11 @@ def test_ir_non_empty_instructions_result_types_basis_rotation_instructions():
                         "    shift_phase(predefined_frame_1, -0.2);",
                         "    play(predefined_frame_1, drag_gauss_wf);",
                         "}",
-                        "inv @ pow(2.5) @ h __qubits__[0];",
-                        "pow(0) @ h __qubits__[0];",
-                        "ms(-0.1, -0.2, -0.3) __qubits__[0], __qubits__[1];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "inv @ pow(2.5) @ h q[0];",
+                        "pow(0) @ h q[0];",
+                        "ms(-0.1, -0.2, -0.3) q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1030,8 +1030,8 @@ def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
             [
                 "OPENQASM 3.0;",
                 "input float theta;",
-                "bit[1] __bits__;",
-                "qubit[1] __qubits__;",
+                "bit[1] b;",
+                "qubit[1] q;",
                 "cal {",
                 "    waveform drag_gauss_wf = drag_gaussian" + "(3.0ms, 400.0ms, 0.2, 1, false);",
                 "}",
@@ -1043,10 +1043,10 @@ def test_parametric_circuit_with_fixed_argument_defcal(pulse_sequence):
                 "    set_frequency(predefined_frame_1, 6000000.0);",
                 "    play(predefined_frame_1, drag_gauss_wf);",
                 "}",
-                "inv @ pow(2.5) @ h __qubits__[0];",
-                "pow(0) @ h __qubits__[0];",
-                "rx(theta) __qubits__[0];",
-                "__bits__[0] = measure __qubits__[0];",
+                "inv @ pow(2.5) @ h q[0];",
+                "pow(0) @ h q[0];",
+                "rx(theta) q[0];",
+                "b[0] = measure q[0];",
             ]
         ),
         inputs={},
@@ -1127,8 +1127,8 @@ def test_circuit_user_gate(pulse_sequence_2):
         source="\n".join(
             [
                 "OPENQASM 3.0;",
-                "bit[1] __bits__;",
-                "qubit[1] __qubits__;",
+                "bit[1] b;",
+                "qubit[1] q;",
                 "cal {",
                 "    waveform drag_gauss_wf = drag_gaussian" + "(3.0ms, 400.0ms, 0.2, 1, false);",
                 "}",
@@ -1138,8 +1138,8 @@ def test_circuit_user_gate(pulse_sequence_2):
                 "    shift_phase(predefined_frame_1, -0.2);",
                 "    play(predefined_frame_1, drag_gauss_wf);",
                 "}",
-                "foo(-0.2) __qubits__[0];",
-                "__bits__[0] = measure __qubits__[0];",
+                "foo(-0.2) q[0];",
+                "b[0] = measure q[0];",
             ]
         ),
         inputs={},
@@ -1164,11 +1164,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "negctrl @ h __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ h q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1180,11 +1180,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "cnot __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "cnot q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1196,11 +1196,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "negctrl @ x __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ x q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1212,11 +1212,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "ctrl @ rx(0.15) __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "ctrl @ rx(0.15) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1228,11 +1228,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "ctrl @ ry(0.2) __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "ctrl @ ry(0.2) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1244,11 +1244,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "negctrl @ rz(0.25) __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ rz(0.25) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1260,11 +1260,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "negctrl @ s __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ s q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1276,11 +1276,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "negctrl @ t __qubits__[0], __qubits__[1];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "negctrl @ t q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1292,11 +1292,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "cphaseshift(0.15) __qubits__[1], __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "cphaseshift(0.15) q[1], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1308,12 +1308,12 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[3] __bits__;",
-                        "qubit[3] __qubits__;",
-                        "ccnot __qubits__[0], __qubits__[1], __qubits__[2];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
-                        "__bits__[2] = measure __qubits__[2];",
+                        "bit[3] b;",
+                        "qubit[3] q;",
+                        "ccnot q[0], q[1], q[2];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
                     ]
                 ),
                 inputs={},
@@ -1325,8 +1325,8 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[1] __qubits__;",
-                        "h __qubits__[0];",
+                        "qubit[1] q;",
+                        "h q[0];",
                         "#pragma braket result state_vector",
                     ]
                 ),
@@ -1339,9 +1339,9 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[1] __qubits__;",
-                        "h __qubits__[0];",
-                        "#pragma braket result expectation x(__qubits__[0])",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result expectation x(q[0])",
                     ]
                 ),
                 inputs={},
@@ -1353,9 +1353,9 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[2] __qubits__;",
-                        "h __qubits__[0];",
-                        "#pragma braket result expectation h(__qubits__[0]) @ x(__qubits__[1])",
+                        "qubit[2] q;",
+                        "h q[0];",
+                        "#pragma braket result expectation h(q[0]) @ x(q[1])",
                     ]
                 ),
                 inputs={},
@@ -1367,9 +1367,9 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[2] __qubits__;",
-                        "h __qubits__[0];",
-                        "#pragma braket result variance h(__qubits__[0]) @ x(__qubits__[1])",
+                        "qubit[2] q;",
+                        "h q[0];",
+                        "#pragma braket result variance h(q[0]) @ x(q[1])",
                     ]
                 ),
                 inputs={},
@@ -1381,9 +1381,9 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[1] __qubits__;",
-                        "h __qubits__[0];",
-                        "#pragma braket result probability __qubits__[0]",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result probability q[0]",
                     ]
                 ),
                 inputs={},
@@ -1395,10 +1395,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket noise bit_flip(0.1) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise bit_flip(0.1) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1410,10 +1410,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket noise generalized_amplitude_damping(0.1, 0.1) __qubits__[0]",  # noqa
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise generalized_amplitude_damping(0.1, 0.1) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1425,10 +1425,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket noise phase_flip(0.2) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise phase_flip(0.2) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1440,10 +1440,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket noise depolarizing(0.5) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise depolarizing(0.5) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1455,10 +1455,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket noise amplitude_damping(0.8) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise amplitude_damping(0.8) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1470,10 +1470,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket noise phase_damping(0.1) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise phase_damping(0.1) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1485,8 +1485,8 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[1] __qubits__;",
-                        "h __qubits__[0];",
+                        "qubit[1] q;",
+                        "h q[0];",
                         '#pragma braket result amplitude "0", "1"',
                     ]
                 ),
@@ -1502,16 +1502,16 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[5] __bits__;",
-                        "qubit[5] __qubits__;",
-                        "negctrl @ rx(0.15) __qubits__[2], __qubits__[0];",
-                        "ctrl(2) @ rx(0.3) __qubits__[2], __qubits__[3], __qubits__[1];",
-                        "ctrl(2) @ cnot __qubits__[2], __qubits__[3], __qubits__[4], __qubits__[0];",  # noqa
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
-                        "__bits__[2] = measure __qubits__[2];",
-                        "__bits__[3] = measure __qubits__[3];",
-                        "__bits__[4] = measure __qubits__[4];",
+                        "bit[5] b;",
+                        "qubit[5] q;",
+                        "negctrl @ rx(0.15) q[2], q[0];",
+                        "ctrl(2) @ rx(0.3) q[2], q[3], q[1];",
+                        "ctrl(2) @ cnot q[2], q[3], q[4], q[0];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
                     ]
                 ),
                 inputs={},
@@ -1523,18 +1523,18 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[7] __bits__;",
-                        "qubit[7] __qubits__;",
-                        "cnot __qubits__[0], __qubits__[1];",
-                        "cnot __qubits__[3], __qubits__[2];",
-                        "ctrl @ cnot __qubits__[5], __qubits__[6], __qubits__[4];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
-                        "__bits__[2] = measure __qubits__[2];",
-                        "__bits__[3] = measure __qubits__[3];",
-                        "__bits__[4] = measure __qubits__[4];",
-                        "__bits__[5] = measure __qubits__[5];",
-                        "__bits__[6] = measure __qubits__[6];",
+                        "bit[7] b;",
+                        "qubit[7] q;",
+                        "cnot q[0], q[1];",
+                        "cnot q[3], q[2];",
+                        "ctrl @ cnot q[5], q[6], q[4];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
+                        "b[2] = measure q[2];",
+                        "b[3] = measure q[3];",
+                        "b[4] = measure q[4];",
+                        "b[5] = measure q[5];",
+                        "b[6] = measure q[6];",
                     ]
                 ),
                 inputs={},
@@ -1546,11 +1546,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "inv @ pow(2.5) @ h __qubits__[0];",
-                        "pow(0) @ h __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "inv @ pow(2.5) @ h q[0];",
+                        "pow(0) @ h q[0];",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1562,10 +1562,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket unitary([[0, 1.0], [1.0, 0]]) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket unitary([[0, 1.0], [1.0, 0]]) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1577,10 +1577,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "#pragma braket noise pauli_channel(0.1, 0.2, 0.3) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1592,11 +1592,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "#pragma braket noise two_qubit_depolarizing(0.1) __qubits__[0], __qubits__[1]",  # noqa
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_depolarizing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1608,11 +1608,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "#pragma braket noise two_qubit_dephasing(0.1) __qubits__[0], __qubits__[1]",  # noqa
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_dephasing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1624,11 +1624,11 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
-                        "#pragma braket noise two_qubit_dephasing(0.1) __qubits__[0], __qubits__[1]",  # noqa
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "bit[2] b;",
+                        "qubit[2] q;",
+                        "#pragma braket noise two_qubit_dephasing(0.1) q[0], q[1]",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1640,9 +1640,9 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[1] __qubits__;",
-                        "h __qubits__[0];",
-                        "#pragma braket result sample z(__qubits__[0])",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result sample z(q[0])",
                     ]
                 ),
                 inputs={},
@@ -1654,9 +1654,9 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[1] __qubits__;",
-                        "h __qubits__[0];",
-                        "#pragma braket result sample z(__qubits__[0])",
+                        "qubit[1] q;",
+                        "h q[0];",
+                        "#pragma braket result sample z(q[0])",
                     ]
                 ),
                 inputs={},
@@ -1668,10 +1668,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "qubit[2] __qubits__;",
-                        "h __qubits__[0];",
-                        "x __qubits__[1];",
-                        "#pragma braket result density_matrix __qubits__[0], __qubits__[1]",
+                        "qubit[2] q;",
+                        "h q[0];",
+                        "x q[1];",
+                        "#pragma braket result density_matrix q[0], q[1]",
                     ]
                 ),
                 inputs={},
@@ -1689,12 +1689,12 @@ def test_circuit_user_gate(pulse_sequence_2):
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
                         "#pragma braket noise "
                         "kraus([[0.9486833im, 0], [0, 0.9486833im]], [[0, 0.31622777], "
-                        "[0.31622777, 0]]) __qubits__[0]",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "[0.31622777, 0]]) q[0]",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1707,10 +1707,10 @@ def test_circuit_user_gate(pulse_sequence_2):
                     [
                         "OPENQASM 3.0;",
                         "input float theta;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "rx(theta) __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "bit[1] b;",
+                        "qubit[1] q;",
+                        "rx(theta) q[0];",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1731,11 +1731,11 @@ def test_from_ir_inputs_updated():
                 "OPENQASM 3.0;",
                 "input float theta;",
                 "input float phi;",
-                "bit[1] __bits__;",
-                "qubit[1] __qubits__;",
-                "rx(theta) __qubits__[0];",
-                "ry(phi) __qubits__[0];",
-                "__bits__[0] = measure __qubits__[0];",
+                "bit[1] b;",
+                "qubit[1] q;",
+                "rx(theta) q[0];",
+                "ry(phi) q[0];",
+                "b[0] = measure q[0];",
             ]
         ),
         inputs={"theta": 0.2, "phi": 0.3},
@@ -1752,15 +1752,15 @@ def test_from_ir_inputs_updated():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
                         "gate my_gate a,b {",
                         "h a;",
-                        "cnot a, b;",
+                        "cnot a,b;",
                         "}",
-                        "my_gate __qubits__[0], __qubits__[1];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "my_gate q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1772,15 +1772,15 @@ def test_from_ir_inputs_updated():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
                         "def my_sub(qubit q) {",
                         "h q;",
                         "}",
-                        "h __qubits__[0];",
-                        "my_sub(__qubits__[1]);",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "h q[0];",
+                        "my_sub(q[1]);",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1792,14 +1792,14 @@ def test_from_ir_inputs_updated():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
                         "for uint i in [0:1] {",
-                        "h __qubits__[i];",
+                        "h q[i];",
                         "}",
-                        "cnot __qubits__[0], __qubits__[1];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "cnot q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1811,14 +1811,14 @@ def test_from_ir_inputs_updated():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[2] __bits__;",
-                        "qubit[2] __qubits__;",
+                        "bit[2] b;",
+                        "qubit[2] q;",
                         "for uint i in [0:1] {",
-                        "h __qubits__[i];",
+                        "h q[i];",
                         "}",
-                        "cnot __qubits__[0], __qubits__[1];",
-                        "__bits__[0] = measure __qubits__[0];",
-                        "__bits__[1] = measure __qubits__[1];",
+                        "cnot q[0], q[1];",
+                        "b[0] = measure q[0];",
+                        "b[1] = measure q[1];",
                     ]
                 ),
                 inputs={},
@@ -1830,13 +1830,13 @@ def test_from_ir_inputs_updated():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
+                        "bit[1] b;",
+                        "qubit[1] q;",
                         "bit c = 0;",
                         "if (c ==0){",
-                        "x __qubits__[0];",
+                        "x q[0];",
                         "}",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1848,11 +1848,11 @@ def test_from_ir_inputs_updated():
                 source="\n".join(
                     [
                         "OPENQASM 3.0;",
-                        "input float theta;" "bit[1] __bits__;",
-                        "qubit[1] __qubits__;",
-                        "rx(theta) __qubits__[0];",
-                        "rx(2*theta) __qubits__[0];",
-                        "__bits__[0] = measure __qubits__[0];",
+                        "input float theta;" "bit[1] b;",
+                        "qubit[1] q;",
+                        "rx(theta) q[0];",
+                        "rx(2*theta) q[0];",
+                        "b[0] = measure q[0];",
                     ]
                 ),
                 inputs={},
@@ -1902,419 +1902,6 @@ def test_circuit_to_ir_invalid_inputs(
     with pytest.raises(expected_exception) as exc:
         circuit.to_ir(ir_type, serialization_properties=serialization_properties)
     assert exc.value.args[0] == expected_message
-
-
-def test_as_unitary_empty_instructions_returns_empty_array():
-    circ = Circuit()
-    circ.as_unitary() == []
-
-
-@pytest.mark.parametrize(
-    "circuit",
-    [
-        (Circuit().phaseshift(0, 0.15).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
-        (Circuit().cnot(1, 0).apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1))),
-        (
-            Circuit()
-            .x(1)
-            .i(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1])
-        ),
-        (
-            Circuit()
-            .x(1)
-            .i(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2])
-        ),
-        (Circuit().x(1).i(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
-        (Circuit().x(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).i(2)),
-        (
-            Circuit()
-            .y(1)
-            .z(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[1])
-        ),
-        (
-            Circuit()
-            .y(1)
-            .z(2)
-            .apply_gate_noise(noise.Noise.BitFlip(probability=0.1), target_qubits=[2])
-        ),
-        (Circuit().y(1).z(2).apply_gate_noise(noise.Noise.BitFlip(probability=0.1))),
-        (Circuit().y(1).apply_gate_noise(noise.Noise.BitFlip(probability=0.1)).z(2)),
-        (
-            Circuit()
-            .cphaseshift(2, 1, 0.15)
-            .si(3)
-            .apply_gate_noise(
-                noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 2]
-            )
-        ),
-        (
-            Circuit()
-            .cphaseshift(2, 1, 0.15)
-            .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1))
-            .si(3)
-        ),
-    ],
-)
-def test_as_unitary_noise_raises_error(circuit):
-    with pytest.raises(TypeError):
-        circuit.as_unitary()
-
-
-def test_as_unitary_parameterized():
-    theta = FreeParameter("theta")
-    circ = Circuit().rx(angle=theta, target=0)
-    with pytest.raises(TypeError):
-        assert np.allclose(circ.as_unitary())
-
-
-def test_as_unitary_noise_not_apply_returns_expected_unitary(recwarn):
-    circuit = (
-        Circuit()
-        .cphaseshift(2, 1, 0.15)
-        .si(3)
-        .apply_gate_noise(noise.Noise.TwoQubitDepolarizing(probability=0.1), target_qubits=[1, 3])
-    )
-
-    assert len(recwarn) == 1
-    assert str(recwarn[0].message).startswith("Noise is not applied to any gate")
-
-    assert np.allclose(
-        circuit.as_unitary(),
-        np.kron(gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))),
-    )
-
-
-def test_as_unitary_with_compiler_directives_returns_expected_unitary():
-    circuit = Circuit().add_verbatim_box(Circuit().cphaseshift(2, 1, 0.15).si(3))
-    assert np.allclose(
-        circuit.as_unitary(),
-        np.kron(gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))),
-    )
-
-
-@pytest.mark.parametrize(
-    "circuit,expected_unitary",
-    [
-        (Circuit().h(0), gates.H().to_matrix()),
-        (Circuit().h(0).add_result_type(ResultType.Probability(target=[0])), gates.H().to_matrix()),
-        (Circuit().x(0), gates.X().to_matrix()),
-        (Circuit().y(0), gates.Y().to_matrix()),
-        (Circuit().z(0), gates.Z().to_matrix()),
-        (Circuit().s(0), gates.S().to_matrix()),
-        (Circuit().si(0), gates.Si().to_matrix()),
-        (Circuit().t(0), gates.T().to_matrix()),
-        (Circuit().ti(0), gates.Ti().to_matrix()),
-        (Circuit().v(0), gates.V().to_matrix()),
-        (Circuit().vi(0), gates.Vi().to_matrix()),
-        (Circuit().rx(0, 0.15), gates.Rx(0.15).to_matrix()),
-        (Circuit().ry(0, 0.15), gates.Ry(0.15).to_matrix()),
-        (Circuit().rz(0, 0.15), gates.Rz(0.15).to_matrix()),
-        (Circuit().phaseshift(0, 0.15), gates.PhaseShift(0.15).to_matrix()),
-        (Circuit().cnot(1, 0), gates.CNot().to_matrix()),
-        (Circuit().cnot(1, 0).add_result_type(ResultType.StateVector()), gates.CNot().to_matrix()),
-        (Circuit().swap(1, 0), gates.Swap().to_matrix()),
-        (Circuit().swap(0, 1), gates.Swap().to_matrix()),
-        (Circuit().iswap(1, 0), gates.ISwap().to_matrix()),
-        (Circuit().iswap(0, 1), gates.ISwap().to_matrix()),
-        (Circuit().pswap(1, 0, 0.15), gates.PSwap(0.15).to_matrix()),
-        (Circuit().pswap(0, 1, 0.15), gates.PSwap(0.15).to_matrix()),
-        (Circuit().xy(1, 0, 0.15), gates.XY(0.15).to_matrix()),
-        (Circuit().xy(0, 1, 0.15), gates.XY(0.15).to_matrix()),
-        (Circuit().cphaseshift(1, 0, 0.15), gates.CPhaseShift(0.15).to_matrix()),
-        (Circuit().cphaseshift00(1, 0, 0.15), gates.CPhaseShift00(0.15).to_matrix()),
-        (Circuit().cphaseshift01(1, 0, 0.15), gates.CPhaseShift01(0.15).to_matrix()),
-        (Circuit().cphaseshift10(1, 0, 0.15), gates.CPhaseShift10(0.15).to_matrix()),
-        (Circuit().cy(1, 0), gates.CY().to_matrix()),
-        (Circuit().cz(1, 0), gates.CZ().to_matrix()),
-        (Circuit().xx(1, 0, 0.15), gates.XX(0.15).to_matrix()),
-        (Circuit().yy(1, 0, 0.15), gates.YY(0.15).to_matrix()),
-        (Circuit().zz(1, 0, 0.15), gates.ZZ(0.15).to_matrix()),
-        (Circuit().ccnot(2, 1, 0), gates.CCNot().to_matrix()),
-        (
-            Circuit()
-            .ccnot(2, 1, 0)
-            .add_result_type(ResultType.Expectation(observable=Observable.Y(), target=[1])),
-            gates.CCNot().to_matrix(),
-        ),
-        (Circuit().ccnot(1, 2, 0), gates.CCNot().to_matrix()),
-        (Circuit().cswap(2, 1, 0), gates.CSwap().to_matrix()),
-        (Circuit().cswap(2, 0, 1), gates.CSwap().to_matrix()),
-        (Circuit().h(1), np.kron(gates.H().to_matrix(), np.eye(2))),
-        (Circuit().x(1).i(2), np.kron(np.eye(2), np.kron(gates.X().to_matrix(), np.eye(2)))),
-        (
-            Circuit().y(1).z(2),
-            np.kron(gates.Z().to_matrix(), np.kron(gates.Y().to_matrix(), np.eye(2))),
-        ),
-        (Circuit().rx(1, 0.15), np.kron(gates.Rx(0.15).to_matrix(), np.eye(2))),
-        (
-            Circuit().ry(1, 0.15).i(2),
-            np.kron(np.eye(2), np.kron(gates.Ry(0.15).to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().rz(1, 0.15).s(2),
-            np.kron(gates.S().to_matrix(), np.kron(gates.Rz(0.15).to_matrix(), np.eye(2))),
-        ),
-        (Circuit().pswap(2, 1, 0.15), np.kron(gates.PSwap(0.15).to_matrix(), np.eye(2))),
-        (Circuit().pswap(1, 2, 0.15), np.kron(gates.PSwap(0.15).to_matrix(), np.eye(2))),
-        (
-            Circuit().xy(2, 1, 0.15).i(3),
-            np.kron(np.eye(2), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().xy(1, 2, 0.15).i(3),
-            np.kron(np.eye(2), np.kron(gates.XY(0.15).to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cphaseshift(2, 1, 0.15).si(3),
-            np.kron(
-                gates.Si().to_matrix(), np.kron(gates.CPhaseShift(0.15).to_matrix(), np.eye(2))
-            ),
-        ),
-        (Circuit().ccnot(3, 2, 1), np.kron(gates.CCNot().to_matrix(), np.eye(2))),
-        (Circuit().ccnot(2, 3, 1), np.kron(gates.CCNot().to_matrix(), np.eye(2))),
-        (
-            Circuit().cswap(3, 2, 1).i(4),
-            np.kron(np.eye(2), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cswap(3, 1, 2).i(4),
-            np.kron(np.eye(2), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cswap(3, 2, 1).t(4),
-            np.kron(gates.T().to_matrix(), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
-        (
-            Circuit().cswap(3, 1, 2).t(4),
-            np.kron(gates.T().to_matrix(), np.kron(gates.CSwap().to_matrix(), np.eye(2))),
-        ),
-        (Circuit().h(0).h(0), gates.I().to_matrix()),
-        (Circuit().h(0).x(0), np.dot(gates.X().to_matrix(), gates.H().to_matrix())),
-        (Circuit().x(0).h(0), np.dot(gates.H().to_matrix(), gates.X().to_matrix())),
-        (
-            Circuit().y(0).z(1).cnot(1, 0),
-            np.dot(gates.CNot().to_matrix(), np.kron(gates.Z().to_matrix(), gates.Y().to_matrix())),
-        ),
-        (
-            Circuit().z(0).y(1).cnot(1, 0),
-            np.dot(gates.CNot().to_matrix(), np.kron(gates.Y().to_matrix(), gates.Z().to_matrix())),
-        ),
-        (
-            Circuit().z(0).y(1).cnot(1, 0).cnot(2, 1),
-            np.dot(
-                np.dot(
-                    np.dot(
-                        np.kron(gates.CNot().to_matrix(), np.eye(2)),
-                        np.kron(np.eye(2), gates.CNot().to_matrix()),
-                    ),
-                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
-                ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
-            ),
-        ),
-        (
-            Circuit().z(0).y(1).cnot(1, 0).ccnot(2, 1, 0),
-            np.dot(
-                np.dot(
-                    np.dot(
-                        gates.CCNot().to_matrix(),
-                        np.kron(np.eye(2), gates.CNot().to_matrix()),
-                    ),
-                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
-                ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
-            ),
-        ),
-        (
-            Circuit().cnot(0, 1),
-            np.array(
-                [
-                    [1.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0],
-                    [0.0, 0.0, 1.0, 0.0],
-                    [0.0, 1.0, 0.0, 0.0],
-                ],
-                dtype=complex,
-            ),
-        ),
-        (
-            Circuit().ccnot(0, 1, 2),
-            np.array(
-                [
-                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                ],
-                dtype=complex,
-            ),
-        ),
-        (
-            Circuit().ccnot(1, 0, 2),
-            np.array(
-                [
-                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                ],
-                dtype=complex,
-            ),
-        ),
-        (
-            Circuit().ccnot(0, 2, 1),
-            np.array(
-                [
-                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                ],
-                dtype=complex,
-            ),
-        ),
-        (
-            Circuit().ccnot(2, 0, 1),
-            np.array(
-                [
-                    [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                ],
-                dtype=complex,
-            ),
-        ),
-        (
-            Circuit().s(0).v(1).cnot(0, 1).cnot(1, 2),
-            np.dot(
-                np.dot(
-                    np.dot(
-                        np.kron(
-                            np.array(
-                                [
-                                    [1.0, 0.0, 0.0, 0.0],
-                                    [0.0, 0.0, 0.0, 1.0],
-                                    [0.0, 0.0, 1.0, 0.0],
-                                    [0.0, 1.0, 0.0, 0.0],
-                                ],
-                                dtype=complex,
-                            ),
-                            np.eye(2),
-                        ),
-                        np.kron(
-                            np.eye(2),
-                            np.array(
-                                [
-                                    [1.0, 0.0, 0.0, 0.0],
-                                    [0.0, 0.0, 0.0, 1.0],
-                                    [0.0, 0.0, 1.0, 0.0],
-                                    [0.0, 1.0, 0.0, 0.0],
-                                ],
-                                dtype=complex,
-                            ),
-                        ),
-                    ),
-                    np.kron(np.kron(np.eye(2), gates.V().to_matrix()), np.eye(2)),
-                ),
-                np.kron(np.eye(4), gates.S().to_matrix()),
-            ),
-        ),
-        (
-            Circuit().z(0).y(1).cnot(0, 1).ccnot(0, 1, 2),
-            np.dot(
-                np.dot(
-                    np.dot(
-                        np.array(
-                            [
-                                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                            ],
-                            dtype=complex,
-                        ),
-                        np.kron(
-                            np.eye(2),
-                            np.array(
-                                [
-                                    [1.0, 0.0, 0.0, 0.0],
-                                    [0.0, 0.0, 0.0, 1.0],
-                                    [0.0, 0.0, 1.0, 0.0],
-                                    [0.0, 1.0, 0.0, 0.0],
-                                ],
-                                dtype=complex,
-                            ),
-                        ),
-                    ),
-                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
-                ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
-            ),
-        ),
-        (
-            Circuit().z(0).y(1).cnot(0, 1).ccnot(2, 0, 1),
-            np.dot(
-                np.dot(
-                    np.dot(
-                        np.array(
-                            [
-                                [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
-                                [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
-                            ],
-                            dtype=complex,
-                        ),
-                        np.kron(
-                            np.eye(2),
-                            np.array(
-                                [
-                                    [1.0, 0.0, 0.0, 0.0],
-                                    [0.0, 0.0, 0.0, 1.0],
-                                    [0.0, 0.0, 1.0, 0.0],
-                                    [0.0, 1.0, 0.0, 0.0],
-                                ],
-                                dtype=complex,
-                            ),
-                        ),
-                    ),
-                    np.kron(np.kron(np.eye(2), gates.Y().to_matrix()), np.eye(2)),
-                ),
-                np.kron(np.eye(4), gates.Z().to_matrix()),
-            ),
-        ),
-    ],
-)
-def test_as_unitary_one_gate_returns_expected_unitary(circuit, expected_unitary):
-    assert np.allclose(circuit.as_unitary(), expected_unitary)
 
 
 def test_to_unitary_empty_instructions_returns_empty_array():
@@ -3355,7 +2942,7 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
     ).source == "\n".join(
         [
             "OPENQASM 3.0;",
-            "bit[2] __bits__;",
+            "bit[2] b;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(1.0ms, 700.0ms, 1, false);",
@@ -3375,8 +2962,8 @@ def test_pulse_circuit_to_openqasm(predefined_frame_1, user_defined_frame):
             "    play(predefined_frame_1, drag_gauss_wf_2);",
             "}",
             "h $1;",
-            "__bits__[0] = measure $0;",
-            "__bits__[1] = measure $1;",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
         ]
     )
 
@@ -3470,7 +3057,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
         [
             "OPENQASM 3.0;",
             "input float frequency;",
-            "bit[2] __bits__;",
+            "bit[2] b;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(10.0us, 700.0ms, 1, false);",
@@ -3480,8 +3067,8 @@ def test_parametrized_pulse_circuit(user_defined_frame):
             "    set_frequency(user_defined_frame_0, frequency);",
             "    play(user_defined_frame_0, gauss_wf);",
             "}",
-            "__bits__[0] = measure $0;",
-            "__bits__[1] = measure $1;",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
         ]
     )
 
@@ -3495,7 +3082,7 @@ def test_parametrized_pulse_circuit(user_defined_frame):
     ).source == "\n".join(
         [
             "OPENQASM 3.0;",
-            "bit[2] __bits__;",
+            "bit[2] b;",
             "cal {",
             "    frame user_defined_frame_0 = newframe(device_port_x0, 10000000.0, 3.14);",
             "    waveform gauss_wf = gaussian(10.0us, 700.0ms, 1, false);",
@@ -3505,8 +3092,8 @@ def test_parametrized_pulse_circuit(user_defined_frame):
             "    set_frequency(user_defined_frame_0, 10000000.0);",
             "    play(user_defined_frame_0, gauss_wf);",
             "}",
-            "__bits__[0] = measure $0;",
-            "__bits__[1] = measure $1;",
+            "b[0] = measure $0;",
+            "b[1] = measure $1;",
         ]
     )
 

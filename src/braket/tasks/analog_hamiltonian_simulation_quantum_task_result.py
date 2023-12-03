@@ -16,7 +16,6 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List
 
 import numpy as np
 
@@ -53,7 +52,7 @@ class ShotResult:
 class AnalogHamiltonianSimulationQuantumTaskResult:
     task_metadata: TaskMetadata
     additional_metadata: AdditionalMetadata
-    measurements: List[ShotResult] = None
+    measurements: list[ShotResult] = None
 
     def __eq__(self, other) -> bool:
         if isinstance(other, AnalogHamiltonianSimulationQuantumTaskResult):
@@ -90,7 +89,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
         )
 
     @classmethod
-    def _get_measurements(cls, result: AnalogHamiltonianSimulationTaskResult) -> List[ShotResult]:
+    def _get_measurements(cls, result: AnalogHamiltonianSimulationTaskResult) -> list[ShotResult]:
         measurements = []
         for measurement in result.measurements:
             status = AnalogHamiltonianSimulationShotStatus(measurement.shotMetadata.shotStatus)
@@ -105,7 +104,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             measurements.append(ShotResult(status, pre_sequence, post_sequence))
         return measurements
 
-    def get_counts(self) -> Dict[str, int]:
+    def get_counts(self) -> dict[str, int]:
         """Aggregate state counts from AHS shot results.
 
         Notes:
@@ -115,7 +114,7 @@ class AnalogHamiltonianSimulationQuantumTaskResult:
             g: ground state atom
 
         Returns:
-            Dict[str, int]: number of times each state configuration is measured.
+            dict[str, int]: number of times each state configuration is measured.
             Returns None if none of shot measurements are successful.
             Only succesful shots contribute to the state count.
         """

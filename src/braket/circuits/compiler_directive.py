@@ -13,11 +13,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any
 
 from braket.circuits.operator import Operator
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import IRType, SerializationProperties
+from braket.registers.qubit_set import QubitSet
 
 
 class CompilerDirective(Operator):
@@ -41,26 +42,26 @@ class CompilerDirective(Operator):
         return self.__class__.__name__
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
-        """Tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
+    def ascii_symbols(self) -> tuple[str, ...]:
+        """tuple[str, ...]: Returns the ascii symbols for the compiler directive."""
         return self._ascii_symbols
 
     def to_ir(
         self,
-        target: QubitSet = None,
+        target: QubitSet | None = None,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
         **kwargs,
     ) -> Any:
         """Returns IR object of the compiler directive.
 
         Args:
-            target (QubitSet): target qubit(s). Defaults to None
+            target (QubitSet | None): target qubit(s). Defaults to None
             ir_type(IRType) : The IRType to use for converting the compiler directive object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             Any: IR object of the compiler directive.

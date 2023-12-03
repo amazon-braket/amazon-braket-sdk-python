@@ -13,26 +13,16 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
+from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from enum import Enum
-from typing import (
-    Any,
-    Dict,
-    ItemsView,
-    Iterable,
-    KeysView,
-    List,
-    Mapping,
-    NamedTuple,
-    OrderedDict,
-    Union,
-    ValuesView,
-)
+from typing import Any, NamedTuple, Union
 
 from braket.circuits.compiler_directive import CompilerDirective
 from braket.circuits.instruction import Instruction
 from braket.circuits.noise import Noise
-from braket.circuits.qubit import Qubit
-from braket.circuits.qubit_set import QubitSet
+from braket.registers.qubit import Qubit
+from braket.registers.qubit_set import QubitSet
 
 
 class MomentType(str, Enum):
@@ -110,9 +100,9 @@ class Moments(Mapping[MomentsKey, Instruction]):
             Value: Instruction('operator': H, 'target': QubitSet([Qubit(1)]))
     """
 
-    def __init__(self, instructions: Iterable[Instruction] = None):
+    def __init__(self, instructions: Iterable[Instruction] | None = None):
         self._moments: OrderedDict[MomentsKey, Instruction] = OrderedDict()
-        self._max_times: Dict[Qubit, int] = {}
+        self._max_times: dict[Qubit, int] = {}
         self._qubits = QubitSet()
         self._depth = 0
         self._time_all_qubits = -1
@@ -141,12 +131,12 @@ class Moments(Mapping[MomentsKey, Instruction]):
         """
         return self._qubits
 
-    def time_slices(self) -> Dict[int, List[Instruction]]:
+    def time_slices(self) -> dict[int, list[Instruction]]:
         """
         Get instructions keyed by time.
 
         Returns:
-            Dict[int, List[Instruction]]: Key is the time and value is a list of instructions that
+            dict[int, list[Instruction]]: Key is the time and value is a list of instructions that
             occur at that moment in time. The order of instructions is in no particular order.
 
         Note:
@@ -293,13 +283,13 @@ class Moments(Mapping[MomentsKey, Instruction]):
         self.sort_moments()
         return self._moments.values()
 
-    def get(self, key: MomentsKey, default: Any = None) -> Instruction:
+    def get(self, key: MomentsKey, default: Any | None = None) -> Instruction:
         """
         Get the instruction in self by key.
 
         Args:
             key (MomentsKey): Key of the instruction to fetch.
-            default (Any): Value to return if `key` is not in `moments`. Default = `None`.
+            default (Any | None): Value to return if `key` is not in `moments`. Default = `None`.
 
         Returns:
             Instruction: `moments[key]` if `key` in `moments`, else `default` is returned.

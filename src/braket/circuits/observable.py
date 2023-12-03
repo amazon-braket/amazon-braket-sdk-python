@@ -14,20 +14,21 @@
 from __future__ import annotations
 
 import numbers
+from collections.abc import Sequence
 from copy import deepcopy
-from typing import List, Sequence, Tuple, Union
+from typing import Union
 
 import numpy as np
 
 from braket.circuits.gate import Gate
 from braket.circuits.quantum_operator import QuantumOperator
-from braket.circuits.qubit_set import QubitSet
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
 from braket.pulse.pulse_sequence import PulseSequence
+from braket.registers.qubit_set import QubitSet
 
 
 class Observable(QuantumOperator):
@@ -47,22 +48,22 @@ class Observable(QuantumOperator):
 
     def to_ir(
         self,
-        target: QubitSet = None,
+        target: QubitSet | None = None,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
-    ) -> Union[str, List[Union[str, List[List[List[float]]]]]]:
+        serialization_properties: SerializationProperties | None = None,
+    ) -> Union[str, list[Union[str, list[list[list[float]]]]]]:
         """Returns the IR representation for the observable
 
         Args:
-            target (QubitSet): target qubit(s). Defaults to None.
+            target (QubitSet | None): target qubit(s). Defaults to None.
             ir_type(IRType) : The IRType to use for converting the result type object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
-            Union[str, List[Union[str, List[List[List[float]]]]]]: The IR representation for
+            Union[str, list[Union[str, list[list[list[float]]]]]]: The IR representation for
             the observable.
 
         Raises:
@@ -85,12 +86,14 @@ class Observable(QuantumOperator):
         else:
             raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
 
-    def _to_jaqcd(self) -> List[Union[str, List[List[List[float]]]]]:
+    def _to_jaqcd(self) -> list[Union[str, list[list[list[float]]]]]:
         """Returns the JAQCD representation of the observable."""
         raise NotImplementedError("to_jaqcd has not been implemented yet.")
 
     def _to_openqasm(
-        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+        self,
+        serialization_properties: OpenQASMSerializationProperties,
+        target: QubitSet | None = None,
     ) -> str:
         """
         Returns the openqasm string representation of the result type.
@@ -98,7 +101,7 @@ class Observable(QuantumOperator):
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
-            target (QubitSet): target qubit(s). Defaults to None.
+            target (QubitSet | None): target qubit(s). Defaults to None.
 
         Returns:
             str: Representing the openqasm representation of the result type.
@@ -106,7 +109,9 @@ class Observable(QuantumOperator):
         raise NotImplementedError("to_openqasm has not been implemented yet.")
 
     def _to_pulse_sequence(
-        self, serialization_properties: OpenQASMSerializationProperties, target: QubitSet = None
+        self,
+        serialization_properties: OpenQASMSerializationProperties,
+        target: QubitSet | None = None,
     ) -> PulseSequence:
         """
         Returns the openqasm string representation of the result type.
@@ -114,10 +119,10 @@ class Observable(QuantumOperator):
         Args:
             serialization_properties (OpenQASMSerializationProperties): The serialization properties
                 to use while serializing the object to the IR representation.
-            target (QubitSet): target qubit(s). Defaults to None.
+            target (QubitSet | None): target qubit(s). Defaults to None.
 
         Returns:
-            str: Representing the openqasm representation of the result type.
+            PulseSequence: A PulseSequence corresponding to the full circuit.
         """
         raise NotImplementedError("to_pulse_sequence has not been implemented yet.")
 
@@ -130,10 +135,10 @@ class Observable(QuantumOperator):
         return self._coef
 
     @property
-    def basis_rotation_gates(self) -> Tuple[Gate, ...]:
+    def basis_rotation_gates(self) -> tuple[Gate, ...]:
         """Returns the basis rotation gates for this observable.
         Returns:
-            Tuple[Gate, ...]: The basis rotation gates for this observable.
+            tuple[Gate, ...]: The basis rotation gates for this observable.
         """
         raise NotImplementedError
 
@@ -227,7 +232,7 @@ class StandardObservable(Observable):
         return self.coefficient * self._eigenvalues[index]
 
     @property
-    def ascii_symbols(self) -> Tuple[str, ...]:
+    def ascii_symbols(self) -> tuple[str, ...]:
         return tuple(
             f"{self.coefficient if self.coefficient != 1 else ''}{ascii_symbol}"
             for ascii_symbol in self._ascii_symbols

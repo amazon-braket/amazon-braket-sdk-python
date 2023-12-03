@@ -1,5 +1,166 @@
 # Changelog
 
+## v1.62.1 (2023-11-17)
+
+### Bug Fixes and Other Changes
+
+ * Fix broken link to example notebook
+ * update: default no longer returning RETIRED devices from get_devices
+
+### Documentation Changes
+
+ * Add matrix expressions to docstrings
+
+## v1.62.0 (2023-11-09)
+
+### Features
+
+ * Add get_compiled_circuit convenience method
+
+## v1.61.0.post0 (2023-11-07)
+
+### Documentation Changes
+
+ * Improve docstring for make_bound_circuit
+
+## v1.61.0 (2023-11-06)
+
+### Features
+
+ * simplify entry point wrapper
+
+### Bug Fixes and Other Changes
+
+ * fixing some type hints for optional params
+
+## v1.60.2 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * drop task count for batch task tests to 3
+
+## v1.60.1 (2023-11-01)
+
+### Bug Fixes and Other Changes
+
+ * set python container version explicitly
+ * set decorator job working directory inside of function
+ * s3 config support for decorator jobs
+
+## v1.60.0 (2023-10-31)
+
+### Features
+
+ * support dependency list for decorator hybrid jobs
+
+### Bug Fixes and Other Changes
+
+ * Don't run pulse tests when QPU offline
+
+### Documentation Changes
+
+ * Fix some nits in the decorator doc string
+ * update intended audience to include education and research
+
+## v1.59.2 (2023-10-25)
+
+### Bug Fixes and Other Changes
+
+ * remove deprecated as_unitary method
+
+## v1.59.1.post0 (2023-10-24)
+
+### Documentation Changes
+
+ * add the amazon braket tag in the stack exchange URL
+
+## v1.59.1 (2023-10-18)
+
+### Bug Fixes and Other Changes
+
+ * doc fixes
+
+## v1.59.0 (2023-10-17)
+
+### Features
+
+ * use region property
+
+## v1.58.1 (2023-10-16)
+
+### Bug Fixes and Other Changes
+
+ * use separate aws session for python validation
+
+## v1.58.0 (2023-10-16)
+
+### Features
+
+ * job decorator
+
+### Bug Fixes and Other Changes
+
+ * update integ test for non-py310
+
+## v1.57.2 (2023-10-11)
+
+### Bug Fixes and Other Changes
+
+ * Use builtins for type hints
+
+## v1.57.1 (2023-10-05)
+
+### Bug Fixes and Other Changes
+
+ * docs: fix helper docstring
+
+## v1.57.0 (2023-10-04)
+
+### Features
+
+ * wrap non-dict results and update results on subsequent calls
+ * job helper functions
+
+### Bug Fixes and Other Changes
+
+ * revert integ test changes
+
+## v1.56.2 (2023-10-03)
+
+### Bug Fixes and Other Changes
+
+ * Refactor Qubit and QubitSet to a separate module
+
+## v1.56.1 (2023-09-27)
+
+### Bug Fixes and Other Changes
+
+ * fixing search device when don't have access to a region.
+
+## v1.56.0 (2023-09-26)
+
+### Features
+
+ * add queue visibility information
+
+## v1.55.1.post0 (2023-09-18)
+
+### Documentation Changes
+
+ * Remove trailing backquotes
+ * add code contributors to the readme
+ * change the sphinx requirement to be greater than 7.0.0
+
+## v1.55.1 (2023-09-14)
+
+### Bug Fixes and Other Changes
+
+ * Revert "update: restricting parameter names to not collide with ones we use for OpenQASM generation. (#675)"
+
+### Documentation Changes
+
+ * Replace aws org with amazon-braket
+
 ## v1.55.0 (2023-09-09)
 
 ### Features

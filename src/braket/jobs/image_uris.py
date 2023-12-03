@@ -14,7 +14,8 @@
 import json
 import os
 from enum import Enum
-from typing import Dict
+from functools import cache
+from typing import Dict, Set
 
 
 class Framework(str, Enum):
@@ -25,6 +26,11 @@ class Framework(str, Enum):
     PL_PYTORCH = "PL_PYTORCH"
 
 
+def built_in_images(region: str) -> Set[str]:
+    return {retrieve_image(framework, region) for framework in Framework}
+
+
+@cache
 def retrieve_image(framework: Framework, region: str) -> str:
     """Retrieves the ECR URI for the Docker image matching the specified arguments.
 

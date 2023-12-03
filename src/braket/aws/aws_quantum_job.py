@@ -20,13 +20,14 @@ import time
 from enum import Enum
 from logging import Logger, getLogger
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
 
 from braket.aws import AwsDevice
 from braket.aws.aws_session import AwsSession
+from braket.aws.queue_information import HybridJobQueueInfo
 from braket.jobs import logs
 from braket.jobs.config import (
     CheckpointConfig,
@@ -35,6 +36,7 @@ from braket.jobs.config import (
     S3DataSourceConfig,
     StoppingCondition,
 )
+from braket.jobs.data_persistence import load_job_result
 from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMetricsFetcher
 
 # TODO: Have added metric file in metrics folder, but have to decide on the name for keep
@@ -42,8 +44,6 @@ from braket.jobs.metrics_data.cwl_insights_metrics_fetcher import CwlInsightsMet
 from braket.jobs.metrics_data.definitions import MetricStatistic, MetricType
 from braket.jobs.quantum_job import QuantumJob
 from braket.jobs.quantum_job_creation import prepare_quantum_job
-from braket.jobs.serialization import deserialize_values
-from braket.jobs_data import PersistedJobData
 
 
 class AwsQuantumJob(QuantumJob):
@@ -64,68 +64,70 @@ class AwsQuantumJob(QuantumJob):
         cls,
         device: str,
         source_module: str,
-        entry_point: str = None,
-        image_uri: str = None,
-        job_name: str = None,
-        code_location: str = None,
-        role_arn: str = None,
+        entry_point: str | None = None,
+        image_uri: str | None = None,
+        job_name: str | None = None,
+        code_location: str | None = None,
+        role_arn: str | None = None,
         wait_until_complete: bool = False,
-        hyperparameters: Dict[str, Any] = None,
-        input_data: Union[str, Dict, S3DataSourceConfig] = None,
-        instance_config: InstanceConfig = None,
-        distribution: str = None,
-        stopping_condition: StoppingCondition = None,
-        output_data_config: OutputDataConfig = None,
-        copy_checkpoints_from_job: str = None,
-        checkpoint_config: CheckpointConfig = None,
-        aws_session: AwsSession = None,
-        tags: Dict[str, str] = None,
+        hyperparameters: dict[str, Any] | None = None,
+        input_data: str | dict | S3DataSourceConfig | None = None,
+        instance_config: InstanceConfig | None = None,
+        distribution: str | None = None,
+        stopping_condition: StoppingCondition | None = None,
+        output_data_config: OutputDataConfig | None = None,
+        copy_checkpoints_from_job: str | None = None,
+        checkpoint_config: CheckpointConfig | None = None,
+        aws_session: AwsSession | None = None,
+        tags: dict[str, str] | None = None,
         logger: Logger = getLogger(__name__),
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
 
         Args:
-            device (str): ARN for the AWS device which is primarily accessed for the execution
-                of this hybrid job. Alternatively, a string of the format
-                "local:<provider>/<simulator>" for using a local simulator for the hybrid job.
-                This string will be available as the environment variable `AMZN_BRAKET_DEVICE_ARN`
-                inside the hybrid job container when using a Braket container.
+            device (str): Device ARN of the QPU device that receives priority quantum
+                task queueing once the hybrid job begins running. Each QPU has a separate hybrid
+                jobs queue so that only one hybrid job is running at a time. The device string is
+                accessible in the hybrid job instance as the environment variable
+                "AMZN_BRAKET_DEVICE_ARN". When using embedded simulators, you may provide the device
+                argument as a string of the form: "local:<provider>/<simulator_name>".
 
             source_module (str): Path (absolute, relative or an S3 URI) to a python module to be
                 tarred and uploaded. If `source_module` is an S3 URI, it must point to a
                 tar.gz file. Otherwise, source_module may be a file or directory.
 
-            entry_point (str): A str that specifies the entry point of the hybrid job, relative to
-                the source module. The entry point must be in the format
+            entry_point (str | None): A str that specifies the entry point of the hybrid job,
+                relative to the source module. The entry point must be in the format
                 `importable.module` or `importable.module:callable`. For example,
                 `source_module.submodule:start_here` indicates the `start_here` function
                 contained in `source_module.submodule`. If source_module is an S3 URI,
                 entry point must be given. Default: source_module's name
 
-            image_uri (str): A str that specifies the ECR image to use for executing the hybrid job.
-                `image_uris.retrieve_image()` function may be used for retrieving the ECR image URIs
-                for the containers supported by Braket. Default = `<Braket base image_uri>`.
+            image_uri (str | None): A str that specifies the ECR image to use for executing the
+                hybrid job. `image_uris.retrieve_image()` function may be used for retrieving the
+                ECR image URIs for the containers supported by Braket.
+                Default = `<Braket base image_uri>`.
 
-            job_name (str): A str that specifies the name with which the hybrid job is created.
-                Allowed pattern for hybrid job name: `^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,50}$`
+            job_name (str | None): A str that specifies the name with which the hybrid job is
+                created. Allowed pattern for hybrid job name: `^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,50}$`
                 Default: f'{image_uri_type}-{timestamp}'.
 
-            code_location (str): The S3 prefix URI where custom code will be uploaded.
+            code_location (str | None): The S3 prefix URI where custom code will be uploaded.
                 Default: f's3://{default_bucket_name}/jobs/{job_name}/script'.
 
-            role_arn (str): A str providing the IAM role ARN used to execute the
+            role_arn (str | None): A str providing the IAM role ARN used to execute the
                 script. Default: IAM role returned by AwsSession's `get_default_jobs_role()`.
 
             wait_until_complete (bool): `True` if we should wait until the hybrid job completes.
                 This would tail the hybrid job logs as it waits. Otherwise `False`.
                 Default: `False`.
 
-            hyperparameters (Dict[str, Any]): Hyperparameters accessible to the hybrid job.
-                The hyperparameters are made accessible as a Dict[str, str] to the hybrid job.
+            hyperparameters (dict[str, Any] | None): Hyperparameters accessible to the hybrid job.
+                The hyperparameters are made accessible as a dict[str, str] to the hybrid job.
                 For convenience, this accepts other types for keys and values, but `str()`
                 is called to convert them before being passed on. Default: None.
 
-            input_data (Union[str, Dict, S3DataSourceConfig]): Information about the training
+            input_data (str | dict | S3DataSourceConfig | None): Information about the training
                 data. Dictionary maps channel names to local paths or S3 URIs. Contents found
                 at any local paths will be uploaded to S3 at
                 f's3://{default_bucket_name}/jobs/{job_name}/data/{channel_name}. If a local
@@ -133,39 +135,40 @@ class AwsQuantumJob(QuantumJob):
                 channel name "input".
                 Default: {}.
 
-            instance_config (InstanceConfig): Configuration of the instances to be used
-                to execute the hybrid job. Default: InstanceConfig(instanceType='ml.m5.large',
-                instanceCount=1, volumeSizeInGB=30).
+            instance_config (InstanceConfig | None): Configuration of the instance(s) for running
+                the classical code for the hybrid job. Default:
+                `InstanceConfig(instanceType='ml.m5.large', instanceCount=1, volumeSizeInGB=30)`.
 
-            distribution (str): A str that specifies how the hybrid job should be distributed.
-                If set to "data_parallel", the hyperparameters for the hybrid job will be set
-                to use data parallelism features for PyTorch or TensorFlow. Default: None.
+            distribution (str | None): A str that specifies how the hybrid job should be
+                distributed. If set to "data_parallel", the hyperparameters for the hybrid job will
+                be set to use data parallelism features for PyTorch or TensorFlow. Default: None.
 
-            stopping_condition (StoppingCondition): The maximum length of time, in seconds,
+            stopping_condition (StoppingCondition | None): The maximum length of time, in seconds,
                 and the maximum number of quantum tasks that a hybrid job can run before being
                 forcefully stopped.
                 Default: StoppingCondition(maxRuntimeInSeconds=5 * 24 * 60 * 60).
 
-            output_data_config (OutputDataConfig): Specifies the location for the output of the
-                hybrid job.
+            output_data_config (OutputDataConfig | None): Specifies the location for the output of
+                the hybrid job.
                 Default: OutputDataConfig(s3Path=f's3://{default_bucket_name}/jobs/{job_name}/data',
                 kmsKeyId=None).
 
-            copy_checkpoints_from_job (str): A str that specifies the hybrid job ARN whose
+            copy_checkpoints_from_job (str | None): A str that specifies the hybrid job ARN whose
                 checkpoint you want to use in the current hybrid job. Specifying this value will
                 copy over the checkpoint data from `use_checkpoints_from_job`'s checkpoint_config
                 s3Uri to the current hybrid job's checkpoint_config s3Uri, making it available at
                 checkpoint_config.localPath during the hybrid job execution. Default: None
 
-            checkpoint_config (CheckpointConfig): Configuration that specifies the location where
-                checkpoint data is stored.
+            checkpoint_config (CheckpointConfig | None): Configuration that specifies the location
+                where checkpoint data is stored.
                 Default: CheckpointConfig(localPath='/opt/jobs/checkpoints',
                 s3Uri=f's3://{default_bucket_name}/jobs/{job_name}/checkpoints').
 
-            aws_session (AwsSession): AwsSession for connecting to AWS Services.
+            aws_session (AwsSession | None): AwsSession for connecting to AWS Services.
                 Default: AwsSession()
 
-            tags (Dict[str, str]): Dict specifying the key-value pairs for tagging this hybrid job.
+            tags (dict[str, str] | None): Dict specifying the key-value pairs for tagging this
+                hybrid job.
                 Default: {}.
 
             logger (Logger): Logger object with which to write logs, such as quantum task statuses
@@ -209,11 +212,11 @@ class AwsQuantumJob(QuantumJob):
 
         return job
 
-    def __init__(self, arn: str, aws_session: AwsSession = None):
+    def __init__(self, arn: str, aws_session: AwsSession | None = None):
         """
         Args:
             arn (str): The ARN of the hybrid job.
-            aws_session (AwsSession): The `AwsSession` for connecting to AWS services.
+            aws_session (AwsSession | None): The `AwsSession` for connecting to AWS services.
                 Default is `None`, in which case an `AwsSession` object will be created with the
                 region of the hybrid job.
         """
@@ -234,7 +237,7 @@ class AwsQuantumJob(QuantumJob):
         bool: `True` when the aws_session region matches the job_arn region; otherwise `False`.
         """
         job_region = job_arn.split(":")[3]
-        return job_region == aws_session.braket_client.meta.region_name
+        return job_region == aws_session.region
 
     @staticmethod
     def _default_session_for_job_arn(job_arn: str) -> AwsSession:
@@ -277,6 +280,38 @@ class AwsQuantumJob(QuantumJob):
             `metadata()`
         """
         return self.metadata(use_cached_value).get("status")
+
+    def queue_position(self) -> HybridJobQueueInfo:
+        """
+        The queue position details for the hybrid job.
+
+        Returns:
+            HybridJobQueueInfo: Instance of HybridJobQueueInfo class representing
+            the queue position information for the hybrid job. The queue_position is
+            only returned when the hybrid job is not in RUNNING/CANCELLING/TERMINAL states,
+            else queue_position is returned as None. If the queue position of the hybrid
+            job is greater than 15, we return '>15' as the queue_position return value.
+
+        Examples:
+            job status = QUEUED and position is 2 in the queue.
+            >>> job.queue_position()
+            HybridJobQueueInfo(queue_position='2', message=None)
+
+            job status = QUEUED and position is 18 in the queue.
+            >>> job.queue_position()
+            HybridJobQueueInfo(queue_position='>15', message=None)
+
+            job status = COMPLETED
+            >>> job.queue_position()
+            HybridJobQueueInfo(queue_position=None,
+            message='Job is in COMPLETED status. AmazonBraket does
+                        not show queue position for this status.')
+        """
+        response = self.metadata()["queueInfo"]
+        queue_position = None if response.get("position") == "None" else response.get("position")
+        message = response.get("message")
+
+        return HybridJobQueueInfo(queue_position=queue_position, message=message)
 
     def logs(self, wait: bool = False, poll_interval_seconds: int = 5) -> None:
         """Display logs for a given hybrid job, optionally tailing them until hybrid job is
@@ -353,7 +388,7 @@ class AwsQuantumJob(QuantumJob):
             elif self.state() in AwsQuantumJob.TERMINAL_STATES:
                 log_state = AwsQuantumJob.LogState.JOB_COMPLETE
 
-    def metadata(self, use_cached_value: bool = False) -> Dict[str, Any]:
+    def metadata(self, use_cached_value: bool = False) -> dict[str, Any]:
         """Gets the hybrid job metadata defined in Amazon Braket.
 
         Args:
@@ -362,7 +397,7 @@ class AwsQuantumJob(QuantumJob):
                 `GetJob` is called to retrieve the metadata. If `False`, always calls
                 `GetJob`, which also updates the cached value. Default: `False`.
         Returns:
-            Dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
+            dict[str, Any]: Dict that specifies the hybrid job metadata defined in Amazon Braket.
         """
         if not use_cached_value or not self._metadata:
             self._metadata = self._aws_session.get_job(self._arn)
@@ -372,7 +407,7 @@ class AwsQuantumJob(QuantumJob):
         self,
         metric_type: MetricType = MetricType.TIMESTAMP,
         statistic: MetricStatistic = MetricStatistic.MAX,
-    ) -> Dict[str, List[Any]]:
+    ) -> dict[str, list[Any]]:
         """Gets all the metrics data, where the keys are the column names, and the values are a list
         containing the values in each row. For example, the table:
             timestamp energy
@@ -389,7 +424,7 @@ class AwsQuantumJob(QuantumJob):
                 when there is a conflict. Default: MetricStatistic.MAX.
 
         Returns:
-            Dict[str, List[Any]] : The metrics data.
+            dict[str, list[Any]] : The metrics data.
         """
         fetcher = CwlInsightsMetricsFetcher(self._aws_session)
         metadata = self.metadata(True)
@@ -418,7 +453,7 @@ class AwsQuantumJob(QuantumJob):
         self,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Retrieves the hybrid job result persisted using save_job_result() function.
 
         Args:
@@ -428,7 +463,7 @@ class AwsQuantumJob(QuantumJob):
                 Default: 5 seconds.
 
         Returns:
-            Dict[str, Any]: Dict specifying the job results.
+            dict[str, Any]: Dict specifying the job results.
 
         Raises:
             RuntimeError: if hybrid job is in a FAILED or CANCELLED state.
@@ -448,20 +483,12 @@ class AwsQuantumJob(QuantumJob):
             return AwsQuantumJob._read_and_deserialize_results(temp_dir, job_name)
 
     @staticmethod
-    def _read_and_deserialize_results(temp_dir: str, job_name: str) -> Dict[str, Any]:
-        try:
-            with open(f"{temp_dir}/{job_name}/{AwsQuantumJob.RESULTS_FILENAME}", "r") as f:
-                persisted_data = PersistedJobData.parse_raw(f.read())
-                deserialized_data = deserialize_values(
-                    persisted_data.dataDictionary, persisted_data.dataFormat
-                )
-                return deserialized_data
-        except FileNotFoundError:
-            return {}
+    def _read_and_deserialize_results(temp_dir: str, job_name: str) -> dict[str, Any]:
+        return load_job_result(Path(temp_dir, job_name, AwsQuantumJob.RESULTS_FILENAME))
 
     def download_result(
         self,
-        extract_to: str = None,
+        extract_to: str | None = None,
         poll_timeout_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_TIMEOUT,
         poll_interval_seconds: float = QuantumJob.DEFAULT_RESULTS_POLL_INTERVAL,
     ) -> None:
@@ -470,7 +497,7 @@ class AwsQuantumJob(QuantumJob):
         the results are extracted to the current directory.
 
         Args:
-            extract_to (str): The directory to which the results are extracted. The results
+            extract_to (str | None): The directory to which the results are extracted. The results
                 are extracted to a folder titled with the hybrid job name within this directory.
                 Default= `Current working directory`.
             poll_timeout_seconds (float): The polling timeout, in seconds, for `download_result()`.
@@ -541,9 +568,7 @@ class AwsQuantumJob(QuantumJob):
         return hash(self.arn)
 
     @staticmethod
-    def _initialize_session(
-        session_value: AwsSession, device: AwsDevice, logger: Logger
-    ) -> AwsSession:
+    def _initialize_session(session_value: AwsSession, device: str, logger: Logger) -> AwsSession:
         aws_session = session_value or AwsSession()
         if device.startswith("local:"):
             return aws_session

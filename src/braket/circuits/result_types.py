@@ -15,20 +15,20 @@ from __future__ import annotations
 
 import re
 from functools import reduce
-from typing import List, Union
+from typing import Union
 
 import braket.ir.jaqcd as ir
 from braket.circuits import circuit
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
 from braket.circuits.observables import Sum
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.result_type import (
     ObservableParameterResultType,
     ObservableResultType,
     ResultType,
 )
 from braket.circuits.serialization import IRType, OpenQASMSerializationProperties
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 """
 To add a new result type:
@@ -91,10 +91,10 @@ class DensityMatrix(ResultType):
     This is available on simulators only when `shots=0`.
     """
 
-    def __init__(self, target: QubitSetInput = None):
+    def __init__(self, target: QubitSetInput | None = None):
         """
         Args:
-            target (QubitSetInput): The target qubits
+            target (QubitSetInput | None): The target qubits
                 of the reduced density matrix. Default is `None`, and the
                 full density matrix is returned.
 
@@ -134,10 +134,10 @@ class DensityMatrix(ResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def density_matrix(target: QubitSetInput = None) -> ResultType:
+    def density_matrix(target: QubitSetInput | None = None) -> ResultType:
         """Registers this function into the circuit class.
         Args:
-            target (QubitSetInput): The target qubits
+            target (QubitSetInput | None): The target qubits
                 of the reduced density matrix. Default is `None`, and the
                 full density matrix is returned.
 
@@ -178,20 +178,20 @@ class AdjointGradient(ObservableParameterResultType):
     def __init__(
         self,
         observable: Observable,
-        target: List[QubitSetInput] = None,
-        parameters: List[Union[str, FreeParameter]] = None,
+        target: list[QubitSetInput] | None = None,
+        parameters: list[Union[str, FreeParameter]] | None = None,
     ):
         """
         Args:
             observable (Observable): The expectation value of this observable is the function
                 against which parameters in the gradient are differentiated.
-            target (List[QubitSetInput]): Target qubits that the result type is requested for.
-                Each term in the target list should have the same number of qubits as the
+            target (list[QubitSetInput] | None): Target qubits that the result type is requested
+                for. Each term in the target list should have the same number of qubits as the
                 corresponding term in the observable. Default is `None`, which means the
                 observable must operate only on 1 qubit and it is applied to all qubits
                 in parallel.
-            parameters (List[Union[str, FreeParameter]]): The free parameters in the circuit to
-                differentiate with respect to. Default: `all`.
+            parameters (list[Union[str, FreeParameter]] | None): The free parameters in the circuit
+                to differentiate with respect to. Default: `all`.
 
         Raises:
             ValueError: If the observable's qubit count does not equal the number of target
@@ -240,21 +240,21 @@ class AdjointGradient(ObservableParameterResultType):
     @circuit.subroutine(register=True)
     def adjoint_gradient(
         observable: Observable,
-        target: List[QubitSetInput] = None,
-        parameters: List[Union[str, FreeParameter]] = None,
+        target: list[QubitSetInput] | None = None,
+        parameters: list[Union[str, FreeParameter]] | None = None,
     ) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): The expectation value of this observable is the function
                 against which parameters in the gradient are differentiated.
-            target (List[QubitSetInput]): Target qubits that the result type is requested for.
-                Each term in the target list should have the same number of qubits as the
+            target (list[QubitSetInput] | None): Target qubits that the result type is requested
+                for. Each term in the target list should have the same number of qubits as the
                 corresponding term in the observable. Default is `None`, which means the
                 observable must operate only on 1 qubit and it is applied to all qubits
                 in parallel.
-            parameters (List[Union[str, FreeParameter]]): The free parameters in the circuit to
-                differentiate with respect to. Default: `all`.
+            parameters (list[Union[str, FreeParameter]] | None): The free parameters in the circuit
+                to differentiate with respect to. Default: `all`.
 
         Returns:
             ResultType: gradient computed via adjoint differentiation as a requested result type
@@ -279,10 +279,10 @@ class Amplitude(ResultType):
     This is available on simulators only when `shots=0`.
     """
 
-    def __init__(self, state: List[str]):
+    def __init__(self, state: list[str]):
         """
         Args:
-            state (List[str]): list of quantum states as strings with "0" and "1"
+            state (list[str]): list of quantum states as strings with "0" and "1"
 
         Raises:
             ValueError: If state is `None` or an empty list, or
@@ -293,7 +293,7 @@ class Amplitude(ResultType):
         """
         if (
             not state
-            or not isinstance(state, List)
+            or not isinstance(state, list)
             or not all(
                 isinstance(amplitude, str) and re.fullmatch("^[01]+$", amplitude)
                 for amplitude in state
@@ -306,7 +306,7 @@ class Amplitude(ResultType):
         self._state = state
 
     @property
-    def state(self) -> List[str]:
+    def state(self) -> list[str]:
         return self._state
 
     def _to_jaqcd(self) -> ir.Amplitude:
@@ -318,11 +318,11 @@ class Amplitude(ResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def amplitude(state: List[str]) -> ResultType:
+    def amplitude(state: list[str]) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
-            state (List[str]): list of quantum states as strings with "0" and "1"
+            state (list[str]): list of quantum states as strings with "0" and "1"
 
         Returns:
             ResultType: state vector as a requested result type
@@ -361,10 +361,10 @@ class Probability(ResultType):
     only on simulators and represents the exact result.
     """
 
-    def __init__(self, target: QubitSetInput = None):
+    def __init__(self, target: QubitSetInput | None = None):
         """
         Args:
-            target (QubitSetInput): The target qubits that the
+            target (QubitSetInput | None): The target qubits that the
                 result type is requested for. Default is `None`, which means all qubits for the
                 circuit.
 
@@ -404,11 +404,11 @@ class Probability(ResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def probability(target: QubitSetInput = None) -> ResultType:
+    def probability(target: QubitSetInput | None = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
-            target (QubitSetInput): The target qubits that the
+            target (QubitSetInput | None): The target qubits that the
                 result type is requested for. Default is `None`, which means all qubits for the
                 circuit.
 
@@ -451,11 +451,11 @@ class Expectation(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = None):
+    def __init__(self, observable: Observable, target: QubitSetInput | None = None):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -501,12 +501,12 @@ class Expectation(ObservableResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def expectation(observable: Observable, target: QubitSetInput = None) -> ResultType:
+    def expectation(observable: Observable, target: QubitSetInput | None = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -534,11 +534,11 @@ class Sample(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = None):
+    def __init__(self, observable: Observable, target: QubitSetInput | None = None):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -576,12 +576,12 @@ class Sample(ObservableResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def sample(observable: Observable, target: QubitSetInput = None) -> ResultType:
+    def sample(observable: Observable, target: QubitSetInput | None = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -610,11 +610,11 @@ class Variance(ObservableResultType):
     See :mod:`braket.circuits.observables` module for all of the supported observables.
     """
 
-    def __init__(self, observable: Observable, target: QubitSetInput = None):
+    def __init__(self, observable: Observable, target: QubitSetInput | None = None):
         """
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 operate only on 1 qubit and it is applied to all qubits in parallel.
 
@@ -652,12 +652,12 @@ class Variance(ObservableResultType):
 
     @staticmethod
     @circuit.subroutine(register=True)
-    def variance(observable: Observable, target: QubitSetInput = None) -> ResultType:
+    def variance(observable: Observable, target: QubitSetInput | None = None) -> ResultType:
         """Registers this function into the circuit class.
 
         Args:
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 only operate on 1 qubit and it will be applied to all qubits in parallel
 

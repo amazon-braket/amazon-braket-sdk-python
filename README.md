@@ -2,8 +2,8 @@
 
 [![Latest Version](https://img.shields.io/pypi/v/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/amazon-braket-sdk.svg)](https://pypi.python.org/pypi/amazon-braket-sdk)
-[![Build status](https://github.com/aws/amazon-braket-sdk-python/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/aws/amazon-braket-sdk-python/actions/workflows/python-package.yml)
-[![codecov](https://codecov.io/gh/aws/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/aws/amazon-braket-sdk-python)
+[![Build status](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/amazon-braket/amazon-braket-sdk-python/actions/workflows/python-package.yml)
+[![codecov](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python/branch/main/graph/badge.svg?token=1lsqkZL3Ll)](https://codecov.io/gh/amazon-braket/amazon-braket-sdk-python)
 [![Documentation Status](https://img.shields.io/readthedocs/amazon-braket-sdk-python.svg?logo=read-the-docs)](https://amazon-braket-sdk-python.readthedocs.io/en/latest/?badge=latest)
 
 The Amazon Braket Python SDK is an open source library that provides a framework that you can use to interact with quantum computing hardware devices through Amazon Braket.
@@ -11,8 +11,8 @@ The Amazon Braket Python SDK is an open source library that provides a framework
 ## Prerequisites
 Before you begin working with the Amazon Braket SDK, make sure that you've installed or configured the following prerequisites.
 
-### Python 3.8 or greater
-Download and install Python 3.8 or greater from [Python.org](https://www.python.org/downloads/).
+### Python 3.9 or greater
+Download and install Python 3.9 or greater from [Python.org](https://www.python.org/downloads/).
 
 ### Git
 Install Git from https://git-scm.com/downloads. Installation instructions are provided on the download page.
@@ -44,7 +44,7 @@ pip install amazon-braket-sdk
 You can also install from source by cloning this repository and running a pip install command in the root directory of the repository:
 
 ```bash
-git clone https://github.com/aws/amazon-braket-sdk-python.git
+git clone https://github.com/amazon-braket/amazon-braket-sdk-python.git
 cd amazon-braket-sdk-python
 pip install .
 ```
@@ -155,7 +155,7 @@ To select a quantum hardware device, specify its ARN as the value of the `device
 **Important** Quantum tasks may not run immediately on the QPU. The QPUs only execute quantum tasks during execution windows. To find their execution windows, please refer to the [AWS console](https://console.aws.amazon.com/braket/home) in the "Devices" tab.
 
 ## Sample Notebooks
-Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/aws/amazon-braket-examples/) repo.
+Sample Jupyter notebooks can be found in the [amazon-braket-examples](https://github.com/amazon-braket/amazon-braket-examples/) repo.
 
 ## Braket Python SDK API Reference Documentation
 
@@ -233,14 +233,18 @@ tox -e integ-tests -- your-arguments
 ### Issues and Bug Reports
 
 If you encounter bugs or face issues while using the SDK, please let us know by posting 
-the issue on our [Github issue tracker](https://github.com/aws/amazon-braket-sdk-python/issues/).  
-For other issues or general questions, please ask on the [Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/questions/ask) and add the tag amazon-braket.
+the issue on our [Github issue tracker](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/).  
+For other issues or general questions, please ask on the [Quantum Computing Stack Exchange](https://quantumcomputing.stackexchange.com/questions/ask?Tags=amazon-braket).
 
 ### Feedback and Feature Requests
 
 If you have feedback or features that you would like to see on Amazon Braket, we would love to hear from you!  
-[Github issues](https://github.com/aws/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
+[Github issues](https://github.com/amazon-braket/amazon-braket-sdk-python/issues/) is our preferred mechanism for collecting feedback and feature requests, allowing other users 
 to engage in the conversation, and +1 issues to help drive priority. 
+
+### Code contributors
+
+[![Contributors](https://contrib.rocks/image?repo=amazon-braket/amazon-braket-sdk-python)](https://github.com/amazon-braket/amazon-braket-sdk-python/graphs/contributors)
 
 ## License
 This project is licensed under the Apache-2.0 License.

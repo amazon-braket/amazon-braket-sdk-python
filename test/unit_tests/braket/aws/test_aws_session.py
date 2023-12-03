@@ -418,16 +418,20 @@ def test_create_quantum_task_with_job_token(aws_session):
 def test_get_quantum_task(aws_session):
     arn = "foo:bar:arn"
     status = "STATUS"
+    queue_info = ["QueueInfo"]
     return_value = {"quantumTaskArn": arn, "status": status}
     aws_session.braket_client.get_quantum_task.return_value = return_value
 
     assert aws_session.get_quantum_task(arn) == return_value
-    aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
+    aws_session.braket_client.get_quantum_task.assert_called_with(
+        quantumTaskArn=arn, additionalAttributeNames=queue_info
+    )
 
 
 def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_found_response):
     arn = "foo:bar:arn"
     status = "STATUS"
+    queue_info = ["QueueInfo"]
     return_value = {"quantumTaskArn": arn, "status": status}
 
     aws_session.braket_client.get_quantum_task.side_effect = [
@@ -437,7 +441,9 @@ def test_get_quantum_task_retry(aws_session, throttling_response, resource_not_f
     ]
 
     assert aws_session.get_quantum_task(arn) == return_value
-    aws_session.braket_client.get_quantum_task.assert_called_with(quantumTaskArn=arn)
+    aws_session.braket_client.get_quantum_task.assert_called_with(
+        quantumTaskArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_quantum_task.call_count == 3
 
 
@@ -474,16 +480,20 @@ def test_get_quantum_task_does_not_retry_other_exceptions(aws_session):
 
 def test_get_job(aws_session, get_job_response):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
     aws_session.braket_client.get_job.return_value = get_job_response
 
     assert aws_session.get_job(arn) == get_job_response
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
 
 
 def test_get_job_retry(
     aws_session, get_job_response, throttling_response, resource_not_found_response
 ):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
 
     aws_session.braket_client.get_job.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
@@ -492,12 +502,15 @@ def test_get_job_retry(
     ]
 
     assert aws_session.get_job(arn) == get_job_response
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_job.call_count == 3
 
 
 def test_get_job_fail_after_retries(aws_session, throttling_response, resource_not_found_response):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
 
     aws_session.braket_client.get_job.side_effect = [
         ClientError(resource_not_found_response, "unit-test"),
@@ -507,12 +520,15 @@ def test_get_job_fail_after_retries(aws_session, throttling_response, resource_n
 
     with pytest.raises(ClientError):
         aws_session.get_job(arn)
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_job.call_count == 3
 
 
 def test_get_job_does_not_retry_other_exceptions(aws_session):
     arn = "arn:aws:braket:us-west-2:1234567890:job/job-name"
+    queue_info = ["QueueInfo"]
     exception_response = {
         "Error": {
             "Code": "SomeOtherException",
@@ -526,7 +542,9 @@ def test_get_job_does_not_retry_other_exceptions(aws_session):
 
     with pytest.raises(ClientError):
         aws_session.get_job(arn)
-    aws_session.braket_client.get_job.assert_called_with(jobArn=arn)
+    aws_session.braket_client.get_job.assert_called_with(
+        jobArn=arn, additionalAttributeNames=queue_info
+    )
     assert aws_session.braket_client.get_job.call_count == 1
 
 
@@ -656,6 +674,18 @@ def test_cancel_job_surfaces_errors(exception_type, aws_session):
             ],
         ),
         (
+            {"statuses": ["RETIRED"]},
+            [
+                {
+                    "deviceArn": "arn4",
+                    "deviceName": "name4",
+                    "deviceType": "QPU",
+                    "deviceStatus": "RETIRED",
+                    "providerName": "pname3",
+                },
+            ],
+        ),
+        (
             {"provider_names": ["pname2"]},
             [
                 {
@@ -726,6 +756,13 @@ def test_search_devices(input, output, aws_session):
                     "deviceType": "QPU",
                     "deviceStatus": "ONLINE",
                     "providerName": "pname2",
+                },
+                {
+                    "deviceArn": "arn4",
+                    "deviceName": "name4",
+                    "deviceType": "QPU",
+                    "deviceStatus": "RETIRED",
+                    "providerName": "pname3",
                 },
             ]
         }
@@ -1328,3 +1365,38 @@ def test_add_braket_user_agent(aws_session):
     aws_session.add_braket_user_agent(user_agent)
     aws_session.add_braket_user_agent(user_agent)
     aws_session._braket_user_agents.count(user_agent) == 1
+
+
+def test_get_full_image_tag(aws_session):
+    aws_session.ecr_client.batch_get_image.side_effect = (
+        {"images": [{"imageId": {"imageDigest": "my-digest"}}]},
+        {
+            "images": [
+                {"imageId": {"imageTag": "my-tag"}},
+                {"imageId": {"imageTag": "my-tag-py3"}},
+                {"imageId": {"imageTag": "my-tag-py310"}},
+                {"imageId": {"imageTag": "latest"}},
+            ]
+        },
+        AssertionError("Image tag not cached"),
+    )
+    image_uri = "123456.image_uri/repo-name:my-tag"
+    assert aws_session.get_full_image_tag(image_uri) == "my-tag-py310"
+    assert aws_session.get_full_image_tag(image_uri) == "my-tag-py310"
+
+
+def test_get_full_image_tag_no_py_info(aws_session):
+    aws_session.ecr_client.batch_get_image.side_effect = (
+        {"images": [{"imageId": {"imageDigest": "my-digest"}}]},
+        {
+            "images": [
+                {"imageId": {"imageTag": "my-tag"}},
+                {"imageId": {"imageTag": "latest"}},
+            ]
+        },
+    )
+    image_uri = "123456.image_uri/repo-name:my-tag"
+
+    no_py_info = "Full image tag missing."
+    with pytest.raises(ValueError, match=no_py_info):
+        aws_session.get_full_image_tag(image_uri)

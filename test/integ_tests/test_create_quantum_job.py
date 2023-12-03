@@ -14,10 +14,26 @@
 import json
 import os.path
 import re
+import sys
 import tempfile
 from pathlib import Path
 
+import job_test_script
+import pytest
+from job_test_module.job_test_submodule.job_test_submodule_file import submodule_helper
+
+from braket.aws import AwsSession
 from braket.aws.aws_quantum_job import AwsQuantumJob
+from braket.devices import Devices
+from braket.jobs import Framework, get_input_data_dir, hybrid_job, retrieve_image, save_job_result
+
+
+def decorator_python_version():
+    aws_session = AwsSession()
+    image_uri = retrieve_image(Framework.BASE, aws_session.region)
+    tag = aws_session.get_full_image_tag(image_uri)
+    major_version, minor_version = re.search(r"-py(\d)(\d+)-", tag).groups()
+    return int(major_version), int(minor_version)
 
 
 def test_failed_quantum_job(aws_session, capsys):
@@ -62,7 +78,7 @@ def test_failed_quantum_job(aws_session, capsys):
         "braket_container.py",
         "Running Code As Process",
         "Test job started!!!!!",
-        "AssertionError",
+        "FileNotFoundError: [Errno 2] No such file or directory: 'fake_file'",
         "Code Run Finished",
         '"user_entry_point": "braket_container.py"',
     ]
@@ -70,8 +86,9 @@ def test_failed_quantum_job(aws_session, capsys):
     for data in logs_to_validate:
         assert data in log_data
 
-    assert job.metadata()["failureReason"].startswith(
-        "AlgorithmError: Job at job_test_script:start_here"
+    assert job.metadata()["failureReason"] == (
+        "AlgorithmError: FileNotFoundError: [Errno 2] "
+        "No such file or directory: 'fake_file', exit code: 1"
     )
 
 
@@ -152,14 +169,17 @@ def test_completed_quantum_job(aws_session, capsys):
 
     with tempfile.TemporaryDirectory() as temp_dir:
         os.chdir(temp_dir)
-        job.download_result()
-        assert (
-            Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists() and Path(downloaded_result).exists()
-        )
+        try:
+            job.download_result()
+            assert (
+                Path(AwsQuantumJob.RESULTS_TAR_FILENAME).exists()
+                and Path(downloaded_result).exists()
+            )
 
-        # Check results match the expectations.
-        assert job.result() == {"converged": True, "energy": -0.2}
-        os.chdir(current_dir)
+            # Check results match the expectations.
+            assert job.result() == {"converged": True, "energy": -0.2}
+        finally:
+            os.chdir(current_dir)
 
     # Check the logs and validate it contains required output.
     job.logs(wait=True)
@@ -178,3 +198,114 @@ def test_completed_quantum_job(aws_session, capsys):
 
     for data in logs_to_validate:
         assert data in log_data
+
+
+@pytest.mark.xfail(
+    (sys.version_info.major, sys.version_info.minor) != decorator_python_version(),
+    raises=RuntimeError,
+    reason="Python version mismatch",
+)
+def test_decorator_job():
+    class MyClass:
+        attribute = "value"
+
+        def __str__(self):
+            return f"MyClass({self.attribute})"
+
+    @hybrid_job(
+        device=Devices.Amazon.SV1,
+        include_modules="job_test_script",
+        dependencies=str(Path("test", "integ_tests", "requirements.txt")),
+        input_data=str(Path("test", "integ_tests", "requirements")),
+    )
+    def decorator_job(a, b: int, c=0, d: float = 1.0, **extras):
+        with open(Path(get_input_data_dir()) / "requirements.txt", "r") as f:
+            assert f.readlines() == ["pytest\n"]
+        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+            assert f.readlines() == ["pytest\n"]
+        assert dir(pytest)
+        assert a.attribute == "value"
+        assert b == 2
+        assert c == 0
+        assert d == 5
+        assert extras["extra_arg"] == "extra_value"
+
+        hp_file = os.environ["AMZN_BRAKET_HP_FILE"]
+        with open(hp_file, "r") as f:
+            hyperparameters = json.load(f)
+        assert hyperparameters == {
+            "a": "MyClass{value}",
+            "b": "2",
+            "c": "0",
+            "d": "5",
+            "extra_arg": "extra_value",
+        }
+
+        with open("test/output_file.txt", "w") as f:
+            f.write("hello")
+
+        return job_test_script.job_helper()
+
+    job = decorator_job(MyClass(), 2, d=5, extra_arg="extra_value")
+    assert job.result()["status"] == "SUCCESS"
+
+    current_dir = Path.cwd()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        os.chdir(temp_dir)
+        try:
+            job.download_result()
+            with open(Path(job.name, "test", "output_file.txt"), "r") as f:
+                assert f.read() == "hello"
+            assert (
+                Path(job.name, "results.json").exists()
+                and Path(job.name, "test").exists()
+                and not Path(job.name, "test", "integ_tests").exists()
+            )
+        finally:
+            os.chdir(current_dir)
+
+
+@pytest.mark.xfail(
+    (sys.version_info.major, sys.version_info.minor) != decorator_python_version(),
+    raises=RuntimeError,
+    reason="Python version mismatch",
+)
+def test_decorator_job_submodule():
+    @hybrid_job(
+        device=Devices.Amazon.SV1,
+        include_modules=[
+            "job_test_module",
+        ],
+        dependencies=Path(
+            "test", "integ_tests", "job_test_module", "job_test_submodule", "requirements.txt"
+        ),
+        input_data={
+            "my_input": str(Path("test", "integ_tests", "requirements.txt")),
+            "my_dir": str(Path("test", "integ_tests", "job_test_module")),
+        },
+    )
+    def decorator_job_submodule():
+        with open(Path(get_input_data_dir("my_input")) / "requirements.txt", "r") as f:
+            assert f.readlines() == ["pytest\n"]
+        with open(Path("test", "integ_tests", "requirements.txt"), "r") as f:
+            assert f.readlines() == ["pytest\n"]
+        with open(
+            Path(get_input_data_dir("my_dir")) / "job_test_submodule" / "requirements.txt", "r"
+        ) as f:
+            assert f.readlines() == ["pytest\n"]
+        with open(
+            Path(
+                "test",
+                "integ_tests",
+                "job_test_module",
+                "job_test_submodule",
+                "requirements.txt",
+            ),
+            "r",
+        ) as f:
+            assert f.readlines() == ["pytest\n"]
+        assert dir(pytest)
+        save_job_result(submodule_helper())
+
+    job = decorator_job_submodule()
+    assert job.result()["status"] == "SUCCESS"

@@ -17,8 +17,9 @@ import itertools
 import os
 import os.path
 import re
+from functools import cache
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple, Optional
 
 import backoff
 import boto3
@@ -39,17 +40,17 @@ class AwsSession(object):
 
     def __init__(
         self,
-        boto_session: boto3.Session = None,
-        braket_client: client = None,
-        config: Config = None,
-        default_bucket: str = None,
+        boto_session: boto3.Session | None = None,
+        braket_client: client | None = None,
+        config: Config | None = None,
+        default_bucket: str | None = None,
     ):
         """
         Args:
-            boto_session (Session): A boto3 session object.
-            braket_client (client): A boto3 Braket client.
-            config (Config): A botocore Config object.
-            default_bucket (str): The name of the default bucket of the AWS Session.
+            boto_session (Session | None): A boto3 session object.
+            braket_client (client | None): A boto3 Braket client.
+            config (Config | None): A botocore Config object.
+            default_bucket (str | None): The name of the default bucket of the AWS Session.
         """
         if (
             boto_session
@@ -269,7 +270,7 @@ class AwsSession(object):
         jitter=backoff.full_jitter,
         giveup=_should_giveup.__func__,
     )
-    def get_quantum_task(self, arn: str) -> Dict[str, Any]:
+    def get_quantum_task(self, arn: str) -> dict[str, Any]:
         """
         Gets the quantum task.
 
@@ -277,9 +278,11 @@ class AwsSession(object):
             arn (str): The ARN of the quantum task to get.
 
         Returns:
-            Dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
+            dict[str, Any]: The response from the Amazon Braket `GetQuantumTask` operation.
         """
-        response = self.braket_client.get_quantum_task(quantumTaskArn=arn)
+        response = self.braket_client.get_quantum_task(
+            quantumTaskArn=arn, additionalAttributeNames=["QueueInfo"]
+        )
         broadcast_event(_TaskStatusEvent(arn=response["quantumTaskArn"], status=response["status"]))
         return response
 
@@ -314,7 +317,7 @@ class AwsSession(object):
         jitter=backoff.full_jitter,
         giveup=_should_giveup.__func__,
     )
-    def get_job(self, arn: str) -> Dict[str, Any]:
+    def get_job(self, arn: str) -> dict[str, Any]:
         """
         Gets the hybrid job.
 
@@ -322,11 +325,11 @@ class AwsSession(object):
             arn (str): The ARN of the hybrid job to get.
 
         Returns:
-            Dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
+            dict[str, Any]: The response from the Amazon Braket `GetQuantumJob` operation.
         """
-        return self.braket_client.get_job(jobArn=arn)
+        return self.braket_client.get_job(jobArn=arn, additionalAttributeNames=["QueueInfo"])
 
-    def cancel_job(self, arn: str) -> Dict[str, Any]:
+    def cancel_job(self, arn: str) -> dict[str, Any]:
         """
         Cancel the hybrid job.
 
@@ -334,7 +337,7 @@ class AwsSession(object):
             arn (str): The ARN of the hybrid job to cancel.
 
         Returns:
-            Dict[str, Any]: The response from the Amazon Braket `CancelJob` operation.
+            dict[str, Any]: The response from the Amazon Braket `CancelJob` operation.
         """
         return self.braket_client.cancel_job(jobArn=arn)
 
@@ -471,7 +474,7 @@ class AwsSession(object):
                 key.replace(source_prefix, destination_prefix, 1),
             )
 
-    def list_keys(self, bucket: str, prefix: str) -> List[str]:
+    def list_keys(self, bucket: str, prefix: str) -> list[str]:
         """
         Lists keys matching prefix in bucket.
 
@@ -480,7 +483,7 @@ class AwsSession(object):
             prefix (str): The S3 path prefix to be matched
 
         Returns:
-            List[str]: A list of all keys matching the prefix in
+            list[str]: A list of all keys matching the prefix in
             the bucket.
         """
         list_objects = self.s3_client.list_objects_v2(
@@ -594,7 +597,7 @@ class AwsSession(object):
             else:
                 raise
 
-    def get_device(self, arn: str) -> Dict[str, Any]:
+    def get_device(self, arn: str) -> dict[str, Any]:
         """
         Calls the Amazon Braket `get_device` API to retrieve device metadata.
 
@@ -602,31 +605,33 @@ class AwsSession(object):
             arn (str): The ARN of the device.
 
         Returns:
-            Dict[str, Any]: The response from the Amazon Braket `GetDevice` operation.
+            dict[str, Any]: The response from the Amazon Braket `GetDevice` operation.
         """
         return self.braket_client.get_device(deviceArn=arn)
 
     def search_devices(
         self,
-        arns: Optional[List[str]] = None,
-        names: Optional[List[str]] = None,
-        types: Optional[List[str]] = None,
-        statuses: Optional[List[str]] = None,
-        provider_names: Optional[List[str]] = None,
-    ) -> List[Dict[str, Any]]:
+        arns: Optional[list[str]] = None,
+        names: Optional[list[str]] = None,
+        types: Optional[list[str]] = None,
+        statuses: Optional[list[str]] = None,
+        provider_names: Optional[list[str]] = None,
+    ) -> list[dict[str, Any]]:
         """
         Get devices based on filters. The result is the AND of
         all the filters `arns`, `names`, `types`, `statuses`, `provider_names`.
 
         Args:
-            arns (Optional[List[str]]): device ARN list, default is `None`.
-            names (Optional[List[str]]): device name list, default is `None`.
-            types (Optional[List[str]]): device type list, default is `None`.
-            statuses (Optional[List[str]]): device status list, default is `None`.
-            provider_names (Optional[List[str]]): provider name list, default is `None`.
+            arns (Optional[list[str]]): device ARN filter, default is `None`.
+            names (Optional[list[str]]): device name filter, default is `None`.
+            types (Optional[list[str]]): device type filter, default is `None`.
+            statuses (Optional[list[str]]): device status filter, default is `None`. When `None`
+                is used, RETIRED devices will not be returned. To include RETIRED devices in
+                the results, use a filter that includes "RETIRED" for this parameter.
+            provider_names (Optional[list[str]]): provider name list, default is `None`.
 
         Returns:
-            List[Dict[str, Any]]: The response from the Amazon Braket `SearchDevices` operation.
+            list[dict[str, Any]]: The response from the Amazon Braket `SearchDevices` operation.
         """
         filters = []
         if arns:
@@ -641,6 +646,8 @@ class AwsSession(object):
                 if types and result["deviceType"] not in types:
                     continue
                 if statuses and result["deviceStatus"] not in statuses:
+                    continue
+                if statuses is None and result["deviceStatus"] == "RETIRED":
                     continue
                 if provider_names and result["providerName"] not in provider_names:
                     continue
@@ -663,7 +670,7 @@ class AwsSession(object):
         return True
 
     @staticmethod
-    def parse_s3_uri(s3_uri: str) -> Tuple[str, str]:
+    def parse_s3_uri(s3_uri: str) -> tuple[str, str]:
         """
         Parse S3 URI to get bucket and key
 
@@ -671,7 +678,7 @@ class AwsSession(object):
             s3_uri (str): S3 URI.
 
         Returns:
-            Tuple[str, str]: Bucket and Key tuple.
+            tuple[str, str]: Bucket and Key tuple.
 
         Raises:
             ValueError: Raises a ValueError if the provided string is not
@@ -713,22 +720,22 @@ class AwsSession(object):
         self,
         log_group: str,
         log_stream_prefix: str,
-        limit: int = None,
+        limit: Optional[int] = None,
         next_token: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Describes CloudWatch log streams in a log group with a given prefix.
 
         Args:
             log_group (str): Name of the log group.
             log_stream_prefix (str): Prefix for log streams to include.
-            limit (int): Limit for number of log streams returned.
+            limit (Optional[int]): Limit for number of log streams returned.
                 default is 50.
             next_token (Optional[str]): The token for the next set of items to return.
                 Would have been received in a previous call.
 
         Returns:
-            Dict[str, Any]: Dicionary containing logStreams and nextToken
+            dict[str, Any]: Dicionary containing logStreams and nextToken
         """
         log_stream_args = {
             "logGroupName": log_group,
@@ -751,7 +758,7 @@ class AwsSession(object):
         start_time: int,
         start_from_head: bool = True,
         next_token: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Gets CloudWatch log events from a given log stream.
 
@@ -765,7 +772,7 @@ class AwsSession(object):
                 Would have been received in a previous call.
 
         Returns:
-            Dict[str, Any]: Dicionary containing events, nextForwardToken, and nextBackwardToken
+            dict[str, Any]: Dicionary containing events, nextForwardToken, and nextBackwardToken
         """
         log_events_args = {
             "logGroupName": log_group,
@@ -823,3 +830,38 @@ class AwsSession(object):
         # Preserve user_agent information
         copied_session._braket_user_agents = self._braket_user_agents
         return copied_session
+
+    @cache
+    def get_full_image_tag(self, image_uri: str) -> str:
+        """
+        Get verbose image tag from image uri.
+
+        Args:
+            image_uri (str): Image uri to get tag for.
+
+        Returns:
+            str: Verbose image tag for given image.
+        """
+        registry = image_uri.split(".")[0]
+        repository, tag = image_uri.split("/")[-1].split(":")
+
+        # get image digest of latest image
+        digest = self.ecr_client.batch_get_image(
+            registryId=registry,
+            repositoryName=repository,
+            imageIds=[{"imageTag": tag}],
+        )["images"][0]["imageId"]["imageDigest"]
+
+        # get all images matching digest (same image, different tags)
+        images = self.ecr_client.batch_get_image(
+            registryId=registry,
+            repositoryName=repository,
+            imageIds=[{"imageDigest": digest}],
+        )["images"]
+
+        # find the tag with the python version info
+        for image in images:
+            if re.search(r"py\d\d+", tag := image["imageId"]["imageTag"]):
+                return tag
+
+        raise ValueError("Full image tag missing.")

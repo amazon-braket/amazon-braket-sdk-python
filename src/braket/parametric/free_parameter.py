@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from numbers import Number
-from typing import Dict, Union
+from typing import Union
 
 from sympy import Symbol
 
@@ -44,13 +44,12 @@ class FreeParameter(FreeParameterExpression):
 
         Args:
             name (str): Name of the :class:'FreeParameter'. Can be a unicode value.
-                Must not start with '__'.
 
         Examples:
             >>> param1 = FreeParameter("theta")
             >>> param1 = FreeParameter("\u03B8")
         """
-        self._set_name(name)
+        self._name = Symbol(name)
         super().__init__(expression=self._name)
 
     @property
@@ -60,12 +59,12 @@ class FreeParameter(FreeParameterExpression):
         """
         return self._name.name
 
-    def subs(self, parameter_values: Dict[str, Number]) -> Union[FreeParameter, Number]:
+    def subs(self, parameter_values: dict[str, Number]) -> Union[FreeParameter, Number]:
         """
         Substitutes a value in if the parameter exists within the mapping.
 
         Args:
-            parameter_values (Dict[str, Number]): A mapping of parameter to its
+            parameter_values (dict[str, Number]): A mapping of parameter to its
                 corresponding value.
 
         Returns:
@@ -99,19 +98,6 @@ class FreeParameter(FreeParameterExpression):
             "__class__": self.__class__.__name__,
             "name": self.name,
         }
-
-    def _set_name(self, name: str) -> None:
-        FreeParameter._validate_name(name)
-        self._name = Symbol(name)
-
-    @staticmethod
-    def _validate_name(name: str) -> None:
-        if not name:
-            raise ValueError("FreeParameter names must be non empty")
-        if not isinstance(name, str):
-            raise TypeError("FreeParameter names must be strings")
-        if name.startswith("__"):
-            raise ValueError("FreeParameter names must not start with two underscores '__'")
 
     @classmethod
     def from_dict(cls, parameter: dict) -> FreeParameter:

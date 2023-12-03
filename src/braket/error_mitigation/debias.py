@@ -11,8 +11,6 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from typing import List
-
 from braket.device_schema import error_mitigation
 from braket.error_mitigation.error_mitigation import ErrorMitigation
 
@@ -22,5 +20,5 @@ class Debias(ErrorMitigation):
     The debias error mitigation scheme. This scheme takes no parameters.
     """
 
-    def serialize(self) -> List[error_mitigation.Debias]:
+    def serialize(self) -> list[error_mitigation.Debias]:
         return [error_mitigation.Debias()]

@@ -24,6 +24,7 @@ import pytest
 from botocore.exceptions import ClientError
 
 from braket.aws import AwsQuantumJob, AwsSession
+from braket.aws.queue_information import HybridJobQueueInfo
 
 
 @pytest.fixture
@@ -42,7 +43,7 @@ def aws_session(quantum_job_arn, job_region):
 
     _aws_session.copy_session.side_effect = fake_copy_session
     _aws_session.list_keys.return_value = ["job-path/output/model.tar.gz"]
-    _aws_session.region = "us-test-1"
+    _aws_session.region = job_region
 
     _braket_client_mock = Mock(meta=Mock(region_name=job_region))
     _aws_session.braket_client = _braket_client_mock
@@ -141,7 +142,7 @@ def quantum_job(quantum_job_arn, aws_session):
 
 
 def test_equality(quantum_job_arn, aws_session, job_region):
-    new_aws_session = Mock(braket_client=Mock(meta=Mock(region_name=job_region)))
+    new_aws_session = Mock(region=job_region)
     quantum_job_1 = AwsQuantumJob(quantum_job_arn, aws_session)
     quantum_job_2 = AwsQuantumJob(quantum_job_arn, aws_session)
     quantum_job_3 = AwsQuantumJob(quantum_job_arn, new_aws_session)
@@ -194,7 +195,7 @@ def test_quantum_job_constructor_invalid_region(aws_session):
 
 @patch("braket.aws.aws_quantum_job.boto3.Session")
 def test_quantum_job_constructor_explicit_session(mock_session, quantum_job_arn, job_region):
-    aws_session_mock = Mock(braket_client=Mock(meta=Mock(region_name=job_region)))
+    aws_session_mock = Mock(region=job_region)
     job = AwsQuantumJob(quantum_job_arn, aws_session_mock)
     assert job._aws_session == aws_session_mock
     assert job.arn == quantum_job_arn
@@ -224,6 +225,27 @@ def test_metadata_caching(quantum_job, aws_session, generate_get_job_response, q
     assert quantum_job.metadata(True) == get_job_response_running
     aws_session.get_job.assert_called_with(quantum_job_arn)
     assert aws_session.get_job.call_count == 1
+
+
+def test_queue_position(quantum_job, aws_session, generate_get_job_response):
+    state_1 = "COMPLETED"
+    queue_info = {
+        "queue": "JOBS_QUEUE",
+        "position": "None",
+        "message": "Job is in COMPLETED status. "
+        "AmazonBraket does not show queue position for this status.",
+    }
+    get_job_response_completed = generate_get_job_response(status=state_1, queueInfo=queue_info)
+    aws_session.get_job.return_value = get_job_response_completed
+    assert quantum_job.queue_position() == HybridJobQueueInfo(
+        queue_position=None, message=queue_info["message"]
+    )
+
+    state_2 = "QUEUED"
+    queue_info = {"queue": "JOBS_QUEUE", "position": "2"}
+    get_job_response_queued = generate_get_job_response(status=state_2, queueInfo=queue_info)
+    aws_session.get_job.return_value = get_job_response_queued
+    assert quantum_job.queue_position() == HybridJobQueueInfo(queue_position="2", message=None)
 
 
 def test_state(quantum_job, aws_session, generate_get_job_response, quantum_job_arn):
@@ -485,7 +507,7 @@ def role_arn():
 
 @pytest.fixture(
     params=[
-        "arn:aws:braket:us-test-1::device/qpu/test/device-name",
+        "arn:aws:braket:us-west-2::device/qpu/test/device-name",
         "arn:aws:braket:::device/qpu/test/device-name",
     ]
 )
@@ -939,7 +961,7 @@ def test_no_region_routing_simulator(aws_session):
     )
 
     device_arn = "arn:aws:braket:::device/simulator/test/device-name"
-    device_not_found = f"Simulator '{device_arn}' not found in 'us-test-1'"
+    device_not_found = f"Simulator '{device_arn}' not found in 'us-west-2'"
     with pytest.raises(ValueError, match=device_not_found):
         AwsQuantumJob._initialize_session(aws_session, device_arn, logger)
 

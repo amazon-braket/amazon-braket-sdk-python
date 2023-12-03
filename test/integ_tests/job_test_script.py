@@ -11,19 +11,19 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-import json
-import os
-
 from braket.aws import AwsDevice
 from braket.circuits import Circuit
-from braket.jobs import save_job_checkpoint, save_job_result
+from braket.jobs import (
+    get_hyperparameters,
+    get_job_device_arn,
+    save_job_checkpoint,
+    save_job_result,
+)
 from braket.jobs_data import PersistedJobDataFormat
 
 
 def start_here():
-    hp_file = os.environ["AMZN_BRAKET_HP_FILE"]
-    with open(hp_file, "r") as f:
-        hyperparameters = json.load(f)
+    hyperparameters = get_hyperparameters()
 
     if hyperparameters["test_case"] == "completed":
         completed_job_script()
@@ -33,14 +33,14 @@ def start_here():
 
 def failed_job_script():
     print("Test job started!!!!!")
-    assert 0
+    open("fake_file")
 
 
 def completed_job_script():
     print("Test job started!!!!!")
 
     # Use the device declared in the Orchestration Script
-    device = AwsDevice(os.environ["AMZN_BRAKET_DEVICE_ARN"])
+    device = AwsDevice(get_job_device_arn())
 
     bell = Circuit().h(0).cnot(0, 1)
     for count in range(5):
@@ -51,3 +51,8 @@ def completed_job_script():
         save_job_checkpoint({"some_data": "abc"}, data_format=PersistedJobDataFormat.PICKLED_V4)
 
     print("Test job completed!!!!!")
+
+
+def job_helper():
+    print("import successful!")
+    return {"status": "SUCCESS"}

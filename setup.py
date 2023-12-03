@@ -23,7 +23,7 @@ setup(
     name="amazon-braket-sdk",
     version=version,
     license="Apache License 2.0",
-    python_requires=">= 3.8.2",
+    python_requires=">= 3.9",
     packages=find_namespace_packages(where="src", exclude=("test",)),
     package_dir={"": "src"},
     install_requires=[
@@ -33,7 +33,8 @@ setup(
         "setuptools",
         "backoff",
         "boltons",
-        "boto3>=1.22.3",
+        "boto3>=1.28.53",
+        "cloudpickle==2.2.1",
         "nest-asyncio",
         "networkx",
         "numpy",
@@ -62,7 +63,7 @@ setup(
         ]
     },
     include_package_data=True,
-    url="https://github.com/aws/amazon-braket-sdk-python",
+    url="https://github.com/amazon-braket/amazon-braket-sdk-python",
     author="Amazon Web Services",
     description=(
         "An open source library for interacting with quantum computing devices on Amazon Braket"
@@ -73,10 +74,11 @@ setup(
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
+        "Intended Audience :: Education",
+        "Intended Audience :: Science/Research",
         "Natural Language :: English",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

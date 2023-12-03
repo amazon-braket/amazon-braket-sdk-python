@@ -13,19 +13,19 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Type, Union
+from typing import Any, Union
 
 from braket.circuits.free_parameter import FreeParameter
 from braket.circuits.observable import Observable
 from braket.circuits.observables import Sum
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import (
     IRType,
     OpenQASMSerializationProperties,
     SerializationProperties,
 )
 from braket.pulse.pulse_sequence import PulseSequence
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 
 class ResultType:
@@ -35,10 +35,10 @@ class ResultType:
     the metadata that defines what a requested result type is and what it does.
     """
 
-    def __init__(self, ascii_symbols: List[str]):
+    def __init__(self, ascii_symbols: list[str]):
         """
         Args:
-            ascii_symbols (List[str]): ASCII string symbols for the result type. This is used when
+            ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
 
         Raises:
@@ -51,8 +51,8 @@ class ResultType:
         self._ascii_symbols = ascii_symbols
 
     @property
-    def ascii_symbols(self) -> List[str]:
-        """List[str]: Returns the ascii symbols for the requested result type."""
+    def ascii_symbols(self) -> list[str]:
+        """list[str]: Returns the ascii symbols for the requested result type."""
         return self._ascii_symbols
 
     @property
@@ -68,7 +68,7 @@ class ResultType:
     def to_ir(
         self,
         ir_type: IRType = IRType.JAQCD,
-        serialization_properties: SerializationProperties = None,
+        serialization_properties: SerializationProperties | None = None,
         **kwargs,
     ) -> Any:
         """Returns IR object of the result type
@@ -76,9 +76,9 @@ class ResultType:
         Args:
             ir_type(IRType) : The IRType to use for converting the result type object to its
                 IR representation. Defaults to IRType.JAQCD.
-            serialization_properties (SerializationProperties): The serialization properties to use
-                while serializing the object to the IR representation. The serialization properties
-                supplied must correspond to the supplied `ir_type`. Defaults to None.
+            serialization_properties (SerializationProperties | None): The serialization properties
+                to use while serializing the object to the IR representation. The serialization
+                properties supplied must correspond to the supplied `ir_type`. Defaults to None.
 
         Returns:
             Any: IR object of the result type
@@ -129,12 +129,14 @@ class ResultType:
                 to use while serializing the object to the IR representation.
 
         Returns:
-            str: Representing the openqasm representation of the result type.
+            PulseSequence: A PulseSequence corresponding to the full circuit.
         """
         raise NotImplementedError("to_pulse_sequence has not been implemented yet.")
 
     def copy(
-        self, target_mapping: Dict[QubitInput, QubitInput] = None, target: QubitSetInput = None
+        self,
+        target_mapping: dict[QubitInput, QubitInput] | None = None,
+        target: QubitSetInput | None = None,
     ) -> ResultType:
         """
         Return a shallow copy of the result type.
@@ -144,10 +146,10 @@ class ResultType:
             qubits. This is useful apply an instruction to a circuit and change the target qubits.
 
         Args:
-            target_mapping (Dict[QubitInput, QubitInput]): A dictionary of
+            target_mapping (dict[QubitInput, QubitInput] | None): A dictionary of
                 qubit mappings to apply to the target. Key is the qubit in this `target` and the
                 value is what the key is changed to. Default = `None`.
-            target (QubitSetInput): Target qubits for the new instruction.
+            target (QubitSetInput | None): Target qubits for the new instruction.
 
         Returns:
             ResultType: A shallow copy of the result type.
@@ -178,11 +180,11 @@ class ResultType:
         return copy
 
     @classmethod
-    def register_result_type(cls, result_type: Type[ResultType]) -> None:
+    def register_result_type(cls, result_type: type[ResultType]) -> None:
         """Register a result type implementation by adding it into the `ResultType` class.
 
         Args:
-            result_type (Type[ResultType]): `ResultType` class to register.
+            result_type (type[ResultType]): `ResultType` class to register.
         """
         setattr(cls, result_type.__name__, result_type)
 
@@ -204,14 +206,14 @@ class ObservableResultType(ResultType):
     """
 
     def __init__(
-        self, ascii_symbols: List[str], observable: Observable, target: QubitSetInput = None
+        self, ascii_symbols: list[str], observable: Observable, target: QubitSetInput | None = None
     ):
         """
         Args:
-            ascii_symbols (List[str]): ASCII string symbols for the result type. This is used when
+            ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
             observable (Observable): the observable for the result type
-            target (QubitSetInput): Target qubits that the
+            target (QubitSetInput | None): Target qubits that the
                 result type is requested for. Default is `None`, which means the observable must
                 only operate on 1 qubit and it will be applied to all qubits in parallel
 
@@ -301,10 +303,10 @@ class ObservableParameterResultType(ObservableResultType):
 
     def __init__(
         self,
-        ascii_symbols: List[str],
+        ascii_symbols: list[str],
         observable: Observable,
-        target: QubitSetInput = None,
-        parameters: List[Union[str, FreeParameter]] = None,
+        target: QubitSetInput | None = None,
+        parameters: list[Union[str, FreeParameter]] | None = None,
     ):
         super().__init__(ascii_symbols, observable, target)
 
@@ -316,13 +318,13 @@ class ObservableParameterResultType(ObservableResultType):
 
         """
         Args:
-            ascii_symbols (List[str]): ASCII string symbols for the result type. This is used when
+            ascii_symbols (list[str]): ASCII string symbols for the result type. This is used when
                 printing a diagram of circuits.
             observable (Observable): the observable for the result type.
-            target (QubitSetInput): Target qubits that the result type is requested for.
+            target (QubitSetInput | None): Target qubits that the result type is requested for.
                 Default is `None`, which means the observable must only operate on 1
                 qubit and it will be applied to all qubits in parallel.
-            parameters (List[Union[str, FreeParameter]]): List of string inputs or
+            parameters (list[Union[str, FreeParameter]] | None): List of string inputs or
                 FreeParameter objects. These inputs will be used as parameters for
                 gradient calculation. Default: `all`.
 
@@ -334,7 +336,7 @@ class ObservableParameterResultType(ObservableResultType):
         """
 
     @property
-    def parameters(self) -> List[str]:
+    def parameters(self) -> list[str]:
         return self._parameters
 
     def __repr__(self) -> str:

@@ -16,13 +16,12 @@ from __future__ import annotations
 import builtins
 from copy import deepcopy
 from inspect import signature
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Union
 
 from openpulse import ast
 from oqpy import BitVar, PhysicalQubits, Program
 from oqpy.timing import OQDurationLiteral
 
-from braket.circuits.qubit_set import QubitSet
 from braket.parametric.free_parameter import FreeParameter
 from braket.parametric.free_parameter_expression import FreeParameterExpression
 from braket.parametric.parameterizable import Parameterizable
@@ -36,6 +35,7 @@ from braket.pulse.ast.qasm_transformer import _IRQASMTransformer
 from braket.pulse.frame import Frame
 from braket.pulse.pulse_sequence_trace import PulseSequenceTrace
 from braket.pulse.waveforms import Waveform
+from braket.registers.qubit_set import QubitSet
 
 
 class PulseSequence:
@@ -67,7 +67,7 @@ class PulseSequence:
         )
 
     @property
-    def parameters(self) -> Set[FreeParameter]:
+    def parameters(self) -> set[FreeParameter]:
         """Returns the set of `FreeParameter` s in the PulseSequence."""
         return self._free_parameters.copy()
 
@@ -169,14 +169,14 @@ class PulseSequence:
 
     def delay(
         self,
-        qubits_or_frames: Union[Frame, List[Frame], QubitSet],
+        qubits_or_frames: Union[Frame, list[Frame], QubitSet],
         duration: Union[float, FreeParameterExpression],
     ) -> PulseSequence:
         """
         Adds an instruction to advance the frame clock by the specified `duration` value.
 
         Args:
-            qubits_or_frames (Union[Frame, List[Frame], QubitSet]): Qubits or frame(s) on which
+            qubits_or_frames (Union[Frame, list[Frame], QubitSet]): Qubits or frame(s) on which
                 the delay needs to be introduced.
             duration (Union[float, FreeParameterExpression]): value (in seconds) defining
                 the duration of the delay.
@@ -196,13 +196,13 @@ class PulseSequence:
             self._program.delay(time=duration, qubits_or_frames=physical_qubits)
         return self
 
-    def barrier(self, qubits_or_frames: Union[List[Frame], QubitSet]) -> PulseSequence:
+    def barrier(self, qubits_or_frames: Union[list[Frame], QubitSet]) -> PulseSequence:
         """
         Adds an instruction to align the frame clocks to the latest time across all the specified
         frames.
 
         Args:
-            qubits_or_frames (Union[List[Frame], QubitSet]): Qubits or frames which the delay
+            qubits_or_frames (Union[list[Frame], QubitSet]): Qubits or frames which the delay
                 needs to be introduced.
 
         Returns:
@@ -258,13 +258,13 @@ class PulseSequence:
         self._frames[frame.id] = frame
         return self
 
-    def make_bound_pulse_sequence(self, param_values: Dict[str, float]) -> PulseSequence:
+    def make_bound_pulse_sequence(self, param_values: dict[str, float]) -> PulseSequence:
         """
         Binds FreeParameters based upon their name and values passed in. If parameters
         share the same name, all the parameters of that name will be set to the mapped value.
 
         Args:
-            param_values (Dict[str, float]):  A mapping of FreeParameter names
+            param_values (dict[str, float]):  A mapping of FreeParameter names
                 to a value to assign to them.
 
         Returns:
@@ -337,7 +337,7 @@ class PulseSequence:
         return OQDurationLiteral(parameter) if isinstance(_type, ast.DurationType) else parameter
 
     def _parse_arg_from_calibration_schema(
-        self, argument: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
+        self, argument: dict, waveforms: dict[Waveform], frames: dict[Frame]
     ) -> Any:
         nonprimitive_arg_type = {
             "frame": getattr(frames, "get"),
@@ -351,15 +351,15 @@ class PulseSequence:
 
     @classmethod
     def _parse_from_calibration_schema(
-        cls, calibration: Dict, waveforms: Dict[Waveform], frames: Dict[Frame]
+        cls, calibration: dict, waveforms: dict[Waveform], frames: dict[Frame]
     ) -> PulseSequence:
         """
         Parsing a JSON input based on https://github.com/aws/amazon-braket-schemas-python/blob/main/src/braket/device_schema/pulse/native_gate_calibrations_v1.py#L26.
 
         Args:
-            calibration (Dict): The pulse instruction to parse
-            waveforms (Dict[Waveform]): The waveforms supplied for the pulse sequences.
-            frames (Dict[Frame]): A dictionary of frame objects to use.
+            calibration (dict): The pulse instruction to parse
+            waveforms (dict[Waveform]): The waveforms supplied for the pulse sequences.
+            frames (dict[Frame]): A dictionary of frame objects to use.
 
         Returns:
             PulseSequence: The parse sequence obtain from parsing a pulse instruction.
@@ -402,12 +402,12 @@ class PulseSequence:
                 raise ValueError(f"The {instr['name']} instruction has not been implemented")
         return calibration_sequence
 
-    def __call__(self, arg: Any = None, **kwargs) -> PulseSequence:
+    def __call__(self, arg: Any | None = None, **kwargs) -> PulseSequence:
         """
         Implements the call function to easily make a bound PulseSequence.
 
         Args:
-            arg (Any): A value to bind to all parameters. Defaults to None and
+            arg (Any | None): A value to bind to all parameters. Defaults to None and
                 can be overridden if the parameter is in kwargs.
 
         Returns:
@@ -461,7 +461,7 @@ class PulseSequence:
 
 
 def _validate_uniqueness(
-    mapping: Dict[str, Any], values: Union[Frame, Waveform, List[Frame], List[Waveform]]
+    mapping: dict[str, Any], values: Union[Frame, Waveform, list[Frame], list[Waveform]]
 ) -> None:
     if not isinstance(values, list):
         values = [values]

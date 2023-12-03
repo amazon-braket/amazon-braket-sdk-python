@@ -13,8 +13,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 from oqpy import Program
@@ -39,11 +40,11 @@ from braket.circuits.quantum_operator_helpers import (
     is_unitary,
     verify_quantum_operator_matrix_dimensions,
 )
-from braket.circuits.qubit import QubitInput
-from braket.circuits.qubit_set import QubitSet, QubitSetInput
 from braket.circuits.serialization import OpenQASMSerializationProperties
 from braket.pulse.ast.qasm_parser import ast_to_qasm
 from braket.pulse.pulse_sequence import PulseSequence
+from braket.registers.qubit import QubitInput
+from braket.registers.qubit_set import QubitSet, QubitSetInput
 
 """
 To add a new gate:
@@ -59,7 +60,14 @@ To add a new gate:
 
 
 class H(Gate):
-    """Hadamard gate."""
+    r"""Hadamard gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{H} = \frac{1}{\sqrt{2}} \begin{bmatrix}
+                1 & 1 \\
+                1 & -1 \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["H"])
@@ -68,7 +76,7 @@ class H(Gate):
     def _qasm_name(self) -> str:
         return "h"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [H()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -90,7 +98,13 @@ class H(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Hadamard gate.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{H} = \frac{1}{\sqrt{2}} \begin{bmatrix}
+                    1 & 1 \\
+                    1 & -1 \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -124,7 +138,14 @@ Gate.register_gate(H)
 
 
 class I(Gate):  # noqa: E742, E261
-    """Identity gate."""
+    r"""Identity gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{I} = \begin{bmatrix}
+                1 & 0 \\
+                0 & 1 \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["I"])
@@ -133,7 +154,7 @@ class I(Gate):  # noqa: E742, E261
     def _qasm_name(self) -> str:
         return "i"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [I()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -155,7 +176,13 @@ class I(Gate):  # noqa: E742, E261
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Identity gate.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{I} = \begin{bmatrix}
+                    1 & 0 \\
+                    0 & 1 \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -189,7 +216,15 @@ Gate.register_gate(I)
 
 
 class X(Gate):
-    """Pauli-X gate."""
+    r"""Pauli-X gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{X} = \begin{bmatrix}
+                0 & 1 \\
+                1 & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["X"])
@@ -198,7 +233,7 @@ class X(Gate):
     def _qasm_name(self) -> str:
         return "x"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [X()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -220,7 +255,14 @@ class X(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Pauli-X gate.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{X} = \begin{bmatrix}
+                    0 & 1 \\
+                    1 & 0
+                    \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -254,7 +296,15 @@ Gate.register_gate(X)
 
 
 class Y(Gate):
-    """Pauli-Y gate."""
+    r"""Pauli-Y gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{Y} = \begin{bmatrix}
+                0 & -i \\
+                i & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Y"])
@@ -263,7 +313,7 @@ class Y(Gate):
     def _qasm_name(self) -> str:
         return "y"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Y()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -285,7 +335,14 @@ class Y(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Pauli-Y gate.
+
+        Unitary matrix:
+
+            .. math:: \mathtt{Y} = \begin{bmatrix}
+                    0 & -i \\
+                    i & 0
+                    \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -319,7 +376,15 @@ Gate.register_gate(Y)
 
 
 class Z(Gate):
-    """Pauli-Z gate."""
+    r"""Pauli-Z gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{Z} = \begin{bmatrix}
+                1 & 0 \\
+                0 & -1
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Z"])
@@ -328,7 +393,7 @@ class Z(Gate):
     def _qasm_name(self) -> str:
         return "z"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Z()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -350,7 +415,12 @@ class Z(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Pauli-Z gate.
+
+        .. math:: \mathtt{Z} = \begin{bmatrix}
+                1 & 0 \\
+                0 & -1
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -384,7 +454,15 @@ Gate.register_gate(Z)
 
 
 class S(Gate):
-    """S gate."""
+    r"""S gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{S} = \begin{bmatrix}
+                1 & 0 \\
+                0 & i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["S"])
@@ -393,7 +471,7 @@ class S(Gate):
     def _qasm_name(self) -> str:
         return "s"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Si()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -415,7 +493,12 @@ class S(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""S gate.
+
+        .. math:: \mathtt{S} = \begin{bmatrix}
+                1 & 0 \\
+                0 & i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -449,7 +532,15 @@ Gate.register_gate(S)
 
 
 class Si(Gate):
-    """Conjugate transpose of S gate."""
+    r"""Conjugate transpose of S gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{S}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & -i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Si"])
@@ -458,7 +549,7 @@ class Si(Gate):
     def _qasm_name(self) -> str:
         return "si"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [S()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -480,7 +571,12 @@ class Si(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Conjugate transpose of S gate.
+
+        .. math:: \mathtt{S}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & -i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -514,7 +610,15 @@ Gate.register_gate(Si)
 
 
 class T(Gate):
-    """T gate."""
+    r"""T gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{T} = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \pi/4}
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["T"])
@@ -523,7 +627,7 @@ class T(Gate):
     def _qasm_name(self) -> str:
         return "t"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Ti()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -545,7 +649,12 @@ class T(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""T gate.
+
+        .. math:: \mathtt{T} = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \pi/4}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -579,7 +688,15 @@ Gate.register_gate(T)
 
 
 class Ti(Gate):
-    """Conjugate transpose of T gate."""
+    r"""Conjugate transpose of T gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{T}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{-i \pi/4}
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Ti"])
@@ -588,7 +705,7 @@ class Ti(Gate):
     def _qasm_name(self) -> str:
         return "ti"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [T()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -610,7 +727,12 @@ class Ti(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Conjugate transpose of T gate.
+
+        .. math:: \mathtt{T}^\dagger = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{-i \pi/4}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -644,7 +766,15 @@ Gate.register_gate(Ti)
 
 
 class V(Gate):
-    """Square root of not gate."""
+    r"""Square root of X gate (V gate).
+
+    Unitary matrix:
+
+        .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
+                1+i & 1-i \\
+                1-i & 1+i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["V"])
@@ -653,7 +783,7 @@ class V(Gate):
     def _qasm_name(self) -> str:
         return "v"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Vi()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -675,7 +805,12 @@ class V(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Square root of X gate (V gate).
+
+        .. math:: \mathtt{V} = \frac{1}{2}\begin{bmatrix}
+                1+i & 1-i \\
+                1-i & 1+i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -709,7 +844,15 @@ Gate.register_gate(V)
 
 
 class Vi(Gate):
-    """Conjugate transpose of square root of not gate."""
+    r"""Conjugate transpose of square root of X gate (conjugate transpose of V).
+
+    Unitary matrix:
+
+        .. math:: \mathtt{V}^\dagger = \frac{1}{2}\begin{bmatrix}
+                1-i & 1+i \\
+                1+i & 1-i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["Vi"])
@@ -718,7 +861,7 @@ class Vi(Gate):
     def _qasm_name(self) -> str:
         return "vi"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [V()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -740,7 +883,12 @@ class Vi(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Conjugate transpose of square root of X gate (conjugate transpose of V).
+
+        .. math:: \mathtt{V}^\dagger = \frac{1}{2}\begin{bmatrix}
+                1-i & 1+i \\
+                1+i & 1-i
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s)
@@ -777,7 +925,14 @@ Gate.register_gate(Vi)
 
 
 class Rx(AngledGate):
-    """X-axis rotation gate.
+    r"""X-axis rotation gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{R_x}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -i \sin{(\phi/2)} \\
+                -i \sin{(\phi/2)} & \cos{(\phi/2)}
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -798,7 +953,7 @@ class Rx(AngledGate):
         return ir.Rx.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -823,7 +978,12 @@ class Rx(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""X-axis rotation gate.
+
+        .. math:: \mathtt{R_x}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -i \sin{(\phi/2)} \\
+                -i \sin{(\phi/2)} & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -857,7 +1017,14 @@ Gate.register_gate(Rx)
 
 
 class Ry(AngledGate):
-    """Y-axis rotation gate.
+    r"""Y-axis rotation gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{R_y}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -\sin{(\phi/2)} \\
+                \sin{(\phi/2)} & \cos{(\phi/2)}
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -878,7 +1045,7 @@ class Ry(AngledGate):
         return ir.Ry.construct(target=target[0], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -903,7 +1070,12 @@ class Ry(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Y-axis rotation gate.
+
+        .. math:: \mathtt{R_y}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & -\sin{(\phi/2)} \\
+                \sin{(\phi/2)} & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -922,6 +1094,7 @@ class Ry(AngledGate):
         Returns:
             Iterable[Instruction]: Rx instruction.
 
+
         Examples:
             >>> circ = Circuit().ry(0, 0.15)
         """
@@ -937,7 +1110,14 @@ Gate.register_gate(Ry)
 
 
 class Rz(AngledGate):
-    """Z-axis rotation gate.
+    r"""Z-axis rotation gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
+                e^{-i \phi/2} & 0 \\
+                0 & e^{i \phi/2}
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -979,7 +1159,12 @@ class Rz(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Z-axis rotation gate.
+
+        .. math:: \mathtt{R_z}(\phi) = \begin{bmatrix}
+                e^{-i \phi/2} & 0 \\
+                0 & e^{i \phi/2}
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1013,7 +1198,14 @@ Gate.register_gate(Rz)
 
 
 class PhaseShift(AngledGate):
-    """Phase shift gate.
+    r"""Phase shift gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{PhaseShift}(\phi) = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \phi}
+                \end{bmatrix}
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1053,7 +1245,12 @@ class PhaseShift(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""Phase shift gate.
+
+        .. math:: \mathtt{PhaseShift}(\phi) = \begin{bmatrix}
+                1 & 0 \\
+                0 & e^{i \phi}
+                \end{bmatrix}
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -1094,7 +1291,17 @@ Gate.register_gate(PhaseShift)
 
 
 class CNot(Gate):
-    """Controlled NOT gate."""
+    r"""Controlled NOT gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "X"])
@@ -1103,7 +1310,7 @@ class CNot(Gate):
     def _qasm_name(self) -> str:
         return "cnot"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CNot()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1127,7 +1334,14 @@ class CNot(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cnot(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled NOT gate.
+
+        .. math:: \mathtt{CNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1154,7 +1368,17 @@ Gate.register_gate(CNot)
 
 
 class Swap(Gate):
-    """Swap gate."""
+    r"""Swap gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{SWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["SWAP", "SWAP"])
@@ -1163,7 +1387,7 @@ class Swap(Gate):
     def _qasm_name(self) -> str:
         return "swap"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Swap()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1194,7 +1418,14 @@ class Swap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Swap gate.
+
+        .. math:: \mathtt{SWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1229,7 +1460,17 @@ Gate.register_gate(Swap)
 
 
 class ISwap(Gate):
-    """ISwap gate."""
+    r"""ISwap gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{iSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & i & 0 \\
+                0 & i & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ISWAP", "ISWAP"])
@@ -1238,7 +1479,7 @@ class ISwap(Gate):
     def _qasm_name(self) -> str:
         return "iswap"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [self, self, self]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1269,7 +1510,14 @@ class ISwap(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""ISwap gate.
+
+        .. math:: \mathtt{iSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & i & 0 \\
+                0 & i & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1304,7 +1552,16 @@ Gate.register_gate(ISwap)
 
 
 class PSwap(AngledGate):
-    """PSwap gate.
+    r"""PSwap gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1356,7 +1613,14 @@ class PSwap(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""PSwap gate.
+
+        .. math:: \mathtt{PSWAP}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
+                0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1392,9 +1656,19 @@ Gate.register_gate(PSwap)
 
 
 class XY(AngledGate):
-    """XY gate.
+    r"""XY gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & \cos{(\phi/2)} & i\sin{(\phi/2)} & 0 \\
+                0 & i\sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                0 & 0 & 0 & 1 \\
+            \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1912.04424v1
+
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1418,7 +1692,7 @@ class XY(AngledGate):
         return ir.XY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -1452,7 +1726,14 @@ class XY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""XY gate.
+
+        .. math:: \mathtt{XY}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & \cos{(\phi/2)} & i\sin{(\phi/2)} & 0 \\
+                0 & i\sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                0 & 0 & 0 & 1 \\
+            \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -1488,7 +1769,16 @@ Gate.register_gate(XY)
 
 
 class CPhaseShift(AngledGate):
-    """Controlled phase shift gate.
+    r"""Controlled phase shift gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CPhaseShift}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & e^{i \phi}
+            \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1526,7 +1816,14 @@ class CPhaseShift(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled phase shift gate.
+
+        .. math:: \mathtt{CPhaseShift}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & e^{i \phi}
+            \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1557,7 +1854,16 @@ Gate.register_gate(CPhaseShift)
 
 
 class CPhaseShift00(AngledGate):
-    """Controlled phase shift gate for phasing the \\|00> state.
+    r"""Controlled phase shift gate for phasing the \|00> state.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
+                e^{i \phi} & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1595,7 +1901,14 @@ class CPhaseShift00(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled phase shift gate for phasing the \|00> state.
+
+        .. math:: \mathtt{CPhaseShift00}(\phi) = \begin{bmatrix}
+                e^{i \phi} & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1626,7 +1939,16 @@ Gate.register_gate(CPhaseShift00)
 
 
 class CPhaseShift01(AngledGate):
-    """Controlled phase shift gate for phasing the \\|01> state.
+    r"""Controlled phase shift gate for phasing the \|01> state.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+            \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1664,7 +1986,14 @@ class CPhaseShift01(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled phase shift gate for phasing the \|01> state.
+
+        .. math:: \mathtt{CPhaseShift01}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & e^{i \phi} & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 1
+            \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1695,7 +2024,16 @@ Gate.register_gate(CPhaseShift01)
 
 
 class CPhaseShift10(AngledGate):
-    """Controlled phase shift gate for phasing the \\|10> state.
+    r"""Controlled phase shift gate for phasing the \\|10> state.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -1733,7 +2071,14 @@ class CPhaseShift10(AngledGate):
         angle: Union[FreeParameterExpression, float],
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled phase shift gate for phasing the \\|10> state.
+
+        .. math:: \mathtt{CPhaseShift10}(\phi) = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & e^{i \phi} & 0 \\
+                0 & 0 & 0 & 1
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1764,7 +2109,17 @@ Gate.register_gate(CPhaseShift10)
 
 
 class CV(Gate):
-    """Controlled Sqrt of NOT gate."""
+    r"""Controlled Sqrt of X gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CV} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0.5+0.5i & 0.5-0.5i \\
+                0 & 0 & 0.5-0.5i & 0.5+0.5i
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "V"])
@@ -1773,7 +2128,7 @@ class CV(Gate):
     def _qasm_name(self) -> str:
         return "cv"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [self, self, self]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1797,7 +2152,14 @@ class CV(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cv(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled Sqrt of X gate.
+
+        .. math:: \mathtt{CV} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0.5+0.5i & 0.5-0.5i \\
+                0 & 0 & 0.5-0.5i & 0.5+0.5i
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1824,7 +2186,17 @@ Gate.register_gate(CV)
 
 
 class CY(Gate):
-    """Controlled Pauli-Y gate."""
+    r"""Controlled Pauli-Y gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CY} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & -i \\
+                0 & 0 & i & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Y"])
@@ -1833,7 +2205,7 @@ class CY(Gate):
     def _qasm_name(self) -> str:
         return "cy"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CY()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1857,7 +2229,14 @@ class CY(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cy(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled Pauli-Y gate.
+
+        .. math:: \mathtt{CY} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & -i \\
+                0 & 0 & i & 0
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1884,7 +2263,17 @@ Gate.register_gate(CY)
 
 
 class CZ(Gate):
-    """Controlled Pauli-Z gate."""
+    r"""Controlled Pauli-Z gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CZ} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & -1
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "Z"])
@@ -1893,7 +2282,7 @@ class CZ(Gate):
     def _qasm_name(self) -> str:
         return "cz"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CZ()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1909,7 +2298,14 @@ class CZ(Gate):
     @staticmethod
     @circuit.subroutine(register=True)
     def cz(control: QubitSetInput, target: QubitInput, power: float = 1) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled Pauli-Z gate.
+
+        .. math:: \mathtt{CZ} = \begin{bmatrix}
+                1 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 \\
+                0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & -1
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -1936,7 +2332,17 @@ Gate.register_gate(CZ)
 
 
 class ECR(Gate):
-    """An echoed RZX(pi/2) gate."""
+    r"""An echoed RZX(pi/2) gate (ECR gate).
+
+    Unitary matrix:
+
+        .. math:: \mathtt{ECR} = \begin{bmatrix}
+                0 & 0 & 1 & i \\
+                0 & 0 & i & 1 \\
+                1 & -i & 0 & 0 \\
+                -i & 1 & 0 & 0
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["ECR", "ECR"])
@@ -1945,7 +2351,7 @@ class ECR(Gate):
     def _qasm_name(self) -> str:
         return "ecr"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [ECR()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -1975,7 +2381,14 @@ class ECR(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""An echoed RZX(pi/2) gate (ECR gate).
+
+        .. math:: \mathtt{ECR} = \begin{bmatrix}
+                0 & 0 & 1 & i \\
+                0 & 0 & i & 1 \\
+                1 & -i & 0 & 0 \\
+                -i & 1 & 0 & 0
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2010,7 +2423,16 @@ Gate.register_gate(ECR)
 
 
 class XX(AngledGate):
-    """Ising XX coupling gate.
+    r"""Ising XX coupling gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & -i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                -i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1707.06356
 
@@ -2036,7 +2458,7 @@ class XX(AngledGate):
         return ir.XX.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -2070,7 +2492,14 @@ class XX(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Ising XX coupling gate.
+
+        .. math:: \mathtt{XX}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & -i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                -i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2106,7 +2535,16 @@ Gate.register_gate(XX)
 
 
 class YY(AngledGate):
-    """Ising YY coupling gate.
+    r"""Ising YY coupling gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1707.06356
 
@@ -2132,7 +2570,7 @@ class YY(AngledGate):
         return ir.YY.construct(targets=[target[0], target[1]], angle=self.angle)
 
     def to_matrix(self) -> np.ndarray:
-        """Returns a matrix representation of this gate.
+        r"""Returns a matrix representation of this gate.
         Returns:
             ndarray: The matrix representation of this gate.
         """
@@ -2166,7 +2604,14 @@ class YY(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Ising YY coupling gate.
+
+        .. math:: \mathtt{YY}(\phi) = \begin{bmatrix}
+                \cos{(\phi/2)} & 0 & 0 & i \sin{(\phi/2)} \\
+                0 & \cos{(\phi/2)} & -i \sin{(\phi/2)} & 0 \\
+                0 & -i \sin{(\phi/2)} & \cos{(\phi/2)} & 0 \\
+                i \sin{(\phi/2)} & 0 & 0 & \cos{(\phi/2)}
+                \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2202,7 +2647,16 @@ Gate.register_gate(YY)
 
 
 class ZZ(AngledGate):
-    """Ising ZZ coupling gate.
+    r"""Ising ZZ coupling gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
+                e^{-i\phi/2} & 0 & 0 & 0 \\
+                0 & e^{i\phi/2} & 0 & 0 \\
+                0 & 0 & e^{i\phi/2} & 0 \\
+                0 & 0 & 0 & e^{-i\phi/2}
+            \end{bmatrix}.
 
     Reference: https://arxiv.org/abs/1707.06356
 
@@ -2256,7 +2710,14 @@ class ZZ(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Ising ZZ coupling gate.
+
+        .. math:: \mathtt{ZZ}(\phi) = \begin{bmatrix}
+                e^{-i\phi/2} & 0 & 0 & 0 \\
+                0 & e^{i\phi/2} & 0 & 0 \\
+                0 & 0 & e^{i\phi/2} & 0 \\
+                0 & 0 & 0 & e^{-i\phi/2}
+            \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2295,7 +2756,21 @@ Gate.register_gate(ZZ)
 
 
 class CCNot(Gate):
-    """CCNOT gate or Toffoli gate."""
+    r"""CCNOT gate or Toffoli gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CCNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "C", "X"])
@@ -2304,7 +2779,7 @@ class CCNot(Gate):
     def _qasm_name(self) -> str:
         return "ccnot"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CCNot()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2340,7 +2815,18 @@ class CCNot(Gate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""CCNOT gate or Toffoli gate.
+
+        .. math:: \mathtt{CCNOT} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                \end{bmatrix}.
 
         Args:
             control1 (QubitInput): Control qubit 1 index.
@@ -2378,7 +2864,21 @@ Gate.register_gate(CCNot)
 
 
 class CSwap(Gate):
-    """Controlled Swap gate."""
+    r"""Controlled Swap gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{CSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
+    """
 
     def __init__(self):
         super().__init__(qubit_count=None, ascii_symbols=["C", "SWAP", "SWAP"])
@@ -2387,7 +2887,7 @@ class CSwap(Gate):
     def _qasm_name(self) -> str:
         return "cswap"
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [CSwap()]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2420,7 +2920,18 @@ class CSwap(Gate):
         target2: QubitInput,
         power: float = 1,
     ) -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Controlled Swap gate.
+
+        .. math:: \mathtt{CSWAP} = \begin{bmatrix}
+                1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 1 & 0 & 0 & 0 & 0 & 0 & 0  \\
+                0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+                \end{bmatrix}.
 
         Args:
             control (QubitSetInput): Control qubit(s). The last control qubit
@@ -2451,7 +2962,14 @@ Gate.register_gate(CSwap)
 
 
 class GPi(AngledGate):
-    """IonQ GPi gate.
+    r"""IonQ GPi gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
+                0 & e^{-i \phi} \\
+                e^{i \phi} & 0
+                \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -2476,7 +2994,7 @@ class GPi(AngledGate):
             ]
         )
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [GPi(self.angle)]
 
     @staticmethod
@@ -2496,7 +3014,12 @@ class GPi(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""IonQ GPi gate.
+
+        .. math:: \mathtt{GPi}(\phi) = \begin{bmatrix}
+                0 & e^{-i \phi} \\
+                e^{i \phi} & 0
+                \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -2530,7 +3053,14 @@ Gate.register_gate(GPi)
 
 
 class GPi2(AngledGate):
-    """IonQ GPi2 gate.
+    r"""IonQ GPi2 gate.
+
+    Unitary matrix:
+
+        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+                1 & -i e^{-i \phi} \\
+                -i e^{i \phi} & 1
+            \end{bmatrix}.
 
     Args:
         angle (Union[FreeParameterExpression, float]): angle in radians.
@@ -2555,7 +3085,7 @@ class GPi2(AngledGate):
             ]
         ) / np.sqrt(2)
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [GPi2(self.angle + np.pi)]
 
     @staticmethod
@@ -2575,7 +3105,12 @@ class GPi2(AngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""IonQ GPi2 gate.
+
+        .. math:: \mathtt{GPi2}(\phi) = \begin{bmatrix}
+                1 & -i e^{-i \phi} \\
+                -i e^{i \phi} & 1
+            \end{bmatrix}.
 
         Args:
             target (QubitSetInput): Target qubit(s).
@@ -2609,12 +3144,26 @@ Gate.register_gate(GPi2)
 
 
 class MS(TripleAngledGate):
-    """IonQ Mølmer-Sørenson gate.
+    r"""IonQ Mølmer-Sørensen gate.
+
+    Unitary matrix:
+
+            .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
+                    \cos{\frac{\theta}{2}} & 0 &
+                    0 & -ie^{-i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} \\
+                    0 & \cos{\frac{\theta}{2}} &
+                    -ie^{-i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} & 0 \\
+                    0 & -ie^{i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} &
+                    \cos{\frac{\theta}{2}} & 0 \\
+                    -ie^{i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} & 0
+                    & 0 & \cos{\frac{\theta}{2}}
+                    \end{bmatrix}.
 
     Args:
         angle_1 (Union[FreeParameterExpression, float]): angle in radians.
         angle_2 (Union[FreeParameterExpression, float]): angle in radians.
         angle_3 (Union[FreeParameterExpression, float]): angle in radians.
+        Default value is angle_3=pi/2.
     """
 
     def __init__(
@@ -2665,7 +3214,7 @@ class MS(TripleAngledGate):
             ]
         )
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [MS(self.angle_1 + np.pi, self.angle_2, self.angle_3)]
 
     @staticmethod
@@ -2688,7 +3237,18 @@ class MS(TripleAngledGate):
         control_state: Optional[BasisStateInput] = None,
         power: float = 1,
     ) -> Iterable[Instruction]:
-        """Registers this function into the circuit class.
+        r"""IonQ Mølmer-Sørensen gate.
+
+        .. math:: &\mathtt{MS}(\phi_0, \phi_1, \theta) =\\ &\begin{bmatrix}
+                    \cos{\frac{\theta}{2}} & 0 &
+                    0 & -ie^{-i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} \\
+                    0 & \cos{\frac{\theta}{2}} &
+                    -ie^{-i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} & 0 \\
+                    0 & -ie^{i (\phi_0 - \phi_1)}\sin{\frac{\theta}{2}} &
+                    \cos{\frac{\theta}{2}} & 0 \\
+                    -ie^{i (\phi_0 + \phi_1)}\sin{\frac{\theta}{2}} & 0
+                    & 0 & \cos{\frac{\theta}{2}}
+                    \end{bmatrix}.
 
         Args:
             target1 (QubitInput): Target qubit 1 index.
@@ -2728,7 +3288,7 @@ Gate.register_gate(MS)
 
 
 class Unitary(Gate):
-    """Arbitrary unitary gate
+    """Arbitrary unitary gate.
 
     Args:
         matrix (numpy.ndarray): Unitary matrix which defines the gate.
@@ -2754,7 +3314,7 @@ class Unitary(Gate):
     def to_matrix(self) -> np.ndarray:
         return np.array(self._matrix)
 
-    def adjoint(self) -> List[Gate]:
+    def adjoint(self) -> list[Gate]:
         return [Unitary(self._matrix.conj().T, display_name=f"({self.ascii_symbols})^†")]
 
     def _to_jaqcd(self, target: QubitSet) -> Any:
@@ -2785,13 +3345,13 @@ class Unitary(Gate):
         return hash((self.name, str(self._matrix), self.qubit_count))
 
     @staticmethod
-    def _transform_matrix_to_ir(matrix: np.ndarray) -> List:
+    def _transform_matrix_to_ir(matrix: np.ndarray) -> list:
         return [[[element.real, element.imag] for element in row] for row in matrix.tolist()]
 
     @staticmethod
     @circuit.subroutine(register=True)
     def unitary(targets: QubitSet, matrix: np.ndarray, display_name: str = "U") -> Instruction:
-        """Registers this function into the circuit class.
+        r"""Arbitrary unitary gate.
 
         Args:
             targets (QubitSet): Target qubits.
@@ -2847,8 +3407,8 @@ class PulseGate(Gate, Parameterizable):
         return self._pulse_sequence
 
     @property
-    def parameters(self) -> List[FreeParameter]:
-        """Returns the list of `FreeParameter` s associated with the gate."""
+    def parameters(self) -> list[FreeParameter]:
+        r"""Returns the list of `FreeParameter` s associated with the gate."""
         return list(self._pulse_sequence.parameters)
 
     def bind_values(self, **kwargs) -> PulseGate:

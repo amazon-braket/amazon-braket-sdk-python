@@ -34,6 +34,7 @@ from common_test_utils import (
 from jsonschema import validate
 
 from braket.aws import AwsDevice, AwsDeviceType, AwsQuantumTask
+from braket.aws.queue_information import QueueDepthInfo, QueueType
 from braket.circuits import Circuit, FreeParameter, Gate, QubitSet
 from braket.circuits.gate_calibrations import GateCalibrations
 from braket.device_schema.device_execution_window import DeviceExecutionWindow
@@ -76,7 +77,6 @@ MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1 = {
 MOCK_GATE_MODEL_QPU_CAPABILITIES_1 = RigettiDeviceCapabilities.parse_obj(
     MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_1
 )
-
 
 MOCK_gate_calibrations_JSON = {
     "gates": {
@@ -218,6 +218,11 @@ MOCK_GATE_MODEL_QPU_1 = {
     "providerName": "Rigetti",
     "deviceStatus": "OFFLINE",
     "deviceCapabilities": MOCK_GATE_MODEL_QPU_CAPABILITIES_1.json(),
+    "deviceQueueInfo": [
+        {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "19", "queuePriority": "Normal"},
+        {"queue": "QUANTUM_TASKS_QUEUE", "queueSize": "3", "queuePriority": "Priority"},
+        {"queue": "JOBS_QUEUE", "queueSize": "0 (3 prioritized job(s) running)"},
+    ],
 }
 
 MOCK_GATE_MODEL_QPU_CAPABILITIES_JSON_2 = {
@@ -627,7 +632,6 @@ MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_1 = {
     },
     "nativeGateCalibrationsRef": "file://hostname/foo/bar",
 }
-
 
 MOCK_PULSE_MODEL_QPU_PULSE_CAPABILITIES_JSON_2 = {
     "braketSchemaHeader": {
@@ -1669,6 +1673,75 @@ def test_get_devices_simulators_only(mock_copy_session, aws_session):
     assert [result.name for result in results] == ["SV1"]
 
 
+@pytest.mark.filterwarnings("ignore:Test Code:")
+@patch("braket.aws.aws_device.AwsSession.copy_session")
+def test_get_devices_with_error_in_region(mock_copy_session, aws_session):
+    aws_session.search_devices.side_effect = [
+        # us-west-1
+        [
+            {
+                "deviceArn": SV1_ARN,
+                "deviceName": "SV1",
+                "deviceType": "SIMULATOR",
+                "deviceStatus": "ONLINE",
+                "providerName": "Amazon Braket",
+            }
+        ],
+        ValueError("should not be reachable"),
+    ]
+    aws_session.get_device.side_effect = [
+        MOCK_GATE_MODEL_SIMULATOR,
+        ValueError("should not be reachable"),
+    ]
+    session_for_region = Mock()
+    session_for_region.search_devices.side_effect = [
+        # us-east-1
+        [
+            {
+                "deviceArn": IONQ_ARN,
+                "deviceName": "IonQ Device",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "IonQ",
+            },
+        ],
+        # us-west-2
+        ClientError(
+            {
+                "Error": {
+                    "Code": "Test Code",
+                    "Message": "Test Message",
+                }
+            },
+            "Test Operation",
+        ),
+        # eu-west-2
+        [
+            {
+                "deviceArn": OQC_ARN,
+                "deviceName": "Lucy",
+                "deviceType": "QPU",
+                "deviceStatus": "ONLINE",
+                "providerName": "OQC",
+            }
+        ],
+        # Only two regions to search outside of current
+        ValueError("should not be reachable"),
+    ]
+    session_for_region.get_device.side_effect = [
+        MOCK_GATE_MODEL_QPU_2,
+        MOCK_GATE_MODEL_QPU_3,
+        ValueError("should not be reachable"),
+    ]
+    mock_copy_session.return_value = session_for_region
+    # Search order: us-east-1, us-west-1, us-west-2, eu-west-2
+    results = AwsDevice.get_devices(
+        statuses=["ONLINE"],
+        aws_session=aws_session,
+    )
+    assert [result.name for result in results] == ["Blah", "Lucy", "SV1"]
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_get_devices_invalid_order_by():
     AwsDevice.get_devices(order_by="foo")
@@ -1937,3 +2010,14 @@ def test_parse_calibration_data_bad_instr(bad_input):
     )
     device = AwsDevice(DWAVE_ARN, mock_session)
     device._parse_calibration_json(bad_input)
+
+
+def test_queue_depth(arn):
+    mock_session = Mock()
+    mock_session.get_device.return_value = MOCK_GATE_MODEL_QPU_1
+    mock_session.region = RIGETTI_REGION
+    device = AwsDevice(arn, mock_session)
+    assert device.queue_depth() == QueueDepthInfo(
+        quantum_tasks={QueueType.NORMAL: "19", QueueType.PRIORITY: "3"},
+        jobs="0 (3 prioritized job(s) running)",
+    )

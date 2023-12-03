@@ -10,7 +10,8 @@
 # distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
-from typing import Dict, Union
+
+from typing import Union
 
 from openpulse import ast
 from openqasm3.visitor import QASMTransformer
@@ -26,7 +27,7 @@ from braket.parametric.free_parameter_expression import (
 class _FreeParameterTransformer(QASMTransformer):
     """Walk the AST and evaluate FreeParameterExpressions."""
 
-    def __init__(self, param_values: Dict[str, float], program: Program):
+    def __init__(self, param_values: dict[str, float], program: Program):
         self.param_values = param_values
         self.program = program
         super().__init__()
