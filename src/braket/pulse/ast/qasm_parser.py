@@ -25,9 +25,7 @@ class _PulsePrinter(Printer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def visit_Identifier(
-        self, node: ast.Identifier, context: PrinterState
-    ) -> None:
+    def visit_Identifier(self, node: ast.Identifier, context: PrinterState) -> None:
         """Visit an Identifier.
         Args:
             node (ast.Identifier): The identifier.
