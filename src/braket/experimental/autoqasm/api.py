@@ -183,7 +183,6 @@ def _function_wrapper(
     if inspect.isfunction(func) or inspect.ismethod(func):
         _wrapper = functools.update_wrapper(_wrapper, func)
 
-    # TODO need to replace this? -> decorated_wrapper = tf_decorator.make_decorator(func, _wrapper)
     return autograph_artifact(_wrapper)
 
 
