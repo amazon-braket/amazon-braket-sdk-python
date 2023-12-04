@@ -18,10 +18,7 @@ from openqasm3.visitor import QASMTransformer
 from oqpy.program import Program
 from oqpy.timing import OQDurationLiteral
 
-from braket.parametric.free_parameter_expression import (
-    FreeParameterExpression,
-    _FreeParameterExpressionIdentifier,
-)
+from braket.parametric.free_parameter_expression import FreeParameterExpression
 
 
 class _FreeParameterTransformer(QASMTransformer):
@@ -32,21 +29,27 @@ class _FreeParameterTransformer(QASMTransformer):
         self.program = program
         super().__init__()
 
-    def visit__FreeParameterExpressionIdentifier(
-        self, identifier: _FreeParameterExpressionIdentifier
-    ) -> Union[_FreeParameterExpressionIdentifier, ast.FloatLiteral]:
-        """Visit a FreeParameterExpressionIdentifier.
+    def visit_Identifier(
+        self, identifier: ast.Identifier
+    ) -> Union[ast.Identifier, ast.FloatLiteral]:
+        """Visit an Identifier.
+
+        If the Identifier is used to hold a `FreeParameterExpression`, it will be simplified
+        using the given parameter values.
+
         Args:
-            identifier (_FreeParameterExpressionIdentifier): The identifier.
+            identifier (Identifier): The identifier.
 
         Returns:
-            Union[_FreeParameterExpressionIdentifier, FloatLiteral]: The transformed expression.
+            Union[Identifier, FloatLiteral]: The transformed identifier.
         """
-        new_value = identifier.expression.subs(self.param_values)
-        if isinstance(new_value, FreeParameterExpression):
-            return _FreeParameterExpressionIdentifier(new_value)
-        else:
-            return ast.FloatLiteral(new_value)
+        if isinstance(identifier.name, FreeParameterExpression):
+            new_value = FreeParameterExpression(identifier.name).subs(self.param_values)
+            if isinstance(new_value, FreeParameterExpression):
+                return ast.Identifier(new_value)
+            else:
+                return ast.FloatLiteral(float(new_value))
+        return identifier
 
     def visit_DurationLiteral(self, duration_literal: ast.DurationLiteral) -> ast.DurationLiteral:
         """Visit Duration Literal.
@@ -58,11 +61,9 @@ class _FreeParameterTransformer(QASMTransformer):
             DurationLiteral: The transformed duration literal.
         """
         duration = duration_literal.value
-        if not isinstance(duration, _FreeParameterExpressionIdentifier):
+        if not isinstance(duration, ast.Identifier):
             return duration_literal
-        new_duration = duration.expression.subs(self.param_values)
+        new_duration = FreeParameterExpression(duration.name).subs(self.param_values)
         if isinstance(new_duration, FreeParameterExpression):
-            return ast.DurationLiteral(
-                _FreeParameterExpressionIdentifier(new_duration), duration_literal.unit
-            )
+            return ast.DurationLiteral(ast.Identifier(str(new_duration)), duration_literal.unit)
         return OQDurationLiteral(new_duration).to_ast(self.program)

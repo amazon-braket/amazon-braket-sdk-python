@@ -194,7 +194,7 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
     )
     assert b_bound.to_ir() == b_bound_call.to_ir() == expected_str_b_bound
     assert pulse_sequence.to_ir() == expected_str_unbound
-    assert b_bound.parameters == set([FreeParameter("sigma_g"), FreeParameter("a")])
+    assert b_bound.parameters == {FreeParameter("sigma_g"), FreeParameter("a")}
     both_bound = b_bound.make_bound_pulse_sequence({"a": 1, "sigma_g": 0.7})
     both_bound_call = b_bound_call(1, sigma_g=0.7)  # use arg 1 for a
     expected_str_both_bound = "\n".join(
@@ -206,11 +206,11 @@ def test_pulse_sequence_make_bound_pulse_sequence(predefined_frame_1, predefined
             "    waveform constant_wf = constant(4.0ms, 2.0 + 0.3im);",
             "    waveform arb_wf = {1.0 + 0.4im, 0, 0.3, 0.1 + 0.2im};",
             "    bit[2] psb;",
-            "    set_frequency(predefined_frame_1, 5);",
-            "    shift_frequency(predefined_frame_1, 5);",
-            "    set_phase(predefined_frame_1, 5);",
-            "    shift_phase(predefined_frame_1, 5);",
-            "    set_scale(predefined_frame_1, 5);",
+            "    set_frequency(predefined_frame_1, 5.0);",
+            "    shift_frequency(predefined_frame_1, 5.0);",
+            "    set_phase(predefined_frame_1, 5.0);",
+            "    shift_phase(predefined_frame_1, 5.0);",
+            "    set_scale(predefined_frame_1, 5.0);",
             "    psb[0] = capture_v0(predefined_frame_1);",
             "    delay[5s] predefined_frame_1, predefined_frame_2;",
             "    delay[5s] predefined_frame_1;",
