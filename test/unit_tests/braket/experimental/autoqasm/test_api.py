@@ -219,7 +219,7 @@ def bell_measurement_undeclared():
     return bell_measurement_undeclared
 
 
-  def test_bell_measurement_undeclared(bell_measurement_undeclared) -> None:
+def test_bell_measurement_undeclared(bell_measurement_undeclared) -> None:
     expected = """OPENQASM 3.0;
 bit[2] c;
 qubit[2] __qubits__;
