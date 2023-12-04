@@ -38,17 +38,12 @@ from autograph.converters import (
     slices,
     variables,
 )
-from autograph.core import ag_ctx, converter, function_wrappers, unsupported_features_checker
-from autograph.impl.api_core import (
-    StackTraceMapper,
-    _attach_error_metadata,
-    _log_callargs,
-    is_autograph_artifact,
-)
-from autograph.logging import ag_logging as logging
+from autograph.core import ag_ctx, converter, unsupported_features_checker
+from autograph.impl.api import _attach_error_metadata, _log_callargs, is_autograph_artifact
+from autograph.operators import function_wrappers
 from autograph.pyct import anno, cfg, qual_names, transpiler
 from autograph.pyct.static_analysis import activity, reaching_definitions
-from autograph.tf_utils import tf_stack
+from autograph.utils import ag_logging as logging
 
 from braket.experimental.autoqasm import operators, program, types
 from braket.experimental.autoqasm.converters import (
@@ -232,13 +227,12 @@ def converted_call(
     if exc:
         raise exc
 
-    with StackTraceMapper(converted_f), tf_stack.CurrentModuleFilter():
-        try:
-            effective_kwargs = kwargs or {}
-            result = converted_f(*effective_args, **effective_kwargs)
-        except Exception as e:
-            _attach_error_metadata(e, converted_f)
-            raise
+    try:
+        effective_kwargs = kwargs or {}
+        result = converted_f(*effective_args, **effective_kwargs)
+    except Exception as e:
+        _attach_error_metadata(e, converted_f)
+        raise
 
     return types.wrap_value(result)
 

@@ -25,8 +25,7 @@ from typing import Any, Optional, Union, get_args
 import openqasm3.ast as qasm_ast
 import oqpy.base
 from autograph.core import converter
-from autograph.impl.api_core import autograph_artifact, is_autograph_artifact
-from autograph.tf_utils import tf_decorator
+from autograph.impl.api import autograph_artifact, is_autograph_artifact
 
 import braket.experimental.autoqasm.constants as aq_constants
 import braket.experimental.autoqasm.instructions as aq_instructions
@@ -184,8 +183,8 @@ def _function_wrapper(
     if inspect.isfunction(func) or inspect.ismethod(func):
         _wrapper = functools.update_wrapper(_wrapper, func)
 
-    decorated_wrapper = tf_decorator.make_decorator(func, _wrapper)
-    return autograph_artifact(decorated_wrapper)
+    # TODO need to replace this? -> decorated_wrapper = tf_decorator.make_decorator(func, _wrapper)
+    return autograph_artifact(_wrapper)
 
 
 def _autograph_optional_features() -> tuple[converter.Feature]:
