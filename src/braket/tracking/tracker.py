@@ -158,9 +158,13 @@ class Tracker:
                     device_stats.get("execution_duration", timedelta(0))
                     + details["execution_duration"]
                 )
-                billed_duration = timedelta(0) if details.get("has_reservation_arn") else (
-                    device_stats.get("billed_execution_duration", timedelta(0))
-                    + details["billed_duration"]
+                billed_duration = (
+                    timedelta(0)
+                    if details.get("has_reservation_arn")
+                    else (
+                        device_stats.get("billed_execution_duration", timedelta(0))
+                        + details["billed_duration"]
+                    )
                 )
 
                 device_stats["execution_duration"] = duration

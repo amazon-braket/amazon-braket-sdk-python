@@ -12,17 +12,16 @@
 # language governing permissions and limitations under the License.
 
 import sys
+
 import pytest
 from botocore.exceptions import ClientError
+from test_create_quantum_job import decorator_python_version
 
 from braket.aws import AwsDevice
-from braket.circuits import Circuit
 from braket.aws.aws_quantum_job import AwsQuantumJob
-
-from braket.jobs import hybrid_job, get_job_device_arn
-
+from braket.circuits import Circuit
 from braket.devices import Devices
-from test_create_quantum_job import decorator_python_version
+from braket.jobs import get_job_device_arn, hybrid_job
 
 
 @pytest.fixture
@@ -77,6 +76,7 @@ def test_create_job_via_invalid_reservation_arn_on_qpu(aws_session, reservation_
 )
 def test_create_job_with_decorator_via_invalid_reservation_arn(reservation_arn):
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
+
         @hybrid_job(
             device=Devices.IonQ.Aria1,
             reservation_arn=reservation_arn,
@@ -87,4 +87,5 @@ def test_create_job_with_decorator_via_invalid_reservation_arn(reservation_arn):
             task = device.run(bell, shots=10)
             measurements = task.result().measurements
             return measurements
+
         hello_job()
