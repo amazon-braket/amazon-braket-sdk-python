@@ -38,7 +38,7 @@ def empty_subroutine() -> Callable:
 
 
 @pytest.fixture
-def empty_program() -> Callable:
+def empty_program() -> aq.Program:
     """Empty program fixture.
 
     Returns:
@@ -71,7 +71,7 @@ def bell_state_subroutine() -> Callable:
 
 
 @pytest.fixture
-def bell_state_program() -> Callable:
+def bell_state_program() -> aq.Program:
     """Bell state preparation program fixture.
 
     Returns:
@@ -105,7 +105,7 @@ def physical_bell_subroutine() -> Callable:
 
 
 @pytest.fixture
-def physical_bell_program() -> Callable:
+def physical_bell_program() -> aq.Program:
     """Physical bell state preparation program fixture.
 
     Returns:

@@ -130,30 +130,27 @@ def test_device_parameter(
         def my_program():
             h(0)
 
-        program = my_program()
-        assert program.to_ir()
+        assert my_program.to_ir()
 
 
 def test_insufficient_qubits(aws_device: Mock) -> None:
     aws_device.properties.paradigm.qubitCount = 9
 
-    @aq.main(device=aws_device, num_qubits=10)
-    def my_program():
-        pass
-
     with pytest.raises(errors.InsufficientQubitCountError):
-        my_program()
+
+        @aq.main(device=aws_device, num_qubits=10)
+        def my_program():
+            pass
 
 
 def test_unsupported_gate(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedOperations = ["h"]
 
-    @aq.main(device=aws_device)
-    def my_program():
-        cphaseshift00(0, 1, 0.123)
-
     with pytest.raises(errors.UnsupportedGate):
-        my_program()
+
+        @aq.main(device=aws_device)
+        def my_program():
+            cphaseshift00(0, 1, 0.123)
 
 
 def test_unsupported_native_gate(aws_device: Mock) -> None:
@@ -161,14 +158,13 @@ def test_unsupported_native_gate(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = ["verbatim"]
     aws_device.properties.paradigm.nativeGateSet = ["x"]
 
-    @aq.main(device=aws_device)
-    def my_program():
-        with aq.verbatim():
-            x("$0")
-            h("$0")
-
     with pytest.raises(errors.UnsupportedNativeGate):
-        my_program()
+
+        @aq.main(device=aws_device)
+        def my_program():
+            with aq.verbatim():
+                x("$0")
+                h("$0")
 
 
 def test_supported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
@@ -186,7 +182,7 @@ def test_supported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
             x("$0")
             my_gate("$0")
 
-    assert my_program().to_ir()
+    assert my_program.to_ir()
 
 
 def test_unsupported_native_gate_inside_gate_definition(aws_device: Mock) -> None:
@@ -198,25 +194,23 @@ def test_unsupported_native_gate_inside_gate_definition(aws_device: Mock) -> Non
     def my_gate(q: aq.Qubit):
         h(q)
 
-    @aq.main(device=aws_device)
-    def my_program():
-        with aq.verbatim():
-            my_gate("$0")
-
     with pytest.raises(errors.UnsupportedNativeGate):
-        my_program()
+
+        @aq.main(device=aws_device)
+        def my_program():
+            with aq.verbatim():
+                my_gate("$0")
 
 
 def test_unsupported_verbatim_block(aws_device: Mock) -> None:
     aws_device.properties.action[DeviceActionType.OPENQASM].supportedPragmas = []
 
-    @aq.main(device=aws_device)
-    def my_program():
-        with aq.verbatim():
-            h("$0")
-
     with pytest.raises(errors.VerbatimBlockNotAllowed):
-        my_program()
+
+        @aq.main(device=aws_device)
+        def my_program():
+            with aq.verbatim():
+                h("$0")
 
 
 def test_validate_connectivity(aws_device: Mock) -> None:
@@ -226,14 +220,13 @@ def test_validate_connectivity(aws_device: Mock) -> None:
     aws_device.properties.paradigm.connectivity.fullyConnected = False
     aws_device.properties.paradigm.connectivity.connectivityGraph = {"0": ["2"], "1": ["0"]}
 
-    @aq.main(device=aws_device)
-    def my_program():
-        with aq.verbatim():
-            h("$0")
-            cnot("$0", "$1")
-
     with pytest.raises(errors.InvalidTargetQubit):
-        my_program()
+
+        @aq.main(device=aws_device)
+        def my_program_invalid():
+            with aq.verbatim():
+                h("$0")
+                cnot("$0", "$1")
 
     @aq.main(device=aws_device)
     def my_program():
@@ -242,7 +235,7 @@ def test_validate_connectivity(aws_device: Mock) -> None:
             cnot("$0", "$2")
             cnot("$1", "$0")
 
-    assert my_program().to_ir()
+    assert my_program.to_ir()
 
     aws_device.properties.paradigm.connectivity.fullyConnected = True
     aws_device.properties.paradigm.connectivity.connectivityGraph = {}
@@ -254,7 +247,7 @@ def test_validate_connectivity(aws_device: Mock) -> None:
             cnot("$0", "$7")
             cnot("$5", "$2")
 
-    assert my_program().to_ir()
+    assert my_program.to_ir()
 
 
 @pytest.mark.parametrize(
@@ -282,9 +275,8 @@ def test_aws_device_run(
         h(0)
         rx(0, FreeParameter("angle"))
 
-    program = my_program()
     aws_device = AwsDevice(Devices.Amazon.SV1.value)
-    _ = aws_device.run(program, shots=10, inputs=inputs, device_parameters=device_parameters)
+    _ = aws_device.run(my_program, shots=10, inputs=inputs, device_parameters=device_parameters)
 
     run_call_args = aws_session.create_quantum_task.mock_calls[0].kwargs
     run_call_args_action = json.loads(run_call_args["action"])
@@ -297,5 +289,5 @@ def test_aws_device_run(
     }
     aws_session.create_quantum_task.assert_called_once()
     assert expected_run_call_args.items() <= run_call_args.items()
-    assert run_call_args_action["source"] == program.to_ir()
+    assert run_call_args_action["source"] == my_program.to_ir()
     assert run_call_args_action["inputs"] == inputs

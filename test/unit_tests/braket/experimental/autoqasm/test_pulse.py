@@ -64,8 +64,7 @@ def test_mix_gate_pulse() -> None:
         }
         """
     ).strip()
-    qasm = my_program().to_ir()
-    assert qasm == expected
+    assert my_program.to_ir() == expected
 
 
 def test_merge_cal_box() -> None:
@@ -85,8 +84,7 @@ def test_merge_cal_box() -> None:
         }
         """
     ).strip()
-    qasm = my_program().to_ir()
-    assert qasm == expected
+    assert my_program.to_ir() == expected
 
 
 @pytest.mark.parametrize(
@@ -187,31 +185,33 @@ def test_pulse_control_invalid_physical_qubit(instruction, qubits_or_frames, par
 
 
 def test_pulse_freeparameter() -> None:
-    """Test pulse program with freeparameter."""
+    """Test pulse program with free parameter."""
 
     @aq.main
-    def my_program():
-        delay(["$3", "$4"], FreeParameter("duration"))
+    def my_program(duration):
+        delay(["$3", "$4"], duration)
+        delay(["$3", "$4"], FreeParameter("duration2"))
 
     expected = textwrap.dedent(
         """
         OPENQASM 3.0;
         input float[64] duration;
+        input float[64] duration2;
         cal {
             delay[(duration) * 1s] $3, $4;
+            delay[(duration2) * 1s] $3, $4;
         }
         """
     ).strip()
-    qasm = my_program().to_ir()
-    assert qasm == expected
+    assert my_program.to_ir() == expected
 
 
 def test_pulse_freeparameter_bound() -> None:
     """Test pulse program with freeparameter bound with values."""
 
     @aq.main
-    def my_program():
-        delay(["$3", "$4"], FreeParameter("duration"))
+    def my_program(duration):
+        delay(["$3", "$4"], duration)
 
     expected = textwrap.dedent(
         """
@@ -222,7 +222,7 @@ def test_pulse_freeparameter_bound() -> None:
         }
         """
     ).strip()
-    qasm = my_program().make_bound_program({"duration": 0.123}).to_ir()
+    qasm = my_program.make_bound_program({"duration": 0.123}).to_ir()
     assert qasm == expected
 
 
@@ -230,10 +230,10 @@ def test_pulse_freeparameter_condition() -> None:
     """Test pulse program with freeparameter in condition."""
 
     @aq.main
-    def my_program():
-        delay(["$3", "$4"], FreeParameter("duration"))
-        if FreeParameter("duration") > FreeParameter("duration2"):
-            delay(["$3", "$4"], FreeParameter("duration2"))
+    def my_program(duration, duration2):
+        delay(["$3", "$4"], duration)
+        if duration > duration2:
+            delay(["$3", "$4"], duration2)
 
     expected = textwrap.dedent(
         """
@@ -252,5 +252,4 @@ def test_pulse_freeparameter_condition() -> None:
         }
         """
     ).strip()
-    qasm = my_program().to_ir()
-    assert qasm == expected
+    assert my_program.to_ir() == expected

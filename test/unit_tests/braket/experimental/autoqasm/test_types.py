@@ -62,7 +62,7 @@ def ret_test() -> bit {
 bit __bit_1__;
 __bit_1__ = ret_test();"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_return_int():
@@ -85,7 +85,7 @@ def ret_test() -> int[32] {
 int[32] __int_1__;
 __int_1__ = ret_test();"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_return_float():
@@ -108,7 +108,7 @@ def ret_test() -> float[64] {
 float[64] __float_1__;
 __float_1__ = ret_test();"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_return_bool():
@@ -131,7 +131,7 @@ def ret_test() -> bool {
 bool __bool_1__;
 __bool_1__ = ret_test();"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_return_bin_expr():
@@ -156,7 +156,7 @@ int[32] b = 6;
 int[32] __int_2__;
 __int_2__ = add(a, b);"""
 
-    assert ret_test().to_ir() == expected
+    assert ret_test.to_ir() == expected
 
 
 def test_return_none():
@@ -168,7 +168,7 @@ def test_return_none():
 
     expected = "OPENQASM 3.0;"
 
-    assert ret_test().to_ir() == expected
+    assert ret_test.to_ir() == expected
 
 
 def test_declare_array():
@@ -189,32 +189,28 @@ array[int[32], 3] b = {4, 5, 6};
 b[2] = 14;
 b = a;"""
 
-    assert declare_array().to_ir() == expected
+    assert declare_array.to_ir() == expected
 
 
 def test_invalid_array_assignment():
     """Test invalid array assignment."""
-
-    @aq.main
-    def invalid():
-        a = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
-        b = aq.ArrayVar([4, 5], base_type=aq.IntVar, dimensions=[2])
-        a = b  # noqa: F841
-
     with pytest.raises(aq.errors.InvalidAssignmentStatement):
-        invalid()
+
+        @aq.main
+        def invalid():
+            a = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
+            b = aq.ArrayVar([4, 5], base_type=aq.IntVar, dimensions=[2])
+            a = b  # noqa: F841
 
 
 def test_declare_array_in_local_scope():
     """Test declaring an array inside a local scope."""
-
-    @aq.main
-    def declare_array():
-        if aq.BoolVar(True):
-            _ = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
-
     with pytest.raises(aq.errors.InvalidArrayDeclaration):
-        declare_array()
+
+        @aq.main
+        def declare_array():
+            if aq.BoolVar(True):
+                _ = aq.ArrayVar([1, 2, 3], base_type=aq.IntVar, dimensions=[3])
 
 
 def test_declare_array_in_subroutine():
@@ -224,12 +220,11 @@ def test_declare_array_in_subroutine():
     def declare_array():
         _ = aq.ArrayVar([1, 2, 3], dimensions=[3])
 
-    @aq.main
-    def main() -> list[int]:
-        return declare_array()
-
     with pytest.raises(aq.errors.InvalidArrayDeclaration):
-        main()
+
+        @aq.main
+        def main() -> list[int]:
+            return declare_array()
 
 
 def test_return_python_array():
@@ -239,12 +234,11 @@ def test_return_python_array():
     def tester() -> list[int]:
         return [1, 2, 3]
 
-    @aq.main(num_qubits=4)
-    def main():
-        tester()
-
     with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
-        main()
+
+        @aq.main(num_qubits=4)
+        def main():
+            tester()
 
 
 def test_return_array_unsupported():
@@ -254,12 +248,11 @@ def test_return_array_unsupported():
     def tester(arr: list[float]) -> list[float]:
         return [1.2, 2.1]
 
-    @aq.main(num_qubits=4)
-    def main():
-        tester([3.3])
-
     with pytest.raises(aq.errors.ParameterTypeError):
-        assert main()
+
+        @aq.main(num_qubits=4)
+        def main():
+            tester([3.3])
 
 
 def test_return_func_call():
@@ -282,7 +275,7 @@ def helper() -> int[32] {
 int[32] __int_1__;
 __int_1__ = helper();"""
 
-    assert ret_test().to_ir() == expected
+    assert ret_test.to_ir() == expected
 
 
 def test_map_bool():
@@ -301,7 +294,7 @@ def annotation_test(bool input) {
 }
 annotation_test(true);"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_map_int():
@@ -320,7 +313,7 @@ def annotation_test(int[32] input) {
 }
 annotation_test(1);"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_map_float():
@@ -339,7 +332,7 @@ def annotation_test(float[64] input) {
 }
 annotation_test(1.0);"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_map_array():
@@ -349,13 +342,12 @@ def test_map_array():
     def annotation_test(input: list[int]):
         pass
 
-    @aq.main
-    def main():
-        a = aq.ArrayVar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dimensions=[10])
-        annotation_test(a)
-
     with pytest.raises(aq.errors.ParameterTypeError):
-        main()
+
+        @aq.main
+        def main():
+            a = aq.ArrayVar([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dimensions=[10])
+            annotation_test(a)
 
 
 def test_map_other():
@@ -376,7 +368,7 @@ def annotation_test(bit input) {
 bit a = 1;
 annotation_test(a);"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_map_other_unnamed_arg():
@@ -396,7 +388,7 @@ def annotation_test(bit input) {
 bit __bit_0__ = 1;
 annotation_test(__bit_0__);"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_map_and_assign_arg():
@@ -420,7 +412,7 @@ def assign_param(int[32] c) {
 int[32] c = 0;
 assign_param(c);"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_unnamed_retval_python_type() -> None:
@@ -442,7 +434,7 @@ def retval_test() -> int[32] {
 int[32] __int_1__;
 __int_1__ = retval_test();"""
 
-    assert caller().to_ir() == expected_qasm
+    assert caller.to_ir() == expected_qasm
 
 
 def test_unnamed_retval_qasm_type() -> None:
@@ -464,7 +456,7 @@ def retval_test() -> bit {
 bit __bit_1__;
 __bit_1__ = retval_test();"""
 
-    assert caller().to_ir() == expected_qasm
+    assert caller.to_ir() == expected_qasm
 
 
 def test_recursive_unassigned_retval_python_type() -> None:
@@ -489,7 +481,7 @@ def retval_recursive() -> int[32] {
 int[32] __int_3__;
 __int_3__ = retval_recursive();"""
 
-    assert main().to_ir() == expected_qasm
+    assert main.to_ir() == expected_qasm
 
 
 def test_recursive_assigned_retval_python_type() -> None:
@@ -516,7 +508,7 @@ def retval_recursive() -> int[32] {
 int[32] __int_3__;
 __int_3__ = retval_recursive();"""
 
-    assert main().to_ir() == expected_qasm
+    assert main.to_ir() == expected_qasm
 
 
 def test_recursive_retval_expression_python_type() -> None:
@@ -550,7 +542,7 @@ def retval_constant() -> int[32] {
 float[64] __float_4__;
 __float_4__ = retval_recursive();"""
 
-    assert caller().to_ir() == expected_qasm
+    assert caller.to_ir() == expected_qasm
 
 
 def test_recursive_oqpy_type() -> None:
@@ -565,7 +557,7 @@ def test_recursive_oqpy_type() -> None:
     def main():
         retval_recursive()
 
-    assert "-> bit" in main().to_ir()
+    assert "-> bit" in main.to_ir()
 
 
 def test_error_for_tuple_param() -> None:
@@ -575,12 +567,11 @@ def test_error_for_tuple_param() -> None:
     def param_test(input: tuple):
         pass
 
-    @aq.main
-    def main():
-        param_test(aq.BitVar(1))
-
     with pytest.raises(aq.errors.ParameterTypeError):
-        main()
+
+        @aq.main
+        def main():
+            param_test(aq.BitVar(1))
 
 
 def test_error_for_missing_param_type() -> None:
@@ -590,12 +581,11 @@ def test_error_for_missing_param_type() -> None:
     def param_test(input):
         pass
 
-    @aq.main
-    def main():
-        param_test(aq.BitVar(1))
-
     with pytest.raises(aq.errors.MissingParameterTypeError):
-        main()
+
+        @aq.main
+        def main():
+            param_test(aq.BitVar(1))
 
 
 def test_ignore_ret_typehint_bool():
@@ -617,7 +607,7 @@ def ret_test() -> bool {
 bool __bool_1__;
 __bool_1__ = ret_test();"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_ignore_ret_typehint_list():
@@ -627,12 +617,11 @@ def test_ignore_ret_typehint_list():
     def ret_test() -> int:
         return [1, 2, 3]
 
-    @aq.main(num_qubits=4)
-    def main() -> float:
-        ret_test()
-
     with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
-        main()
+
+        @aq.main(num_qubits=4)
+        def main() -> float:
+            ret_test()
 
 
 def test_ignore_missing_ret_typehint_list():
@@ -642,12 +631,11 @@ def test_ignore_missing_ret_typehint_list():
     def ret_test():
         return [1, 2, 3]
 
-    @aq.main(num_qubits=4)
-    def main():
-        ret_test()
-
     with pytest.raises(aq.errors.UnsupportedSubroutineReturnType):
-        main()
+
+        @aq.main(num_qubits=4)
+        def main():
+            ret_test()
 
 
 def test_ignore_missing_ret_typehint_float():
@@ -670,7 +658,7 @@ qubit[4] __qubits__;
 float[64] __float_1__;
 __float_1__ = ret_test();"""
 
-    assert main().to_ir() == expected
+    assert main.to_ir() == expected
 
 
 def test_param_array_list_missing_arg():
@@ -680,9 +668,8 @@ def test_param_array_list_missing_arg():
     def param_test(arr: list) -> int:
         return 1
 
-    @aq.main(num_qubits=4)
-    def main():
-        param_test()
-
     with pytest.raises(aq.errors.ParameterTypeError):
-        main()
+
+        @aq.main(num_qubits=4)
+        def main():
+            param_test()
