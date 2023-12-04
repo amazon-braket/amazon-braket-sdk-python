@@ -25,9 +25,7 @@ from collections.abc import Callable
 from typing import Any, Optional, Union
 
 import gast
-
-from braket.experimental.autoqasm import operators, program, types
-from braket.experimental.autoqasm.autograph.converters import (
+from autograph.converters import (
     asserts,
     call_trees,
     conditional_expressions,
@@ -40,25 +38,19 @@ from braket.experimental.autoqasm.autograph.converters import (
     slices,
     variables,
 )
-from braket.experimental.autoqasm.autograph.core import (
-    ag_ctx,
-    converter,
-    function_wrappers,
-    unsupported_features_checker,
-)
-from braket.experimental.autoqasm.autograph.impl.api_core import (
+from autograph.core import ag_ctx, converter, function_wrappers, unsupported_features_checker
+from autograph.impl.api_core import (
     StackTraceMapper,
     _attach_error_metadata,
     _log_callargs,
     is_autograph_artifact,
 )
-from braket.experimental.autoqasm.autograph.logging import ag_logging as logging
-from braket.experimental.autoqasm.autograph.pyct import anno, cfg, qual_names, transpiler
-from braket.experimental.autoqasm.autograph.pyct.static_analysis import (
-    activity,
-    reaching_definitions,
-)
-from braket.experimental.autoqasm.autograph.tf_utils import tf_stack
+from autograph.logging import ag_logging as logging
+from autograph.pyct import anno, cfg, qual_names, transpiler
+from autograph.pyct.static_analysis import activity, reaching_definitions
+from autograph.tf_utils import tf_stack
+
+from braket.experimental.autoqasm import operators, program, types
 from braket.experimental.autoqasm.converters import (
     assignments,
     break_statements,

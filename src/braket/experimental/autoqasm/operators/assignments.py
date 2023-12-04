@@ -19,9 +19,9 @@ from typing import Any
 
 import oqpy
 import oqpy.base
+from autograph.operators.variables import UndefinedReturnValue
 
 from braket.experimental.autoqasm import constants, errors, program, types
-from braket.experimental.autoqasm.autograph.operators.variables import UndefinedReturnValue
 from braket.experimental.autoqasm.types.conversions import var_type_from_oqpy
 
 

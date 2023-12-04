@@ -16,10 +16,10 @@
 import functools
 
 import pytest
+from autograph import ag_logging
+from autograph.core.ag_ctx import ControlStatusCtx, Status
 
 import braket.experimental.autoqasm as aq
-from braket.experimental.autoqasm.autograph import ag_logging
-from braket.experimental.autoqasm.autograph.core.ag_ctx import ControlStatusCtx, Status
 from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 
 

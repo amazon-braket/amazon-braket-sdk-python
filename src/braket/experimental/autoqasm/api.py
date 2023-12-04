@@ -24,6 +24,9 @@ from typing import Any, Optional, Union, get_args
 
 import openqasm3.ast as qasm_ast
 import oqpy.base
+from autograph.core import converter
+from autograph.impl.api_core import autograph_artifact, is_autograph_artifact
+from autograph.tf_utils import tf_decorator
 
 import braket.experimental.autoqasm.constants as aq_constants
 import braket.experimental.autoqasm.instructions as aq_instructions
@@ -33,12 +36,6 @@ import braket.experimental.autoqasm.types as aq_types
 from braket.aws import AwsDevice
 from braket.devices.device import Device
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.autograph.core import converter
-from braket.experimental.autoqasm.autograph.impl.api_core import (
-    autograph_artifact,
-    is_autograph_artifact,
-)
-from braket.experimental.autoqasm.autograph.tf_utils import tf_decorator
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration

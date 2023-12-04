@@ -16,8 +16,8 @@
 from typing import Union
 
 import gast
+from autograph.core import ag_ctx
 
-from braket.experimental.autoqasm.autograph.core import ag_ctx
 from braket.experimental.autoqasm.transpiler import PyToOqpy
 
 # TODO: Implement a converter abstract class for better type hinting.

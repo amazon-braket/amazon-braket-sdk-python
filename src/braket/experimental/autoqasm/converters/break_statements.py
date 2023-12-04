@@ -16,9 +16,10 @@
 
 import ast
 
+from autograph.converters import break_statements
+from autograph.core import ag_ctx, converter
+
 from braket.experimental.autoqasm import errors
-from braket.experimental.autoqasm.autograph.converters import break_statements
-from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
 
 
 class BreakValidator(converter.Base):

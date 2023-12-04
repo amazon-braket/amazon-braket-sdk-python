@@ -18,13 +18,8 @@ This module implements operators that AutoQASM overloads or adds on top of AutoG
 """
 
 # Operators below are imported directly from core autograph implementation
-from braket.experimental.autoqasm.autograph.impl.api_core import autograph_artifact  # noqa: F401
-from braket.experimental.autoqasm.autograph.operators.variables import (  # noqa: F401
-    Undefined,
-    UndefinedReturnValue,
-    ld,
-    ldu,
-)
+from autograph.impl.api_core import autograph_artifact  # noqa: F401
+from autograph.operators.variables import Undefined, UndefinedReturnValue, ld, ldu  # noqa: F401
 
 from .assignments import assign_stmt  # noqa: F401
 from .comparisons import gt_, gteq_, lt_, lteq_  # noqa: F401

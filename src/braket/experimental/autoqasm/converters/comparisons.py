@@ -16,9 +16,8 @@
 import ast
 
 import gast
-
-from braket.experimental.autoqasm.autograph.core import ag_ctx, converter
-from braket.experimental.autoqasm.autograph.pyct import templates
+from autograph.core import ag_ctx, converter
+from autograph.pyct import templates
 
 COMPARISON_OPERATORS = {
     gast.Lt: "ag__.lt_",
