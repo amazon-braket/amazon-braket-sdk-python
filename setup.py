@@ -44,6 +44,7 @@ setup(
         "numpy",
         "openpulse",
         "openqasm3",
+        "pennylane-autograph",
         "sympy",
         "astunparse",
         "gast",
