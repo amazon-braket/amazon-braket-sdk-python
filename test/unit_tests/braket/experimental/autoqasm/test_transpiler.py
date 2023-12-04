@@ -20,18 +20,18 @@ from autograph.core.ag_ctx import ControlStatusCtx, Status
 from autograph.utils import ag_logging
 
 import braket.experimental.autoqasm as aq
+from braket.experimental.autoqasm.errors import UnknownQubitCountError
 from braket.experimental.autoqasm.instructions import cnot, h, measure, x
 
 
 def test_convert_invalid_main_object() -> None:
     """Tests the aq.main decorator on something that is not a function."""
 
-    @aq.main
-    class MyClass:
-        pass
-
     with pytest.raises(ValueError):
-        MyClass()
+
+        @aq.main
+        class MyClass:
+            pass
 
 
 def test_convert_invalid_subroutine_object() -> None:
@@ -41,27 +41,25 @@ def test_convert_invalid_subroutine_object() -> None:
     class MyClass:
         pass
 
-    @aq.main
-    def main():
-        MyClass()
-
     with pytest.raises(ValueError):
-        main()
+
+        @aq.main
+        def main():
+            MyClass()
 
 
 def test_autograph_disabled() -> None:
     """Tests the aq.main decorator with autograph disabled by control status,
     and verifies that the function is not converted."""
 
-    @aq.main
-    def my_program():
-        h(0)
-        if measure(0):
-            x(0)
-
     with ControlStatusCtx(Status.DISABLED):
         with pytest.raises(RuntimeError):
-            my_program()
+
+            @aq.main
+            def my_program():
+                h(0)
+                if measure(0):
+                    x(0)
 
 
 def test_partial_function() -> None:
@@ -71,50 +69,46 @@ def test_partial_function() -> None:
         h(q0)
         cnot(q0, q1)
 
-    @aq.main
-    def bell_decorated(q0: int, q1: int):
-        bell(q0, q1)
+    expected_partial = """OPENQASM 3.0;
+input int[32] q1;
+qubit[4] __qubits__;
+h __qubits__[1];
+cnot __qubits__[1], __qubits__[q1];"""
 
-    expected = """OPENQASM 3.0;
+    expected_no_arg_partial = """OPENQASM 3.0;
 qubit[4] __qubits__;
 h __qubits__[1];
 cnot __qubits__[1], __qubits__[3];"""
 
-    bell_partial = aq.main(functools.partial(bell, 1))
-    assert bell_partial(3).to_ir() == expected
+    with pytest.raises(UnknownQubitCountError):
+        aq.main(functools.partial(bell, 1))
+    bell_partial = aq.main(num_qubits=4)(functools.partial(bell, 1))
+    assert bell_partial.to_ir() == expected_partial
 
-    bell_decorated_partial = functools.partial(bell_decorated, 1)
-    assert bell_decorated_partial(3).to_ir() == expected
-
-    bell_noarg_partial = functools.partial(bell_decorated, 1, 3)
-    assert bell_noarg_partial().to_ir() == expected
+    bell_noarg_partial = aq.main(functools.partial(bell, 1, 3))
+    assert bell_noarg_partial.to_ir() == expected_no_arg_partial
 
 
 def test_classmethod() -> None:
-    """Tests aq.main decorator application to a classmethod."""
+    """Tests aq.main application to a classmethod."""
+    # Note - this only works with the function call syntax, since with a decorator,
+    # the class isn't initialized fully at transpilation time.
 
     class MyClass:
         @classmethod
-        def bell(self, q0: int, q1: int):
+        def bell(cls, q0: int, q1: int):
             h(q0)
             cnot(q0, q1)
 
-        @classmethod
-        @aq.main
-        def bell_decorated(self, q0: int, q1: int):
-            self.bell(q0, q1)
-
     expected = """OPENQASM 3.0;
-qubit[4] __qubits__;
-h __qubits__[1];
-cnot __qubits__[1], __qubits__[3];"""
+input int[32] q0;
+input int[32] q1;
+qubit[2] __qubits__;
+h __qubits__[q0];
+cnot __qubits__[q0], __qubits__[q1];"""
 
-    assert aq.main(MyClass.bell)(1, 3).to_ir() == expected
-    assert MyClass.bell_decorated(1, 3).to_ir() == expected
-
-    a = MyClass()
-    assert aq.main(a.bell)(1, 3).to_ir() == expected
-    assert a.bell_decorated(1, 3).to_ir() == expected
+    assert aq.main(num_qubits=2)(MyClass.bell).to_ir() == expected
+    assert aq.main(num_qubits=2)(MyClass().bell).to_ir() == expected
 
 
 def test_with_verbose_logging() -> None:
@@ -125,4 +119,3 @@ def test_with_verbose_logging() -> None:
         pass
 
     ag_logging.set_verbosity(10)
-    nothing()

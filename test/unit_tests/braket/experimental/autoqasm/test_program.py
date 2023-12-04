@@ -85,17 +85,20 @@ def test_multiprocessing() -> None:
         rx(0, angle)
         cnot(0, 1)
 
-    @aq.main
-    def zne(scale: int, angle: float) -> aq.BitVar:
-        for i in aq.range(scale):
-            circuit(angle)
-        return measure(1)
+    def build_zne(scale: int, angle: float):
+        @aq.main
+        def zne() -> aq.BitVar:
+            for i in aq.range(scale):
+                circuit(angle)
+            return measure(1)
+
+        return zne
 
     scales = [2, 4, 6]
     angles = [0.1, 0.2, 0.3]
     with ThreadPool(processes=5) as executor:
         programs = executor.map(
-            lambda args: zne(*args),
+            lambda args: build_zne(*args),
             [(scale, angle) for scale, angle in itertools.product(scales, angles)],
         )
 

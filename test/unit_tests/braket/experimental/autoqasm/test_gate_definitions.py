@@ -64,7 +64,7 @@ def test_bell_state_prep(bell_state_program) -> None:
 qubit[2] __qubits__;
 h __qubits__[0];
 cnot __qubits__[0], __qubits__[1];"""
-    actual_result = bell_state_program().to_ir()
+    actual_result = bell_state_program.to_ir()
     assert actual_result == expected
 
 
@@ -73,7 +73,7 @@ def test_physical_q_bell_state_prep(physical_bell_program) -> None:
     expected = """OPENQASM 3.0;
 h $0;
 cnot $0, $5;"""
-    actual_result = physical_bell_program().to_ir()
+    actual_result = physical_bell_program.to_ir()
     assert actual_result == expected
 
 

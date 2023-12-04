@@ -35,7 +35,7 @@ from braket.experimental.autoqasm.instructions import (
 from braket.tasks.local_quantum_task import LocalQuantumTask
 
 
-def _test_parametric_on_local_sim(program: aq.Program, inputs: dict[str, float]) -> None:
+def _test_parametric_on_local_sim(program: aq.Program, inputs: dict[str, float]) -> np.ndarray:
     device = LocalSimulator(backend=StateVectorSimulator())
     task = device.run(program, shots=100, inputs=inputs)
     assert isinstance(task, LocalQuantumTask)
@@ -43,13 +43,27 @@ def _test_parametric_on_local_sim(program: aq.Program, inputs: dict[str, float])
     return task.result().measurements
 
 
-@aq.main
+@pytest.fixture
 def simple_parametric():
-    rx(0, FreeParameter("theta"))
-    measure(0)
+    @aq.main
+    def simple_parametric(theta):
+        rx(0, theta)
+        measure(0)
+
+    return simple_parametric
 
 
-def test_simple_parametric():
+@pytest.fixture
+def simple_parametric_fp():
+    @aq.main
+    def simple_parametric():
+        rx(0, FreeParameter("theta"))
+        measure(0)
+
+    return simple_parametric
+
+
+def test_simple_parametric(simple_parametric):
     """Test a program with a parameter can be serialized."""
 
     expected = """OPENQASM 3.0;
@@ -58,24 +72,47 @@ qubit[1] __qubits__;
 rx(theta) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
-    assert simple_parametric().to_ir() == expected
+    assert simple_parametric.to_ir() == expected
 
 
-def test_sim_simple():
-    measurements = _test_parametric_on_local_sim(simple_parametric(), {"theta": 0})
+def test_simple_parametric_fp(simple_parametric_fp):
+    """Test a program with an explicit free parameter can be serialized."""
+
+    expected = """OPENQASM 3.0;
+input float[64] theta;
+qubit[1] __qubits__;
+rx(theta) __qubits__[0];
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+    assert simple_parametric_fp.to_ir() == expected
+
+
+def test_sim_simple(simple_parametric):
+    measurements = _test_parametric_on_local_sim(simple_parametric, {"theta": 0})
     assert 1 not in measurements["__bit_0__"]
-    measurements = _test_parametric_on_local_sim(simple_parametric(), {"theta": np.pi})
+    measurements = _test_parametric_on_local_sim(simple_parametric, {"theta": np.pi})
     assert 0 not in measurements["__bit_0__"]
 
 
-@aq.main
+def test_sim_simple_fp(simple_parametric_fp):
+    measurements = _test_parametric_on_local_sim(simple_parametric_fp, {"theta": 0})
+    assert 1 not in measurements["__bit_0__"]
+    measurements = _test_parametric_on_local_sim(simple_parametric_fp, {"theta": np.pi})
+    assert 0 not in measurements["__bit_0__"]
+
+
+@pytest.fixture
 def multi_parametric():
-    rx(0, FreeParameter("alpha"))
-    rx(1, FreeParameter("theta"))
-    c = measure([0, 1])  # noqa: F841
+    @aq.main
+    def multi_parametric(alpha, theta):
+        rx(0, alpha)
+        rx(1, theta)
+        c = measure([0, 1])  # noqa: F841
+
+    return multi_parametric
 
 
-def test_multiple_parameters():
+def test_multiple_parameters(multi_parametric):
     """Test that multiple free parameters all appear in the processed program."""
 
     expected = """OPENQASM 3.0;
@@ -89,13 +126,13 @@ bit[2] __bit_0__ = "00";
 __bit_0__[0] = measure __qubits__[0];
 __bit_0__[1] = measure __qubits__[1];
 c = __bit_0__;"""
-    assert multi_parametric().to_ir() == expected
+    assert multi_parametric.to_ir() == expected
 
 
-def test_sim_multi_param():
-    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": np.pi, "theta": 0})
+def test_sim_multi_param(multi_parametric):
+    measurements = _test_parametric_on_local_sim(multi_parametric, {"alpha": np.pi, "theta": 0})
     assert all(val == "10" for val in measurements["c"])
-    measurements = _test_parametric_on_local_sim(multi_parametric(), {"alpha": 0, "theta": np.pi})
+    measurements = _test_parametric_on_local_sim(multi_parametric, {"alpha": 0, "theta": np.pi})
     assert all(val == "01" for val in measurements["c"])
 
 
@@ -103,9 +140,7 @@ def test_repeat_parameter():
     """Test that programs can use the same parameter multiple times."""
 
     @aq.main
-    def parametric():
-        alpha = FreeParameter("alpha")
-        theta = FreeParameter("theta")
+    def parametric(alpha, theta):
         rx(0, alpha)
         rx(1, theta)
         cnot(0, 1)
@@ -121,11 +156,14 @@ rx(theta) __qubits__[1];
 cnot __qubits__[0], __qubits__[1];
 rx(theta) __qubits__[0];
 rx(alpha) __qubits__[1];"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_parameter_in_subroutine():
     """Test that parameters in subroutines are declared appropriately."""
+    # TODO (#816): the openqasm generated here isn't strictly valid
+    # (cannot close over non-const global variables)
+    # https://openqasm.com/language/scope.html#subroutine-and-gate-scope
 
     @aq.subroutine
     def rx_alpha(qubit: int):
@@ -142,14 +180,13 @@ def rx_alpha(int[32] qubit) {
 input float[64] alpha;
 qubit[3] __qubits__;
 rx_alpha(2);"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_captured_parameter():
     """Test that a parameter declared in a larger scope is captured
     and functions correctly.
     """
-
     alpha = FreeParameter("alpha")
 
     @aq.main
@@ -162,43 +199,50 @@ input float[64] alpha;
 qubit[2] __qubits__;
 rz(alpha) __qubits__[0];
 rx(alpha) __qubits__[1];"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_multi_angle_gates():
     """Test that FreeParameters work with gates that take multiple inputs."""
+    qubit_0 = 2
+    theta = 0.5
 
     @aq.main(num_qubits=5)
-    def parametric(qubit_0: int, phi: float, theta: float):
+    def parametric(phi: float):
         ms(0, qubit_0, phi, phi, theta)
 
     expected = """OPENQASM 3.0;
 input float[64] phi;
 qubit[5] __qubits__;
 ms(phi, phi, 0.5) __qubits__[0], __qubits__[2];"""
-    assert parametric(2, FreeParameter("phi"), 0.5).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_sim_multi_angle():
+    theta = 0
+
     @aq.main
-    def parametric(phi: float, theta: float):
+    def parametric(phi: float):
         ms(0, 1, phi, phi, theta)
 
-    _test_parametric_on_local_sim(parametric(FreeParameter("phi"), 0.0), {"phi": np.pi})
+    _test_parametric_on_local_sim(
+        parametric,
+        inputs={"phi": np.pi},
+    )
 
 
 def test_parameters_passed_as_main_arg():
     """Test that parameters work when passed as input values."""
 
     @aq.main
-    def parametric(phi: float):
-        cphaseshift(0, 1, phi)
+    def parametric(my_phi: float):
+        cphaseshift(0, 1, my_phi)
 
     expected = """OPENQASM 3.0;
 input float[64] my_phi;
 qubit[2] __qubits__;
 cphaseshift(my_phi) __qubits__[0], __qubits__[1];"""
-    assert parametric(FreeParameter("my_phi")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_simple_subroutine_arg():
@@ -209,8 +253,8 @@ def test_simple_subroutine_arg():
         rz(0, theta)
 
     @aq.main(num_qubits=1)
-    def parametric():
-        silly_rz(FreeParameter("alpha"))
+    def parametric(alpha):
+        silly_rz(alpha)
 
     expected = """OPENQASM 3.0;
 def silly_rz(float[64] theta) {
@@ -219,7 +263,7 @@ def silly_rz(float[64] theta) {
 input float[64] alpha;
 qubit[1] __qubits__;
 silly_rz(alpha);"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_parameters_passed_as_subroutine_arg():
@@ -230,8 +274,8 @@ def test_parameters_passed_as_subroutine_arg():
         ms(0, qubit_0, phi, phi, theta)
 
     @aq.main(num_qubits=5)
-    def parametric():
-        silly_ms(1, FreeParameter("alpha"), 0.707)
+    def parametric(alpha):
+        silly_ms(1, alpha, 0.707)
         silly_ms(3, 0.5, FreeParameter("beta"))
 
     expected = """OPENQASM 3.0;
@@ -243,7 +287,7 @@ input float[64] beta;
 qubit[5] __qubits__;
 silly_ms(1, alpha, 0.707);
 silly_ms(3, 0.5, beta);"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_sim_subroutine_arg():
@@ -252,11 +296,11 @@ def test_sim_subroutine_arg():
         rx(0, theta)
 
     @aq.main
-    def parametric():
-        rx_theta(FreeParameter("theta"))
+    def parametric(theta):
+        rx_theta(theta)
         measure(0)
 
-    measurements = _test_parametric_on_local_sim(parametric(), {"theta": np.pi})
+    measurements = _test_parametric_on_local_sim(parametric, {"theta": np.pi})
     assert 0 not in measurements["__bit_0__"]
 
 
@@ -278,7 +322,7 @@ gate rx_theta(theta) q {
 input float[64] θ;
 qubit[3] __qubits__;
 rx_theta(θ) __qubits__[2];"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_parametric_pulse_cals():
@@ -289,8 +333,8 @@ def test_parametric_pulse_cals():
         pulse.delay("$1", angle)
 
     @aq.main
-    def my_program():
-        rx("$1", FreeParameter("theta"))
+    def my_program(theta):
+        rx("$1", theta)
 
     expected = """OPENQASM 3.0;
 input float[64] theta;
@@ -298,7 +342,7 @@ defcal rx(angle[32] angle) $1 {
     delay[(angle) * 1s] $1;
 }
 rx(theta) $1;"""
-    qasm = my_program().with_calibrations(cal_1).to_ir()
+    qasm = my_program.with_calibrations(cal_1).to_ir()
     assert qasm == expected
 
 
@@ -306,11 +350,10 @@ def test_bind_parameters():
     """Test binding FreeParameters to concrete values."""
 
     @aq.main
-    def parametric(theta: float):
-        rx(0, theta)
+    def parametric(alpha: float):
+        rx(0, alpha)
         measure(0)
 
-    prog = parametric(FreeParameter("alpha"))
     unbound_expected = """OPENQASM 3.0;
 input float[64] alpha;
 qubit[1] __qubits__;
@@ -325,13 +368,13 @@ rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
-    assert prog.to_ir() == unbound_expected
-    bound_prog = prog.make_bound_program({"alpha": 0.5})
+    assert parametric.to_ir() == unbound_expected
+    bound_prog = parametric.make_bound_program({"alpha": 0.5})
     # Original program unchanged
-    assert prog.to_ir() == unbound_expected
+    assert parametric.to_ir() == unbound_expected
     assert bound_prog.to_ir() == bound_template.format(0.5)
     # Can rebind
-    bound_prog = prog.make_bound_program({"alpha": 0.432143})
+    bound_prog = parametric.make_bound_program({"alpha": 0.432143})
     assert bound_prog.to_ir() == bound_template.format(0.432143)
 
 
@@ -351,12 +394,11 @@ def test_multi_bind_parameters():
         rx(qubit, FreeParameter("alpha"))
 
     @aq.main(num_qubits=3)
-    def parametric(alpha: float, theta: float):
-        sub(alpha, theta)
+    def parametric(alpha: float, beta: float):
+        sub(alpha, beta)
         rx_alpha(2)
 
-    prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
-    bound_prog = prog.make_bound_program({"alpha": 0.5, "beta": 1.5})
+    bound_prog = parametric.make_bound_program({"alpha": 0.5, "beta": 1.5})
 
     expected = """OPENQASM 3.0;
 def sub(float[64] alpha, float[64] theta) {
@@ -389,8 +431,7 @@ def test_partial_bind():
         rx_alpha(2, alpha)
         rx_alpha(2, beta)
 
-    prog = parametric(FreeParameter("alpha"), FreeParameter("beta"))
-    bound_prog = prog.make_bound_program({"beta": np.pi})
+    bound_prog = parametric.make_bound_program({"beta": np.pi})
 
     expected = """OPENQASM 3.0;
 def rx_alpha(int[32] qubit, float[64] theta) {
@@ -412,11 +453,11 @@ def test_binding_pulse_parameters():
         pulse.delay("$1", angle)
 
     @aq.main
-    def my_program():
-        rx("$1", FreeParameter("theta"))
+    def my_program(theta):
+        rx("$1", theta)
 
-    qasm1 = my_program().with_calibrations(cal_1).make_bound_program({"theta": 0.6}).to_ir()
-    qasm2 = my_program().make_bound_program({"theta": 0.6}).with_calibrations(cal_1).to_ir()
+    qasm1 = my_program.with_calibrations(cal_1).make_bound_program({"theta": 0.6}).to_ir()
+    qasm2 = my_program.make_bound_program({"theta": 0.6}).with_calibrations(cal_1).to_ir()
     assert qasm1 == qasm2
 
     expected = """OPENQASM 3.0;
@@ -435,9 +476,9 @@ def test_bind_empty_program():
     def empty_program():
         pass
 
-    qasm = empty_program().to_ir()
-    bound_program1 = empty_program().make_bound_program({}).to_ir()
-    bound_program2 = empty_program().make_bound_program({"alpha": 0.5}).to_ir()
+    qasm = empty_program.to_ir()
+    bound_program1 = empty_program.make_bound_program({}).to_ir()
+    bound_program2 = empty_program.make_bound_program({"alpha": 0.5}).to_ir()
     assert qasm == bound_program1 == bound_program2
 
 
@@ -445,11 +486,9 @@ def test_strict_parameter_bind():
     """Test make_bound_program with strict set to True."""
 
     @aq.main
-    def parametric(theta: float):
-        rx(0, theta)
+    def parametric(alpha: float):
+        rx(0, alpha)
         measure(0)
-
-    prog = parametric(FreeParameter("alpha"))
 
     template = """OPENQASM 3.0;
 float[64] alpha = {};
@@ -458,7 +497,7 @@ rx(alpha) __qubits__[0];
 bit __bit_0__;
 __bit_0__ = measure __qubits__[0];"""
 
-    bound_prog = prog.make_bound_program({"alpha": 0.5}, strict=True)
+    bound_prog = parametric.make_bound_program({"alpha": 0.5}, strict=True)
     assert bound_prog.to_ir() == template.format(0.5)
 
 
@@ -466,27 +505,32 @@ def test_strict_parameter_bind_failure():
     """Test make_bound_program with strict set to True."""
 
     @aq.main
-    def parametric(theta: float):
-        rx(0, theta)
+    def parametric(alpha: float):
+        rx(0, alpha)
         measure(0)
 
-    prog = parametric(FreeParameter("alpha"))
     with pytest.raises(
         aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
     ):
-        prog.make_bound_program({"beta": 0.5}, strict=True)
+        parametric.make_bound_program({"beta": 0.5}, strict=True)
 
 
 def test_duplicate_variable_name_fails():
     """Test using a variable and FreeParameter with the same name."""
 
-    @aq.main
-    def parametric():
-        alpha = aq.FloatVar(1.2)  # noqa: F841
-        rx(0, FreeParameter("alpha"))
+    with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
+
+        @aq.main
+        def parametric_explicit():
+            alpha = aq.FloatVar(1.2)  # noqa: F841
+            rx(0, FreeParameter("alpha"))
 
     with pytest.raises(RuntimeError, match="conflicting variables with name alpha"):
-        parametric()
+
+        @aq.main
+        def parametric(alpha):
+            alpha = aq.FloatVar(1.2)  # noqa: F841
+            rx(0, alpha)
 
 
 def test_binding_variable_fails():
@@ -499,7 +543,7 @@ def test_binding_variable_fails():
     with pytest.raises(
         aq.errors.ParameterNotFoundError, match="No parameter in the program named: beta"
     ):
-        parametric().make_bound_program({"beta": 0.5}, strict=True)
+        parametric.make_bound_program({"beta": 0.5}, strict=True)
 
 
 def test_compound_condition():
@@ -526,7 +570,7 @@ if (__bool_2__) {
 }
 bit __bit_3__;
 __bit_3__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("val")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_lt_condition():
@@ -555,7 +599,7 @@ if (__bool_1__) {
 }
 bit __bit_2__;
 __bit_2__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("val")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_parameter_in_predicate_in_subroutine():
@@ -585,39 +629,39 @@ qubit[1] __qubits__;
 sub(val);
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("val")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_eq_condition():
     """Test parameters used in conditional equals statements."""
 
     @aq.main
-    def parametric(basis: int):
-        if basis == 1:
+    def parametric(threshold: int):
+        if threshold == 1:
             h(0)
-        elif basis == 2:
+        elif threshold == 2:
             x(0)
         else:
             pass
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] basis;
+input int[32] threshold;
 qubit[1] __qubits__;
 bool __bool_0__;
-__bool_0__ = basis == 1;
+__bool_0__ = threshold == 1;
 if (__bool_0__) {
     h __qubits__[0];
 } else {
     bool __bool_1__;
-    __bool_1__ = basis == 2;
+    __bool_1__ = threshold == 2;
     if (__bool_1__) {
         x __qubits__[0];
     }
 }
 bit __bit_2__;
 __bit_2__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("basis")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_sim_conditional_stmts():
@@ -629,22 +673,22 @@ def test_sim_conditional_stmts():
             x(0)
         c = measure(0)  # noqa: F841
 
-    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0})
+    measurements = _test_parametric_on_local_sim(main, {"basis": 0})
     assert all(val == 1 for val in measurements["c"])
-    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 1})
+    measurements = _test_parametric_on_local_sim(main, {"basis": 1})
     assert 1 in measurements["c"] and 0 in measurements["c"]
 
 
 def test_sim_comparison_stmts():
     @aq.main
-    def main(basis: int):
+    def main(basis: float):
         if basis > 0.5:
             x(0)
         c = measure(0)  # noqa: F841
 
-    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0.5})
+    measurements = _test_parametric_on_local_sim(main, {"basis": 0.5})
     assert all(val == 0 for val in measurements["c"])
-    measurements = _test_parametric_on_local_sim(main(FreeParameter("basis")), {"basis": 0.55})
+    measurements = _test_parametric_on_local_sim(main, {"basis": 0.55})
     assert all(val == 1 for val in measurements["c"])
 
 
@@ -658,7 +702,7 @@ def test_param_neq():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] val;
+input int[32] val;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = val != 1;
@@ -667,7 +711,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("val")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_param_or():
@@ -692,7 +736,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_param_and():
@@ -715,14 +759,15 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("alpha"), FreeParameter("beta")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_param_and_float():
     """Test parameters used in conditional `and` statements."""
+    beta = 1.5
 
     @aq.main
-    def parametric(alpha: float, beta: float):
+    def parametric(alpha: float):
         if alpha and beta:
             rx(0, alpha)
         measure(0)
@@ -737,7 +782,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("alpha"), 1.5).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_param_not():
@@ -750,7 +795,7 @@ def test_param_not():
         measure(0)
 
     expected = """OPENQASM 3.0;
-input float[64] val;
+input int[32] val;
 qubit[1] __qubits__;
 bool __bool_0__;
 __bool_0__ = !val;
@@ -759,7 +804,7 @@ if (__bool_0__) {
 }
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    assert parametric(FreeParameter("val")).to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_parameter_binding_conditions():
@@ -781,9 +826,9 @@ if (__bool_0__) {{
 }}
 bit __bit_1__;
 __bit_1__ = measure __qubits__[0];"""
-    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 0})
+    bound_prog = parametric.make_bound_program({"val": 0})
     assert bound_prog.to_ir() == template.format(0)
-    bound_prog = parametric(FreeParameter("val")).make_bound_program({"val": 1})
+    bound_prog = parametric.make_bound_program({"val": 1})
     assert bound_prog.to_ir() == template.format(1)
 
 
@@ -791,7 +836,12 @@ def test_parameter_expressions():
     """Test expressions of free parameters with numeric literals."""
 
     @aq.main
-    def parametric():
+    def parametric(theta):
+        expr = 2 * theta
+        gpi(0, expr)
+
+    @aq.main
+    def parametric_fp():
         expr = 2 * FreeParameter("theta")
         gpi(0, expr)
 
@@ -799,16 +849,16 @@ def test_parameter_expressions():
 input float[64] theta;
 qubit[1] __qubits__;
 gpi(2*theta) __qubits__[0];"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == parametric_fp.to_ir() == expected
 
 
 def test_sim_expressions():
     @aq.main
-    def parametric():
-        rx(0, 2 * FreeParameter("phi"))
+    def parametric(phi):
+        rx(0, 2 * phi)
         measure(0)
 
-    measurements = _test_parametric_on_local_sim(parametric(), {"phi": np.pi / 2})
+    measurements = _test_parametric_on_local_sim(parametric, {"phi": np.pi / 2})
     assert 0 not in measurements["__bit_0__"]
 
 
@@ -816,8 +866,8 @@ def test_multi_parameter_expressions():
     """Test expressions of multiple free parameters."""
 
     @aq.main
-    def parametric():
-        expr = FreeParameter("alpha") * FreeParameter("theta")
+    def parametric(alpha, theta):
+        expr = alpha * theta
         gpi(0, expr)
 
     expected = """OPENQASM 3.0;
@@ -825,29 +875,29 @@ input float[64] alpha;
 input float[64] theta;
 qubit[1] __qubits__;
 gpi(alpha*theta) __qubits__[0];"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_bound_parameter_expressions():
     """Test expressions of free parameters bound to specific values."""
 
     @aq.main
-    def parametric():
-        rx(0, 2 * FreeParameter("phi"))
+    def parametric(phi):
+        rx(0, 2 * phi)
 
     expected = """OPENQASM 3.0;
 float[64] phi = 1.5707963267948966;
 qubit[1] __qubits__;
 rx(2*phi) __qubits__[0];"""
-    assert parametric().make_bound_program({"phi": np.pi / 2}).to_ir() == expected
+    assert parametric.make_bound_program({"phi": np.pi / 2}).to_ir() == expected
 
 
 def test_partially_bound_parameter_expressions():
     """Test expressions of free parameters partially bound to specific values."""
 
     @aq.main
-    def parametric():
-        expr = FreeParameter("prefactor") * FreeParameter("theta")
+    def parametric(prefactor, theta):
+        expr = prefactor * theta
         gpi(0, expr)
 
     expected = """OPENQASM 3.0;
@@ -855,7 +905,7 @@ float[64] prefactor = 3;
 input float[64] theta;
 qubit[1] __qubits__;
 gpi(prefactor*theta) __qubits__[0];"""
-    assert parametric().make_bound_program({"prefactor": 3}).to_ir() == expected
+    assert parametric.make_bound_program({"prefactor": 3}).to_ir() == expected
 
 
 def test_subroutine_parameter_expressions():
@@ -866,8 +916,8 @@ def test_subroutine_parameter_expressions():
         rx(0, 3 * theta)
 
     @aq.main
-    def parametric():
-        rotate(2 * FreeParameter("alpha"))
+    def parametric(alpha):
+        rotate(2 * alpha)
 
     expected = """OPENQASM 3.0;
 def rotate(float[64] theta) {
@@ -876,7 +926,7 @@ def rotate(float[64] theta) {
 input float[64] alpha;
 qubit[1] __qubits__;
 rotate(2*alpha);"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_gate_parameter_expressions():
@@ -887,8 +937,8 @@ def test_gate_parameter_expressions():
         rx(q, 3 * theta)
 
     @aq.main
-    def parametric():
-        rotate(0, 2 * FreeParameter("alpha"))
+    def parametric(alpha):
+        rotate(0, 2 * alpha)
 
     expected = """OPENQASM 3.0;
 gate rotate(theta) q {
@@ -897,15 +947,15 @@ gate rotate(theta) q {
 input float[64] alpha;
 qubit[1] __qubits__;
 rotate(2*alpha) __qubits__[0];"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected
 
 
 def test_conditional_parameter_expressions():
     """Test expressions of free parameters contained in conditional statements."""
 
     @aq.main
-    def parametric():
-        if 2 * FreeParameter("phi") > np.pi:
+    def parametric(phi):
+        if 2 * phi > np.pi:
             h(0)
         measure(0)
 
@@ -920,4 +970,4 @@ if (__bool_1__) {
 }
 bit __bit_2__;
 __bit_2__ = measure __qubits__[0];"""
-    assert parametric().to_ir() == expected
+    assert parametric.to_ir() == expected

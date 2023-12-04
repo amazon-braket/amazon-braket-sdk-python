@@ -60,22 +60,20 @@ e = a;"""
 
 
 def test_break_for_loop():
-    @aq.main
-    def main():
-        for i in aq.range(3):
-            aq.gates.h(i)
-            break
-
     with pytest.raises(aq.errors.UnsupportedFeatureError):
-        main()
+
+        @aq.main
+        def main():
+            for i in aq.range(3):
+                aq.gates.h(i)
+                break
 
 
 def test_break_while_loop():
-    @aq.main
-    def uses_while_w_break():
-        while aq.gates.measure(0):
-            aq.gates.x(0)
-            break
-
     with pytest.raises(aq.errors.UnsupportedFeatureError):
-        uses_while_w_break()
+
+        @aq.main
+        def uses_while_w_break():
+            while aq.gates.measure(0):
+                aq.gates.x(0)
+                break

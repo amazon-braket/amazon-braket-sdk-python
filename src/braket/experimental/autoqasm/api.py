@@ -38,6 +38,7 @@ from braket.experimental.autoqasm import errors
 from braket.experimental.autoqasm.instructions.qubits import QubitIdentifierType as Qubit
 from braket.experimental.autoqasm.instructions.qubits import is_qubit_identifier_type
 from braket.experimental.autoqasm.program.gate_calibrations import GateCalibration
+from braket.parametric import FreeParameter
 
 
 def main(
@@ -45,9 +46,8 @@ def main(
     *,
     num_qubits: Optional[int] = None,
     device: Optional[Union[Device, str]] = None,
-) -> Callable[..., aq_program.Program]:
-    """Decorator that converts a function into a callable that returns
-    a Program object containing the quantum program.
+) -> aq_program.Program | functools.partial:
+    """Decorator that converts a function into a Program object containing the quantum program.
 
     The decorator re-converts the target function whenever the decorated
     function is called, and a new Program object is returned each time.
@@ -61,13 +61,22 @@ def main(
             program. Can be either an Device object or a valid Amazon Braket device ARN.
 
     Returns:
-        Callable[..., Program]: A callable which returns the converted
-        quantum program when called.
+        Program | partial: The Program object containing the converted quantum program, or a
+        partial function of the `main` decorator.
     """
     if isinstance(device, str):
         device = AwsDevice(device)
 
-    return _function_wrapper(
+    # decorator is called on a Program
+    if isinstance(func, aq_program.Program):
+        return func
+
+    # decorator is used with parentheses
+    # (see _function_wrapper for more details)
+    if not (func and callable(func)):
+        return functools.partial(main, num_qubits=num_qubits, device=device)
+
+    program_builder = _function_wrapper(
         func,
         converter_callback=_convert_main,
         converter_args={
@@ -77,6 +86,8 @@ def main(
             )
         },
     )
+
+    return program_builder()
 
 
 def subroutine(func: Optional[Callable] = None) -> Callable[..., aq_program.Program]:
@@ -178,7 +189,7 @@ def _function_wrapper(
             optional_features=_autograph_optional_features(),
         )
         # Call the appropriate function converter
-        return converter_callback(func, options, args, kwargs, **converter_args)
+        return converter_callback(func, options=options, args=args, kwargs=kwargs, **converter_args)
 
     if inspect.isfunction(func) or inspect.ismethod(func):
         _wrapper = functools.update_wrapper(_wrapper, func)
@@ -199,7 +210,7 @@ def _convert_main(
     args: tuple[Any],
     kwargs: dict[str, Any],
     user_config: aq_program.UserConfig,
-) -> None:
+) -> aq_program.Program:
     """Convert the initial callable `f` into a full AutoQASM program `program`.
     Puts the contents of `f` at the global level of the program, rather than
     putting it into a subroutine as done in `_convert_subroutine`.
@@ -213,16 +224,25 @@ def _convert_main(
         args (tuple[Any]): Arguments passed to the program when called.
         kwargs (dict[str, Any]): Keyword arguments passed to the program when called.
         user_config (UserConfig): User-specified settings that influence program building.
+
+    Returns:
+        aq_program.Program: Generated AutoQASM Program.
     """
-    if aq_program.in_active_program_conversion_context():
-        raise errors.AutoQasmTypeError(
-            f"Cannot call main function '{f.__name__}' from another main function. Did you mean "
-            "to use '@aq.subroutine'?"
-        )
+    kwargs = {}
+    parameters = inspect.signature(f).parameters
 
     with aq_program.build_program(user_config) as program_conversion_context:
+        # Capture inputs to decorated function as `FreeParameter` inputs for the Program
+        for param in parameters.values():
+            if param.kind == param.POSITIONAL_OR_KEYWORD:
+                kwargs[param.name] = FreeParameter(param.name)
+                param_type = param.annotation if param.annotation is not param.empty else float
+                program_conversion_context.register_parameter(param.name, param_type)
+            else:
+                raise NotImplementedError
+
         # Process the program
-        aq_transpiler.converted_call(f, args, kwargs, options=options)
+        aq_transpiler.converted_call(f, (), kwargs, options=options)
 
         # Modify program to add global declarations if necessary
         _add_qubit_declaration(program_conversion_context)
