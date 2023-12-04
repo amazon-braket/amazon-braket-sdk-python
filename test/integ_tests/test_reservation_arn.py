@@ -22,7 +22,7 @@ from braket.aws.aws_quantum_job import AwsQuantumJob
 from braket.jobs import hybrid_job, get_job_device_arn
 
 from braket.devices import Devices
-from test.integ_tests.test_create_quantum_job import decorator_python_version
+from test_create_quantum_job import decorator_python_version
 
 
 @pytest.fixture
@@ -75,9 +75,8 @@ def test_create_job_via_invalid_reservation_arn_on_qpu(aws_session, reservation_
     raises=RuntimeError,
     reason="Python version mismatch",
 )
-def test_create_job_decorator_via_invalid_reservation_arn():
+def test_create_job_with_decorator_via_invalid_reservation_arn(reservation_arn):
     with pytest.raises(ClientError, match="Reservation arn is invalid"):
-
         @hybrid_job(
             device=Devices.IonQ.Aria1,
             reservation_arn=reservation_arn,
@@ -88,3 +87,4 @@ def test_create_job_decorator_via_invalid_reservation_arn():
             task = device.run(bell, shots=10)
             measurements = task.result().measurements
             return measurements
+        hello_job()
