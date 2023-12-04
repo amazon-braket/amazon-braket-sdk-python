@@ -62,8 +62,8 @@ def hybrid_job(
     output_data_config: OutputDataConfig | None = None,
     aws_session: AwsSession | None = None,
     tags: dict[str, str] | None = None,
-    reservation_arn: str | None = None,
     logger: Logger = getLogger(__name__),
+    reservation_arn: str | None = None,
 ) -> Callable:
     """Defines a hybrid job by decorating the entry point function. The job will be created
     when the decorated function is called.

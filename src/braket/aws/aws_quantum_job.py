@@ -80,8 +80,8 @@ class AwsQuantumJob(QuantumJob):
         checkpoint_config: CheckpointConfig | None = None,
         aws_session: AwsSession | None = None,
         tags: dict[str, str] | None = None,
-        reservation_arn: str | None = None,
         logger: Logger = getLogger(__name__),
+        reservation_arn: str | None = None,
     ) -> AwsQuantumJob:
         """Creates a hybrid job by invoking the Braket CreateJob API.
 
