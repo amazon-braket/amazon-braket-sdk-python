@@ -971,3 +971,24 @@ if (__bool_1__) {
 bit __bit_2__;
 __bit_2__ = measure __qubits__[0];"""
     assert parametric.to_ir() == expected
+
+
+def test_parameter_expressions_range_index():
+    """Test expressions of free parameters contained in a range index."""
+
+    @aq.main
+    def two_n_hs(n: int):
+        for _ in aq.range(2 * n):
+            h(0)
+        measure(0)
+
+    expected = """OPENQASM 3.0;
+input int[32] n;
+qubit[1] __qubits__;
+for int _ in [0:2*n - 1] {
+    h __qubits__[0];
+}
+bit __bit_0__;
+__bit_0__ = measure __qubits__[0];"""
+    assert two_n_hs.to_ir() == expected
+    _test_parametric_on_local_sim(two_n_hs, {"n": 3})
