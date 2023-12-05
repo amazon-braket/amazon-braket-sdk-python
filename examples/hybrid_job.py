@@ -18,7 +18,14 @@ from braket.jobs import get_job_device_arn, hybrid_job
 from braket.jobs.metrics import log_metric
 
 
-@hybrid_job(device=Devices.Amazon.SV1, wait_until_complete=True)
+@hybrid_job(
+    device=Devices.Amazon.SV1,
+    wait_until_complete=True,
+    # If you want to run the job in a device reservation window,
+    # change the device to the one you've reserved,
+    # uncomment the following line and fill in your reservation ARN
+    # reservation_arn="<reservation ARN>"
+)
 def run_hybrid_job(num_tasks=1):
     # declare AwsDevice within the hybrid job
     device = AwsDevice(get_job_device_arn())
