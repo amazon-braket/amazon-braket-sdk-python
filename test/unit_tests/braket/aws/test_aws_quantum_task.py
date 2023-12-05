@@ -203,6 +203,29 @@ def test_metadata_call_if_none(quantum_task):
     quantum_task._aws_session.get_quantum_task.assert_called_with(quantum_task.id)
 
 
+def test_has_reservation_arn_from_metadata(quantum_task):
+    metadata_true = {
+        "associations": [
+            {
+                "arn": "123",
+                "type": "RESERVATION_TIME_WINDOW_ARN",
+            }
+        ]
+    }
+    assert quantum_task._has_reservation_arn_from_metadata(metadata_true)
+
+    metadata_false = {
+        "status": "RUNNING",
+        "associations": [
+            {
+                "arn": "123",
+                "type": "other",
+            }
+        ],
+    }
+    assert not quantum_task._has_reservation_arn_from_metadata(metadata_false)
+
+
 def test_queue_position(quantum_task):
     state_1 = "QUEUED"
     _mock_metadata(quantum_task._aws_session, state_1)
