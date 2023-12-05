@@ -105,6 +105,7 @@ class AwsQuantumTask(QuantumTask):
         tags: dict[str, str] | None = None,
         inputs: dict[str, float] | None = None,
         gate_definitions: Optional[dict[tuple[Gate, QubitSet], PulseSequence]] | None = None,
+        reservation_arn: str | None = None,
         *args,
         **kwargs,
     ) -> AwsQuantumTask:
@@ -151,6 +152,12 @@ class AwsQuantumTask(QuantumTask):
                 a `PulseSequence`.
                 Default: None.
 
+            reservation_arn (str | None): The reservation ARN provided by Braket Direct
+                to reserve exclusive usage for the device to run the quantum task on.
+                Note: If you are creating tasks in a job that itself was created reservation ARN,
+                those tasks do not need to be created with the reservation ARN.
+                Default: None.
+
         Returns:
             AwsQuantumTask: AwsQuantumTask tracking the quantum task execution on the device.
 
@@ -178,6 +185,18 @@ class AwsQuantumTask(QuantumTask):
         if tags is not None:
             create_task_kwargs.update({"tags": tags})
         inputs = inputs or {}
+
+        if reservation_arn:
+            create_task_kwargs.update(
+                {
+                    "associations": [
+                        {
+                            "arn": reservation_arn,
+                            "type": "RESERVATION_TIME_WINDOW_ARN",
+                        }
+                    ]
+                }
+            )
 
         if isinstance(task_specification, Circuit):
             param_names = {param.name for param in task_specification.parameters}
@@ -477,6 +496,12 @@ class AwsQuantumTask(QuantumTask):
         self._result = None
         return None
 
+    def _has_reservation_arn_from_metadata(self, current_metadata: dict[str, Any]) -> bool:
+        for association in current_metadata.get("associations", []):
+            if association.get("type") == "RESERVATION_TIME_WINDOW_ARN":
+                return True
+        return False
+
     def _download_result(
         self,
     ) -> Union[
@@ -488,7 +513,12 @@ class AwsQuantumTask(QuantumTask):
             current_metadata["outputS3Directory"] + f"/{AwsQuantumTask.RESULTS_FILENAME}",
         )
         self._result = _format_result(BraketSchemaBase.parse_raw_schema(result_string))
-        task_event = {"arn": self.id, "status": self.state(), "execution_duration": None}
+        task_event = {
+            "arn": self.id,
+            "status": self.state(),
+            "execution_duration": None,
+            "has_reservation_arn": self._has_reservation_arn_from_metadata(current_metadata),
+        }
         try:
             task_event[
                 "execution_duration"

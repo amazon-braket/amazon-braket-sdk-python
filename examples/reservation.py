@@ -11,31 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-from __future__ import annotations
+from braket.aws import AwsDevice
+from braket.circuits import Circuit
+from braket.devices import Devices
 
-from dataclasses import dataclass
-from typing import Optional
+bell = Circuit().h(0).cnot(0, 1)
+device = AwsDevice(Devices.IonQ.Aria1)
 
-
-@dataclass
-class _TrackingEvent:
-    arn: str
-
-
-@dataclass
-class _TaskCreationEvent(_TrackingEvent):
-    shots: int
-    is_job_task: bool
-    device: str
-
-
-@dataclass
-class _TaskCompletionEvent(_TrackingEvent):
-    execution_duration: Optional[float]
-    status: str
-    has_reservation_arn: bool = False
-
-
-@dataclass
-class _TaskStatusEvent(_TrackingEvent):
-    status: str
+# To run a task in a device reservation, change the device to the one you reserved
+# and fill in your reservation ARN
+task = device.run(bell, shots=100, reservation_arn="reservation ARN")
+print(task.result().measurement_counts)
