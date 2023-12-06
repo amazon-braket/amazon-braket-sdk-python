@@ -1,5 +1,38 @@
 # Changelog
 
+## v1.63.0 (2023-12-05)
+
+### Features
+
+ * Allow reservation ARN in task and job creation
+
+### Bug Fixes and Other Changes
+
+ * Add Forte 1 device
+
+## v1.62.1 (2023-11-17)
+
+### Bug Fixes and Other Changes
+
+ * Fix broken link to example notebook
+ * update: default no longer returning RETIRED devices from get_devices
+
+### Documentation Changes
+
+ * Add matrix expressions to docstrings
+
+## v1.62.0 (2023-11-09)
+
+### Features
+
+ * Add get_compiled_circuit convenience method
+
+## v1.61.0.post0 (2023-11-07)
+
+### Documentation Changes
+
+ * Improve docstring for make_bound_circuit
+
 ## v1.61.0 (2023-11-06)
 
 ### Features
