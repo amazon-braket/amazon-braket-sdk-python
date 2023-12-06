@@ -105,6 +105,9 @@ def test_decorator_non_defaults(
     output_data_config = OutputDataConfig(s3Path="s3")
     aws_session = MagicMock()
     tags = {"my_tag": "my_value"}
+    reservation_arn = (
+        "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9"
+    )
     logger = getLogger(__name__)
 
     with tempfile.TemporaryDirectory() as tempdir:
@@ -135,6 +138,7 @@ def test_decorator_non_defaults(
             output_data_config=output_data_config,
             aws_session=aws_session,
             tags=tags,
+            reservation_arn=reservation_arn,
             logger=logger,
         )
         def my_entry(a, b: int, c=0, d: float = 1.0, **extras) -> str:
@@ -184,6 +188,7 @@ def test_decorator_non_defaults(
         aws_session=aws_session,
         tags=tags,
         logger=logger,
+        reservation_arn=reservation_arn,
     )
     included_module = importlib.import_module("job_module")
     mock_register.assert_called_with(included_module)
