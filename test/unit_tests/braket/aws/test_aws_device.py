@@ -987,6 +987,16 @@ def test_run_no_extra(aws_quantum_task_mock, device, circuit):
     )
 
 
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_with_reservation_arn(aws_quantum_task_mock, device, circuit):
+    _run_and_assert(
+        aws_quantum_task_mock,
+        device,
+        circuit,
+        reservation_arn="arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
+    )
+
+
 @patch("braket.aws.aws_quantum_task.AwsQuantumTask")
 def test_run_param_circuit_with_no_inputs(
     aws_quantum_task_mock, single_circuit_input, device, s3_destination_folder
@@ -1021,6 +1031,38 @@ def test_run_param_circuit_with_inputs(
         86400,
         0.25,
         inputs,
+    )
+
+
+@patch("braket.aws.aws_session.boto3.Session")
+@patch("braket.aws.aws_session.AwsSession")
+@patch("braket.aws.aws_quantum_task.AwsQuantumTask.create")
+def test_run_param_circuit_with_reservation_arn_batch_task(
+    aws_quantum_task_mock,
+    aws_session_mock,
+    boto_session_mock,
+    single_circuit_input,
+    device,
+    s3_destination_folder,
+):
+    inputs = {"theta": 0.2}
+    circ_1 = Circuit().rx(angle=0.2, target=0)
+    circuits = [circ_1, single_circuit_input]
+
+    _run_batch_and_assert(
+        aws_quantum_task_mock,
+        aws_session_mock,
+        device,
+        circuits,
+        s3_destination_folder,
+        10,
+        20,
+        50,
+        43200,
+        0.25,
+        inputs,
+        None,
+        reservation_arn="arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
     )
 
 
@@ -1308,13 +1350,14 @@ def test_default_bucket_not_called(aws_quantum_task_mock, device, circuit, s3_de
         AwsQuantumTask.DEFAULT_RESULTS_POLL_INTERVAL,
         circuit,
         s3_destination_folder,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
+        shots=None,
+        poll_timeout_seconds=None,
+        poll_interval_seconds=None,
+        inputs=None,
+        gate_definitions=None,
+        reservation_arn=None,
+        extra_args=None,
+        extra_kwargs=None,
     )
     device._aws_session.default_bucket.assert_not_called()
 
@@ -1375,6 +1418,8 @@ def test_run_with_positional_args_and_kwargs(
         0.25,
         {},
         ["foo"],
+        "arn:aws:braket:us-west-2:123456789123:reservation/a1b123cd-45e6-789f-gh01-i234567jk8l9",
+        None,
         {"bar": 1, "baz": 2},
     )
 
@@ -1489,6 +1534,7 @@ def _run_and_assert(
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
     gate_definitions=None,  # Treated as positional arg
+    reservation_arn=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1506,6 +1552,7 @@ def _run_and_assert(
         poll_interval_seconds,
         inputs,
         gate_definitions,
+        reservation_arn,
         extra_args,
         extra_kwargs,
     )
@@ -1524,6 +1571,7 @@ def _run_batch_and_assert(
     poll_interval_seconds=None,  # Treated as positional arg
     inputs=None,  # Treated as positional arg
     gate_definitions=None,  # Treated as positional arg
+    reservation_arn=None,  # Treated as positional arg
     extra_args=None,
     extra_kwargs=None,
 ):
@@ -1544,6 +1592,7 @@ def _run_batch_and_assert(
         poll_interval_seconds,
         inputs,
         gate_definitions,
+        reservation_arn,
         extra_args,
         extra_kwargs,
     )
