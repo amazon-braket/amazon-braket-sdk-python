@@ -19,7 +19,7 @@ from inspect import signature
 from typing import Any, Union
 
 from openpulse import ast
-from oqpy import BitVar, PhysicalQubits, Program
+from oqpy import BitVar, FloatVar, PhysicalQubits, Program
 from oqpy.timing import OQDurationLiteral
 
 from braket.parametric.free_parameter import FreeParameter
@@ -310,6 +310,8 @@ class PulseSequence:
             str: a str representing the OpenPulse program encoding the PulseSequence.
         """
         program = deepcopy(self._program)
+        for param in self.parameters:
+            program.declare(FloatVar(name=param.name, size=None, init_expression="input"), to_beginning=True)
         if self._capture_v0_count:
             register_identifier = "psb"
             program.declare(
