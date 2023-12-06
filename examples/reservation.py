@@ -11,8 +11,14 @@
 # ANY KIND, either express or implied. See the License for the specific
 # language governing permissions and limitations under the License.
 
-"""Version information.
-   Version number (major.minor.patch[-label])
-"""
+from braket.aws import AwsDevice
+from braket.circuits import Circuit
+from braket.devices import Devices
 
-__version__ = "1.63.1.dev0"
+bell = Circuit().h(0).cnot(0, 1)
+device = AwsDevice(Devices.IonQ.Aria1)
+
+# To run a task in a device reservation, change the device to the one you reserved
+# and fill in your reservation ARN
+task = device.run(bell, shots=100, reservation_arn="reservation ARN")
+print(task.result().measurement_counts)

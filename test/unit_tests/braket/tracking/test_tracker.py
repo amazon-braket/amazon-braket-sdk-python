@@ -85,6 +85,18 @@ CREATE_EVENTS = [
     _TaskCreationEvent(
         arn="no_price:::region", shots=1000, is_job_task=False, device="something_else"
     ),
+    _TaskCreationEvent(
+        arn="unbilled_task0:::region",
+        shots=100,
+        is_job_task=True,
+        device="qpu/foo",
+    ),
+    _TaskCreationEvent(
+        arn="unbilled_task1:::region",
+        shots=100,
+        is_job_task=True,
+        device="qpu/foo",
+    ),
 ]
 
 GET_EVENTS = [
@@ -101,6 +113,18 @@ COMPLETE_EVENTS = [
     ),
     _TaskCompletionEvent(arn="task_fail:::region", execution_duration=12345, status="FAILED"),
     _TaskCompletionEvent(arn="task_cancel:::region", execution_duration=None, status="CANCELLED"),
+    _TaskCompletionEvent(
+        arn="unbilled_task0:::region",
+        execution_duration=123,
+        status="COMPLETED",
+        has_reservation_arn=True,
+    ),
+    _TaskCompletionEvent(
+        arn="unbilled_task1:::region",
+        execution_duration=123,
+        status="COMPLETED",
+        has_reservation_arn=True,
+    ),
 ]
 
 
@@ -174,7 +198,12 @@ def test_simulator_task_cost(price_mock, completed_tracker):
 def test_quantum_task_statistics(completed_tracker):
     stats = completed_tracker.quantum_tasks_statistics()
     expected = {
-        "qpu/foo": {"shots": 200, "tasks": {"COMPLETED": 1, "FAILED": 1}},
+        "qpu/foo": {
+            "shots": 400,
+            "tasks": {"COMPLETED": 3, "FAILED": 1},
+            "execution_duration": timedelta(microseconds=246000),
+            "billed_execution_duration": timedelta(0),
+        },
         "simulator/bar": {
             "shots": 1000,
             "tasks": {"COMPLETED": 2, "CREATED": 1},
