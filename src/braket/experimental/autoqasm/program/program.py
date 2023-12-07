@@ -23,6 +23,9 @@ from enum import Enum
 from typing import Any, Optional, Union
 
 import oqpy.base
+import pygments
+from openqasm_pygments import OpenQASM3Lexer
+from pygments.formatters.terminal import TerminalFormatter
 from sympy import Symbol
 
 import braket.experimental.autoqasm.types as aq_types
@@ -159,6 +162,7 @@ class Program(SerializableProgram):
         self,
         ir_type: IRType = IRType.OPENQASM,
         serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
+        highlight: bool = True,
     ) -> str:
         """Serializes the program into an intermediate representation.
 
@@ -167,6 +171,7 @@ class Program(SerializableProgram):
                 IR representation. Defaults to IRType.OPENQASM.
             serialization_properties (SerializationProperties): IR serialization configuration.
                 Default to OpenQASMSerializationProperties().
+            highlight (bool): Whether to highlight the IR. Default True.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.
@@ -182,6 +187,9 @@ class Program(SerializableProgram):
             openqasm_ir = ast_to_qasm(openqasm_ast)
             if self._has_pulse_control and not serialization_properties.auto_defcalgrammar:
                 openqasm_ir = openqasm_ir.replace('defcalgrammar "openpulse";\n', "")
+
+            if highlight:
+                return pygments.highlight(openqasm_ir, OpenQASM3Lexer(), TerminalFormatter())
             return openqasm_ir
 
         raise ValueError(f"Supplied ir_type {ir_type} is not supported.")
