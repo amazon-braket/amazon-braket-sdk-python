@@ -162,7 +162,7 @@ class Program(SerializableProgram):
         self,
         ir_type: IRType = IRType.OPENQASM,
         serialization_properties: SerializationProperties = OpenQASMSerializationProperties(),
-        highlight: bool = True,
+        highlight: bool = False,
     ) -> str:
         """Serializes the program into an intermediate representation.
 
@@ -171,7 +171,7 @@ class Program(SerializableProgram):
                 IR representation. Defaults to IRType.OPENQASM.
             serialization_properties (SerializationProperties): IR serialization configuration.
                 Default to OpenQASMSerializationProperties().
-            highlight (bool): Whether to highlight the IR. Default True.
+            highlight (bool): Whether to highlight the IR. Default False.
 
         Raises:
             ValueError: If the supplied `ir_type` is not supported.
