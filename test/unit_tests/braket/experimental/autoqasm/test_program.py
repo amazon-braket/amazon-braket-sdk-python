@@ -123,3 +123,37 @@ __bit_0__ = measure __qubits__[1];"""
 
     for i, (scale, angle) in enumerate(itertools.product(scales, angles)):
         assert programs[i].to_ir() == expected(scale, angle)
+
+
+def test_to_ir_highlighted():
+    @aq.subroutine
+    def sub(q0: int):
+        if aq.instructions.measure(q0):
+            aq.instructions.x(1)
+
+    @aq.main(num_qubits=3)
+    def teleportation(theta):
+        sub(0)
+        aq.instructions.rx(1, theta)
+
+    expected = (
+        b"\x1b[36mOPENQASM\x1b[39;49;00m\x1b[37m \x1b[39;49;00m3.0;\x1b[37m\x1b[39;49;00m\n"
+        b"\x1b[34mdef\x1b[39;49;00m\x1b[37m \x1b[39;49;00m\x1b[32msub\x1b[39;49;00m(\x1b[36mint"
+        b"\x1b[39;49;00m[\x1b[34m32\x1b[39;49;00m]\x1b[37m \x1b[39;49;00mq0)\x1b[37m "
+        b"\x1b[39;49;00m{\x1b[37m\x1b[39;49;00m\n\x1b[37m    \x1b[39;49;00m\x1b[36mbit"
+        b"\x1b[39;49;00m\x1b[37m \x1b[39;49;00m__bit_0__;\x1b[37m\x1b[39;49;00m\n\x1b[37m"
+        b"    \x1b[39;49;00m__bit_0__\x1b[37m \x1b[39;49;00m=\x1b[37m \x1b[39;49;00m"
+        b"\x1b[35mmeasure\x1b[39;49;00m\x1b[37m \x1b[39;49;00m__qubits__[q0];\x1b[37m"
+        b"\x1b[39;49;00m\n\x1b[37m    \x1b[39;49;00m\x1b[34mif\x1b[39;49;00m\x1b[37m "
+        b"\x1b[39;49;00m(__bit_0__)\x1b[37m \x1b[39;49;00m{\x1b[37m\x1b[39;49;00m\n\x1b[37m"
+        b"        \x1b[39;49;00m\x1b[32mx\x1b[39;49;00m\x1b[37m \x1b[39;49;00m__qubits__["
+        b"\x1b[34m1\x1b[39;49;00m];\x1b[37m\x1b[39;49;00m\n\x1b[37m    \x1b[39;49;00m}"
+        b"\x1b[37m\x1b[39;49;00m\n}\x1b[37m\x1b[39;49;00m\n\x1b[36minput\x1b[39;49;00m\x1b[37m "
+        b"\x1b[39;49;00m\x1b[36mfloat\x1b[39;49;00m[\x1b[34m64\x1b[39;49;00m]\x1b[37m "
+        b"\x1b[39;49;00mtheta;\x1b[37m\x1b[39;49;00m\n\x1b[36mqubit\x1b[39;49;00m["
+        b"\x1b[34m3\x1b[39;49;00m]\x1b[37m \x1b[39;49;00m__qubits__;\x1b[37m\x1b[39;49;00m\n"
+        b"\x1b[32msub\x1b[39;49;00m(\x1b[34m0\x1b[39;49;00m);\x1b[37m\x1b[39;49;00m\n\x1b[32mrx"
+        b"\x1b[39;49;00m(theta)\x1b[37m \x1b[39;49;00m__qubits__[\x1b[34m1\x1b[39;49;00m];"
+        b"\x1b[37m\x1b[39;49;00m\n"
+    ).decode("utf-8")
+    assert teleportation.to_ir(highlight=True) == expected
